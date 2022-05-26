@@ -30,6 +30,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
@@ -69,8 +70,9 @@ buildFunctionInfo ::
   FunctionPermissionsMap ->
   RawFunctionInfo 'MSSQL ->
   Maybe Text ->
+  NamingCase ->
   m (FunctionInfo 'MSSQL, SchemaDependency)
-buildFunctionInfo _ _ _ _ _ _ _ =
+buildFunctionInfo _ _ _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for MSSQL source"
 
 updateColumnInEventTrigger ::

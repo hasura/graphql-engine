@@ -12,6 +12,7 @@ module Hasura.Backends.Postgres.Schema.OnConflict
   )
 where
 
+import Data.Has (getter)
 import Data.Text.Extended
 import Hasura.GraphQL.Parser
   ( InputFieldsParser,
@@ -32,6 +33,7 @@ import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -55,11 +57,12 @@ onConflictFieldParser ::
   TableInfo ('Postgres pgKind) ->
   m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
 onConflictFieldParser sourceName tableInfo = do
+  tCase <- asks getter
   updatePerms <- _permUpd <$> tablePermissions tableInfo
   let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
-  let maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> updatePerms
+      maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> updatePerms
   case maybeConflictObject of
-    Just conflictObject -> conflictObject <&> P.fieldOptional G._on_conflict (Just "upsert condition")
+    Just conflictObject -> conflictObject <&> P.fieldOptional (applyFieldNameCaseCust tCase G._on_conflict) (Just "upsert condition")
     Nothing -> return $ pure Nothing
 
 -- | Create a parser for the @_on_conflict@ object of the given table.

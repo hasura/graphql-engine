@@ -36,6 +36,7 @@ module Hasura.GraphQL.Schema.Backend
 where
 
 import Data.Has
+import Data.Text.Casing (GQLNameIdentifier)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (Type)
 import Hasura.GraphQL.Schema.Common
@@ -50,6 +51,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -99,21 +101,21 @@ class
     SourceName ->
     TableName b ->
     TableInfo b ->
-    G.Name ->
+    GQLNameIdentifier ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
     TableName b ->
     TableInfo b ->
-    G.Name ->
+    GQLNameIdentifier ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
     SourceName ->
     TableName b ->
     TableInfo b ->
-    G.Name ->
+    GQLNameIdentifier ->
     NESeq (ColumnInfo b) ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableInsertMutationFields ::
@@ -122,7 +124,7 @@ class
     SourceName ->
     TableName b ->
     TableInfo b ->
-    G.Name ->
+    GQLNameIdentifier ->
     m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   -- | This method is responsible for building the GraphQL Schema for mutations
@@ -140,7 +142,7 @@ class
     -- | table info
     TableInfo b ->
     -- | field display name
-    G.Name ->
+    GQLNameIdentifier ->
     m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildTableDeleteMutationFields ::
@@ -148,7 +150,7 @@ class
     SourceName ->
     TableName b ->
     TableInfo b ->
-    G.Name ->
+    GQLNameIdentifier ->
     m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
   buildFunctionQueryFields ::
@@ -199,7 +201,7 @@ class
 
   -- individual components
   columnParser ::
-    (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+    (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
     ColumnType b ->
     G.Nullability -> -- TODO maybe use Hasura.GraphQL.Parser.Schema.Nullability instead?
     m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
@@ -211,6 +213,7 @@ class
     InputFieldsParser n (Maybe (ScalarSelectionArguments b))
 
   orderByOperators ::
+    NamingCase ->
     NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b))
   comparisonExps ::
     MonadBuildSchema b r m n =>

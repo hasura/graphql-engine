@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -18,6 +18,7 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.List.NonEmpty qualified as NE
 import Data.Parser.JSONPath
 import Data.Text qualified as T
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType, incOp)
 import Hasura.Backends.Postgres.SQL.Types as PG hiding (FunctionName, TableName)
@@ -57,7 +58,7 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function (FunctionInfo)
-import Hasura.RQL.Types.SourceCustomization (mkRootFieldName)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (RolePermInfo (..), SelPermInfo, TableInfo, UpdPermInfo)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
 import Hasura.SQL.Types
@@ -81,7 +82,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     SourceName ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
-    G.Name ->
+    C.GQLNameIdentifier ->
     NESeq (ColumnInfo ('Postgres pgKind)) ->
     m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkBuildFunctionRelayQueryFields ::
@@ -155,7 +156,15 @@ instance
   -- indivdual components
   columnParser = columnParser
   scalarSelectionArgumentsParser = pgScalarSelectionArgumentsParser
-  orderByOperators = orderByOperators
+
+  -- NOTE: We don't use @orderByOperators@ directly as this will cause memory
+  --  growth, instead we use separate functions, according to @jberryman on the
+  --  memory growth, "This is turning a CAF Into a function, And the output is
+  --  likely no longer going to be shared even for the same arguments, and even
+  --  though the domain is extremely small (just HasuraCase or GraphqlCase)."
+  orderByOperators = \case
+    HasuraCase -> orderByOperatorsHasuraCase
+    GraphqlCase -> orderByOperatorsGraphqlCase
   comparisonExps = comparisonExps
   countTypeInput = countTypeInput
   aggregateOrderByCountType = PG.PGInteger
@@ -180,15 +189,16 @@ buildTableRelayQueryFields ::
   SourceName ->
   TableName ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   NESeq (ColumnInfo ('Postgres pgKind)) ->
   m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns = do
+  tCase <- asks getter
   let fieldDesc = Just $ G.Description $ "fetch data from the table: " <>> tableName
-  fieldName <- mkRootFieldName $ gqlName <> G.__connection
+  rootFieldName <- mkRootFieldName $ applyFieldNameCaseIdentifier tCase (mkRelayConnectionField gqlName)
   fmap afold $
     optionalFieldParser QDBConnection $
-      selectTableConnection sourceName tableInfo fieldName fieldDesc pkeyColumns
+      selectTableConnection sourceName tableInfo rootFieldName fieldDesc pkeyColumns
 
 pgkBuildTableUpdateMutationFields ::
   MonadBuildSchema ('Postgres pgKind) r m n =>
@@ -199,7 +209,7 @@ pgkBuildTableUpdateMutationFields ::
   -- | table info
   TableInfo ('Postgres pgKind) ->
   -- | field display name
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 pgkBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName =
   concat . maybeToList <$> runMaybeT do
@@ -232,11 +242,12 @@ buildFunctionRelayQueryFields sourceName functionName functionInfo tableName pke
 -- Individual components
 
 columnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r, Has NamingCase r) =>
   ColumnType ('Postgres pgKind) ->
   G.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue ('Postgres pgKind))))
-columnParser columnType (G.Nullability isNullable) =
+columnParser columnType (G.Nullability isNullable) = do
+  tCase <- asks getter
   -- TODO(PDV): It might be worth memoizing this function even though it isn’t
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
@@ -273,15 +284,15 @@ columnParser columnType (G.Nullability isNullable) =
         Just enumValuesList -> do
           tableGQLName <- qualifiedObjectToName tableName
           name <- addEnumSuffix tableGQLName tableCustomName
-          pure $ possiblyNullable PGText $ P.enum name Nothing (mkEnumValue <$> enumValuesList)
+          pure $ possiblyNullable PGText $ P.enum name Nothing (mkEnumValue tCase <$> enumValuesList)
         Nothing -> throw400 ValidationFailed "empty enum values"
   where
     possiblyNullable scalarType
       | isNullable = fmap (fromMaybe $ PGNull scalarType) . P.nullable
       | otherwise = id
-    mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, PGScalarValue)
-    mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
+    mkEnumValue :: NamingCase -> (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, PGScalarValue)
+    mkEnumValue tCase (EnumValue value, EnumValueInfo description) =
+      ( P.Definition (applyEnumValueCase tCase value) (G.Description <$> description) P.EnumValueInfo,
         PGValText $ G.unName value
       )
 
@@ -303,26 +314,37 @@ pgScalarSelectionArgumentsParser columnType
     elToColExp (Key k) = PG.SELit k
     elToColExp (Index i) = PG.SELit $ tshow i
 
-orderByOperators ::
+orderByOperatorsHasuraCase ::
   NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind)))
-orderByOperators =
+orderByOperatorsHasuraCase = orderByOperators HasuraCase
+
+orderByOperatorsGraphqlCase ::
+  NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind)))
+orderByOperatorsGraphqlCase = orderByOperators GraphqlCase
+
+-- | Do NOT use this function directly, this should be used via
+--  @orderByOperatorsHasuraCase@ or @orderByOperatorsGraphqlCase@
+orderByOperators ::
+  NamingCase ->
+  NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind)))
+orderByOperators tCase =
   NE.fromList
-    [ ( define G._asc "in ascending order, nulls last",
+    [ ( define (applyFieldNameCaseCust tCase G._asc) "in ascending order, nulls last",
         (PG.OTAsc, PG.NLast)
       ),
-      ( define G._asc_nulls_first "in ascending order, nulls first",
+      ( define (applyFieldNameCaseCust tCase G._asc_nulls_first) "in ascending order, nulls first",
         (PG.OTAsc, PG.NFirst)
       ),
-      ( define G._asc_nulls_last "in ascending order, nulls last",
+      ( define (applyFieldNameCaseCust tCase G._asc_nulls_last) "in ascending order, nulls last",
         (PG.OTAsc, PG.NLast)
       ),
-      ( define G._desc "in descending order, nulls first",
+      ( define (applyFieldNameCaseCust tCase G._desc) "in descending order, nulls first",
         (PG.OTDesc, PG.NFirst)
       ),
-      ( define G._desc_nulls_first "in descending order, nulls first",
+      ( define (applyFieldNameCaseCust tCase G._desc_nulls_first) "in descending order, nulls first",
         (PG.OTDesc, PG.NFirst)
       ),
-      ( define G._desc_nulls_last "in descending order, nulls last",
+      ( define (applyFieldNameCaseCust tCase G._desc_nulls_last) "in descending order, nulls last",
         (PG.OTDesc, PG.NLast)
       )
     ]
@@ -336,7 +358,8 @@ comparisonExps ::
     MonadError QErr m,
     MonadReader r m,
     Has QueryContext r,
-    Has MkTypename r
+    Has MkTypename r,
+    Has NamingCase r
   ) =>
   ColumnType ('Postgres pgKind) ->
   m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
@@ -357,7 +380,8 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- `ltxtquery` represents a full-text-search-like pattern for matching `ltree` values.
   ltxtqueryParser <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
   maybeCastParser <- castExp columnType
-  let name = P.getName typedParser <> G.__comparison_exp
+  tCase <- asks getter
+  let name = applyTypeNameCaseCust tCase $ P.getName typedParser <> G.__comparison_exp
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -365,7 +389,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
             <<> ". All fields are combined with logical 'AND'."
       textListParser = fmap openValueOrigin <$> P.list textParser
       columnListParser = fmap openValueOrigin <$> P.list typedParser
-
+  -- Naming conventions
   pure $
     P.object name (Just desc) $
       fmap catMaybes $
@@ -376,214 +400,253 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
                 ],
               -- Common ops for all types
               equalityOperators
+                tCase
                 collapseIfNull
                 (mkParameter <$> typedParser)
                 (mkListLiteral columnType <$> columnListParser),
               -- Comparison ops for non Raster types
               guard (isScalarColumnWhere (/= PGRaster) columnType)
                 *> comparisonOperators
+                  tCase
                   collapseIfNull
                   (mkParameter <$> typedParser),
               -- Ops for Raster types
               guard (isScalarColumnWhere (== PGRaster) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_intersects_rast
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects", "rast"]))
                        Nothing
                        (ABackendSpecific . ASTIntersectsRast . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_intersects_nband_geom
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects", "nband", "geom"]))
                        Nothing
                        (ABackendSpecific . ASTIntersectsNbandGeom <$> ingInputParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_intersects_geom_nband
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects", "geom", "nband"]))
                        Nothing
                        (ABackendSpecific . ASTIntersectsGeomNband <$> ignInputParser)
                    ],
               -- Ops for String like types
               guard (isScalarColumnWhere isStringType columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__like
+                       (C.fromName G.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__nlike
+                       (C.fromName G.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__ilike
+                       (C.fromName G.__ilike)
                        (Just "does the column match the given case-insensitive pattern")
                        (ABackendSpecific . AILIKE . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__nilike
+                       (C.fromName G.__nilike)
                        (Just "does the column NOT match the given case-insensitive pattern")
                        (ABackendSpecific . ANILIKE . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__similar
+                       (C.fromName G.__similar)
                        (Just "does the column match the given SQL regular expression")
                        (ABackendSpecific . ASIMILAR . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__nsimilar
+                       (C.fromName G.__nsimilar)
                        (Just "does the column NOT match the given SQL regular expression")
                        (ABackendSpecific . ANSIMILAR . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__regex
+                       (C.fromName G.__regex)
                        (Just "does the column match the given POSIX regular expression, case sensitive")
                        (ABackendSpecific . AREGEX . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__iregex
+                       (C.fromName G.__iregex)
                        (Just "does the column match the given POSIX regular expression, case insensitive")
                        (ABackendSpecific . AIREGEX . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__nregex
+                       (C.fromName G.__nregex)
                        (Just "does the column NOT match the given POSIX regular expression, case sensitive")
                        (ABackendSpecific . ANREGEX . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__niregex
+                       (C.fromName G.__niregex)
                        (Just "does the column NOT match the given POSIX regular expression, case insensitive")
                        (ABackendSpecific . ANIREGEX . mkParameter <$> typedParser)
                    ],
               -- Ops for JSONB type
               guard (isScalarColumnWhere (== PGJSONB) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__contains
+                       (C.fromName G.__contains)
                        (Just "does the column contain the given json value at the top level")
                        (ABackendSpecific . AContains . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__contained_in
+                       (C.fromTuple $$(G.litGQLIdentifier ["_contained", "in"]))
                        (Just "is the column contained in the given json value")
                        (ABackendSpecific . AContainedIn . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__has_key
+                       (C.fromTuple $$(G.litGQLIdentifier ["_has", "key"]))
                        (Just "does the string exist as a top-level key in the column")
                        (ABackendSpecific . AHasKey . mkParameter <$> nullableTextParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__has_keys_any
+                       (C.fromTuple $$(G.litGQLIdentifier ["_has", "keys", "any"]))
                        (Just "do any of these strings exist as top-level keys in the column")
                        (ABackendSpecific . AHasKeysAny . mkListLiteral (ColumnScalar PGText) <$> textListParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__has_keys_all
+                       (C.fromTuple $$(G.litGQLIdentifier ["_has", "keys", "all"]))
                        (Just "do all of these strings exist as top-level keys in the column")
                        (ABackendSpecific . AHasKeysAll . mkListLiteral (ColumnScalar PGText) <$> textListParser)
                    ],
               -- Ops for Geography type
               guard (isScalarColumnWhere (== PGGeography) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_intersects
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects"]))
                        (Just "does the column spatially intersect the given geography value")
                        (ABackendSpecific . ASTIntersects . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_d_within
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "d", "within"]))
                        (Just "is the column within a given distance from the given geography value")
                        (ABackendSpecific . ASTDWithinGeog <$> geogInputParser)
                    ],
               -- Ops for Geometry type
               guard (isScalarColumnWhere (== PGGeometry) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_contains
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "contains"]))
                        (Just "does the column contain the given geometry value")
                        (ABackendSpecific . ASTContains . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_crosses
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "crosses"]))
                        (Just "does the column cross the given geometry value")
                        (ABackendSpecific . ASTCrosses . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_equals
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "equals"]))
                        (Just "is the column equal to given geometry value (directionality is ignored)")
                        (ABackendSpecific . ASTEquals . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_overlaps
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "overlaps"]))
                        (Just "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value")
                        (ABackendSpecific . ASTOverlaps . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_touches
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "touches"]))
                        (Just "does the column have atleast one point in common with the given geometry value")
                        (ABackendSpecific . ASTTouches . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_within
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "within"]))
                        (Just "is the column contained in the given geometry value")
                        (ABackendSpecific . ASTWithin . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_intersects
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects"]))
                        (Just "does the column spatially intersect the given geometry value")
                        (ABackendSpecific . ASTIntersects . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_3d_intersects
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "3d", "intersects"]))
                        (Just "does the column spatially intersect the given geometry value in 3D")
                        (ABackendSpecific . AST3DIntersects . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_d_within
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "d", "within"]))
                        (Just "is the column within a given distance from the given geometry value")
                        (ABackendSpecific . ASTDWithinGeom <$> geomInputParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_3d_d_within
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "3d", "d", "within"]))
                        (Just "is the column within a given 3D distance from the given geometry value")
                        (ABackendSpecific . AST3DDWithinGeom <$> geomInputParser)
                    ],
               -- Ops for Ltree type
               guard (isScalarColumnWhere (== PGLtree) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__ancestor
+                       (C.fromName G.__ancestor)
                        (Just "is the left argument an ancestor of right (or equal)?")
                        (ABackendSpecific . AAncestor . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__ancestor_any
+                       (C.fromTuple $$(G.litGQLIdentifier ["_ancestor", "any"]))
                        (Just "does array contain an ancestor of `ltree`?")
                        (ABackendSpecific . AAncestorAny . mkListLiteral columnType <$> columnListParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__descendant
+                       (C.fromName G.__descendant)
                        (Just "is the left argument a descendant of right (or equal)?")
                        (ABackendSpecific . ADescendant . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__descendant_any
+                       (C.fromTuple $$(G.litGQLIdentifier ["_descendant", "any"]))
                        (Just "does array contain a descendant of `ltree`?")
                        (ABackendSpecific . ADescendantAny . mkListLiteral columnType <$> columnListParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__matches
+                       (C.fromName G.__matches)
                        (Just "does `ltree` match `lquery`?")
                        (ABackendSpecific . AMatches . mkParameter <$> lqueryParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__matches_any
+                       (C.fromTuple $$(G.litGQLIdentifier ["_matches", "any"]))
                        (Just "does `ltree` match any `lquery` in array?")
                        (ABackendSpecific . AMatchesAny . mkListLiteral (ColumnScalar PGLquery) <$> textListParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__matches_fulltext
+                       (C.fromTuple $$(G.litGQLIdentifier ["_matches", "fulltext"]))
                        (Just "does `ltree` match `ltxtquery`?")
                        (ABackendSpecific . AMatchesFulltext . mkParameter <$> ltxtqueryParser)
                    ]
@@ -613,7 +676,7 @@ comparisonExps = P.memoize 'comparisonExps \columnType -> do
 
 geographyWithinDistanceInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeogOp (UnpreparedValue ('Postgres pgKind))))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar PGGeography) (G.Nullability False)
@@ -633,7 +696,7 @@ geographyWithinDistanceInput = do
 
 geometryWithinDistanceInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeomOp (UnpreparedValue ('Postgres pgKind))))
 geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -645,7 +708,7 @@ geometryWithinDistanceInput = do
 
 intersectsNbandGeomInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (STIntersectsNbandGeommin (UnpreparedValue ('Postgres pgKind))))
 intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -657,7 +720,7 @@ intersectsNbandGeomInput = do
 
 intersectsGeomNbandInput ::
   forall pgKind m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (STIntersectsGeomminNband (UnpreparedValue ('Postgres pgKind))))
 intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
@@ -693,7 +756,8 @@ prependOp ::
     MonadReader r m,
     MonadError QErr m,
     MonadSchema n m,
-    Has MkTypename r
+    Has MkTypename r,
+    Has NamingCase r
   ) =>
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 prependOp = SU.UpdateOperator {..}
@@ -727,7 +791,8 @@ appendOp ::
     MonadReader r m,
     MonadError QErr m,
     MonadSchema n m,
-    Has MkTypename r
+    Has MkTypename r,
+    Has NamingCase r
   ) =>
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 appendOp = SU.UpdateOperator {..}
@@ -761,7 +826,8 @@ deleteKeyOp ::
     MonadReader r m,
     MonadError QErr m,
     MonadSchema n m,
-    Has MkTypename r
+    Has MkTypename r,
+    Has NamingCase r
   ) =>
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 deleteKeyOp = SU.UpdateOperator {..}
@@ -791,7 +857,8 @@ deleteElemOp ::
     MonadReader r m,
     MonadError QErr m,
     MonadSchema n m,
-    Has MkTypename r
+    Has MkTypename r,
+    Has NamingCase r
   ) =>
   SU.UpdateOperator ('Postgres pgKind) m n (UnpreparedValue ('Postgres pgKind))
 deleteElemOp = SU.UpdateOperator {..}
@@ -823,7 +890,8 @@ deleteAtPathOp ::
     MonadReader r m,
     MonadError QErr m,
     MonadSchema n m,
-    Has MkTypename r
+    Has MkTypename r,
+    Has NamingCase r
   ) =>
   SU.UpdateOperator ('Postgres pgKind) m n [UnpreparedValue ('Postgres pgKind)]
 deleteAtPathOp = SU.UpdateOperator {..}

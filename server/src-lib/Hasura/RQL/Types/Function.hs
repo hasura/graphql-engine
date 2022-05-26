@@ -213,47 +213,56 @@ getFunctionArgsGQLName ::
   -- | The GQL version of the DB name of the function
   G.Name ->
   FunctionConfig ->
+  -- | Custom function for setting naming case
+  (G.Name -> G.Name) ->
   G.Name
 getFunctionArgsGQLName
   funcGivenName
-  FunctionConfig {..} =
-    fromMaybe funcGivenName _fcCustomName <> G.__args
+  FunctionConfig {..}
+  setCase =
+    setCase $ fromMaybe funcGivenName _fcCustomName <> G.__args
 
 -- | Apply function name customization to the basic function variation, as
 -- detailed in 'rfcs/function-root-field-customisation.md'.
 getFunctionGQLName ::
   G.Name ->
   FunctionConfig ->
+  -- | Custom function for setting naming case
+  (G.Name -> G.Name) ->
   G.Name
 getFunctionGQLName
   funcGivenName
   FunctionConfig
     { _fcCustomRootFields = FunctionCustomRootFields {..},
       ..
-    } =
+    }
+  setCase =
     choice
       [ _fcrfFunction,
         _fcCustomName
       ]
-      & fromMaybe funcGivenName
+      & fromMaybe (setCase funcGivenName)
 
 -- | Apply function name customization to the aggregate function variation, as
 -- detailed in 'rfcs/function-root-field-customisation.md'.
 getFunctionAggregateGQLName ::
   G.Name ->
   FunctionConfig ->
+  -- | Custom function for setting naming case
+  (G.Name -> G.Name) ->
   G.Name
 getFunctionAggregateGQLName
   funcGivenName
   FunctionConfig
     { _fcCustomRootFields = FunctionCustomRootFields {..},
       ..
-    } =
+    }
+  setCase =
     choice
       [ _fcrfFunctionAggregate,
         _fcCustomName <&> (<> G.__aggregate)
       ]
-      & fromMaybe (funcGivenName <> G.__aggregate)
+      & fromMaybe (setCase $ funcGivenName <> G.__aggregate)
 
 getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArgument b)
 getInputArgs =

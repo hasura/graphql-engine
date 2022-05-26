@@ -408,6 +408,7 @@ library
                      , Data.Set.Extended
                      , Data.SqlCommenter
                      , Data.TByteString
+                     , Data.Text.Casing
                      , Data.Text.Extended
                      , Data.Text.NonEmpty
                      , Data.Time.Clock.Units

@@ -66,6 +66,7 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.SQL.Backend
 import Hasura.Server.API.Config (runGetConfig)
 import Hasura.Server.API.Metadata
@@ -126,7 +127,8 @@ data ServerCtx = ServerCtx
     scExperimentalFeatures :: !(S.HashSet ExperimentalFeature),
     scLoggingSettings :: !LoggingSettings,
     scEventingMode :: !EventingMode,
-    scEnableReadOnlyMode :: !ReadOnlyMode
+    scEnableReadOnlyMode :: !ReadOnlyMode,
+    scDefaultNamingConvention :: !(Maybe NamingCase)
   }
 
 data HandlerCtx = HandlerCtx
@@ -409,6 +411,7 @@ v1QueryHandler query = do
       experimentalFeatures <- asks (scExperimentalFeatures . hcServerCtx)
       eventingMode <- asks (scEventingMode . hcServerCtx)
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+      defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
       let serverConfigCtx =
             ServerConfigCtx
               functionPermsCtx
@@ -418,6 +421,7 @@ v1QueryHandler query = do
               experimentalFeatures
               eventingMode
               readOnlyMode
+              defaultNamingCase
       runQuery
         env
         logger
@@ -455,6 +459,7 @@ v1MetadataHandler query = do
   _sccMaintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
   _sccEventingMode <- asks (scEventingMode . hcServerCtx)
   _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+  _sccDefaultNamingConvention <- asks (scDefaultNamingConvention . hcServerCtx)
   let serverConfigCtx = ServerConfigCtx {..}
   r <-
     withSchemaCacheUpdate
@@ -508,6 +513,7 @@ v2QueryHandler query = do
       maintenanceMode <- asks (scEnableMaintenanceMode . hcServerCtx)
       eventingMode <- asks (scEventingMode . hcServerCtx)
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
+      defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
       let serverConfigCtx =
             ServerConfigCtx
               functionPermsCtx
@@ -517,6 +523,7 @@ v2QueryHandler query = do
               experimentalFeatures
               eventingMode
               readOnlyMode
+              defaultNamingCase
 
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
@@ -850,7 +857,8 @@ mkWaiApp
               scExperimentalFeatures = experimentalFeatures,
               scLoggingSettings = LoggingSettings enabledLogTypes enableMetadataQueryLogging,
               scEventingMode = eventingMode,
-              scEnableReadOnlyMode = readOnlyMode
+              scEnableReadOnlyMode = readOnlyMode,
+              scDefaultNamingConvention = readDefaultNamingCaseFromEnv env
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->

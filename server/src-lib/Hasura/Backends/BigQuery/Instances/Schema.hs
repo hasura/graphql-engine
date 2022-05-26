@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
-{-# LANGUAGE TemplateHaskellQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.BigQuery.Instances.Schema () where
@@ -9,6 +9,7 @@ import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
@@ -32,6 +33,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -77,7 +79,7 @@ bqBuildTableRelayQueryFields ::
   SourceName ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'BigQuery) ->
   m [a]
 bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
@@ -89,7 +91,7 @@ bqBuildTableInsertMutationFields ::
   SourceName ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [a]
 bqBuildTableInsertMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
@@ -99,7 +101,7 @@ bqBuildTableUpdateMutationFields ::
   SourceName ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [a]
 bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName =
   pure []
@@ -109,7 +111,7 @@ bqBuildTableDeleteMutationFields ::
   SourceName ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [a]
 bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName =
   pure []
@@ -214,11 +216,13 @@ bqScalarSelectionArgumentsParser ::
 bqScalarSelectionArgumentsParser _columnType = pure Nothing
 
 bqOrderByOperators ::
+  NamingCase ->
   NonEmpty
     ( Definition P.EnumValueInfo,
       (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)
     )
-bqOrderByOperators =
+bqOrderByOperators _tCase =
+  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
   NE.fromList
     [ ( define G._asc "in ascending order, nulls first",
         (BigQuery.AscOrder, BigQuery.NullsFirst)
@@ -244,12 +248,13 @@ bqOrderByOperators =
 
 bqComparisonExps ::
   forall m n r.
-  (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m, MonadReader r m, Has QueryContext r, Has MkTypename r) =>
+  (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m, MonadReader r m, Has QueryContext r, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'BigQuery ->
   m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
   dWithinGeogOpParser <- geographyWithinDistanceInput
+  tCase <- asks getter
   -- see Note [Columns in comparison expression are never nullable]
   typedParser <- columnParser columnType (G.Nullability False)
   _nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
@@ -274,69 +279,81 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
               -- GEOGRAPHY comparisons are not supported. To compare GEOGRAPHY values, use ST_Equals.
               guard (isScalarColumnWhere (/= BigQuery.GeographyScalarType) columnType)
                 *> equalityOperators
+                  tCase
                   collapseIfNull
                   (mkParameter <$> typedParser)
                   (mkListLiteral <$> columnListParser),
               guard (isScalarColumnWhere (/= BigQuery.GeographyScalarType) columnType)
                 *> comparisonOperators
+                  tCase
                   collapseIfNull
                   (mkParameter <$> typedParser),
               -- Ops for String type
               guard (isScalarColumnWhere (== BigQuery.StringScalarType) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__like
+                       (C.fromName G.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__nlike
+                       (C.fromName G.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . mkParameter <$> typedParser)
                    ],
               -- Ops for Bytes type
               guard (isScalarColumnWhere (== BigQuery.BytesScalarType) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__like
+                       (C.fromName G.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__nlike
+                       (C.fromName G.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . mkParameter <$> typedParser)
                    ],
               -- Ops for Geography type
               guard (isScalarColumnWhere (== BigQuery.GeographyScalarType) columnType)
                 *> [ mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_contains
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "contains"]))
                        (Just "does the column contain the given geography value")
                        (ABackendSpecific . BigQuery.ASTContains . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_equals
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "equals"]))
                        (Just "is the column equal to given geography value (directionality is ignored)")
                        (ABackendSpecific . BigQuery.ASTEquals . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_touches
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "touches"]))
                        (Just "does the column have at least one point in common with the given geography value")
                        (ABackendSpecific . BigQuery.ASTTouches . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_within
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "within"]))
                        (Just "is the column contained in the given geography value")
                        (ABackendSpecific . BigQuery.ASTWithin . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_intersects
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects"]))
                        (Just "does the column spatially intersect the given geography value")
                        (ABackendSpecific . BigQuery.ASTIntersects . mkParameter <$> typedParser),
                      mkBoolOperator
+                       tCase
                        collapseIfNull
-                       G.__st_d_within
+                       (C.fromTuple $$(G.litGQLIdentifier ["_st", "d", "within"]))
                        (Just "is the column within a given distance from the given geometry value")
                        (ABackendSpecific . BigQuery.ASTDWithin <$> dWithinGeogOpParser)
                    ]
@@ -361,7 +378,7 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)

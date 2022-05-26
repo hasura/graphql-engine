@@ -7,6 +7,7 @@ module Hasura.Backends.DataConnector.Adapter.Schema () where
 
 import Data.Has
 import Data.List.NonEmpty qualified as NE
+import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended ((<<>))
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
@@ -25,6 +26,7 @@ import Hasura.RQL.IR.Select (SelectArgsG (..))
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table qualified as RQL
 import Hasura.SQL.Backend (BackendType (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -75,7 +77,7 @@ experimentalBuildTableRelayQueryFields ::
   RQL.SourceName ->
   RQL.TableName 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
-  GQL.Name ->
+  GQLNameIdentifier ->
   NESeq (RQL.ColumnInfo 'DataConnector) ->
   m [a]
 experimentalBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
@@ -102,8 +104,9 @@ columnParser' columnType (GQL.Nullability isNullable) = do
       | isNullable = fmap (fromMaybe IR.S.V.Null) . P.nullable
       | otherwise = id
 
-orderByOperators' :: NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector))
-orderByOperators' =
+orderByOperators' :: NamingCase -> NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector))
+orderByOperators' _tCase =
+  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
   NE.fromList
     [ ( define $$(GQL.litName "asc") "in ascending order",
         (IR.O.Ascending, ())
@@ -121,11 +124,13 @@ comparisonExps' ::
     MonadSchema n m,
     MonadError QErr m,
     MonadReader r m,
-    Has GS.C.QueryContext r
+    Has GS.C.QueryContext r,
+    Has NamingCase r
   ) =>
   RQL.ColumnType 'DataConnector ->
   m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
 comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
+  tCase <- asks getter
   collapseIfNull <- asks $ GS.C.qcDangerousBooleanCollapse . getter
   typedParser <- columnParser' columnType (GQL.Nullability False)
   nullableTextParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability True)
@@ -144,10 +149,12 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
         sequenceA $
           concat
             [ GS.BE.equalityOperators
+                tCase
                 collapseIfNull
                 (P.mkParameter <$> typedParser)
                 (mkListLiteral <$> columnListParser),
               GS.BE.comparisonOperators
+                tCase
                 collapseIfNull
                 (P.mkParameter <$> typedParser)
             ]

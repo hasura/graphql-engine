@@ -8,6 +8,7 @@
 -- by the package ghc-heap-view, which can't be built using profiling.
 
 #ifdef PROFILING
+{-# LANGUAGE TemplateHaskell #-}
 
 module GHC.AssertNF.CPP
   ( assertNFHere,

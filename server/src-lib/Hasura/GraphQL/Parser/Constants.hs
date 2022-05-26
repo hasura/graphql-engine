@@ -119,6 +119,9 @@ _UUID = [G.name|UUID|]
 __BigQuery_comparison_exp :: G.Name
 __BigQuery_comparison_exp = [G.name|_BigQuery_comparison_exp|]
 
+_one :: G.Name
+_one = [G.name|one|]
+
 __one :: G.Name
 __one = [G.name|_one|]
 
@@ -208,6 +211,9 @@ __cast = [G.name|_cast|]
 
 __comparison_exp :: G.Name
 __comparison_exp = [G.name|_comparison_exp|]
+
+_connection :: G.Name
+_connection = [G.name|connection|]
 
 __connection :: G.Name
 __connection = [G.name|_connection|]
@@ -488,6 +494,9 @@ _data = [G.name|data|]
 _defaultValue :: G.Name
 _defaultValue = [G.name|defaultValue|]
 
+_delete :: G.Name
+_delete = [G.name|delete|]
+
 _delete_ :: G.Name
 _delete_ = [G.name|delete_|]
 
@@ -571,6 +580,9 @@ _initial_value = [G.name|initial_value|]
 
 _inputFields :: G.Name
 _inputFields = [G.name|inputFields|]
+
+_insert :: G.Name
+_insert = [G.name|insert|]
 
 _insert_ :: G.Name
 _insert_ = [G.name|insert_|]
@@ -705,7 +717,7 @@ _stddev :: G.Name
 _stddev = [G.name|stddev|]
 
 _stream :: G.Name
-_stream = [G.name|_stream|]
+_stream = [G.name|stream|]
 
 _subscriptionType :: G.Name
 _subscriptionType = [G.name|subscriptionType|]
@@ -730,6 +742,9 @@ _type = [G.name|type|]
 
 _update_columns :: G.Name
 _update_columns = [G.name|update_columns|]
+
+_update :: G.Name
+_update = [G.name|update|]
 
 _update_ :: G.Name
 _update_ = [G.name|update_|]

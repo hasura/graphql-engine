@@ -91,6 +91,7 @@ class
     RawFunctionInfo b ->
     -- | the function comment
     Maybe Text ->
+    NamingCase ->
     m (FunctionInfo b, SchemaDependency)
 
   updateColumnInEventTrigger ::

@@ -6,6 +6,7 @@
 module Hasura.Backends.MSSQL.Instances.Types () where
 
 import Data.Aeson
+import Data.Text.Casing (GQLNameIdentifier)
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Connection qualified as MSSQL
 import Hasura.Backends.MSSQL.ToQuery ()
@@ -89,6 +90,12 @@ instance Backend 'MSSQL where
 
   snakeCaseTableName :: TableName 'MSSQL -> Text
   snakeCaseTableName = MSSQL.snakeCaseTableName
+
+  getTableIdentifier :: TableName 'MSSQL -> Either QErr GQLNameIdentifier
+  getTableIdentifier = MSSQL.getTableIdentifier
+
+  namingConventionSupport :: SupportedNamingCase
+  namingConventionSupport = OnlyHasuraCase
 
   computedFieldFunction :: ComputedFieldDefinition 'MSSQL -> FunctionName 'MSSQL
   computedFieldFunction = absurd

@@ -720,6 +720,36 @@ roles-inheritance)
 	kill_hge_servers
 	;;
 
+naming-conventions)
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: NAMING CONVENTIONS ########>\n"
+
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM"
+	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=naming_conventions
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py
+
+	kill_hge_servers
+
+	# We are now going to test by setting the default naming convention to
+	# graphql-default. So now we don't need to set the naming convention in
+	# source customisation
+	export HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION="graphql-default"
+
+	run_hge_with_args serve
+	wait_for_port 8080
+
+
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py::TestDefaultNamingConvention
+
+	unset HASURA_GRAPHQL_ADMIN_SECRET
+	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+	unset HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION
+
+	kill_hge_servers
+	;;
+
 streaming-subscriptions)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH STREAMING SUBSCRIPTIONS #########################>\n"
 
@@ -1217,6 +1247,7 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 backend-mssql)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
 
+	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=naming_conventions
 	run_hge_with_args serve
 	wait_for_port 8080
 
@@ -1232,6 +1263,12 @@ backend-mssql)
 	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -k TestGraphQLInheritedRolesMSSQL --backend mssql
 
 	# end inherited roles test
+
+	# start naming conventions test (failure for other than postgres backend)
+	echo -e "\n$(time_elapsed): <########## TEST NAMING CONVENTIONS WITH SQL SERVER BACKEND ###########################################>\n"
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -k TestNamingConventionsFailure --backend mssql
+	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+	# end naming conventions test
 
 	kill_hge_servers
 	;;

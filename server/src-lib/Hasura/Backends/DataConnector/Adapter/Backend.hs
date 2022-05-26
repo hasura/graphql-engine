@@ -5,6 +5,7 @@ module Hasura.Backends.DataConnector.Adapter.Backend () where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as J (Value)
+import Data.Text.Casing qualified as C
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
@@ -16,7 +17,7 @@ import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Backends.DataConnector.IR.Table as IR.T
 import Hasura.Base.Error (Code (ValidationFailed), QErr, throw400)
 import Hasura.Prelude
-import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, XDisable)
+import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable)
 import Hasura.RQL.Types.Common as RQL (boolScalar, floatScalar, stringScalar)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -112,3 +113,13 @@ instance Backend 'DataConnector where
 
   snakeCaseTableName :: TableName 'DataConnector -> Text
   snakeCaseTableName = IR.N.unName
+
+  getTableIdentifier :: TableName 'DataConnector -> Either QErr C.GQLNameIdentifier
+  getTableIdentifier name = do
+    gqlTableName <-
+      G.mkName (IR.N.unName name)
+        `onNothing` throw400 ValidationFailed ("TableName " <> IR.N.unName name <> " is not a valid GraphQL identifier")
+    pure $ C.Identifier gqlTableName []
+
+  namingConventionSupport :: SupportedNamingCase
+  namingConventionSupport = OnlyHasuraCase

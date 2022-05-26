@@ -20,6 +20,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 
@@ -49,6 +50,7 @@ newtype InstanceId = InstanceId {getInstanceId :: Text}
 data ExperimentalFeature
   = EFInheritedRoles
   | EFOptimizePermissionFilters
+  | EFNamingConventions
   | EFStreamingSubscriptions
   deriving (Show, Eq, Generic)
 
@@ -58,13 +60,15 @@ instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     "inherited_roles" -> pure EFInheritedRoles
     "optimize_permission_filters" -> pure EFOptimizePermissionFilters
+    "naming_conventions" -> pure EFNamingConventions
     "streaming_subscriptions" -> pure EFStreamingSubscriptions
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters or streaming_subscriptions"
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_conventions or streaming_subscriptions"
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
     EFInheritedRoles -> "inherited_roles"
     EFOptimizePermissionFilters -> "optimize_permission_filters"
+    EFNamingConventions -> "naming_conventions"
     EFStreamingSubscriptions -> "streaming_subscriptions"
 
 data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
@@ -98,7 +102,9 @@ data ServerConfigCtx = ServerConfigCtx
     _sccMaintenanceMode :: MaintenanceMode (),
     _sccExperimentalFeatures :: Set.HashSet ExperimentalFeature,
     _sccEventingMode :: EventingMode,
-    _sccReadOnlyMode :: ReadOnlyMode
+    _sccReadOnlyMode :: ReadOnlyMode,
+    -- | stores global default naming convention
+    _sccDefaultNamingConvention :: Maybe NamingCase
   }
   deriving (Show, Eq)
 

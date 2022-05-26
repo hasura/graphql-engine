@@ -33,6 +33,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config
@@ -277,6 +278,8 @@ mkServeOptions rso = do
     bool MetadataQueryLoggingDisabled MetadataQueryLoggingEnabled
       <$> withEnvBool (rsoEnableMetadataQueryLoggingEnv rso) (fst enableMetadataQueryLoggingEnv)
 
+  globalDefaultNamingCase <- withEnv (rsoDefaultNamingConvention rso) $ fst defaultNamingConvention
+
   pure $
     ServeOptions
       port
@@ -318,6 +321,7 @@ mkServeOptions rso = do
       EventingEnabled
       ReadOnlyModeDisabled
       enableMetadataQueryLogging
+      globalDefaultNamingCase
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
@@ -692,6 +696,14 @@ dangerousBooleanCollapseEnv =
 defaultEnabledAPIs :: [API]
 defaultEnabledAPIs = [METADATA, GRAPHQL, PGDUMP, CONFIG]
 
+defaultNamingConvention :: (String, String)
+defaultNamingConvention =
+  ( "HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION",
+    "Default naming convention for the auto generated graphql names. Possible values are"
+      <> "hasura-default: Use snake_case for all names."
+      <> "graphql-default: Use camelCase for field names and PascalCase for type names."
+  )
+
 enabledAPIsEnv :: (String, String)
 enabledAPIsEnv =
   ( "HASURA_GRAPHQL_ENABLED_APIS",
@@ -701,10 +713,11 @@ enabledAPIsEnv =
 experimentalFeaturesEnv :: (String, String)
 experimentalFeaturesEnv =
   ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
-    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters). "
+    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters and naming_conventions). "
       <> "optimize_permission_filters: Use experimental SQL optimization"
       <> "transformations for permission filters. "
       <> "inherited_roles: ignored; inherited roles cannot be switched off"
+      <> "naming_conventions: apply naming convention (graphql-default/hasura-default) based on source customization"
   )
 
 gracefulShutdownEnv :: (String, String)
@@ -1113,6 +1126,15 @@ parseDangerousBooleanCollapse =
           <> help (snd dangerousBooleanCollapseEnv)
       )
 
+parseDefaultNamingConvention :: Parser (Maybe NamingCase)
+parseDefaultNamingConvention =
+  optional $
+    option
+      (eitherReader readDefaultNamingCase)
+      ( long "experimental-features"
+          <> help (snd defaultNamingConvention)
+      )
+
 parseEnabledAPIs :: Parser (Maybe [API])
 parseEnabledAPIs =
   optional $
@@ -1497,6 +1519,7 @@ serveOptionsParser =
     <*> parseGracefulShutdownTimeout
     <*> parseWebSocketConnectionInitTimeout
     <*> parseEnableMetadataQueryLogging
+    <*> parseDefaultNamingConvention
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.

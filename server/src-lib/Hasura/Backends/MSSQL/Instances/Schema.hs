@@ -10,6 +10,7 @@ module Hasura.Backends.MSSQL.Instances.Schema () where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Schema.IfMatched
@@ -39,6 +40,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -88,7 +90,7 @@ msBuildTableRelayQueryFields ::
   SourceName ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'MSSQL) ->
   m [a]
 msBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
@@ -112,7 +114,7 @@ msBuildTableUpdateMutationFields ::
   SourceName ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
-  G.Name ->
+  C.GQLNameIdentifier ->
   m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName = do
   fieldParsers <- runMaybeT do
@@ -297,11 +299,13 @@ msScalarSelectionArgumentsParser ::
 msScalarSelectionArgumentsParser _columnType = pure Nothing
 
 msOrderByOperators ::
+  NamingCase ->
   NonEmpty
     ( Definition P.EnumValueInfo,
       (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)
     )
-msOrderByOperators =
+msOrderByOperators _tCase =
+  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
   NE.fromList
     [ ( define G._asc "in ascending order, nulls first",
         (MSSQL.AscOrder, MSSQL.NullsFirst)
@@ -332,7 +336,8 @@ msComparisonExps ::
     MonadError QErr m,
     MonadReader r m,
     Has QueryContext r,
-    Has MkTypename r
+    Has MkTypename r,
+    Has NamingCase r
   ) =>
   ColumnType 'MSSQL ->
   m (Parser 'Input n [ComparisonExp 'MSSQL])
@@ -355,6 +360,9 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
 
+  -- Naming convention
+  tCase <- asks getter
+
   pure $
     P.object name (Just desc) $
       fmap catMaybes $
@@ -362,10 +370,12 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
           concat
             [ -- Common ops for all types
               equalityOperators
+                tCase
                 collapseIfNull
                 (mkParameter <$> typedParser)
                 (mkListLiteral <$> columnListParser),
               comparisonOperators
+                tCase
                 collapseIfNull
                 (mkParameter <$> typedParser),
               -- Ops for String like types

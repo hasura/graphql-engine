@@ -53,6 +53,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization (NamingCase, applyFieldNameCaseCust)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -408,10 +409,11 @@ buildTableCache ::
     SourceConfig b,
     DBTablesMetadata b,
     [TableBuildInput b],
-    Inc.Dependency Inc.InvalidationKey
+    Inc.Dependency Inc.InvalidationKey,
+    NamingCase
   )
     `arr` Map.HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey) -> do
+buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuildInputs, reloadMetadataInvalidationKey, tCase) -> do
   rawTableInfos <-
     (|
       Inc.keyed
@@ -430,7 +432,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
   tableInfos <-
     (|
       Inc.keyed
-        (| withTable (\table -> processTableInfo -< (enumTables, table)) |)
+        (| withTable (\table -> processTableInfo -< (enumTables, table, tCase)) |)
       |) (withSourceInKey source rawTableCache)
   returnA -< removeSourceInKey (Map.catMaybes tableInfos)
   where
@@ -517,17 +519,18 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         QErr
         arr
         ( Map.HashMap (TableName b) (PrimaryKey b (Column b), TableConfig b, EnumValues),
-          TableCoreInfoG b (RawColumnInfo b) (Column b)
+          TableCoreInfoG b (RawColumnInfo b) (Column b),
+          NamingCase
         )
         (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
-    processTableInfo = proc (enumTables, rawInfo) ->
+    processTableInfo = proc (enumTables, rawInfo, tCase) ->
       liftEitherA
         -< do
           let columns = _tciFieldInfoMap rawInfo
               enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
           columnInfoMap <-
             collectColumnConfiguration columns (_tciCustomConfig rawInfo)
-              >>= traverse (processColumnInfo enumReferences (_tciName rawInfo))
+              >>= traverse (processColumnInfo tCase enumReferences (_tciName rawInfo))
           assertNoDuplicateFieldNames (Map.elems columnInfoMap)
 
           primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
@@ -582,16 +585,17 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
 
     processColumnInfo ::
       (QErrM n) =>
+      NamingCase ->
       Map.HashMap (Column b) (NonEmpty (EnumReference b)) ->
       TableName b ->
       (RawColumnInfo b, G.Name, Maybe G.Description) ->
       n (ColumnInfo b)
-    processColumnInfo tableEnumReferences tableName (rawInfo, name, description) = do
+    processColumnInfo tCase tableEnumReferences tableName (rawInfo, name, description) = do
       resolvedType <- resolveColumnType
       pure
         ColumnInfo
           { ciColumn = pgCol,
-            ciName = name,
+            ciName = (applyFieldNameCaseCust tCase name),
             ciPosition = rciPosition rawInfo,
             ciType = resolvedType,
             ciIsNullable = rciIsNullable rawInfo,

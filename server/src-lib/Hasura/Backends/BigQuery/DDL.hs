@@ -22,6 +22,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
@@ -48,8 +49,9 @@ buildFunctionInfo ::
   FunctionPermissionsMap ->
   RawFunctionInfo 'BigQuery ->
   Maybe Text ->
+  NamingCase ->
   m (FunctionInfo 'BigQuery, SchemaDependency)
-buildFunctionInfo _ _ _ _ _ _ _ =
+buildFunctionInfo _ _ _ _ _ _ _ _ =
   throw400 NotSupported "SQL Functions are not supported for BigQuery source"
 
 updateColumnInEventTrigger ::

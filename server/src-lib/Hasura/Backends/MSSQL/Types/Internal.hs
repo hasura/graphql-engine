@@ -88,6 +88,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     emptySelect,
     geoTypes,
     getGQLTableName,
+    getTableIdentifier,
     isComparableType,
     isNumType,
     mkMSSQLScalarTypeName,
@@ -95,14 +96,18 @@ module Hasura.Backends.MSSQL.Types.Internal
     scalarTypeDBName,
     snakeCaseTableName,
     stringTypes,
+    namingConventionSupport,
   )
 where
 
 import Data.Aeson qualified as J
+import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing qualified as C
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
+import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.Backend
 import Hasura.SQL.GeoJSON qualified as Geo
@@ -668,6 +673,14 @@ snakeCaseTableName (TableName tableName (SchemaName tableSchema)) =
   if tableSchema == "dbo"
     then tableName
     else tableSchema <> "_" <> tableName
+
+getTableIdentifier :: TableName -> Either QErr GQLNameIdentifier
+getTableIdentifier tName = do
+  gqlTableName <- getGQLTableName tName
+  pure $ C.Identifier gqlTableName []
+
+namingConventionSupport :: SupportedNamingCase
+namingConventionSupport = OnlyHasuraCase
 
 stringTypes :: [ScalarType]
 stringTypes =

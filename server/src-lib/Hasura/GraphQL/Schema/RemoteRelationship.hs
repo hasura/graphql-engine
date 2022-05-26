@@ -30,7 +30,7 @@ import Hasura.RQL.Types.Relationships.ToSchema qualified as Remote
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
-import Hasura.RQL.Types.SourceCustomization (mkCustomizedTypename)
+import Hasura.RQL.Types.SourceCustomization (NamingCase (..), mkCustomizedTypename)
 import Hasura.SQL.AnyBackend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -176,7 +176,7 @@ remoteRelationshipToSourceField ::
   RemoteSourceFieldInfo tgt ->
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
 remoteRelationshipToSourceField RemoteSourceFieldInfo {..} =
-  withTypenameCustomization (mkCustomizedTypename $ Just _rsfiSourceCustomization) do
+  withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
     tableInfo <- askTableInfo @tgt _rsfiSource _rsfiTable
     fieldName <- textToName $ relNameToTxt _rsfiName
     maybePerms <- tableSelectPermissions @tgt tableInfo

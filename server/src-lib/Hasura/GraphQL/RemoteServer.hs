@@ -118,6 +118,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         mempty :: RemoteSchemaMap,
         mempty :: MkTypename,
         mempty :: MkRootFieldName,
+        HasuraCase :: NamingCase,
         QueryContext
           { -- doesn't apply to remote schemas
             qcStringifyNum = LeaveNumbersAlone,

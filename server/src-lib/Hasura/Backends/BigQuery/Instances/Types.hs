@@ -3,6 +3,8 @@
 module Hasura.Backends.BigQuery.Instances.Types () where
 
 import Data.Aeson
+import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing qualified as C
 import Hasura.Backends.BigQuery.Meta qualified as BigQuery
 import Hasura.Backends.BigQuery.Source qualified as BigQuery
 import Hasura.Backends.BigQuery.ToQuery ()
@@ -82,6 +84,14 @@ instance Backend 'BigQuery where
   snakeCaseTableName :: TableName 'BigQuery -> Text
   snakeCaseTableName BigQuery.TableName {tableName, tableNameSchema} =
     tableNameSchema <> "_" <> tableName
+
+  getTableIdentifier :: TableName 'BigQuery -> Either QErr GQLNameIdentifier
+  getTableIdentifier tName = do
+    gqlTableName <- BigQuery.getGQLTableName tName
+    pure $ C.Identifier gqlTableName []
+
+  namingConventionSupport :: SupportedNamingCase
+  namingConventionSupport = OnlyHasuraCase
 
   computedFieldFunction :: ComputedFieldDefinition 'BigQuery -> FunctionName 'BigQuery
   computedFieldFunction = BigQuery._bqcfdFunction
