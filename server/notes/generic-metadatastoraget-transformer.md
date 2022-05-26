@@ -1,6 +1,6 @@
 This note is in [Hasura.Metadata.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Metadata/Class.hs#L335).
 It is referenced at:
-  - line 1142 of [Hasura.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/App.hs#L1142)
+  - line 1144 of [Hasura.App](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/App.hs#L1144)
   - line 381 of [Hasura.Metadata.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Metadata/Class.hs#L381)
 
 # Generic MetadataStorageT transformer
