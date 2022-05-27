@@ -108,6 +108,7 @@ module Hasura.RQL.Types.SchemaCache
     mkComputedFieldDep,
     getDependentObjs,
     getDependentObjsWith,
+    getRemoteDependencies,
     FunctionVolatility (..),
     FunctionArgName (..),
     FunctionInfo (..),
@@ -683,6 +684,38 @@ getDependentObjsWith f sc objId =
     go (SOITable tn1) (SOITable tn2) = Just $ tn1 == tn2
     go (SOITable tn1) (SOITableObj tn2 _) = Just $ tn1 == tn2
     go _ _ = Nothing
+
+-- | Compute all remote dependencies on a source.
+--
+-- Given a source name, this function computes all of its dependencies, direct
+-- or indirect, and returns all of the dependencies that are not "local" to the
+-- source, i.e. that belong to another source or to a remote schema, here dubbed
+-- "remote dependencies".
+--
+-- This functions returns a 'SchemaObjId' for each such dependency, but makes no
+-- attempt at extracting the underlying `SourceObjId` (if any), for two reasons:
+--   1. a `SourceObjId` no longer contains the source name, which most callers
+--      need to identify where the corresponding dependency is
+--   2. this would prevent us from returning remote schema dependencies, which
+--      by definition do not have a corresponding `SourceObjId`
+getRemoteDependencies ::
+  SchemaCache ->
+  SourceName ->
+  [SchemaObjId]
+getRemoteDependencies schemaCache sourceName =
+  filter isRemoteDep $ getDependentObjs schemaCache (SOSource sourceName)
+  where
+    isRemoteDep = \case
+      SOSourceObj sn _
+        -- only true if the dependency is in another source
+        | sn /= sourceName -> True
+        | otherwise -> False
+      SORemoteSchemaRemoteRelationship {} -> True
+      -- those relationshipss either do not exist or do not qualify as remote
+      SOSource {} -> False
+      SORemoteSchema {} -> False
+      SORemoteSchemaPermission {} -> False
+      SORole {} -> False
 
 -- | The table type context of schema dependency discovery. Boolean expressions
 -- may refer to a so-called 'root table' (identified by a '$'-sign in the
