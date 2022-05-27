@@ -195,7 +195,7 @@ dropSource ::
 dropSource _schemaCache (DropSource sourceName cascade) sourceInfo = do
   indirectDeps <- getIndirectDependencies sourceName
 
-  when (not cascade && indirectDeps /= []) $
+  when (not cascade && not (null indirectDeps)) $
     reportDependentObjectsExist indirectDeps
 
   metadataModifier <- execWriterT $ do

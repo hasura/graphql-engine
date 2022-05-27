@@ -89,6 +89,8 @@
     imports:
     - package base
     rules:
+    - warn: {lhs: "a == []", rhs: "null a"}
+    - warn: {lhs: "a /= []", rhs: "not (null a)"}
     - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
     - warn: {lhs: "maybe b pure a", rhs: "onNothing a b"}
     - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}

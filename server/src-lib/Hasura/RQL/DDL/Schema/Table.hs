@@ -357,7 +357,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
       indirectDeps = mapMaybe getIndirectDep allDeps
 
   -- Report bach with an error if cascade is not set
-  when (indirectDeps /= [] && not cascade) $
+  when (not (null indirectDeps) && not cascade) $
     reportDependentObjectsExist indirectDeps
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
