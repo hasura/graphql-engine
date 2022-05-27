@@ -197,12 +197,10 @@ checkConflictingNode sc tnGQL = do
           case names of
             Nothing -> pure ()
             Just ns ->
-              if tnGQL `elem` ns
-                then
-                  throw400 RemoteSchemaConflicts $
-                    "node " <> tnGQL
-                      <> " already exists in current graphql schema"
-                else pure ()
+              when (tnGQL `elem` ns) $
+                throw400 RemoteSchemaConflicts $
+                  "node " <> tnGQL
+                    <> " already exists in current graphql schema"
         _ -> pure ()
 
 trackExistingTableOrViewP2 ::

@@ -105,7 +105,7 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
             AB.mkAnyBackend $
               SOITableObj @b table $
                 TOComputedField computedField
-  when (not cascade && not (null deps)) $ reportDependentObjectsExist deps
+  unless (cascade || null deps) $ reportDependentObjectsExist deps
 
   withNewInconsistentObjsCheck do
     metadataModifiers <- mapM purgeComputedFieldDependency deps

@@ -113,6 +113,14 @@
     - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
     - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
+    - warn: {lhs: "if x then pure (); else y", rhs: "unless x y"}
+    - warn: {lhs: "if x then return (); else y", rhs: "unless x y"}
+    - warn: {lhs: "if x then y; else pure ()", rhs: "when x y"}
+    - warn: {lhs: "if x then y; else return ()", rhs: "when x y"}
+    - warn: {lhs: "unless (not x)", rhs: "when x"}
+    - warn: {lhs: "when (not x)", rhs: "unless x"}
+    - suggest: {lhs: "not x && not y", rhs: "not (x || y)"}
+    - suggest: {lhs: "not x || not y", rhs: "not (x && y)"}
     - warn: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
     - warn: {lhs: "map f xs == map f ys",   rhs: "liftEq ((==) `on` f)", note: "This is liable to be faster"}
     - suggest: {lhs: "fmap f xs == fmap f ys", rhs: "liftEq ((==) `on` f)", note: "This is liable to be faster"}

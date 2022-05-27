@@ -102,7 +102,7 @@ withSchemaCacheUpdate (SchemaCacheRef lock cacheRef metadataVersionGauge) logger
             then do
               STM.atomically $ STM.writeTVar logCheckerTVar False
             else do
-              when (not logCheck && not (null inconsistentObjectsList)) $ do
+              unless (logCheck || null inconsistentObjectsList) $ do
                 STM.atomically $ STM.writeTVar logCheckerTVar True
                 logInconsistentMetadata'
 

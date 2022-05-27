@@ -218,12 +218,10 @@ prepareValueSubscription globalVariables =
       modify' (\s -> s {sessionVariables = sessionVariables s <> globalVariables})
       pure $ resultVarExp (RootPath `FieldPath` "session")
     GraphQL.UVSessionVar _typ text -> do
-      if Set.member text globalVariables
-        then pure ()
-        else
-          throw400
-            NotFound
-            ("missing session variable: " <>> sessionVariableToText text)
+      unless (text `Set.member` globalVariables) $
+        throw400
+          NotFound
+          ("missing session variable: " <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
     GraphQL.UVParameter mVariableInfo columnValue ->

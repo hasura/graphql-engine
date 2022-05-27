@@ -396,15 +396,13 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
       allNewOpsL <- TMap.toList newOpsTV
       let snapshottedNewSubsSet = Set.fromList $ _sId <$> snapshottedNewSubs
       forM_ allNewOpsL $ \(subId, subscriber) ->
-        if subId `elem` snapshottedNewSubsSet
-          then -- we only add the snapshotted new subscribers to the current subscribers
+        when (subId `elem` snapshottedNewSubsSet) do
+          -- we only add the snapshotted new subscribers to the current subscribers
           -- because they have been sent the first message of the subscription. The
           -- new subscribers apart from the snapshotted new subscribers are yet to
           -- recieve their first message so we just keep them as new subscribers
-          do
-            TMap.insert subscriber subId curOpsTV
-            TMap.delete subId newOpsTV
-          else pure ()
+          TMap.insert subscriber subId curOpsTV
+          TMap.delete subId newOpsTV
 
     getCohortSnapshot (cohortVars, cohort) = do
       let C.Cohort resId respRef curOpsTV newOpsTV _ = cohort
