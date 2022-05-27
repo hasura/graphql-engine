@@ -18,9 +18,10 @@
       .then(function (res) { return res.json() })
       .then(function (branches) {
         var list = document.getElementById('haddocks')
-
         branches.forEach(function (branch) {
-          list.innerHTML += '<li><a href="/' + branch.path + '">' + branch.name + '</a></li>'
+          if (branch.name != "index.html") {
+            list.innerHTML += '<li><a href="' + branch.name + '">' + branch.name + '</a></li>'
+          }
         })
       })
     </script>
