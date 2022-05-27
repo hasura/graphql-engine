@@ -60,15 +60,15 @@ instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
     "inherited_roles" -> pure EFInheritedRoles
     "optimize_permission_filters" -> pure EFOptimizePermissionFilters
-    "naming_conventions" -> pure EFNamingConventions
+    "naming_convention" -> pure EFNamingConventions
     "streaming_subscriptions" -> pure EFStreamingSubscriptions
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_conventions or streaming_subscriptions"
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_convention or streaming_subscriptions"
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
     EFInheritedRoles -> "inherited_roles"
     EFOptimizePermissionFilters -> "optimize_permission_filters"
-    EFNamingConventions -> "naming_conventions"
+    EFNamingConventions -> "naming_convention"
     EFStreamingSubscriptions -> "streaming_subscriptions"
 
 data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled

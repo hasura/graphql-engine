@@ -21,7 +21,7 @@
         root_fields:
           prefix: test
           suffix: Query
-        naming_conventions: graphql-default
+        naming_convention: graphql-default
 
 - description: create table 1
   url: /v1/query
@@ -224,7 +224,7 @@
         root_fields:
           prefix: test_
           suffix: _query
-        naming_conventions: hasura-default
+        naming_convention: hasura-default
 
 - description: track table
   url: /v1/metadata

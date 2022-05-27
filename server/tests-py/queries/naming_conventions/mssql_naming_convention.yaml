@@ -17,4 +17,4 @@
             max_connections: 50
             idle_timeout: 180
       customization:
-        naming_conventions: graphql-default
+        naming_convention: graphql-default

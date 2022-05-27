@@ -16,7 +16,7 @@
             idle_timeout: 180
             retries:
       customization:
-        naming_conventions: graphql-default
+        naming_convention: graphql-default
 
 - description: create enum table
   url: /v1/query

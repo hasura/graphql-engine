@@ -2,11 +2,48 @@
 
 ## Next release
 
+### Naming conventions in HGE
+Now, users can specify the naming convention of the auto-generated names in the HGE.
+This is an experimental feature and is postgres only for now. There are two naming
+conventions possible as of now:
+| Naming Convention | Field names | Type names  | Arguments  | Enum values |
+|-------------------|-------------|-------------|------------|-------------|
+| `hasura-default`  | Snake case  | Snake case  | Snake case | as defined  |
+| `graphql-default` | Camel case  | Pascal case | Camel case | Uppercased  |
+
+To configure the naming convention for a source, set the naming convention in source-
+customisation while adding the source:
+```JSON
+{
+  "resource_version": 2,
+  "metadata": {
+    "version": 1,
+    "sources": [
+      {
+        "name": "default",
+        "kind": "postgres",
+        "tables": [],
+        "configuration": {},
+        "customization": {
+          "naming_convention": "graphql-default"
+        }
+      }
+    ]
+  }
+}
+```
+To set the default naming convention (this will be used across the sources in HGE),
+use the environment variable `HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION`. Please note
+that the global default can be overridden by the source customisation mentioned above.
+
+Note: The naming convention won't be applied to the custom field names and custom
+table names (i.e. if the custom table name is `my_table` and `naming_convention`
+is `graphql-default`, the field names generated will be `my_table`, `my_tableByPk`,
+`my_tableAggregate` and so on).
+
 ### Bug fixes and improvements
 
 - server: do not serialize env vars in logs or errors for remote schemas
-- server: add support for naming conventions for auto generated names (postgres only)
-- server: add support for configurable naming conventions for auto generated names (postgres only)
 - server: fix failure when executing consecutive delete mutations on mssql (#8462)
 
 ## v2.7.0

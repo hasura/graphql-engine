@@ -713,11 +713,11 @@ enabledAPIsEnv =
 experimentalFeaturesEnv :: (String, String)
 experimentalFeaturesEnv =
   ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
-    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters and naming_conventions). "
+    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters and naming_convention). "
       <> "optimize_permission_filters: Use experimental SQL optimization"
       <> "transformations for permission filters. "
       <> "inherited_roles: ignored; inherited roles cannot be switched off"
-      <> "naming_conventions: apply naming convention (graphql-default/hasura-default) based on source customization"
+      <> "naming_convention: apply naming convention (graphql-default/hasura-default) based on source customization"
   )
 
 gracefulShutdownEnv :: (String, String)

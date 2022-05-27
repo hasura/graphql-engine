@@ -292,7 +292,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         sourceCustomization =
           if EFNamingConventions `elem` expFeatures
             then sourceCustomization'
-            else sourceCustomization' {_scNamingConventions = Nothing}
+            else sourceCustomization' {_scNamingConvention = Nothing}
 
 buildRelayRoleContext ::
   forall m.
@@ -404,7 +404,7 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
         sourceCustomization =
           if EFNamingConventions `elem` expFeatures
             then sourceCustomization'
-            else sourceCustomization' {_scNamingConventions = Nothing}
+            else sourceCustomization' {_scNamingConvention = Nothing}
 
 -- | Builds the schema context for unauthenticated users.
 --
