@@ -28,11 +28,11 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (NamingCase, applyFieldNameCaseIdentifier)
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -48,10 +48,10 @@ import Language.GraphQL.Draft.Syntax qualified as G
 boolExp ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceName ->
+  SourceInfo b ->
   TableInfo b ->
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
-boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
+boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
   name <- P.mkTypename $ tableGQLName <> G.__bool_exp
   let description =
@@ -59,9 +59,9 @@ boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
           "Boolean expression to filter rows from the table " <> tableName
             <<> ". All fields are combined with a logical 'AND'."
 
-  fieldInfos <- tableSelectFields sourceName tableInfo
+  fieldInfos <- tableSelectFields sourceInfo tableInfo
   tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos
-  recur <- boolExp sourceName tableInfo
+  recur <- boolExp sourceInfo tableInfo
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
   let specialFieldParsers =
@@ -89,12 +89,12 @@ boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
           lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b (ciType columnInfo)
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
-          remoteTableInfo <- askTableInfo sourceName $ riRTable relationshipInfo
+          remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
           remotePermissions <- lift $ tableSelectPermissions remoteTableInfo
           let remoteTableFilter =
                 fmap partialSQLExpToUnpreparedValue
                   <$> maybe annBoolExpTrue spiFilter remotePermissions
-          remoteBoolExp <- lift $ boolExp sourceName remoteTableInfo
+          remoteBoolExp <- lift $ boolExp sourceInfo remoteTableInfo
           pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do
           let ComputedFieldFunction {..} = _cfiFunction
@@ -109,8 +109,8 @@ boolExp sourceName tableInfo = memoizeOn 'boolExp (sourceName, tableName) $ do
                 <$> case computedFieldReturnType @b _cfiReturnType of
                   ReturnsScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b (ColumnScalar scalarType)
                   ReturnsTable table -> do
-                    info <- askTableInfo @b sourceName table
-                    lift $ fmap (CFBETable table) <$> boolExp sourceName info
+                    info <- askTableInfo sourceInfo table
+                    lift $ fmap (CFBETable table) <$> boolExp sourceInfo info
                   ReturnsOthers -> hoistMaybe Nothing
             _ -> hoistMaybe Nothing
 

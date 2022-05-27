@@ -29,7 +29,6 @@ import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
-import Hasura.GraphQL.Schema.Select
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
@@ -185,7 +184,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       let selectionSet = customScalarParser ast
       pure $ P.selection fieldName description actionIdInputField selectionSet <&> (,[])
 
-  stringifyNum <- asks $ qcStringifyNum . getter
+  stringifyNum <- retrieve soStringifyNum
   pure $
     parserOutput
       <&> \(idArg, fields) ->
@@ -261,7 +260,8 @@ actionOutputFields outputType annotatedObject objectTypes = do
       TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla)) ->
       m (Maybe [FieldParser n (AnnotatedActionField)])
     relationshipFieldParser (TypeRelationship relationshipName relType sourceName tableInfo fieldMapping) = runMaybeT do
-      sourceInfo <- MaybeT $ asks $ (unsafeSourceInfo @('Postgres 'Vanilla) <=< Map.lookup sourceName) . getter
+      sourceCache <- lift $ retrieve scSourceCache
+      sourceInfo <- hoistMaybe $ unsafeSourceInfo @('Postgres 'Vanilla) =<< Map.lookup sourceName sourceCache
       relName <- hoistMaybe $ RelName <$> mkNonEmptyText (toTxt relationshipName)
 
       --  `lhsJoinFields` is a map of `x: y`
@@ -295,6 +295,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
                           _rsfiMapping = joinMapping
                         }
               }
+      RemoteRelationshipParserBuilder remoteRelationshipField <- retrieve scRemoteRelationshipParserBuilder
       remoteRelationshipFieldParsers <- MaybeT $ remoteRelationshipField remoteFieldInfo
       pure $ remoteRelationshipFieldParsers <&> fmap (IR.ACFRemote . IR.ActionRemoteRelationshipSelect lhsJoinFields)
 

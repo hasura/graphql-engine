@@ -17,7 +17,7 @@ import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
-import Hasura.GraphQL.Parser.Monad
+import Hasura.GraphQL.Parser.Monad (runSchemaT)
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.Schema.Common
@@ -28,7 +28,6 @@ import Hasura.RQL.IR.Root
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.Session
 import Language.GraphQL.Draft.Parser qualified as G
@@ -117,19 +116,20 @@ buildQueryParsers introspection = do
       -- schema. Here, since there are no relationships to a source in this
       -- test, we are free to give 'undefined' for such fields, as they won't be
       -- evaluated.
-      sourceContext =
+      schemaInfo =
         ( adminRoleName :: RoleName,
-          undefined :: SourceCache,
-          undefined :: QueryContext,
           mempty :: CustomizeRemoteFieldName,
-          mempty :: RemoteSchemaMap,
           mempty :: MkTypename,
           mempty :: MkRootFieldName,
-          HasuraCase :: NamingCase
+          HasuraCase :: NamingCase,
+          undefined :: SchemaOptions,
+          SchemaContext
+            mempty
+            ignoreRemoteRelationship
         )
   RemoteSchemaParser query _ _ <-
     runError $
-      flip runReaderT sourceContext $
+      flip runReaderT schemaInfo $
         runSchemaT $
           buildRemoteParser introResult remoteSchemaRels remoteSchemaInfo
   pure $

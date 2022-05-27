@@ -18,13 +18,11 @@ import Hasura.Base.Error (Code, QErr)
 import Hasura.GraphQL.Execute.Types (GraphQLQueryType (..))
 import Hasura.GraphQL.Parser.Class (MonadParse (..), MonadSchema (..))
 import Hasura.GraphQL.Parser.Schema (MkTypename (..))
-import Hasura.GraphQL.Schema.Common (QueryContext (..))
+import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaOptions (..), ignoreRemoteRelationship)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (StringifyNumbers (LeaveNumbersAlone))
 import Hasura.RQL.Types.Function (FunctionPermissionsCtx (..))
 import Hasura.RQL.Types.RemoteSchema (RemoteSchemaPermsCtx (..))
-import Hasura.RQL.Types.SchemaCache (RemoteSchemaMap)
-import Hasura.RQL.Types.Source (SourceCache)
 import Hasura.RQL.Types.SourceCustomization (CustomizeRemoteFieldName, MkRootFieldName, NamingCase (..))
 import Hasura.Session (RoleName, adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
@@ -52,20 +50,6 @@ instance Has NamingCase SchemaEnvironment where
   modifier :: (NamingCase -> NamingCase) -> SchemaEnvironment -> SchemaEnvironment
   modifier = notImplemented "modifier<Has NamingCase SchemaEnvironment>"
 
-instance Has SourceCache SchemaEnvironment where
-  getter :: SchemaEnvironment -> SourceCache
-  getter = notImplemented "getter<Has SourceCache SchemaEnvironment>"
-
-  modifier :: (SourceCache -> SourceCache) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has SourceCache SchemaEnvironment>"
-
-instance Has RemoteSchemaMap SchemaEnvironment where
-  getter :: SchemaEnvironment -> RemoteSchemaMap
-  getter = notImplemented "getter<Has RemoteSchemaMap SchemaEnvironment>"
-
-  modifier :: (RemoteSchemaMap -> RemoteSchemaMap) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has RemoteSchemaMap SchemaEnvironment>"
-
 instance Has RoleName SchemaEnvironment where
   getter :: SchemaEnvironment -> RoleName
   getter = const adminRoleName
@@ -73,23 +57,33 @@ instance Has RoleName SchemaEnvironment where
   modifier :: (RoleName -> RoleName) -> SchemaEnvironment -> SchemaEnvironment
   modifier = notImplemented "modifier<Has RoleName SchemaEnvironment>"
 
-queryContext :: QueryContext
-queryContext =
-  QueryContext
-    { qcStringifyNum = LeaveNumbersAlone,
-      qcDangerousBooleanCollapse = False,
-      qcQueryType = QueryHasura,
-      qcFunctionPermsContext = FunctionPermissionsInferred,
-      qcRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
-      qcOptimizePermissionFilters = False
-    }
+instance Has SchemaOptions SchemaEnvironment where
+  getter :: SchemaEnvironment -> SchemaOptions
+  getter =
+    const
+      SchemaOptions
+        { soStringifyNum = LeaveNumbersAlone,
+          soDangerousBooleanCollapse = False,
+          soQueryType = QueryHasura,
+          soFunctionPermsContext = FunctionPermissionsInferred,
+          soRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
+          soOptimizePermissionFilters = False
+        }
 
-instance Has QueryContext SchemaEnvironment where
-  getter :: SchemaEnvironment -> QueryContext
-  getter = const queryContext
+  modifier :: (SchemaOptions -> SchemaOptions) -> SchemaEnvironment -> SchemaEnvironment
+  modifier = notImplemented "modifier<Has SchemaOptions SchemaEnvironment>"
 
-  modifier :: (QueryContext -> QueryContext) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has QueryContext SchemaEnvironment>"
+instance Has SchemaContext SchemaEnvironment where
+  getter :: SchemaEnvironment -> SchemaContext
+  getter =
+    const
+      SchemaContext
+        { scSourceCache = notImplemented "scSourceCache",
+          scRemoteRelationshipParserBuilder = ignoreRemoteRelationship
+        }
+
+  modifier :: (SchemaContext -> SchemaContext) -> SchemaEnvironment -> SchemaEnvironment
+  modifier = notImplemented "modifier<Has SchemaContext SchemaEnvironment>"
 
 instance Has MkTypename SchemaEnvironment where
   getter :: SchemaEnvironment -> MkTypename

@@ -33,6 +33,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source (SourceInfo)
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
@@ -76,7 +77,7 @@ instance BackendSchema 'BigQuery where
 
 bqBuildTableRelayQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
+  SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
@@ -88,7 +89,7 @@ bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyCol
 bqBuildTableInsertMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
   Scenario ->
-  SourceName ->
+  SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
@@ -98,7 +99,7 @@ bqBuildTableInsertMutationFields _scenario _sourceName _tableName _tableInfo _gq
 
 bqBuildTableUpdateMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
+  SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
@@ -108,7 +109,7 @@ bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName =
 
 bqBuildTableDeleteMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
+  SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
@@ -118,7 +119,7 @@ bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName =
 
 bqBuildFunctionQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
+  SourceInfo 'BigQuery ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
@@ -128,7 +129,7 @@ bqBuildFunctionQueryFields _ _ _ _ =
 
 bqBuildFunctionRelayQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
+  SourceInfo 'BigQuery ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
@@ -139,7 +140,7 @@ bqBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableNa
 
 bqBuildFunctionMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
+  SourceInfo 'BigQuery ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
@@ -248,11 +249,11 @@ bqOrderByOperators _tCase =
 
 bqComparisonExps ::
   forall m n r.
-  (BackendSchema 'BigQuery, MonadSchema n m, MonadError QErr m, MonadReader r m, Has QueryContext r, Has MkTypename r, Has NamingCase r) =>
+  (MonadBuildSchema 'BigQuery r m n) =>
   ColumnType 'BigQuery ->
   m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
-  collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
+  collapseIfNull <- retrieve soDangerousBooleanCollapse
   dWithinGeogOpParser <- geographyWithinDistanceInput
   tCase <- asks getter
   -- see Note [Columns in comparison expression are never nullable]
@@ -395,13 +396,13 @@ geographyWithinDistanceInput = do
 bqComputedField ::
   forall r m n.
   MonadBuildSchema 'BigQuery r m n =>
-  SourceName ->
+  SourceInfo 'BigQuery ->
   ComputedFieldInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
 bqComputedField sourceName ComputedFieldInfo {..} tableName _tableInfo = runMaybeT do
-  stringifyNum <- asks $ qcStringifyNum . getter
+  stringifyNum <- retrieve soStringifyNum
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of

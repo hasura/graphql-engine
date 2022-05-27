@@ -31,8 +31,8 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
@@ -53,14 +53,14 @@ import Language.GraphQL.Draft.Syntax qualified as G
 onConflictFieldParser ::
   forall pgKind r m n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceName ->
+  SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
-onConflictFieldParser sourceName tableInfo = do
+onConflictFieldParser sourceInfo tableInfo = do
   tCase <- asks getter
   updatePerms <- _permUpd <$> tablePermissions tableInfo
   let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
-      maybeConflictObject = conflictObjectParser sourceName tableInfo <$> maybeConstraints <*> updatePerms
+      maybeConflictObject = conflictObjectParser sourceInfo tableInfo <$> maybeConstraints <*> updatePerms
   case maybeConflictObject of
     Just conflictObject -> conflictObject <&> P.fieldOptional (applyFieldNameCaseCust tCase G._on_conflict) (Just "upsert condition")
     Nothing -> return $ pure Nothing
@@ -69,15 +69,15 @@ onConflictFieldParser sourceName tableInfo = do
 conflictObjectParser ::
   forall pgKind r m n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceName ->
+  SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   NonEmpty (Constraint ('Postgres pgKind)) ->
   UpdPermInfo ('Postgres pgKind) ->
   m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-conflictObjectParser sourceName tableInfo constraints updatePerms = do
+conflictObjectParser sourceInfo tableInfo constraints updatePerms = do
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
-  constraintParser <- conflictConstraint constraints sourceName tableInfo
-  whereExpParser <- boolExp sourceName tableInfo
+  constraintParser <- conflictConstraint constraints sourceInfo tableInfo
+  whereExpParser <- boolExp sourceInfo tableInfo
   tableGQLName <- getTableGQLName tableInfo
   objectName <- P.mkTypename $ tableGQLName <> G.__on_conflict
 
@@ -116,11 +116,11 @@ conflictConstraint ::
   forall pgKind r m n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
   NonEmpty (Constraint ('Postgres pgKind)) ->
-  SourceName ->
+  SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   m (Parser 'Both n (ConstraintName ('Postgres pgKind)))
-conflictConstraint constraints sourceName tableInfo =
-  memoizeOn 'conflictConstraint (sourceName, tableName) $ do
+conflictConstraint constraints sourceInfo tableInfo =
+  memoizeOn 'conflictConstraint (_siName sourceInfo, tableName) $ do
     tableGQLName <- getTableGQLName tableInfo
     constraintEnumValues <- for constraints \constraint -> do
       name <- textToName $ toTxt $ _cName constraint

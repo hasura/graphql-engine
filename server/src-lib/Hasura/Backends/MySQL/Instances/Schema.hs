@@ -27,9 +27,9 @@ import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend as RQL
 import Hasura.RQL.Types.Column as RQL
-import Hasura.RQL.Types.Common as RQL
 import Hasura.RQL.Types.Function as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
+import Hasura.RQL.Types.Source as RQL
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -60,12 +60,12 @@ instance BackendSchema 'MySQL where
 mysqlTableArgs ::
   forall r m n.
   MonadBuildSchema 'MySQL r m n =>
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   TableInfo 'MySQL ->
   m (InputFieldsParser n (IR.SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
-mysqlTableArgs sourceName tableInfo = do
-  whereParser <- tableWhereArg sourceName tableInfo
-  orderByParser <- tableOrderByArg sourceName tableInfo
+mysqlTableArgs sourceInfo tableInfo = do
+  whereParser <- tableWhereArg sourceInfo tableInfo
+  orderByParser <- tableOrderByArg sourceInfo tableInfo
   pure do
     whereArg <- whereParser
     orderByArg <- orderByParser
@@ -82,49 +82,49 @@ mysqlTableArgs sourceName tableInfo = do
 
 buildTableRelayQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'MySQL) ->
   m [a]
-buildTableRelayQueryFields' _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
+buildTableRelayQueryFields' _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 buildTableInsertMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
   Scenario ->
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
   m [a]
-buildTableInsertMutationFields' _scenario _sourceName _tableName _tableInfo _gqlName =
+buildTableInsertMutationFields' _scenario _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
 buildTableUpdateMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
   m [a]
-buildTableUpdateMutationFields' _sourceName _tableName _tableInfo _gqlName =
+buildTableUpdateMutationFields' _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
 buildTableDeleteMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
   m [a]
-buildTableDeleteMutationFields' _sourceName _tableName _tableInfo _gqlName =
+buildTableDeleteMutationFields' _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
 buildFunctionQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
@@ -134,18 +134,18 @@ buildFunctionQueryFields' _ _ _ _ =
 
 buildFunctionRelayQueryFields' ::
   MonadBuildSchema 'MySQL r m n =>
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   NESeq (ColumnInfo 'MySQL) ->
   m [a]
-buildFunctionRelayQueryFields' _sourceName _functionName _functionInfo _tableName _pkeyColumns =
+buildFunctionRelayQueryFields' _sourceInfo _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
 buildFunctionMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
-  SourceName ->
+  RQL.SourceInfo 'MySQL ->
   FunctionName 'MySQL ->
   FunctionInfo 'MySQL ->
   RQL.TableName 'MySQL ->

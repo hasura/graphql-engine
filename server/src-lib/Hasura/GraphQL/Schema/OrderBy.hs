@@ -30,6 +30,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -57,17 +58,17 @@ orderByOperator tCase = case tCase of
 orderByExp ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceName ->
+  SourceInfo b ->
   TableInfo b ->
   m (Parser 'Input n [IR.AnnotatedOrderByItemG b (UnpreparedValue b)])
-orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoName tableInfo) $ do
+orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tableInfoName tableInfo) $ do
   tableGQLName <- getTableGQLName tableInfo
   tCase <- asks getter
   name <- P.mkTypename $ tableGQLName <> G.__order_by
   let description =
         G.Description $
           "Ordering options when selecting data from " <> tableInfoName tableInfo <<> "."
-  tableFields <- tableSelectFields sourceName tableInfo
+  tableFields <- tableSelectFields sourceInfo tableInfo
   fieldParsers <- sequenceA . catMaybes <$> traverse (mkField tCase) tableFields
   pure $ concat . catMaybes <$> P.object name (Just description) fieldParsers
   where
@@ -86,19 +87,19 @@ orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoNa
               (orderByOperator @b tCase)
               <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
-          remoteTableInfo <- askTableInfo @b sourceName $ riRTable relationshipInfo
+          remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
           fieldName <- hoistMaybe $ G.mkName $ relNameToTxt $ riName relationshipInfo
           perms <- MaybeT $ tableSelectPermissions remoteTableInfo
           let newPerms = fmap partialSQLExpToUnpreparedValue <$> spiFilter perms
           case riType relationshipInfo of
             ObjRel -> do
-              otherTableParser <- lift $ orderByExp sourceName remoteTableInfo
+              otherTableParser <- lift $ orderByExp sourceInfo remoteTableInfo
               pure $ do
                 otherTableOrderBy <- join <$> P.fieldOptional fieldName Nothing (P.nullable otherTableParser)
                 pure $ fmap (map $ fmap $ IR.AOCObjectRelation relationshipInfo newPerms) otherTableOrderBy
             ArrRel -> do
               let aggregateFieldName = fieldName <> G.__aggregate
-              aggregationParser <- lift $ orderByAggregation sourceName remoteTableInfo
+              aggregationParser <- lift $ orderByAggregation sourceInfo remoteTableInfo
               pure $ do
                 aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
                 pure $ fmap (map $ fmap $ IR.AOCArrayAggregation relationshipInfo newPerms) aggregationOrderBy
@@ -122,10 +123,10 @@ orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoNa
                   <&> fmap (pure . mkOrderByItemG @b (IR.AOCComputedField computedFieldOrderBy)) . join
             ReturnsTable table -> do
               let aggregateFieldName = fieldName <> G.__aggregate
-              tableInfo' <- askTableInfo @b sourceName table
+              tableInfo' <- askTableInfo sourceInfo table
               perms <- MaybeT $ tableSelectPermissions tableInfo'
               let newPerms = fmap partialSQLExpToUnpreparedValue <$> spiFilter perms
-              aggregationParser <- lift $ orderByAggregation sourceName tableInfo'
+              aggregationParser <- lift $ orderByAggregation sourceInfo tableInfo'
               pure $ do
                 aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
                 pure $
@@ -147,17 +148,17 @@ orderByExp sourceName tableInfo = memoizeOn 'orderByExp (sourceName, tableInfoNa
 orderByAggregation ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceName ->
+  SourceInfo b ->
   TableInfo b ->
   m (Parser 'Input n [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
-orderByAggregation sourceName tableInfo = memoizeOn 'orderByAggregation (sourceName, tableName) do
+orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName sourceInfo, tableName) do
   -- WIP NOTE
   -- there is heavy duplication between this and Select.tableAggregationFields
   -- it might be worth putting some of it in common, just to avoid issues when
   -- we change one but not the other?
   tableGQLName <- getTableGQLName @b tableInfo
   tCase <- asks getter
-  allColumns <- tableSelectColumns sourceName tableInfo
+  allColumns <- tableSelectColumns sourceInfo tableInfo
   mkTypename <- asks getter
   let numColumns = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
