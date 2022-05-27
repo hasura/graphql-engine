@@ -10498,13 +10498,13 @@ Applicative f =&gt;
 </span><a href="#local-6989586621689061627"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceCustomization"><span class="hs-identifier hs-type">SourceCustomization</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689061623"><span id="local-6989586621689061624"><span id="local-6989586621689061625"><span class="annot"><span class="annottext">Maybe NamingCase
 Maybe SourceTypeCustomization
 Maybe RootFieldsCustomization
-_scNamingConventions :: SourceCustomization -&gt; Maybe NamingCase
+_scNamingConvention :: SourceCustomization -&gt; Maybe NamingCase
 _scTypeNames :: SourceCustomization -&gt; Maybe SourceTypeCustomization
 _scRootFields :: SourceCustomization -&gt; Maybe RootFieldsCustomization
-_scNamingConventions :: Maybe NamingCase
+_scNamingConvention :: Maybe NamingCase
 _scTypeNames :: Maybe SourceTypeCustomization
 _scRootFields :: Maybe RootFieldsCustomization
-</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scNamingConventions"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MaybeT
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scNamingConvention"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MaybeT
   m
   (Parser
      'Output

@@ -385,7 +385,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature
 </span><a href="Hasura.Server.Types.html#EFOptimizePermissionFilters"><span class="hs-identifier hs-var">EFOptimizePermissionFilters</span></a></span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;naming_conventions&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature -&gt; Parser ExperimentalFeature
+</span><span class="hs-string">&quot;naming_convention&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature -&gt; Parser ExperimentalFeature
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ExperimentalFeature
 </span><a href="Hasura.Server.Types.html#EFNamingConventions"><span class="hs-identifier hs-var">EFNamingConventions</span></a></span><span>
@@ -398,7 +398,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ExperimentalFeature
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_conventions or streaming_subscriptions&quot;</span></span><span>
+</span><span class="hs-string">&quot;ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_convention or streaming_subscriptions&quot;</span></span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689000670"><span id="local-6989586621689000672"><span id="local-6989586621689000674"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ExperimentalFeature"><span class="hs-identifier hs-type">ExperimentalFeature</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-68"></span><span>  </span><span id="local-6989586621689000669"><span class="annot"><span class="annottext">toJSON :: ExperimentalFeature -&gt; Value
@@ -411,7 +411,7 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-string">&quot;optimize_permission_filters&quot;</span></span><span>
 </span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">ExperimentalFeature
 </span><a href="Hasura.Server.Types.html#EFNamingConventions"><span class="hs-identifier hs-var">EFNamingConventions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
-</span><span class="hs-string">&quot;naming_conventions&quot;</span></span><span>
+</span><span class="hs-string">&quot;naming_convention&quot;</span></span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">ExperimentalFeature
 </span><a href="Hasura.Server.Types.html#EFStreamingSubscriptions"><span class="hs-identifier hs-var">EFStreamingSubscriptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-string">&quot;streaming_subscriptions&quot;</span></span><span>

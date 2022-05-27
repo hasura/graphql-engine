@@ -14942,7 +14942,7 @@ data SourceCustomization
 SourceCustomization :: !Maybe RootFieldsCustomization -> !Maybe SourceTypeCustomization -> !Maybe NamingCase -> SourceCustomization
 [_scRootFields] :: SourceCustomization -> !Maybe RootFieldsCustomization
 [_scTypeNames] :: SourceCustomization -> !Maybe SourceTypeCustomization
-[_scNamingConventions] :: SourceCustomization -> !Maybe NamingCase
+[_scNamingConvention] :: SourceCustomization -> !Maybe NamingCase
 emptySourceCustomization :: SourceCustomization
 getRootFieldsCustomization :: SourceCustomization -> RootFieldsCustomization
 getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization

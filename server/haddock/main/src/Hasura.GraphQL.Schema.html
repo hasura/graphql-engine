@@ -2691,8 +2691,8 @@ forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span id="line-294"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">SourceCustomization
 </span><a href="#local-6989586621689077649"><span class="hs-identifier hs-var">sourceCustomization'</span></a></span><span>
 </span><span id="line-295"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">SourceCustomization
-</span><a href="#local-6989586621689077649"><span class="hs-identifier hs-var">sourceCustomization'</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_scNamingConventions :: Maybe NamingCase
-</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scNamingConventions"><span class="hs-identifier hs-var">_scNamingConventions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="#local-6989586621689077649"><span class="hs-identifier hs-var">sourceCustomization'</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_scNamingConvention :: Maybe NamingCase
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scNamingConvention"><span class="hs-identifier hs-var">_scNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">}</span><span>
 </span><span id="line-296"></span><span>
@@ -4131,8 +4131,8 @@ forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span id="line-406"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">SourceCustomization
 </span><a href="#local-6989586621689077586"><span class="hs-identifier hs-var">sourceCustomization'</span></a></span><span>
 </span><span id="line-407"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">SourceCustomization
-</span><a href="#local-6989586621689077586"><span class="hs-identifier hs-var">sourceCustomization'</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_scNamingConventions :: Maybe NamingCase
-</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scNamingConventions"><span class="hs-identifier hs-var">_scNamingConventions</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="#local-6989586621689077586"><span class="hs-identifier hs-var">sourceCustomization'</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_scNamingConvention :: Maybe NamingCase
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#_scNamingConvention"><span class="hs-identifier hs-var">_scNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">}</span><span>
 </span><span id="line-408"></span><span>
@@ -8961,10 +8961,10 @@ Maybe SourceTypeCustomization
 Maybe RootFieldsCustomization
 _scTypeNames :: SourceCustomization -&gt; Maybe SourceTypeCustomization
 _scRootFields :: SourceCustomization -&gt; Maybe RootFieldsCustomization
-_scNamingConventions :: Maybe NamingCase
+_scNamingConvention :: Maybe NamingCase
 _scTypeNames :: Maybe SourceTypeCustomization
 _scRootFields :: Maybe RootFieldsCustomization
-_scNamingConventions :: SourceCustomization -&gt; Maybe NamingCase
+_scNamingConvention :: SourceCustomization -&gt; Maybe NamingCase
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#_scTypeNames"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-775"></span><span>  </span><span class="annot"><span class="annottext">([FieldParser n (RootField db remote action Value)]
  -&gt; [FieldParser
