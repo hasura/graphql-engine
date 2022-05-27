@@ -25,7 +25,6 @@ import Hasura.RQL.DML.Types
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Metadata
-import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
@@ -77,7 +76,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SessionVariableBuilder m ->
   (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
   CountQuery ->
   m CountQueryP1

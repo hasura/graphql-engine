@@ -85,7 +85,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
     -- if column has predefined value then throw error
     when (pgCol `elem` preSetCols) $ throwNotUpdErr pgCol
-    checkPermOnCol @('Postgres 'Vanilla) PTUpdate allowedCols pgCol
+    checkPermOnCol PTUpdate allowedCols pgCol
     colType <- askColumnType fieldInfoMap pgCol relWhenPgErr
     res <- conv pgCol colType a
     -- build a set expression's entry
@@ -102,7 +102,7 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 
 validateUpdateQueryWith ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   UpdateQuery ->
   m (AnnotatedUpdate ('Postgres 'Vanilla))

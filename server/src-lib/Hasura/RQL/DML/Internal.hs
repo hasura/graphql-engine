@@ -34,6 +34,7 @@ import Data.Sequence qualified as DS
 import Data.Text qualified as T
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Hasura.Backends.Postgres.Instances.Metadata ()
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.SQL.Value
@@ -48,8 +49,6 @@ import Hasura.RQL.Types.BoolExp
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.Metadata.Backend
-import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
@@ -80,23 +79,23 @@ runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
 askPermInfo ::
   UserInfoM m =>
-  Lens' (RolePermInfo b) (Maybe c) ->
-  TableInfo b ->
+  Lens' (RolePermInfo ('Postgres 'Vanilla)) (Maybe c) ->
+  TableInfo ('Postgres 'Vanilla) ->
   m (Maybe c)
 askPermInfo pa tableInfo = do
   role <- askCurRole
   return $ getPermInfoMaybe role pa tableInfo
 
 getPermInfoMaybe ::
-  RoleName -> Lens' (RolePermInfo b) (Maybe c) -> TableInfo b -> Maybe c
+  RoleName -> Lens' (RolePermInfo ('Postgres 'Vanilla)) (Maybe c) -> TableInfo ('Postgres 'Vanilla) -> Maybe c
 getPermInfoMaybe role pa tableInfo =
   getRolePermInfo role tableInfo ^. pa
 
 assertAskPermInfo ::
-  (UserInfoM m, QErrM m, Backend b) =>
+  (UserInfoM m, QErrM m) =>
   PermType ->
-  Lens' (RolePermInfo b) (Maybe c) ->
-  TableInfo b ->
+  Lens' (RolePermInfo ('Postgres 'Vanilla)) (Maybe c) ->
+  TableInfo ('Postgres 'Vanilla) ->
   m c
 assertAskPermInfo pt pa tableInfo = do
   roleName <- askCurRole
@@ -109,7 +108,7 @@ assertAskPermInfo pt pa tableInfo = do
           " is not allowed. "
         ]
 
-isTabUpdatable :: RoleName -> TableInfo ('Postgres pgKind) -> Bool
+isTabUpdatable :: RoleName -> TableInfo ('Postgres 'Vanilla) -> Bool
 isTabUpdatable role ti
   | role == adminRoleName = True
   | otherwise = isJust $ M.lookup role rpim >>= _permUpd
@@ -117,38 +116,38 @@ isTabUpdatable role ti
     rpim = _tiRolePermInfoMap ti
 
 askInsPermInfo ::
-  (UserInfoM m, QErrM m, Backend b) =>
-  TableInfo b ->
-  m (InsPermInfo b)
+  (UserInfoM m, QErrM m) =>
+  TableInfo ('Postgres 'Vanilla) ->
+  m (InsPermInfo ('Postgres 'Vanilla))
 askInsPermInfo = assertAskPermInfo PTInsert permIns
 
 askSelPermInfo ::
-  (UserInfoM m, QErrM m, Backend b) =>
-  TableInfo b ->
-  m (SelPermInfo b)
+  (UserInfoM m, QErrM m) =>
+  TableInfo ('Postgres 'Vanilla) ->
+  m (SelPermInfo ('Postgres 'Vanilla))
 askSelPermInfo = assertAskPermInfo PTSelect permSel
 
 askUpdPermInfo ::
-  (UserInfoM m, QErrM m, Backend b) =>
-  TableInfo b ->
-  m (UpdPermInfo b)
+  (UserInfoM m, QErrM m) =>
+  TableInfo ('Postgres 'Vanilla) ->
+  m (UpdPermInfo ('Postgres 'Vanilla))
 askUpdPermInfo = assertAskPermInfo PTUpdate permUpd
 
 askDelPermInfo ::
-  (UserInfoM m, QErrM m, Backend b) =>
-  TableInfo b ->
-  m (DelPermInfo b)
+  (UserInfoM m, QErrM m) =>
+  TableInfo ('Postgres 'Vanilla) ->
+  m (DelPermInfo ('Postgres 'Vanilla))
 askDelPermInfo = assertAskPermInfo PTDelete permDel
 
 verifyAsrns :: (MonadError QErr m) => [a -> m ()] -> [a] -> m ()
 verifyAsrns preds xs = indexedForM_ xs $ \a -> mapM_ ($ a) preds
 
 checkRetCols ::
-  (Backend ('Postgres pgKind), UserInfoM m, QErrM m) =>
-  FieldInfoMap (FieldInfo ('Postgres pgKind)) ->
-  SelPermInfo ('Postgres pgKind) ->
+  (UserInfoM m, QErrM m) =>
+  FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
+  SelPermInfo ('Postgres 'Vanilla) ->
   [PGCol] ->
-  m [ColumnInfo ('Postgres pgKind)]
+  m [ColumnInfo ('Postgres 'Vanilla)]
 checkRetCols fieldInfoMap selPermInfo cols = do
   mapM_ (checkSelOnCol selPermInfo) cols
   forM cols $ \col -> askColInfo fieldInfoMap col relInRetErr
@@ -156,20 +155,18 @@ checkRetCols fieldInfoMap selPermInfo cols = do
     relInRetErr = "Relationships can't be used in \"returning\"."
 
 checkSelOnCol ::
-  forall b m.
-  (UserInfoM m, QErrM m, Backend b) =>
-  SelPermInfo b ->
-  Column b ->
+  (UserInfoM m, QErrM m) =>
+  SelPermInfo ('Postgres 'Vanilla) ->
+  Column ('Postgres 'Vanilla) ->
   m ()
 checkSelOnCol selPermInfo =
-  checkPermOnCol @b PTSelect (HS.fromList $ M.keys $ spiCols @b selPermInfo)
+  checkPermOnCol PTSelect (HS.fromList $ M.keys $ spiCols selPermInfo)
 
 checkPermOnCol ::
-  forall b m.
-  (UserInfoM m, QErrM m, Backend b) =>
+  (UserInfoM m, QErrM m) =>
   PermType ->
-  HS.HashSet (Column b) ->
-  Column b ->
+  HS.HashSet (Column ('Postgres 'Vanilla)) ->
+  Column ('Postgres 'Vanilla) ->
   m ()
 checkPermOnCol pt allowedCols col = do
   role <- askCurRole
@@ -186,9 +183,8 @@ checkPermOnCol pt allowedCols col = do
           ]
 
 checkSelectPermOnScalarComputedField ::
-  forall b m.
   (UserInfoM m, QErrM m) =>
-  SelPermInfo b ->
+  SelPermInfo ('Postgres 'Vanilla) ->
   ComputedFieldName ->
   m ()
 checkSelectPermOnScalarComputedField selPermInfo computedField = do
@@ -202,10 +198,9 @@ checkSelectPermOnScalarComputedField selPermInfo computedField = do
         "role " <> role <<> " does not have permission to select computed field" <>> computedField
 
 valueParserWithCollectableType ::
-  forall pgKind m.
-  (Backend ('Postgres pgKind), MonadError QErr m) =>
-  (ColumnType ('Postgres pgKind) -> Value -> m S.SQLExp) ->
-  CollectableType (ColumnType ('Postgres pgKind)) ->
+  (MonadError QErr m) =>
+  (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
+  CollectableType (ColumnType ('Postgres 'Vanilla)) ->
   Value ->
   m S.SQLExp
 valueParserWithCollectableType valBldr pgType val = case pgType of
@@ -220,9 +215,8 @@ valueParserWithCollectableType valBldr pgType val = case pgType of
         (S.mkTypeAnn $ CollectableTypeArray (unsafePGColumnToBackend ofTy))
 
 binRHSBuilder ::
-  forall pgKind m.
-  (Backend ('Postgres pgKind), QErrM m) =>
-  ColumnType ('Postgres pgKind) ->
+  (QErrM m) =>
+  ColumnType ('Postgres 'Vanilla) ->
   Value ->
   DMLP1T m S.SQLExp
 binRHSBuilder colType val = do
@@ -232,33 +226,32 @@ binRHSBuilder colType val = do
   return $ toPrepParam (DS.length preparedArgs + 1) (unsafePGColumnToBackend colType)
 
 fetchRelTabInfo ::
-  (QErrM m, TableInfoRM b m, Backend b) =>
-  TableName b ->
-  m (TableInfo b)
+  (QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  TableName ('Postgres 'Vanilla) ->
+  m (TableInfo ('Postgres 'Vanilla))
 fetchRelTabInfo refTabName =
   -- Internal error
   modifyErrAndSet500 ("foreign " <>) $
     askTableInfoSource refTabName
 
 askTableInfoSource ::
-  forall b m.
-  (QErrM m, TableInfoRM b m, Backend b) =>
-  TableName b ->
-  m (TableInfo b)
+  (QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  TableName ('Postgres 'Vanilla) ->
+  m (TableInfo ('Postgres 'Vanilla))
 askTableInfoSource tableName = do
   onNothingM (lookupTableInfo tableName) $
     throw400 NotExists $ "table " <> tableName <<> " does not exist"
 
-data SessionVariableBuilder b m = SessionVariableBuilder
-  { _svbCurrentSession :: !(SQLExpression b),
-    _svbVariableParser :: !(SessionVarType b -> SessionVariable -> m (SQLExpression b))
+data SessionVariableBuilder m = SessionVariableBuilder
+  { _svbCurrentSession :: !(SQLExpression ('Postgres 'Vanilla)),
+    _svbVariableParser :: !(SessionVarType ('Postgres 'Vanilla) -> SessionVariable -> m (SQLExpression ('Postgres 'Vanilla)))
   }
 
 fetchRelDet ::
-  (UserInfoM m, QErrM m, TableInfoRM b m, Backend b) =>
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
   RelName ->
-  TableName b ->
-  m (FieldInfoMap (FieldInfo b), SelPermInfo b)
+  TableName ('Postgres 'Vanilla) ->
+  m (FieldInfoMap (FieldInfo ('Postgres 'Vanilla)), SelPermInfo ('Postgres 'Vanilla))
 fetchRelDet relName refTabName = do
   roleName <- askCurRole
   -- Internal error
@@ -279,11 +272,11 @@ fetchRelDet relName refTabName = do
         ]
 
 checkOnColExp ::
-  (UserInfoM m, QErrM m, TableInfoRM b m, Backend b) =>
-  SelPermInfo b ->
-  SessionVariableBuilder b m ->
-  AnnBoolExpFldSQL b ->
-  m (AnnBoolExpFldSQL b)
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  SelPermInfo ('Postgres 'Vanilla) ->
+  SessionVariableBuilder m ->
+  AnnBoolExpFldSQL ('Postgres 'Vanilla) ->
+  m (AnnBoolExpFldSQL ('Postgres 'Vanilla))
 checkOnColExp spi sessVarBldr annFld = case annFld of
   AVColumn colInfo _ -> do
     let cn = ciColumn colInfo
@@ -315,33 +308,33 @@ checkOnColExp spi sessVarBldr annFld = case annFld of
         pure $ AVComputedField cfBoolExp {_acfbBoolExp = CFBETable table finalBoolExp}
 
 convAnnBoolExpPartialSQL ::
-  (Applicative f, Backend backend) =>
-  SessionVariableBuilder backend f ->
-  AnnBoolExpPartialSQL backend ->
-  f (AnnBoolExpSQL backend)
+  (Applicative f) =>
+  SessionVariableBuilder f ->
+  AnnBoolExpPartialSQL ('Postgres 'Vanilla) ->
+  f (AnnBoolExpSQL ('Postgres 'Vanilla))
 convAnnBoolExpPartialSQL f =
   (traverse . traverse) (convPartialSQLExp f)
 
 convAnnColumnCaseBoolExpPartialSQL ::
-  (Applicative f, Backend backend) =>
-  SessionVariableBuilder backend f ->
-  AnnColumnCaseBoolExpPartialSQL backend ->
-  f (AnnColumnCaseBoolExp backend (SQLExpression backend))
+  (Applicative f) =>
+  SessionVariableBuilder f ->
+  AnnColumnCaseBoolExpPartialSQL ('Postgres 'Vanilla) ->
+  f (AnnColumnCaseBoolExp ('Postgres 'Vanilla) (SQLExpression ('Postgres 'Vanilla)))
 convAnnColumnCaseBoolExpPartialSQL f =
   (traverse . traverse) (convPartialSQLExp f)
 
 convPartialSQLExp ::
   (Applicative f) =>
-  SessionVariableBuilder backend f ->
-  PartialSQLExp backend ->
-  f (SQLExpression backend)
+  SessionVariableBuilder f ->
+  PartialSQLExp ('Postgres 'Vanilla) ->
+  f (SQLExpression ('Postgres 'Vanilla))
 convPartialSQLExp sessVarBldr = \case
   PSESQLExp sqlExp -> pure sqlExp
   PSESession -> pure $ _svbCurrentSession sessVarBldr
   PSESessVar colTy sessionVariable -> (_svbVariableParser sessVarBldr) colTy sessionVariable
 
 sessVarFromCurrentSetting ::
-  (Applicative f) => SessionVariableBuilder ('Postgres pgKind) f
+  (Applicative f) => SessionVariableBuilder f
 sessVarFromCurrentSetting =
   SessionVariableBuilder currentSession $ \ty var -> pure $ sessVarFromCurrentSetting' ty var
 
@@ -362,23 +355,23 @@ currentSession :: S.SQLExp
 currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm ::
-  (UserInfoM m, QErrM m, TableInfoRM b m, Backend b) =>
-  SelPermInfo b ->
-  SessionVariableBuilder b m ->
-  AnnBoolExpSQL b ->
-  m (AnnBoolExpSQL b)
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  SelPermInfo ('Postgres 'Vanilla) ->
+  SessionVariableBuilder m ->
+  AnnBoolExpSQL ('Postgres 'Vanilla) ->
+  m (AnnBoolExpSQL ('Postgres 'Vanilla))
 checkSelPerm spi sessVarBldr =
   traverse (checkOnColExp spi sessVarBldr)
 
 convBoolExp ::
-  (UserInfoM m, QErrM m, TableInfoRM b m, BackendMetadata b) =>
-  FieldInfoMap (FieldInfo b) ->
-  SelPermInfo b ->
-  BoolExp b ->
-  SessionVariableBuilder b m ->
-  TableName b ->
-  ValueParser b m (SQLExpression b) ->
-  m (AnnBoolExpSQL b)
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
+  SelPermInfo ('Postgres 'Vanilla) ->
+  BoolExp ('Postgres 'Vanilla) ->
+  SessionVariableBuilder m ->
+  TableName ('Postgres 'Vanilla) ->
+  ValueParser ('Postgres 'Vanilla) m (SQLExpression ('Postgres 'Vanilla)) ->
+  m (AnnBoolExpSQL ('Postgres 'Vanilla))
 convBoolExp cim spi be sessVarBldr rootTable rhsParser = do
   let boolExpRHSParser = BoolExpRHSParser rhsParser $ _svbCurrentSession sessVarBldr
   abe <- annBoolExp boolExpRHSParser rootTable cim $ unBoolExp be

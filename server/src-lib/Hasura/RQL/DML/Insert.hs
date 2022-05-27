@@ -71,7 +71,7 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 
 buildConflictClause ::
   (UserInfoM m, QErrM m) =>
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SessionVariableBuilder m ->
   TableInfo ('Postgres 'Vanilla) ->
   [PGCol] ->
   OnConflict ->
@@ -139,7 +139,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 convInsertQuery ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
   (Value -> m [InsObj ('Postgres 'Vanilla)]) ->
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SessionVariableBuilder m ->
   (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
   InsertQuery ->
   m (InsertQueryP1 ('Postgres 'Vanilla))
