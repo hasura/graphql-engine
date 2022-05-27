@@ -30,10 +30,11 @@ export const CardRadioGroup = <T extends string = string>(
         return (
           <div
             className={clsx(
-              'bg-white shadow-sm rounded p-md border border-gray-300',
+              'bg-white shadow-sm rounded p-md border border-gray-300 cursor-pointer',
               value === iValue && 'ring-2 ring-yellow-200 border-yellow-400'
             )}
             key={iValue}
+            onClick={() => onChange(iValue)}
           >
             <p className="flex items-center font-semibold text-muted">
               <input
@@ -42,7 +43,6 @@ export const CardRadioGroup = <T extends string = string>(
                 value={iValue}
                 x-model="relationType"
                 className="cursor-pointer rounded-full border shadow-sm border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
-                onChange={() => onChange(iValue)}
                 checked={value === iValue}
                 data-test={`radio-select-${iValue}`}
               />

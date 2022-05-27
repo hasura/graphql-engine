@@ -4,6 +4,7 @@ import { useRemoteSchema } from '@/features/MetadataAPI';
 import { useTableColumns } from '@/features/SqlQueries';
 import { InputField, Select } from '@/new-components/Form';
 import { MapSelector } from '@/new-components/MapSelector';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
 import {
   LinkBlockHorizontal,
   LinkBlockVertical,
@@ -53,17 +54,17 @@ export const FormElements = ({
     if (existingRelationshipName && mapping?.length) setTypeMap(defaultMapping);
   }, [RSTypeName, existingRelationshipName, mapping]);
 
-  if (!data)
+  if (isLoading) {
     return (
-      <div className="grid border border-gray-300 rounded shadow-sm p-4">
-        Data is not ready
+      <div className="my-2">
+        <IndicatorCard status="info">Loading...</IndicatorCard>
       </div>
     );
-
-  if (isLoading)
+  }
+  if (!data)
     return (
-      <div className="grid border border-gray-300 rounded shadow-sm p-4">
-        Loading...
+      <div className="my-2">
+        <IndicatorCard status="info">Data is not ready</IndicatorCard>;
       </div>
     );
 

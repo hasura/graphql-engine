@@ -71,6 +71,11 @@ export const RemoteSchemaWidget = ({
       <div className="grid gap-4 w-full">
         <label className="block ">
           <span className="text-gray-600 mb-xs font-semibold">Mapping</span>
+          <br />
+          <span className="text-gray-600 mb-xs">
+            Build a query mapping from your source schema type to a field
+            argument in your reference schema{' '}
+          </span>
           <input
             type="text"
             className="mt-xs block h-input w-full shadow-sm rounded cursor-not-allowed bg-gray-100 border border-gray-300"

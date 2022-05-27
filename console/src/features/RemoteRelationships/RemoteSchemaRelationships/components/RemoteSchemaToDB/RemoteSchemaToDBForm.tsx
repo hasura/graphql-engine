@@ -139,7 +139,7 @@ export const RemoteSchemaToDbForm = ({
               <Button type="button" size="sm" onClick={closeHandler}>
                 Cancel
               </Button>
-              <span className="font-semibold text-muted ml-sm">
+              <span className="font-semibold ml-sm">
                 {existingRelationshipName
                   ? 'Edit Relationship'
                   : 'Create New Relationship'}

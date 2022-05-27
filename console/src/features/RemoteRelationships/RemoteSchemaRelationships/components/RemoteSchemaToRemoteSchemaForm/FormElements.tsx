@@ -92,14 +92,20 @@ export const FormElements = ({
   } = useLoadData(sourceRemoteSchema);
 
   if (isLoading && !isError) {
-    return <IndicatorCard status="info">Loading...</IndicatorCard>;
+    return (
+      <div className="my-2">
+        <IndicatorCard status="info">Loading...</IndicatorCard>
+      </div>
+    );
   }
 
   if (isError || !remoteSchemaList || !sourceRemoteSchema) {
     return (
-      <IndicatorCard status="negative">
-        Error loading remote schemas
-      </IndicatorCard>
+      <div className="my-2">
+        <IndicatorCard status="negative">
+          Error loading remote schemas
+        </IndicatorCard>
+      </div>
     );
   }
 
