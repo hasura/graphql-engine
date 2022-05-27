@@ -87,13 +87,11 @@ validateConfiguration ::
 validateConfiguration API.Routes {..} sourceName dataConnectorName config = do
   configSchemaResponse <- _configSchema
   let errors = API.validateConfigAgainstConfigSchema configSchemaResponse config
-  if not $ null errors
-    then
-      let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
-       in throw400
-            DataConnectorError
-            ("Configuration for source " <> sourceName <<> " is not valid based on the configuration schema declared by the " <> dataConnectorName <<> " data connector agent. Errors:\n" <> errorsText)
-    else pure ()
+  unless (null errors) $
+    let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
+     in throw400
+          DataConnectorError
+          ("Configuration for source " <> sourceName <<> " is not valid based on the configuration schema declared by the " <> dataConnectorName <<> " data connector agent. Errors:\n" <> errorsText)
 
 resolveDatabaseMetadata' ::
   Applicative m =>

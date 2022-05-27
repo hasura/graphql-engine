@@ -28,9 +28,8 @@ import Network.HTTP.Types qualified as Http
 get_ :: HasCallStack => String -> IO ()
 get_ url = do
   response <- Http.httpNoBody (fromString url)
-  if Http.getResponseStatusCode response == 200
-    then pure ()
-    else error ("Non-200 response code from HTTP request: " ++ url)
+  unless (Http.getResponseStatusCode response == 200) $
+    error ("Non-200 response code from HTTP request: " ++ url)
 
 -- | Post the JSON to the given URL, and produces a very descriptive
 -- exception on failure.
