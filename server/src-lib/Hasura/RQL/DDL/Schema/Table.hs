@@ -37,7 +37,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Constants qualified as G
-import Hasura.GraphQL.Schema.Common (purgeDependencies, textToName)
+import Hasura.GraphQL.Schema.Common (textToName)
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -359,7 +359,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
     reportDependentObjectsExist indirectDeps
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
-    purgeDependencies indirectDeps
+    traverse_ purgeSourceAndSchemaDependencies indirectDeps
     tell $ dropTableInMetadata @b source qtn
   -- delete the table and its direct dependencies
   withNewInconsistentObjsCheck $ buildSchemaCache metadataModifier

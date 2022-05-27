@@ -23,13 +23,13 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Schema.Common (getIndirectDependencies, purgeDependencies)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
+import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -193,13 +193,14 @@ dropSource ::
   SourceInfo b ->
   m ()
 dropSource _schemaCache (DropSource sourceName cascade) sourceInfo = do
-  indirectDeps <- getIndirectDependencies sourceName
+  schemaCache <- askSchemaCache
+  let remoteDeps = getRemoteDependencies schemaCache sourceName
 
-  when (not cascade && not (null indirectDeps)) $
-    reportDependentObjectsExist indirectDeps
+  when (not cascade && not (null remoteDeps)) $
+    reportDependentObjectsExist remoteDeps
 
   metadataModifier <- execWriterT $ do
-    purgeDependencies indirectDeps
+    traverse_ purgeSourceAndSchemaDependencies remoteDeps
     tell $ dropSourceMetadataModifier sourceName
 
   buildSchemaCacheFor (MOSource sourceName) metadataModifier

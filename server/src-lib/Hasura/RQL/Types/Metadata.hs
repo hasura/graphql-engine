@@ -44,6 +44,9 @@ module Hasura.RQL.Types.Metadata
     dropRelationshipInMetadata,
     dropRemoteRelationshipInMetadata,
     dropTableInMetadata,
+    dropRemoteSchemaInMetadata,
+    dropRemoteSchemaPermissionInMetadata,
+    dropRemoteSchemaRemoteRelationshipInMetadata,
     emptyMetadata,
     fmComment,
     fmConfiguration,
@@ -779,6 +782,24 @@ dropFunctionInMetadata ::
 dropFunctionInMetadata source function =
   MetadataModifier $
     metaSources . ix source . toSourceMetadata . (smFunctions @b) %~ OM.delete function
+
+dropRemoteSchemaInMetadata :: RemoteSchemaName -> MetadataModifier
+dropRemoteSchemaInMetadata name =
+  MetadataModifier $ metaRemoteSchemas %~ OM.delete name
+
+dropRemoteSchemaPermissionInMetadata :: RemoteSchemaName -> RoleName -> MetadataModifier
+dropRemoteSchemaPermissionInMetadata remoteSchemaName roleName =
+  MetadataModifier $ metaRemoteSchemas . ix remoteSchemaName . rsmPermissions %~ filter ((/=) roleName . _rspmRole)
+
+dropRemoteSchemaRemoteRelationshipInMetadata :: RemoteSchemaName -> G.Name -> RelName -> MetadataModifier
+dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName =
+  MetadataModifier $
+    metaRemoteSchemas
+      . ix remoteSchemaName
+      . rsmRemoteRelationships
+      . ix typeName
+      . rstrsRelationships
+      %~ OM.delete relationshipName
 
 -- | Encode 'Metadata' to JSON with deterministic ordering (e.g. "version" being at the top).
 -- The CLI system stores metadata in files and has option to show changes in git diff style.

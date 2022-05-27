@@ -7,6 +7,7 @@ module Hasura.RQL.Types.SchemaCacheTypes
     SourceObjId (..),
     TableObjId (..),
     purgeDependentObject,
+    purgeSourceAndSchemaDependencies,
     reasonToTxt,
     reportDependentObjectsExist,
     reportSchemaObj,
@@ -179,6 +180,18 @@ reportDependentObjectsExist dependentObjects =
   throw400 DependencyError $
     "cannot drop due to the following dependent objects : "
       <> reportSchemaObjs dependentObjects
+
+purgeSourceAndSchemaDependencies ::
+  MonadError QErr m =>
+  SchemaObjId ->
+  WriterT MetadataModifier m ()
+purgeSourceAndSchemaDependencies = \case
+  SOSourceObj sourceName objectID -> do
+    AB.dispatchAnyBackend @Backend objectID $ purgeDependentObject sourceName >=> tell
+  SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName -> do
+    tell $ dropRemoteSchemaRemoteRelationshipInMetadata remoteSchemaName typeName relationshipName
+  _ ->
+    pure ()
 
 purgeDependentObject ::
   forall b m.
