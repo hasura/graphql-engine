@@ -23,8 +23,9 @@ import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), PartialSQLExp (
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
-import Hasura.RQL.Types.Common (Comment (..), FieldName (..), SourceName, SystemDefined (..))
+import Hasura.RQL.Types.Common (Comment (..), FieldName (..), SystemDefined (..))
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Source (SourceInfo)
 import Hasura.RQL.Types.Table (CustomRootField (..), FieldInfo (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax (unsafeMkName)
@@ -85,7 +86,7 @@ mkParser :: QualifiedTable -> [ColumnInfoBuilder] -> SchemaTestT [Parser]
 mkParser table cib =
   Build.buildTableUpdateMutationFields
     backendUpdateParser
-    sourceName
+    sourceInfo
     table
     tableInfo
     name
@@ -114,8 +115,8 @@ mkParser table cib =
     upiFilter = BoolAnd $ fmap (\ci -> BoolFld $ AVColumn ci []) columnInfos
 
     ------------------------------------------
-    sourceName :: SourceName
-    sourceName = undefined
+    sourceInfo :: SourceInfo PG
+    sourceInfo = undefined
 
     ------------------------------------------
     tableInfo :: TableInfo PG

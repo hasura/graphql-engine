@@ -1,5 +1,5 @@
 {-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema.Remote
@@ -25,7 +25,6 @@ import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Schema.Common
-import {-# SOURCE #-} Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
@@ -565,6 +564,7 @@ remoteSchemaRelationships relationships typeName =
     Nothing -> pure []
     Just rels ->
       concat <$> for (toList rels) \remoteFieldInfo -> do
+        RemoteRelationshipParserBuilder remoteRelationshipField <- retrieve scRemoteRelationshipParserBuilder
         relationshipFields <- fromMaybe [] <$> remoteRelationshipField remoteFieldInfo
         let lhsFields = _rfiLHS remoteFieldInfo
         pure $ map (fmap (IR.SchemaRemoteRelationshipSelect lhsFields)) relationshipFields

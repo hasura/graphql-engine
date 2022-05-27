@@ -51,6 +51,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
@@ -98,21 +99,21 @@ class
   -- top level parsers
   buildTableQueryFields ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -121,7 +122,7 @@ class
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
     Scenario ->
-    SourceName ->
+    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -136,7 +137,7 @@ class
   buildTableUpdateMutationFields ::
     MonadBuildSchema b r m n =>
     -- | The source that the table lives in
-    SourceName ->
+    SourceInfo b ->
     -- | The name of the table being acted on
     TableName b ->
     -- | table info
@@ -147,7 +148,7 @@ class
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     TableName b ->
     TableInfo b ->
     GQLNameIdentifier ->
@@ -155,7 +156,7 @@ class
 
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
@@ -163,7 +164,7 @@ class
 
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
@@ -172,7 +173,7 @@ class
 
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
     TableName b ->
@@ -181,7 +182,7 @@ class
   -- table components
   tableArguments ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     TableInfo b ->
     m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
 
@@ -189,7 +190,7 @@ class
   -- relationships altogether.
   mkRelationshipParser ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     RelInfo b ->
     m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
   mkRelationshipParser _ _ = pure Nothing
@@ -232,7 +233,7 @@ class
   -- | Computed field parser
   computedField ::
     MonadBuildSchema b r m n =>
-    SourceName ->
+    SourceInfo b ->
     ComputedFieldInfo b ->
     TableName b ->
     TableInfo b ->

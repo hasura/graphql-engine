@@ -58,6 +58,7 @@ import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function (FunctionInfo)
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (RolePermInfo (..), SelPermInfo, TableInfo, UpdPermInfo)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
@@ -79,7 +80,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 class PostgresSchema (pgKind :: PostgresKind) where
   pgkBuildTableRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
-    SourceName ->
+    SourceInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
     TableInfo ('Postgres pgKind) ->
     C.GQLNameIdentifier ->
@@ -87,7 +88,7 @@ class PostgresSchema (pgKind :: PostgresKind) where
     m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
   pgkBuildFunctionRelayQueryFields ::
     BS.MonadBuildSchema ('Postgres pgKind) r m n =>
-    SourceName ->
+    SourceInfo ('Postgres pgKind) ->
     FunctionName ('Postgres pgKind) ->
     FunctionInfo ('Postgres pgKind) ->
     TableName ('Postgres pgKind) ->
@@ -174,7 +175,7 @@ instance
 backendInsertParser ::
   forall pgKind m r n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceName ->
+  SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   m (InputFieldsParser n (PGIR.BackendInsert pgKind (UnpreparedValue ('Postgres pgKind))))
 backendInsertParser sourceName tableInfo =
@@ -186,7 +187,7 @@ backendInsertParser sourceName tableInfo =
 buildTableRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceName ->
+  SourceInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
   C.GQLNameIdentifier ->
@@ -203,7 +204,7 @@ buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns = 
 pgkBuildTableUpdateMutationFields ::
   MonadBuildSchema ('Postgres pgKind) r m n =>
   -- | The source that the table lives in
-  SourceName ->
+  SourceInfo ('Postgres pgKind) ->
   -- | The name of the table being acted on
   TableName ('Postgres pgKind) ->
   -- | table info
@@ -226,7 +227,7 @@ pgkBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName =
 buildFunctionRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceName ->
+  SourceInfo ('Postgres pgKind) ->
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
@@ -357,7 +358,7 @@ comparisonExps ::
     MonadSchema n m,
     MonadError QErr m,
     MonadReader r m,
-    Has QueryContext r,
+    Has SchemaOptions r,
     Has MkTypename r,
     Has NamingCase r
   ) =>
@@ -365,7 +366,7 @@ comparisonExps ::
   m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
 comparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
-  collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
+  collapseIfNull <- retrieve soDangerousBooleanCollapse
 
   -- parsers used for comparison arguments
   geogInputParser <- geographyWithinDistanceInput

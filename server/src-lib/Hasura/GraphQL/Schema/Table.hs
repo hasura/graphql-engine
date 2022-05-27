@@ -28,7 +28,6 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
@@ -85,12 +84,12 @@ getTableIdentifierName tableInfo =
 tableSelectColumnsEnum ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceName ->
+  SourceInfo b ->
   TableInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
-tableSelectColumnsEnum sourceName tableInfo = do
+tableSelectColumnsEnum sourceInfo tableInfo = do
   tableGQLName <- getTableGQLName @b tableInfo
-  columns <- tableSelectColumns sourceName tableInfo
+  columns <- tableSelectColumns sourceInfo tableInfo
   enumName <- P.mkTypename $ tableGQLName <> G.__select_column
   let description =
         Just $
@@ -173,13 +172,12 @@ tableSelectFields ::
   ( Backend b,
     MonadError QErr m,
     MonadReader r m,
-    Has SourceCache r,
     Has RoleName r
   ) =>
-  SourceName ->
+  SourceInfo b ->
   TableInfo b ->
   m [FieldInfo b]
-tableSelectFields sourceName tableInfo = do
+tableSelectFields sourceInfo tableInfo = do
   let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
   permissions <- tableSelectPermissions tableInfo
   filterM (canBeSelected permissions) $ Map.elems tableFields
@@ -188,14 +186,14 @@ tableSelectFields sourceName tableInfo = do
     canBeSelected (Just permissions) (FIColumn columnInfo) =
       pure $ Map.member (ciColumn columnInfo) (spiCols permissions)
     canBeSelected _ (FIRelationship relationshipInfo) = do
-      tableInfo' <- askTableInfo sourceName $ riRTable relationshipInfo
+      tableInfo' <- askTableInfo sourceInfo $ riRTable relationshipInfo
       isJust <$> tableSelectPermissions @b tableInfo'
     canBeSelected (Just permissions) (FIComputedField computedFieldInfo) =
       case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
         ReturnsScalar _ ->
           pure $ Map.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
         ReturnsTable tableName -> do
-          tableInfo' <- askTableInfo sourceName tableName
+          tableInfo' <- askTableInfo sourceInfo tableName
           isJust <$> tableSelectPermissions @b tableInfo'
         ReturnsOthers -> pure False
     canBeSelected _ (FIRemoteRelationship _) = pure True
@@ -215,14 +213,13 @@ tableSelectColumns ::
   ( Backend b,
     MonadError QErr m,
     MonadReader r m,
-    Has SourceCache r,
     Has RoleName r
   ) =>
-  SourceName ->
+  SourceInfo b ->
   TableInfo b ->
   m [ColumnInfo b]
-tableSelectColumns sourceName tableInfo =
-  mapMaybe columnInfo <$> tableSelectFields sourceName tableInfo
+tableSelectColumns sourceInfo tableInfo =
+  mapMaybe columnInfo <$> tableSelectFields sourceInfo tableInfo
   where
     columnInfo (FIColumn ci) = Just ci
     columnInfo _ = Nothing

@@ -23,7 +23,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Monad (ParseT, runSchemaT)
-import Hasura.GraphQL.Schema.Common (QueryContext (..))
+import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
@@ -33,7 +33,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.Server.Utils
 import Hasura.Session
@@ -80,9 +79,12 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   -- properly for each role at schema generation time, but this allows us to
   -- quickly reject an invalid schema.
   void $
-    runSchemaT $
-      flip runReaderT minimumValidContext $
-        buildRemoteParser @_ @_ @(ParseT Identity) _rscIntroOriginal _rscRemoteRelationships _rscInfo
+    flip runReaderT minimumValidContext $
+      runSchemaT $
+        buildRemoteParser @_ @_ @(ParseT Identity)
+          _rscIntroOriginal
+          _rscRemoteRelationships
+          _rscInfo
 
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
@@ -113,28 +115,29 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
     -- the remote schema.
     minimumValidContext =
       ( adminRoleName :: RoleName,
-        mempty :: SourceCache,
         mempty :: CustomizeRemoteFieldName,
-        mempty :: RemoteSchemaMap,
         mempty :: MkTypename,
         mempty :: MkRootFieldName,
         HasuraCase :: NamingCase,
-        QueryContext
+        SchemaOptions
           { -- doesn't apply to remote schemas
-            qcStringifyNum = LeaveNumbersAlone,
+            soStringifyNum = LeaveNumbersAlone,
             -- doesn't apply to remote schemas
-            qcDangerousBooleanCollapse = True,
+            soDangerousBooleanCollapse = True,
             -- we don't support remote schemas in Relay, but the check is
             -- performed ahead of time, meaning that the value here is
             -- irrelevant
-            qcQueryType = QueryHasura,
+            soQueryType = QueryHasura,
             -- doesn't apply to remote schemas
-            qcFunctionPermsContext = FunctionPermissionsInferred,
+            soFunctionPermsContext = FunctionPermissionsInferred,
             -- we default to no permissions
-            qcRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
+            soRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
             -- doesn't apply to remote schemas
-            qcOptimizePermissionFilters = False
-          }
+            soOptimizePermissionFilters = False
+          },
+        SchemaContext
+          mempty
+          ignoreRemoteRelationship
       )
 
 -- | Sends a GraphQL query to the given server.

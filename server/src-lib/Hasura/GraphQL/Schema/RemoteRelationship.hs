@@ -30,6 +30,7 @@ import Hasura.RQL.Types.Relationships.ToSchema qualified as Remote
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (NamingCase (..), mkCustomizedTypename)
 import Hasura.SQL.AnyBackend
 import Hasura.Session
@@ -37,34 +38,34 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Remote relationship field parsers
 remoteRelationshipField ::
-  forall r m n lhsJoinField.
-  (MonadBuildSchemaBase r m n) =>
-  RemoteFieldInfo lhsJoinField ->
-  m (Maybe [FieldParser n (IR.RemoteRelationshipField UnpreparedValue)])
-remoteRelationshipField RemoteFieldInfo {..} = runMaybeT do
-  queryType <- asks $ qcQueryType . getter
-  -- https://github.com/hasura/graphql-engine/issues/5144
-  -- The above issue is easily fixable by removing the following guard
-  guard $ queryType == ET.QueryHasura
-  case _rfiRHS of
-    RFISource anyRemoteSourceFieldInfo ->
-      dispatchAnyBackend @BackendSchema anyRemoteSourceFieldInfo \remoteSourceFieldInfo -> do
-        fields <- lift $ remoteRelationshipToSourceField remoteSourceFieldInfo
-        pure $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
-    RFISchema remoteSchema -> do
-      fields <- MaybeT $ remoteRelationshipToSchemaField _rfiLHS remoteSchema
-      pure $ pure $ IR.RemoteSchemaField <$> fields
+  SourceCache ->
+  RemoteSchemaMap ->
+  RemoteRelationshipParserBuilder
+remoteRelationshipField sourceCache remoteSchemaCache = RemoteRelationshipParserBuilder
+  \RemoteFieldInfo {..} -> runMaybeT do
+    queryType <- retrieve soQueryType
+    -- https://github.com/hasura/graphql-engine/issues/5144
+    -- The above issue is easily fixable by removing the following guard
+    guard $ queryType == ET.QueryHasura
+    case _rfiRHS of
+      RFISource anyRemoteSourceFieldInfo ->
+        dispatchAnyBackend @BackendSchema anyRemoteSourceFieldInfo \remoteSourceFieldInfo -> do
+          fields <- lift $ remoteRelationshipToSourceField sourceCache remoteSourceFieldInfo
+          pure $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
+      RFISchema remoteSchema -> do
+        fields <- MaybeT $ remoteRelationshipToSchemaField remoteSchemaCache _rfiLHS remoteSchema
+        pure $ pure $ IR.RemoteSchemaField <$> fields
 
 -- | Parser(s) for remote relationship fields to a remote schema
 remoteRelationshipToSchemaField ::
   forall r m n lhsJoinField.
   (MonadBuildSchemaBase r m n) =>
+  RemoteSchemaMap ->
   Map.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
   m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField UnpreparedValue))))
-remoteRelationshipToSchemaField lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
-  remoteSchemaCache <- asks getter
-  remoteSchemaPermsCtx <- asks $ qcRemoteSchemaPermsCtx . getter
+remoteRelationshipToSchemaField remoteSchemaCache lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
+  remoteSchemaPermsCtx <- retrieve soRemoteSchemaPermsCtx
   roleName <- asks getter
   remoteSchemaContext <-
     Map.lookup _rrfiRemoteSchemaName remoteSchemaCache
@@ -173,11 +174,15 @@ lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| res
 remoteRelationshipToSourceField ::
   forall r m n tgt.
   (MonadBuildSchemaBase r m n, BackendSchema tgt) =>
+  SourceCache ->
   RemoteSourceFieldInfo tgt ->
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
-remoteRelationshipToSourceField RemoteSourceFieldInfo {..} =
+remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
   withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
-    tableInfo <- askTableInfo @tgt _rsfiSource _rsfiTable
+    sourceInfo <-
+      onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
+        throw500 $ "source not found " <> dquote _rsfiSource
+    tableInfo <- askTableInfo sourceInfo _rsfiTable
     fieldName <- textToName $ relNameToTxt _rsfiName
     maybePerms <- tableSelectPermissions @tgt tableInfo
     case maybePerms of
@@ -185,7 +190,7 @@ remoteRelationshipToSourceField RemoteSourceFieldInfo {..} =
       Just tablePerms -> do
         parsers <- case _rsfiType of
           ObjRel -> do
-            selectionSetParserM <- tableSelectionSet _rsfiSource tableInfo
+            selectionSetParserM <- tableSelectionSet sourceInfo tableInfo
             pure $ case selectionSetParserM of
               Nothing -> []
               Just selectionSetParser ->
@@ -195,8 +200,8 @@ remoteRelationshipToSourceField RemoteSourceFieldInfo {..} =
                       IR.AnnObjectSelectG fields _rsfiTable $ IR._tpFilter $ tablePermissionsInfo tablePerms
           ArrRel -> do
             let aggFieldName = fieldName <> G.__aggregate
-            selectionSetParser <- selectTable _rsfiSource tableInfo fieldName Nothing
-            aggSelectionSetParser <- selectTableAggregate _rsfiSource tableInfo aggFieldName Nothing
+            selectionSetParser <- selectTable sourceInfo tableInfo fieldName Nothing
+            aggSelectionSetParser <- selectTableAggregate sourceInfo tableInfo aggFieldName Nothing
             pure $
               catMaybes
                 [ selectionSetParser <&> fmap IR.SourceRelationshipArray,

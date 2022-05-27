@@ -36,6 +36,7 @@ import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Introspect
 import Hasura.GraphQL.Schema.Postgres
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
+import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
@@ -176,15 +177,19 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         queryType,
         functionPermsCtx
         ) = options
-      roleQueryContext =
-        QueryContext
+      schemaOptions =
+        SchemaOptions
           stringifyNum
           dangerousBooleanCollapse
           queryType
           functionPermsCtx
           remoteSchemaPermsCtx
           optimizePermissionFilters
-  runMonadSchema role roleQueryContext sources (fst <$> remotes) $ do
+      schemaContext =
+        SchemaContext
+          sources
+          (remoteRelationshipField sources (fst <$> remotes))
+  runMonadSchema schemaOptions schemaContext role $ do
     -- build all sources
     (sourcesQueryFields, sourcesMutationFrontendFields, sourcesMutationBackendFields, subscriptionFields) <-
       fmap mconcat $ traverse (buildBackendSource buildSource) $ toList sources
@@ -261,15 +266,15 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
           [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource (SourceInfo sourceName tables functions sourceConfig queryTagsConfig sourceCustomization') =
+    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
       withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
         mkTypename <- asks getter
-        uncustomizedQueryFields <- buildQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig
+        uncustomizedQueryFields <- buildQueryFields sourceInfo validTables validFunctions
         uncustomizedStreamSubscriptionFields <-
           case streamingSubscriptionsCtx of
-            StreamingSubscriptionsEnabled -> buildTableStreamSubscriptionFields sourceName sourceConfig validTables queryTagsConfig
+            StreamingSubscriptionsEnabled -> buildTableStreamSubscriptionFields sourceInfo validTables
             StreamingSubscriptionsDisabled -> pure mempty
         (,,,)
           <$> customizeFields
@@ -279,11 +284,11 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
-            (buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig)
+            (buildMutationFields Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_backend))
-            (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
+            (buildMutationFields Backend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__subscription))
@@ -310,18 +315,22 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
         queryType,
         functionPermsCtx
         ) = options
-      -- TODO: At the time of writing this, remote schema queries are not supported in relay.
-      -- When they are supported, we should get do what `buildRoleContext` does. Since, they
-      -- are not supported yet, we use `mempty` below for `RemoteSchemaMap`.
-      roleQueryContext =
-        QueryContext
+      schemaOptions =
+        SchemaOptions
           stringifyNum
           dangerousBooleanCollapse
           queryType
           functionPermsCtx
           RemoteSchemaPermsDisabled
           optimizePermissionFilters
-  runMonadSchema role roleQueryContext sources mempty do
+      -- TODO: At the time of writing this, remote schema queries are not supported in relay.
+      -- When they are supported, we should get do what `buildRoleContext` does. Since, they
+      -- are not supported yet, we use `mempty` below for `RemoteSchemaMap`.
+      schemaContext =
+        SchemaContext
+          sources
+          (remoteRelationshipField sources mempty)
+  runMonadSchema schemaOptions schemaContext role do
     fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
 
     -- Add node root field.
@@ -381,7 +390,7 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
           [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))]
         )
-    buildSource (SourceInfo sourceName tables functions sourceConfig queryTagsConfig sourceCustomization') =
+    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
       withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
@@ -391,15 +400,15 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
           <$> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__query))
-            (buildRelayQueryFields sourceName sourceConfig validTables validFunctions queryTagsConfig)
+            (buildRelayQueryFields sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
-            (buildMutationFields Frontend sourceName sourceConfig validTables validFunctions queryTagsConfig)
+            (buildMutationFields Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_backend))
-            (buildMutationFields Backend sourceName sourceConfig validTables validFunctions queryTagsConfig)
+            (buildMutationFields Backend sourceInfo validTables validFunctions)
       where
         sourceCustomization =
           if EFNamingConventions `elem` expFeatures
@@ -429,14 +438,18 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
   -- building a restricted schema; namely, we erase all remote relationships
   -- from the remote schema contexts, meaning that all the information that is
   -- needed for sources is completely irrelevant and filled with default values.
-  let fakeQueryContext =
-        QueryContext
+  let fakeSchemaOptions =
+        SchemaOptions
           LeaveNumbersAlone -- stringifyNum doesn't apply to remotes
           True -- booleanCollapse doesn't apply to remotes
           QueryHasura
           FunctionPermissionsInferred -- function permissions don't apply to remotes
           remoteSchemaPermsCtx
           False
+      fakeSchemaContext =
+        SchemaContext
+          mempty
+          ignoreRemoteRelationship
       -- chosen arbitrarily to be as improbable as possible
       fakeRole = mkRoleNameSafe [NT.nonEmptyTextQQ|MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair|]
       -- we delete all references to remote joins
@@ -444,7 +457,7 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         allRemotes <&> first \context ->
           context {_rscRemoteRelationships = mempty}
 
-  runMonadSchema fakeRole fakeQueryContext mempty mempty do
+  runMonadSchema fakeSchemaOptions fakeSchemaContext fakeRole do
     (queryFields, mutationFields, subscriptionFields, remoteErrors) <- case remoteSchemaPermsCtx of
       RemoteSchemaPermsEnabled ->
         -- Permissions are enabled, unauthenticated users have access to nothing.
@@ -548,94 +561,95 @@ buildRemoteSchemaParser remoteSchemaPermsCtx roleName context = do
 buildQueryFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceName ->
-  SourceConfig b ->
+  SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  Maybe QueryTagsConfig ->
   m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) queryTagsConfig = do
+buildQueryFields sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
   roleName <- asks getter
-  functionPermsCtx <- asks $ qcFunctionPermsContext . getter
+  functionPermsCtx <- retrieve soFunctionPermsContext
   tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableIdentifierName <- getTableIdentifierName @b tableInfo
-    mkRF $ buildTableQueryFields sourceName tableName tableInfo tableIdentifierName
+    mkRF $ buildTableQueryFields sourceInfo tableName tableInfo tableIdentifierName
   functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     guard $
       roleName == adminRoleName
         || roleName `Map.member` _fiPermissions functionInfo
         || functionPermsCtx == FunctionPermissionsInferred
     let targetTableName = _fiReturnType functionInfo
-    lift $ mkRF $ buildFunctionQueryFields sourceName functionName functionInfo targetTableName
+    lift $ mkRF $ buildFunctionQueryFields sourceInfo functionName functionInfo targetTableName
   pure $ concat $ tableSelectExpParsers <> catMaybes functionSelectExpParsers
   where
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
+    sourceName = _siName sourceInfo
+    sourceConfig = _siConfiguration sourceInfo
+    queryTagsConfig = _siQueryTagsConfig sourceInfo
 
 buildTableStreamSubscriptionFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceName ->
-  SourceConfig b ->
+  SourceInfo b ->
   TableCache b ->
-  Maybe QueryTagsConfig ->
   m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildTableStreamSubscriptionFields sourceName sourceConfig tables queryTagsConfig = do
+buildTableStreamSubscriptionFields sourceInfo tables = do
   tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableGQLName <- getTableIdentifierName @b tableInfo
     mkRF $
       buildTableStreamingSubscriptionFields
-        sourceName
+        sourceInfo
         tableName
         tableInfo
         tableGQLName
   pure $ concat tableSelectExpParsers
   where
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
+    sourceName = _siName sourceInfo
+    sourceConfig = _siConfiguration sourceInfo
+    queryTagsConfig = _siQueryTagsConfig sourceInfo
 
 buildRelayQueryFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  SourceName ->
-  SourceConfig b ->
+  SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  Maybe QueryTagsConfig ->
   m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildRelayQueryFields sourceName sourceConfig tables (takeExposedAs FEAQuery -> functions) queryTagsConfig = do
+buildRelayQueryFields sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
   tableConnectionFields <- for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
     tableIdentifierName <- getTableIdentifierName @b tableInfo
     pkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
-    lift $ mkRF $ buildTableRelayQueryFields sourceName tableName tableInfo tableIdentifierName pkeyColumns
+    lift $ mkRF $ buildTableRelayQueryFields sourceInfo tableName tableInfo tableIdentifierName pkeyColumns
   functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
-    returnTableInfo <- lift $ askTableInfo sourceName returnTableName
+    returnTableInfo <- lift $ askTableInfo sourceInfo returnTableName
     pkeyColumns <- MaybeT $ (^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns) <$> pure returnTableInfo
-    lift $ mkRF $ buildFunctionRelayQueryFields sourceName functionName functionInfo returnTableName pkeyColumns
+    lift $ mkRF $ buildFunctionRelayQueryFields sourceInfo functionName functionInfo returnTableName pkeyColumns
   pure $ concat $ catMaybes $ tableConnectionFields <> functionConnectionFields
   where
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
+    sourceName = _siName sourceInfo
+    sourceConfig = _siConfiguration sourceInfo
+    queryTagsConfig = _siQueryTagsConfig sourceInfo
 
 buildMutationFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   Scenario ->
-  SourceName ->
-  SourceConfig b ->
+  SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  Maybe QueryTagsConfig ->
   m [P.FieldParser n (MutationRootField UnpreparedValue)]
-buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMutation -> functions) queryTagsConfig = do
+buildMutationFields scenario sourceInfo tables (takeExposedAs FEAMutation -> functions) = do
   roleName <- asks getter
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableIdentifierName <- getTableIdentifierName @b tableInfo
     inserts <-
-      mkRF (MDBR . MDBInsert) $ buildTableInsertMutationFields scenario sourceName tableName tableInfo tableIdentifierName
+      mkRF (MDBR . MDBInsert) $ buildTableInsertMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
     updates <-
-      mkRF (MDBR . MDBUpdate) $ buildTableUpdateMutationFields @b sourceName tableName tableInfo tableIdentifierName
+      mkRF (MDBR . MDBUpdate) $ buildTableUpdateMutationFields sourceInfo tableName tableInfo tableIdentifierName
     deletes <-
-      mkRF (MDBR . MDBDelete) $ buildTableDeleteMutationFields sourceName tableName tableInfo tableIdentifierName
+      mkRF (MDBR . MDBDelete) $ buildTableDeleteMutationFields sourceInfo tableName tableInfo tableIdentifierName
     pure $ concat [inserts, updates, deletes]
   functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo
@@ -645,11 +659,14 @@ buildMutationFields scenario sourceName sourceConfig tables (takeExposedAs FEAMu
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `Map.member` (_fiPermissions functionInfo)
-    lift $ mkRF MDBR $ buildFunctionMutationFields sourceName functionName functionInfo targetTableName
+    lift $ mkRF MDBR $ buildFunctionMutationFields sourceInfo functionName functionInfo targetTableName
   pure $ concat $ tableMutations <> catMaybes functionMutations
   where
     mkRF :: forall a db remote action raw. (a -> db b) -> m [FieldParser n a] -> m [FieldParser n (RootField db remote action raw)]
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig
+    sourceName = _siName sourceInfo
+    sourceConfig = _siConfiguration sourceInfo
+    queryTagsConfig = _siQueryTagsConfig sourceInfo
 
 ----------------------------------------------------------------
 -- Building root parser from fields
@@ -821,13 +838,12 @@ type ConcreteSchemaT m a =
   P.SchemaT
     (P.ParseT Identity)
     ( ReaderT
-        ( RoleName,
-          SourceCache,
-          QueryContext,
-          P.MkTypename,
+        ( SchemaOptions,
+          SchemaContext,
+          RoleName,
+          MkTypename,
           MkRootFieldName,
           CustomizeRemoteFieldName,
-          RemoteSchemaMap,
           NamingCase
         )
         m
@@ -837,14 +853,14 @@ type ConcreteSchemaT m a =
 runMonadSchema ::
   forall m a.
   Monad m =>
+  SchemaOptions ->
+  SchemaContext ->
   RoleName ->
-  QueryContext ->
-  SourceCache ->
-  RemoteSchemaMap ->
   ConcreteSchemaT m a ->
   m a
-runMonadSchema roleName queryContext sources remotes m =
-  P.runSchemaT m `runReaderT` (roleName, sources, queryContext, mempty, mempty, mempty, remotes, HasuraCase)
+runMonadSchema options context roleName m =
+  flip runReaderT (options, context, roleName, mempty, mempty, mempty, HasuraCase) $
+    P.runSchemaT m
 
 buildBackendSource ::
   (forall b. BackendSchema b => SourceInfo b -> r) ->

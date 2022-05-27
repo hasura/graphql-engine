@@ -33,8 +33,8 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -55,24 +55,24 @@ import Language.GraphQL.Draft.Syntax qualified as G
 ifMatchedFieldParser ::
   forall r m n.
   MonadBuildSchema 'MSSQL r m n =>
-  SourceName ->
+  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedFieldParser sourceName tableInfo = do
-  maybeObject <- ifMatchedObjectParser sourceName tableInfo
+ifMatchedFieldParser sourceInfo tableInfo = do
+  maybeObject <- ifMatchedObjectParser sourceInfo tableInfo
   return $ withJust maybeObject $ P.fieldOptional G._if_matched (Just "upsert condition")
 
 -- | Parse a @tablename_if_matched@ object.
 ifMatchedObjectParser ::
   forall r m n.
   MonadBuildSchema 'MSSQL r m n =>
-  SourceName ->
+  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   m (Maybe (Parser 'Input n (IfMatched (UnpreparedValue 'MSSQL))))
-ifMatchedObjectParser sourceName tableInfo = runMaybeT do
+ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
   -- Short-circuit if we don't have sufficient permissions.
   updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
-  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceName tableInfo
+  matchColumnsEnum <- MaybeT $ tableInsertMatchColumnsEnum sourceInfo tableInfo
   lift do
     updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
     tableGQLName <- getTableGQLName tableInfo
@@ -83,7 +83,7 @@ ifMatchedObjectParser sourceName tableInfo = runMaybeT do
         matchColumnsName = G._match_columns
         updateColumnsName = G._update_columns
         whereName = G._where
-    whereExpParser <- boolExp sourceName tableInfo
+    whereExpParser <- boolExp sourceInfo tableInfo
     pure $
       P.object objectName (Just objectDesc) do
         _imConditions <-
@@ -109,12 +109,12 @@ ifMatchedObjectParser sourceName tableInfo = runMaybeT do
 tableInsertMatchColumnsEnum ::
   forall r m n.
   MonadBuildSchemaBase r m n =>
-  SourceName ->
+  SourceInfo 'MSSQL ->
   TableInfo 'MSSQL ->
   m (Maybe (Parser 'Both n (Column 'MSSQL)))
-tableInsertMatchColumnsEnum sourceName tableInfo = do
+tableInsertMatchColumnsEnum sourceInfo tableInfo = do
   tableGQLName <- getTableGQLName @'MSSQL tableInfo
-  columns <- tableSelectColumns sourceName tableInfo
+  columns <- tableSelectColumns sourceInfo tableInfo
   enumName <- P.mkTypename $ tableGQLName <> G.__insert_match_column
   let description =
         Just $

@@ -1,7 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Schema.Common
-  ( MonadBuildSchemaBase,
+  ( SchemaOptions (..),
+    SchemaContext (..),
+    RemoteRelationshipParserBuilder (..),
+    MonadBuildSchemaBase,
+    retrieve,
+    ignoreRemoteRelationship,
     AggSelectExp,
     AnnotatedField,
     AnnotatedFields,
@@ -10,7 +15,6 @@ module Hasura.GraphQL.Schema.Common
     AnnotatedActionField,
     AnnotatedActionFields,
     EdgeFields,
-    QueryContext (..),
     Scenario (..),
     SelectArgs,
     SelectStreamArgs,
@@ -52,37 +56,93 @@ import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude
-import Hasura.RQL.IR.Action qualified as IR
+import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.IR.RemoteSchema qualified as IR
-import Hasura.RQL.IR.Root qualified as IR
-import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Session (RoleName)
-import Language.GraphQL.Draft.Syntax as G
+import Language.GraphQL.Draft.Syntax qualified as G
 
--- | the set of common constraints required to build the schema
+-------------------------------------------------------------------------------
+
+-- | Aggregation of options required to build the schema.
+data SchemaOptions = SchemaOptions
+  { -- | how numbers should be represented in the ouput; this option does not
+    -- influence the schema, but is bundled in the resulting IR
+    soStringifyNum :: StringifyNumbers,
+    -- | should boolean fields be collapsed to True when null is given?
+    soDangerousBooleanCollapse :: Bool,
+    -- | what kind of schema is being built (Hasura or Relay)
+    soQueryType :: ET.GraphQLQueryType,
+    -- | whether function permissions should be inferred
+    soFunctionPermsContext :: FunctionPermissionsCtx,
+    -- | whether remote schema permissions are enabled
+    soRemoteSchemaPermsCtx :: RemoteSchemaPermsCtx,
+    -- | 'True' when we should attempt to use experimental SQL optimization passes
+    soOptimizePermissionFilters :: Bool
+  }
+
+-- | Aggregation of contextual information required to build the schema.
+data SchemaContext = SchemaContext
+  { -- | the set of all sources (TODO: remove this?)
+    scSourceCache :: SourceCache,
+    -- | how to process remote relationships
+    scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder
+  }
+
+-- | The set of common constraints required to build the schema.
 type MonadBuildSchemaBase r m n =
   ( MonadError QErr m,
     MonadReader r m,
     P.MonadSchema n m,
+    Has SchemaOptions r,
+    Has SchemaContext r,
+    -- TODO: make all `Has x r` explicit fields of 'SchemaContext'
     Has RoleName r,
-    Has SourceCache r,
-    Has QueryContext r,
     Has MkTypename r,
     Has MkRootFieldName r,
     Has CustomizeRemoteFieldName r,
-    Has RemoteSchemaMap r,
     Has NamingCase r
   )
+
+-- | How a remote relationship field should be processed when building a
+-- schema. Injecting this function from the top level avoids having to know how
+-- to do top-level dispatch from deep within the schema code.
+--
+-- Note: the inner function type uses an existential qualifier: it is expected
+-- that the given function will work for _any_ monad @m@ that has the relevant
+-- constraints. This prevents us from passing a function that is specfic to the
+-- monad in which the schema construction will run, but avoids having to
+-- propagate type annotations to each call site.
+newtype RemoteRelationshipParserBuilder
+  = RemoteRelationshipParserBuilder
+      ( forall lhsJoinField r n m.
+        MonadBuildSchemaBase r m n =>
+        RemoteFieldInfo lhsJoinField ->
+        m (Maybe [P.FieldParser n (IR.RemoteRelationshipField P.UnpreparedValue)])
+      )
+
+-- | A 'RemoteRelationshipParserBuilder' that ignores the field altogether, that can
+-- be used in tests or to build a source or remote schema in isolation.
+ignoreRemoteRelationship :: RemoteRelationshipParserBuilder
+ignoreRemoteRelationship = RemoteRelationshipParserBuilder $ const $ pure Nothing
+
+-- TODO: move this to Prelude?
+retrieve ::
+  (MonadReader r m, Has a r) =>
+  (a -> b) ->
+  m b
+retrieve f = asks $ f . getter
+
+-------------------------------------------------------------------------------
 
 type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
 
@@ -110,21 +170,12 @@ type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField P.Unpr
 
 type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField P.UnpreparedValue)
 
+-------------------------------------------------------------------------------
+
 data RemoteSchemaParser n = RemoteSchemaParser
   { piQuery :: [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField P.UnpreparedValue) RemoteSchemaVariable))],
     piMutation :: Maybe [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField P.UnpreparedValue) RemoteSchemaVariable))],
     piSubscription :: Maybe [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField P.UnpreparedValue) RemoteSchemaVariable))]
-  }
-
-data QueryContext = QueryContext
-  { qcStringifyNum :: StringifyNumbers,
-    -- | should boolean fields be collapsed to True when null is given?
-    qcDangerousBooleanCollapse :: Bool,
-    qcQueryType :: ET.GraphQLQueryType,
-    qcFunctionPermsContext :: FunctionPermissionsCtx,
-    qcRemoteSchemaPermsCtx :: RemoteSchemaPermsCtx,
-    -- | 'True' when we should attempt to use experimental SQL optimization passes
-    qcOptimizePermissionFilters :: Bool
   }
 
 getTableRoles :: BackendSourceInfo -> [RoleName]
@@ -137,19 +188,14 @@ getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
 -- supposed to ensure all dependencies are resolved.
 -- TODO: deduplicate this with `CacheRM`.
 askTableInfo ::
-  forall b r m.
-  (Backend b, MonadError QErr m, MonadReader r m, Has SourceCache r) =>
-  SourceName ->
+  forall b m.
+  (Backend b, MonadError QErr m) =>
+  SourceInfo b ->
   TableName b ->
   m (TableInfo b)
-askTableInfo sourceName tableName = do
-  tableInfo <- asks $ getTableInfo . getter
-  -- This should never fail, since the schema cache construction process is
-  -- supposed to ensure that all dependencies are resolved.
-  tableInfo `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote sourceName)
-  where
-    getTableInfo :: SourceCache -> Maybe (TableInfo b)
-    getTableInfo = Map.lookup tableName <=< unsafeSourceTables <=< Map.lookup sourceName
+askTableInfo SourceInfo {..} tableName =
+  Map.lookup tableName _siTables
+    `onNothing` throw500 ("askTableInfo: no info for table " <> dquote tableName <> " in source " <> dquote _siName)
 
 -- | Whether the request is sent with `x-hasura-use-backend-only-permissions` set to `true`.
 data Scenario = Backend | Frontend deriving (Enum, Show, Eq)
@@ -197,7 +243,7 @@ numericAggOperators =
   ]
 
 comparisonAggOperators :: [G.Name]
-comparisonAggOperators = [$$(litName "max"), $$(litName "min")]
+comparisonAggOperators = [$$(G.litName "max"), $$(G.litName "min")]
 
 data NodeIdVersion
   = NIVersion1

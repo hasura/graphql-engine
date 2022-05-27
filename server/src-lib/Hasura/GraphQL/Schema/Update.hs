@@ -35,7 +35,7 @@ import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
-import Hasura.RQL.Types.Common (SourceName)
+import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..), Nullability (..), litName)
@@ -264,7 +264,7 @@ updateTable ::
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (P.UnpreparedValue b)) ->
   -- | table source
-  SourceName ->
+  SourceInfo b ->
   -- | table info
   TableInfo b ->
   -- | field display name
@@ -272,7 +272,7 @@ updateTable ::
   -- | field description, if any
   Maybe Description ->
   m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b))))
-updateTable backendUpdate sourceName tableInfo fieldName description = runMaybeT do
+updateTable backendUpdate sourceInfo tableInfo fieldName description = runMaybeT do
   let tableName = tableInfoName tableInfo
       columns = tableColumns tableInfo
       whereName = $$(litName "where")
@@ -280,8 +280,8 @@ updateTable backendUpdate sourceName tableInfo fieldName description = runMaybeT
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
   updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
-  whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp sourceName tableInfo
-  selection <- lift $ mutationSelectionSet sourceName tableInfo
+  whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp sourceInfo tableInfo
+  selection <- lift $ mutationSelectionSet sourceInfo tableInfo
   let argsParser = liftA2 (,) backendUpdate whereArg
   pure $
     P.subselection fieldName description argsParser selection
@@ -297,7 +297,7 @@ updateTableByPk ::
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (P.UnpreparedValue b)) ->
   -- | table source
-  SourceName ->
+  SourceInfo b ->
   -- | table info
   TableInfo b ->
   -- | field display name
@@ -305,14 +305,14 @@ updateTableByPk ::
   -- | field description, if any
   Maybe Description ->
   m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b))))
-updateTableByPk backendUpdate sourceName tableInfo fieldName description = runMaybeT $ do
+updateTableByPk backendUpdate sourceInfo tableInfo fieldName description = runMaybeT $ do
   let columns = tableColumns tableInfo
       tableName = tableInfoName tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
   updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo
-  selection <- MaybeT $ tableSelectionSet sourceName tableInfo
+  selection <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   lift $ do
     tableGQLName <- getTableGQLName tableInfo
     pkObjectName <- P.mkTypename $ tableGQLName <> $$(litName "_pk_columns_input")

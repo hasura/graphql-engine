@@ -25,7 +25,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Select (SelectArgsG (..))
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
-import Hasura.RQL.Types.Common qualified as RQL
+import Hasura.RQL.Types.Source qualified as RQL
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table qualified as RQL
 import Hasura.SQL.Backend (BackendType (..))
@@ -74,7 +74,7 @@ instance BackendSchema 'DataConnector where
 
 experimentalBuildTableRelayQueryFields ::
   MonadBuildSchema 'DataConnector r m n =>
-  RQL.SourceName ->
+  RQL.SourceInfo 'DataConnector ->
   RQL.TableName 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
@@ -124,14 +124,14 @@ comparisonExps' ::
     MonadSchema n m,
     MonadError QErr m,
     MonadReader r m,
-    Has GS.C.QueryContext r,
+    Has GS.C.SchemaOptions r,
     Has NamingCase r
   ) =>
   RQL.ColumnType 'DataConnector ->
   m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
 comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
   tCase <- asks getter
-  collapseIfNull <- asks $ GS.C.qcDangerousBooleanCollapse . getter
+  collapseIfNull <- GS.C.retrieve GS.C.soDangerousBooleanCollapse
   typedParser <- columnParser' columnType (GQL.Nullability False)
   nullableTextParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability True)
   textParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability False)
@@ -170,7 +170,7 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
 tableArgs' ::
   forall r m n.
   MonadBuildSchema 'DataConnector r m n =>
-  RQL.SourceName ->
+  RQL.SourceInfo 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
   m (P.InputFieldsParser n (SelectArgsG 'DataConnector (P.UnpreparedValue 'DataConnector)))
 tableArgs' sourceName tableInfo = do
