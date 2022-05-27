@@ -1,6 +1,15 @@
 import { CardedTable } from '@/new-components/CardedTable';
 import React, { ReactNode } from 'react';
-import { FaArrowRight } from 'react-icons/fa';
+import { IconType } from 'react-icons';
+import {
+  FaArrowRight,
+  FaColumns,
+  FaDatabase,
+  FaFont,
+  FaPlug,
+  FaTable,
+} from 'react-icons/fa';
+import { FiType } from 'react-icons/fi';
 import { rsToDbRelDef, rsToRsRelDef } from '@/metadata/types';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import ModifyActions from './components/ModifyActions';
@@ -105,14 +114,57 @@ export const RemoteSchemaRelationshipTable = ({
       });
   }
 
+  const legend: { Icon: IconType; name: string }[] = [
+    {
+      Icon: FaPlug,
+      name: 'Remote Schema',
+    },
+    {
+      Icon: FiType,
+      name: 'Type',
+    },
+    {
+      Icon: FaFont,
+      name: 'Field',
+    },
+    {
+      Icon: FaDatabase,
+      name: 'Database',
+    },
+    {
+      Icon: FaTable,
+      name: 'Table',
+    },
+    {
+      Icon: FaColumns,
+      name: 'Column',
+    },
+  ];
+
   if (rowData?.length)
     return (
-      <CardedTable
-        columns={columns}
-        data={rowData}
-        showActionCell={showActionCell}
-        data-test="remote-schema-relationships-table"
-      />
+      <div>
+        <CardedTable
+          columns={columns}
+          data={rowData}
+          showActionCell={showActionCell}
+          data-test="remote-schema-relationships-table"
+        />
+        <div className="text-right mb-4">
+          {legend.map(item => {
+            const { Icon, name } = item;
+            return (
+              <span>
+                <Icon
+                  className="mr-1 ml-4 text-sm"
+                  style={{ strokeWidth: 4.5 }}
+                />
+                {name}
+              </span>
+            );
+          })}
+        </div>
+      </div>
     );
   return (
     <>

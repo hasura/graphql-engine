@@ -1,5 +1,5 @@
 import React, { ReactText } from 'react';
-import { FaProjectDiagram, FaFont } from 'react-icons/fa';
+import { FaPlug, FaFont } from 'react-icons/fa';
 
 const RsLeafCell = ({ leafName }: { leafName: ReactText }) => (
   <>
@@ -11,9 +11,10 @@ const RsLeafCell = ({ leafName }: { leafName: ReactText }) => (
   </>
 );
 
-// the desgin mockup was using FA v5, instead of fa-project-diagram, I've used  fa-code-fork from FA v4 for the time being
+// the design mockup was using FA v5, instead of fa-project-diagram, I've used  fa-code-fork from FA v4 for the time being
 // this matches with the icon that we show on RS page
 // this can be changed once after we upgrade Font Awesome to v5
+// edit: updated this to use FaPlug to have just one representation for remote schema in the table
 const ToRsCell = ({
   rsName,
   leafs,
@@ -23,7 +24,7 @@ const ToRsCell = ({
 }) => (
   <>
     <div className="flex items-center">
-      <FaProjectDiagram
+      <FaPlug
         className="fill-current text-sm text-muted mr-1 p-0"
         title="Remote schema"
       />

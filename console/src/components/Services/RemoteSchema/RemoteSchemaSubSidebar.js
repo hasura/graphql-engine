@@ -58,8 +58,8 @@ const RemoteSchemaSubSidebar = ({
           let activeTableClass = '';
 
           if (
-            d.name === viewRemoteSchema &&
-            location.pathname.includes(viewRemoteSchema)
+            location.pathname.includes(`/remote-schemas/`) &&
+            location.pathname.includes(`/${d.name}/`)
           ) {
             activeTableClass = styles.activeLink;
           }
