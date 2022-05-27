@@ -874,7 +874,7 @@ session variable of the same name.
     "prefix": String,
     "suffix": String
     }, 
-  "naming_conventions": String
+  "naming_convention": String
 }
 ```
 
@@ -882,23 +882,23 @@ session variable of the same name.
 |----------------------|----------|-----------------------------------------------------|------------------------------------------------|
 | `root_fields`        | false    | [RootFieldsCustomization](#rootfieldscustomization) | Customization of root field names for a source |
 | `type_names`         | false    | [SourceTypeCustomization](#sourcetypecustomization) | Customization of type names for a source       |
-| `naming_conventions` | false    | String                                              | Naming conventions for a source                |
+| `naming_convention` | false    | String                                              | Naming conventions for a source                |
 
 :::info Note
 
 Please note that the naming convention feature is an experimental feature for now.
-To use this feature, please use the `--experimental-features=naming_conventions`
+To use this feature, please use the `--experimental-features=naming_convention`
 flag or set the `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` environment variable to
-`naming_conventions`.
+`naming_convention`.
 
 The naming convention can either be `graphql-default` or `hasura-default` (default).
 **The `graphql-default` naming convention is supported only for postgres databases right now.**
 Typecase for each of the naming convention is mentioned below:
 
-| Naming Convention | Field names | Type names  |
-|-------------------|-------------|-------------|
-| hasura-default    | Snake case  | Snake case  |
-| graphql-default   | Camel case  | Pascal case |
+| Naming Convention | Field names | Type names  | Arguments  | Enum values |
+|-------------------|-------------|-------------|------------|-------------|
+| hasura-default    | Snake case  | Snake case  | Snake case | as defined  |
+| graphql-default   | Camel case  | Pascal case | Camel case | Uppercased  |
 
 The naming convention can be overridden by `custom_name` in [Table Config](#table-config)
 or by setting [Custom Root Fields](#custom-root-fields).

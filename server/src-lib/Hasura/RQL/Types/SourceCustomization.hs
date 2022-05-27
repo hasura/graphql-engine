@@ -118,7 +118,7 @@ instance FromJSON NamingCase where
 parseNamingConventionFromText :: Text -> Either String NamingCase
 parseNamingConventionFromText "hasura-default" = Right HasuraCase
 parseNamingConventionFromText "graphql-default" = Right GraphqlCase
-parseNamingConventionFromText _ = Left "naming_conventions can either be \"hasura-default\" or \"graphql-default\""
+parseNamingConventionFromText _ = Left "naming_convention can either be \"hasura-default\" or \"graphql-default\""
 
 mkCustomizedTypename :: Maybe SourceTypeCustomization -> NamingCase -> MkTypename
 mkCustomizedTypename stc tCase = MkTypename ((applyTypeNameCaseCust tCase) . (applyTypeCust stc))
@@ -197,7 +197,7 @@ applyPrefixSuffix (Just prefix) (Just suffix) name = prefix <> name <> suffix
 data SourceCustomization = SourceCustomization
   { _scRootFields :: !(Maybe RootFieldsCustomization),
     _scTypeNames :: !(Maybe SourceTypeCustomization),
-    _scNamingConventions :: !(Maybe NamingCase)
+    _scNamingConvention :: !(Maybe NamingCase)
   }
   deriving (Eq, Show, Generic)
 
@@ -219,7 +219,7 @@ getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
 
 getNamingConvention :: SourceCustomization -> NamingCase
-getNamingConvention = fromMaybe HasuraCase . _scNamingConventions
+getNamingConvention = fromMaybe HasuraCase . _scNamingConvention
 
 -- | Function to apply root field name customizations.
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
@@ -256,7 +256,7 @@ withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defa
   -- have restricted this feature to postgres for now.
   tCase <-
     case namingConventionSupport of
-      AllConventions -> pure (fromMaybe defaultNC _scNamingConventions)
+      AllConventions -> pure (fromMaybe defaultNC _scNamingConvention)
       OnlyHasuraCase -> case namingConv of
         GraphqlCase -> throw400 NotSupported $ "sources other than postgres do not support graphql-default as naming convention yet"
         HasuraCase -> pure HasuraCase

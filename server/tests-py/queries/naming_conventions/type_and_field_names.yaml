@@ -18,7 +18,7 @@
             idle_timeout: 180
             retries:
       customization:
-        naming_conventions: graphql-default
+        naming_convention: graphql-default
 
 - description: create table 1
   url: /v1/query
@@ -218,7 +218,7 @@
             idle_timeout: 180
             retries:
       customization:
-        naming_conventions: hasura-default
+        naming_convention: hasura-default
 
 - description: track table
   url: /v1/metadata

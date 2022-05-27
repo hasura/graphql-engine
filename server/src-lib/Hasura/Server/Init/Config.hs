@@ -402,11 +402,11 @@ readExperimentalFeatures = mapM readAPI . T.splitOn "," . T.pack
       "inherited_roles" -> Right EFInheritedRoles
       "streaming_subscriptions" -> Right EFStreamingSubscriptions
       "optimize_permission_filters" -> Right EFOptimizePermissionFilters
-      "naming_conventions" -> Right EFNamingConventions
+      "naming_convention" -> Right EFNamingConventions
       _ ->
         Left $
           "Only expecting list of comma separated experimental features, options are:"
-            ++ "inherited_roles, streaming_subscriptions, optimize_permission_filters, naming_conventions"
+            ++ "inherited_roles, streaming_subscriptions, optimize_permission_filters, naming_convention"
 
 readLogLevel :: String -> Either String L.LogLevel
 readLogLevel s = case T.toLower $ T.strip $ T.pack s of

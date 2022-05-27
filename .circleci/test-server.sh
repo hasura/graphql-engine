@@ -724,7 +724,7 @@ naming-conventions)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH EXPERIMENTAL FEATURE: NAMING CONVENTIONS ########>\n"
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM"
-	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=naming_conventions
+	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=naming_convention
 	run_hge_with_args serve
 	wait_for_port 8080
 
@@ -1247,7 +1247,7 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 backend-mssql)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SQL SERVER BACKEND ###########################################>\n"
 
-	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=naming_conventions
+	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=naming_convention
 	run_hge_with_args serve
 	wait_for_port 8080
 

@@ -5,8 +5,8 @@ import os
 
 @pytest.mark.skipif(
     os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES') is None or
-    not 'naming_conventions' in os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES'),
-    reason="This test expects the (naming_conventions) experimental feature turned on")
+    not 'naming_convention' in os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES'),
+    reason="This test expects the (naming_convention) experimental feature turned on")
 class TestNamingConventions:
 
     @classmethod
