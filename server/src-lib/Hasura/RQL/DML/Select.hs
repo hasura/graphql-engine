@@ -35,7 +35,7 @@ import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 
-type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
+type SelectQExt = SelectG (ExtCol ('Postgres 'Vanilla)) (BoolExp ('Postgres 'Vanilla)) Int
 
 -- Columns in RQL
 -- This technically doesn't need to be generalized to all backends as
@@ -43,8 +43,8 @@ type SelectQExt b = SelectG (ExtCol b) (BoolExp b) Int
 -- already done, and there's no particular reason to force this to be
 -- specific.
 data ExtCol (b :: BackendType)
-  = ECSimple !(Column b)
-  | ECRel !RelName !(Maybe RelName) !(SelectQExt b)
+  = ECSimple (Column b)
+  | ECRel RelName (Maybe RelName) SelectQExt
 
 convSelCol ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
@@ -103,7 +103,7 @@ resolveStar ::
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   SelPermInfo ('Postgres 'Vanilla) ->
   SelectQ ->
-  m (SelectQExt ('Postgres 'Vanilla))
+  m SelectQExt
 resolveStar fim selPermInfo (SelectG selCols mWh mOb mLt mOf) = do
   procOverrides <- fmap (concat . catMaybes) $
     withPathK "columns" $
@@ -127,7 +127,7 @@ resolveStar fim selPermInfo (SelectG selCols mWh mOb mLt mOf) = do
 
 convOrderByElem ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SessionVariableBuilder m ->
   (FieldInfoMap (FieldInfo ('Postgres 'Vanilla)), SelPermInfo ('Postgres 'Vanilla)) ->
   OrderByCol ->
   m (AnnotatedOrderByElement ('Postgres 'Vanilla) S.SQLExp)
@@ -198,8 +198,8 @@ convSelectQ ::
   TableName ('Postgres 'Vanilla) ->
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) -> -- Table information of current table
   SelPermInfo ('Postgres 'Vanilla) -> -- Additional select permission info
-  SelectQExt ('Postgres 'Vanilla) -> -- Given Select Query
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SelectQExt -> -- Given Select Query
+  SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   m (AnnSimpleSelect ('Postgres 'Vanilla))
 convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
@@ -278,8 +278,8 @@ convExtRel ::
   FieldInfoMap (FieldInfo ('Postgres 'Vanilla)) ->
   RelName ->
   Maybe RelName ->
-  SelectQExt ('Postgres 'Vanilla) ->
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SelectQExt ->
+  SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   m (Either (ObjectRelationSelect ('Postgres 'Vanilla)) (ArraySelect ('Postgres 'Vanilla)))
 convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
@@ -327,7 +327,7 @@ convSelectQuery ::
     TableInfoRM ('Postgres 'Vanilla) m,
     HasServerConfigCtx m
   ) =>
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SessionVariableBuilder m ->
   ValueParser ('Postgres 'Vanilla) m S.SQLExp ->
   SelectQuery ->
   m (AnnSimpleSelect ('Postgres 'Vanilla))

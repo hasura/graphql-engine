@@ -35,7 +35,7 @@ import Hasura.Tracing qualified as Tracing
 
 validateDeleteQWith ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
-  SessionVariableBuilder ('Postgres 'Vanilla) m ->
+  SessionVariableBuilder m ->
   (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
   DeleteQuery ->
   m (AnnDel ('Postgres 'Vanilla))
