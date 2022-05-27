@@ -326,7 +326,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
           tableIndirectDeps <- getIndirectDependenciesFromTableDiff source tablesDiff
 
           -- If table indirect dependencies exist and cascading is not enabled then report an exception
-          when (tableIndirectDeps /= [] && not cascadeDependencies) $ reportDependentObjectsExist tableIndirectDeps
+          when (not (null tableIndirectDeps) && not cascadeDependencies) $ reportDependentObjectsExist tableIndirectDeps
 
           -- Purge all the table dependents
           purgeDependencies tableIndirectDeps

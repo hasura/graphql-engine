@@ -299,7 +299,7 @@ runDropRel (DropRel source qt rn cascade) = do
                     SOITableObj @b qt $
                       TORel rn
               )
-      when (depObjs /= [] && not cascade) $ reportDependentObjectsExist depObjs
+      when (not (null depObjs) && not cascade) $ reportDependentObjectsExist depObjs
       pure depObjs
 
 purgeRelDep ::

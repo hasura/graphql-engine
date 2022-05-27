@@ -87,7 +87,7 @@ validateConfiguration ::
 validateConfiguration API.Routes {..} sourceName dataConnectorName config = do
   configSchemaResponse <- _configSchema
   let errors = API.validateConfigAgainstConfigSchema configSchemaResponse config
-  if errors /= []
+  if not $ null errors
     then
       let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
        in throw400
