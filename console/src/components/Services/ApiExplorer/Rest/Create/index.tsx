@@ -288,7 +288,7 @@ const CreateEndpoint: React.FC<CreateEndpointProps> = ({
           onClick={onClickCreate}
           className={styles.create_btn_styles}
         >
-          {isPageCreate ? 'Create' : 'Edit'} Endpoint
+          {isPageCreate ? 'Create' : 'Save'} Endpoint
         </Button>
       </div>
     </div>
