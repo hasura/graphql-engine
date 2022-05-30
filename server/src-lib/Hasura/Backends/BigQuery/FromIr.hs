@@ -1,7 +1,6 @@
 -- | Translate from the DML to the BigQuery dialect.
 module Hasura.Backends.BigQuery.FromIr
-  ( fromSelectRows,
-    mkSQLSelect,
+  ( mkSQLSelect,
     fromRootField,
     fromSelectAggregate,
     Error (..),
@@ -53,9 +52,13 @@ data Error
   | InvalidIntegerishSql Expression
   | ConnectionsNotSupported
   | ActionsNotSupported
-  | -- | TODO: SQL generation for computed fields is not being added now.
-    -- See https://github.com/hasura/graphql-engine-mono/issues/4369
-    ComputedFieldsNotSupported
+  | -- | https://github.com/hasura/graphql-engine/issues/8526
+    ComputedFieldsBooleanExpressionNotSupported
+  | -- | https://github.com/hasura/graphql-engine/issues/8526
+    ComputedFieldsOrderByNotSupported
+  | -- | https://github.com/hasura/graphql-engine/issues/8521
+    ScalarComputedFieldsNotSupported
+  | NoParentEntityInternalError
 
 instance Show Error where
   show =
@@ -75,7 +78,10 @@ instance Show Error where
       InvalidIntegerishSql {} -> "InvalidIntegerishSql"
       ConnectionsNotSupported {} -> "ConnectionsNotSupported"
       ActionsNotSupported {} -> "ActionsNotSupported"
-      ComputedFieldsNotSupported {} -> "ComputedFieldsNotSupported"
+      ComputedFieldsBooleanExpressionNotSupported {} -> "ComputedFieldsBooleanExpressionNotSupported"
+      ComputedFieldsOrderByNotSupported {} -> "ComputedFieldsOrderByNotSupported"
+      ScalarComputedFieldsNotSupported {} -> "ScalarComputedFieldsNotSupported"
+      NoParentEntityInternalError {} -> "NoParentEntityInternalError"
 
 -- | The base monad used throughout this module for all conversion
 -- functions.
@@ -115,6 +121,33 @@ data FromIrConfig = FromIrConfig
 defaultFromIrConfig :: FromIrConfig
 defaultFromIrConfig = FromIrConfig {globalSelectLimit = NoTop}
 
+-- | Alias of parent SELECT FROM.
+-- Functions underlying computed fields requires column values from
+-- the table that is being used in FROM clause of parent SELECT.
+--
+-- Example SQL:
+--
+-- > SELECT
+-- >   `t_author1`.`id` AS `id`,
+-- >   `t_author1`.`name` AS `name`,
+-- >   ARRAY(
+-- >     SELECT
+-- >       AS STRUCT `id`,
+-- >       `title`,
+-- >       `content`
+-- >     FROM
+-- >       `hasura_test`.`fetch_articles`(`id` => `t_author1`.`id`)
+-- >   ) AS `articles`
+-- > FROM
+-- >   `hasura_test`.`author` AS `t_author1`
+--
+-- Where `t_author1` is the @'ParentSelectFromIdentity'
+data ParentSelectFromEntity
+  = -- | There's no parent entity
+    NoParentEntity
+  | -- | Alias of the parent SELECT FROM
+    ParentEntityAlias EntityAlias
+
 --------------------------------------------------------------------------------
 -- Runners
 
@@ -139,7 +172,7 @@ mkSQLSelect ::
   Ir.AnnSelectG 'BigQuery (Ir.AnnFieldG 'BigQuery Void) Expression ->
   FromIr BigQuery.Select
 mkSQLSelect jsonAggSelect annSimpleSel = do
-  select <- noExtraPartitionFields <$> fromSelectRows annSimpleSel
+  select <- noExtraPartitionFields <$> fromSelectRows NoParentEntity annSimpleSel
   pure
     ( select
         { selectCardinality =
@@ -176,8 +209,8 @@ fromUnnestedJSON json columns _fields = do
         )
     )
 
-fromSelectRows :: Ir.AnnSelectG 'BigQuery (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.PartitionableSelect
-fromSelectRows annSelectG = do
+fromSelectRows :: ParentSelectFromEntity -> Ir.AnnSelectG 'BigQuery (Ir.AnnFieldG 'BigQuery Void) Expression -> FromIr BigQuery.PartitionableSelect
+fromSelectRows parentSelectFromEntity annSelectG = do
   let Ir.AnnSelectG
         { _asnFields = fields,
           _asnFrom = from,
@@ -193,6 +226,8 @@ fromSelectRows annSelectG = do
       Ir.FromTable qualifiedObject -> fromQualifiedTable qualifiedObject
       Ir.FromFunction nm (Rql.FunctionArgsExp [BigQuery.AEInput json] _) (Just columns)
         | functionName nm == "unnest" -> fromUnnestedJSON json columns (map fst fields)
+      Ir.FromFunction functionName (Rql.FunctionArgsExp positionalArgs namedArgs) Nothing ->
+        fromFunction parentSelectFromEntity functionName positionalArgs namedArgs
       _ -> refute (pure (FromTypeUnsupported from))
   Args
     { argsOrderBy,
@@ -217,6 +252,7 @@ fromSelectRows annSelectG = do
   let select =
         Select
           { selectCardinality = Many,
+            selectAsStruct = NoAsStruct,
             selectFinalWantedFields = pure (fieldTextNames fields),
             selectGroupBy = mempty,
             selectOrderBy = argsOrderBy,
@@ -406,6 +442,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
   pure
     Select
       { selectCardinality = One,
+        selectAsStruct = NoAsStruct,
         selectFinalWantedFields = Nothing,
         selectGroupBy = mempty,
         selectProjections,
@@ -416,6 +453,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
                 { aliasedThing =
                     Select
                       { selectProjections = innerProjections,
+                        selectAsStruct = NoAsStruct,
                         selectFrom,
                         selectJoins = argsJoins,
                         selectWhere = argsWhere <> (Where [filterExpression]),
@@ -574,6 +612,7 @@ unfurlAnnotatedOrderByElement =
                         JoinSelect
                           Select
                             { selectCardinality = One,
+                              selectAsStruct = NoAsStruct,
                               selectFinalWantedFields = Nothing,
                               selectGroupBy = mempty,
                               selectTop = NoTop,
@@ -625,6 +664,7 @@ unfurlAnnotatedOrderByElement =
                           JoinSelect
                             Select
                               { selectCardinality = One,
+                                selectAsStruct = NoAsStruct,
                                 selectFinalWantedFields = Nothing,
                                 selectTop = NoTop,
                                 selectProjections =
@@ -668,7 +708,7 @@ unfurlAnnotatedOrderByElement =
           { fieldNameEntity = entityAliasText joinAlias,
             fieldName = alias
           }
-    Ir.AOCComputedField {} -> refute $ pure ComputedFieldsNotSupported
+    Ir.AOCComputedField {} -> refute $ pure ComputedFieldsOrderByNotSupported
 
 --------------------------------------------------------------------------------
 -- Conversion functions
@@ -690,6 +730,41 @@ fromQualifiedTable (TableName {tableNameSchema = schemaName, tableName = qname})
             }
         )
     )
+
+-- | Build a @'From' expression out of a function that returns a set of rows.
+fromFunction ::
+  -- | The parent's entity alias from which the column values for computed fields are referred
+  ParentSelectFromEntity ->
+  -- | The function
+  FunctionName ->
+  -- | List of positional Arguments
+  [ArgumentExp Expression] ->
+  -- | List of named arguments
+  HM.HashMap Text (ArgumentExp Expression) ->
+  FromIr From
+fromFunction parentEntityAlias functionName positionalArgs namedArgs = do
+  alias <- generateEntityAlias (FunctionTemplate functionName)
+  positionalArgExps <- mapM fromArgumentExp positionalArgs
+  namedArgExps <- for (HM.toList namedArgs) $ \(argName, argValue) -> FunctionNamedArgument argName <$> fromArgumentExp argValue
+  pure
+    ( FromFunction
+        ( Aliased
+            { aliasedThing = SelectFromFunction functionName (positionalArgExps <> namedArgExps),
+              aliasedAlias = entityAliasText alias
+            }
+        )
+    )
+  where
+    fromArgumentExp :: ArgumentExp Expression -> FromIr Expression
+    fromArgumentExp = \case
+      AEInput e -> pure e
+      AETableColumn (ColumnName columnName) -> do
+        case parentEntityAlias of
+          NoParentEntity -> refute $ pure NoParentEntityInternalError
+          ParentEntityAlias entityAlias ->
+            pure $
+              ColumnExpression $
+                FieldName columnName (entityAliasText entityAlias)
 
 fromAnnBoolExp ::
   Ir.GBoolExp 'BigQuery (Ir.AnnBoolExpFld 'BigQuery Expression) ->
@@ -713,6 +788,7 @@ fromAnnBoolExpFld =
         ( ExistsExpression
             Select
               { selectCardinality = One,
+                selectAsStruct = NoAsStruct,
                 selectFinalWantedFields = Nothing,
                 selectGroupBy = mempty,
                 selectOrderBy = Nothing,
@@ -732,7 +808,7 @@ fromAnnBoolExpFld =
                 selectOffset = Nothing
               }
         )
-    Ir.AVComputedField {} -> refute $ pure ComputedFieldsNotSupported
+    Ir.AVComputedField {} -> refute $ pure ComputedFieldsBooleanExpressionNotSupported
 
 fromColumnInfo :: Rql.ColumnInfo 'BigQuery -> ReaderT EntityAlias FromIr FieldName
 fromColumnInfo Rql.ColumnInfo {ciColumn = ColumnName column} = do
@@ -752,6 +828,7 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
   pure
     Select
       { selectCardinality = One,
+        selectAsStruct = NoAsStruct,
         selectFinalWantedFields = Nothing,
         selectGroupBy = mempty,
         selectOrderBy = Nothing,
@@ -939,7 +1016,12 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
             JoinFieldSource (Aliased {aliasedThing, aliasedAlias = name})
         )
         (fromArraySelectG arraySelectG)
-    Ir.AFComputedField {} -> refute $ pure ComputedFieldsNotSupported
+    Ir.AFComputedField _ _ computedFieldSelect -> do
+      expression <- fromComputedFieldSelect computedFieldSelect
+      pure
+        ( ExpressionFieldSource
+            Aliased {aliasedThing = expression, aliasedAlias = name}
+        )
 
 -- | Here is where we project a field as a column expression. If
 -- number stringification is on, then we wrap it in a
@@ -1139,6 +1221,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
           JoinSelect
             Select
               { selectCardinality = One,
+                selectAsStruct = NoAsStruct,
                 selectFinalWantedFields,
                 selectGroupBy = mempty,
                 selectOrderBy = Nothing,
@@ -1190,6 +1273,39 @@ fromArraySelectG =
       fromArrayRelationSelectG arrayRelationSelectG
     Ir.ASAggregate arrayAggregateSelectG ->
       fromArrayAggregateSelectG arrayAggregateSelectG
+
+-- | Generate a select field @'Expression' for a computed field
+--
+-- > ARRAY(
+-- >     SELECT
+-- >       AS STRUCT
+-- >       `column_1`,
+-- >       `column_2``,
+-- >       `column_3`
+-- >     FROM
+-- >       `dataset`.`function_name`(`argument_name` => `parent_entity`.`column`)
+-- >   ) AS `field_name`
+fromComputedFieldSelect ::
+  Ir.ComputedFieldSelect 'BigQuery Void Expression ->
+  ReaderT EntityAlias FromIr Expression
+fromComputedFieldSelect = \case
+  Ir.CFSScalar {} ->
+    -- As of now, we don't have support for computed fields returning a scalar value.
+    -- See https://github.com/hasura/graphql-engine/issues/8521
+    refute $ pure ScalarComputedFieldsNotSupported
+  Ir.CFSTable jsonAggSelect annSimpleSelect -> do
+    entityAlias <- ask
+    select <- lift $ noExtraPartitionFields <$> fromSelectRows (ParentEntityAlias entityAlias) annSimpleSelect
+    let selectWithCardinality =
+          select
+            { selectCardinality =
+                case jsonAggSelect of
+                  Rql.JASMultipleRows -> Many
+                  Rql.JASSingleObject -> One,
+              selectAsStruct = AsStruct,
+              selectTop = NoTop
+            }
+    pure $ FunctionExpression (FunctionName "ARRAY" Nothing) [SelectExpression selectWithCardinality]
 
 -- | Produce the join for an array aggregate relation. We produce a
 -- normal select, but then include join fields. Then downstream, the
@@ -1313,7 +1429,7 @@ fromArrayRelationSelectG ::
   Ir.ArrayRelationSelectG 'BigQuery Void Expression ->
   ReaderT EntityAlias FromIr Join
 fromArrayRelationSelectG annRelationSelectG = do
-  pselect <- lift (fromSelectRows annSelectG) -- Take the original select.
+  pselect <- (lift . flip fromSelectRows annSelectG . ParentEntityAlias) =<< ask -- Take the original select.
   joinFieldName <- lift (fromRelName _aarRelationshipName)
   alias <- lift (generateEntityAlias (ArrayRelationTemplate joinFieldName))
   indexAlias <- lift (generateEntityAlias IndexTemplate)
@@ -1334,6 +1450,7 @@ fromArrayRelationSelectG annRelationSelectG = do
       joinSelect =
         Select
           { selectCardinality = One,
+            selectAsStruct = NoAsStruct,
             selectFinalWantedFields = selectFinalWantedFields select,
             selectTop = NoTop,
             selectProjections =
@@ -1409,6 +1526,7 @@ fromArrayRelationSelectG annRelationSelectG = do
                             selectFinalWantedFields =
                               selectFinalWantedFields select,
                             selectCardinality = Many,
+                            selectAsStruct = NoAsStruct,
                             selectTop = NoTop,
                             selectGroupBy = mempty
                           }
@@ -1568,7 +1686,7 @@ fromOpExpG expression op =
 
 fromBackendSpecificOpExpG :: Expression -> BigQuery.BooleanOperators Expression -> Expression
 fromBackendSpecificOpExpG expression op =
-  let func name val = FunctionExpression name [expression, val]
+  let func name val = FunctionExpression (FunctionName name Nothing) [expression, val]
    in case op of
         BigQuery.ASTContains v -> func "ST_CONTAINS" v
         BigQuery.ASTEquals v -> func "ST_EQUALS" v
@@ -1576,7 +1694,7 @@ fromBackendSpecificOpExpG expression op =
         BigQuery.ASTWithin v -> func "ST_WITHIN" v
         BigQuery.ASTIntersects v -> func "ST_INTERSECTS" v
         BigQuery.ASTDWithin (Ir.DWithinGeogOp r v sph) ->
-          FunctionExpression "ST_DWITHIN" [expression, v, r, sph]
+          FunctionExpression (FunctionName "ST_DWITHIN" Nothing) [expression, v, r, sph]
 
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolEquality x y =
@@ -1629,6 +1747,7 @@ data NameTemplate
   | ForOrderAlias Text
   | IndexTemplate
   | UnnestTemplate
+  | FunctionTemplate FunctionName
 
 generateEntityAlias :: NameTemplate -> FromIr EntityAlias
 generateEntityAlias template = do
@@ -1652,11 +1771,13 @@ generateEntityAlias template = do
         ForOrderAlias sample -> "order_" <> sample
         IndexTemplate -> "idx"
         UnnestTemplate -> "unnest"
+        FunctionTemplate FunctionName {..} -> functionName
 
 fromAlias :: From -> EntityAlias
 fromAlias (FromQualifiedTable Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelect Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 fromAlias (FromSelectJson Aliased {aliasedAlias}) = EntityAlias aliasedAlias
+fromAlias (FromFunction Aliased {aliasedAlias}) = EntityAlias aliasedAlias
 
 fieldTextNames :: Ir.AnnFieldsG 'BigQuery Void Expression -> [Text]
 fieldTextNames = fmap (\(Rql.FieldName name, _) -> name)

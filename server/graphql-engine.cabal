@@ -1155,6 +1155,8 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
+    Test.BigQuery.ComputedFieldSpec
+    Test.BigQuery.Metadata.ComputedFieldSpec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.SelectSpec
     Test.SerializationSpec
