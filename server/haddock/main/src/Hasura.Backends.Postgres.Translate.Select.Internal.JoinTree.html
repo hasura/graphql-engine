@@ -23,49 +23,49 @@
 </span><span id="line-23"></span><span class="hs-comment">--</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- See the definition of 'JoinTree' for details before diving further</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- (particularly its components and Monoid instance).</span><span>
-</span><span id="line-26"></span><span id="local-6989586621689056277"><span id="local-6989586621689056278"><span id="local-6989586621689056279"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-type">withWriteJoinTree</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056279"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689056278"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-29"></span><span>  </span><span class="annot"><a href="#local-6989586621689056279"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689056277"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621689056278"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-30"></span><span>  </span><span class="annot"><a href="#local-6989586621689056279"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056277"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-26"></span><span id="local-6989586621689056259"><span id="local-6989586621689056260"><span id="local-6989586621689056261"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-type">withWriteJoinTree</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056261"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689056260"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-29"></span><span>  </span><span class="annot"><a href="#local-6989586621689056261"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689056259"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621689056260"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="#local-6989586621689056261"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056259"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
 </span><span id="line-31"></span><span id="withWriteJoinTree"><span class="annot"><span class="annottext">withWriteJoinTree :: (JoinTree -&gt; b -&gt; JoinTree) -&gt; m (a, b) -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-var hs-var">withWriteJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056255"><span class="annot"><span class="annottext">JoinTree -&gt; b -&gt; JoinTree
-</span><a href="#local-6989586621689056255"><span class="hs-identifier hs-var">joinTreeUpdater</span></a></span></span><span> </span><span id="local-6989586621689056254"><span class="annot"><span class="annottext">m (a, b)
-</span><a href="#local-6989586621689056254"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-var hs-var">withWriteJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056237"><span class="annot"><span class="annottext">JoinTree -&gt; b -&gt; JoinTree
+</span><a href="#local-6989586621689056237"><span class="hs-identifier hs-var">joinTreeUpdater</span></a></span></span><span> </span><span id="local-6989586621689056236"><span class="annot"><span class="annottext">m (a, b)
+</span><a href="#local-6989586621689056236"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-32"></span><span>  </span><span class="annot"><span class="annottext">m (a, JoinTree -&gt; JoinTree) -&gt; m a
 forall w (m :: * -&gt; *) a. MonadWriter w m =&gt; m (a, w -&gt; w) -&gt; m a
 </span><span class="hs-identifier hs-var">pass</span></span><span> </span><span class="annot"><span class="annottext">(m (a, JoinTree -&gt; JoinTree) -&gt; m a)
 -&gt; m (a, JoinTree -&gt; JoinTree) -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-33"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056252"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056252"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056251"><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621689056251"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (a, b)
-</span><a href="#local-6989586621689056254"><span class="hs-identifier hs-var">action</span></a></span><span>
-</span><span id="line-34"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056250"><span class="annot"><span class="annottext">fromJoinTree :: JoinTree -&gt; JoinTree
-</span><a href="#local-6989586621689056250"><span class="hs-identifier hs-var hs-var">fromJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056249"><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056249"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056234"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689056234"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056233"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621689056233"><span class="hs-identifier hs-var">result</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (a, b)
+</span><a href="#local-6989586621689056236"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056232"><span class="annot"><span class="annottext">fromJoinTree :: JoinTree -&gt; JoinTree
+</span><a href="#local-6989586621689056232"><span class="hs-identifier hs-var hs-var">fromJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056231"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056231"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-35"></span><span>          </span><span class="annot"><span class="annottext">JoinTree -&gt; b -&gt; JoinTree
-</span><a href="#local-6989586621689056255"><span class="hs-identifier hs-var">joinTreeUpdater</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056249"><span class="hs-identifier hs-var">joinTree</span></a></span><span> </span><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621689056251"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><a href="#local-6989586621689056237"><span class="hs-identifier hs-var">joinTreeUpdater</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056231"><span class="hs-identifier hs-var">joinTree</span></a></span><span> </span><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621689056233"><span class="hs-identifier hs-var">result</span></a></span><span>
 </span><span id="line-36"></span><span>    </span><span class="annot"><span class="annottext">(a, JoinTree -&gt; JoinTree) -&gt; m (a, JoinTree -&gt; JoinTree)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056252"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">JoinTree -&gt; JoinTree
-</span><a href="#local-6989586621689056250"><span class="hs-identifier hs-var">fromJoinTree</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689056234"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">JoinTree -&gt; JoinTree
+</span><a href="#local-6989586621689056232"><span class="hs-identifier hs-var">fromJoinTree</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span id="local-6989586621689056247"><span id="local-6989586621689056248"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteObjectRelation"><span class="hs-identifier hs-type">withWriteObjectRelation</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-39"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056248"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-40"></span><span>  </span><span class="annot"><a href="#local-6989586621689056248"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-38"></span><span id="local-6989586621689056229"><span id="local-6989586621689056230"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteObjectRelation"><span class="hs-identifier hs-type">withWriteObjectRelation</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056230"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><a href="#local-6989586621689056230"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-41"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ObjectRelationSource"><span class="hs-identifier hs-type">ObjectRelationSource</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-42"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-43"></span><span>      </span><span class="annot"><a href="#local-6989586621689056247"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><a href="#local-6989586621689056229"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-44"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-45"></span><span>  </span><span class="annot"><a href="#local-6989586621689056248"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056247"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="#local-6989586621689056230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056229"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-46"></span><span id="withWriteObjectRelation"><span class="annot"><span class="annottext">withWriteObjectRelation :: m (ObjectRelationSource, HashMap Alias SQLExp, a) -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteObjectRelation"><span class="hs-identifier hs-var hs-var">withWriteObjectRelation</span></a></span></span><span> </span><span id="local-6989586621689056246"><span class="annot"><span class="annottext">m (ObjectRelationSource, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056246"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteObjectRelation"><span class="hs-identifier hs-var hs-var">withWriteObjectRelation</span></a></span></span><span> </span><span id="local-6989586621689056228"><span class="annot"><span class="annottext">m (ObjectRelationSource, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056228"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><span class="annottext">(JoinTree
  -&gt; (ObjectRelationSource, HashMap Alias SQLExp) -&gt; JoinTree)
 -&gt; m (a, (ObjectRelationSource, HashMap Alias SQLExp)) -&gt; m a
@@ -74,56 +74,56 @@ MonadWriter JoinTree m =&gt;
 (JoinTree -&gt; b -&gt; JoinTree) -&gt; m (a, b) -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-var">withWriteJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
 -&gt; (ObjectRelationSource, HashMap Alias SQLExp) -&gt; JoinTree
-</span><a href="#local-6989586621689056245"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a, (ObjectRelationSource, HashMap Alias SQLExp)) -&gt; m a)
+</span><a href="#local-6989586621689056227"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a, (ObjectRelationSource, HashMap Alias SQLExp)) -&gt; m a)
 -&gt; m (a, (ObjectRelationSource, HashMap Alias SQLExp)) -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-48"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056244"><span class="annot"><span class="annottext">ObjectRelationSource
-</span><a href="#local-6989586621689056244"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056243"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056243"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056242"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056242"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ObjectRelationSource, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056246"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056226"><span class="annot"><span class="annottext">ObjectRelationSource
+</span><a href="#local-6989586621689056226"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056225"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056225"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056224"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689056224"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ObjectRelationSource, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056228"><span class="hs-identifier hs-var">action</span></a></span><span>
 </span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">(a, (ObjectRelationSource, HashMap Alias SQLExp))
 -&gt; m (a, (ObjectRelationSource, HashMap Alias SQLExp))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056242"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectRelationSource
-</span><a href="#local-6989586621689056244"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056243"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689056224"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectRelationSource
+</span><a href="#local-6989586621689056226"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056225"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621689056245"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621689056227"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
 -&gt; (ObjectRelationSource, HashMap Alias SQLExp) -&gt; JoinTree
-</span><a href="#local-6989586621689056245"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056241"><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056241"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056240"><span class="annot"><span class="annottext">ObjectRelationSource
-</span><a href="#local-6989586621689056240"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056239"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056239"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-52"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056238"><span class="annot"><span class="annottext">selectNode :: SelectNode
-</span><a href="#local-6989586621689056238"><span class="hs-identifier hs-var hs-var">selectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp -&gt; JoinTree -&gt; SelectNode
+</span><a href="#local-6989586621689056227"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056223"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056223"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056222"><span class="annot"><span class="annottext">ObjectRelationSource
+</span><a href="#local-6989586621689056222"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056221"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056221"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056220"><span class="annot"><span class="annottext">selectNode :: SelectNode
+</span><a href="#local-6989586621689056220"><span class="hs-identifier hs-var hs-var">selectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp -&gt; JoinTree -&gt; SelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056239"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056241"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
+</span><a href="#local-6989586621689056221"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056223"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
 </span><span id="line-53"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">JoinTree
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_jtObjectRelations :: HashMap ObjectRelationSource SelectNode
-</span><a href="#local-6989586621689056236"><span class="hs-identifier hs-var">_jtObjectRelations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjectRelationSource
+</span><a href="#local-6989586621689056218"><span class="hs-identifier hs-var">_jtObjectRelations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ObjectRelationSource
 -&gt; SelectNode -&gt; HashMap ObjectRelationSource SelectNode
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HM.singleton</span></span><span> </span><span class="annot"><span class="annottext">ObjectRelationSource
-</span><a href="#local-6989586621689056240"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">SelectNode
-</span><a href="#local-6989586621689056238"><span class="hs-identifier hs-var">selectNode</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689056222"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">SelectNode
+</span><a href="#local-6989586621689056220"><span class="hs-identifier hs-var">selectNode</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span id="local-6989586621689056233"><span id="local-6989586621689056234"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayRelation"><span class="hs-identifier hs-type">withWriteArrayRelation</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056234"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-57"></span><span>  </span><span class="annot"><a href="#local-6989586621689056234"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-55"></span><span id="local-6989586621689056215"><span id="local-6989586621689056216"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayRelation"><span class="hs-identifier hs-type">withWriteArrayRelation</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056216"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="#local-6989586621689056216"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-58"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayRelationSource"><span class="hs-identifier hs-type">ArrayRelationSource</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-59"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-type">S.Extractor</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-60"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>      </span><span class="annot"><a href="#local-6989586621689056233"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-61"></span><span>      </span><span class="annot"><a href="#local-6989586621689056215"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-62"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><a href="#local-6989586621689056234"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056233"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="#local-6989586621689056216"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056215"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-64"></span><span id="withWriteArrayRelation"><span class="annot"><span class="annottext">withWriteArrayRelation :: m (ArrayRelationSource, Extractor, HashMap Alias SQLExp, a) -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayRelation"><span class="hs-identifier hs-var hs-var">withWriteArrayRelation</span></a></span></span><span> </span><span id="local-6989586621689056232"><span class="annot"><span class="annottext">m (ArrayRelationSource, Extractor, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056232"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayRelation"><span class="hs-identifier hs-var hs-var">withWriteArrayRelation</span></a></span></span><span> </span><span id="local-6989586621689056214"><span class="annot"><span class="annottext">m (ArrayRelationSource, Extractor, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056214"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-65"></span><span>  </span><span class="annot"><span class="annottext">(JoinTree
  -&gt; (ArrayRelationSource, Extractor, HashMap Alias SQLExp)
  -&gt; JoinTree)
@@ -135,47 +135,47 @@ MonadWriter JoinTree m =&gt;
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-var">withWriteJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
 -&gt; (ArrayRelationSource, Extractor, HashMap Alias SQLExp)
 -&gt; JoinTree
-</span><a href="#local-6989586621689056231"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a, (ArrayRelationSource, Extractor, HashMap Alias SQLExp))
+</span><a href="#local-6989586621689056213"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a, (ArrayRelationSource, Extractor, HashMap Alias SQLExp))
  -&gt; m a)
 -&gt; m (a, (ArrayRelationSource, Extractor, HashMap Alias SQLExp))
 -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-66"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056230"><span class="annot"><span class="annottext">ArrayRelationSource
-</span><a href="#local-6989586621689056230"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056229"><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056229"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056228"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056228"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056227"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056227"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ArrayRelationSource, Extractor, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056232"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056212"><span class="annot"><span class="annottext">ArrayRelationSource
+</span><a href="#local-6989586621689056212"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056211"><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056211"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056210"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056210"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056209"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689056209"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ArrayRelationSource, Extractor, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056214"><span class="hs-identifier hs-var">action</span></a></span><span>
 </span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">(a, (ArrayRelationSource, Extractor, HashMap Alias SQLExp))
 -&gt; m (a, (ArrayRelationSource, Extractor, HashMap Alias SQLExp))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056227"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ArrayRelationSource
-</span><a href="#local-6989586621689056230"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056229"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056228"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689056209"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ArrayRelationSource
+</span><a href="#local-6989586621689056212"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056211"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056210"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-69"></span><span>    </span><span id="local-6989586621689056231"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621689056213"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
 -&gt; (ArrayRelationSource, Extractor, HashMap Alias SQLExp)
 -&gt; JoinTree
-</span><a href="#local-6989586621689056231"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056226"><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056226"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056225"><span class="annot"><span class="annottext">ArrayRelationSource
-</span><a href="#local-6989586621689056225"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056224"><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056224"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056223"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056223"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-70"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056222"><span class="annot"><span class="annottext">arraySelectNode :: MultiRowSelectNode
-</span><a href="#local-6989586621689056222"><span class="hs-identifier hs-var hs-var">arraySelectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689056213"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056208"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056208"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056207"><span class="annot"><span class="annottext">ArrayRelationSource
+</span><a href="#local-6989586621689056207"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056206"><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056206"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056205"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056205"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-70"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056204"><span class="annot"><span class="annottext">arraySelectNode :: MultiRowSelectNode
+</span><a href="#local-6989586621689056204"><span class="hs-identifier hs-var hs-var">arraySelectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-71"></span><span>            </span><span class="annot"><span class="annottext">[Extractor] -&gt; SelectNode -&gt; MultiRowSelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-var">MultiRowSelectNode</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056224"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
+</span><a href="#local-6989586621689056206"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
 -&gt; SelectNode -&gt; MultiRowSelectNode
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-72"></span><span>              </span><span class="annot"><span class="annottext">HashMap Alias SQLExp -&gt; JoinTree -&gt; SelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056223"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056226"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
+</span><a href="#local-6989586621689056205"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056208"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
 </span><span id="line-73"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">JoinTree
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_jtArrayRelations :: HashMap ArrayRelationSource MultiRowSelectNode
@@ -184,22 +184,22 @@ forall a. Monoid a =&gt; a
 -&gt; HashMap ArrayRelationSource MultiRowSelectNode
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HM.singleton</span></span><span> </span><span class="annot"><span class="annottext">ArrayRelationSource
-</span><a href="#local-6989586621689056225"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
-</span><a href="#local-6989586621689056222"><span class="hs-identifier hs-var">arraySelectNode</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689056207"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
+</span><a href="#local-6989586621689056204"><span class="hs-identifier hs-var">arraySelectNode</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span id="local-6989586621689056218"><span id="local-6989586621689056219"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayConnection"><span class="hs-identifier hs-type">withWriteArrayConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056219"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-77"></span><span>  </span><span class="annot"><a href="#local-6989586621689056219"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-75"></span><span id="local-6989586621689056200"><span id="local-6989586621689056201"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayConnection"><span class="hs-identifier hs-type">withWriteArrayConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056201"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="#local-6989586621689056201"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-78"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ArrayConnectionSource"><span class="hs-identifier hs-type">ArrayConnectionSource</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-79"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-type">S.Extractor</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-80"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-81"></span><span>      </span><span class="annot"><a href="#local-6989586621689056218"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-81"></span><span>      </span><span class="annot"><a href="#local-6989586621689056200"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-82"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="#local-6989586621689056219"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056218"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="#local-6989586621689056201"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056200"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-84"></span><span id="withWriteArrayConnection"><span class="annot"><span class="annottext">withWriteArrayConnection :: m (ArrayConnectionSource, Extractor, HashMap Alias SQLExp, a)
 -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayConnection"><span class="hs-identifier hs-var hs-var">withWriteArrayConnection</span></a></span></span><span> </span><span id="local-6989586621689056217"><span class="annot"><span class="annottext">m (ArrayConnectionSource, Extractor, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056217"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteArrayConnection"><span class="hs-identifier hs-var hs-var">withWriteArrayConnection</span></a></span></span><span> </span><span id="local-6989586621689056199"><span class="annot"><span class="annottext">m (ArrayConnectionSource, Extractor, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056199"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">(JoinTree
  -&gt; (ArrayConnectionSource, Extractor, HashMap Alias SQLExp)
  -&gt; JoinTree)
@@ -211,47 +211,47 @@ MonadWriter JoinTree m =&gt;
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-var">withWriteJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
 -&gt; (ArrayConnectionSource, Extractor, HashMap Alias SQLExp)
 -&gt; JoinTree
-</span><a href="#local-6989586621689056216"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a, (ArrayConnectionSource, Extractor, HashMap Alias SQLExp))
+</span><a href="#local-6989586621689056198"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a, (ArrayConnectionSource, Extractor, HashMap Alias SQLExp))
  -&gt; m a)
 -&gt; m (a, (ArrayConnectionSource, Extractor, HashMap Alias SQLExp))
 -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-86"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056215"><span class="annot"><span class="annottext">ArrayConnectionSource
-</span><a href="#local-6989586621689056215"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056214"><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056214"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056213"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056213"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056212"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056212"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ArrayConnectionSource, Extractor, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056217"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056197"><span class="annot"><span class="annottext">ArrayConnectionSource
+</span><a href="#local-6989586621689056197"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056196"><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056196"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056195"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056195"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056194"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689056194"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ArrayConnectionSource, Extractor, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056199"><span class="hs-identifier hs-var">action</span></a></span><span>
 </span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">(a, (ArrayConnectionSource, Extractor, HashMap Alias SQLExp))
 -&gt; m (a, (ArrayConnectionSource, Extractor, HashMap Alias SQLExp))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056212"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ArrayConnectionSource
-</span><a href="#local-6989586621689056215"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056214"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056213"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689056194"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ArrayConnectionSource
+</span><a href="#local-6989586621689056197"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056196"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056195"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-89"></span><span>    </span><span id="local-6989586621689056216"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621689056198"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
 -&gt; (ArrayConnectionSource, Extractor, HashMap Alias SQLExp)
 -&gt; JoinTree
-</span><a href="#local-6989586621689056216"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056211"><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056211"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056210"><span class="annot"><span class="annottext">ArrayConnectionSource
-</span><a href="#local-6989586621689056210"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056209"><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056209"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056208"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056208"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-90"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056207"><span class="annot"><span class="annottext">arraySelectNode :: MultiRowSelectNode
-</span><a href="#local-6989586621689056207"><span class="hs-identifier hs-var hs-var">arraySelectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689056198"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056193"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056193"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056192"><span class="annot"><span class="annottext">ArrayConnectionSource
+</span><a href="#local-6989586621689056192"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056191"><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056191"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056190"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056190"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056189"><span class="annot"><span class="annottext">arraySelectNode :: MultiRowSelectNode
+</span><a href="#local-6989586621689056189"><span class="hs-identifier hs-var hs-var">arraySelectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-91"></span><span>            </span><span class="annot"><span class="annottext">[Extractor] -&gt; SelectNode -&gt; MultiRowSelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-var">MultiRowSelectNode</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056209"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
+</span><a href="#local-6989586621689056191"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
 -&gt; SelectNode -&gt; MultiRowSelectNode
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-92"></span><span>              </span><span class="annot"><span class="annottext">HashMap Alias SQLExp -&gt; JoinTree -&gt; SelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056208"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056211"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
+</span><a href="#local-6989586621689056190"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056193"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
 </span><span id="line-93"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">JoinTree
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_jtArrayConnections :: HashMap ArrayConnectionSource MultiRowSelectNode
@@ -260,22 +260,22 @@ forall a. Monoid a =&gt; a
 -&gt; HashMap ArrayConnectionSource MultiRowSelectNode
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HM.singleton</span></span><span> </span><span class="annot"><span class="annottext">ArrayConnectionSource
-</span><a href="#local-6989586621689056210"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
-</span><a href="#local-6989586621689056207"><span class="hs-identifier hs-var">arraySelectNode</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689056192"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
+</span><a href="#local-6989586621689056189"><span class="hs-identifier hs-var">arraySelectNode</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span id="local-6989586621689056204"><span id="local-6989586621689056205"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteComputedFieldTableSet"><span class="hs-identifier hs-type">withWriteComputedFieldTableSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056205"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-97"></span><span>  </span><span class="annot"><a href="#local-6989586621689056205"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-95"></span><span id="local-6989586621689056186"><span id="local-6989586621689056187"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteComputedFieldTableSet"><span class="hs-identifier hs-type">withWriteComputedFieldTableSet</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadWriter</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#JoinTree"><span class="hs-identifier hs-type">JoinTree</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056187"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><a href="#local-6989586621689056187"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-98"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#ComputedFieldTableSetSource"><span class="hs-identifier hs-type">ComputedFieldTableSetSource</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-99"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-type">S.Extractor</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-100"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-101"></span><span>      </span><span class="annot"><a href="#local-6989586621689056204"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-101"></span><span>      </span><span class="annot"><a href="#local-6989586621689056186"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-102"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-103"></span><span>  </span><span class="annot"><a href="#local-6989586621689056205"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056204"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="#local-6989586621689056187"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689056186"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-104"></span><span id="withWriteComputedFieldTableSet"><span class="annot"><span class="annottext">withWriteComputedFieldTableSet :: m (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp, a)
 -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteComputedFieldTableSet"><span class="hs-identifier hs-var hs-var">withWriteComputedFieldTableSet</span></a></span></span><span> </span><span id="local-6989586621689056203"><span class="annot"><span class="annottext">m (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056203"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteComputedFieldTableSet"><span class="hs-identifier hs-var hs-var">withWriteComputedFieldTableSet</span></a></span></span><span> </span><span id="local-6989586621689056185"><span class="annot"><span class="annottext">m (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056185"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-105"></span><span>  </span><span class="annot"><span class="annottext">(JoinTree
  -&gt; (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp)
  -&gt; JoinTree)
@@ -288,7 +288,7 @@ MonadWriter JoinTree m =&gt;
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree.html#withWriteJoinTree"><span class="hs-identifier hs-var">withWriteJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
 -&gt; (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp)
 -&gt; JoinTree
-</span><a href="#local-6989586621689056202"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a,
+</span><a href="#local-6989586621689056184"><span class="hs-identifier hs-var">updateJoinTree</span></a></span><span> </span><span class="annot"><span class="annottext">(m (a,
     (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp))
  -&gt; m a)
 -&gt; m (a,
@@ -296,40 +296,40 @@ MonadWriter JoinTree m =&gt;
 -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056201"><span class="annot"><span class="annottext">ComputedFieldTableSetSource
-</span><a href="#local-6989586621689056201"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056200"><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056200"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056199"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056199"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056198"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056198"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp, a)
-</span><a href="#local-6989586621689056203"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689056183"><span class="annot"><span class="annottext">ComputedFieldTableSetSource
+</span><a href="#local-6989586621689056183"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056182"><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056182"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056181"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056181"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056180"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689056180"><span class="hs-identifier hs-var">out</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp, a)
+</span><a href="#local-6989586621689056185"><span class="hs-identifier hs-var">action</span></a></span><span>
 </span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">(a, (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp))
 -&gt; m (a,
       (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689056198"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFieldTableSetSource
-</span><a href="#local-6989586621689056201"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056200"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056199"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689056180"><span class="hs-identifier hs-var">out</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFieldTableSetSource
+</span><a href="#local-6989586621689056183"><span class="hs-identifier hs-var">source</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056182"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056181"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-109"></span><span>    </span><span id="local-6989586621689056202"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
+</span><span id="line-109"></span><span>    </span><span id="local-6989586621689056184"><span class="annot"><span class="annottext">updateJoinTree :: JoinTree
 -&gt; (ComputedFieldTableSetSource, Extractor, HashMap Alias SQLExp)
 -&gt; JoinTree
-</span><a href="#local-6989586621689056202"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056197"><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056197"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056196"><span class="annot"><span class="annottext">ComputedFieldTableSetSource
-</span><a href="#local-6989586621689056196"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056195"><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056195"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056194"><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056194"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-110"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056193"><span class="annot"><span class="annottext">selectNode :: MultiRowSelectNode
-</span><a href="#local-6989586621689056193"><span class="hs-identifier hs-var hs-var">selectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Extractor] -&gt; SelectNode -&gt; MultiRowSelectNode
+</span><a href="#local-6989586621689056184"><span class="hs-identifier hs-var hs-var">updateJoinTree</span></a></span></span><span> </span><span id="local-6989586621689056179"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056179"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689056178"><span class="annot"><span class="annottext">ComputedFieldTableSetSource
+</span><a href="#local-6989586621689056178"><span class="hs-identifier hs-var">source</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056177"><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689056177"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689056176"><span class="annot"><span class="annottext">HashMap Alias SQLExp
+</span><a href="#local-6989586621689056176"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689056175"><span class="annot"><span class="annottext">selectNode :: MultiRowSelectNode
+</span><a href="#local-6989586621689056175"><span class="hs-identifier hs-var hs-var">selectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Extractor] -&gt; SelectNode -&gt; MultiRowSelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-var">MultiRowSelectNode</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689056195"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
+</span><a href="#local-6989586621689056177"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
 -&gt; SelectNode -&gt; MultiRowSelectNode
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp -&gt; JoinTree -&gt; SelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Alias SQLExp
-</span><a href="#local-6989586621689056194"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689056197"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
+</span><a href="#local-6989586621689056176"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689056179"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
 </span><span id="line-111"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">JoinTree
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_jtComputedFieldTableSets :: HashMap ComputedFieldTableSetSource MultiRowSelectNode
@@ -338,6 +338,6 @@ forall a. Monoid a =&gt; a
 -&gt; HashMap ComputedFieldTableSetSource MultiRowSelectNode
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">HM.singleton</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldTableSetSource
-</span><a href="#local-6989586621689056196"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
-</span><a href="#local-6989586621689056193"><span class="hs-identifier hs-var">selectNode</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689056178"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
+</span><a href="#local-6989586621689056175"><span class="hs-identifier hs-var">selectNode</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-112"></span></pre></body></html>
