@@ -1,3 +1,9 @@
+# Tips and tricks
+
+This document contains various tips and tricks to make development easier.
+
+### Table of contents
+
 <!--
 Please make sure you update the table of contents when modifying this file. If
 you're using emacs, you can generate a default version of it with `M-x
@@ -5,8 +11,7 @@ markdown-toc-refresh-toc` (provided by the package markdown-toc), and then edit
 it for readability.
 -->
 
-<!-- markdown-toc start -->
-**Table of Contents**
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 
 - [Use curl and yaml2json to test the graphql-engine API directly](#use-curl-and-yaml2json-to-test-the-graphql-engine-api-directly)
 - [Convert a test case to a live example](#convert-a-test-case-to-a-live-example)
@@ -16,9 +21,6 @@ it for readability.
 
 <!-- markdown-toc end -->
 
-# Tips and tricks
-
-This document contains various tips and tricks to make development easier.
 
 ## Use curl and yaml2json to test the graphql-engine API directly
 

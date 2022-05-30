@@ -21,11 +21,14 @@ code; we automatically update it on every push to a branch of interest:
 
 ## Architecture deep-dive
 
-* how to understand our [GraphQL schema](schema.md)
-* how to perform [database migrations](migration-guidelines.md)
-* how the [execution of remote joins](remote_joins_execution.md) works
+* how to understand our [GraphQL schema](deep-dives/schema.md)
+* how to perform [database migrations](deep-dives/migration-guidelines.md)
+* how the [execution of remote joins](deep-dives/remote-joins-execution.md) works
 
-TODO: we can either list individual topics here, or point to architecture/ and have a README file there.
+
+## Backend-specific documentation
+
+* [BigQuery](data-sources/bigquery.md)
 
 ## Notes
 

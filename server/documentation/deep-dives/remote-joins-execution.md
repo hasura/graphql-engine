@@ -1,23 +1,4 @@
-## Table of contents
-
-<!--
-Please make sure you update the table of contents when modifying this file. If
-you're using emacs, you can automatically do so using the command mentioned in
-the generated comment below (provided by the package markdown-toc), but it will
-use a slightly different format and you will have to fix the differences
-manually.
--->
-
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-
-- [The join tree](#the-join-tree)
-- [Collect](#collect)
-- [Join](#join)
-- [Ambiguous schemas](#ambiguous-schemas)
-
-<!-- markdown-toc end -->
-
-## Executing remote joins
+# Executing remote joins
 
 When a request has been parsed, and is ready to be executed, we start by
 building a `JoinTree`: a structure close to a [prefix
@@ -30,7 +11,26 @@ After executing the core step of the request, if there is indeed a join tree,
 then we start the [join](#join) phase: we fold that tree, expending the response
 with the result of each subsequent request.
 
-### The join tree
+### Table of contents
+
+<!--
+Please make sure you update the table of contents when modifying this file. If
+you're using emacs, you can generate a default version of it with `M-x
+markdown-toc-refresh-toc` (provided by the package markdown-toc), and then edit
+it for readability.
+-->
+
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+
+
+- [The join tree](#the-join-tree)
+- [Collect](#collect)
+- [Join](#join)
+- [Ambiguous schemas](#ambiguous-schemas)
+
+<!-- markdown-toc end -->
+
+## The join tree
 
 As mentioned, the join tree is almost like a prefix tree; the key difference is
 that we don't store values at arbitrary points of the tree, only at the
@@ -64,7 +64,7 @@ Each key in this join tree is a pair: it contains the name of the field, but
 also contains an optional type information: this is used to deal with [ambiguous
 schemas](#ambiguous-schemas).
 
-### Collect
+## Collect
 
 Implemented in
 [Hasura.GraphQL.Execute.RemoteJoin.Collect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/RemoteJoin/Collect.hs),
@@ -87,7 +87,7 @@ traversal. Every time we traverse a field, we use `censor` to wrap the resulting
 joins in a sub-tree. Remote joins are aggregated using the `Semigroup` instance
 of `JoinTree`.
 
-### Join
+## Join
 
 Implemented in
 [Hasura.GraphQL.Execute.RemoteJoin.Join](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/RemoteJoin/Join.hs),
@@ -104,7 +104,7 @@ and
 [Hasura.GraphQL.Execute.RemoteJoin.Source](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Execute/RemoteJoin/Source.hs)
 respectively.
 
-### Ambiguous schemas
+## Ambiguous schemas
 
 This process is made more complicated by the fact that remote schemas, via
 unions and interfaces, can be ambiguous. Consider the following request:

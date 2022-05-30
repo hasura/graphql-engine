@@ -1,9 +1,12 @@
-## Table of contents
+# Overview
+
+### Table of contents
 
 <!--
 Please make sure you update the table of contents when modifying this file. If
-you're using emacs, you can automatically do so using the command mentioned in
-the generated comment below (provided by the package markdown-toc).
+you're using emacs, you can generate a default version of it with `M-x
+markdown-toc-refresh-toc` (provided by the package markdown-toc), and then edit
+it for readability.
 -->
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
