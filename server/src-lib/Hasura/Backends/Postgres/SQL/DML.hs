@@ -1058,8 +1058,7 @@ instance ToSQL SQLConflict where
       <~> toSQL set
       <~> toSQL whr
 
-newtype ValuesExp
-  = ValuesExp [TupleExp]
+newtype ValuesExp = ValuesExp {getValuesExp :: [TupleExp]}
   deriving (Show, Eq, Data, NFData, Cacheable, Hashable)
 
 instance ToSQL ValuesExp where
@@ -1080,7 +1079,9 @@ instance ToSQL SQLInsert where
     "INSERT INTO"
       <~> toSQL (siTable si)
       <~> ( if null (siCols si)
-              then "DEFAULT VALUES"
+              then
+                "VALUES"
+                  <~> ", " <+> map (const ("(DEFAULT)" :: TB.Builder)) (getValuesExp (siValues si))
               else "(" <~> (", " <+> siCols si) <~> ")" <~> toSQL (siValues si)
           )
       <~> maybe "" toSQL (siConflict si)

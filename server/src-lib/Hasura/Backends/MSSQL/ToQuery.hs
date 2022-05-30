@@ -236,14 +236,13 @@ fromInsert Insert {..} =
   SepByPrinter
     NewlinePrinter
     $ ["INSERT INTO " <+> fromTableName insertTable]
-      <> ( if null insertColumns
-             then []
-             else ["(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")"]
-         )
+      <> [ "(" <+> SepByPrinter ", " (map (fromNameText . columnNameText) insertColumns) <+> ")"
+           | not (null insertColumns)
+         ]
       <> [ fromInsertOutput insertOutput,
            "INTO " <+> fromTempTable insertTempTable,
            if null insertColumns
-             then "DEFAULT VALUES"
+             then "VALUES " <+> SepByPrinter ", " (map (const "(DEFAULT)") insertValues)
              else fromValuesList insertValues
          ]
 
