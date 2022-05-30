@@ -16,7 +16,6 @@ import {
   setRequestBodyError,
   setRequestSampleInput,
   setRequestTransformedBody,
-  setEnableRequestBody,
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
@@ -25,7 +24,10 @@ import {
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
-import { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+import {
+  KeyValuePair,
+  RequestTransformStateBody,
+} from '@/components/Common/ConfigureTransformation/stateDefaults';
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
 import {
   getValidateTransformOptions,
@@ -184,12 +186,8 @@ const Add: React.FC<Props> = props => {
     transformDispatch(setRequestAddHeaders(requestAddHeaders));
   };
 
-  const requestBodyOnChange = (requestBody: string) => {
+  const requestBodyOnChange = (requestBody: RequestTransformStateBody) => {
     transformDispatch(setRequestBody(requestBody));
-  };
-
-  const requestBodyEnabledOnChange = (enableRequestBody: boolean) => {
-    transformDispatch(setEnableRequestBody(enableRequestBody));
   };
 
   const requestBodyErrorOnChange = (requestBodyError: string) => {
@@ -407,6 +405,7 @@ const Add: React.FC<Props> = props => {
                   handleToggleAllColumn={setState.toggleAllColumnChecked}
                 />
                 <ConfigureTransformation
+                  transformationType="event"
                   state={transformState}
                   resetSampleInput={resetSampleInput}
                   envVarsOnChange={envVarsOnChange}
@@ -416,7 +415,6 @@ const Add: React.FC<Props> = props => {
                   requestQueryParamsOnChange={requestQueryParamsOnChange}
                   requestAddHeadersOnChange={requestAddHeadersOnChange}
                   requestBodyOnChange={requestBodyOnChange}
-                  requestBodyEnabledOnChange={requestBodyEnabledOnChange}
                   requestSampleInputOnChange={requestSampleInputOnChange}
                   requestContentTypeOnChange={requestContentTypeOnChange}
                   requestUrlTransformOnChange={requestUrlTransformOnChange}

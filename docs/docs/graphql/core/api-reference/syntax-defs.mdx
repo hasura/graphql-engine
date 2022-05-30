@@ -1269,15 +1269,20 @@ Enum](https://spec.graphql.org/June2018/#sec-Enums)
 
 | Key             | required | Schema                                       | Description                                                                                                                                        |
 |-----------------|----------|----------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| version         | false    | "1" \| "2"                                   | Sets the `RequestTransformation` schema version. Version `1` uses a `String` for the `body` field and Version `2` takes a [BodyTransform](#bodytransform). Defaults to version `1`. Warning: You must remove any  "version 2" schemas from your metadata prior to downgrading to `v2.4.0` or earlier  |
+| version         | false    | "1" \| "2"                                   | Sets the `RequestTransformation` schema version. Version `1` uses a `String` for the `body` field and Version `2` takes a [BodyTransform](#bodytransform). Defaults to version `1`. |
 | method          | false    | String                                       | Change the request method to this value.                                                                                                           |
 | url             | false    | String                                       | Change the request URL to this value.                                                                                                              |
 | body            | false    | [BodyTransform](#bodytransform) \| String    | A template script for transforming the request body.                                                                                               |
-| content_type    | false    | String                                       | Replace the Content-Type with this value. Only "application/json" and "application/x-www-form-urlencoded" are allowed. Default: "application/json" |
+| content_type    | false    | String                                       | Replace the Content-Type with this value. Default: "application/json" *(valid only for version 1)* |
 | query_params    | false    | Object (String : String)                     | Replace the query params on the URL with this value.                                                                                               |
 | request_headers | false    | [TransformHeaders](#transformheaders)        | Request Header Transformation.                                                                                                                     |
 | template_engine | false    | [TemplateEngine](#templateengine)            | Template language to be used for this transformation. Default: "Kriti"                                                                             |
 
+:::tip Supported from
+
+Version 2 is supported in `v2.5.0` and above. You must remove any  "version 2" schemas from your metadata prior to downgrading to `v2.4.0` or earlier
+
+:::
 
 :::info Note
 
@@ -1350,7 +1355,7 @@ HGE provides the following functions that can be used in the template:
 
 | Key           | required | Schema              | Description                                                                                            |
 |---------------|----------|---------------------|--------------------------------------------------------------------------------------------------------|
-| action        | true     | remove \| transform | The action to perform on the request body.                                                             |
+| action        | true     | remove \| transform \| x_www_form_urlencoded | The action to perform on the request body.                                                             |
 | template      | false    | String              | The transformation template to be applied to the body. This is required if the action is *transform*.  |
 | form_template | false    | Object ([String](/graphql/core/databases/postgres/postgresql-types.mdx#string) : [String](/graphql/core/databases/postgres/postgresql-types.mdx#string))              | The key/value pairs to be used in a `x-www-url-formencoded` body. The values can be transfomation templates.  |
 

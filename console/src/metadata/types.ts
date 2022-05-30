@@ -897,6 +897,17 @@ export type RequestTransformContentType =
   | 'application/json'
   | 'application/x-www-form-urlencoded';
 
+export type RequestTransformBodyActions =
+  | 'remove'
+  | 'transform'
+  | 'x_www_form_urlencoded';
+
+export type RequestTransformBody = {
+  action: RequestTransformBodyActions;
+  template?: string;
+  form_template?: Record<string, string>;
+};
+
 export type RequestTransformHeaders = {
   add_headers?: Record<string, string>;
   remove_headers?: string[];
@@ -920,7 +931,7 @@ interface RequestTransformV1 extends RequestTransformFields {
 
 interface RequestTransformV2 extends RequestTransformFields {
   version: 2;
-  body?: Record<string, Nullable<string>>;
+  body?: RequestTransformBody;
 }
 
 export type RequestTransform = RequestTransformV1 | RequestTransformV2;

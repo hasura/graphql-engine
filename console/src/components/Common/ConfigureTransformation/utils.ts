@@ -1,15 +1,23 @@
-import { RequestTransform, RequestTransformMethod } from '@/metadata/types';
+import {
+  RequestTransform,
+  RequestTransformBody,
+  RequestTransformMethod,
+} from '@/metadata/types';
 import { getLSItem, setLSItem, LS_KEYS } from '@/utils/localStorage';
 import {
   defaultRequestContentType,
   GraphiQlHeader,
   KeyValuePair,
   RequestTransformState,
+  RequestTransformStateBody,
 } from './stateDefaults';
 import { isEmpty, isJsonString } from '../utils/jsUtils';
 import { Nullable } from '../utils/tsUtils';
+import { requestBodyActionState } from './requestTransformState';
 
-export const getPairsObjFromArray = (pairs: KeyValuePair[]) => {
+export const getPairsObjFromArray = (
+  pairs: KeyValuePair[]
+): Record<string, string> => {
   let obj = {};
 
   pairs.forEach(({ name, value }) => {
@@ -101,12 +109,22 @@ const getUrlWithBasePrefix = (val?: string) => {
   return val ? `{{$base_url}}${val}` : undefined;
 };
 
+const getTransformBodyServer = (reqBody: RequestTransformStateBody) => {
+  if (reqBody.action === requestBodyActionState.remove)
+    return { action: reqBody.action };
+  else if (reqBody.action === requestBodyActionState.transformApplicationJson)
+    return { action: reqBody.action, template: reqBody.template };
+  return {
+    action: reqBody.action,
+    form_template: getPairsObjFromArray(reqBody.form_template ?? []),
+  };
+};
+
 export const getRequestTransformObject = (
   transformState: RequestTransformState
 ) => {
   const isRequestUrlTransform = transformState.isRequestUrlTransform;
   const isRequestPayloadTransform = transformState.isRequestPayloadTransform;
-  const enableRequestBody = transformState.enableRequestBody;
 
   if (!isRequestUrlTransform && !isRequestPayloadTransform) return null;
 
@@ -135,16 +153,22 @@ export const getRequestTransformObject = (
   if (isRequestPayloadTransform) {
     obj = {
       ...obj,
-      body: enableRequestBody
-        ? {
-            action: 'transform',
-            template: checkEmptyString(transformState.requestBody),
-          }
-        : {
-            action: 'remove',
-          },
-      content_type: transformState.requestContentType,
+      body: getTransformBodyServer(transformState.requestBody),
     };
+    if (
+      transformState.requestBody.action ===
+      requestBodyActionState.transformFormUrlEncoded
+    ) {
+      obj = {
+        ...obj,
+        request_headers: {
+          remove_headers: ['content-type'],
+          add_headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+          },
+        },
+      };
+    }
   }
 
   return obj;
@@ -209,14 +233,14 @@ type RequestTransformerV1 = RequestTransformerFields & {
 
 type RequestTransformerV2 = RequestTransformerFields & {
   version: 2;
-  body?: Record<string, string>;
+  body?: RequestTransformBody;
 };
 
 type RequestTransformer = RequestTransformerV1 | RequestTransformerV2;
 
 const getTransformer = (
   version: 1 | 2,
-  transformerBody?: string,
+  transformerBody?: RequestTransformStateBody,
   transformerUrl?: string,
   requestMethod?: Nullable<RequestTransformMethod>,
   queryParams?: KeyValuePair[]
@@ -224,7 +248,7 @@ const getTransformer = (
   return version === 1
     ? {
         version,
-        body: checkEmptyString(transformerBody),
+        body: checkEmptyString(transformerBody?.template ?? ''),
         url: checkEmptyString(transformerUrl),
         method: requestMethod,
         query_params: queryParams
@@ -234,10 +258,9 @@ const getTransformer = (
       }
     : {
         version,
-        body: {
-          action: 'transform',
-          template: checkEmptyString(transformerBody) ?? '{}',
-        },
+        body: transformerBody
+          ? getTransformBodyServer(transformerBody)
+          : undefined,
         url: checkEmptyString(transformerUrl),
         method: requestMethod,
         query_params: queryParams
@@ -275,7 +298,7 @@ type ValidateTransformOptionsArgsType = {
   webhookUrl: string;
   envVarsFromContext?: KeyValuePair[];
   sessionVarsFromContext?: KeyValuePair[];
-  transformerBody?: string;
+  transformerBody?: RequestTransformStateBody;
   requestUrl?: string;
   queryParams?: KeyValuePair[];
   isEnvVar?: boolean;
@@ -384,6 +407,28 @@ const getTrimmedRequestUrl = (val: string) => {
   return val.startsWith(prefix) ? val.slice(prefix.length) : val;
 };
 
+const getRequestTransformBody = (
+  transform: RequestTransform
+): RequestTransformStateBody => {
+  if (transform.body) {
+    return transform.version === 1
+      ? {
+          action: requestBodyActionState.transformApplicationJson,
+          template: transform?.body ?? '',
+        }
+      : {
+          ...transform.body,
+          form_template: getArrayFromServerPairObject(
+            transform.body?.form_template
+          ),
+        };
+  }
+  return {
+    action: requestBodyActionState.transformApplicationJson,
+    template: '',
+  };
+};
+
 export const getTransformState = (
   transform: RequestTransform,
   sampleInput: string
@@ -401,15 +446,10 @@ export const getTransformState = (
   requestAddHeaders: getArrayFromServerPairObject(
     transform?.request_headers?.add_headers
   ) ?? [{ name: '', value: '' }],
-  requestBody:
-    transform?.version === 1
-      ? transform?.body ?? ''
-      : transform?.body?.template ?? '',
+  requestBody: getRequestTransformBody(transform),
   requestBodyError: '',
   requestSampleInput: sampleInput,
   requestTransformedBody: '',
-  enableRequestBody:
-    transform?.version === 2 ? transform?.body?.action === 'transform' : true,
   requestContentType: transform?.content_type ?? defaultRequestContentType,
   isRequestUrlTransform:
     !!transform?.method ||
@@ -418,6 +458,9 @@ export const getTransformState = (
   isRequestPayloadTransform: !!transform?.body,
   templatingEngine: transform?.template_engine ?? 'Kriti',
 });
+
+export const capitaliseFirstLetter = (val: string) =>
+  `${val[0].toUpperCase()}${val.slice(1)}`;
 
 export const sidebarNumberStyles =
   '-mb-9 -ml-14 bg-gray-50 text-sm font-medium border border-gray-400 rounded-full flex items-center justify-center h-lg w-lg';

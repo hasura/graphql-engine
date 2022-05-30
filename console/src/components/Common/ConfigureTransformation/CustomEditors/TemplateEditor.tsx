@@ -4,12 +4,13 @@ import { Nullable } from '../../utils/tsUtils';
 import { getAceCompleterFromString, editorDebounceTime } from '../utils';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import CrossIcon from '../../Icons/Cross';
+import { RequestTransformStateBody } from '../stateDefaults';
 
 type TemplateEditorProps = {
-  requestBody: string;
+  requestBody: RequestTransformStateBody;
   requestBodyError: string;
   requestSampleInput: string;
-  requestBodyOnChange: (requestBody: string) => void;
+  requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   height?: string;
   width?: string;
 };
@@ -23,13 +24,15 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   width,
 }) => {
   const editorRef = useRef<any>();
-  const [localValue, setLocalValue] = useState<string>(requestBody);
+  const [localValue, setLocalValue] = useState<string>(
+    requestBody.template ?? ''
+  );
   const [localError, setLocalError] = useState<Nullable<string>>(
     requestBodyError
   );
 
   useEffect(() => {
-    setLocalValue(requestBody);
+    setLocalValue(requestBody.template ?? '');
   }, [requestBody]);
 
   useEffect(() => {
@@ -54,7 +57,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
   useDebouncedEffect(
     () => {
-      requestBodyOnChange(localValue);
+      requestBodyOnChange({ ...requestBody, template: localValue });
     },
     editorDebounceTime,
     [localValue]

@@ -24,7 +24,6 @@ import {
   setRequestBodyError,
   setRequestSampleInput,
   setRequestTransformedBody,
-  setEnableRequestBody,
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
@@ -33,7 +32,10 @@ import {
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
-import { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+import {
+  KeyValuePair,
+  RequestTransformStateBody,
+} from '@/components/Common/ConfigureTransformation/stateDefaults';
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
 import ActionEditor from '../Common/components/ActionEditor';
 import Button from '../../../Common/Button';
@@ -189,7 +191,7 @@ const AddAction: React.FC<AddActionProps> = ({
     transformDispatch(setRequestAddHeaders(requestAddHeaders));
   };
 
-  const requestBodyOnChange = (requestBody: string) => {
+  const requestBodyOnChange = (requestBody: RequestTransformStateBody) => {
     transformDispatch(setRequestBody(requestBody));
   };
 
@@ -203,10 +205,6 @@ const AddAction: React.FC<AddActionProps> = ({
 
   const requestTransformedBodyOnChange = (requestTransformedBody: string) => {
     transformDispatch(setRequestTransformedBody(requestTransformedBody));
-  };
-
-  const requestBodyEnabledOnChange = (enableRequestBody: boolean) => {
-    transformDispatch(setEnableRequestBody(enableRequestBody));
   };
 
   const requestContentTypeOnChange = (
@@ -356,6 +354,7 @@ const AddAction: React.FC<AddActionProps> = ({
         />
 
         <ConfigureTransformation
+          transformationType="action"
           state={transformState}
           resetSampleInput={resetSampleInput}
           envVarsOnChange={envVarsOnChange}
@@ -365,7 +364,6 @@ const AddAction: React.FC<AddActionProps> = ({
           requestQueryParamsOnChange={requestQueryParamsOnChange}
           requestAddHeadersOnChange={requestAddHeadersOnChange}
           requestBodyOnChange={requestBodyOnChange}
-          requestBodyEnabledOnChange={requestBodyEnabledOnChange}
           requestSampleInputOnChange={requestSampleInputOnChange}
           requestContentTypeOnChange={requestContentTypeOnChange}
           requestUrlTransformOnChange={requestUrlTransformOnChange}

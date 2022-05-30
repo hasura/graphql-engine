@@ -14,7 +14,6 @@ import {
   setRequestBodyError,
   setRequestSampleInput,
   setRequestTransformedBody,
-  setEnableRequestBody,
   setRequestContentType,
   setRequestUrlTransform,
   setRequestTransformState,
@@ -25,7 +24,10 @@ import {
   RequestTransformContentType,
   RequestTransformMethod,
 } from '@/metadata/types';
-import { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+import {
+  KeyValuePair,
+  RequestTransformStateBody,
+} from '@/components/Common/ConfigureTransformation/stateDefaults';
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
 import requestAction from '@/utils/requestAction';
 import Endpoints from '@/Endpoints';
@@ -162,12 +164,8 @@ const Modify: React.FC<Props> = props => {
     transformDispatch(setRequestAddHeaders(requestAddHeaders));
   };
 
-  const requestBodyOnChange = (requestBody: string) => {
+  const requestBodyOnChange = (requestBody: RequestTransformStateBody) => {
     transformDispatch(setRequestBody(requestBody));
-  };
-
-  const requestBodyEnabledOnChange = (enableRequestBody: boolean) => {
-    transformDispatch(setEnableRequestBody(enableRequestBody));
   };
 
   const requestBodyErrorOnChange = (requestBodyError: string) => {
@@ -379,6 +377,7 @@ const Modify: React.FC<Props> = props => {
             save={saveWrapper('headers')}
           />
           <ConfigureTransformation
+            transformationType="event"
             state={transformState}
             resetSampleInput={resetSampleInput}
             envVarsOnChange={envVarsOnChange}
@@ -388,7 +387,6 @@ const Modify: React.FC<Props> = props => {
             requestQueryParamsOnChange={requestQueryParamsOnChange}
             requestAddHeadersOnChange={requestAddHeadersOnChange}
             requestBodyOnChange={requestBodyOnChange}
-            requestBodyEnabledOnChange={requestBodyEnabledOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
             requestContentTypeOnChange={requestContentTypeOnChange}
             requestUrlTransformOnChange={requestUrlTransformOnChange}
