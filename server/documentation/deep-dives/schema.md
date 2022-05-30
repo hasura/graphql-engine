@@ -1,9 +1,18 @@
-## Table of contents
+# Building the schema
+
+We use the same piece of code to generate the GraphQL schema and parse
+it, to ensure those two parts of the code are always consistent. In
+practice, we do this by building _introspectable_ parsers, in the
+style of parser combinators, which turn an incoming GraphQL AST into
+our internal representation ([IR](#ir)).
+
+### Table of contents
 
 <!--
 Please make sure you update the table of contents when modifying this file. If
-you're using emacs, you can automatically do so using the command mentioned in
-the generated comment below (provided by the package markdown-toc).
+you're using emacs, you can generate a default version of it with `M-x
+markdown-toc-refresh-toc` (provided by the package markdown-toc), and then edit
+it for readability.
 -->
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -17,16 +26,7 @@ the generated comment below (provided by the package markdown-toc).
 
 <!-- markdown-toc end -->
 
-## Building the schema
-
-We use the same piece of code to generate the GraphQL schema and parse
-it, to ensure those two parts of the code are always consistent. In
-practice, we do this by building _introspectable_ parsers, in the
-style of parser combinators, which turn an incoming GraphQL AST into
-our internal representation ([IR](#ir)).
-
-
-### Terminology
+## Terminology
 
 The schema building code takes as input our metadata: what sources do
 we have, what tables are tracked, what columns do they have... and
@@ -48,7 +48,7 @@ To summarize: ahead of time, based on our metadata, we generate
 transformed semantic AST, based on whether that incoming query is
 consistent with our metadata.
 
-### The `Parser` type
+## The `Parser` type
 
 We have different types depending on what we're parsing: `Parser` for types in
 the GraphQL schema, `FieldParser` for a field in an output type, and
@@ -88,7 +88,7 @@ of `Maybe a` that tolerates "null" values and updates its internal type
 information to transform the corresponding GraphQL non-nullable `TypeName!` into
 a nullable `TypeName`.
 
-### Output
+## Output
 
 While the parsers keep track of the GraphQL types, their output is our IR: we
 transform the incoming GrapQL AST into a semantic representation. This is
@@ -202,7 +202,7 @@ name `article`, it will result in the following GraphQL schema, if introspected
 }
 ```
 
-### Input
+## Input
 
 There is a noteworthy peculiarity with the input of the parsers for
 GraphQL input types: some of the values we parse are JSON values,
@@ -313,7 +313,7 @@ Step-by step:
   of that database column is; we use the appropriate column parser to
   interpret `{"1": "2"}` without treating is as a GraphQL value.
 
-### Recursion, and tying the knot
+## Recursion, and tying the knot
 
 One major hurdle that we face when building the schema is that, due to
 relationships, our schema is not a tree, but a graph. Consider for instance two
@@ -375,7 +375,7 @@ various GraphQL types, return the constructed parser in an outer monad `m` which
 is an instance of `MonadSchema`; the parser itself operates in an inner monad
 `n`, which is an instance of `MonadParse`.
 
-### The GraphQL context
+## The GraphQL context
 
 It's in `Hasura.GraphQL.Schema` that we build the actual "context" that is
 stored in the [SchemaCache](#schema-cache): for each role we build the
