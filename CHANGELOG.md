@@ -45,6 +45,7 @@ is `graphql-default`, the field names generated will be `my_table`, `my_tableByP
 
 - server: do not serialize env vars in logs or errors for remote schemas
 - server: fix failure when executing consecutive delete mutations on mssql (#8462)
+- server: bugfix: insertion of multiple empty objects should result in multiple entries (#8475)
 
 ## v2.7.0
 

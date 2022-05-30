@@ -157,6 +157,27 @@ data:
     affected_rows: 1
 |]
 
+  it "Insert multiple empty objects with default values" $ \testEnvironment ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnvironment
+          [graphql|
+mutation {
+  insert_hasura_alldefaults(
+    objects:[{}, {}, {}]
+  ){
+    affected_rows
+  }
+}
+|]
+      )
+      [yaml|
+data:
+  insert_hasura_alldefaults:
+    affected_rows: 3
+|]
+
   it "Insert simple object with default values" $ \testEnvironment ->
     shouldReturnYaml
       opts
