@@ -84,6 +84,8 @@ Then in a new terminal launch `graphql-engine` in dev mode with:
 
     $ scripts/dev.sh graphql-engine
 
+This command also starts the GraphQL Engine console, which you can access at http://localhost:8181/console.
+
 The `dev.sh` will print some helpful information and logs from both services
 will be printed to screen.
 
