@@ -56,8 +56,6 @@ import Hasura.GraphQL.Parser
     InputFieldsParser,
     Kind (..),
     Parser,
-    UnpreparedValue (..),
-    mkParameter,
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
@@ -224,7 +222,7 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
       sequenceA <$> for primaryKeys \columnInfo -> do
         field <- columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
         pure $
-          BoolFld . AVColumn columnInfo . pure . AEQ True . mkParameter
+          BoolFld . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
             <$> P.field (ciName columnInfo) (ciDescription columnInfo) field
     pure $
       P.subselection fieldName description argsParser selectionSetParser
@@ -721,7 +719,7 @@ tableWhereArg ::
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableInfo b ->
-  m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (UnpreparedValue b))))
+  m (InputFieldsParser n (Maybe (IR.AnnBoolExp b (IR.UnpreparedValue b))))
 tableWhereArg sourceInfo tableInfo = do
   boolExpParser <- boolExp sourceInfo tableInfo
   pure $
@@ -739,7 +737,7 @@ tableOrderByArg ::
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableInfo b ->
-  m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (UnpreparedValue b)))))
+  m (InputFieldsParser n (Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)))))
 tableOrderByArg sourceInfo tableInfo = do
   tCase <- asks getter
   orderByParser <- orderByExp sourceInfo tableInfo
@@ -819,7 +817,7 @@ tableConnectionArgs ::
     ( InputFieldsParser
         n
         ( SelectArgs b,
-          Maybe (NonEmpty (IR.ConnectionSplit b (UnpreparedValue b))),
+          Maybe (NonEmpty (IR.ConnectionSplit b (IR.UnpreparedValue b))),
           Maybe IR.ConnectionSlice
         )
     )
@@ -873,10 +871,10 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
        in h NE.:| (t <> pkeyOrderBys)
 
     parseConnectionSplit ::
-      Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (UnpreparedValue b))) ->
+      Maybe (NonEmpty (IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b))) ->
       IR.ConnectionSplitKind ->
       BL.ByteString ->
-      n (NonEmpty (IR.ConnectionSplit b (UnpreparedValue b)))
+      n (NonEmpty (IR.ConnectionSplit b (IR.UnpreparedValue b)))
     parseConnectionSplit maybeOrderBys splitKind cursorSplit = do
       cursorValue <- J.eitherDecode cursorSplit `onLeft` const throwInvalidCursor
       case maybeOrderBys of
@@ -888,7 +886,7 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
               iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
                 `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValueColumnType columnType columnValue
-            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
+            let unresolvedValue = IR.UVParameter Nothing $ ColumnValue columnType pgValue
             pure $
               IR.ConnectionSplit splitKind unresolvedValue $
                 IR.OrderByItemG Nothing (IR.AOCColumn columnInfo) Nothing
@@ -900,7 +898,7 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
               iResultToMaybe (executeJSONPath (getPathFromOrderBy annObCol) cursorValue)
                 `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValueColumnType columnType orderByItemValue
-            let unresolvedValue = UVParameter Nothing $ ColumnValue columnType pgValue
+            let unresolvedValue = IR.UVParameter Nothing $ ColumnValue columnType pgValue
             pure $
               IR.ConnectionSplit splitKind unresolvedValue $
                 IR.OrderByItemG orderType annObCol nullsOrder
@@ -1227,7 +1225,7 @@ relationshipField sourceInfo table ri = runMaybeT do
   thisTablePerm <-
     IR._tpFilter . tablePermissionsInfo
       <$> MaybeT (tableSelectPermissions =<< askTableInfo sourceInfo table)
-  let deduplicatePermissions :: AnnBoolExp b (UnpreparedValue b) -> AnnBoolExp b (UnpreparedValue b)
+  let deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
       deduplicatePermissions x =
         case (optimizePermissionFilters, x) of
           (True, BoolAnd [BoolFld (AVRelationship remoteRI remoteTablePerm)]) ->
@@ -1403,7 +1401,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
 
     computedFieldFunctionArgs ::
       ComputedFieldFunction ('Postgres pgKind) ->
-      m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+      m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
     computedFieldFunctionArgs ComputedFieldFunction {..} =
       functionArgs sourceInfo (FTAComputedField _cfiName (_siName sourceInfo) parentTable) (IAUserProvided <$> _cffInputArgs)
         <&> fmap addTableAndSessionArgument
@@ -1412,7 +1410,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
           let withTable = case PG._cffaTableArgument _cffComputedFieldImplicitArgs of
                 PG.FTAFirst -> FunctionArgsExp (PG.AETableRow : positional) named
                 PG.FTANamed argName index -> IR.insertFunctionArg argName index PG.AETableRow args
-              sessionArgVal = PG.AESession UVSession
+              sessionArgVal = PG.AESession IR.UVSession
            in case PG._cffaSessionArgument _cffComputedFieldImplicitArgs of
                 Nothing -> withTable
                 Just (PG.FunctionSessionArgument argName index) ->
@@ -1426,7 +1424,7 @@ customSQLFunctionArgs ::
   FunctionInfo ('Postgres pgKind) ->
   G.Name ->
   G.Name ->
-  m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+  m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 customSQLFunctionArgs sourceInfo FunctionInfo {..} functionName functionArgsName =
   functionArgs
     sourceInfo
@@ -1455,7 +1453,7 @@ functionArgs ::
   SourceInfo ('Postgres pgKind) ->
   FunctionTrackedAs ('Postgres pgKind) ->
   Seq.Seq (FunctionInputArgument ('Postgres pgKind)) ->
-  m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+  m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
   -- First, we iterate through the original sql arguments in order, to find the
   -- corresponding graphql names. At the same time, we create the input field
@@ -1522,17 +1520,17 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
 
         pure $ P.field fieldName (Just fieldDesc) objectParser
   where
-    sessionPlaceholder :: PG.ArgumentExp (UnpreparedValue b)
-    sessionPlaceholder = PG.AEInput P.UVSession
+    sessionPlaceholder :: PG.ArgumentExp (IR.UnpreparedValue b)
+    sessionPlaceholder = PG.AEInput IR.UVSession
 
     splitArguments ::
       Int ->
       FunctionInputArgument ('Postgres pgKind) ->
       ( Int,
         ( [Text], -- graphql names, in order
-          [(Text, PG.ArgumentExp (UnpreparedValue ('Postgres pgKind)))], -- session argument
-          [m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (UnpreparedValue ('Postgres pgKind)))))], -- optional argument
-          [m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (UnpreparedValue ('Postgres pgKind)))))] -- mandatory argument
+          [(Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))], -- session argument
+          [m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))], -- optional argument
+          [m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))] -- mandatory argument
         )
       )
     splitArguments positionalIndex (IASessionVariables name) =
@@ -1546,7 +1544,7 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
             then (newIndex, ([argName], [], [parseArgument arg argName], []))
             else (newIndex, ([argName], [], [], [parseArgument arg argName]))
 
-    parseArgument :: FunctionArgument ('Postgres pgKind) -> Text -> m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (UnpreparedValue ('Postgres pgKind)))))
+    parseArgument :: FunctionArgument ('Postgres pgKind) -> Text -> m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))
     parseArgument arg name = do
       typedParser <- columnParser (ColumnScalar $ PG.mkFunctionArgScalarType $ PG.faType arg) (G.Nullability True)
       fieldName <- textToName name
@@ -1563,12 +1561,12 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
       -- explicit value of `null` is used, as long as we don't set a default
       -- value, not even `null`.
       let argParser = P.fieldOptional fieldName Nothing typedParser
-      pure $ argParser `mapField` ((name,) . PG.AEInput . mkParameter)
+      pure $ argParser `mapField` ((name,) . PG.AEInput . IR.mkParameter)
 
     namedArgument ::
-      HashMap Text (PG.ArgumentExp (UnpreparedValue ('Postgres pgKind))) ->
+      HashMap Text (PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind))) ->
       (Text, FunctionInputArgument ('Postgres pgKind)) ->
-      n (Maybe (Text, PG.ArgumentExp (UnpreparedValue ('Postgres pgKind))))
+      n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind))))
     namedArgument dictionary (name, inputArgument) = case inputArgument of
       IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
       IAUserProvided arg -> case Map.lookup name dictionary of
@@ -1696,7 +1694,7 @@ nodePG = memoizeOn 'nodePG () do
 nodeField ::
   forall m n r.
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
-  m (P.FieldParser n (IR.QueryRootField UnpreparedValue))
+  m (P.FieldParser n (IR.QueryRootField IR.UnpreparedValue))
 nodeField = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field G._id (Just idDescription) P.identifier
@@ -1739,7 +1737,7 @@ nodeField = do
     buildNodeIdBoolExp ::
       NESeq.NESeq J.Value ->
       NESeq.NESeq (ColumnInfo ('Postgres 'Vanilla)) ->
-      n (IR.AnnBoolExp ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla)))
+      n (IR.AnnBoolExp ('Postgres 'Vanilla) (IR.UnpreparedValue ('Postgres 'Vanilla)))
     buildNodeIdBoolExp columnValues pkeyColumns = do
       let firstPkColumn NESeq.:<|| remainingPkColumns = pkeyColumns
           firstColumnValue NESeq.:<|| remainingColumns = columnValues
@@ -1765,5 +1763,5 @@ nodeField = do
                       <<> " in node id: " <> t
                   pgColumnType = ciType columnInfo
               pgValue <- modifyErr modifyErrFn $ parseScalarValueColumnType pgColumnType columnValue
-              let unpreparedValue = UVParameter Nothing $ ColumnValue pgColumnType pgValue
+              let unpreparedValue = IR.UVParameter Nothing $ ColumnValue pgColumnType pgValue
               pure $ IR.BoolFld $ IR.AVColumn columnInfo [IR.AEQ True unpreparedValue]

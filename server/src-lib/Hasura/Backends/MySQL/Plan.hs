@@ -14,7 +14,6 @@ import Hasura.Backends.MySQL.DataLoader.Plan qualified as DataLoader
 import Hasura.Backends.MySQL.FromIr
 import Hasura.Backends.MySQL.Types
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser qualified as GraphQL
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Column qualified as RQL
@@ -25,7 +24,7 @@ import Hasura.Session
 queryToActionForest ::
   MonadError QErr m =>
   UserInfo ->
-  QueryDB 'MySQL Void (GraphQL.UnpreparedValue 'MySQL) ->
+  QueryDB 'MySQL Void (UnpreparedValue 'MySQL) ->
   m (DataLoader.HeadAndTail, Forest DataLoader.PlannedAction)
 queryToActionForest userInfo qrf = do
   select <- planQuery (_uiSession userInfo) qrf
@@ -38,7 +37,7 @@ queryToActionForest userInfo qrf = do
 planQuery ::
   MonadError QErr m =>
   SessionVariables ->
-  QueryDB 'MySQL Void (GraphQL.UnpreparedValue 'MySQL) ->
+  QueryDB 'MySQL Void (UnpreparedValue 'MySQL) ->
   m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
@@ -50,14 +49,14 @@ planQuery sessionVariables queryDB = do
 prepareValueQuery ::
   MonadError QErr m =>
   SessionVariables ->
-  GraphQL.UnpreparedValue 'MySQL ->
+  UnpreparedValue 'MySQL ->
   m Expression
 prepareValueQuery sessionVariables =
   \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> pure $ ValueExpression $ BinaryValue $ toStrict $ J.encode sessionVariables
-    GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
-    GraphQL.UVSessionVar _typ sessionVariable -> do
+    UVLiteral x -> pure x
+    UVSession -> pure $ ValueExpression $ BinaryValue $ toStrict $ J.encode sessionVariables
+    UVParameter _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
+    UVSessionVar _typ sessionVariable -> do
       value <-
         getSessionVariableValue sessionVariable sessionVariables
           `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)

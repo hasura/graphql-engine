@@ -18,7 +18,6 @@ import Hasura.GraphQL.Parser
   ( InputFieldsParser,
     Kind (..),
     Parser,
-    UnpreparedValue (..),
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
@@ -28,8 +27,9 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -55,7 +55,7 @@ onConflictFieldParser ::
   MonadBuildSchema ('Postgres pgKind) r m n =>
   SourceInfo ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
-  m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind)))))
+  m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
 onConflictFieldParser sourceInfo tableInfo = do
   tCase <- asks getter
   updatePerms <- _permUpd <$> tablePermissions tableInfo
@@ -73,7 +73,7 @@ conflictObjectParser ::
   TableInfo ('Postgres pgKind) ->
   NonEmpty (Constraint ('Postgres pgKind)) ->
   UpdPermInfo ('Postgres pgKind) ->
-  m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+  m (Parser 'Input n (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind))))
 conflictObjectParser sourceInfo tableInfo constraints updatePerms = do
   updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
   constraintParser <- conflictConstraint constraints sourceInfo tableInfo
@@ -99,7 +99,7 @@ conflictObjectParser sourceInfo tableInfo constraints updatePerms = do
       pure $
         case updateColumns of
           [] -> IR.OCCDoNothing $ Just constraint
-          _ -> IR.OCCUpdate $ IR.OnConflictClauseData constraint updateColumns presetColumns $ BoolAnd $ updateFilter : maybeToList whereExp
+          _ -> IR.OCCUpdate $ IR.OnConflictClauseData constraint updateColumns presetColumns $ IR.BoolAnd $ updateFilter : maybeToList whereExp
   where
     tableName = tableInfoName tableInfo
 

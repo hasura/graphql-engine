@@ -39,6 +39,7 @@ module Hasura.GraphQL.Schema.Common
     RemoteSchemaParser (..),
     mkEnumTypeName,
     addEnumSuffix,
+    peelWithOrigin,
   )
 where
 
@@ -55,6 +56,8 @@ import Hasura.GraphQL.Execute.Types qualified as ET (GraphQLQueryType)
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Internal.Parser qualified as P
+import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -127,7 +130,7 @@ newtype RemoteRelationshipParserBuilder
       ( forall lhsJoinField r n m.
         MonadBuildSchemaBase r m n =>
         RemoteFieldInfo lhsJoinField ->
-        m (Maybe [P.FieldParser n (IR.RemoteRelationshipField P.UnpreparedValue)])
+        m (Maybe [P.FieldParser n (IR.RemoteRelationshipField IR.UnpreparedValue)])
       )
 
 -- | A 'RemoteRelationshipParserBuilder' that ignores the field altogether, that can
@@ -144,38 +147,38 @@ retrieve f = asks $ f . getter
 
 -------------------------------------------------------------------------------
 
-type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type SelectExp b = IR.AnnSimpleSelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type StreamSelectExp b = IR.AnnSimpleStreamSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type StreamSelectExp b = IR.AnnSimpleStreamSelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type AggSelectExp b = IR.AnnAggregateSelectG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type ConnectionSelectExp b = IR.ConnectionSelect b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type ConnectionSelectExp b = IR.ConnectionSelect b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type SelectArgs b = IR.SelectArgsG b (P.UnpreparedValue b)
+type SelectArgs b = IR.SelectArgsG b (IR.UnpreparedValue b)
 
-type SelectStreamArgs b = IR.SelectStreamArgsG b (P.UnpreparedValue b)
+type SelectStreamArgs b = IR.SelectStreamArgsG b (IR.UnpreparedValue b)
 
-type TablePerms b = IR.TablePermG b (P.UnpreparedValue b)
+type TablePerms b = IR.TablePermG b (IR.UnpreparedValue b)
 
-type AnnotatedFields b = IR.AnnFieldsG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type AnnotatedFields b = IR.AnnFieldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type AnnotatedField b = IR.AnnFieldG b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type AnnotatedField b = IR.AnnFieldG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type ConnectionFields b = IR.ConnectionFields b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type ConnectionFields b = IR.ConnectionFields b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type EdgeFields b = IR.EdgeFields b (IR.RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+type EdgeFields b = IR.EdgeFields b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 
-type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField P.UnpreparedValue)
+type AnnotatedActionFields = IR.ActionFieldsG (IR.RemoteRelationshipField IR.UnpreparedValue)
 
-type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField P.UnpreparedValue)
+type AnnotatedActionField = IR.ActionFieldG (IR.RemoteRelationshipField IR.UnpreparedValue)
 
 -------------------------------------------------------------------------------
 
 data RemoteSchemaParser n = RemoteSchemaParser
-  { piQuery :: [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField P.UnpreparedValue) RemoteSchemaVariable))],
-    piMutation :: Maybe [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField P.UnpreparedValue) RemoteSchemaVariable))],
-    piSubscription :: Maybe [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField P.UnpreparedValue) RemoteSchemaVariable))]
+  { piQuery :: [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable))],
+    piMutation :: Maybe [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable))],
+    piSubscription :: Maybe [P.FieldParser n (NamespacedField (IR.RemoteSchemaRootField (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable))]
   }
 
 getTableRoles :: BackendSourceInfo -> [RoleName]
@@ -209,10 +212,10 @@ textToName textName =
           <> " it is not a valid GraphQL identifier"
       )
 
-partialSQLExpToUnpreparedValue :: PartialSQLExp b -> P.UnpreparedValue b
-partialSQLExpToUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
-partialSQLExpToUnpreparedValue PSESession = P.UVSession
-partialSQLExpToUnpreparedValue (PSESQLExp sqlExp) = P.UVLiteral sqlExp
+partialSQLExpToUnpreparedValue :: PartialSQLExp b -> IR.UnpreparedValue b
+partialSQLExpToUnpreparedValue (PSESessVar pftype var) = IR.UVSessionVar pftype var
+partialSQLExpToUnpreparedValue PSESession = IR.UVSession
+partialSQLExpToUnpreparedValue (PSESQLExp sqlExp) = IR.UVLiteral sqlExp
 
 mapField ::
   Functor m =>
@@ -314,3 +317,15 @@ mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
 
 addEnumSuffix :: (MonadReader r m, Has MkTypename r) => G.Name -> Maybe G.Name -> m G.Name
 addEnumSuffix enumTableGQLName enumTableCustomName = P.mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> G.__enum
+
+-- TODO: figure out what the purpose of this method is.
+peelWithOrigin :: P.MonadParse m => P.Parser 'P.Both m a -> P.Parser 'P.Both m (IR.ValueWithOrigin a)
+peelWithOrigin parser =
+  parser
+    { P.pParser = \case
+        P.GraphQLValue (G.VVariable var@P.Variable {vInfo, vValue}) -> do
+          -- Check types c.f. 5.8.5 of the June 2018 GraphQL spec
+          P.typeCheck False (P.toGraphQLType $ P.pType parser) var
+          IR.ValueWithOrigin vInfo <$> P.pParser parser (absurd <$> vValue)
+        value -> IR.ValueNoOrigin <$> P.pParser parser value
+    }

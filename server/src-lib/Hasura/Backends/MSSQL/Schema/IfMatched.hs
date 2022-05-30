@@ -20,7 +20,6 @@ import Hasura.GraphQL.Parser
   ( InputFieldsParser,
     Kind (..),
     Parser,
-    UnpreparedValue (..),
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
@@ -31,6 +30,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache

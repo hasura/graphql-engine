@@ -53,7 +53,6 @@ import Hasura.GraphQL.Logging
   )
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.GraphQL.Parser.Directives (CachedDirective (..), DirectiveMap, cached)
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol

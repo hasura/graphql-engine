@@ -9,10 +9,10 @@ module Hasura.GraphQL.Schema.Build.UpdateSpec (spec) where
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
 import Hasura.Backends.Postgres.SQL.Value (PGScalarValue (..))
 import Hasura.Backends.Postgres.Types.Update (UpdateOpExpression (..))
-import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..))
 import Hasura.RQL.IR.Returning (MutFldG (..), MutationOutputG (..))
+import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))

@@ -31,9 +31,9 @@ import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
-import Hasura.GraphQL.Parser.Column
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Prelude
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Column
 import Hasura.SQL.Backend
 import Hasura.Session

@@ -23,6 +23,7 @@ import Hasura.GraphQL.Schema.Common qualified as GS.C
 import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (SelectArgsG (..))
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Source qualified as RQL
@@ -87,14 +88,14 @@ columnParser' ::
   (MonadSchema n m, MonadError QErr m) =>
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
-  m (P.Parser 'P.Both n (P.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
+  m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
 columnParser' columnType (GQL.Nullability isNullable) = do
   parser <- case columnType of
     RQL.ColumnScalar IR.S.T.String -> pure (IR.S.V.String <$> P.string)
     RQL.ColumnScalar IR.S.T.Number -> pure (IR.S.V.Number <$> P.scientific)
     RQL.ColumnScalar IR.S.T.Bool -> pure (IR.S.V.Boolean <$> P.boolean)
     _ -> throw400 NotSupported "This column type is unsupported by the Data Connector backend"
-  pure . P.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable $ parser
+  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable $ parser
   where
     possiblyNullable ::
       MonadParse m =>
@@ -141,8 +142,8 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
-      textListParser = fmap P.openValueOrigin <$> P.list textParser
-      columnListParser = fmap P.openValueOrigin <$> P.list typedParser
+      textListParser = fmap IR.openValueOrigin <$> P.list textParser
+      columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
   pure $
     P.object name (Just desc) $
       fmap catMaybes $
@@ -151,17 +152,17 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
             [ GS.BE.equalityOperators
                 tCase
                 collapseIfNull
-                (P.mkParameter <$> typedParser)
+                (IR.mkParameter <$> typedParser)
                 (mkListLiteral <$> columnListParser),
               GS.BE.comparisonOperators
                 tCase
                 collapseIfNull
-                (P.mkParameter <$> typedParser)
+                (IR.mkParameter <$> typedParser)
             ]
   where
-    mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> P.UnpreparedValue 'DataConnector
+    mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
-      P.UVLiteral $ IR.E.Array $ mapMaybe (extractLiteral . IR.E.Literal . RQL.cvValue) columnValues
+      IR.UVLiteral $ IR.E.Array $ mapMaybe (extractLiteral . IR.E.Literal . RQL.cvValue) columnValues
 
     extractLiteral :: IR.E.Expression -> Maybe IR.S.V.Value
     extractLiteral (IR.E.Literal lit) = Just lit
@@ -172,7 +173,7 @@ tableArgs' ::
   MonadBuildSchema 'DataConnector r m n =>
   RQL.SourceInfo 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
-  m (P.InputFieldsParser n (SelectArgsG 'DataConnector (P.UnpreparedValue 'DataConnector)))
+  m (P.InputFieldsParser n (SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
 tableArgs' sourceName tableInfo = do
   whereParser <- GS.S.tableWhereArg sourceName tableInfo
   orderByParser <- GS.S.tableOrderByArg sourceName tableInfo

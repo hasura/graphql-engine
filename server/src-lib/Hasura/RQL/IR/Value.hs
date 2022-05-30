@@ -1,29 +1,19 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.GraphQL.Parser.Column
+module Hasura.RQL.IR.Value
   ( UnpreparedValue (..),
     ValueWithOrigin (..),
     openValueOrigin,
-    peelWithOrigin,
     mkParameter,
   )
 where
 
-import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Internal.TypeChecking
-import Hasura.GraphQL.Parser.Internal.Types
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Schema (VariableInfo)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Column hiding
-  ( EnumValue (..),
-    EnumValueInfo (..),
-  )
+import Hasura.RQL.Types.Column
 import Hasura.SQL.Backend
 import Hasura.Session (SessionVariable)
-import Language.GraphQL.Draft.Syntax qualified as G
-
--- -------------------------------------------------------------------------------------------------
 
 data UnpreparedValue (b :: BackendType)
   = -- | A SQL value that can be parameterized over.
@@ -67,15 +57,3 @@ mkParameter (ValueWithOrigin valInfo columnValue) =
   UVParameter (Just valInfo) columnValue
 mkParameter (ValueNoOrigin columnValue) =
   UVParameter Nothing columnValue
-
--- TODO: figure out what the purpose of this method is.
-peelWithOrigin :: MonadParse m => Parser 'Both m a -> Parser 'Both m (ValueWithOrigin a)
-peelWithOrigin parser =
-  parser
-    { pParser = \case
-        GraphQLValue (G.VVariable var@Variable {vInfo, vValue}) -> do
-          -- Check types c.f. 5.8.5 of the June 2018 GraphQL spec
-          typeCheck False (toGraphQLType $ pType parser) var
-          ValueWithOrigin vInfo <$> pParser parser (absurd <$> vValue)
-        value -> ValueNoOrigin <$> pParser parser value
-    }

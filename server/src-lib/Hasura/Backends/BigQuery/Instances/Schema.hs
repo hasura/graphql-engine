@@ -27,6 +27,7 @@ import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -155,7 +156,7 @@ bqColumnParser ::
   (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'BigQuery ->
   G.Nullability ->
-  m (Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery)))
+  m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
 bqColumnParser columnType (G.Nullability isNullable) =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
@@ -267,10 +268,10 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."
       -- textListParser = fmap openValueOrigin <$> P.list textParser
-      columnListParser = fmap openValueOrigin <$> P.list typedParser
-      mkListLiteral :: [ColumnValue 'BigQuery] -> UnpreparedValue 'BigQuery
+      columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
+      mkListLiteral :: [ColumnValue 'BigQuery] -> IR.UnpreparedValue 'BigQuery
       mkListLiteral =
-        P.UVLiteral . BigQuery.ListExpression . fmap (BigQuery.ValueExpression . cvValue)
+        IR.UVLiteral . BigQuery.ListExpression . fmap (BigQuery.ValueExpression . cvValue)
   pure $
     P.object name (Just desc) $
       fmap catMaybes $
@@ -282,13 +283,13 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                 *> equalityOperators
                   tCase
                   collapseIfNull
-                  (mkParameter <$> typedParser)
+                  (IR.mkParameter <$> typedParser)
                   (mkListLiteral <$> columnListParser),
               guard (isScalarColumnWhere (/= BigQuery.GeographyScalarType) columnType)
                 *> comparisonOperators
                   tCase
                   collapseIfNull
-                  (mkParameter <$> typedParser),
+                  (IR.mkParameter <$> typedParser),
               -- Ops for String type
               guard (isScalarColumnWhere (== BigQuery.StringScalarType) columnType)
                 *> [ mkBoolOperator
@@ -296,13 +297,13 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                        collapseIfNull
                        (C.fromName G.__like)
                        (Just "does the column match the given pattern")
-                       (ALIKE . mkParameter <$> typedParser),
+                       (ALIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
                        (C.fromName G.__nlike)
                        (Just "does the column NOT match the given pattern")
-                       (ANLIKE . mkParameter <$> typedParser)
+                       (ANLIKE . IR.mkParameter <$> typedParser)
                    ],
               -- Ops for Bytes type
               guard (isScalarColumnWhere (== BigQuery.BytesScalarType) columnType)
@@ -311,13 +312,13 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                        collapseIfNull
                        (C.fromName G.__like)
                        (Just "does the column match the given pattern")
-                       (ALIKE . mkParameter <$> typedParser),
+                       (ALIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
                        (C.fromName G.__nlike)
                        (Just "does the column NOT match the given pattern")
-                       (ANLIKE . mkParameter <$> typedParser)
+                       (ANLIKE . IR.mkParameter <$> typedParser)
                    ],
               -- Ops for Geography type
               guard (isScalarColumnWhere (== BigQuery.GeographyScalarType) columnType)
@@ -326,31 +327,31 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                        collapseIfNull
                        (C.fromTuple $$(G.litGQLIdentifier ["_st", "contains"]))
                        (Just "does the column contain the given geography value")
-                       (ABackendSpecific . BigQuery.ASTContains . mkParameter <$> typedParser),
+                       (ABackendSpecific . BigQuery.ASTContains . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
                        (C.fromTuple $$(G.litGQLIdentifier ["_st", "equals"]))
                        (Just "is the column equal to given geography value (directionality is ignored)")
-                       (ABackendSpecific . BigQuery.ASTEquals . mkParameter <$> typedParser),
+                       (ABackendSpecific . BigQuery.ASTEquals . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
                        (C.fromTuple $$(G.litGQLIdentifier ["_st", "touches"]))
                        (Just "does the column have at least one point in common with the given geography value")
-                       (ABackendSpecific . BigQuery.ASTTouches . mkParameter <$> typedParser),
+                       (ABackendSpecific . BigQuery.ASTTouches . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
                        (C.fromTuple $$(G.litGQLIdentifier ["_st", "within"]))
                        (Just "is the column contained in the given geography value")
-                       (ABackendSpecific . BigQuery.ASTWithin . mkParameter <$> typedParser),
+                       (ABackendSpecific . BigQuery.ASTWithin . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
                        (C.fromTuple $$(G.litGQLIdentifier ["_st", "intersects"]))
                        (Just "does the column spatially intersect the given geography value")
-                       (ABackendSpecific . BigQuery.ASTIntersects . mkParameter <$> typedParser),
+                       (ABackendSpecific . BigQuery.ASTIntersects . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
@@ -380,7 +381,7 @@ bqCountTypeInput = \case
 geographyWithinDistanceInput ::
   forall m n r.
   (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
-  m (Parser 'Input n (DWithinGeogOp (UnpreparedValue 'BigQuery)))
+  m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
   -- practically BigQuery (as of 2021-11-19) doesn't support TRUE as use_spheroid parameter for ST_DWITHIN
@@ -388,9 +389,9 @@ geographyWithinDistanceInput = do
   floatParser <- columnParser (ColumnScalar BigQuery.FloatScalarType) (G.Nullability False)
   pure $
     P.object G._st_dwithin_input Nothing $
-      DWithinGeogOp <$> (mkParameter <$> P.field G._distance Nothing floatParser)
-        <*> (mkParameter <$> P.field G._from Nothing geographyParser)
-        <*> (mkParameter <$> P.fieldWithDefault G._use_spheroid Nothing (G.VBoolean False) booleanParser)
+      DWithinGeogOp <$> (IR.mkParameter <$> P.field G._distance Nothing floatParser)
+        <*> (IR.mkParameter <$> P.field G._from Nothing geographyParser)
+        <*> (IR.mkParameter <$> P.fieldWithDefault G._use_spheroid Nothing (G.VBoolean False) booleanParser)
 
 -- | Computed field parser.
 bqComputedField ::
@@ -462,7 +463,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName _tableInfo = runMayb
 
     computedFieldFunctionArgs ::
       ComputedFieldFunction 'BigQuery ->
-      m (InputFieldsParser n (FunctionArgsExp 'BigQuery (UnpreparedValue 'BigQuery)))
+      m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
     computedFieldFunctionArgs ComputedFieldFunction {..} = do
       let fieldName = G._args
           fieldDesc =
@@ -488,13 +489,13 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName _tableInfo = runMayb
 
       pure $ P.field fieldName (Just fieldDesc) objectParser
 
-    parseArgument :: BigQuery.FunctionArgument -> m (InputFieldsParser n (Text, BigQuery.ArgumentExp (UnpreparedValue 'BigQuery)))
+    parseArgument :: BigQuery.FunctionArgument -> m (InputFieldsParser n (Text, BigQuery.ArgumentExp (IR.UnpreparedValue 'BigQuery)))
     parseArgument arg = do
       typedParser <- columnParser (ColumnScalar $ BigQuery._faType arg) (G.Nullability False)
       let argumentName = getFuncArgNameTxt $ BigQuery._faName arg
       fieldName <- textToName argumentName
       let argParser = P.field fieldName Nothing typedParser
-      pure $ argParser `P.bindFields` \inputValue -> pure ((argumentName, BigQuery.AEInput $ mkParameter inputValue))
+      pure $ argParser `P.bindFields` \inputValue -> pure ((argumentName, BigQuery.AEInput $ IR.mkParameter inputValue))
 
 {-
 NOTE: Unused. Should we remove?

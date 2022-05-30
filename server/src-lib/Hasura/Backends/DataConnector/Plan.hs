@@ -29,11 +29,11 @@ import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Column
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend

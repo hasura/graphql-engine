@@ -21,7 +21,6 @@ import Hasura.Base.Error qualified as E
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
-import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.QueryTags
   ( emptyQueryTagsComment,

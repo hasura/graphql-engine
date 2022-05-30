@@ -21,7 +21,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser
 import Hasura.Prelude hiding (first, second)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend

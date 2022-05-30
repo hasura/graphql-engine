@@ -40,7 +40,6 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias (..), RootFieldMap)
-import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR

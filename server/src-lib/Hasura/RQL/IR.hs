@@ -13,3 +13,4 @@ import Hasura.RQL.IR.Returning as IR
 import Hasura.RQL.IR.Root as IR
 import Hasura.RQL.IR.Select as IR
 import Hasura.RQL.IR.Update as IR
+import Hasura.RQL.IR.Value as IR

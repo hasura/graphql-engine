@@ -33,6 +33,7 @@ import Hasura.RQL.IR.BoolExp (AnnBoolExp, annBoolExpTrue)
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
 import Hasura.RQL.Types.Source
@@ -92,7 +93,7 @@ buildUpdateOperators presetCols ops tableInfo = do
 -- | The columns that have 'preset' definitions applied to them. (see
 -- <https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#column-presets
 -- Permissions user docs>)
-presetColumns :: UpdPermInfo b -> HashMap (Column b) (P.UnpreparedValue b)
+presetColumns :: UpdPermInfo b -> HashMap (Column b) (UnpreparedValue b)
 presetColumns = fmap partialSQLExpToUnpreparedValue . upiSet
 
 -- | Produce an InputFieldsParser from an UpdateOperator, but only if the operator
@@ -205,14 +206,14 @@ setOp ::
     MonadError QErr m,
     P.MonadSchema n m
   ) =>
-  UpdateOperator b m n (P.UnpreparedValue b)
+  UpdateOperator b m n (UnpreparedValue b)
 setOp = UpdateOperator {..}
   where
     updateOperatorApplicableColumn = const True
 
     updateOperatorParser tableGQLName tableName columns = do
       let typedParser columnInfo =
-            fmap P.mkParameter
+            fmap mkParameter
               <$> columnParser
                 (ciType columnInfo)
                 (Nullability $ ciIsNullable columnInfo)
@@ -235,14 +236,14 @@ incOp ::
     Has P.MkTypename r,
     Has NamingCase r
   ) =>
-  UpdateOperator b m n (P.UnpreparedValue b)
+  UpdateOperator b m n (UnpreparedValue b)
 incOp = UpdateOperator {..}
   where
     updateOperatorApplicableColumn = isNumCol
 
     updateOperatorParser tableGQLName tableName columns = do
       let typedParser columnInfo =
-            fmap P.mkParameter
+            fmap mkParameter
               <$> columnParser
                 (ciType columnInfo)
                 (Nullability $ ciIsNullable columnInfo)
@@ -262,7 +263,7 @@ updateTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   -- | backend-specific data needed to perform an update mutation
-  P.InputFieldsParser n (BackendUpdate b (P.UnpreparedValue b)) ->
+  P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
   -- | table source
   SourceInfo b ->
   -- | table info
@@ -271,7 +272,7 @@ updateTable ::
   Name ->
   -- | field description, if any
   Maybe Description ->
-  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b))))
+  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 updateTable backendUpdate sourceInfo tableInfo fieldName description = runMaybeT do
   let tableName = tableInfoName tableInfo
       columns = tableColumns tableInfo
@@ -295,7 +296,7 @@ updateTableByPk ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   -- | backend-specific data needed to perform an update mutation
-  P.InputFieldsParser n (BackendUpdate b (P.UnpreparedValue b)) ->
+  P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
   -- | table source
   SourceInfo b ->
   -- | table info
@@ -304,7 +305,7 @@ updateTableByPk ::
   Name ->
   -- | field description, if any
   Maybe Description ->
-  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b))))
+  m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
 updateTableByPk backendUpdate sourceInfo tableInfo fieldName description = runMaybeT $ do
   let columns = tableColumns tableInfo
       tableName = tableInfoName tableInfo
@@ -329,12 +330,12 @@ mkUpdateObject ::
   TableName b ->
   [ColumnInfo b] ->
   UpdPermInfo b ->
-  ( ( BackendUpdate b (P.UnpreparedValue b),
-      AnnBoolExp b (P.UnpreparedValue b)
+  ( ( BackendUpdate b (UnpreparedValue b),
+      AnnBoolExp b (UnpreparedValue b)
     ),
-    MutationOutputG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+    MutationOutputG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
   ) ->
-  AnnotatedUpdateG b (RemoteRelationshipField P.UnpreparedValue) (P.UnpreparedValue b)
+  AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
 mkUpdateObject _auTable _auAllCols updatePerms ((_auBackend, whereExp), _auOutput) =
   AnnotatedUpdateG {..}
   where

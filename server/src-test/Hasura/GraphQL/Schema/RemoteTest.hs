@@ -14,7 +14,6 @@ import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser.Column (UnpreparedValue)
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Monad (runSchemaT)
@@ -25,6 +24,7 @@ import Hasura.GraphQL.Schema.Remote
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema
 import Hasura.RQL.IR.Root
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache

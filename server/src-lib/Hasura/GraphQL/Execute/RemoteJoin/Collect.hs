@@ -15,7 +15,6 @@ import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
 import Hasura.GraphQL.Execute.RemoteJoin.Types
-import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Prelude
 import Hasura.RQL.IR

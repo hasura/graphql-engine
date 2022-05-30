@@ -25,7 +25,6 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Parser
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
