@@ -26,12 +26,12 @@ import Data.Int (Int64)
 import Data.Scientific (Scientific)
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.IR.Select qualified as RS
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common

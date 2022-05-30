@@ -37,6 +37,7 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.ToSchema
@@ -206,7 +207,7 @@ getJoinColumnMapping = \case
 data RemoteSourceJoin b = RemoteSourceJoin
   { _rsjSource :: !SourceName,
     _rsjSourceConfig :: !(SourceConfig b),
-    _rsjRelationship :: !(IR.SourceRelationshipSelection b Void P.UnpreparedValue),
+    _rsjRelationship :: !(IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
     _rsjJoinColumns :: !(Map.HashMap FieldName (JoinColumnAlias, (Column b, ScalarType b)))
   }
   deriving (Generic)
@@ -215,16 +216,16 @@ deriving instance
   ( Backend b,
     Show (ScalarValue b),
     Show (SourceConfig b),
-    Show (BooleanOperators b (P.UnpreparedValue b)),
-    Show (FunctionArgumentExp b (P.UnpreparedValue b))
+    Show (BooleanOperators b (IR.UnpreparedValue b)),
+    Show (FunctionArgumentExp b (IR.UnpreparedValue b))
   ) =>
   Show (RemoteSourceJoin b)
 
 deriving instance
   ( Backend b,
     Eq (ScalarValue b),
-    Eq (BooleanOperators b (P.UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (P.UnpreparedValue b))
+    Eq (BooleanOperators b (IR.UnpreparedValue b)),
+    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
   ) =>
   Eq (RemoteSourceJoin b)
 

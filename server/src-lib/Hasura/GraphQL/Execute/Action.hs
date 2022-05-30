@@ -48,7 +48,6 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Common
 import Hasura.GraphQL.Execute.Action.Types as Types
-import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import Hasura.HTTP
@@ -61,6 +60,7 @@ import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -248,7 +248,7 @@ Resolving async action query happens in two steps;
 resolveAsyncActionQuery ::
   UserInfo ->
   IR.AnnActionAsyncQuery ('Postgres 'Vanilla) Void ->
-  AsyncActionQueryExecution (UnpreparedValue ('Postgres 'Vanilla))
+  AsyncActionQueryExecution (IR.UnpreparedValue ('Postgres 'Vanilla))
 resolveAsyncActionQuery userInfo annAction =
   case actionSource of
     IR.ASINoSource -> AAQENoRelationships \actionLogResponse -> runExcept do
@@ -282,7 +282,7 @@ resolveAsyncActionQuery userInfo annAction =
 
                   jsonbToRecordSet = QualifiedObject "pg_catalog" $ FunctionName "jsonb_to_recordset"
                   actionLogInput =
-                    UVParameter Nothing $
+                    IR.UVParameter Nothing $
                       ColumnValue (ColumnScalar PGJSONB) $
                         PGValJSONB $
                           Q.JSONB $
@@ -334,10 +334,10 @@ resolveAsyncActionQuery userInfo annAction =
                 ciDescription = Nothing,
                 ciMutability = ColumnMutability False False
               }
-          actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ UVLiteral $ S.SELit $ actionIdToText actionId]
+          actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ IR.UVLiteral $ S.SELit $ actionIdToText actionId]
           sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
           sessionVarValue =
-            UVParameter Nothing $
+            IR.UVParameter Nothing $
               ColumnValue (ColumnScalar PGJSONB) $
                 PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolFld $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]

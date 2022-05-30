@@ -14,7 +14,6 @@ import Data.Text.Casing qualified as C
 import Hasura.Backends.Postgres.Instances.Schema (updateOperators)
 import Hasura.Backends.Postgres.SQL.Types (QualifiedObject (..), QualifiedTable, TableName (..), unsafePGCol)
 import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..))
-import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.GraphQL.Parser.Internal.Input (InputFieldsParser)
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Schema.Build qualified as Build
@@ -22,6 +21,7 @@ import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), PartialSQLExp (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
+import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
 import Hasura.RQL.Types.Common (Comment (..), FieldName (..), SystemDefined (..))
 import Hasura.RQL.Types.Instances ()

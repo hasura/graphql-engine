@@ -428,7 +428,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
   where
     mkListLiteral :: [ColumnValue 'MSSQL] -> UnpreparedValue 'MSSQL
     mkListLiteral =
-      P.UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
+      UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
 
 msCountTypeInput ::
   MonadParse n =>

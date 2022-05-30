@@ -20,8 +20,6 @@ import Hasura.GraphQL.Parser
     InputFieldsParser,
     Kind (..),
     Parser,
-    UnpreparedValue (..),
-    mkParameter,
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
@@ -37,6 +35,7 @@ import Hasura.RQL.IR.Delete qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -57,7 +56,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 insertIntoTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   SourceInfo b ->
   -- | qualified name of the table
@@ -66,7 +65,7 @@ insertIntoTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -102,7 +101,7 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
 insertOneIntoTable ::
   forall b r m n.
   (MonadBuildSchema b r m n) =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   -- | source of the table
   SourceInfo b ->
@@ -112,7 +111,7 @@ insertOneIntoTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  m (Maybe (FieldParser n (IR.AnnotatedInsert b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName description = runMaybeT do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -160,7 +159,7 @@ tableFieldsInput ::
   SourceInfo b ->
   -- | qualified name of the table
   TableInfo b ->
-  m (Parser 'Input n (IR.AnnotatedInsertRow b (UnpreparedValue b)))
+  m (Parser 'Input n (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)))
 tableFieldsInput sourceInfo tableInfo =
   memoizeOn 'tableFieldsInput (_siName sourceInfo, tableName) do
     tableGQLName <- getTableGQLName tableInfo
@@ -178,13 +177,13 @@ tableFieldsInput sourceInfo tableInfo =
     -- function does the necessary transformations to coalesce all of this in
     -- one 'InputFieldsParser'.
     coalesceFields ::
-      [Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b))))] ->
-      InputFieldsParser n (IR.AnnotatedInsertRow b (UnpreparedValue b))
+      [Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b))))] ->
+      InputFieldsParser n (IR.AnnotatedInsertRow b (IR.UnpreparedValue b))
     coalesceFields = fmap catMaybes . sequenceA . catMaybes
 
     mkFieldParser ::
       FieldInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
+      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
     mkFieldParser = \case
       FIComputedField _ -> pure Nothing
       FIRemoteRelationship _ -> pure Nothing
@@ -196,7 +195,7 @@ tableFieldsInput sourceInfo tableInfo =
 
     mkColumnParser ::
       ColumnInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
+      m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
     mkColumnParser columnInfo = runMaybeT $ do
       insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
       let columnName = ciName columnInfo
@@ -206,16 +205,16 @@ tableFieldsInput sourceInfo tableInfo =
       fieldParser <- lift $ columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
       pure $
         P.fieldOptional columnName columnDesc fieldParser `mapField` \value ->
-          IR.AIColumn (ciColumn columnInfo, mkParameter value)
+          IR.AIColumn (ciColumn columnInfo, IR.mkParameter value)
 
 mkDefaultRelationshipParser ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   XNestedInserts b ->
   SourceInfo b ->
   RelInfo b ->
-  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (UnpreparedValue b)))))
+  m (Maybe (InputFieldsParser n (Maybe (IR.AnnotatedInsertField b (IR.UnpreparedValue b)))))
 mkDefaultRelationshipParser backendInsertAction xNestedInserts sourceInfo relationshipInfo = runMaybeT do
   let otherTableName = riRTable relationshipInfo
       relName = riName relationshipInfo
@@ -246,10 +245,10 @@ mkDefaultRelationshipParser backendInsertAction xNestedInserts sourceInfo relati
 objectRelationshipInput ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   SourceInfo b ->
   TableInfo b ->
-  m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (UnpreparedValue b))))
+  m (Maybe (Parser 'Input n (IR.SingleObjectInsert b (IR.UnpreparedValue b))))
 objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
   insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   lift $ memoizeOn 'objectRelationshipInput (_siName sourceInfo, tableName) do
@@ -279,10 +278,10 @@ objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ d
 arrayRelationshipInput ::
   forall b r m n.
   MonadBuildSchema b r m n =>
-  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   SourceInfo b ->
   TableInfo b ->
-  m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (UnpreparedValue b))))
+  m (Maybe (Parser 'Input n (IR.MultiObjectInsert b (IR.UnpreparedValue b))))
 arrayRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
   insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   lift $ memoizeOn 'arrayRelationshipInput (_siName sourceInfo, tableName) do
@@ -306,12 +305,12 @@ arrayRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
 mkInsertObject ::
   forall b f.
   BackendSchema b =>
-  f (IR.AnnotatedInsertRow b (UnpreparedValue b)) ->
+  f (IR.AnnotatedInsertRow b (IR.UnpreparedValue b)) ->
   TableInfo b ->
-  BackendInsert b (UnpreparedValue b) ->
+  BackendInsert b (IR.UnpreparedValue b) ->
   InsPermInfo b ->
   Maybe (UpdPermInfo b) ->
-  IR.AnnotatedInsertData b f (UnpreparedValue b)
+  IR.AnnotatedInsertData b f (IR.UnpreparedValue b)
 mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
   IR.AnnotatedInsertData
     { _aiInsertObject = objects,
@@ -343,7 +342,7 @@ deleteFromTable ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 deleteFromTable sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -372,7 +371,7 @@ deleteFromTableByPk ::
   G.Name ->
   -- | field description, if any
   Maybe G.Description ->
-  m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
+  m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
 deleteFromTableByPk sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
@@ -389,8 +388,8 @@ mkDeleteObject ::
   TableName b ->
   [ColumnInfo b] ->
   DelPermInfo b ->
-  (AnnBoolExp b (UnpreparedValue b), IR.MutationOutputG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)) ->
-  IR.AnnDelG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)
+  (AnnBoolExp b (IR.UnpreparedValue b), IR.MutationOutputG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)) ->
+  IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
 mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
   IR.AnnDel
     { IR._adTable = table,
@@ -410,7 +409,7 @@ mutationSelectionSet ::
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableInfo b ->
-  m (Parser 'Output n (IR.MutFldsG b (IR.RemoteRelationshipField UnpreparedValue) (UnpreparedValue b)))
+  m (Parser 'Output n (IR.MutFldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))
 mutationSelectionSet sourceInfo tableInfo =
   memoizeOn 'mutationSelectionSet (_siName sourceInfo, tableName) do
     tableGQLName <- getTableGQLName tableInfo
@@ -447,7 +446,7 @@ primaryKeysArguments ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   TableInfo b ->
-  m (Maybe (InputFieldsParser n (AnnBoolExp b (UnpreparedValue b))))
+  m (Maybe (InputFieldsParser n (AnnBoolExp b (IR.UnpreparedValue b))))
 primaryKeysArguments tableInfo = runMaybeT $ do
   selectPerms <- MaybeT $ tableSelectPermissions tableInfo
   primaryKeys <- hoistMaybe $ _tciPrimaryKey . _tiCoreInfo $ tableInfo
@@ -457,5 +456,5 @@ primaryKeysArguments tableInfo = runMaybeT $ do
     fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
       field <- columnParser (ciType columnInfo) (G.Nullability False)
       pure $
-        BoolFld . AVColumn columnInfo . pure . AEQ True . mkParameter
+        BoolFld . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
           <$> P.field (ciName columnInfo) (ciDescription columnInfo) field

@@ -11,7 +11,6 @@ import Data.Text.Lazy qualified as LT
 import Hasura.Backends.BigQuery.FromIr as BigQuery
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error qualified as E
-import Hasura.GraphQL.Parser qualified as GraphQL
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Column qualified as RQL
@@ -26,7 +25,7 @@ planNoPlan ::
   MonadError E.QErr m =>
   FromIrConfig ->
   UserInfo ->
-  QueryDB 'BigQuery Void (GraphQL.UnpreparedValue 'BigQuery) ->
+  QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   m Select
 planNoPlan fromIrConfig userInfo queryDB = do
   rootField <- traverse (prepareValueNoPlan (_uiSession userInfo)) queryDB
@@ -41,14 +40,14 @@ planNoPlan fromIrConfig userInfo queryDB = do
 prepareValueNoPlan ::
   (MonadError E.QErr m) =>
   SessionVariables ->
-  GraphQL.UnpreparedValue 'BigQuery ->
+  UnpreparedValue 'BigQuery ->
   m Expression
 prepareValueNoPlan sessionVariables =
   \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> pure globalSessionExpression
+    UVLiteral x -> pure x
+    UVSession -> pure globalSessionExpression
     -- To be honest, I'm not sure if it's indeed the JSON_VALUE operator we need here...
-    GraphQL.UVSessionVar typ text ->
+    UVSessionVar typ text ->
       case typ of
         CollectableTypeScalar scalarType ->
           pure
@@ -61,7 +60,7 @@ prepareValueNoPlan sessionVariables =
             )
         CollectableTypeArray {} ->
           throwError $ E.internalError "Cannot currently prepare array types in BigQuery."
-    GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure (ValueExpression cvValue)
+    UVParameter _ RQL.ColumnValue {..} -> pure (ValueExpression cvValue)
   where
     globalSessionExpression =
       ValueExpression

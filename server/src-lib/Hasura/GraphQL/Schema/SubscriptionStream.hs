@@ -25,6 +25,7 @@ import Hasura.GraphQL.Schema.Select (tablePermissionsInfo, tableSelectionList, t
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns, tableSelectPermissions)
 import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
@@ -102,7 +103,7 @@ streamColumnParserArg colInfo = do
     P.fieldOptional fieldName fieldDesc fieldParser <&> fmap (colInfo,)
   where
     typedParser columnInfo = do
-      fmap P.openValueOrigin <$> columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
+      fmap IR.openValueOrigin <$> columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
 
 -- | Input object parser whose keys are the column names and the values are the
 --   initial values of those columns from where the streaming should start.

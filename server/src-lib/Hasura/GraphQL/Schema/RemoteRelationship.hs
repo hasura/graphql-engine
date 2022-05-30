@@ -63,7 +63,7 @@ remoteRelationshipToSchemaField ::
   RemoteSchemaMap ->
   Map.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
-  m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField UnpreparedValue))))
+  m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
 remoteRelationshipToSchemaField remoteSchemaCache lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
   remoteSchemaPermsCtx <- retrieve soRemoteSchemaPermsCtx
   roleName <- asks getter
@@ -176,7 +176,7 @@ remoteRelationshipToSourceField ::
   (MonadBuildSchemaBase r m n, BackendSchema tgt) =>
   SourceCache ->
   RemoteSourceFieldInfo tgt ->
-  m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField UnpreparedValue) UnpreparedValue tgt)]
+  m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
   withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
     sourceInfo <-

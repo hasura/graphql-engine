@@ -24,7 +24,6 @@ import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias, RootFieldMap)
-import Hasura.GraphQL.Parser hiding (Type)
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Metadata.Class
 import Hasura.Prelude

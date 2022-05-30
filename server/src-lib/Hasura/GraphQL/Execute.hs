@@ -39,7 +39,6 @@ import Hasura.GraphQL.Execute.Subscription.Plan qualified as ES
 import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser.Column (UnpreparedValue (..))
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.RemoteServer (execRemoteGQ)
@@ -110,7 +109,7 @@ getExecPlanPartial userInfo sc queryType req =
 -- The graphql query is resolved into a sequence of execution operations
 data ResolvedExecutionPlan
   = -- | query execution; remote schemas and introspection possible
-    QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField UnpreparedValue] DirectiveMap
+    QueryExecutionPlan EB.ExecutionPlan [IR.QueryRootField IR.UnpreparedValue] DirectiveMap
   | -- | mutation execution; only __typename introspection supported
     MutationExecutionPlan EB.ExecutionPlan
   | -- | either action query or live query execution; remote schemas and introspection not supported
@@ -138,7 +137,7 @@ buildSubscriptionPlan ::
   forall m.
   (MonadError QErr m, EB.MonadQueryTags m, MonadIO m, MonadBaseControl IO m) =>
   UserInfo ->
-  RootFieldMap (IR.QueryRootField UnpreparedValue) ->
+  RootFieldMap (IR.QueryRootField IR.UnpreparedValue) ->
   ParameterizedQueryHash ->
   m SubscriptionExecution
 buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
@@ -201,23 +200,23 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
     go ::
       ( ( RootFieldMap
             ( Either
-                (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
+                (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (IR.UnpreparedValue ('Postgres 'Vanilla))))
+                (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
             ),
           RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
         ),
-        RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
+        RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
       ) ->
-      (RootFieldAlias, IR.QueryRootField UnpreparedValue) ->
+      (RootFieldAlias, IR.QueryRootField IR.UnpreparedValue) ->
       m
         ( ( RootFieldMap
               ( Either
-                  (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (UnpreparedValue ('Postgres 'Vanilla))))
-                  (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
+                  (ActionId, (PGSourceConfig, EA.AsyncActionQuerySourceExecution (IR.UnpreparedValue ('Postgres 'Vanilla))))
+                  (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
               ),
             RootFieldMap (ActionId, ActionLogResponse -> Either QErr EncJSON)
           ),
-          RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue)))
+          RootFieldMap (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue)))
         )
     go (accLiveQueryFields, accStreamingFields) (gName, field) = case field of
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
@@ -252,7 +251,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
     buildAction ::
       (SourceName, AB.AnyBackend (IR.SourceConfigWith b)) ->
       RootFieldMap
-        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue))) ->
+        (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue))) ->
       RootFieldAlias ->
       ExceptT QErr IO (SourceName, SubscriptionQueryPlan)
     buildAction (sourceName, exists) allFields rootFieldName = do
@@ -270,8 +269,8 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
       forall b m1.
       (Backend b, MonadError QErr m1) =>
       SourceName ->
-      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void UnpreparedValue))) ->
-      m1 (IR.QueryDB b Void (UnpreparedValue b))
+      (SourceName, AB.AnyBackend (IR.SourceConfigWith (IR.QueryDBRoot Void IR.UnpreparedValue))) ->
+      m1 (IR.QueryDB b Void (IR.UnpreparedValue b))
     checkField sourceName (src, exists)
       | sourceName /= src = throw400 NotSupported "all fields of a subscription must be from the same source"
       | otherwise = case AB.unpackAnyBackend exists of

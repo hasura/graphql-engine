@@ -12,7 +12,6 @@ import Hasura.GraphQL.Parser
   ( InputFieldsParser,
     Kind (..),
     Parser,
-    UnpreparedValue,
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
@@ -23,6 +22,7 @@ import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -60,7 +60,7 @@ orderByExp ::
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableInfo b ->
-  m (Parser 'Input n [IR.AnnotatedOrderByItemG b (UnpreparedValue b)])
+  m (Parser 'Input n [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])
 orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tableInfoName tableInfo) $ do
   tableGQLName <- getTableGQLName tableInfo
   tCase <- asks getter
@@ -75,7 +75,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
     mkField ::
       NamingCase ->
       FieldInfo b ->
-      m (Maybe (InputFieldsParser n (Maybe [IR.AnnotatedOrderByItemG b (UnpreparedValue b)])))
+      m (Maybe (InputFieldsParser n (Maybe [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])))
     mkField tCase fieldInfo = runMaybeT $
       case fieldInfo of
         FIColumn columnInfo -> do
@@ -108,7 +108,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
               mkComputedFieldOrderBy =
                 let functionArgs =
                       flip FunctionArgsExp mempty $
-                        fromComputedFieldImplicitArguments @b P.UVSession _cffComputedFieldImplicitArgs
+                        fromComputedFieldImplicitArguments @b IR.UVSession _cffComputedFieldImplicitArgs
                  in IR.ComputedFieldOrderBy _cfiXComputedFieldInfo _cfiName _cffName functionArgs
           fieldName <- hoistMaybe $ G.mkName $ toTxt _cfiName
           guard $ _cffInputArgs == mempty -- No input arguments other than table row and session argument

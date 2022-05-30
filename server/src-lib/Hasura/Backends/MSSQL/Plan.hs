@@ -50,7 +50,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 planQuery ::
   MonadError QErr m =>
   SessionVariables ->
-  QueryDB 'MSSQL Void (GraphQL.UnpreparedValue 'MSSQL) ->
+  QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m Select
 planQuery sessionVariables queryDB = do
   rootField <- traverse (prepareValueQuery sessionVariables) queryDB
@@ -65,7 +65,7 @@ planSourceRelationship ::
   -- | The above objects have this schema
   HM.HashMap RQL.FieldName (ColumnName, ScalarType) ->
   RQL.FieldName ->
-  (RQL.FieldName, SourceRelationshipSelection 'MSSQL Void GraphQL.UnpreparedValue) ->
+  (RQL.FieldName, SourceRelationshipSelection 'MSSQL Void UnpreparedValue) ->
   m Select
 planSourceRelationship
   sessionVariables
@@ -97,7 +97,7 @@ runIrWrappingRoot selectAction = do
 prepareValueQuery ::
   MonadError QErr m =>
   SessionVariables ->
-  GraphQL.UnpreparedValue 'MSSQL ->
+  UnpreparedValue 'MSSQL ->
   m Expression
 prepareValueQuery sessionVariables =
   {- History note:
@@ -106,10 +106,10 @@ prepareValueQuery sessionVariables =
       left as a *suggestion* for implementing support for mutations.
       -}
   \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
-    GraphQL.UVParameter _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
-    GraphQL.UVSessionVar typ sessionVariable -> do
+    UVLiteral x -> pure x
+    UVSession -> pure $ ValueExpression $ ODBC.ByteStringValue $ toStrict $ J.encode sessionVariables
+    UVParameter _ RQL.ColumnValue {..} -> pure $ ValueExpression cvValue
+    UVSessionVar typ sessionVariable -> do
       value <-
         getSessionVariableValue sessionVariable sessionVariables
           `onNothing` throw400 NotFound ("missing session variable: " <>> sessionVariable)
@@ -125,7 +125,7 @@ prepareValueQuery sessionVariables =
 
 planSubscription ::
   MonadError QErr m =>
-  OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (GraphQL.UnpreparedValue 'MSSQL)) ->
+  OMap.InsOrdHashMap G.Name (QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL)) ->
   SessionVariables ->
   m (Reselect, PrepareState)
 planSubscription unpreparedMap sessionVariables = do
@@ -141,7 +141,7 @@ planSubscription unpreparedMap sessionVariables = do
 
 -- Plan a query without prepare/exec.
 -- planNoPlanMap ::
---      OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (GraphQL.UnpreparedValue 'MSSQL))
+--      OMap.InsOrdHashMap G.Name (SubscriptionRootFieldMSSQL (UnpreparedValue 'MSSQL))
 --   -> Either PrepareError Reselect
 -- planNoPlanMap _unpreparedMap =
 -- let rootFieldMap = runIdentity $
@@ -209,22 +209,22 @@ emptyPrepareState =
 prepareValueSubscription ::
   (MonadState PrepareState m, MonadError QErr m) =>
   Set.HashSet SessionVariable ->
-  GraphQL.UnpreparedValue 'MSSQL ->
+  UnpreparedValue 'MSSQL ->
   m Expression
 prepareValueSubscription globalVariables =
   \case
-    GraphQL.UVLiteral x -> pure x
-    GraphQL.UVSession -> do
+    UVLiteral x -> pure x
+    UVSession -> do
       modify' (\s -> s {sessionVariables = sessionVariables s <> globalVariables})
       pure $ resultVarExp (RootPath `FieldPath` "session")
-    GraphQL.UVSessionVar _typ text -> do
+    UVSessionVar _typ text -> do
       unless (text `Set.member` globalVariables) $
         throw400
           NotFound
           ("missing session variable: " <>> sessionVariableToText text)
       modify' (\s -> s {sessionVariables = text `Set.insert` sessionVariables s})
       pure $ resultVarExp (sessionDot $ toTxt text)
-    GraphQL.UVParameter mVariableInfo columnValue ->
+    UVParameter mVariableInfo columnValue ->
       case fmap GraphQL.getName mVariableInfo of
         Nothing -> do
           currentIndex <- toInteger . length <$> gets positionalArguments

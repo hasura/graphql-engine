@@ -16,7 +16,6 @@ import Hasura.GraphQL.Parser
   ( InputFieldsParser,
     Kind (..),
     Parser,
-    UnpreparedValue,
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
@@ -26,6 +25,7 @@ import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValu
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.ComputedField
@@ -103,7 +103,7 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
             [] -> do
               let functionArgs =
                     flip FunctionArgsExp mempty $
-                      fromComputedFieldImplicitArguments @b P.UVSession _cffComputedFieldImplicitArgs
+                      fromComputedFieldImplicitArguments @b UVSession _cffComputedFieldImplicitArgs
 
               fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName functionArgs)
                 <$> case computedFieldReturnType @b _cfiReturnType of

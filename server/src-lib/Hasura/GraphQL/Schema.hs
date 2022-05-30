@@ -23,7 +23,6 @@ import Hasura.GraphQL.Parser
   ( Kind (..),
     Parser,
     Schema (..),
-    UnpreparedValue (..),
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class

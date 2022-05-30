@@ -21,7 +21,6 @@ import Hasura.GraphQL.Parser
     InputFieldsParser,
     Kind (..),
     Parser,
-    UnpreparedValue (..),
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
@@ -32,6 +31,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
+import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
@@ -62,7 +62,7 @@ actionExecute ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
-  m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField UnpreparedValue))))
+  m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionExecute customTypes actionInfo = runMaybeT do
   roleName <- asks getter
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
@@ -137,7 +137,7 @@ actionAsyncQuery ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
   AnnotatedObjects ->
   ActionInfo ->
-  m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField UnpreparedValue))))
+  m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
   roleName <- asks getter
   guard $ roleName == adminRoleName || roleName `Map.member` permissions

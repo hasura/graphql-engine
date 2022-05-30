@@ -61,15 +61,12 @@ import Hasura.GraphQL.Namespace
     RootFieldMap,
   )
 import Hasura.GraphQL.Namespace qualified as G
-import Hasura.GraphQL.Parser
-  ( UnpreparedValue (..),
-  )
 import Hasura.Prelude
 import Hasura.QueryTags
   ( QueryTagsComment (..),
     emptyQueryTagsComment,
   )
-import Hasura.RQL.IR (MutationDB (..), QueryDB (..))
+import Hasura.RQL.IR
 import Hasura.RQL.IR.Delete qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Returning qualified as IR

@@ -738,6 +738,7 @@ library
                      , Hasura.RQL.IR.Select
                      , Hasura.RQL.IR.RemoteSchema
                      , Hasura.RQL.IR.Update
+                     , Hasura.RQL.IR.Value
                      , Hasura.RQL.IR.Root
                      , Hasura.RQL.IR
                      , Hasura.GraphQL.Analyse
@@ -776,7 +777,6 @@ library
                      , Hasura.GraphQL.Parser.Class
                      , Hasura.GraphQL.Parser.Class.Parse
                      , Hasura.GraphQL.Parser.Collect
-                     , Hasura.GraphQL.Parser.Column
                      , Hasura.GraphQL.Parser.Constants
                      , Hasura.GraphQL.Parser.Directives
                      , Hasura.GraphQL.Parser.Internal.Convert

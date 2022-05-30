@@ -40,7 +40,6 @@ import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Subscription.Plan
-import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Schema qualified as PS
 import Hasura.Prelude
 import Hasura.RQL.IR
