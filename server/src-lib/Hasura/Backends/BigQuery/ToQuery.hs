@@ -112,13 +112,15 @@ fromExpression =
         <+> ") "
         <+> fromOp op
         <+> fromExpression y
-    FunctionExpression name args ->
-      UnsafeTextPrinter name <+> "(" <+> SepByPrinter ", " (fromExpression <$> args) <+> ")"
+    FunctionExpression function args ->
+      fromFunctionName function <+> "(" <+> SepByPrinter ", " (fromExpression <$> args) <+> ")"
     ConditionalProjection expression fieldName ->
       "(CASE WHEN(" <+> fromExpression expression
         <+> ") THEN "
         <+> fromFieldName fieldName
         <+> " ELSE NULL END)"
+    FunctionNamedArgument argName argValue ->
+      fromNameText argName <+> " => " <+> fromExpression argValue
 
 fromScalarType :: ScalarType -> Printer
 fromScalarType =
@@ -178,10 +180,15 @@ fromSelect Select {..} = finalExpression
       SepByPrinter
         ("," <+> NewlinePrinter)
         (map fromProjection (toList (cleanProjections selectProjections)))
+    fromAsStruct = \case
+      AsStruct -> "AS STRUCT"
+      NoAsStruct -> ""
     inner =
       SepByPrinter
         NewlinePrinter
-        [ "SELECT " <+> IndentPrinter 7 projections,
+        [ "SELECT ",
+          fromAsStruct selectAsStruct,
+          IndentPrinter 7 projections,
           "FROM " <+> IndentPrinter 5 (fromFrom selectFrom),
           SepByPrinter
             NewlinePrinter
@@ -517,10 +524,25 @@ fromFrom =
     FromSelect select -> fromAliased (fmap (parens . fromSelect) select)
     FromSelectJson selectJson ->
       fromAliased (fmap (parens . fromSelectJson) selectJson)
+    FromFunction selectFromFunction ->
+      fromAliased
+        ( fmap
+            ( \SelectFromFunction {..} ->
+                fromExpression $ FunctionExpression sffFunctionName sffArguments
+            )
+            selectFromFunction
+        )
 
 fromTableName :: TableName -> Printer
 fromTableName TableName {tableName, tableNameSchema} =
   fromNameText tableNameSchema <+> "." <+> fromNameText tableName
+
+fromFunctionName :: FunctionName -> Printer
+fromFunctionName = \case
+  FunctionName name Nothing ->
+    -- Function without dataset are system functions like 'ARRAY', 'UNNEST' etc.
+    UnsafeTextPrinter name
+  FunctionName name (Just dataset) -> fromNameText dataset <+> "." <+> fromNameText name
 
 fromAliased :: Aliased Printer -> Printer
 fromAliased Aliased {..} =

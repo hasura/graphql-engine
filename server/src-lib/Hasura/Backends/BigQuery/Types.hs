@@ -20,6 +20,7 @@ module Hasura.Backends.BigQuery.Types
     FieldOrigin (..),
     Float64,
     From (..),
+    SelectFromFunction (..),
     Geography (Geography),
     Int64 (Int64),
     Join (..),
@@ -34,6 +35,7 @@ module Hasura.Backends.BigQuery.Types
     Reselect (..),
     ScalarType (..),
     Select (..),
+    AsStruct (..),
     PartitionableSelect (..),
     noExtraPartitionFields,
     withExtraPartitionFields,
@@ -58,6 +60,7 @@ module Hasura.Backends.BigQuery.Types
     projectionAlias,
     scalarTypeGraphQLName,
     scientificToText,
+    columnToFieldName,
     FunctionName (..),
     ComputedFieldDefinition (..),
     ArgumentExp (..),
@@ -98,6 +101,7 @@ import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 data Select = Select
   { selectTop :: !Top,
+    selectAsStruct :: !AsStruct,
     selectProjections :: !(NonEmpty Projection),
     selectFrom :: !From,
     selectJoins :: ![Join],
@@ -106,7 +110,6 @@ data Select = Select
     selectOffset :: !(Maybe Expression),
     selectGroupBy :: [FieldName],
     selectFinalWantedFields :: !(Maybe [Text]),
-    -- , selectAsStruct          :: !AsStruct
     selectCardinality :: !Cardinality
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift)
@@ -404,8 +407,11 @@ data Expression
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | CastExpression Expression ScalarType
-  | FunctionExpression !Text [Expression]
+  | FunctionExpression !FunctionName [Expression]
   | ConditionalProjection Expression FieldName
+  | -- | A function input argument expression with argument name
+    -- `argument_name` => 'argument_value'
+    FunctionNamedArgument Text Expression
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
 instance FromJSON Expression
@@ -467,6 +473,7 @@ data From
   = FromQualifiedTable (Aliased TableName)
   | FromSelect (Aliased Select)
   | FromSelectJson (Aliased SelectJson)
+  | FromFunction (Aliased SelectFromFunction)
   deriving (Eq, Show, Generic, Data, Lift, Ord)
 
 instance FromJSON From
@@ -490,6 +497,20 @@ instance Hashable SelectJson
 instance Cacheable SelectJson
 
 instance NFData SelectJson
+
+data SelectFromFunction = SelectFromFunction
+  { sffFunctionName :: FunctionName,
+    sffArguments :: [Expression]
+  }
+  deriving (Eq, Show, Generic, Data, Lift, Ord)
+
+instance FromJSON SelectFromFunction
+
+instance Hashable SelectFromFunction
+
+instance Cacheable SelectFromFunction
+
+instance NFData SelectFromFunction
 
 data OpenJson = OpenJson
   { openJsonExpression :: Expression,
@@ -566,7 +587,8 @@ instance ToJSONKey TableName
 
 instance NFData TableName
 
-instance ToTxt TableName where toTxt = tshow
+instance ToTxt TableName where
+  toTxt TableName {..} = toTxt tableNameSchema <> "." <> toTxt tableName
 
 data FieldName = FieldName
   { fieldName :: Text,
@@ -606,6 +628,10 @@ newtype EntityAlias = EntityAlias
   { entityAliasText :: Text
   }
   deriving (NFData, Eq, Ord, Show, Generic, Data, Lift, FromJSON, ToJSON, Hashable, Cacheable)
+
+columnToFieldName :: EntityAlias -> ColumnName -> FieldName
+columnToFieldName EntityAlias {..} ColumnName {..} =
+  FieldName columnName entityAliasText
 
 data Op
   = LessOp
@@ -931,7 +957,7 @@ instance Cacheable ComputedFieldDefinition
 instance NFData ComputedFieldDefinition
 
 instance ToJSON ComputedFieldDefinition where
-  toJSON = J.genericToJSON hasuraJSON
+  toJSON = J.genericToJSON hasuraJSON {J.omitNothingFields = True}
 
 instance FromJSON ComputedFieldDefinition where
   parseJSON = J.genericParseJSON hasuraJSON
