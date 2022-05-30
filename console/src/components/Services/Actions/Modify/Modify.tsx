@@ -24,13 +24,15 @@ import {
   setRequestBodyError,
   setRequestSampleInput,
   setRequestTransformedBody,
-  setEnableRequestBody,
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
   setRequestTransformState,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
-import { KeyValuePair } from '@/components/Common/ConfigureTransformation/stateDefaults';
+import {
+  KeyValuePair,
+  RequestTransformStateBody,
+} from '@/components/Common/ConfigureTransformation/stateDefaults';
 import {
   RequestTransformContentType,
   RequestTransformMethod,
@@ -214,12 +216,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
     transformDispatch(setRequestAddHeaders(requestAddHeaders));
   };
 
-  const requestBodyOnChange = (requestBody: string) => {
+  const requestBodyOnChange = (requestBody: RequestTransformStateBody) => {
     transformDispatch(setRequestBody(requestBody));
-  };
-
-  const requestBodyEnabledOnChange = (enableRequestBody: boolean) => {
-    transformDispatch(setEnableRequestBody(enableRequestBody));
   };
 
   const requestBodyErrorOnChange = (requestBodyError: string) => {
@@ -399,6 +397,7 @@ const ModifyAction: React.FC<ModifyProps> = ({
           />
 
           <ConfigureTransformation
+            transformationType="action"
             state={transformState}
             resetSampleInput={resetSampleInput}
             envVarsOnChange={envVarsOnChange}
@@ -408,7 +407,6 @@ const ModifyAction: React.FC<ModifyProps> = ({
             requestQueryParamsOnChange={requestQueryParamsOnChange}
             requestAddHeadersOnChange={requestAddHeadersOnChange}
             requestBodyOnChange={requestBodyOnChange}
-            requestBodyEnabledOnChange={requestBodyEnabledOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
             requestContentTypeOnChange={requestContentTypeOnChange}
             requestUrlTransformOnChange={requestUrlTransformOnChange}

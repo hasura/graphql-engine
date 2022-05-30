@@ -1,48 +1,82 @@
 import React, { useRef } from 'react';
+import { RequestTransformBodyActions } from '@/metadata/types';
+import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
 import { FaExclamationCircle } from 'react-icons/fa';
+import CrossIcon from '../Icons/Cross';
 import TemplateEditor from './CustomEditors/TemplateEditor';
 import JsonEditor from './CustomEditors/JsonEditor';
 import AceEditor from '../AceEditor/BaseEditor';
-import { RequestTransformContentType } from '../../../metadata/types';
 import ResetIcon from '../Icons/Reset';
-import { buttonShadow, focusYellowRing, inputStyles } from './utils';
+import {
+  buttonShadow,
+  capitaliseFirstLetter,
+  editorDebounceTime,
+  focusYellowRing,
+  inputStyles,
+} from './utils';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';
+import {
+  KeyValuePair,
+  RequestTransformStateBody,
+  TransformationType,
+} from './stateDefaults';
+import KeyValueInput from './CustomEditors/KeyValueInput';
+import { isEmpty } from '../utils/jsUtils';
+import { requestBodyActionState } from './requestTransformState';
 
 type PayloadOptionsTransformsProps = {
-  requestBody: string;
+  transformationType: TransformationType;
+  requestBody: RequestTransformStateBody;
   requestBodyError: string;
   requestSampleInput: string;
   requestTransformedBody: string;
-  requestContentType: RequestTransformContentType;
-  enableRequestBody: boolean;
   resetSampleInput: () => void;
-  requestBodyOnChange: (requestBody: string) => void;
-  requestBodyEnabledOnChange: (enableRequestBody: boolean) => void;
+  requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
-  requestContentTypeOnChange: (
-    requestContentType: RequestTransformContentType
-  ) => void;
 };
 
 const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
+  transformationType,
   requestBody,
   requestBodyError,
   requestSampleInput,
   requestTransformedBody,
-  requestContentType,
-  enableRequestBody,
   resetSampleInput,
   requestBodyOnChange,
-  requestBodyEnabledOnChange,
   requestSampleInputOnChange,
-  requestContentTypeOnChange,
 }) => {
   const editorRef = useRef<any>();
-  const showRequestContentTypeOptions = false;
-  const requestContentTypeOptions = [
-    'application/json',
-    'application/x-www-form-urlencoded',
+  const requestBodyTypeOptions = [
+    {
+      value: requestBodyActionState.remove,
+      text: 'disabled',
+    },
+    {
+      value: requestBodyActionState.transformApplicationJson,
+      text: 'application/json',
+    },
+    {
+      value: requestBodyActionState.transformFormUrlEncoded,
+      text: 'application/x-www-form-urlencoded',
+    },
   ];
+  const [localFormElements, setLocalFormElements] = React.useState<
+    KeyValuePair[]
+  >(requestBody.form_template ?? [{ name: '', value: '' }]);
+
+  React.useEffect(() => {
+    setLocalFormElements(
+      requestBody.form_template ?? [{ name: '', value: '' }]
+    );
+  }, [requestBody]);
+
+  useDebouncedEffect(
+    () => {
+      requestBodyOnChange({ ...requestBody, form_template: localFormElements });
+    },
+    editorDebounceTime,
+    [localFormElements]
+  );
 
   if (editorRef?.current?.editor?.renderer?.$cursorLayer?.element?.style) {
     editorRef.current.editor.renderer.$cursorLayer.element.style.display =
@@ -54,7 +88,9 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
       <div className="mb-md">
         <NumberedSidebar
           title="Sample Input"
-          description="Sample input defined by your Action Defintion."
+          description={`Sample input defined by your ${capitaliseFirstLetter(
+            transformationType
+          )} Defintion.`}
           number="1"
         >
           <button
@@ -81,71 +117,78 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
             <span>
               The template which will transform your request body into the
               required specification. You can use{' '}
-              <code className="text-xs">$body</code> to access the original
-              request body
+              <code className="text-xs">&#123;&#123;$body&#125;&#125;</code> to
+              access the original request body
             </span>
           }
           number="2"
           url="https://hasura.io/docs/latest/graphql/core/actions/transforms.html#request-body"
-        />
-        <div className="mb-sm">
-          <input
-            checked={enableRequestBody}
-            id="request-enable"
-            name="request-body"
-            type="checkbox"
-            onChange={e => requestBodyEnabledOnChange(e.target.checked)}
-            className="rounded border-gray-400 focus:outline-none focus:ring-2  focus:ring-offset-2  focus:ring-yellow-400"
-            data-test="transform-showRequestBody-checkbox"
-          />
-          <label className="ml-xs" htmlFor="request-enable">
-            Enable Request Body
-          </label>
-        </div>
-        {enableRequestBody ? (
+        >
+          <select
+            className={`ml-auto ${inputStyles}`}
+            value={requestBody.action}
+            onChange={e =>
+              requestBodyOnChange({
+                ...requestBody,
+                action: e.target.value as RequestTransformBodyActions,
+              })
+            }
+          >
+            <option disabled>Request Body Type</option>
+            {requestBodyTypeOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.text}
+              </option>
+            ))}
+          </select>
+        </NumberedSidebar>
+        {requestBody.action ===
+        requestBodyActionState.transformApplicationJson ? (
           <TemplateEditor
             requestBody={requestBody}
             requestBodyError={requestBodyError}
             requestSampleInput={requestSampleInput}
             requestBodyOnChange={requestBodyOnChange}
           />
-        ) : (
+        ) : null}
+
+        {requestBody.action ===
+        requestBodyActionState.transformFormUrlEncoded ? (
+          <>
+            {!isEmpty(requestBodyError) && (
+              <div className="mb-sm" data-test="transform-requestBody-error">
+                <CrossIcon />
+                <span className="text-red-500 ml-sm">{requestBodyError}</span>
+              </div>
+            )}
+            <div className="grid gap-3 grid-cols-3 mb-sm">
+              <KeyValueInput
+                pairs={localFormElements}
+                setPairs={setLocalFormElements}
+                testId="add-url-encoded-body"
+              />
+            </div>
+          </>
+        ) : null}
+
+        {requestBody.action === requestBodyActionState.remove ? (
           <div className="flex items-center text-gray-600 bg-gray-200 border border-gray-400 text-sm rounded p-sm">
             <FaExclamationCircle className="mr-sm" />
             The request body is disabled. No request body will be sent with this
-            action. Enable the request body to modify your request
+            {transformationType}. Enable the request body to modify your request
             transformation.
           </div>
-        )}
+        ) : null}
       </div>
 
-      {enableRequestBody ? (
+      {requestBody.action !== requestBodyActionState.remove ? (
         <div className="mb-md">
           <NumberedSidebar
             title="Transformed Request Body"
             description="Sample request body to be delivered based on your input and
           transformation template."
             number="3"
-          >
-            {showRequestContentTypeOptions ? (
-              <select
-                className={`ml-auto ${inputStyles}`}
-                value={requestContentType}
-                onChange={e =>
-                  requestContentTypeOnChange(
-                    e.target.value as RequestTransformContentType
-                  )
-                }
-              >
-                <option disabled>Data Type</option>
-                {requestContentTypeOptions.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            ) : null}
-          </NumberedSidebar>
+          />
           <AceEditor
             mode="json"
             editorRef={editorRef}

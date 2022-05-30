@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import {
-  RequestTransformContentType,
   RequestTransformMethod,
+  RequestTransformContentType,
 } from '@/metadata/types';
-import { KeyValuePair, RequestTransformState } from './stateDefaults';
+import {
+  KeyValuePair,
+  RequestTransformState,
+  RequestTransformStateBody,
+  TransformationType,
+} from './stateDefaults';
 import RequestOptionsTransforms from './RequestOptionsTransforms';
 import PayloadOptionsTransforms from './PayloadOptionsTransforms';
 import SampleContextTransforms from './SampleContextTransforms';
@@ -11,6 +16,7 @@ import Button from '../Button';
 import AddIcon from '../Icons/Add';
 
 type ConfigureTransformationProps = {
+  transformationType: TransformationType;
   state: RequestTransformState;
   resetSampleInput: () => void;
   envVarsOnChange: (envVars: KeyValuePair[]) => void;
@@ -19,10 +25,9 @@ type ConfigureTransformationProps = {
   requestUrlOnChange: (requestUrl: string) => void;
   requestQueryParamsOnChange: (requestQueryParams: KeyValuePair[]) => void;
   requestAddHeadersOnChange: (requestAddHeaders: KeyValuePair[]) => void;
-  requestBodyOnChange: (requestBody: string) => void;
-  requestBodyEnabledOnChange: (enableRequestBody: boolean) => void;
+  requestBodyOnChange: (requestBody: RequestTransformStateBody) => void;
   requestSampleInputOnChange: (requestSampleInput: string) => void;
-  requestContentTypeOnChange: (
+  requestContentTypeOnChange?: (
     requestContentType: RequestTransformContentType
   ) => void;
   requestUrlTransformOnChange: (data: boolean) => void;
@@ -30,6 +35,7 @@ type ConfigureTransformationProps = {
 };
 
 const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
+  transformationType,
   state,
   resetSampleInput,
   envVarsOnChange,
@@ -39,9 +45,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
   requestQueryParamsOnChange,
   requestAddHeadersOnChange,
   requestBodyOnChange,
-  requestBodyEnabledOnChange,
   requestSampleInputOnChange,
-  requestContentTypeOnChange,
   requestUrlTransformOnChange,
   requestPayloadTransformOnChange,
 }) => {
@@ -58,8 +62,6 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
     requestBodyError,
     requestSampleInput,
     requestTransformedBody,
-    enableRequestBody,
-    requestContentType,
     isRequestUrlTransform,
     isRequestPayloadTransform,
   } = state;
@@ -105,6 +107,7 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
 
         {isContextAreaActive ? (
           <SampleContextTransforms
+            transformationType={transformationType}
             envVars={envVars}
             sessionVars={sessionVars}
             envVarsOnChange={envVarsOnChange}
@@ -170,17 +173,14 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
         </Button>
         {isRequestPayloadTransform ? (
           <PayloadOptionsTransforms
+            transformationType={transformationType}
             requestBody={requestBody}
             requestBodyError={requestBodyError}
             requestSampleInput={requestSampleInput}
             requestTransformedBody={requestTransformedBody}
-            enableRequestBody={enableRequestBody}
-            requestContentType={requestContentType}
             resetSampleInput={resetSampleInput}
             requestBodyOnChange={requestBodyOnChange}
-            requestBodyEnabledOnChange={requestBodyEnabledOnChange}
             requestSampleInputOnChange={requestSampleInputOnChange}
-            requestContentTypeOnChange={requestContentTypeOnChange}
           />
         ) : null}
       </div>

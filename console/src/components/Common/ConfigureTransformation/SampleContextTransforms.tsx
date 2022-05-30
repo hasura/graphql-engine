@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useDebouncedEffect } from '@/hooks/useDebounceEffect';
-import { KeyValuePair } from './stateDefaults';
+import { KeyValuePair, TransformationType } from './stateDefaults';
 import KeyValueInput from './CustomEditors/KeyValueInput';
 import NumberedSidebar from './CustomEditors/NumberedSidebar';
 import { editorDebounceTime, setEnvVarsToLS } from './utils';
 
 type SampleContextTransformsProps = {
+  transformationType: TransformationType;
   envVars: KeyValuePair[];
   sessionVars: KeyValuePair[];
   envVarsOnChange: (envVars: KeyValuePair[]) => void;
@@ -13,6 +14,7 @@ type SampleContextTransformsProps = {
 };
 
 const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
+  transformationType,
   envVars,
   sessionVars,
   envVarsOnChange,
@@ -57,7 +59,8 @@ const SampleContextTransforms: React.FC<SampleContextTransformsProps> = ({
             <span>
               Enter a sample input for your provided env variables.
               <br />
-              e.g. the sample value for ACTION_BASE_URL
+              e.g. the sample value for {transformationType.toUpperCase()}
+              _BASE_URL
             </span>
           }
           number="1"

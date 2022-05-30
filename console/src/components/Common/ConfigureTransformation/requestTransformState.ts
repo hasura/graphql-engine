@@ -1,6 +1,7 @@
 import {
   RequestTransformMethod,
   RequestTransformContentType,
+  RequestTransformBodyActions,
 } from '../../../metadata/types';
 import {
   SET_ENV_VARS,
@@ -15,7 +16,6 @@ import {
   SET_REQUEST_BODY_ERROR,
   SET_REQUEST_SAMPLE_INPUT,
   SET_REQUEST_TRANSFORMED_BODY,
-  SET_ENABLE_REQUEST_BODY,
   SET_REQUEST_CONTENT_TYPE,
   SET_REQUEST_URL_TRANSFORM,
   SET_REQUEST_PAYLOAD_TRANSFORM,
@@ -32,7 +32,6 @@ import {
   SetRequestBodyError,
   SetRequestSampleInput,
   SetRequestTransformedBody,
-  SetEnableRequestBody,
   SetRequestTransformState,
   SetRequestContentType,
   SetRequestUrlTransform,
@@ -46,6 +45,7 @@ import {
   KeyValuePair,
   defaultEventRequestBody,
   defaultEventRequestSampleInput,
+  RequestTransformStateBody,
 } from './stateDefaults';
 import { getSessionVarsFromLS, getEnvVarsFromLS } from './utils';
 
@@ -101,7 +101,9 @@ export const setRequestAddHeaders = (
   requestAddHeaders,
 });
 
-export const setRequestBody = (requestBody: string): SetRequestBody => ({
+export const setRequestBody = (
+  requestBody: RequestTransformStateBody
+): SetRequestBody => ({
   type: SET_REQUEST_BODY,
   requestBody,
 });
@@ -125,13 +127,6 @@ export const setRequestTransformedBody = (
 ): SetRequestTransformedBody => ({
   type: SET_REQUEST_TRANSFORMED_BODY,
   requestTransformedBody,
-});
-
-export const setEnableRequestBody = (
-  enableRequestBody: boolean
-): SetEnableRequestBody => ({
-  type: SET_ENABLE_REQUEST_BODY,
-  enableRequestBody,
 });
 
 export const setRequestContentType = (
@@ -164,6 +159,12 @@ export const setRequestTransformState = (
 
 const currentVersion = 2;
 
+export const requestBodyActionState = {
+  remove: 'remove' as RequestTransformBodyActions,
+  transformApplicationJson: 'transform' as RequestTransformBodyActions,
+  transformFormUrlEncoded: 'x_www_form_urlencoded' as RequestTransformBodyActions,
+};
+
 export const requestTransformState: RequestTransformState = {
   version: currentVersion,
   envVars: [],
@@ -174,11 +175,10 @@ export const requestTransformState: RequestTransformState = {
   requestUrlPreview: '',
   requestQueryParams: [],
   requestAddHeaders: [],
-  requestBody: '',
+  requestBody: { action: requestBodyActionState.transformApplicationJson },
   requestBodyError: '',
   requestSampleInput: '',
   requestTransformedBody: '',
-  enableRequestBody: true,
   requestContentType: defaultRequestContentType,
   isRequestUrlTransform: false,
   isRequestPayloadTransform: false,
@@ -192,7 +192,11 @@ export const getActionRequestTransformDefaultState = (): RequestTransformState =
     sessionVars: getSessionVarsFromLS(),
     requestQueryParams: [{ name: '', value: '' }],
     requestAddHeaders: [{ name: '', value: '' }],
-    requestBody: defaultActionRequestBody,
+    requestBody: {
+      action: requestBodyActionState.transformApplicationJson,
+      template: defaultActionRequestBody,
+      form_template: [{ name: 'name', value: '{{$body.action.name}}' }],
+    },
     requestSampleInput: defaultActionRequestSampleInput,
   };
 };
@@ -204,7 +208,11 @@ export const getEventRequestTransformDefaultState = (): RequestTransformState =>
     sessionVars: getSessionVarsFromLS(),
     requestQueryParams: [{ name: '', value: '' }],
     requestAddHeaders: [{ name: '', value: '' }],
-    requestBody: defaultEventRequestBody,
+    requestBody: {
+      action: requestBodyActionState.transformApplicationJson,
+      template: defaultEventRequestBody,
+      form_template: [{ name: 'name', value: '{{$body.table.name}}' }],
+    },
     requestSampleInput: defaultEventRequestSampleInput,
   };
 };
@@ -273,11 +281,6 @@ export const requestTransformReducer = (
       return {
         ...state,
         requestTransformedBody: action.requestTransformedBody,
-      };
-    case SET_ENABLE_REQUEST_BODY:
-      return {
-        ...state,
-        enableRequestBody: action.enableRequestBody,
       };
     case SET_REQUEST_CONTENT_TYPE:
       return {

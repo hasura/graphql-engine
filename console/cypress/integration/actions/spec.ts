@@ -435,7 +435,7 @@ export const modifyV1ActionTransform = () => {
   createV1ActionTransform('login');
 
   cy.wait(AWAIT_SHORT);
-  // modify and save the action, the action should be converted into v2 and checkbox to remove body should be visible
+  // modify and save the action, the action should be converted into v2
   cy.visit('/actions/manage/login/modify');
   cy.url({ timeout: AWAIT_LONG }).should(
     'eq',
@@ -452,9 +452,6 @@ export const modifyV1ActionTransform = () => {
   cy.get('.notification', { timeout: AWAIT_LONG })
     .should('be.visible')
     .and('contain', 'Action saved successfully');
-
-  // check if checkbox to remove body is visible
-  cy.getBySel('transform-showRequestBody-checkbox').should('be.visible');
 
   // delete the action
   deleteActionTransform();

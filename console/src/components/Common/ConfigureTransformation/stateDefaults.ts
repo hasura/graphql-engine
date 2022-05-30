@@ -9,6 +9,7 @@ import {
   RequestTransformMethod,
   RequestTransformContentType,
   RequestTransformTemplateEngine,
+  RequestTransformBody,
 } from '../../../metadata/types';
 import { Nullable } from '../utils/tsUtils';
 
@@ -82,7 +83,7 @@ export interface SetRequestAddHeaders extends ReduxAction {
 
 export interface SetRequestBody extends ReduxAction {
   type: typeof SET_REQUEST_BODY;
-  requestBody: string;
+  requestBody: RequestTransformStateBody;
 }
 
 export interface SetRequestBodyError extends ReduxAction {
@@ -98,11 +99,6 @@ export interface SetRequestSampleInput extends ReduxAction {
 export interface SetRequestTransformedBody extends ReduxAction {
   type: typeof SET_REQUEST_TRANSFORMED_BODY;
   requestTransformedBody: string;
-}
-
-export interface SetEnableRequestBody extends ReduxAction {
-  type: typeof SET_ENABLE_REQUEST_BODY;
-  enableRequestBody: boolean;
 }
 
 export interface SetRequestContentType extends ReduxAction {
@@ -138,7 +134,6 @@ export type RequestTransformEvents =
   | SetRequestBodyError
   | SetRequestSampleInput
   | SetRequestTransformedBody
-  | SetEnableRequestBody
   | SetRequestContentType
   | SetRequestUrlTransform
   | SetRequestPayloadTransform
@@ -154,16 +149,20 @@ export type RequestTransformState = {
   requestUrlPreview: string;
   requestQueryParams: KeyValuePair[];
   requestAddHeaders: KeyValuePair[];
-  requestBody: string;
+  requestBody: RequestTransformStateBody;
   requestBodyError: string;
   requestSampleInput: string;
   requestTransformedBody: string;
-  enableRequestBody: boolean;
   requestContentType: RequestTransformContentType;
   isRequestUrlTransform: boolean;
   isRequestPayloadTransform: boolean;
   templatingEngine: RequestTransformTemplateEngine;
 };
+
+export type RequestTransformStateBody = Omit<
+  RequestTransformBody,
+  'form_template'
+> & { form_template?: KeyValuePair[] };
 
 export type KeyValuePair = {
   name: string;
@@ -177,6 +176,8 @@ export type GraphiQlHeader = {
   isNewHeader: boolean;
   isDisabled: boolean;
 };
+
+export type TransformationType = 'action' | 'event';
 
 export const defaultActionRequestSampleInput = getActionRequestSampleInput(
   defaultActionDefSdl,
