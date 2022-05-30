@@ -334,5 +334,5 @@ Any supporting code should be in the `Harness.*` hierarchy and apply broadly to 
 
 ## Troubleshooting
 
-### `Database 'hasura' already exists. Choose a different database name.`
+### `Database 'hasura' already exists. Choose a different database name.` or `schema "hasura" does not exist`
 This typically indicates persistent DB state between test runs. Try `docker-compose down --volumes` to delete the DBs and restart the containers.
