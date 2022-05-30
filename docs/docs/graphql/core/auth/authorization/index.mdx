@@ -15,14 +15,9 @@ import Thumbnail from "@site/src/components/Thumbnail";
 
 ## Overview
 
-Hasura supports **role-based** authorization where access control is
-done by creating rules for each role, table and operation (*insert*,
-*update*, etc.). These access control rules use dynamic session
+Hasura supports **role-based** authorization where access control is done by creating rules for each role and operation. In the case of database tables, you can create rules for database operations (select, insert, update, delete) and in the case of [remote schemas](/graphql/core/remote-schemas/index.mdx), you can define rules for access to fields. These access control rules use dynamic session
 variables that are passed to the GraphQL engine from your
-[authentication service](/graphql/core/auth/authentication/index.mdx) with every request. Role
-information is inferred from the `X-Hasura-Role` and
-`X-Hasura-Allowed-Roles` session variables. Other session variables can
-be passed by your auth service as per your requirements.
+[authentication service](/graphql/core/auth/authentication/index.mdx) with every request. Role information is inferred from the `X-Hasura-Role` and `X-Hasura-Allowed-Roles` session variables. Other session variables can be passed by your auth service as per your requirements.
 
 **For example:**
 
