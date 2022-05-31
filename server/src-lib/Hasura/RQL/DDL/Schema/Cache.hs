@@ -532,6 +532,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             )
           |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
 
+      defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+
       -- sql functions
       functionCache <-
         (mapFromL _fmFunction (OMap.elems functions) >- returnA)
@@ -561,7 +563,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                     rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
                                     let metadataPermissions = mapFromL _fpmRole functionPermissions
                                         permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment (getNamingConvention sourceCustomization)
+                                    let !namingConv = getNamingConvention sourceCustomization defaultNC
+                                    (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
                                     recordDependencies -< (metadataObject, schemaObject, [dep])
                                     returnA -< functionInfo
                                 )
@@ -645,6 +648,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, OMap.elems remoteSchemas)
       let remoteSchemaCtxMap = M.map (fst . fst) remoteSchemaMap
 
+      defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+
       -- sources are build in two steps
       -- first we resolve them, and build the table cache
       partiallyResolvedSources <-
@@ -652,7 +657,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.keyed
             ( \_ exists ->
                 AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata
-                  ( proc (backendConfigAndSourceMetadata, invalidationKeys) -> do
+                  ( proc (backendConfigAndSourceMetadata, (invalidationKeys, defaultNC)) -> do
                       let sourceMetadata = _bcasmSourceMetadata backendConfigAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
@@ -662,6 +667,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         Just (source :: ResolvedSource b) -> do
                           let metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
                               (tableInputs, _, _) = unzip3 $ map mkTableInputs $ OMap.elems $ _smTables sourceMetadata
+                              !namingConv = getNamingConvention (_smCustomization sourceMetadata) defaultNC
                           tablesCoreInfo <-
                             buildTableCache
                               -<
@@ -670,7 +676,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                   _rsTables source,
                                   tableInputs,
                                   metadataInvalidationKey,
-                                  (getNamingConvention (_smCustomization sourceMetadata))
+                                  namingConv
                                 )
                           returnA
                             -<
@@ -679,7 +685,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                   PartiallyResolvedSource sourceMetadata source tablesCoreInfo
                   )
                   -<
-                    (exists, invalidationKeys)
+                    (exists, (invalidationKeys, defaultNC))
             )
         |) (M.fromList $ OMap.toList backendConfigAndSourceMetadata)
           >-> (\infos -> M.catMaybes infos >- returnA)
