@@ -442,6 +442,15 @@ args:
       output_type: String!
       handler: http://127.0.0.1:5593/scalar-response
 
+- type: create_action
+  args:
+    name: scalar_array_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: '[String]!'
+      handler: http://127.0.0.1:5593/scalar-array-response
+
 - type: create_select_permission
   args:
     table: user

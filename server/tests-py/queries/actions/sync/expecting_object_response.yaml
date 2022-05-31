@@ -67,7 +67,7 @@
             transformed_request:
         path: $
         code: unexpected
-      message: got array for the action webhook response, might want to check the action return type defined!
+      message: got array for the action webhook response, expecting UserId
 - description: Revert action definition
   url: /v1/query
   status: 200

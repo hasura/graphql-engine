@@ -99,7 +99,7 @@ data ActionWebhookErrorResponse = ActionWebhookErrorResponse
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 
 data ActionWebhookResponse
-  = AWRArray ![Map.HashMap G.Name J.Value]
+  = AWRArray ![J.Value]
   | AWRObject !(Map.HashMap G.Name J.Value)
   | AWRNum !Scientific
   | AWRBool !Bool

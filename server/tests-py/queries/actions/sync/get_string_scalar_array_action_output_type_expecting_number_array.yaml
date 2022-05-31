@@ -1,5 +1,12 @@
-- description: Update actions webhook to another route which returns object
-    response
+# Action definition:
+  # type Mutation {
+  #   scalar_array_response : [Int]!
+  #   }
+  # }
+# Hanlder/Webhook response:
+  # ["foo", "bar", null]
+
+- description: Update action definition to expect array of Int - `[Int]` 
   url: /v1/query
   status: 200
   response:
@@ -7,24 +14,20 @@
   query:
     type: update_action
     args:
-      name: scalar_response
+      name: scalar_array_response
       definition:
         kind: synchronous
         arguments:
-        - name: email
-          type: String!
-        - name: name
-          type: String!
-        output_type: String!
-        handler: http://127.0.0.1:5593/create-user
+        output_type: '[Int]!'
+        handler: http://127.0.0.1:5593/scalar-array-response
 
-- description: Run scalar-response sync action
+- description: Run scalar-array-response sync action
   url: /v1/graphql
   status: 200
   query:
     query: |
       mutation {
-        scalar_response(email: "clarke@gmail.com", name: "Clarke")
+        scalar_array_response
       }
 
   response:
@@ -35,7 +38,9 @@
           response:
             status: 200
             body: 
-              id: 1
+              - foo
+              - bar
+              - null
             headers:
             - value: application/json
               name: Content-Type
@@ -45,19 +50,16 @@
             body:
               session_variables:
                 x-hasura-role: admin
-              input:
-                email: clarke@gmail.com
-                name: Clarke
+              input: {}
               action:
-                name: scalar_response
-              request_query: "mutation {\n  scalar_response(email: \"clarke@gmail.com\", name: \"\
-                Clarke\")\n}\n"
-            url: http://127.0.0.1:5593/create-user
+                name: scalar_array_response
+              request_query: "mutation {\n  scalar_array_response\n}\n"
+            url: http://127.0.0.1:5593/scalar-array-response
             headers: []
             transformed_request:
         path: $
         code: unexpected
-      message: got object for the action webhook response, expecting String
+      message: got scalar String for the action webhook response, expecting Int
 - description: Revert action wehbook
   url: /v1/query
   status: 200
@@ -66,9 +68,9 @@
   query:
     type: update_action
     args:
-      name: scalar_response
+      name: scalar_array_response
       definition:
         kind: synchronous
         arguments:
-        output_type: String!
-        handler: http://127.0.0.1:5593/scalar-response
+        output_type: '[String]!'
+        handler: http://127.0.0.1:5593/scalar-array-response

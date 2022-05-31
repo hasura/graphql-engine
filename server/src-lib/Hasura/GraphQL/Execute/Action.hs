@@ -26,6 +26,7 @@ import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Ordered qualified as AO
+import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
@@ -33,6 +34,7 @@ import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.Set (Set)
 import Data.TByteString qualified as TBS
+import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as Q
@@ -182,11 +184,15 @@ makeActionResponseNoRelations annFields webhookResponse =
                           J.Null -> Just AO.Null
                           _ -> Nothing
                     Map.lookup fieldText obj >>= mkValue
+      mkResponseArray :: J.Value -> AO.Value
+      mkResponseArray = \case
+        (J.Object o) -> mkResponseObject annFields o
+        x -> AO.toOrdered x
    in -- NOTE (Sam): This case would still not allow for aliased fields to be
       -- a part of the response. Also, seeing that none of the other `annField`
       -- types would be caught in the example, I've chosen to leave it as it is.
       case webhookResponse of
-        AWRArray objs -> AO.array $ map (mkResponseObject annFields) (mapKeys G.unName <$> objs)
+        AWRArray objs -> AO.array $ map mkResponseArray objs
         AWRObject obj -> mkResponseObject annFields (mapKeys G.unName obj)
         AWRNum n -> AO.toOrdered n
         AWRBool b -> AO.toOrdered b
@@ -562,30 +568,9 @@ callWebhook
 
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
-                  let expectedResponse = showGT' $ unGraphQLType outputType
-                      expectingArray = isListType outputType
-                      expectingNull = isNullableType outputType
                   modifyQErr addInternalToErr $ do
                     webhookResponse <- decodeValue responseValue
-                    case webhookResponse of
-                      AWRNull -> unless expectingNull $ throwUnexpected "got null for the action webhook response"
-                      AWRNum _ -> do
-                        unless (expectedResponse == "Int" || expectedResponse == "Float") $
-                          throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> expectedResponse
-                      AWRBool _ ->
-                        unless (expectedResponse == "Boolean") $
-                          throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> expectedResponse
-                      AWRString _ ->
-                        unless (expectedResponse == "String") $
-                          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> expectedResponse
-                      AWRArray objs -> do
-                        unless expectingArray $
-                          throwUnexpected "got array for the action webhook response, might want to check the action return type defined!"
-                        mapM_ validateResponseObject objs
-                      AWRObject obj -> do
-                        when (isScalar expectedResponse || expectingArray) $
-                          throwUnexpected "got object for the action webhook response, might want to check the action return type defined!"
-                        validateResponseObject obj
+                    validateResponse responseValue outputType
                     pure (webhookResponse, mkSetCookieHeaders responseWreq)
                 | HTTP.statusIsClientError responseStatus -> do
                   ActionWebhookErrorResponse message maybeCode maybeExtensions <-
@@ -619,11 +604,6 @@ callWebhook
                   throwUnexpected $
                     "expecting not null value for field " <>> fieldName
 
-      showGT' :: G.GType -> Text
-      showGT' = \case
-        G.TypeNamed _ nt -> G.unName nt
-        G.TypeList _ lt -> G.showLT lt
-
       isScalar :: Text -> Bool
       isScalar s
         | s == "Int" = True
@@ -631,6 +611,37 @@ callWebhook
         | s == "String" = True
         | s == "Boolean" = True
         | otherwise = False
+
+      -- Validates the webhook response against the output type
+      validateResponse :: J.Value -> GraphQLType -> m ()
+      validateResponse webhookResponse' outputType' =
+        case (webhookResponse', outputType') of
+          (J.Null, _) -> unless (isNullableType outputType') $ throwUnexpected "got null for the action webhook response"
+          (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
+            unless (G.unName name == "Int" || G.unName name == "Float") $
+              throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> G.unName name
+          (J.Bool _, (GraphQLType (G.TypeNamed _ name))) ->
+            unless (G.unName name == "Boolean") $
+              throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
+          (J.String _, (GraphQLType (G.TypeNamed _ name))) ->
+            unless (G.unName name == "String") $
+              throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+          (J.Array _, (GraphQLType (G.TypeNamed _ name))) ->
+            throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
+          (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) ->
+            traverse_ (\o -> validateResponse o (GraphQLType outputType'')) objs
+          (ob@(J.Object _), (GraphQLType (G.TypeNamed _ name))) -> do
+            case J.parse (fmap AWRObject . J.parseJSON) ob of
+              J.Error s -> throwUnexpected $ "failed to parse webhookResponse as Object, error: " <> T.pack s -- This should never happen
+              J.Success (AWRObject awr) -> do
+                when (isScalar (G.unName name)) $
+                  throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
+                validateResponseObject awr
+              J.Success _ ->
+                throwUnexpected "Webhook response not an object" -- This should never happen
+                -- Expected output type is an array and webhook response is not an array
+          (_, (GraphQLType (G.TypeList _ _))) ->
+            throwUnexpected $ "expecting array for the action webhook response"
 
 processOutputSelectionSet ::
   TF.ArgumentExp v ->

@@ -372,6 +372,9 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         elif req_path == "/scalar-response":
             self._send_response(HTTPStatus.OK, "some-string")
+        
+        elif req_path == "/scalar-array-response":
+            self._send_response(HTTPStatus.OK, ["foo", "bar", None])
 
         elif req_path == "/recursive-output":
             resp, status = self.recursive_output()
