@@ -33,7 +33,7 @@
       source: pg1
       sql: |
         create table author_local(
-            id serial primary key,
+            author_id serial primary key,
             name text unique
         );
         INSERT INTO author_local (name)
@@ -56,17 +56,17 @@
   response:
     data:
       authorLocal:
-      - id: 1
+      - authorId: 1
         name: 'Author 1'
         __typename: AuthorLocal
-      - id: 2
+      - authorId: 2
         name: 'Author 2'
         __typename: AuthorLocal
   query:
     query: |
       query {
         authorLocal {
-          id
+          authorId
           name
           __typename
         }
@@ -88,7 +88,7 @@
     query: |
       query {
         a: authorLocal {
-          b: id
+          b: authorId
           c: name
           d: __typename
         }
@@ -100,14 +100,14 @@
   response:
     data:
       authorLocalByPk:
-        id: 1
+        authorId: 1
         name: 'Author 1'
         __typename: AuthorLocal
   query:
     query: |
       query {
-        authorLocalByPk(id: 1) {
-          id
+        authorLocalByPk(authorId: 1) {
+          authorId
           name
           __typename
         }
@@ -144,16 +144,16 @@
         __typename: AuthorLocalMutationResponse
         returning:
         - __typename: AuthorLocal
-          id: 3
+          authorId: 3
           name: Author 3
   query:
     query: |
       mutation MyMutation {
-        insertAuthorLocal(objects: {name: "Author 3", id: 3}) {
+        insertAuthorLocal(objects: {name: "Author 3", authorId: 3}) {
           __typename
           returning {
             __typename
-            id
+            authorId
             name
           }
         }
@@ -166,14 +166,14 @@
     data:
       deleteAuthorLocalByPk:
         __typename: AuthorLocal
-        id: 3
+        authorId: 3
         name: Author 3
   query:
     query: |
       mutation MyMutation {
-        deleteAuthorLocalByPk(id: 3) {
+        deleteAuthorLocalByPk(authorId: 3) {
           __typename
-          id
+          authorId
           name
         }
       }

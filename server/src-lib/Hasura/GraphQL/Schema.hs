@@ -106,7 +106,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
       allRoles = nonTableRoles <> allTableRoles
-      defaultNC = fromMaybe HasuraCase _sccDefaultNamingConvention
+      defaultNC = _sccDefaultNamingConvention
 
   roleContexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
@@ -165,7 +165,7 @@ buildRoleContext ::
   RemoteSchemaPermsCtx ->
   Set.HashSet ExperimentalFeature ->
   StreamingSubscriptionsCtx ->
-  NamingCase ->
+  Maybe NamingCase ->
   m
     ( RoleContext GQLContext,
       HashSet InconsistentMetadata,
@@ -307,7 +307,7 @@ buildRelayRoleContext ::
   AnnotatedCustomTypes ->
   RoleName ->
   Set.HashSet ExperimentalFeature ->
-  NamingCase ->
+  Maybe NamingCase ->
   m (RoleContext GQLContext)
 buildRelayRoleContext options sources allActionInfos customTypes role expFeatures globalDefaultNC = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,

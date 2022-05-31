@@ -218,8 +218,8 @@ getRootFieldsCustomization = fromMaybe emptyRootFieldsCustomization . _scRootFie
 getSourceTypeCustomization :: SourceCustomization -> SourceTypeCustomization
 getSourceTypeCustomization = fromMaybe emptySourceTypeCustomization . _scTypeNames
 
-getNamingConvention :: SourceCustomization -> NamingCase
-getNamingConvention = fromMaybe HasuraCase . _scNamingConvention
+getNamingConvention :: SourceCustomization -> Maybe NamingCase -> NamingCase
+getNamingConvention sc defaultNC = defaultNC `seq` fromMaybe HasuraCase $ _scNamingConvention sc <|> defaultNC
 
 -- | Function to apply root field name customizations.
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
@@ -243,11 +243,11 @@ withSourceCustomization ::
   (MonadReader r m, Has MkTypename r, Has MkRootFieldName r, Has NamingCase r, MonadError QErr m) =>
   SourceCustomization ->
   SupportedNamingCase ->
-  NamingCase ->
+  Maybe NamingCase ->
   m a ->
   m a
 withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defaultNC m = do
-  let namingConv = getNamingConvention sc
+  let namingConv = getNamingConvention sc defaultNC
   -- The console currently constructs a graphql query based on table name and
   -- schema name to fetch the data from the database (other than postgres).
   -- Now, when we set @GraphqlCase@ for other (than postgres) databases, this
@@ -256,7 +256,7 @@ withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defa
   -- have restricted this feature to postgres for now.
   tCase <-
     case namingConventionSupport of
-      AllConventions -> pure (fromMaybe defaultNC _scNamingConvention)
+      AllConventions -> pure namingConv
       OnlyHasuraCase -> case namingConv of
         GraphqlCase -> throw400 NotSupported $ "sources other than postgres do not support graphql-default as naming convention yet"
         HasuraCase -> pure HasuraCase
