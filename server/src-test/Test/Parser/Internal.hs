@@ -17,6 +17,7 @@ import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..))
 import Hasura.GraphQL.Parser.Internal.Input (InputFieldsParser)
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Schema.Build qualified as Build
+import Hasura.GraphQL.Schema.Common (Scenario (Frontend))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), PartialSQLExp (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -86,6 +87,7 @@ mkParser :: QualifiedTable -> [ColumnInfoBuilder] -> SchemaTestT [Parser]
 mkParser table cib =
   Build.buildTableUpdateMutationFields
     backendUpdateParser
+    Frontend
     sourceInfo
     table
     tableInfo
@@ -105,6 +107,7 @@ mkParser table cib =
           upiFilter = upiFilter,
           upiCheck = Nothing,
           upiSet = mempty,
+          upiBackendOnly = False,
           upiRequiredHeaders = mempty
         }
 

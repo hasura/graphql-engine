@@ -24,7 +24,7 @@ import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend (BackendSchema, MonadBuildSchema, columnParser)
 import Hasura.GraphQL.Schema.BoolExp (boolExp)
-import Hasura.GraphQL.Schema.Common (mapField, partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Common (Scenario (..), mapField, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
 import Hasura.GraphQL.Schema.Select (tableSelectionSet)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tablePermissions, tableUpdateColumns)
@@ -264,6 +264,7 @@ updateTable ::
   MonadBuildSchema b r m n =>
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
+  Scenario ->
   -- | table source
   SourceInfo b ->
   -- | table info
@@ -273,7 +274,7 @@ updateTable ::
   -- | field description, if any
   Maybe Description ->
   m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-updateTable backendUpdate sourceInfo tableInfo fieldName description = runMaybeT do
+updateTable backendUpdate scenario sourceInfo tableInfo fieldName description = runMaybeT do
   let tableName = tableInfoName tableInfo
       columns = tableColumns tableInfo
       whereName = $$(litName "where")
@@ -281,6 +282,9 @@ updateTable backendUpdate sourceInfo tableInfo fieldName description = runMaybeT
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
   updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+  -- If we're in a frontend scenario, we should not include backend_only updates
+  -- For more info see Note [Backend only permissions]
+  guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
   whereArg <- lift $ P.field whereName (Just whereDesc) <$> boolExp sourceInfo tableInfo
   selection <- lift $ mutationSelectionSet sourceInfo tableInfo
   let argsParser = liftA2 (,) backendUpdate whereArg
@@ -297,6 +301,7 @@ updateTableByPk ::
   MonadBuildSchema b r m n =>
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
+  Scenario ->
   -- | table source
   SourceInfo b ->
   -- | table info
@@ -306,12 +311,15 @@ updateTableByPk ::
   -- | field description, if any
   Maybe Description ->
   m (Maybe (P.FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))))
-updateTableByPk backendUpdate sourceInfo tableInfo fieldName description = runMaybeT $ do
+updateTableByPk backendUpdate scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let columns = tableColumns tableInfo
       tableName = tableInfoName tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
   updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+  -- If we're in a frontend scenario, we should not include backend_only updates
+  -- For more info see Note [Backend only permissions]
+  guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo
   selection <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   lift $ do

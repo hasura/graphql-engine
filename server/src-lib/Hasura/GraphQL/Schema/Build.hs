@@ -200,6 +200,7 @@ buildTableUpdateMutationFields ::
     m
       (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
   ) ->
+  Scenario ->
   -- | The source that the table lives in
   SourceInfo b ->
   -- | The name of the table being acted on
@@ -209,18 +210,18 @@ buildTableUpdateMutationFields ::
   -- | field display name
   C.GQLNameIdentifier ->
   m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableUpdateMutationFields mkBackendUpdate sourceInfo tableName tableInfo gqlName = do
+buildTableUpdateMutationFields mkBackendUpdate scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
   backendUpdate <- mkBackendUpdate tableInfo
   -- update table
   updateName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdate mkUpdateField gqlName
   -- update table by pk
   updatePKName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdateByPk mkUpdateByPkField gqlName
-  update <- updateTable backendUpdate sourceInfo tableInfo updateName updateDesc
+  update <- updateTable backendUpdate scenario sourceInfo tableInfo updateName updateDesc
   -- Primary keys can only be tested in the `where` clause if a primary key
   -- exists on the table and if the user has select permissions on all columns
   -- that make up the key.
-  updateByPk <- updateTableByPk backendUpdate sourceInfo tableInfo updatePKName updatePKDesc
+  updateByPk <- updateTableByPk backendUpdate scenario sourceInfo tableInfo updatePKName updatePKDesc
   pure $ catMaybes [update, updateByPk]
   where
     updateDesc = buildFieldDescription defaultUpdateDesc $ _crfComment _tcrfUpdate
@@ -232,22 +233,23 @@ buildTableUpdateMutationFields mkBackendUpdate sourceInfo tableName tableInfo gq
 buildTableDeleteMutationFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  Scenario ->
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
   m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableDeleteMutationFields sourceInfo tableName tableInfo gqlName = do
+buildTableDeleteMutationFields scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
   -- delete from table
   deleteName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDelete mkDeleteField gqlName
   -- delete from table by pk
   deletePKName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDeleteByPk mkDeleteByPkField gqlName
-  delete <- deleteFromTable sourceInfo tableInfo deleteName deleteDesc
+  delete <- deleteFromTable scenario sourceInfo tableInfo deleteName deleteDesc
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select
   -- permissions.
-  deleteByPk <- deleteFromTableByPk sourceInfo tableInfo deletePKName deletePKDesc
+  deleteByPk <- deleteFromTableByPk scenario sourceInfo tableInfo deletePKName deletePKDesc
   pure $ catMaybes [delete, deleteByPk]
   where
     deleteDesc = buildFieldDescription defaultDeleteDesc $ _crfComment _tcrfDelete

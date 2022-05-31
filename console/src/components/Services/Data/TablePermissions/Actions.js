@@ -541,7 +541,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
 };
 
 export const isQueryTypeBackendOnlyCompatible = queryType => {
-  return queryType === 'insert';
+  return ['insert', 'update', 'delete'].includes(queryType);
 };
 
 const copyRolePermissions = (

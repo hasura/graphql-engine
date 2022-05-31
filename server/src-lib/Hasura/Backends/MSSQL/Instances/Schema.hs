@@ -112,12 +112,13 @@ backendInsertParser sourceName tableInfo = do
 
 msBuildTableUpdateMutationFields ::
   MonadBuildSchema 'MSSQL r m n =>
+  Scenario ->
   SourceInfo 'MSSQL ->
   TableName 'MSSQL ->
   TableInfo 'MSSQL ->
   C.GQLNameIdentifier ->
   m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
-msBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName = do
+msBuildTableUpdateMutationFields scenario sourceName tableName tableInfo gqlName = do
   fieldParsers <- runMaybeT do
     updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
     let mkBackendUpdate backendUpdateTableInfo =
@@ -131,6 +132,7 @@ msBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName = do
     lift $
       GSB.buildTableUpdateMutationFields
         mkBackendUpdate
+        scenario
         sourceName
         tableName
         tableInfo

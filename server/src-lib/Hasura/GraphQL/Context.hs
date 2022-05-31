@@ -16,7 +16,7 @@ import Hasura.RQL.IR qualified as IR
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | For storing both a normal GQLContext and one for the backend variant.
--- Currently, this is to enable the backend variant to have certain insert
+-- Currently, this is to enable the backend variant to have certain insert/update/delete
 -- permissions which the frontend variant does not.
 data RoleContext a = RoleContext
   { -- | The default context for normal sessions

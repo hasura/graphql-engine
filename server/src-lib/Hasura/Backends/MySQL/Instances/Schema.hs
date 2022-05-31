@@ -104,22 +104,24 @@ buildTableInsertMutationFields' _scenario _sourceInfo _tableName _tableInfo _gql
 
 buildTableUpdateMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
+  Scenario ->
   RQL.SourceInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
   m [a]
-buildTableUpdateMutationFields' _sourceInfo _tableName _tableInfo _gqlName =
+buildTableUpdateMutationFields' _scenario _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
 buildTableDeleteMutationFields' ::
   MonadBuildSchema 'MySQL r m n =>
+  Scenario ->
   RQL.SourceInfo 'MySQL ->
   RQL.TableName 'MySQL ->
   TableInfo 'MySQL ->
   C.GQLNameIdentifier ->
   m [a]
-buildTableDeleteMutationFields' _sourceInfo _tableName _tableInfo _gqlName =
+buildTableDeleteMutationFields' _scenario _sourceInfo _tableName _tableInfo _gqlName =
   pure []
 
 buildFunctionQueryFields' ::

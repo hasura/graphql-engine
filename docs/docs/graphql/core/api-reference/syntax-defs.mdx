@@ -311,7 +311,7 @@ Configuration properties for particular column, as specified on [ColumnConfig](#
 | check        | true     | [BoolExp](#boolexp)                   | This expression has to hold true for every new row that is inserted                                                                                                                                                       |
 | set          | false    | [ColumnPresetsExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values                                                                                                                                     |
 | columns      | false    | [PGColumn](#pgcolumn) array (or) `'*'` | Can insert into only these columns (or all when `'*'` is specified)                                                                                                                                                       |
-| backend_only | false    | Boolean                     | When set to `true` the mutation is accessible only if `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and request is made with `x-hasura-admin-secret` set if any auth is configured |
+| backend_only | false    | Boolean                     | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
 
 ## SelectPermission {#selectpermission}
 
@@ -331,12 +331,16 @@ Configuration properties for particular column, as specified on [ColumnConfig](#
 | filter  | true     | [BoolExp](#boolexp)                   | Only the rows where this precondition holds true are updatable                         |
 | check   | false    | [BoolExp](#boolexp)                   | Postcondition which must be satisfied by rows which have been updated                  |
 | set     | false    | [ColumnPresetsExp](#columnpresetexp)           | Preset values for columns that can be sourced from session variables or static values. |
+| backend_only | false    | Boolean                     | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+
 
 ## DeletePermission {#deletepermission}
 
 | Key    | Required | Schema    | Description                                                  |
 |--------|----------|-----------|--------------------------------------------------------------|
 | filter | true     | [BoolExp](#boolexp) | Only the rows where this expression holds true are deletable |
+| backend_only | false    | Boolean                     | When set to `true` the mutation is accessible only if the `x-hasura-use-backend-only-permissions` session variable exists and is set to `true` and the request is made with `x-hasura-admin-secret` set if any auth is configured |
+
 
 ## ObjRelUsing {#objrelusing}
 

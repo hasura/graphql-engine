@@ -75,6 +75,7 @@ you can configure the following:
 - [Row-level permissions](#row-level-permissions)
 - [Column-level permissions](#col-level-permissions)
 - [Column presets](#col-presets-permissions)
+- [Backend only](#backend-only-permissions)
 
 ### **Delete** permissions
 
@@ -82,6 +83,7 @@ For `delete` operations or for GraphQL mutations of the type _delete_,
 you can configure the following:
 
 - [Row-level permissions](#row-level-permissions)
+- [Backend only](#backend-only-permissions)
 
 ## Permission categories
 
@@ -850,11 +852,13 @@ session variable exists and is set to `true` and request is made with
 This might be useful if you would like to hide a mutation from the
 public facing API but allow access to it via a "trusted backend".
 
-:::info Note
+Setting `backend-only` is currently available for insert, update and delete mutations.
+  
+:::tip Supported from
 
-Setting `backend-only` is currently available for insert mutations only.
+Back-end only permissions for `update` and `delete` mutations are supported in Hasura GraphQL engine versions `v2.8.0` and above.
 
-:::
+:::  
 
 :::info Additional Resources
 

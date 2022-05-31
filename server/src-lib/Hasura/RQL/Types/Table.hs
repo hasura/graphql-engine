@@ -472,6 +472,7 @@ data UpdPermInfo (b :: BackendType) = UpdPermInfo
     upiFilter :: !(AnnBoolExpPartialSQL b),
     upiCheck :: !(Maybe (AnnBoolExpPartialSQL b)),
     upiSet :: !(PreSetColsPartial b),
+    upiBackendOnly :: !Bool,
     upiRequiredHeaders :: !(HashSet Text)
   }
   deriving (Generic)
@@ -516,6 +517,7 @@ instance
 data DelPermInfo (b :: BackendType) = DelPermInfo
   { dpiTable :: !(TableName b),
     dpiFilter :: !(AnnBoolExpPartialSQL b),
+    dpiBackendOnly :: !Bool,
     dpiRequiredHeaders :: !(HashSet Text)
   }
   deriving (Generic)
@@ -1062,5 +1064,5 @@ mkAdminRolePermInfo ti =
     tn = _tciName ti
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
     s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty mempty
-    d = DelPermInfo tn annBoolExpTrue mempty
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty False mempty
+    d = DelPermInfo tn annBoolExpTrue False mempty

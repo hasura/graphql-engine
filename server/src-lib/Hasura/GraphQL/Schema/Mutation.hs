@@ -71,6 +71,7 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
   guard $ isMutable viIsInsertable viewInfo
   insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   -- If we're in a frontend scenario, we should not include backend_only inserts
+  -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && ipiBackendOnly insertPerms
   lift do
     updatePerms <- _permUpd <$> tablePermissions tableInfo
@@ -117,6 +118,7 @@ insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName d
   guard $ isMutable viIsInsertable viewInfo
   insertPerms <- MaybeT $ _permIns <$> tablePermissions tableInfo
   -- If we're in a frontend scenario, we should not include backend_only inserts
+  -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && ipiBackendOnly insertPerms
   selectionParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   lift do
@@ -334,6 +336,7 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
 deleteFromTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  Scenario ->
   -- | table source
   SourceInfo b ->
   -- | table info
@@ -343,10 +346,13 @@ deleteFromTable ::
   -- | field description, if any
   Maybe G.Description ->
   m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
-deleteFromTable sourceInfo tableInfo fieldName description = runMaybeT $ do
+deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
   deletePerms <- MaybeT $ _permDel <$> tablePermissions tableInfo
+  -- If we're in a frontend scenario, we should not include backend_only deletes
+  -- For more info see Note [Backend only permissions]
+  guard $ not $ scenario == Frontend && dpiBackendOnly deletePerms
   lift do
     let whereName = G._where
         whereDesc = "filter the rows which have to be deleted"
@@ -363,6 +369,7 @@ deleteFromTable sourceInfo tableInfo fieldName description = runMaybeT $ do
 deleteFromTableByPk ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  Scenario ->
   -- | table source
   SourceInfo b ->
   -- | table info
@@ -372,11 +379,14 @@ deleteFromTableByPk ::
   -- | field description, if any
   Maybe G.Description ->
   m (Maybe (FieldParser n (IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b))))
-deleteFromTableByPk sourceInfo tableInfo fieldName description = runMaybeT $ do
+deleteFromTableByPk scenario sourceInfo tableInfo fieldName description = runMaybeT $ do
   let viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsInsertable viewInfo
   pkArgs <- MaybeT $ primaryKeysArguments tableInfo
   deletePerms <- MaybeT $ _permDel <$> tablePermissions tableInfo
+  -- If we're in a frontend scenario, we should not include backend_only deletes
+  -- For more info see Note [Backend only permissions]
+  guard $ not $ scenario == Frontend && dpiBackendOnly deletePerms
   selection <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   let columns = tableColumns tableInfo
   pure $

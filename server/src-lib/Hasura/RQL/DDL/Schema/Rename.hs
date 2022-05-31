@@ -332,16 +332,16 @@ updateInsPermFlds ::
   Rename b ->
   PermDefPermission b InsPerm ->
   m (PermDefPermission b InsPerm)
-updateInsPermFlds refQT rename (InsPerm' (InsPerm chk preset cols mBackendOnly)) =
+updateInsPermFlds refQT rename (InsPerm' (InsPerm chk preset cols backendOnly)) =
   case rename of
     RTable rt -> do
       let updChk = updateTableInBoolExp rt chk
-      pure $ InsPerm' (InsPerm updChk preset cols mBackendOnly)
+      pure $ InsPerm' $ InsPerm updChk preset cols backendOnly
     RField rf -> do
       updChk <- updateFieldInBoolExp refQT rf chk
       let updPresetM = updatePreset refQT rf <$> preset
           updColsM = updateCols refQT rf <$> cols
-      pure $ InsPerm' (InsPerm updChk updPresetM updColsM mBackendOnly)
+      pure $ InsPerm' $ InsPerm updChk updPresetM updColsM backendOnly
 
 updateSelPermFlds ::
   (MonadReader (TableCache b) m, Backend b) =>
@@ -353,11 +353,11 @@ updateSelPermFlds refQT rename (SelPerm' (SelPerm cols fltr limit aggAllwd compu
   case rename of
     RTable rt -> do
       let updFltr = updateTableInBoolExp rt fltr
-      pure $ SelPerm' (SelPerm cols updFltr limit aggAllwd computedFields)
+      pure $ SelPerm' $ SelPerm cols updFltr limit aggAllwd computedFields
     RField rf -> do
       updFltr <- updateFieldInBoolExp refQT rf fltr
       let updCols = updateCols refQT rf cols
-      pure $ SelPerm' (SelPerm updCols updFltr limit aggAllwd computedFields)
+      pure $ SelPerm' $ SelPerm updCols updFltr limit aggAllwd computedFields
 
 updateUpdPermFlds ::
   (MonadReader (TableCache b) m, Backend b) =>
@@ -365,18 +365,18 @@ updateUpdPermFlds ::
   Rename b ->
   PermDefPermission b UpdPerm ->
   m (PermDefPermission b UpdPerm)
-updateUpdPermFlds refQT rename (UpdPerm' (UpdPerm cols preset fltr check)) = do
+updateUpdPermFlds refQT rename (UpdPerm' (UpdPerm cols preset fltr check backendOnly)) = do
   case rename of
     RTable rt -> do
       let updFltr = updateTableInBoolExp rt fltr
           updCheck = fmap (updateTableInBoolExp rt) check
-      pure $ UpdPerm' $ UpdPerm cols preset updFltr updCheck
+      pure $ UpdPerm' $ UpdPerm cols preset updFltr updCheck backendOnly
     RField rf -> do
       updFltr <- updateFieldInBoolExp refQT rf fltr
       updCheck <- traverse (updateFieldInBoolExp refQT rf) check
       let updCols = updateCols refQT rf cols
           updPresetM = updatePreset refQT rf <$> preset
-      pure $ UpdPerm' $ UpdPerm updCols updPresetM updFltr updCheck
+      pure $ UpdPerm' $ UpdPerm updCols updPresetM updFltr updCheck backendOnly
 
 updateDelPermFlds ::
   (MonadReader (TableCache b) m, Backend b) =>
@@ -384,10 +384,14 @@ updateDelPermFlds ::
   Rename b ->
   PermDefPermission b DelPerm ->
   m (PermDefPermission b DelPerm)
-updateDelPermFlds refQT rename (DelPerm' (DelPerm fltr)) = do
-  DelPerm' . DelPerm <$> case rename of
-    RTable rt -> pure $ updateTableInBoolExp rt fltr
-    RField rf -> updateFieldInBoolExp refQT rf fltr
+updateDelPermFlds refQT rename (DelPerm' (DelPerm fltr backendOnly)) = do
+  case rename of
+    RTable rt -> do
+      let updFltr = updateTableInBoolExp rt fltr
+      pure $ DelPerm' $ DelPerm updFltr backendOnly
+    RField rf -> do
+      updFltr <- updateFieldInBoolExp refQT rf fltr
+      pure $ DelPerm' $ DelPerm updFltr backendOnly
 
 updatePreset ::
   (Backend b) =>
