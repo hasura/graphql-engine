@@ -24344,7 +24344,7 @@ ActionWebhookErrorResponse :: !Text -> !Maybe Text -> !Maybe Value -> ActionWebh
 [_awerCode] :: ActionWebhookErrorResponse -> !Maybe Text
 [_awerExtensions] :: ActionWebhookErrorResponse -> !Maybe Value
 data ActionWebhookResponse
-AWRArray :: ![HashMap Name Value] -> ActionWebhookResponse
+AWRArray :: ![Value] -> ActionWebhookResponse
 AWRObject :: !HashMap Name Value -> ActionWebhookResponse
 AWRNum :: !Scientific -> ActionWebhookResponse
 AWRBool :: !Bool -> ActionWebhookResponse
@@ -24801,9 +24801,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_awAIq. Lens' (QueryParametersInfo b_awAIq) (Seq (ColumnValue b_awAIq))
-qpiReusableVariableValues :: forall b_awAIq. Lens' (QueryParametersInfo b_awAIq) (HashMap Name (ColumnValue b_awAIq))
-qpiReferencedSessionVariables :: forall b_awAIq. Lens' (QueryParametersInfo b_awAIq) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_awAIk. Lens' (QueryParametersInfo b_awAIk) (Seq (ColumnValue b_awAIk))
+qpiReusableVariableValues :: forall b_awAIk. Lens' (QueryParametersInfo b_awAIk) (HashMap Name (ColumnValue b_awAIk))
+qpiReferencedSessionVariables :: forall b_awAIk. Lens' (QueryParametersInfo b_awAIk) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
