@@ -63,6 +63,22 @@ type SupportedDataSourcesPrefix =
   | 'citus_'
   | 'pg_';
 
+export interface TableRelationship {
+  name: string;
+  comment: string;
+  type: 'object' | 'array';
+  tableRelationships?: {
+    from: {
+      table: string;
+      column: string[];
+    };
+    to: {
+      table: string;
+      column: string[];
+    };
+  }[];
+}
+
 export type AllMetadataQueries = `${SupportedDataSourcesPrefix}${MetadataQueryType}`;
 
 export type allowedMetadataTypes =

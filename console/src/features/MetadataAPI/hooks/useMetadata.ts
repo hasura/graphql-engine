@@ -1,13 +1,31 @@
 import Endpoints from '@/Endpoints';
 import { Api } from '@/hooks/apiUtils';
 import { useAppSelector } from '@/store';
-import { useQuery, UseQueryOptions } from 'react-query';
+import { useQuery, UseQueryOptions, UseQueryResult } from 'react-query';
 import type { MetadataResponse } from '../types';
 
+// overloads
+export function useMetadata(): UseQueryResult<MetadataResponse, Error>;
 export function useMetadata<T extends (d: MetadataResponse) => any>(
-  select: T = (((d: MetadataResponse) => d) as unknown) as T,
+  select: T
+): UseQueryResult<ReturnType<T>, Error>;
+export function useMetadata<
+  T extends (d: MetadataResponse) => any,
+  D extends (d: ReturnType<T>) => any
+>(
+  select: T,
+  transformFn: D,
   queryOptions?: Omit<
     UseQueryOptions<MetadataResponse, Error, ReturnType<T>, 'metadata'>,
+    'queryKey' | 'queryFn'
+  >
+): UseQueryResult<ReturnType<D>, Error>;
+
+export function useMetadata(
+  select = (d: MetadataResponse) => d,
+  transformFn = (d: unknown) => d,
+  queryOptions?: Omit<
+    UseQueryOptions<MetadataResponse, Error, unknown, 'metadata'>,
     'queryKey' | 'queryFn'
   >
 ) {
@@ -30,6 +48,6 @@ export function useMetadata<T extends (d: MetadataResponse) => any>(
     queryKey: 'metadata',
     queryFn,
     ...queryOptions,
-    select,
+    select: d => transformFn(select(d)),
   });
 }
