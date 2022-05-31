@@ -80,10 +80,10 @@
 </span><span id="line-80"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
 </span><span id="line-81"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">PostgreSQL.Binary.Encoding</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PE</span></span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span id="local-6989586621689007676"><span id="local-6989586621689007677"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ActionName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-var">ActionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-var">ActionName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unActionName"><span class="annot"><span class="annottext">ActionName -&gt; Name
+</span><span id="line-83"></span><span id="local-6989586621689009368"><span id="local-6989586621689009369"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ActionName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-var">ActionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-var">ActionName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unActionName"><span class="annot"><span class="annottext">ActionName -&gt; Name
 </span><a href="Hasura.RQL.Types.Action.html#unActionName"><span class="hs-identifier hs-var hs-var">unActionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">}</span><span>
 </span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-85"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689007668"><span id="local-6989586621689007670"><span id="local-6989586621689007672"><span class="annot"><span class="annottext">Int -&gt; ActionName -&gt; ShowS
+</span><span id="line-85"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689009360"><span id="local-6989586621689009362"><span id="local-6989586621689009364"><span class="annot"><span class="annottext">Int -&gt; ActionName -&gt; ShowS
 [ActionName] -&gt; ShowS
 ActionName -&gt; String
 (Int -&gt; ActionName -&gt; ShowS)
@@ -99,7 +99,7 @@ $cshow :: ActionName -&gt; String
 showsPrec :: Int -&gt; ActionName -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionName -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-86"></span><span>      </span><span id="local-6989586621689007663"><span id="local-6989586621689007665"><span class="annot"><span class="annottext">ActionName -&gt; ActionName -&gt; Bool
+</span><span id="line-86"></span><span>      </span><span id="local-6989586621689009355"><span id="local-6989586621689009357"><span class="annot"><span class="annottext">ActionName -&gt; ActionName -&gt; Bool
 (ActionName -&gt; ActionName -&gt; Bool)
 -&gt; (ActionName -&gt; ActionName -&gt; Bool) -&gt; Eq ActionName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -108,7 +108,7 @@ $c/= :: ActionName -&gt; ActionName -&gt; Bool
 == :: ActionName -&gt; ActionName -&gt; Bool
 $c== :: ActionName -&gt; ActionName -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-87"></span><span>      </span><span id="local-6989586621689007647"><span id="local-6989586621689007649"><span id="local-6989586621689007651"><span id="local-6989586621689007653"><span id="local-6989586621689007655"><span id="local-6989586621689007657"><span id="local-6989586621689007659"><span class="annot"><span class="annottext">Eq ActionName
+</span><span id="line-87"></span><span>      </span><span id="local-6989586621689009339"><span id="local-6989586621689009341"><span id="local-6989586621689009343"><span id="local-6989586621689009345"><span id="local-6989586621689009347"><span id="local-6989586621689009349"><span id="local-6989586621689009351"><span class="annot"><span class="annottext">Eq ActionName
 Eq ActionName
 -&gt; (ActionName -&gt; ActionName -&gt; Ordering)
 -&gt; (ActionName -&gt; ActionName -&gt; Bool)
@@ -147,7 +147,7 @@ compare :: ActionName -&gt; ActionName -&gt; Ordering
 $ccompare :: ActionName -&gt; ActionName -&gt; Ordering
 $cp1Ord :: Eq ActionName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-88"></span><span>      </span><span id="local-6989586621689007642"><span id="local-6989586621689007644"><span class="annot"><span class="annottext">Value -&gt; Parser [ActionName]
+</span><span id="line-88"></span><span>      </span><span id="local-6989586621689009334"><span id="local-6989586621689009336"><span class="annot"><span class="annottext">Value -&gt; Parser [ActionName]
 Value -&gt; Parser ActionName
 (Value -&gt; Parser ActionName)
 -&gt; (Value -&gt; Parser [ActionName]) -&gt; FromJSON ActionName
@@ -158,7 +158,7 @@ $cparseJSONList :: Value -&gt; Parser [ActionName]
 parseJSON :: Value -&gt; Parser ActionName
 $cparseJSON :: Value -&gt; Parser ActionName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-89"></span><span>      </span><span id="local-6989586621689007633"><span id="local-6989586621689007635"><span id="local-6989586621689007637"><span id="local-6989586621689007639"><span class="annot"><span class="annottext">[ActionName] -&gt; Encoding
+</span><span id="line-89"></span><span>      </span><span id="local-6989586621689009325"><span id="local-6989586621689009327"><span id="local-6989586621689009329"><span id="local-6989586621689009331"><span class="annot"><span class="annottext">[ActionName] -&gt; Encoding
 [ActionName] -&gt; Value
 ActionName -&gt; Encoding
 ActionName -&gt; Value
@@ -182,7 +182,7 @@ $ctoEncoding :: ActionName -&gt; Encoding
 toJSON :: ActionName -&gt; Value
 $ctoJSON :: ActionName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-90"></span><span>      </span><span id="local-6989586621689007628"><span id="local-6989586621689007630"><span class="annot"><span class="annottext">FromJSONKeyFunction [ActionName]
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621689009320"><span id="local-6989586621689009322"><span class="annot"><span class="annottext">FromJSONKeyFunction [ActionName]
 FromJSONKeyFunction ActionName
 FromJSONKeyFunction ActionName
 -&gt; FromJSONKeyFunction [ActionName] -&gt; FromJSONKey ActionName
@@ -193,7 +193,7 @@ $cfromJSONKeyList :: FromJSONKeyFunction [ActionName]
 fromJSONKey :: FromJSONKeyFunction ActionName
 $cfromJSONKey :: FromJSONKeyFunction ActionName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-91"></span><span>      </span><span id="local-6989586621689007623"><span id="local-6989586621689007625"><span class="annot"><span class="annottext">ToJSONKeyFunction [ActionName]
+</span><span id="line-91"></span><span>      </span><span id="local-6989586621689009315"><span id="local-6989586621689009317"><span class="annot"><span class="annottext">ToJSONKeyFunction [ActionName]
 ToJSONKeyFunction ActionName
 ToJSONKeyFunction ActionName
 -&gt; ToJSONKeyFunction [ActionName] -&gt; ToJSONKey ActionName
@@ -204,7 +204,7 @@ $ctoJSONKeyList :: ToJSONKeyFunction [ActionName]
 toJSONKey :: ToJSONKeyFunction ActionName
 $ctoJSONKey :: ToJSONKeyFunction ActionName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-92"></span><span>      </span><span id="local-6989586621689007618"><span id="local-6989586621689007620"><span class="annot"><span class="annottext">Int -&gt; ActionName -&gt; Int
+</span><span id="line-92"></span><span>      </span><span id="local-6989586621689009310"><span id="local-6989586621689009312"><span class="annot"><span class="annottext">Int -&gt; ActionName -&gt; Int
 ActionName -&gt; Int
 (Int -&gt; ActionName -&gt; Int)
 -&gt; (ActionName -&gt; Int) -&gt; Hashable ActionName
@@ -214,7 +214,7 @@ $chash :: ActionName -&gt; Int
 hashWithSalt :: Int -&gt; ActionName -&gt; Int
 $chashWithSalt :: Int -&gt; ActionName -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-93"></span><span>      </span><span id="local-6989586621689007615"><span class="annot"><span class="annottext">ActionName -&gt; Text
+</span><span id="line-93"></span><span>      </span><span id="local-6989586621689009307"><span class="annot"><span class="annottext">ActionName -&gt; Text
 (ActionName -&gt; Text) -&gt; ToTxt ActionName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: ActionName -&gt; Text
@@ -229,13 +229,13 @@ forall a.
 $cto :: forall x. Rep ActionName x -&gt; ActionName
 $cfrom :: forall x. ActionName -&gt; Rep ActionName x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span>
-</span><span id="line-95"></span><span>      </span><span id="local-6989586621689007609"><span class="annot"><span class="annottext">ActionName -&gt; ()
+</span><span id="line-95"></span><span>      </span><span id="local-6989586621689009301"><span class="annot"><span class="annottext">ActionName -&gt; ()
 (ActionName -&gt; ()) -&gt; NFData ActionName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ActionName -&gt; ()
 $crnf :: ActionName -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-96"></span><span>      </span><span id="local-6989586621689007605"><span class="annot"><span class="annottext">Eq ActionName
+</span><span id="line-96"></span><span>      </span><span id="local-6989586621689009297"><span class="annot"><span class="annottext">Eq ActionName
 Eq ActionName
 -&gt; (Accesses -&gt; ActionName -&gt; ActionName -&gt; Bool)
 -&gt; Cacheable ActionName
@@ -248,23 +248,23 @@ $cp1Cacheable :: Eq ActionName
 </span><span id="line-97"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.FromCol</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">ActionName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621689007601"><span class="annot"><span class="annottext">fromCol :: Maybe ByteString -&gt; Either Text ActionName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCol</span></span></span><span> </span><span id="local-6989586621689007599"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621689007599"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-101"></span><span>    </span><span id="local-6989586621689007598"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689007598"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text Text
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621689009293"><span class="annot"><span class="annottext">fromCol :: Maybe ByteString -&gt; Either Text ActionName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCol</span></span></span><span> </span><span id="local-6989586621689009291"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621689009291"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621689009290"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689009290"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text Text
 forall a. FromCol a =&gt; Maybe ByteString -&gt; Either Text a
 </span><span class="hs-identifier hs-var">Q.fromCol</span></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621689007599"><span class="hs-identifier hs-var">bs</span></a></span><span>
-</span><span id="line-102"></span><span>    </span><span id="local-6989586621689007597"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689007597"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="#local-6989586621689009291"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-102"></span><span>    </span><span id="local-6989586621689009289"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689009289"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689007598"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Either Text Name -&gt; Either Text Name
+</span><a href="#local-6989586621689009290"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Either Text Name -&gt; Either Text Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text Name
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689007598"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689009290"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is not valid GraphQL name&quot;</span></span><span class="hs-special">)</span><span>
@@ -275,10 +275,10 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ActionName
 </span><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-var">ActionName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689007597"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689009289"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-104"></span><span>
 </span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.ToPrepArg</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">ActionName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-106"></span><span>  </span><span id="local-6989586621689007592"><span class="annot"><span class="annottext">toPrepVal :: ActionName -&gt; PrepArg
+</span><span id="line-106"></span><span>  </span><span id="local-6989586621689009284"><span class="annot"><span class="annottext">toPrepVal :: ActionName -&gt; PrepArg
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toPrepVal</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; PrepArg
 forall a. ToPrepArg a =&gt; a -&gt; PrepArg
 </span><span class="hs-identifier hs-var">Q.toPrepVal</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; PrepArg) -&gt; (ActionName -&gt; Text) -&gt; ActionName -&gt; PrepArg
@@ -289,10 +289,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ActionName -&gt; Name
 </span><a href="Hasura.RQL.Types.Action.html#unActionName"><span class="hs-identifier hs-var hs-var">unActionName</span></a></span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span id="local-6989586621689007587"><span id="local-6989586621689007588"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionMutationKind"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutationKind"><span class="hs-identifier hs-var">ActionMutationKind</span></a></span></span><span>
+</span><span id="line-108"></span><span id="local-6989586621689009279"><span id="local-6989586621689009280"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionMutationKind"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutationKind"><span class="hs-identifier hs-var">ActionMutationKind</span></a></span></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ActionSynchronous"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionSynchronous"><span class="hs-identifier hs-var">ActionSynchronous</span></a></span></span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ActionAsynchronous"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionAsynchronous"><span class="hs-identifier hs-var">ActionAsynchronous</span></a></span></span><span>
-</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007579"><span id="local-6989586621689007581"><span id="local-6989586621689007583"><span class="annot"><span class="annottext">Int -&gt; ActionMutationKind -&gt; ShowS
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689009271"><span id="local-6989586621689009273"><span id="local-6989586621689009275"><span class="annot"><span class="annottext">Int -&gt; ActionMutationKind -&gt; ShowS
 [ActionMutationKind] -&gt; ShowS
 ActionMutationKind -&gt; String
 (Int -&gt; ActionMutationKind -&gt; ShowS)
@@ -307,7 +307,7 @@ show :: ActionMutationKind -&gt; String
 $cshow :: ActionMutationKind -&gt; String
 showsPrec :: Int -&gt; ActionMutationKind -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionMutationKind -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007575"><span id="local-6989586621689007577"><span class="annot"><span class="annottext">ActionMutationKind -&gt; ActionMutationKind -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009267"><span id="local-6989586621689009269"><span class="annot"><span class="annottext">ActionMutationKind -&gt; ActionMutationKind -&gt; Bool
 (ActionMutationKind -&gt; ActionMutationKind -&gt; Bool)
 -&gt; (ActionMutationKind -&gt; ActionMutationKind -&gt; Bool)
 -&gt; Eq ActionMutationKind
@@ -327,20 +327,20 @@ $cto :: forall x. Rep ActionMutationKind x -&gt; ActionMutationKind
 $cfrom :: forall x. ActionMutationKind -&gt; Rep ActionMutationKind x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>
-</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007571"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutationKind"><span class="hs-identifier hs-type">ActionMutationKind</span></a></span></span><span>
+</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009263"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutationKind"><span class="hs-identifier hs-type">ActionMutationKind</span></a></span></span><span>
 </span><span id="line-114"></span><span>
-</span><span id="line-115"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007568"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutationKind"><span class="hs-identifier hs-type">ActionMutationKind</span></a></span></span><span>
+</span><span id="line-115"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009260"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutationKind"><span class="hs-identifier hs-type">ActionMutationKind</span></a></span></span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689007556"><span id="local-6989586621689007558"><span id="local-6989586621689007560"><span id="local-6989586621689007562"><span id="local-6989586621689007564"><span id="local-6989586621689007566"><span class="hs-identifier">J.deriveJSON</span><span>
+</span><span id="line-117"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689009248"><span id="local-6989586621689009250"><span id="local-6989586621689009252"><span id="local-6989586621689009254"><span id="local-6989586621689009256"><span id="local-6989586621689009258"><span class="hs-identifier">J.deriveJSON</span><span>
 </span><span id="line-118"></span><span>     </span><span class="hs-identifier">J.defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">J.snakeCase</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">6</span><span class="hs-special">}</span><span>
 </span><span id="line-119"></span><span>     </span><span class="hs-special">''</span><span class="hs-identifier">ActionMutationKind</span></span></span></span></span></span></span><span>
 </span><span id="line-120"></span><span> </span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span class="hs-special">$(</span><span id="_ActionSynchronous"><span id="_ActionAsynchronous"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionMutationKind</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-122"></span><span>
-</span><span id="line-123"></span><span id="local-6989586621689007550"><span id="local-6989586621689007551"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ArgumentName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentName"><span class="hs-identifier hs-var">ArgumentName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ArgumentName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentName"><span class="hs-identifier hs-var">ArgumentName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unArgumentName"><span class="annot"><span class="annottext">ArgumentName -&gt; Name
+</span><span id="line-123"></span><span id="local-6989586621689009242"><span id="local-6989586621689009243"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ArgumentName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentName"><span class="hs-identifier hs-var">ArgumentName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ArgumentName"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentName"><span class="hs-identifier hs-var">ArgumentName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unArgumentName"><span class="annot"><span class="annottext">ArgumentName -&gt; Name
 </span><a href="Hasura.RQL.Types.Action.html#unArgumentName"><span class="hs-identifier hs-var hs-var">unArgumentName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">}</span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-125"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689007542"><span id="local-6989586621689007544"><span id="local-6989586621689007546"><span class="annot"><span class="annottext">Int -&gt; ArgumentName -&gt; ShowS
+</span><span id="line-125"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689009234"><span id="local-6989586621689009236"><span id="local-6989586621689009238"><span class="annot"><span class="annottext">Int -&gt; ArgumentName -&gt; ShowS
 [ArgumentName] -&gt; ShowS
 ArgumentName -&gt; String
 (Int -&gt; ArgumentName -&gt; ShowS)
@@ -356,7 +356,7 @@ $cshow :: ArgumentName -&gt; String
 showsPrec :: Int -&gt; ArgumentName -&gt; ShowS
 $cshowsPrec :: Int -&gt; ArgumentName -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-126"></span><span>      </span><span id="local-6989586621689007538"><span id="local-6989586621689007540"><span class="annot"><span class="annottext">ArgumentName -&gt; ArgumentName -&gt; Bool
+</span><span id="line-126"></span><span>      </span><span id="local-6989586621689009230"><span id="local-6989586621689009232"><span class="annot"><span class="annottext">ArgumentName -&gt; ArgumentName -&gt; Bool
 (ArgumentName -&gt; ArgumentName -&gt; Bool)
 -&gt; (ArgumentName -&gt; ArgumentName -&gt; Bool) -&gt; Eq ArgumentName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -365,7 +365,7 @@ $c/= :: ArgumentName -&gt; ArgumentName -&gt; Bool
 == :: ArgumentName -&gt; ArgumentName -&gt; Bool
 $c== :: ArgumentName -&gt; ArgumentName -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-127"></span><span>      </span><span id="local-6989586621689007534"><span id="local-6989586621689007536"><span class="annot"><span class="annottext">Value -&gt; Parser [ArgumentName]
+</span><span id="line-127"></span><span>      </span><span id="local-6989586621689009226"><span id="local-6989586621689009228"><span class="annot"><span class="annottext">Value -&gt; Parser [ArgumentName]
 Value -&gt; Parser ArgumentName
 (Value -&gt; Parser ArgumentName)
 -&gt; (Value -&gt; Parser [ArgumentName]) -&gt; FromJSON ArgumentName
@@ -375,8 +375,8 @@ parseJSONList :: Value -&gt; Parser [ArgumentName]
 $cparseJSONList :: Value -&gt; Parser [ArgumentName]
 parseJSON :: Value -&gt; Parser ArgumentName
 $cparseJSON :: Value -&gt; Parser ArgumentName
-</span><a href="#local-6989586621689007534"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-128"></span><span>      </span><span id="local-6989586621689007526"><span id="local-6989586621689007528"><span id="local-6989586621689007530"><span id="local-6989586621689007532"><span class="annot"><span class="annottext">[ArgumentName] -&gt; Encoding
+</span><a href="#local-6989586621689009226"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-128"></span><span>      </span><span id="local-6989586621689009218"><span id="local-6989586621689009220"><span id="local-6989586621689009222"><span id="local-6989586621689009224"><span class="annot"><span class="annottext">[ArgumentName] -&gt; Encoding
 [ArgumentName] -&gt; Value
 ArgumentName -&gt; Encoding
 ArgumentName -&gt; Value
@@ -399,8 +399,8 @@ toEncoding :: ArgumentName -&gt; Encoding
 $ctoEncoding :: ArgumentName -&gt; Encoding
 toJSON :: ArgumentName -&gt; Value
 $ctoJSON :: ArgumentName -&gt; Value
-</span><a href="#local-6989586621689007526"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-129"></span><span>      </span><span id="local-6989586621689007522"><span id="local-6989586621689007524"><span class="annot"><span class="annottext">FromJSONKeyFunction [ArgumentName]
+</span><a href="#local-6989586621689009218"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-129"></span><span>      </span><span id="local-6989586621689009214"><span id="local-6989586621689009216"><span class="annot"><span class="annottext">FromJSONKeyFunction [ArgumentName]
 FromJSONKeyFunction ArgumentName
 FromJSONKeyFunction ArgumentName
 -&gt; FromJSONKeyFunction [ArgumentName] -&gt; FromJSONKey ArgumentName
@@ -410,8 +410,8 @@ fromJSONKeyList :: FromJSONKeyFunction [ArgumentName]
 $cfromJSONKeyList :: FromJSONKeyFunction [ArgumentName]
 fromJSONKey :: FromJSONKeyFunction ArgumentName
 $cfromJSONKey :: FromJSONKeyFunction ArgumentName
-</span><a href="#local-6989586621689007522"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-130"></span><span>      </span><span id="local-6989586621689007518"><span id="local-6989586621689007520"><span class="annot"><span class="annottext">ToJSONKeyFunction [ArgumentName]
+</span><a href="#local-6989586621689009214"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-130"></span><span>      </span><span id="local-6989586621689009210"><span id="local-6989586621689009212"><span class="annot"><span class="annottext">ToJSONKeyFunction [ArgumentName]
 ToJSONKeyFunction ArgumentName
 ToJSONKeyFunction ArgumentName
 -&gt; ToJSONKeyFunction [ArgumentName] -&gt; ToJSONKey ArgumentName
@@ -421,8 +421,8 @@ toJSONKeyList :: ToJSONKeyFunction [ArgumentName]
 $ctoJSONKeyList :: ToJSONKeyFunction [ArgumentName]
 toJSONKey :: ToJSONKeyFunction ArgumentName
 $ctoJSONKey :: ToJSONKeyFunction ArgumentName
-</span><a href="#local-6989586621689007518"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-131"></span><span>      </span><span id="local-6989586621689007514"><span id="local-6989586621689007516"><span class="annot"><span class="annottext">Int -&gt; ArgumentName -&gt; Int
+</span><a href="#local-6989586621689009210"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-131"></span><span>      </span><span id="local-6989586621689009206"><span id="local-6989586621689009208"><span class="annot"><span class="annottext">Int -&gt; ArgumentName -&gt; Int
 ArgumentName -&gt; Int
 (Int -&gt; ArgumentName -&gt; Int)
 -&gt; (ArgumentName -&gt; Int) -&gt; Hashable ArgumentName
@@ -431,13 +431,13 @@ hash :: ArgumentName -&gt; Int
 $chash :: ArgumentName -&gt; Int
 hashWithSalt :: Int -&gt; ArgumentName -&gt; Int
 $chashWithSalt :: Int -&gt; ArgumentName -&gt; Int
-</span><a href="#local-6989586621689007514"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-132"></span><span>      </span><span id="local-6989586621689007512"><span class="annot"><span class="annottext">ArgumentName -&gt; Text
+</span><a href="#local-6989586621689009206"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-132"></span><span>      </span><span id="local-6989586621689009204"><span class="annot"><span class="annottext">ArgumentName -&gt; Text
 (ArgumentName -&gt; Text) -&gt; ToTxt ArgumentName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: ArgumentName -&gt; Text
 $ctoTxt :: ArgumentName -&gt; Text
-</span><a href="#local-6989586621689007512"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689009204"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
 </span><span id="line-133"></span><span>      </span><span class="annot"><span class="annottext">(forall x. ArgumentName -&gt; Rep ArgumentName x)
 -&gt; (forall x. Rep ArgumentName x -&gt; ArgumentName)
 -&gt; Generic ArgumentName
@@ -448,13 +448,13 @@ forall a.
 $cto :: forall x. Rep ArgumentName x -&gt; ArgumentName
 $cfrom :: forall x. ArgumentName -&gt; Rep ArgumentName x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span>
-</span><span id="line-134"></span><span>      </span><span id="local-6989586621689007508"><span class="annot"><span class="annottext">ArgumentName -&gt; ()
+</span><span id="line-134"></span><span>      </span><span id="local-6989586621689009200"><span class="annot"><span class="annottext">ArgumentName -&gt; ()
 (ArgumentName -&gt; ()) -&gt; NFData ArgumentName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ArgumentName -&gt; ()
 $crnf :: ArgumentName -&gt; ()
-</span><a href="#local-6989586621689007508"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-135"></span><span>      </span><span id="local-6989586621689007505"><span class="annot"><span class="annottext">Eq ArgumentName
+</span><a href="#local-6989586621689009200"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>      </span><span id="local-6989586621689009197"><span class="annot"><span class="annottext">Eq ArgumentName
 Eq ArgumentName
 -&gt; (Accesses -&gt; ArgumentName -&gt; ArgumentName -&gt; Bool)
 -&gt; Cacheable ArgumentName
@@ -463,18 +463,18 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; ArgumentName -&gt; ArgumentName -&gt; Bool
 $cunchanged :: Accesses -&gt; ArgumentName -&gt; ArgumentName -&gt; Bool
 $cp1Cacheable :: Eq ArgumentName
-</span><a href="#local-6989586621689007505"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span>
+</span><a href="#local-6989586621689009197"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span>
 </span><span id="line-136"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span id="local-6989586621689007503"><span id="local-6989586621689007504"></span></span><span class="hs-keyword">data</span><span> </span><span id="ArgumentDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-var">ArgumentDefinition</span></a></span></span><span> </span><span id="local-6989586621689007502"><span class="annot"><a href="#local-6989586621689007502"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ArgumentDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-var">ArgumentDefinition</span></a></span></span><span>
+</span><span id="line-138"></span><span id="local-6989586621689009195"><span id="local-6989586621689009196"></span></span><span class="hs-keyword">data</span><span> </span><span id="ArgumentDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-var">ArgumentDefinition</span></a></span></span><span> </span><span id="local-6989586621689009194"><span class="annot"><a href="#local-6989586621689009194"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ArgumentDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-var">ArgumentDefinition</span></a></span></span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_argName"><span class="annot"><span class="annottext">ArgumentDefinition a -&gt; ArgumentName
 </span><a href="Hasura.RQL.Types.Action.html#_argName"><span class="hs-identifier hs-var hs-var">_argName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentName"><span class="hs-identifier hs-type">ArgumentName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-140"></span><span>    </span><span id="_argType"><span class="annot"><span class="annottext">ArgumentDefinition a -&gt; a
-</span><a href="Hasura.RQL.Types.Action.html#_argType"><span class="hs-identifier hs-var hs-var">_argType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689007502"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Action.html#_argType"><span class="hs-identifier hs-var hs-var">_argType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689009194"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-141"></span><span>    </span><span id="_argDescription"><span class="annot"><span class="annottext">ArgumentDefinition a -&gt; Maybe Description
 </span><a href="Hasura.RQL.Types.Action.html#_argDescription"><span class="hs-identifier hs-var hs-var">_argDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Description</span></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-143"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007492"><span id="local-6989586621689007494"><span id="local-6989586621689007496"><span class="annot"><span class="annottext">Int -&gt; ArgumentDefinition a -&gt; ShowS
+</span><span id="line-143"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689009184"><span id="local-6989586621689009186"><span id="local-6989586621689009188"><span class="annot"><span class="annottext">Int -&gt; ArgumentDefinition a -&gt; ShowS
 [ArgumentDefinition a] -&gt; ShowS
 ArgumentDefinition a -&gt; String
 (Int -&gt; ArgumentDefinition a -&gt; ShowS)
@@ -492,7 +492,7 @@ show :: ArgumentDefinition a -&gt; String
 $cshow :: forall a. Show a =&gt; ArgumentDefinition a -&gt; String
 showsPrec :: Int -&gt; ArgumentDefinition a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; ArgumentDefinition a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007488"><span id="local-6989586621689007490"><span class="annot"><span class="annottext">ArgumentDefinition a -&gt; ArgumentDefinition a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009180"><span id="local-6989586621689009182"><span class="annot"><span class="annottext">ArgumentDefinition a -&gt; ArgumentDefinition a -&gt; Bool
 (ArgumentDefinition a -&gt; ArgumentDefinition a -&gt; Bool)
 -&gt; (ArgumentDefinition a -&gt; ArgumentDefinition a -&gt; Bool)
 -&gt; Eq (ArgumentDefinition a)
@@ -508,7 +508,7 @@ ArgumentDefinition a -&gt; ArgumentDefinition a -&gt; Bool
 $c== :: forall a.
 Eq a =&gt;
 ArgumentDefinition a -&gt; ArgumentDefinition a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007484"><span id="local-6989586621689007486"><span class="annot"><span class="annottext">a -&gt; ArgumentDefinition b -&gt; ArgumentDefinition a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009176"><span id="local-6989586621689009178"><span class="annot"><span class="annottext">a -&gt; ArgumentDefinition b -&gt; ArgumentDefinition a
 (a -&gt; b) -&gt; ArgumentDefinition a -&gt; ArgumentDefinition b
 (forall a b.
  (a -&gt; b) -&gt; ArgumentDefinition a -&gt; ArgumentDefinition b)
@@ -525,7 +525,7 @@ $c&lt;$ :: forall a b. a -&gt; ArgumentDefinition b -&gt; ArgumentDefinition a
 fmap :: (a -&gt; b) -&gt; ArgumentDefinition a -&gt; ArgumentDefinition b
 $cfmap :: forall a b.
 (a -&gt; b) -&gt; ArgumentDefinition a -&gt; ArgumentDefinition b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007449"><span id="local-6989586621689007451"><span id="local-6989586621689007453"><span id="local-6989586621689007455"><span id="local-6989586621689007457"><span id="local-6989586621689007459"><span id="local-6989586621689007461"><span id="local-6989586621689007463"><span id="local-6989586621689007465"><span id="local-6989586621689007467"><span id="local-6989586621689007469"><span id="local-6989586621689007471"><span id="local-6989586621689007473"><span id="local-6989586621689007475"><span id="local-6989586621689007477"><span id="local-6989586621689007479"><span id="local-6989586621689007481"><span class="annot"><span class="annottext">ArgumentDefinition a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009141"><span id="local-6989586621689009143"><span id="local-6989586621689009145"><span id="local-6989586621689009147"><span id="local-6989586621689009149"><span id="local-6989586621689009151"><span id="local-6989586621689009153"><span id="local-6989586621689009155"><span id="local-6989586621689009157"><span id="local-6989586621689009159"><span id="local-6989586621689009161"><span id="local-6989586621689009163"><span id="local-6989586621689009165"><span id="local-6989586621689009167"><span id="local-6989586621689009169"><span id="local-6989586621689009171"><span id="local-6989586621689009173"><span class="annot"><span class="annottext">ArgumentDefinition a -&gt; Bool
 (a -&gt; m) -&gt; ArgumentDefinition a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; ArgumentDefinition a -&gt; b
 (forall m. Monoid m =&gt; ArgumentDefinition m -&gt; m)
@@ -610,7 +610,7 @@ foldMap :: (a -&gt; m) -&gt; ArgumentDefinition a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ArgumentDefinition a -&gt; m
 fold :: ArgumentDefinition m -&gt; m
 $cfold :: forall m. Monoid m =&gt; ArgumentDefinition m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007438"><span id="local-6989586621689007440"><span id="local-6989586621689007442"><span id="local-6989586621689007444"><span class="annot"><span class="annottext">Functor ArgumentDefinition
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009130"><span id="local-6989586621689009132"><span id="local-6989586621689009134"><span id="local-6989586621689009136"><span class="annot"><span class="annottext">Functor ArgumentDefinition
 Foldable ArgumentDefinition
 Functor ArgumentDefinition
 -&gt; Foldable ArgumentDefinition
@@ -683,16 +683,16 @@ $cto :: forall a x. Rep (ArgumentDefinition a) x -&gt; ArgumentDefinition a
 $cfrom :: forall a x. ArgumentDefinition a -&gt; Rep (ArgumentDefinition a) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-144"></span><span>
-</span><span id="line-145"></span><span id="local-6989586621689007434"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007432"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689007434"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-type">ArgumentDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007434"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-145"></span><span id="local-6989586621689009126"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009124"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689009126"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-type">ArgumentDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009126"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span id="local-6989586621689007431"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007428"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007431"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-type">ArgumentDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007431"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-147"></span><span id="local-6989586621689009123"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009120"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009123"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-type">ArgumentDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009123"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-148"></span><span>
-</span><span id="line-149"></span><span class="hs-special">$(</span><span id="local-6989586621689007416"><span id="local-6989586621689007418"><span id="local-6989586621689007420"><span id="local-6989586621689007422"><span id="local-6989586621689007424"><span id="local-6989586621689007426"><span id="local-6989586621689007502"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ArgumentDefinition</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span class="hs-special">$(</span><span id="local-6989586621689009108"><span id="local-6989586621689009110"><span id="local-6989586621689009112"><span id="local-6989586621689009114"><span id="local-6989586621689009116"><span id="local-6989586621689009118"><span id="local-6989586621689009194"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ArgumentDefinition</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-150"></span><span>
-</span><span id="line-151"></span><span id="local-6989586621689007414"><span id="local-6989586621689007415"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionType"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionType"><span class="hs-identifier hs-var">ActionType</span></a></span></span><span>
+</span><span id="line-151"></span><span id="local-6989586621689009106"><span id="local-6989586621689009107"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionType"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionType"><span class="hs-identifier hs-var">ActionType</span></a></span></span><span>
 </span><span id="line-152"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ActionQuery"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span></span><span>
 </span><span id="line-153"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ActionMutation"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-var">ActionMutation</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutationKind"><span class="hs-identifier hs-type">ActionMutationKind</span></a></span><span>
-</span><span id="line-154"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007406"><span id="local-6989586621689007408"><span id="local-6989586621689007410"><span class="annot"><span class="annottext">Int -&gt; ActionType -&gt; ShowS
+</span><span id="line-154"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689009098"><span id="local-6989586621689009100"><span id="local-6989586621689009102"><span class="annot"><span class="annottext">Int -&gt; ActionType -&gt; ShowS
 [ActionType] -&gt; ShowS
 ActionType -&gt; String
 (Int -&gt; ActionType -&gt; ShowS)
@@ -707,7 +707,7 @@ show :: ActionType -&gt; String
 $cshow :: ActionType -&gt; String
 showsPrec :: Int -&gt; ActionType -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionType -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007402"><span id="local-6989586621689007404"><span class="annot"><span class="annottext">ActionType -&gt; ActionType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009094"><span id="local-6989586621689009096"><span class="annot"><span class="annottext">ActionType -&gt; ActionType -&gt; Bool
 (ActionType -&gt; ActionType -&gt; Bool)
 -&gt; (ActionType -&gt; ActionType -&gt; Bool) -&gt; Eq ActionType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -725,15 +725,15 @@ $cto :: forall x. Rep ActionType x -&gt; ActionType
 $cfrom :: forall x. ActionType -&gt; Rep ActionType x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-155"></span><span>
-</span><span id="line-156"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007398"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionType"><span class="hs-identifier hs-type">ActionType</span></a></span></span><span>
+</span><span id="line-156"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009090"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionType"><span class="hs-identifier hs-type">ActionType</span></a></span></span><span>
 </span><span id="line-157"></span><span>
-</span><span id="line-158"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007395"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionType"><span class="hs-identifier hs-type">ActionType</span></a></span></span><span>
+</span><span id="line-158"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009087"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionType"><span class="hs-identifier hs-type">ActionType</span></a></span></span><span>
 </span><span id="line-159"></span><span>
 </span><span id="line-160"></span><span class="hs-special">$(</span><span id="_ActionQuery"><span id="_ActionMutation"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionType</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-161"></span><span>
-</span><span id="line-162"></span><span id="local-6989586621689007392"><span id="local-6989586621689007393"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-var">ActionDefinition</span></a></span></span><span> </span><span id="local-6989586621689007775"><span class="annot"><a href="#local-6989586621689007775"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621689007774"><span class="annot"><a href="#local-6989586621689007774"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-var">ActionDefinition</span></a></span></span><span>
+</span><span id="line-162"></span><span id="local-6989586621689009084"><span id="local-6989586621689009085"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-var">ActionDefinition</span></a></span></span><span> </span><span id="local-6989586621689009467"><span class="annot"><a href="#local-6989586621689009467"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621689009466"><span class="annot"><a href="#local-6989586621689009466"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-var">ActionDefinition</span></a></span></span><span>
 </span><span id="line-163"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_adArguments"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; [a]
-</span><a href="Hasura.RQL.Types.Action.html#_adArguments"><span class="hs-identifier hs-var hs-var">_adArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689007775"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Action.html#_adArguments"><span class="hs-identifier hs-var hs-var">_adArguments</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689009467"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-164"></span><span>    </span><span id="_adOutputType"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; GraphQLType
 </span><a href="Hasura.RQL.Types.Action.html#_adOutputType"><span class="hs-identifier hs-var hs-var">_adOutputType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#GraphQLType"><span class="hs-identifier hs-type">GraphQLType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-165"></span><span>    </span><span id="_adType"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; ActionType
@@ -747,13 +747,13 @@ $cfrom :: forall x. ActionType -&gt; Rep ActionType x
 </span><span id="line-170"></span><span>    </span><span id="_adTimeout"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; Timeout
 </span><a href="Hasura.RQL.Types.Action.html#_adTimeout"><span class="hs-identifier hs-var hs-var">_adTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Timeout"><span class="hs-identifier hs-type">Timeout</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-171"></span><span>    </span><span id="_adHandler"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; b
-</span><a href="Hasura.RQL.Types.Action.html#_adHandler"><span class="hs-identifier hs-var hs-var">_adHandler</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689007774"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Action.html#_adHandler"><span class="hs-identifier hs-var hs-var">_adHandler</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689009466"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-172"></span><span>    </span><span id="_adRequestTransform"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; Maybe RequestTransform
 </span><a href="Hasura.RQL.Types.Action.html#_adRequestTransform"><span class="hs-identifier hs-var hs-var">_adRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-173"></span><span>    </span><span id="_adResponseTransform"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; Maybe MetadataResponseTransform
 </span><a href="Hasura.RQL.Types.Action.html#_adResponseTransform"><span class="hs-identifier hs-var hs-var">_adResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-174"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007376"><span id="local-6989586621689007378"><span id="local-6989586621689007380"><span class="annot"><span class="annottext">Int -&gt; ActionDefinition a b -&gt; ShowS
+</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689009068"><span id="local-6989586621689009070"><span id="local-6989586621689009072"><span class="annot"><span class="annottext">Int -&gt; ActionDefinition a b -&gt; ShowS
 [ActionDefinition a b] -&gt; ShowS
 ActionDefinition a b -&gt; String
 (Int -&gt; ActionDefinition a b -&gt; ShowS)
@@ -775,7 +775,7 @@ showsPrec :: Int -&gt; ActionDefinition a b -&gt; ShowS
 $cshowsPrec :: forall a b.
 (Show a, Show b) =&gt;
 Int -&gt; ActionDefinition a b -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007372"><span id="local-6989586621689007374"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; ActionDefinition a b -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009064"><span id="local-6989586621689009066"><span class="annot"><span class="annottext">ActionDefinition a b -&gt; ActionDefinition a b -&gt; Bool
 (ActionDefinition a b -&gt; ActionDefinition a b -&gt; Bool)
 -&gt; (ActionDefinition a b -&gt; ActionDefinition a b -&gt; Bool)
 -&gt; Eq (ActionDefinition a b)
@@ -791,7 +791,7 @@ ActionDefinition a b -&gt; ActionDefinition a b -&gt; Bool
 $c== :: forall a b.
 (Eq a, Eq b) =&gt;
 ActionDefinition a b -&gt; ActionDefinition a b -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007368"><span id="local-6989586621689007370"><span class="annot"><span class="annottext">a -&gt; ActionDefinition a b -&gt; ActionDefinition a a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009060"><span id="local-6989586621689009062"><span class="annot"><span class="annottext">a -&gt; ActionDefinition a b -&gt; ActionDefinition a a
 (a -&gt; b) -&gt; ActionDefinition a a -&gt; ActionDefinition a b
 (forall a b.
  (a -&gt; b) -&gt; ActionDefinition a a -&gt; ActionDefinition a b)
@@ -811,7 +811,7 @@ $c&lt;$ :: forall a a b. a -&gt; ActionDefinition a b -&gt; ActionDefinition a a
 fmap :: (a -&gt; b) -&gt; ActionDefinition a a -&gt; ActionDefinition a b
 $cfmap :: forall a a b.
 (a -&gt; b) -&gt; ActionDefinition a a -&gt; ActionDefinition a b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007334"><span id="local-6989586621689007336"><span id="local-6989586621689007338"><span id="local-6989586621689007340"><span id="local-6989586621689007342"><span id="local-6989586621689007344"><span id="local-6989586621689007346"><span id="local-6989586621689007348"><span id="local-6989586621689007350"><span id="local-6989586621689007352"><span id="local-6989586621689007354"><span id="local-6989586621689007356"><span id="local-6989586621689007358"><span id="local-6989586621689007360"><span id="local-6989586621689007362"><span id="local-6989586621689007364"><span id="local-6989586621689007366"><span class="annot"><span class="annottext">ActionDefinition a a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009026"><span id="local-6989586621689009028"><span id="local-6989586621689009030"><span id="local-6989586621689009032"><span id="local-6989586621689009034"><span id="local-6989586621689009036"><span id="local-6989586621689009038"><span id="local-6989586621689009040"><span id="local-6989586621689009042"><span id="local-6989586621689009044"><span id="local-6989586621689009046"><span id="local-6989586621689009048"><span id="local-6989586621689009050"><span id="local-6989586621689009052"><span id="local-6989586621689009054"><span id="local-6989586621689009056"><span id="local-6989586621689009058"><span class="annot"><span class="annottext">ActionDefinition a a -&gt; Bool
 (a -&gt; m) -&gt; ActionDefinition a a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; ActionDefinition a a -&gt; b
 (forall m. Monoid m =&gt; ActionDefinition a m -&gt; m)
@@ -907,7 +907,7 @@ foldMap :: (a -&gt; m) -&gt; ActionDefinition a a -&gt; m
 $cfoldMap :: forall a m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionDefinition a a -&gt; m
 fold :: ActionDefinition a m -&gt; m
 $cfold :: forall a m. Monoid m =&gt; ActionDefinition a m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007324"><span id="local-6989586621689007326"><span id="local-6989586621689007328"><span id="local-6989586621689007330"><span class="annot"><span class="annottext">Functor (ActionDefinition a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689009016"><span id="local-6989586621689009018"><span id="local-6989586621689009020"><span id="local-6989586621689009022"><span class="annot"><span class="annottext">Functor (ActionDefinition a)
 Foldable (ActionDefinition a)
 Functor (ActionDefinition a)
 -&gt; Foldable (ActionDefinition a)
@@ -994,15 +994,15 @@ $cto :: forall a b x. Rep (ActionDefinition a b) x -&gt; ActionDefinition a b
 $cfrom :: forall a b x. ActionDefinition a b -&gt; Rep (ActionDefinition a b) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span id="local-6989586621689007320"><span id="local-6989586621689007321"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007318"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689007321"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689007320"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007321"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007320"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-177"></span><span id="local-6989586621689009012"><span id="local-6989586621689009013"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009010"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689009013"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689009012"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009013"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009012"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-178"></span><span>
-</span><span id="line-179"></span><span id="local-6989586621689007316"><span id="local-6989586621689007317"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007313"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007317"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007316"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007317"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007316"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-179"></span><span id="local-6989586621689009008"><span id="local-6989586621689009009"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689009005"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009009"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009008"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009009"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009008"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-180"></span><span>
-</span><span id="line-181"></span><span class="hs-special">$(</span><span id="local-6989586621689007311"><span id="local-6989586621689007312"><span id="adResponseTransform"><span id="adRequestTransform"><span id="adTimeout"><span id="adHandler"><span id="adHeaders"><span id="adForwardClientHeaders"><span id="adType"><span id="adOutputType"><span id="adArguments"><span id="local-6989586621689007774"><span id="local-6989586621689007775"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionDefinition</span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span class="hs-special">$(</span><span id="local-6989586621689009003"><span id="local-6989586621689009004"><span id="adResponseTransform"><span id="adRequestTransform"><span id="adTimeout"><span id="adHandler"><span id="adHeaders"><span id="adForwardClientHeaders"><span id="adType"><span id="adOutputType"><span id="adArguments"><span id="local-6989586621689009466"><span id="local-6989586621689009467"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionDefinition</span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-182"></span><span>
-</span><span id="line-183"></span><span id="local-6989586621689007309"><span id="local-6989586621689007310"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007306"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689007310"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689007309"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007310"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007309"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-184"></span><span>  </span><span id="local-6989586621689007305"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (ActionDefinition a b)
-</span><a href="#local-6989586621689007305"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-183"></span><span id="local-6989586621689009001"><span id="local-6989586621689009002"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008998"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689009002"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689009001"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009002"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689009001"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-184"></span><span>  </span><span id="local-6989586621689008997"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (ActionDefinition a b)
+</span><a href="#local-6989586621689008997"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (ActionDefinition a b))
 -&gt; Value
 -&gt; Parser (ActionDefinition a b)
@@ -1014,73 +1014,73 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser (ActionDefinition a b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689007303"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-185"></span><span>    </span><span id="local-6989586621689007302"><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689007302"><span class="hs-identifier hs-var">_adArguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [a])
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689008995"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-185"></span><span>    </span><span id="local-6989586621689008994"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689008994"><span class="hs-identifier hs-var">_adArguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [a])
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;arguments&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [a]) -&gt; [a] -&gt; Parser [a]
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-186"></span><span>    </span><span id="local-6989586621689007299"><span class="annot"><span class="annottext">GraphQLType
-</span><a href="#local-6989586621689007299"><span class="hs-identifier hs-var">_adOutputType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser GraphQLType
+</span><span id="line-186"></span><span>    </span><span id="local-6989586621689008991"><span class="annot"><span class="annottext">GraphQLType
+</span><a href="#local-6989586621689008991"><span class="hs-identifier hs-var">_adOutputType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser GraphQLType
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;output_type&quot;</span></span><span>
-</span><span id="line-187"></span><span>    </span><span id="local-6989586621689007297"><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621689007297"><span class="hs-identifier hs-var">_adHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [HeaderConf])
+</span><span id="line-187"></span><span>    </span><span id="local-6989586621689008989"><span class="annot"><span class="annottext">[HeaderConf]
+</span><a href="#local-6989586621689008989"><span class="hs-identifier hs-var">_adHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [HeaderConf])
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [HeaderConf]) -&gt; [HeaderConf] -&gt; Parser [HeaderConf]
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-188"></span><span>    </span><span id="local-6989586621689007296"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689007296"><span class="hs-identifier hs-var">_adForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
+</span><span id="line-188"></span><span>    </span><span id="local-6989586621689008988"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689008988"><span class="hs-identifier hs-var">_adForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;forward_client_headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool) -&gt; Bool -&gt; Parser Bool
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-189"></span><span>    </span><span id="local-6989586621689007295"><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621689007295"><span class="hs-identifier hs-var">_adHandler</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser b
+</span><span id="line-189"></span><span>    </span><span id="local-6989586621689008987"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621689008987"><span class="hs-identifier hs-var">_adHandler</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser b
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;handler&quot;</span></span><span>
-</span><span id="line-190"></span><span>    </span><span id="local-6989586621689007294"><span class="annot"><span class="annottext">Timeout
-</span><a href="#local-6989586621689007294"><span class="hs-identifier hs-var">_adTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Timeout)
+</span><span id="line-190"></span><span>    </span><span id="local-6989586621689008986"><span class="annot"><span class="annottext">Timeout
+</span><a href="#local-6989586621689008986"><span class="hs-identifier hs-var">_adTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Timeout)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;timeout&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Timeout) -&gt; Timeout -&gt; Parser Timeout
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">Timeout
 </span><a href="Hasura.RQL.Types.Common.html#defaultActionTimeoutSecs"><span class="hs-identifier hs-var">defaultActionTimeoutSecs</span></a></span><span>
-</span><span id="line-191"></span><span>    </span><span id="local-6989586621689007293"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689007293"><span class="hs-identifier hs-var">actionType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe String)
+</span><span id="line-191"></span><span>    </span><span id="local-6989586621689008985"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689008985"><span class="hs-identifier hs-var">actionType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe String)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String) -&gt; String -&gt; Parser String
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;mutation&quot;</span></span><span>
-</span><span id="line-192"></span><span>    </span><span id="local-6989586621689007292"><span class="annot"><span class="annottext">ActionType
-</span><a href="#local-6989586621689007292"><span class="hs-identifier hs-var">_adType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689007293"><span class="hs-identifier hs-var">actionType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-192"></span><span>    </span><span id="local-6989586621689008984"><span class="annot"><span class="annottext">ActionType
+</span><a href="#local-6989586621689008984"><span class="hs-identifier hs-var">_adType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689008985"><span class="hs-identifier hs-var">actionType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-193"></span><span>      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;mutation&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ActionMutationKind -&gt; ActionType
 </span><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-var">ActionMutation</span></a></span><span> </span><span class="annot"><span class="annottext">(ActionMutationKind -&gt; ActionType)
 -&gt; Parser ActionMutationKind -&gt; Parser ActionType
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe ActionMutationKind)
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe ActionMutationKind)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;kind&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe ActionMutationKind)
@@ -1093,8 +1093,8 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ActionType
 </span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span>
-</span><span id="line-195"></span><span>      </span><span id="local-6989586621689007290"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689007290"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ActionType
+</span><span id="line-195"></span><span>      </span><span id="local-6989586621689008982"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689008982"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser ActionType
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser ActionType) -&gt; String -&gt; Parser ActionType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1102,16 +1102,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;expected mutation or query, but found &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689007290"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-196"></span><span>    </span><span id="local-6989586621689007289"><span class="annot"><span class="annottext">Maybe RequestTransform
-</span><a href="#local-6989586621689007289"><span class="hs-identifier hs-var">_adRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe RequestTransform)
+</span><a href="#local-6989586621689008982"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-196"></span><span>    </span><span id="local-6989586621689008981"><span class="annot"><span class="annottext">Maybe RequestTransform
+</span><a href="#local-6989586621689008981"><span class="hs-identifier hs-var">_adRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe RequestTransform)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;request_transform&quot;</span></span><span>
-</span><span id="line-197"></span><span>    </span><span id="local-6989586621689007288"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689007288"><span class="hs-identifier hs-var">_adResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007303"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe MetadataResponseTransform)
+</span><span id="line-197"></span><span>    </span><span id="local-6989586621689008980"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
+</span><a href="#local-6989586621689008980"><span class="hs-identifier hs-var">_adResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe MetadataResponseTransform)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;response_transform&quot;</span></span><span>
@@ -1155,31 +1155,31 @@ _adHeaders :: [HeaderConf]
 _adType :: ActionType
 _adOutputType :: GraphQLType
 _adArguments :: [a]
-</span><a href="#local-6989586621689007288"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span></span></span><span>
+</span><a href="#local-6989586621689008980"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span></span></span><span>
 </span><span id="line-199"></span><span>
-</span><span id="line-200"></span><span id="local-6989586621689007286"><span id="local-6989586621689007287"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007279"><span id="local-6989586621689007281"><span id="local-6989586621689007283"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689007287"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689007286"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007287"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689007286"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-201"></span><span>  </span><span id="local-6989586621689007278"><span class="annot"><span class="annottext">toJSON :: ActionDefinition a b -&gt; Value
-</span><a href="#local-6989586621689007278"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span id="local-6989586621689007277"><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689007277"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span id="local-6989586621689007276"><span class="annot"><span class="annottext">GraphQLType
-</span><a href="#local-6989586621689007276"><span class="hs-identifier hs-var">outputType</span></a></span></span><span> </span><span id="local-6989586621689007275"><span class="annot"><span class="annottext">ActionType
-</span><a href="#local-6989586621689007275"><span class="hs-identifier hs-var">actionType</span></a></span></span><span> </span><span id="local-6989586621689007274"><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621689007274"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621689007273"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689007273"><span class="hs-identifier hs-var">forwardClientHeaders</span></a></span></span><span> </span><span id="local-6989586621689007272"><span class="annot"><span class="annottext">Timeout
-</span><a href="#local-6989586621689007272"><span class="hs-identifier hs-var">timeout</span></a></span></span><span> </span><span id="local-6989586621689007271"><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621689007271"><span class="hs-identifier hs-var">handler</span></a></span></span><span> </span><span id="local-6989586621689007270"><span class="annot"><span class="annottext">Maybe RequestTransform
-</span><a href="#local-6989586621689007270"><span class="hs-identifier hs-var">requestTransform</span></a></span></span><span> </span><span id="local-6989586621689007269"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689007269"><span class="hs-identifier hs-var">responseTransform</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-202"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689007268"><span class="annot"><span class="annottext">typeAndKind :: [Pair]
-</span><a href="#local-6989586621689007268"><span class="hs-identifier hs-var hs-var">typeAndKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ActionType
-</span><a href="#local-6989586621689007275"><span class="hs-identifier hs-var">actionType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-200"></span><span id="local-6989586621689008978"><span id="local-6989586621689008979"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008971"><span id="local-6989586621689008973"><span id="local-6989586621689008975"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689008979"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689008978"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689008979"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689008978"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621689008970"><span class="annot"><span class="annottext">toJSON :: ActionDefinition a b -&gt; Value
+</span><a href="#local-6989586621689008970"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span id="local-6989586621689008969"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689008969"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span id="local-6989586621689008968"><span class="annot"><span class="annottext">GraphQLType
+</span><a href="#local-6989586621689008968"><span class="hs-identifier hs-var">outputType</span></a></span></span><span> </span><span id="local-6989586621689008967"><span class="annot"><span class="annottext">ActionType
+</span><a href="#local-6989586621689008967"><span class="hs-identifier hs-var">actionType</span></a></span></span><span> </span><span id="local-6989586621689008966"><span class="annot"><span class="annottext">[HeaderConf]
+</span><a href="#local-6989586621689008966"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span id="local-6989586621689008965"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689008965"><span class="hs-identifier hs-var">forwardClientHeaders</span></a></span></span><span> </span><span id="local-6989586621689008964"><span class="annot"><span class="annottext">Timeout
+</span><a href="#local-6989586621689008964"><span class="hs-identifier hs-var">timeout</span></a></span></span><span> </span><span id="local-6989586621689008963"><span class="annot"><span class="annottext">b
+</span><a href="#local-6989586621689008963"><span class="hs-identifier hs-var">handler</span></a></span></span><span> </span><span id="local-6989586621689008962"><span class="annot"><span class="annottext">Maybe RequestTransform
+</span><a href="#local-6989586621689008962"><span class="hs-identifier hs-var">requestTransform</span></a></span></span><span> </span><span id="local-6989586621689008961"><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
+</span><a href="#local-6989586621689008961"><span class="hs-identifier hs-var">responseTransform</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-202"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689008960"><span class="annot"><span class="annottext">typeAndKind :: [Pair]
+</span><a href="#local-6989586621689008960"><span class="hs-identifier hs-var hs-var">typeAndKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ActionType
+</span><a href="#local-6989586621689008967"><span class="hs-identifier hs-var">actionType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-203"></span><span>          </span><span class="annot"><span class="annottext">ActionType
 </span><a href="Hasura.RQL.Types.Action.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-204"></span><span>          </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span id="local-6989586621689007266"><span class="annot"><span class="annottext">ActionMutationKind
-</span><a href="#local-6989586621689007266"><span class="hs-identifier hs-var">kind</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-204"></span><span>          </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span id="local-6989586621689008958"><span class="annot"><span class="annottext">ActionMutationKind
+</span><a href="#local-6989586621689008958"><span class="hs-identifier hs-var">kind</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-205"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
@@ -1189,7 +1189,7 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-string">&quot;kind&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ActionMutationKind -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">ActionMutationKind
-</span><a href="#local-6989586621689007266"><span class="hs-identifier hs-var">kind</span></a></span><span>
+</span><a href="#local-6989586621689008958"><span class="hs-identifier hs-var">kind</span></a></span><span>
 </span><span id="line-207"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-208"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">([Pair] -&gt; Value) -&gt; [Pair] -&gt; Value
@@ -1199,32 +1199,32 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;arguments&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [a] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">[a]
-</span><a href="#local-6989586621689007277"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689008969"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-210"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;output_type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; GraphQLType -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">GraphQLType
-</span><a href="#local-6989586621689007276"><span class="hs-identifier hs-var">outputType</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689008968"><span class="hs-identifier hs-var">outputType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-211"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [HeaderConf] -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
-</span><a href="#local-6989586621689007274"><span class="hs-identifier hs-var">headers</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689008966"><span class="hs-identifier hs-var">headers</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-212"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;forward_client_headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689007273"><span class="hs-identifier hs-var">forwardClientHeaders</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689008965"><span class="hs-identifier hs-var">forwardClientHeaders</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-213"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;handler&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; b -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">b
-</span><a href="#local-6989586621689007271"><span class="hs-identifier hs-var">handler</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689008963"><span class="hs-identifier hs-var">handler</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-214"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;timeout&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Timeout -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Timeout
-</span><a href="#local-6989586621689007272"><span class="hs-identifier hs-var">timeout</span></a></span><span>
+</span><a href="#local-6989586621689008964"><span class="hs-identifier hs-var">timeout</span></a></span><span>
 </span><span id="line-215"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-216"></span><span>            </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -1237,7 +1237,7 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(RequestTransform -&gt; Pair) -&gt; Maybe RequestTransform -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe RequestTransform
-</span><a href="#local-6989586621689007270"><span class="hs-identifier hs-var">requestTransform</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689008962"><span class="hs-identifier hs-var">requestTransform</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-218"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;response_transform&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; MetadataResponseTransform -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
@@ -1245,12 +1245,12 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
 -&gt; Maybe MetadataResponseTransform -&gt; Maybe Pair
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-</span><a href="#local-6989586621689007269"><span class="hs-identifier hs-var">responseTransform</span></a></span><span>
+</span><a href="#local-6989586621689008961"><span class="hs-identifier hs-var">responseTransform</span></a></span><span>
 </span><span id="line-219"></span><span>              </span><span class="hs-special">]</span><span>
 </span><span id="line-220"></span><span>            </span><span class="annot"><span class="annottext">[Pair] -&gt; [Pair] -&gt; [Pair]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Pair]
-</span><a href="#local-6989586621689007268"><span class="hs-identifier hs-var">typeAndKind</span></a></span></span></span><span>
+</span><a href="#local-6989586621689008960"><span class="hs-identifier hs-var">typeAndKind</span></a></span></span></span><span>
 </span><span id="line-221"></span><span>
 </span><span id="line-222"></span><span class="hs-keyword">type</span><span> </span><span id="ResolvedActionDefinition"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ResolvedActionDefinition"><span class="hs-identifier hs-var">ResolvedActionDefinition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-223"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-type">ArgumentDefinition</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#NonObjectCustomType"><span class="hs-identifier hs-type">NonObjectCustomType</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#EnvRecord"><span class="hs-identifier hs-type">EnvRecord</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#ResolvedWebhook"><span class="hs-identifier hs-type">ResolvedWebhook</span></a></span><span class="hs-special">)</span><span>
@@ -1259,7 +1259,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-226"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_apiRole"><span class="annot"><span class="annottext">ActionPermissionInfo -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Action.html#_apiRole"><span class="hs-identifier hs-var hs-var">_apiRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
 </span><span id="line-227"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-228"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007254"><span id="local-6989586621689007256"><span id="local-6989586621689007258"><span class="annot"><span class="annottext">Int -&gt; ActionPermissionInfo -&gt; ShowS
+</span><span id="line-228"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008946"><span id="local-6989586621689008948"><span id="local-6989586621689008950"><span class="annot"><span class="annottext">Int -&gt; ActionPermissionInfo -&gt; ShowS
 [ActionPermissionInfo] -&gt; ShowS
 ActionPermissionInfo -&gt; String
 (Int -&gt; ActionPermissionInfo -&gt; ShowS)
@@ -1274,7 +1274,7 @@ show :: ActionPermissionInfo -&gt; String
 $cshow :: ActionPermissionInfo -&gt; String
 showsPrec :: Int -&gt; ActionPermissionInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionPermissionInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007250"><span id="local-6989586621689007252"><span class="annot"><span class="annottext">ActionPermissionInfo -&gt; ActionPermissionInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008942"><span id="local-6989586621689008944"><span class="annot"><span class="annottext">ActionPermissionInfo -&gt; ActionPermissionInfo -&gt; Bool
 (ActionPermissionInfo -&gt; ActionPermissionInfo -&gt; Bool)
 -&gt; (ActionPermissionInfo -&gt; ActionPermissionInfo -&gt; Bool)
 -&gt; Eq ActionPermissionInfo
@@ -1285,11 +1285,11 @@ $c/= :: ActionPermissionInfo -&gt; ActionPermissionInfo -&gt; Bool
 $c== :: ActionPermissionInfo -&gt; ActionPermissionInfo -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-229"></span><span>
-</span><span id="line-230"></span><span class="hs-special">$(</span><span id="local-6989586621689007242"><span id="local-6989586621689007244"><span id="local-6989586621689007246"><span id="local-6989586621689007248"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionPermissionInfo</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-230"></span><span class="hs-special">$(</span><span id="local-6989586621689008934"><span id="local-6989586621689008936"><span id="local-6989586621689008938"><span id="local-6989586621689008940"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionPermissionInfo</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-231"></span><span>
 </span><span id="line-232"></span><span class="hs-keyword">type</span><span> </span><span id="ActionPermissionMap"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMap"><span class="hs-identifier hs-var">ActionPermissionMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionInfo"><span class="hs-identifier hs-type">ActionPermissionInfo</span></a></span><span>
 </span><span id="line-233"></span><span>
-</span><span id="line-234"></span><span id="local-6989586621689007239"><span id="local-6989586621689007240"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-var">ActionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-var">ActionInfo</span></a></span></span><span>
+</span><span id="line-234"></span><span id="local-6989586621689008931"><span id="local-6989586621689008932"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-var">ActionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-var">ActionInfo</span></a></span></span><span>
 </span><span id="line-235"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aiName"><span class="annot"><span class="annottext">ActionInfo -&gt; ActionName
 </span><a href="Hasura.RQL.Types.Action.html#_aiName"><span class="hs-identifier hs-var hs-var">_aiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">ActionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-236"></span><span>    </span><span id="_aiOutputType"><span class="annot"><span class="annottext">ActionInfo -&gt; (GType, AnnotatedOutputType)
@@ -1313,9 +1313,9 @@ $cto :: forall x. Rep ActionInfo x -&gt; ActionInfo
 $cfrom :: forall x. ActionInfo -&gt; Rep ActionInfo x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-243"></span><span>
-</span><span id="line-244"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007223"><span id="local-6989586621689007225"><span id="local-6989586621689007227"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-245"></span><span>  </span><span id="local-6989586621689007222"><span class="annot"><span class="annottext">toJSON :: ActionInfo -&gt; Value
-</span><a href="#local-6989586621689007222"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ActionInfo -&gt; Value
+</span><span id="line-244"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008915"><span id="local-6989586621689008917"><span id="local-6989586621689008919"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionInfo"><span class="hs-identifier hs-type">ActionInfo</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-245"></span><span>  </span><span id="local-6989586621689008914"><span class="annot"><span class="annottext">toJSON :: ActionInfo -&gt; Value
+</span><a href="#local-6989586621689008914"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ActionInfo -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -1328,13 +1328,13 @@ Options -&gt; a -&gt; Value
 </span><span id="line-250"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionDefinition"><span class="hs-identifier hs-type">ActionDefinition</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ArgumentDefinition"><span class="hs-identifier hs-type">ArgumentDefinition</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#GraphQLType"><span class="hs-identifier hs-type">GraphQLType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier hs-type">InputWebhook</span></a></span><span>
 </span><span id="line-251"></span><span>
 </span><span id="line-252"></span><span class="hs-comment">-- representation of action permission metadata</span><span>
-</span><span id="line-253"></span><span id="local-6989586621689007218"><span id="local-6989586621689007219"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionPermissionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-var">ActionPermissionMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionPermissionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-var">ActionPermissionMetadata</span></a></span></span><span>
+</span><span id="line-253"></span><span id="local-6989586621689008910"><span id="local-6989586621689008911"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionPermissionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-var">ActionPermissionMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionPermissionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-var">ActionPermissionMetadata</span></a></span></span><span>
 </span><span id="line-254"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_apmRole"><span class="annot"><span class="annottext">ActionPermissionMetadata -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Action.html#_apmRole"><span class="hs-identifier hs-var hs-var">_apmRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-255"></span><span>    </span><span id="_apmComment"><span class="annot"><span class="annottext">ActionPermissionMetadata -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.Action.html#_apmComment"><span class="hs-identifier hs-var hs-var">_apmComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-256"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-257"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007209"><span id="local-6989586621689007211"><span id="local-6989586621689007213"><span class="annot"><span class="annottext">Int -&gt; ActionPermissionMetadata -&gt; ShowS
+</span><span id="line-257"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008901"><span id="local-6989586621689008903"><span id="local-6989586621689008905"><span class="annot"><span class="annottext">Int -&gt; ActionPermissionMetadata -&gt; ShowS
 [ActionPermissionMetadata] -&gt; ShowS
 ActionPermissionMetadata -&gt; String
 (Int -&gt; ActionPermissionMetadata -&gt; ShowS)
@@ -1349,7 +1349,7 @@ show :: ActionPermissionMetadata -&gt; String
 $cshow :: ActionPermissionMetadata -&gt; String
 showsPrec :: Int -&gt; ActionPermissionMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionPermissionMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007205"><span id="local-6989586621689007207"><span class="annot"><span class="annottext">ActionPermissionMetadata -&gt; ActionPermissionMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008897"><span id="local-6989586621689008899"><span class="annot"><span class="annottext">ActionPermissionMetadata -&gt; ActionPermissionMetadata -&gt; Bool
 (ActionPermissionMetadata -&gt; ActionPermissionMetadata -&gt; Bool)
 -&gt; (ActionPermissionMetadata -&gt; ActionPermissionMetadata -&gt; Bool)
 -&gt; Eq ActionPermissionMetadata
@@ -1375,17 +1375,17 @@ $cfrom :: forall x.
 ActionPermissionMetadata -&gt; Rep ActionPermissionMetadata x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-258"></span><span>
-</span><span id="line-259"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007201"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-type">ActionPermissionMetadata</span></a></span></span><span>
+</span><span id="line-259"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008893"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-type">ActionPermissionMetadata</span></a></span></span><span>
 </span><span id="line-260"></span><span>
-</span><span id="line-261"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007198"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-type">ActionPermissionMetadata</span></a></span></span><span>
+</span><span id="line-261"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008890"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-type">ActionPermissionMetadata</span></a></span></span><span>
 </span><span id="line-262"></span><span>
-</span><span id="line-263"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689007186"><span id="local-6989586621689007188"><span id="local-6989586621689007190"><span id="local-6989586621689007192"><span id="local-6989586621689007194"><span id="local-6989586621689007196"><span class="hs-identifier">J.deriveJSON</span><span>
+</span><span id="line-263"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689008878"><span id="local-6989586621689008880"><span id="local-6989586621689008882"><span id="local-6989586621689008884"><span id="local-6989586621689008886"><span id="local-6989586621689008888"><span class="hs-identifier">J.deriveJSON</span><span>
 </span><span id="line-264"></span><span>     </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span>
 </span><span id="line-265"></span><span>     </span><span class="hs-special">''</span><span class="hs-identifier">ActionPermissionMetadata</span></span></span></span></span></span></span><span>
 </span><span id="line-266"></span><span> </span><span class="hs-special">)</span><span>
 </span><span id="line-267"></span><span>
 </span><span id="line-268"></span><span class="hs-comment">-- representation of action metadata</span><span>
-</span><span id="line-269"></span><span id="local-6989586621689007184"><span id="local-6989586621689007185"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-var">ActionMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-var">ActionMetadata</span></a></span></span><span>
+</span><span id="line-269"></span><span id="local-6989586621689008876"><span id="local-6989586621689008877"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-var">ActionMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionMetadata"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-var">ActionMetadata</span></a></span></span><span>
 </span><span id="line-270"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_amName"><span class="annot"><span class="annottext">ActionMetadata -&gt; ActionName
 </span><a href="Hasura.RQL.Types.Action.html#_amName"><span class="hs-identifier hs-var hs-var">_amName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">ActionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-271"></span><span>    </span><span id="_amComment"><span class="annot"><span class="annottext">ActionMetadata -&gt; Maybe Text
@@ -1395,7 +1395,7 @@ ActionPermissionMetadata -&gt; Rep ActionPermissionMetadata x
 </span><span id="line-273"></span><span>    </span><span id="_amPermissions"><span class="annot"><span class="annottext">ActionMetadata -&gt; [ActionPermissionMetadata]
 </span><a href="Hasura.RQL.Types.Action.html#_amPermissions"><span class="hs-identifier hs-var hs-var">_amPermissions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionPermissionMetadata"><span class="hs-identifier hs-type">ActionPermissionMetadata</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-274"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-275"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007173"><span id="local-6989586621689007175"><span id="local-6989586621689007177"><span class="annot"><span class="annottext">Int -&gt; ActionMetadata -&gt; ShowS
+</span><span id="line-275"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008865"><span id="local-6989586621689008867"><span id="local-6989586621689008869"><span class="annot"><span class="annottext">Int -&gt; ActionMetadata -&gt; ShowS
 [ActionMetadata] -&gt; ShowS
 ActionMetadata -&gt; String
 (Int -&gt; ActionMetadata -&gt; ShowS)
@@ -1410,7 +1410,7 @@ show :: ActionMetadata -&gt; String
 $cshow :: ActionMetadata -&gt; String
 showsPrec :: Int -&gt; ActionMetadata -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionMetadata -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007169"><span id="local-6989586621689007171"><span class="annot"><span class="annottext">ActionMetadata -&gt; ActionMetadata -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008861"><span id="local-6989586621689008863"><span class="annot"><span class="annottext">ActionMetadata -&gt; ActionMetadata -&gt; Bool
 (ActionMetadata -&gt; ActionMetadata -&gt; Bool)
 -&gt; (ActionMetadata -&gt; ActionMetadata -&gt; Bool) -&gt; Eq ActionMetadata
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1429,16 +1429,16 @@ $cto :: forall x. Rep ActionMetadata x -&gt; ActionMetadata
 $cfrom :: forall x. ActionMetadata -&gt; Rep ActionMetadata x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-276"></span><span>
-</span><span id="line-277"></span><span class="hs-special">$(</span><span id="local-6989586621689007159"><span id="local-6989586621689007161"><span id="local-6989586621689007163"><span id="local-6989586621689007165"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-277"></span><span class="hs-special">$(</span><span id="local-6989586621689008851"><span id="local-6989586621689008853"><span id="local-6989586621689008855"><span id="local-6989586621689008857"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-278"></span><span class="hs-special">$(</span><span id="amPermissions"><span id="amDefinition"><span id="amComment"><span id="amName"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionMetadata</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-279"></span><span>
-</span><span id="line-280"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007157"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-type">ActionMetadata</span></a></span></span><span>
+</span><span id="line-280"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008849"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-type">ActionMetadata</span></a></span></span><span>
 </span><span id="line-281"></span><span>
-</span><span id="line-282"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007154"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-type">ActionMetadata</span></a></span></span><span>
+</span><span id="line-282"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008846"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-type">ActionMetadata</span></a></span></span><span>
 </span><span id="line-283"></span><span>
-</span><span id="line-284"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689007151"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-type">ActionMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-285"></span><span>  </span><span id="local-6989586621689007150"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ActionMetadata
-</span><a href="#local-6989586621689007150"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-284"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689008843"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionMetadata"><span class="hs-identifier hs-type">ActionMetadata</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-285"></span><span>  </span><span id="local-6989586621689008842"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ActionMetadata
+</span><a href="#local-6989586621689008842"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser ActionMetadata)
 -&gt; Value
 -&gt; Parser ActionMetadata
@@ -1450,8 +1450,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser ActionMetadata
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689007149"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007149"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689008841"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689008841"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-286"></span><span>    </span><span class="annot"><span class="annottext">ActionName
 -&gt; Maybe Text
 -&gt; ActionDefinitionInput
@@ -1471,7 +1471,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       -&gt; ActionMetadata)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007149"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ActionName
+</span><a href="#local-6989586621689008841"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ActionName
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
@@ -1486,7 +1486,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
       -&gt; [ActionPermissionMetadata] -&gt; ActionMetadata)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007149"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Text)
+</span><a href="#local-6989586621689008841"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe Text)
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;comment&quot;</span></span><span>
@@ -1497,7 +1497,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 -&gt; Parser ([ActionPermissionMetadata] -&gt; ActionMetadata)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007149"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ActionDefinitionInput
+</span><a href="#local-6989586621689008841"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser ActionDefinitionInput
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;definition&quot;</span></span><span>
@@ -1505,7 +1505,7 @@ forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser a
 -&gt; Parser [ActionPermissionMetadata] -&gt; Parser ActionMetadata
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689007149"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [ActionPermissionMetadata])
+</span><a href="#local-6989586621689008841"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Text -&gt; Parser (Maybe [ActionPermissionMetadata])
 forall a. FromJSON a =&gt; Object -&gt; Text -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;permissions&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [ActionPermissionMetadata])
@@ -1526,7 +1526,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span id="line-299"></span><span>
 </span><span id="line-300"></span><span class="hs-keyword">newtype</span><span> </span><span id="ActionId"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionId"><span class="hs-identifier hs-var">ActionId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionId"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionId"><span class="hs-identifier hs-var">ActionId</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unActionId"><span class="annot"><span class="annottext">ActionId -&gt; UUID
 </span><a href="Hasura.RQL.Types.Action.html#unActionId"><span class="hs-identifier hs-var hs-var">unActionId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">UUID.UUID</span></span><span class="hs-special">}</span><span>
-</span><span id="line-301"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007137"><span id="local-6989586621689007139"><span id="local-6989586621689007141"><span class="annot"><span class="annottext">Int -&gt; ActionId -&gt; ShowS
+</span><span id="line-301"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008829"><span id="local-6989586621689008831"><span id="local-6989586621689008833"><span class="annot"><span class="annottext">Int -&gt; ActionId -&gt; ShowS
 [ActionId] -&gt; ShowS
 ActionId -&gt; String
 (Int -&gt; ActionId -&gt; ShowS)
@@ -1539,7 +1539,7 @@ show :: ActionId -&gt; String
 $cshow :: ActionId -&gt; String
 showsPrec :: Int -&gt; ActionId -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionId -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007133"><span id="local-6989586621689007135"><span class="annot"><span class="annottext">ActionId -&gt; ActionId -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008825"><span id="local-6989586621689008827"><span class="annot"><span class="annottext">ActionId -&gt; ActionId -&gt; Bool
 (ActionId -&gt; ActionId -&gt; Bool)
 -&gt; (ActionId -&gt; ActionId -&gt; Bool) -&gt; Eq ActionId
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1547,17 +1547,17 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ActionId -&gt; ActionId -&gt; Bool
 == :: ActionId -&gt; ActionId -&gt; Bool
 $c== :: ActionId -&gt; ActionId -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007131"><span class="annot"><span class="annottext">ActionId -&gt; PrepArg
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008823"><span class="annot"><span class="annottext">ActionId -&gt; PrepArg
 (ActionId -&gt; PrepArg) -&gt; ToPrepArg ActionId
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 toPrepVal :: ActionId -&gt; PrepArg
 $ctoPrepVal :: ActionId -&gt; PrepArg
-</span><a href="#local-6989586621689007131"><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007129"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text ActionId
+</span><a href="#local-6989586621689008823"><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008821"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text ActionId
 (Maybe ByteString -&gt; Either Text ActionId) -&gt; FromCol ActionId
 forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
 fromCol :: Maybe ByteString -&gt; Either Text ActionId
 $cfromCol :: Maybe ByteString -&gt; Either Text ActionId
-</span><a href="#local-6989586621689007129"><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.FromCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007121"><span id="local-6989586621689007123"><span id="local-6989586621689007125"><span id="local-6989586621689007127"><span class="annot"><span class="annottext">[ActionId] -&gt; Encoding
+</span><a href="#local-6989586621689008821"><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.FromCol</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008813"><span id="local-6989586621689008815"><span id="local-6989586621689008817"><span id="local-6989586621689008819"><span class="annot"><span class="annottext">[ActionId] -&gt; Encoding
 [ActionId] -&gt; Value
 ActionId -&gt; Encoding
 ActionId -&gt; Value
@@ -1580,7 +1580,7 @@ toEncoding :: ActionId -&gt; Encoding
 $ctoEncoding :: ActionId -&gt; Encoding
 toJSON :: ActionId -&gt; Value
 $ctoJSON :: ActionId -&gt; Value
-</span><a href="#local-6989586621689007121"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007117"><span id="local-6989586621689007119"><span class="annot"><span class="annottext">Value -&gt; Parser [ActionId]
+</span><a href="#local-6989586621689008813"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008809"><span id="local-6989586621689008811"><span class="annot"><span class="annottext">Value -&gt; Parser [ActionId]
 Value -&gt; Parser ActionId
 (Value -&gt; Parser ActionId)
 -&gt; (Value -&gt; Parser [ActionId]) -&gt; FromJSON ActionId
@@ -1590,7 +1590,7 @@ parseJSONList :: Value -&gt; Parser [ActionId]
 $cparseJSONList :: Value -&gt; Parser [ActionId]
 parseJSON :: Value -&gt; Parser ActionId
 $cparseJSON :: Value -&gt; Parser ActionId
-</span><a href="#local-6989586621689007117"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007113"><span id="local-6989586621689007115"><span class="annot"><span class="annottext">Int -&gt; ActionId -&gt; Int
+</span><a href="#local-6989586621689008809"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008805"><span id="local-6989586621689008807"><span class="annot"><span class="annottext">Int -&gt; ActionId -&gt; Int
 ActionId -&gt; Int
 (Int -&gt; ActionId -&gt; Int) -&gt; (ActionId -&gt; Int) -&gt; Hashable ActionId
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -1598,7 +1598,7 @@ hash :: ActionId -&gt; Int
 $chash :: ActionId -&gt; Int
 hashWithSalt :: Int -&gt; ActionId -&gt; Int
 $chashWithSalt :: Int -&gt; ActionId -&gt; Int
-</span><a href="#local-6989586621689007113"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689008805"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-302"></span><span>
 </span><span id="line-303"></span><span class="annot"><a href="Hasura.RQL.Types.Action.html#actionIdToText"><span class="hs-identifier hs-type">actionIdToText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionId"><span class="hs-identifier hs-type">ActionId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-304"></span><span id="actionIdToText"><span class="annot"><span class="annottext">actionIdToText :: ActionId -&gt; Text
@@ -1620,7 +1620,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-311"></span><span>    </span><span id="_aliInputPayload"><span class="annot"><span class="annottext">ActionLogItem -&gt; Value
 </span><a href="Hasura.RQL.Types.Action.html#_aliInputPayload"><span class="hs-identifier hs-var hs-var">_aliInputPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-312"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-313"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007099"><span id="local-6989586621689007101"><span id="local-6989586621689007103"><span class="annot"><span class="annottext">Int -&gt; ActionLogItem -&gt; ShowS
+</span><span id="line-313"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008791"><span id="local-6989586621689008793"><span id="local-6989586621689008795"><span class="annot"><span class="annottext">Int -&gt; ActionLogItem -&gt; ShowS
 [ActionLogItem] -&gt; ShowS
 ActionLogItem -&gt; String
 (Int -&gt; ActionLogItem -&gt; ShowS)
@@ -1635,7 +1635,7 @@ show :: ActionLogItem -&gt; String
 $cshow :: ActionLogItem -&gt; String
 showsPrec :: Int -&gt; ActionLogItem -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionLogItem -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007095"><span id="local-6989586621689007097"><span class="annot"><span class="annottext">ActionLogItem -&gt; ActionLogItem -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008787"><span id="local-6989586621689008789"><span class="annot"><span class="annottext">ActionLogItem -&gt; ActionLogItem -&gt; Bool
 (ActionLogItem -&gt; ActionLogItem -&gt; Bool)
 -&gt; (ActionLogItem -&gt; ActionLogItem -&gt; Bool) -&gt; Eq ActionLogItem
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1657,7 +1657,7 @@ $c== :: ActionLogItem -&gt; ActionLogItem -&gt; Bool
 </span><span id="line-320"></span><span>    </span><span id="_alrSessionVariables"><span class="annot"><span class="annottext">ActionLogResponse -&gt; SessionVariables
 </span><a href="Hasura.RQL.Types.Action.html#_alrSessionVariables"><span class="hs-identifier hs-var hs-var">_alrSessionVariables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span>
 </span><span id="line-321"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-322"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007083"><span id="local-6989586621689007085"><span id="local-6989586621689007087"><span class="annot"><span class="annottext">Int -&gt; ActionLogResponse -&gt; ShowS
+</span><span id="line-322"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008775"><span id="local-6989586621689008777"><span id="local-6989586621689008779"><span class="annot"><span class="annottext">Int -&gt; ActionLogResponse -&gt; ShowS
 [ActionLogResponse] -&gt; ShowS
 ActionLogResponse -&gt; String
 (Int -&gt; ActionLogResponse -&gt; ShowS)
@@ -1672,7 +1672,7 @@ show :: ActionLogResponse -&gt; String
 $cshow :: ActionLogResponse -&gt; String
 showsPrec :: Int -&gt; ActionLogResponse -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionLogResponse -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007079"><span id="local-6989586621689007081"><span class="annot"><span class="annottext">ActionLogResponse -&gt; ActionLogResponse -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008771"><span id="local-6989586621689008773"><span class="annot"><span class="annottext">ActionLogResponse -&gt; ActionLogResponse -&gt; Bool
 (ActionLogResponse -&gt; ActionLogResponse -&gt; Bool)
 -&gt; (ActionLogResponse -&gt; ActionLogResponse -&gt; Bool)
 -&gt; Eq ActionLogResponse
@@ -1683,7 +1683,7 @@ $c/= :: ActionLogResponse -&gt; ActionLogResponse -&gt; Bool
 $c== :: ActionLogResponse -&gt; ActionLogResponse -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-323"></span><span>
-</span><span id="line-324"></span><span class="hs-special">$(</span><span id="local-6989586621689007067"><span id="local-6989586621689007069"><span id="local-6989586621689007071"><span id="local-6989586621689007073"><span id="local-6989586621689007075"><span id="local-6989586621689007077"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionLogResponse</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-324"></span><span class="hs-special">$(</span><span id="local-6989586621689008759"><span id="local-6989586621689008761"><span id="local-6989586621689008763"><span id="local-6989586621689008765"><span id="local-6989586621689008767"><span id="local-6989586621689008769"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionLogResponse</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-325"></span><span>
 </span><span id="line-326"></span><span class="hs-keyword">type</span><span> </span><span id="ActionLogResponseMap"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionLogResponseMap"><span class="hs-identifier hs-var">ActionLogResponseMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionId"><span class="hs-identifier hs-type">ActionId</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionLogResponse"><span class="hs-identifier hs-type">ActionLogResponse</span></a></span><span>
 </span><span id="line-327"></span><span>
@@ -1691,13 +1691,13 @@ $c== :: ActionLogResponse -&gt; ActionLogResponse -&gt; Bool
 </span><span id="line-329"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AASCompleted"><span class="annot"><a href="Hasura.RQL.Types.Action.html#AASCompleted"><span class="hs-identifier hs-var">AASCompleted</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-330"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AASError"><span class="annot"><a href="Hasura.RQL.Types.Action.html#AASError"><span class="hs-identifier hs-var">AASError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span>
 </span><span id="line-331"></span><span>
-</span><span id="line-332"></span><span id="local-6989586621689007062"><span id="local-6989586621689007063"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionsInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionsInfo"><span class="hs-identifier hs-var">ActionsInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionsInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionsInfo"><span class="hs-identifier hs-var">ActionsInfo</span></a></span></span><span>
+</span><span id="line-332"></span><span id="local-6989586621689008754"><span id="local-6989586621689008755"></span></span><span class="hs-keyword">data</span><span> </span><span id="ActionsInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionsInfo"><span class="hs-identifier hs-var">ActionsInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionsInfo"><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionsInfo"><span class="hs-identifier hs-var">ActionsInfo</span></a></span></span><span>
 </span><span id="line-333"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_asiName"><span class="annot"><span class="annottext">ActionsInfo -&gt; ActionName
 </span><a href="Hasura.RQL.Types.Action.html#_asiName"><span class="hs-identifier hs-var hs-var">_asiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">ActionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-334"></span><span>    </span><span id="_asiForwardClientHeaders"><span class="annot"><span class="annottext">ActionsInfo -&gt; Bool
 </span><a href="Hasura.RQL.Types.Action.html#_asiForwardClientHeaders"><span class="hs-identifier hs-var hs-var">_asiForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-335"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-336"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007053"><span id="local-6989586621689007055"><span id="local-6989586621689007057"><span class="annot"><span class="annottext">Int -&gt; ActionsInfo -&gt; ShowS
+</span><span id="line-336"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008745"><span id="local-6989586621689008747"><span id="local-6989586621689008749"><span class="annot"><span class="annottext">Int -&gt; ActionsInfo -&gt; ShowS
 [ActionsInfo] -&gt; ShowS
 ActionsInfo -&gt; String
 (Int -&gt; ActionsInfo -&gt; ShowS)
@@ -1712,7 +1712,7 @@ show :: ActionsInfo -&gt; String
 $cshow :: ActionsInfo -&gt; String
 showsPrec :: Int -&gt; ActionsInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; ActionsInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007049"><span id="local-6989586621689007051"><span class="annot"><span class="annottext">ActionsInfo -&gt; ActionsInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008741"><span id="local-6989586621689008743"><span class="annot"><span class="annottext">ActionsInfo -&gt; ActionsInfo -&gt; Bool
 (ActionsInfo -&gt; ActionsInfo -&gt; Bool)
 -&gt; (ActionsInfo -&gt; ActionsInfo -&gt; Bool) -&gt; Eq ActionsInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1736,7 +1736,7 @@ $cfrom :: forall x. ActionsInfo -&gt; Rep ActionsInfo x
 </span><span id="line-340"></span><span class="hs-comment">-- This type exists only to use the Postgres array encoding.</span><span>
 </span><span id="line-341"></span><span class="hs-keyword">newtype</span><span> </span><span id="LockedActionIdArray"><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionIdArray"><span class="hs-identifier hs-var">LockedActionIdArray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="LockedActionIdArray"><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionIdArray"><span class="hs-identifier hs-var">LockedActionIdArray</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unCohortIdArray"><span class="annot"><span class="annottext">LockedActionIdArray -&gt; [LockedActionEventId]
 </span><a href="Hasura.RQL.Types.Action.html#unCohortIdArray"><span class="hs-identifier hs-var hs-var">unCohortIdArray</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionEventId"><span class="hs-identifier hs-type">LockedActionEventId</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-342"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689007039"><span id="local-6989586621689007041"><span id="local-6989586621689007043"><span class="annot"><span class="annottext">Int -&gt; LockedActionIdArray -&gt; ShowS
+</span><span id="line-342"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689008731"><span id="local-6989586621689008733"><span id="local-6989586621689008735"><span class="annot"><span class="annottext">Int -&gt; LockedActionIdArray -&gt; ShowS
 [LockedActionIdArray] -&gt; ShowS
 LockedActionIdArray -&gt; String
 (Int -&gt; LockedActionIdArray -&gt; ShowS)
@@ -1751,7 +1751,7 @@ show :: LockedActionIdArray -&gt; String
 $cshow :: LockedActionIdArray -&gt; String
 showsPrec :: Int -&gt; LockedActionIdArray -&gt; ShowS
 $cshowsPrec :: Int -&gt; LockedActionIdArray -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689007035"><span id="local-6989586621689007037"><span class="annot"><span class="annottext">LockedActionIdArray -&gt; LockedActionIdArray -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689008727"><span id="local-6989586621689008729"><span class="annot"><span class="annottext">LockedActionIdArray -&gt; LockedActionIdArray -&gt; Bool
 (LockedActionIdArray -&gt; LockedActionIdArray -&gt; Bool)
 -&gt; (LockedActionIdArray -&gt; LockedActionIdArray -&gt; Bool)
 -&gt; Eq LockedActionIdArray
@@ -1763,14 +1763,14 @@ $c== :: LockedActionIdArray -&gt; LockedActionIdArray -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-343"></span><span>
 </span><span id="line-344"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.ToPrepArg</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionIdArray"><span class="hs-identifier hs-type">LockedActionIdArray</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-345"></span><span>  </span><span id="local-6989586621689007033"><span class="annot"><span class="annottext">toPrepVal :: LockedActionIdArray -&gt; PrepArg
-</span><a href="#local-6989586621689007033"><span class="hs-identifier hs-var hs-var hs-var hs-var">toPrepVal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionIdArray"><span class="hs-identifier hs-type">LockedActionIdArray</span></a></span><span> </span><span id="local-6989586621689007032"><span class="annot"><span class="annottext">[LockedActionEventId]
-</span><a href="#local-6989586621689007032"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-345"></span><span>  </span><span id="local-6989586621689008725"><span class="annot"><span class="annottext">toPrepVal :: LockedActionIdArray -&gt; PrepArg
+</span><a href="#local-6989586621689008725"><span class="hs-identifier hs-var hs-var hs-var hs-var">toPrepVal</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#LockedActionIdArray"><span class="hs-identifier hs-type">LockedActionIdArray</span></a></span><span> </span><span id="local-6989586621689008724"><span class="annot"><span class="annottext">[LockedActionEventId]
+</span><a href="#local-6989586621689008724"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-346"></span><span>    </span><span class="annot"><span class="annottext">Oid -&gt; ([UUID] -&gt; Encoding) -&gt; [UUID] -&gt; PrepArg
 forall a. Oid -&gt; (a -&gt; Encoding) -&gt; a -&gt; PrepArg
 </span><span class="hs-identifier hs-var">Q.toPrepValHelper</span></span><span> </span><span class="annot"><span class="annottext">Oid
 </span><span class="hs-identifier hs-var">PTI.unknown</span></span><span> </span><span class="annot"><span class="annottext">[UUID] -&gt; Encoding
-</span><a href="#local-6989586621689007029"><span class="hs-identifier hs-var">encoder</span></a></span><span> </span><span class="annot"><span class="annottext">([UUID] -&gt; PrepArg) -&gt; [UUID] -&gt; PrepArg
+</span><a href="#local-6989586621689008721"><span class="hs-identifier hs-var">encoder</span></a></span><span> </span><span class="annot"><span class="annottext">([UUID] -&gt; PrepArg) -&gt; [UUID] -&gt; PrepArg
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(LockedActionEventId -&gt; Maybe UUID)
 -&gt; [LockedActionEventId] -&gt; [UUID]
@@ -1783,10 +1783,10 @@ forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LockedActionEventId -&gt; Text
 </span><a href="Hasura.RQL.Types.Eventing.html#unEventId"><span class="hs-identifier hs-var hs-var">unEventId</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[LockedActionEventId]
-</span><a href="#local-6989586621689007032"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><a href="#local-6989586621689008724"><span class="hs-identifier hs-var">l</span></a></span><span>
 </span><span id="line-347"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-348"></span><span>      </span><span id="local-6989586621689007029"><span class="annot"><span class="annottext">encoder :: [UUID] -&gt; Encoding
-</span><a href="#local-6989586621689007029"><span class="hs-identifier hs-var hs-var">encoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Array -&gt; Encoding
+</span><span id="line-348"></span><span>      </span><span id="local-6989586621689008721"><span class="annot"><span class="annottext">encoder :: [UUID] -&gt; Encoding
+</span><a href="#local-6989586621689008721"><span class="hs-identifier hs-var hs-var">encoder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Array -&gt; Encoding
 </span><span class="hs-identifier hs-var">PE.array</span></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">2950</span></span><span> </span><span class="annot"><span class="annottext">(Array -&gt; Encoding) -&gt; ([UUID] -&gt; Array) -&gt; [UUID] -&gt; Encoding
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
