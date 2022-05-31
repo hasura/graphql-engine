@@ -2,8 +2,6 @@
 
 module Hasura.SQL.BackendMap
   ( BackendMap,
-    empty,
-    insert,
     lookup,
     elems,
   )
@@ -16,8 +14,8 @@ import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text.Extended (toTxt)
-import Hasura.Prelude hiding (empty, lookup)
-import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend, dispatchAnyBackend'', parseAnyBackendFromJSON, unpackAnyBackend)
+import Hasura.Prelude hiding (lookup)
+import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend'', parseAnyBackendFromJSON, unpackAnyBackend)
 import Hasura.SQL.Backend (BackendType, parseBackendTypeFromText)
 import Hasura.SQL.Tag (HasTag, backendTag, reify)
 
@@ -30,21 +28,6 @@ newtype BackendMap (i :: BackendType -> Type) = BackendMap (Map BackendType (Any
 deriving newtype instance i `SatisfiesForAllBackends` Show => Show (BackendMap i)
 
 deriving newtype instance i `SatisfiesForAllBackends` Eq => Eq (BackendMap i)
-
-empty :: BackendMap i
-empty = mempty
-
--- | Insert 'newValue' into the map, replacing any existing value that is of the same
--- 'BackendType' as represented by the particular 'AnyBackend' value passed.
-insert :: AnyBackend i -> BackendMap i -> BackendMap i
-insert newValue (BackendMap backendMap) =
-  BackendMap $ Map.insert backendType newValue backendMap
-  where
-    backendType :: BackendType
-    backendType = dispatchAnyBackend @HasTag newValue determineBackendType
-
-    determineBackendType :: forall (b :: BackendType) i. HasTag b => i b -> BackendType
-    determineBackendType _ = reify $ backendTag @b
 
 -- | Get a value from the map for the particular 'BackendType' 'b'. This function
 -- is usually used with a type application.

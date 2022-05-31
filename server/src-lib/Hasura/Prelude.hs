@@ -37,7 +37,6 @@ module Hasura.Prelude
     -- * Map-related utilities
     mapFromL,
     oMapFromL,
-    bimapHash,
 
     -- * Measuring and working with moments and durations
     withElapsedTime,
@@ -47,7 +46,6 @@ module Hasura.Prelude
     hasuraJSON,
 
     -- * Extensions to @Data.Foldable@
-    fold',
     module Data.Time.Clock.Units,
   )
 where
@@ -281,14 +279,6 @@ hasuraJSON = J.aesonPrefix J.snakeCase
 instance (Hashable a) => Hashable (Seq a) where
   hashWithSalt i = hashWithSalt i . toList
 
--- | Given a structure with elements whose type is a 'Monoid', combine them via
--- the monoid's @('<>')@ operator.
---
--- This fold is right-associative and strict in the accumulator; it's defined
--- as @foldMap id@, per the documentation in @Data.Foldable@.
-fold' :: (Monoid m, Foldable t) => t m -> m
-fold' = foldMap' id
-
 -- Fancy trace debugging
 
 -- | Labeled, prettified traceShowId
@@ -309,12 +299,3 @@ ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
 -- [0,1,2,3,4,5,7,9]
 hashNub :: (Hashable a, Eq a) => [a] -> [a]
 hashNub = HSet.toList . HSet.fromList
-
--- | 'bimapHash' is the map obtained by applying @f@ to each key and @g@ to each value.
---
--- The size of the result may be smaller if f maps two or more
--- distinct keys to the same new key. In this case there is no
--- guarantee which of the associated values is chosen for the
--- conflicting key.
-bimapHash :: (Eq a, Eq a', Hashable a, Hashable a') => (a -> a') -> (b -> b') -> HashMap a b -> HashMap a' b'
-bimapHash f g = Map.mapKeys f . fmap g

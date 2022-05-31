@@ -822,7 +822,6 @@ library
                      , Hasura.Eventing.ScheduledTrigger
                      , Hasura.Eventing.ScheduledTrigger.Types
                      , Data.GADT.Compare.Extended
-                     , Data.Tuple.Extended
                      , Hasura.SQL.AnyBackend
                      , Hasura.SQL.Backend
                      , Hasura.SQL.BackendMap

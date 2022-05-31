@@ -39,11 +39,9 @@ module Hasura.Base.Error
     withPathKA,
     withPathI,
     withPathIA,
-    indexedFoldM,
     indexedFoldlA',
     indexedForM,
     indexedMapM,
-    indexedTraverseA,
     indexedForM_,
     indexedMapM_,
     indexedTraverseA_,
@@ -377,10 +375,6 @@ indexedFoldlA' f = proc (e, (acc0, (xs, s))) ->
       (\acc (i, v) -> (| withPathIA ((e, (acc, (v, s))) >- f) |) i)
   |) acc0 (zip [0 ..] (toList xs))
 
-indexedFoldM :: (QErrM m, Foldable t) => (b -> a -> m b) -> b -> t a -> m b
-indexedFoldM f acc0 = runKleisli proc xs ->
-  (| indexedFoldlA' (\acc v -> f acc v >- bindA) |) acc0 xs
-
 indexedTraverseA_ ::
   (ArrowChoice arr, ArrowError QErr arr, Foldable t) =>
   arr (e, (a, s)) b ->
@@ -393,16 +387,6 @@ indexedMapM_ f = runKleisli proc xs -> (| indexedTraverseA_ (\x -> f x >- bindA)
 
 indexedForM_ :: (QErrM m, Foldable t) => t a -> (a -> m b) -> m ()
 indexedForM_ = flip indexedMapM_
-
-indexedTraverseA ::
-  (ArrowChoice arr, ArrowError QErr arr) =>
-  arr (e, (a, s)) b ->
-  arr (e, ([a], s)) [b]
-indexedTraverseA f = proc (e, (xs, s)) ->
-  (|
-    traverseA
-      (\(i, x) -> (| withPathIA ((e, (x, s)) >- f) |) i)
-  |) (zip [0 ..] (toList xs))
 
 indexedMapM :: (QErrM m) => (a -> m b) -> [a] -> m [b]
 indexedMapM f = traverse (\(i, x) -> withPathI i (f x)) . zip [0 ..]
