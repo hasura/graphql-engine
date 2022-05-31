@@ -67,12 +67,12 @@ The action definition consists of the following:
 - `Arguments`: Arguments are used to pass dynamic values along with
   the query/mutation.
 - `Response type`: The GraphQL type of the response that the query or
-  mutation will return. Actions can only return object types or scalar types currently.
+  mutation will return. Action response types support objects, scalars and lists of those only.
 
 For instance, consider this action definition:
 
 ```graphql
-extend type Mutation {
+type Mutation {
   userLogin(username: String!, password: String!): UserInfo
 }
 ```

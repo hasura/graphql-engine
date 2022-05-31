@@ -1,0 +1,19 @@
+# Action definition:
+  # type Mutation {
+  #   scalar_array_response : [String]!
+  #   }
+  # }
+# Hanlder/Webhook response:
+  # ["foo", "bar", null]
+
+description: Scalar array response should be allowed
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      scalar_array_response
+    }
+response:
+  data:
+    scalar_array_response: ["foo", "bar", null]

@@ -229,6 +229,23 @@ scalars (assuming no other definition for them is provided).
 
 :::
 
+## List types
+
+You can define a list of objects or scalars as the response type for an action.
+
+The action definition for list (of objects) response type looks something like this:
+
+```graphql
+type Mutation {
+  userLogin(username: String!, password: String!): [UserInfo]
+}
+```
+
+For corresponding custom object type definition of `UserInfo`, refer to [Object Types](#object-types)
+
+In case the response type is a list of scalars (let's say, `Int`), the output type in the above action definition can be `[Int]`.
+
+
 ## Enum types
 
 Enums are a special kind of scalar that is restricted to a particular
