@@ -151,8 +151,17 @@ export const Create = ({ onSuccess }: Props) => {
                   value="true"
                   data-testid="forward_client_headers"
                 />
-                <label className="pl-3 flex items-center">
+                <label className="pl-3 flex items-center mt-2">
                   Forward all headers from client
+                  <ToolTip
+                    message="Toggle forwarding headers sent by the client app in the request to
+          your remote GraphQL server"
+                  />
+                </label>
+              </div>
+              <div>
+                <label className="flex items-center">
+                  Additional headers:
                   <ToolTip message="Custom headers to be sent to the remote GraphQL server" />
                 </label>
               </div>
