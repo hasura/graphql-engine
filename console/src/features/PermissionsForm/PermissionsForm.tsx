@@ -202,7 +202,7 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
             <AggregationSection queryType={queryType} roleName={roleName} />
           )}
 
-          {queryType === 'insert' && (
+          {['insert', 'update', 'delete'].includes(queryType) && (
             <BackendOnlySection queryType={queryType} />
           )}
 

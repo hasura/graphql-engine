@@ -1028,9 +1028,12 @@ metadataToOrdJSON
             insPermDefToOrdJSON :: forall b. (Backend b) => InsPermDef b -> AO.Value
             insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
               where
-                insPermToOrdJSON (InsPerm check set columns mBackendOnly) =
+                insPermToOrdJSON (InsPerm check set columns backendOnly) =
                   let columnsPair = ("columns",) . AO.toOrdered <$> columns
-                      backendOnlyPair = ("backend_only",) . AO.toOrdered <$> mBackendOnly
+                      backendOnlyPair =
+                        if backendOnly
+                          then Just ("backend_only", AO.toOrdered backendOnly)
+                          else Nothing
                    in AO.object $
                         [("check", AO.toOrdered check)]
                           <> catMaybes [maybeSetToMaybeOrdPair @b set, columnsPair, backendOnlyPair]
@@ -1060,13 +1063,17 @@ metadataToOrdJSON
             updPermDefToOrdJSON :: forall b. Backend b => UpdPermDef b -> AO.Value
             updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON
               where
-                updPermToOrdJSON (UpdPerm columns set fltr check) =
-                  AO.object $
-                    [ ("columns", AO.toOrdered columns),
-                      ("filter", AO.toOrdered fltr),
-                      ("check", AO.toOrdered check)
-                    ]
-                      <> catMaybes [maybeSetToMaybeOrdPair @b set]
+                updPermToOrdJSON (UpdPerm columns set fltr check backendOnly) =
+                  let backendOnlyPair =
+                        if backendOnly
+                          then Just ("backend_only", AO.toOrdered backendOnly)
+                          else Nothing
+                   in AO.object $
+                        [ ("columns", AO.toOrdered columns),
+                          ("filter", AO.toOrdered fltr),
+                          ("check", AO.toOrdered check)
+                        ]
+                          <> catMaybes [maybeSetToMaybeOrdPair @b set, backendOnlyPair]
 
             delPermDefToOrdJSON :: Backend b => DelPermDef b -> AO.Value
             delPermDefToOrdJSON = permDefToOrdJSON AO.toOrdered

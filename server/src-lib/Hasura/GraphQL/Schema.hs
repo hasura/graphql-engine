@@ -646,9 +646,9 @@ buildMutationFields scenario sourceInfo tables (takeExposedAs FEAMutation -> fun
     inserts <-
       mkRF (MDBR . MDBInsert) $ buildTableInsertMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
     updates <-
-      mkRF (MDBR . MDBUpdate) $ buildTableUpdateMutationFields sourceInfo tableName tableInfo tableIdentifierName
+      mkRF (MDBR . MDBUpdate) $ buildTableUpdateMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
     deletes <-
-      mkRF (MDBR . MDBDelete) $ buildTableDeleteMutationFields sourceInfo tableName tableInfo tableIdentifierName
+      mkRF (MDBR . MDBDelete) $ buildTableDeleteMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
     pure $ concat [inserts, updates, deletes]
   functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo

@@ -188,14 +188,19 @@ data InsPerm (b :: BackendType) = InsPerm
   { ipCheck :: !(BoolExp b),
     ipSet :: !(Maybe (ColumnValues b Value)),
     ipColumns :: !(Maybe (PermColSpec b)),
-    ipBackendOnly :: !(Maybe Bool) -- see Note [Backend only permissions]
+    ipBackendOnly :: !Bool -- see Note [Backend only permissions]
   }
   deriving (Show, Eq, Generic)
 
 instance Backend b => Cacheable (InsPerm b)
 
 instance Backend b => FromJSON (InsPerm b) where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+  parseJSON = withObject "InsPerm" $ \o ->
+    InsPerm
+      <$> o .: "check"
+      <*> o .:? "set"
+      <*> o .:? "columns"
+      <*> o .:? "backend_only" .!= False
 
 instance Backend b => ToJSON (InsPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -236,13 +241,18 @@ type SelPermDef b = PermDef b SelPerm
 
 -- Delete permission
 data DelPerm (b :: BackendType) = DelPerm
-  {dcFilter :: !(BoolExp b)}
+  { dcFilter :: !(BoolExp b),
+    dcBackendOnly :: !Bool -- see Note [Backend only permissions]
+  }
   deriving (Show, Eq, Generic)
 
 instance Backend b => Cacheable (DelPerm b)
 
 instance Backend b => FromJSON (DelPerm b) where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+  parseJSON = withObject "DelPerm" $ \o ->
+    DelPerm
+      <$> o .: "filter"
+      <*> o .:? "backend_only" .!= False
 
 instance Backend b => ToJSON (DelPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -259,14 +269,21 @@ data UpdPerm (b :: BackendType) = UpdPerm
     -- This is optional because we don't want to break the v1 API
     -- but Nothing should be equivalent to the expression which always
     -- returns true.
-    ucCheck :: !(Maybe (BoolExp b))
+    ucCheck :: !(Maybe (BoolExp b)),
+    ucBackendOnly :: !Bool -- see Note [Backend only permissions]
   }
   deriving (Show, Eq, Generic)
 
 instance Backend b => Cacheable (UpdPerm b)
 
 instance Backend b => FromJSON (UpdPerm b) where
-  parseJSON = genericParseJSON hasuraJSON {omitNothingFields = True}
+  parseJSON = withObject "UpdPerm" $ \o ->
+    UpdPerm
+      <$> o .: "columns"
+      <*> o .:? "set"
+      <*> o .: "filter"
+      <*> o .:? "check"
+      <*> o .:? "backend_only" .!= False
 
 instance Backend b => ToJSON (UpdPerm b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}

@@ -204,6 +204,7 @@ buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns = 
 
 pgkBuildTableUpdateMutationFields ::
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  Scenario ->
   -- | The source that the table lives in
   SourceInfo ('Postgres pgKind) ->
   -- | The name of the table being acted on
@@ -213,13 +214,14 @@ pgkBuildTableUpdateMutationFields ::
   -- | field display name
   C.GQLNameIdentifier ->
   m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
-pgkBuildTableUpdateMutationFields sourceName tableName tableInfo gqlName =
+pgkBuildTableUpdateMutationFields scenario sourceName tableName tableInfo gqlName =
   concat . maybeToList <$> runMaybeT do
     updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
     lift $
       GSB.buildTableUpdateMutationFields
         -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955
         (\ti -> fmap BackendUpdate <$> updateOperators ti updatePerms)
+        scenario
         sourceName
         tableName
         tableInfo

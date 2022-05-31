@@ -136,6 +136,7 @@ class
   -- its namesake @GSB.@'Hasura.GraphQL.Schema.Build.buildTableUpdateMutationFields'.
   buildTableUpdateMutationFields ::
     MonadBuildSchema b r m n =>
+    Scenario ->
     -- | The source that the table lives in
     SourceInfo b ->
     -- | The name of the table being acted on
@@ -148,6 +149,7 @@ class
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
+    Scenario ->
     SourceInfo b ->
     TableName b ->
     TableInfo b ->

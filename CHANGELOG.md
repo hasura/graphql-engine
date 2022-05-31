@@ -43,6 +43,7 @@ is `graphql-default`, the field names generated will be `my_table`, `my_tableByP
 
 ### Bug fixes and improvements
 
+- server: extend backend_only setting for update and delete permissions
 - server: add support for scalar array response type in actions (#3661)
 - server: add support for table computed fields in bigquery backends
 - server: do not serialize env vars in logs or errors for remote schemas

@@ -100,22 +100,24 @@ bqBuildTableInsertMutationFields _scenario _sourceName _tableName _tableInfo _gq
 
 bqBuildTableUpdateMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  Scenario ->
   SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
   m [a]
-bqBuildTableUpdateMutationFields _sourceName _tableName _tableInfo _gqlName =
+bqBuildTableUpdateMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildTableDeleteMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  Scenario ->
   SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
   m [a]
-bqBuildTableDeleteMutationFields _sourceName _tableName _tableInfo _gqlName =
+bqBuildTableDeleteMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildFunctionQueryFields ::

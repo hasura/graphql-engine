@@ -173,13 +173,14 @@ instance
   ) =>
   OnlyRelevantEq (UpdPermInfo b)
   where
-  (UpdPermInfo colsL tableL filterL checkL setL reqHeadersL)
-    `relevantEq` (UpdPermInfo colsR tableR filterR checkR setR reqHeadersR) =
+  (UpdPermInfo colsL tableL filterL checkL setL backendOnlyL reqHeadersL)
+    `relevantEq` (UpdPermInfo colsR tableR filterR checkR setR backendOnlyR reqHeadersR) =
       colsL == colsR
         && tableL == tableR
         && filterL `relevantEq` filterR
         && checkL `relevantEq` checkR
         && setL == setR
+        && backendOnlyL == backendOnlyR
         && reqHeadersL == reqHeadersR
 
 instance
@@ -191,10 +192,11 @@ instance
   ) =>
   OnlyRelevantEq (DelPermInfo b)
   where
-  DelPermInfo tableL filterL reqHeadersL
-    `relevantEq` DelPermInfo tableR filterR reqHeadersR =
+  (DelPermInfo tableL filterL backendOnlyL reqHeadersL)
+    `relevantEq` (DelPermInfo tableR filterR backendOnlyR reqHeadersR) =
       tableL == tableR
         && filterL `relevantEq` filterR
+        && backendOnlyL == backendOnlyR
         && reqHeadersL == reqHeadersR
 
 instance OnlyRelevantEq RemoteSchemaInputValueDefinition where

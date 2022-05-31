@@ -44,8 +44,8 @@ instance BackendSchema 'DataConnector where
   buildFunctionRelayQueryFields _ _ _ _ _ = pure []
   buildFunctionMutationFields _ _ _ _ = pure []
   buildTableInsertMutationFields _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ = pure []
   buildTableStreamingSubscriptionFields _ _ _ _ = pure []
 
   -- backend extensions
