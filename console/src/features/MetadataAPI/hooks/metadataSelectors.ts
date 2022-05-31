@@ -227,6 +227,22 @@ export namespace MetadataSelector {
     return array_relationships;
   };
 
+  export const createGetLocalDBRelationships = (
+    currentDataSource: string,
+    table: QualifiedTable
+  ) => (m: MetadataResponse) => {
+    const metadataTable = getTable(currentDataSource, table)(m);
+    const objectRelationships: ObjectRelationship[] =
+      metadataTable?.object_relationships ?? [];
+    const arrayRelationships: ArrayRelationship[] =
+      metadataTable?.array_relationships ?? [];
+
+    return {
+      objectRelationships,
+      arrayRelationships,
+    };
+  };
+
   export const getAllDriversList = (m: MetadataResponse) =>
     m.metadata?.sources.map(s => ({ source: s.name, kind: s.kind }));
 }
