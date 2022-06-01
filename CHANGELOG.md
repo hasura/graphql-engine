@@ -147,6 +147,7 @@ Response 2:
 - server: fixes url/query date variable bug in REST endpoints
 - server: makes url/query variables in REST endpoints assume string if other types not applicable
 - server: fix inserting empty objects with default values to postgres, citus, and sql server (fix #8475)
+- server: allow casting most postgres scalar types to strings in comparison expressions (fix #8524)
 - console: add remote database relationships for views
 - console: bug fixes for RS-to-RS relationships
 - console: allow users to remove prefix / suffix / root field namespace from a remote schema

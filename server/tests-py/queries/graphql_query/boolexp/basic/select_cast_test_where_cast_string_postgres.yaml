@@ -1,0 +1,250 @@
+- description: Fetch data from cast_test table for smallint column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 1
+        smallint_col: 123
+  query:
+    query: |-
+      query {
+        cast_test (where: {smallint_col: {_cast: {String: {_ilike: "123"}}}}){
+          id
+          smallint_col
+        }
+      }
+
+- description: Fetch data from cast_test table for integer column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 2
+        integer_col: 123
+  query:
+    query: |-
+      query {
+        cast_test (where: {integer_col: {_cast: {String: {_ilike: "123"}}}}){
+          id
+          integer_col
+        }
+      }
+
+- description: Fetch data from cast_test table for bigint column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 3
+        bigint_col: '123'
+  query:
+    query: |-
+      query {
+        cast_test (where: {bigint_col: {_cast: {String: {_ilike: "123"}}}}){
+          id
+          bigint_col
+        }
+      }
+
+- description: Fetch data from cast_test table for float column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 4
+        float_col: '1.23'
+  query:
+    query: |-
+      query {
+        cast_test (where: {float_col: {_cast: {String: {_ilike: "1.23"}}}}){
+          id
+          float_col
+        }
+      }
+
+- description: Fetch data from cast_test table for double column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 5
+        double_col: '1.23'
+  query:
+    query: |-
+      query {
+        cast_test (where: {double_col: {_cast: {String: {_ilike: "1.23"}}}}){
+          id
+          double_col
+        }
+      }
+
+- description: Fetch data from cast_test table for numeric column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 6
+        numeric_col: '123'
+  query:
+    query: |-
+      query {
+        cast_test (where: {numeric_col: {_cast: {String: {_ilike: "123"}}}}){
+          id
+          numeric_col
+        }
+      }
+- description: Fetch data from cast_test table for money column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 7
+        money_col: '$1.23'
+  query:
+    query: |-
+      query {
+        cast_test (where: {money_col: {_cast: {String: {_ilike: "%1%"}}}}){
+          id
+          money_col
+        }
+      }
+- description: Fetch data from cast_test table for boolean column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 8
+        boolean_col: true
+  query:
+    query: |-
+      query {
+        cast_test (where: {boolean_col: {_cast: {String: {_ilike: "true"}}}}){
+          id
+          boolean_col
+        }
+      }
+- description: Fetch data from cast_test table for char column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 9
+        char_col: 'a'
+  query:
+    query: |-
+      query {
+        cast_test (where: {char_col: {_cast: {String: {_ilike: "a"}}}}){
+          id
+          char_col
+        }
+      }
+
+- description: Fetch data from cast_test table for date column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 10
+        date_col: '2018-05-12'
+  query:
+    query: |-
+      query {
+        cast_test (where: {date_col: {_cast: {String: {_ilike: "2018-%"}}}}){
+          id
+          date_col
+        }
+      }
+- description: Fetch data from cast_test table for timestamp column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 11
+        timestamp_col: '2018-09-21T09:50:44'
+  query:
+    query: |-
+      query {
+        cast_test (where: {timestamp_col: {_cast: {String: {_ilike: "2018-%"}}}}){
+          id
+          timestamp_col
+        }
+      }
+- description: Fetch data from cast_test table for timestamptz column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 12
+        timestamptz_col: '2018-09-21T09:50:44+00:00'
+  query:
+    query: |-
+      query {
+        cast_test (where: {timestamptz_col: {_cast: {String: {_ilike: "2018-%"}}}}){
+          id
+          timestamptz_col
+        }
+      }
+
+- description: Fetch data from cast_test table for timetz column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 13
+        timetz_col: '09:50:44+00'
+  query:
+    query: |-
+      query {
+        cast_test (where: {timetz_col: {_cast: {String: {_ilike: "09%"}}}}){
+          id
+          timetz_col
+        }
+      }
+
+- description: Fetch data from cast_test table for json column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 14
+        json_col:
+        - foo
+  query:
+    query: |-
+      query {
+        cast_test (where: {json_col: {_cast: {String: {_ilike: "%f%"}}}}){
+          id
+          json_col
+        }
+      }
+
+- description: Fetch data from cast_test table for uuid column after casting to string
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      cast_test:
+      - id: 15
+        uuid_col: '28d6d683-1317-49f7-b1cf-7d195242e4e5'
+  query:
+    query: |-
+      query {
+        cast_test (where: {uuid_col: {_cast: {String: {_ilike: "%7d195242e4e5"}}}}){
+          id
+          uuid_col
+        }
+      }

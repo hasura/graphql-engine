@@ -651,6 +651,9 @@ class TestGraphQLQueryBoolExpBasicPostgres:
     def test_in_sql_identifier_array(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/in_sql_identifier_array.yaml', transport)
 
+    def test_select_cast_test_where_cast_string(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_cast_test_where_cast_string_postgres.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
