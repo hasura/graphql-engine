@@ -471,6 +471,7 @@ elif [ "$MODE" = "test" ]; then
   export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
   export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
+  export ACTION_WEBHOOK_HANDLER="http://127.0.0.1:5593"
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     # It's better UX to build first (possibly failing) before trying to launch
