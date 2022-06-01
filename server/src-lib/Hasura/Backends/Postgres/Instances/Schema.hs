@@ -669,6 +669,21 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
             ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
             ColumnScalar PGGeometry -> Just (PGGeometry, PGGeography)
             ColumnScalar PGJSONB -> Just (PGJSONB, PGText)
+            ColumnScalar PGSmallInt -> Just (PGSmallInt, PGText)
+            ColumnScalar PGInteger -> Just (PGInteger, PGText)
+            ColumnScalar PGBigInt -> Just (PGBigInt, PGText)
+            ColumnScalar PGFloat -> Just (PGFloat, PGText)
+            ColumnScalar PGDouble -> Just (PGDouble, PGText)
+            ColumnScalar PGNumeric -> Just (PGNumeric, PGText)
+            ColumnScalar PGMoney -> Just (PGMoney, PGText)
+            ColumnScalar PGBoolean -> Just (PGBoolean, PGText)
+            ColumnScalar PGChar -> Just (PGChar, PGText)
+            ColumnScalar PGDate -> Just (PGDate, PGText)
+            ColumnScalar PGTimeStamp -> Just (PGTimeStamp, PGText)
+            ColumnScalar PGTimeStampTZ -> Just (PGTimeStampTZ, PGText)
+            ColumnScalar PGTimeTZ -> Just (PGTimeTZ, PGText)
+            ColumnScalar PGJSON -> Just (PGJSON, PGText)
+            ColumnScalar PGUUID -> Just (PGUUID, PGText)
             _ -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do
