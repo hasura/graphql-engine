@@ -30,61 +30,61 @@
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#getVariableDefinitionAndValue"><span class="hs-identifier hs-type">getVariableDefinitionAndValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.VariableDefinition</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span id="getVariableDefinitionAndValue"><span class="annot"><span class="annottext">getVariableDefinitionAndValue :: Variable -&gt; (VariableDefinition, (Name, Value))
-</span><a href="Hasura.GraphQL.Execute.Remote.html#getVariableDefinitionAndValue"><span class="hs-identifier hs-var hs-var">getVariableDefinitionAndValue</span></a></span></span><span> </span><span id="local-6989586621689086407"><span class="annot"><span class="annottext">var :: Variable
-</span><a href="#local-6989586621689086407"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span id="local-6989586621689086405"><span class="annot"><span class="annottext">VariableInfo
-</span><a href="#local-6989586621689086405"><span class="hs-identifier hs-var">varInfo</span></a></span></span><span> </span><span id="local-6989586621689086404"><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689086404"><span class="hs-identifier hs-var">gType</span></a></span></span><span> </span><span id="local-6989586621689086403"><span class="annot"><span class="annottext">InputValue Void
-</span><a href="#local-6989586621689086403"><span class="hs-identifier hs-var">varValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Remote.html#getVariableDefinitionAndValue"><span class="hs-identifier hs-var hs-var">getVariableDefinitionAndValue</span></a></span></span><span> </span><span id="local-6989586621689109108"><span class="annot"><span class="annottext">var :: Variable
+</span><a href="#local-6989586621689109108"><span class="hs-identifier hs-var">var</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span id="local-6989586621689109106"><span class="annot"><span class="annottext">VariableInfo
+</span><a href="#local-6989586621689109106"><span class="hs-identifier hs-var">varInfo</span></a></span></span><span> </span><span id="local-6989586621689109105"><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621689109105"><span class="hs-identifier hs-var">gType</span></a></span></span><span> </span><span id="local-6989586621689109104"><span class="annot"><span class="annottext">InputValue Void
+</span><a href="#local-6989586621689109104"><span class="hs-identifier hs-var">varValue</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VariableDefinition
-</span><a href="#local-6989586621689086402"><span class="hs-identifier hs-var">varDefn</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086401"><span class="hs-identifier hs-var">varName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689086400"><span class="hs-identifier hs-var">varJSONValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689109103"><span class="hs-identifier hs-var">varDefn</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689109102"><span class="hs-identifier hs-var">varName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689109101"><span class="hs-identifier hs-var">varJSONValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>    </span><span id="local-6989586621689086401"><span class="annot"><span class="annottext">varName :: Name
-</span><a href="#local-6989586621689086401"><span class="hs-identifier hs-var hs-var">varName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; Name
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621689109102"><span class="annot"><span class="annottext">varName :: Name
+</span><a href="#local-6989586621689109102"><span class="hs-identifier hs-var hs-var">varName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; Name
 forall a. HasName a =&gt; a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Schema.html#getName"><span class="hs-identifier hs-var">getName</span></a></span><span> </span><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689086407"><span class="hs-identifier hs-var">var</span></a></span><span>
+</span><a href="#local-6989586621689109108"><span class="hs-identifier hs-var">var</span></a></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621689086402"><span class="annot"><span class="annottext">varDefn :: VariableDefinition
-</span><a href="#local-6989586621689086402"><span class="hs-identifier hs-var hs-var">varDefn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; GType -&gt; Maybe (Value Void) -&gt; VariableDefinition
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621689109103"><span class="annot"><span class="annottext">varDefn :: VariableDefinition
+</span><a href="#local-6989586621689109103"><span class="hs-identifier hs-var hs-var">varDefn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; GType -&gt; Maybe (Value Void) -&gt; VariableDefinition
 </span><span class="hs-identifier hs-var">G.VariableDefinition</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086401"><span class="hs-identifier hs-var">varName</span></a></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689086404"><span class="hs-identifier hs-var">gType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
-</span><a href="#local-6989586621689086397"><span class="hs-identifier hs-var">defaultVal</span></a></span><span>
+</span><a href="#local-6989586621689109102"><span class="hs-identifier hs-var">varName</span></a></span><span> </span><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621689109105"><span class="hs-identifier hs-var">gType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621689109098"><span class="hs-identifier hs-var">defaultVal</span></a></span><span>
 </span><span id="line-38"></span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621689086397"><span class="annot"><span class="annottext">defaultVal :: Maybe (Value Void)
-</span><a href="#local-6989586621689086397"><span class="hs-identifier hs-var hs-var">defaultVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621689109098"><span class="annot"><span class="annottext">defaultVal :: Maybe (Value Void)
+</span><a href="#local-6989586621689109098"><span class="hs-identifier hs-var hs-var">defaultVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-40"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">VariableInfo
-</span><a href="#local-6989586621689086405"><span class="hs-identifier hs-var">varInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689109106"><span class="hs-identifier hs-var">varInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-41"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#VIRequired"><span class="hs-identifier hs-type">VIRequired</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-42"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#VIOptional"><span class="hs-identifier hs-type">VIOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689086394"><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689086394"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Maybe (Value Void)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689109095"><span class="annot"><span class="annottext">Value Void
+</span><a href="#local-6989586621689109095"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Maybe (Value Void)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689086394"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621689109095"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span>    </span><span id="local-6989586621689086400"><span class="annot"><span class="annottext">varJSONValue :: Value
-</span><a href="#local-6989586621689086400"><span class="hs-identifier hs-var hs-var">varJSONValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621689109101"><span class="annot"><span class="annottext">varJSONValue :: Value
+</span><a href="#local-6989586621689109101"><span class="hs-identifier hs-var hs-var">varJSONValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-45"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InputValue Void
-</span><a href="#local-6989586621689086403"><span class="hs-identifier hs-var">varValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-46"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span id="local-6989586621689086392"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689086392"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689086392"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-47"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span id="local-6989586621689086390"><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689086390"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value
+</span><a href="#local-6989586621689109104"><span class="hs-identifier hs-var">varValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span id="local-6989586621689109093"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689109093"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689109093"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-47"></span><span>        </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span id="local-6989586621689109091"><span class="annot"><span class="annottext">Value Void
+</span><a href="#local-6989586621689109091"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value
 </span><a href="Hasura.RQL.Types.Relationships.ToSchema.html#graphQLValueToJSON"><span class="hs-identifier hs-var">graphQLValueToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689086390"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621689109091"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#unresolveVariables"><span class="hs-identifier hs-type">unresolveVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689086515"><span class="annot"><a href="#local-6989586621689086515"><span class="hs-identifier hs-type">fragments</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-51"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="annot"><a href="#local-6989586621689086515"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689086515"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689086515"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689109216"><span class="annot"><a href="#local-6989586621689109216"><span class="hs-identifier hs-type">fragments</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="annot"><a href="#local-6989586621689109216"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689109216"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689109216"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-54"></span><span id="unresolveVariables"><span class="annot"><span class="annottext">unresolveVariables :: SelectionSet fragments Variable -&gt; SelectionSet fragments Name
 </span><a href="Hasura.GraphQL.Execute.Remote.html#unresolveVariables"><span class="hs-identifier hs-var hs-var">unresolveVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">(Selection fragments Variable -&gt; Selection fragments Name)
@@ -102,10 +102,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.GraphQL.Parser.Schema.html#vInfo"><span class="hs-identifier hs-var hs-var">vInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#collectVariables"><span class="hs-identifier hs-type">collectVariables</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689086511"><span class="annot"><a href="#local-6989586621689086511"><span class="hs-identifier hs-type">fragments</span></a></span></span><span> </span><span id="local-6989586621689086510"><span class="annot"><a href="#local-6989586621689086510"><span class="hs-identifier hs-type">var</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-59"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621689086511"><span class="hs-identifier hs-type">fragments</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689086510"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689086510"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-60"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689086511"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086510"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689086510"><span class="hs-identifier hs-type">var</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689109212"><span class="annot"><a href="#local-6989586621689109212"><span class="hs-identifier hs-type">fragments</span></a></span></span><span> </span><span id="local-6989586621689109211"><span class="annot"><a href="#local-6989586621689109211"><span class="hs-identifier hs-type">var</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="annot"><a href="#local-6989586621689109212"><span class="hs-identifier hs-type">fragments</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689109211"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689109211"><span class="hs-identifier hs-type">var</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689109212"><span class="hs-identifier hs-type">fragments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689109211"><span class="hs-identifier hs-type">var</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="#local-6989586621689109211"><span class="hs-identifier hs-type">var</span></a></span><span>
 </span><span id="line-62"></span><span id="collectVariables"><span class="annot"><span class="annottext">collectVariables :: SelectionSet fragments var -&gt; HashSet var
 </span><a href="Hasura.GraphQL.Execute.Remote.html#collectVariables"><span class="hs-identifier hs-var hs-var">collectVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">[HashSet var] -&gt; HashSet var
@@ -141,15 +141,15 @@ forall a. Hashable a =&gt; a -&gt; HashSet a
 -&gt; Maybe RemoteJoins
 -&gt; Maybe OperationName
 -&gt; ExecutionStep
-</span><a href="Hasura.GraphQL.Execute.Remote.html#buildExecStepRemote"><span class="hs-identifier hs-var hs-var">buildExecStepRemote</span></a></span></span><span> </span><span id="local-6989586621689086381"><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621689086381"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span></span><span> </span><span id="local-6989586621689086380"><span class="annot"><span class="annottext">ResultCustomizer
-</span><a href="#local-6989586621689086380"><span class="hs-identifier hs-var">resultCustomizer</span></a></span></span><span> </span><span id="local-6989586621689086379"><span class="annot"><span class="annottext">OperationType
-</span><a href="#local-6989586621689086379"><span class="hs-identifier hs-var">tp</span></a></span></span><span> </span><span id="local-6989586621689086378"><span class="annot"><span class="annottext">GraphQLField Void Variable
-</span><a href="#local-6989586621689086378"><span class="hs-identifier hs-var">rootField</span></a></span></span><span> </span><span id="local-6989586621689086377"><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621689086377"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span> </span><span id="local-6989586621689086376"><span class="annot"><span class="annottext">Maybe OperationName
-</span><a href="#local-6989586621689086376"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-74"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689086375"><span class="annot"><span class="annottext">selSet :: [Selection NoFragments Variable]
-</span><a href="#local-6989586621689086375"><span class="hs-identifier hs-var hs-var">selSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Field NoFragments Variable -&gt; Selection NoFragments Variable
+</span><a href="Hasura.GraphQL.Execute.Remote.html#buildExecStepRemote"><span class="hs-identifier hs-var hs-var">buildExecStepRemote</span></a></span></span><span> </span><span id="local-6989586621689109082"><span class="annot"><span class="annottext">RemoteSchemaInfo
+</span><a href="#local-6989586621689109082"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span></span><span> </span><span id="local-6989586621689109081"><span class="annot"><span class="annottext">ResultCustomizer
+</span><a href="#local-6989586621689109081"><span class="hs-identifier hs-var">resultCustomizer</span></a></span></span><span> </span><span id="local-6989586621689109080"><span class="annot"><span class="annottext">OperationType
+</span><a href="#local-6989586621689109080"><span class="hs-identifier hs-var">tp</span></a></span></span><span> </span><span id="local-6989586621689109079"><span class="annot"><span class="annottext">GraphQLField Void Variable
+</span><a href="#local-6989586621689109079"><span class="hs-identifier hs-var">rootField</span></a></span></span><span> </span><span id="local-6989586621689109078"><span class="annot"><span class="annottext">Maybe RemoteJoins
+</span><a href="#local-6989586621689109078"><span class="hs-identifier hs-var">remoteJoins</span></a></span></span><span> </span><span id="local-6989586621689109077"><span class="annot"><span class="annottext">Maybe OperationName
+</span><a href="#local-6989586621689109077"><span class="hs-identifier hs-var">operationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-74"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689109076"><span class="annot"><span class="annottext">selSet :: [Selection NoFragments Variable]
+</span><a href="#local-6989586621689109076"><span class="hs-identifier hs-var hs-var">selSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Field NoFragments Variable -&gt; Selection NoFragments Variable
 forall (frag :: * -&gt; *) var. Field frag var -&gt; Selection frag var
 </span><span class="hs-identifier hs-var">G.SelectionField</span></span><span> </span><span class="annot"><span class="annottext">(Field NoFragments Variable -&gt; Selection NoFragments Variable)
 -&gt; Field NoFragments Variable -&gt; Selection NoFragments Variable
@@ -159,16 +159,16 @@ forall var.
 Eq var =&gt;
 GraphQLField Void var -&gt; Field NoFragments var
 </span><a href="Hasura.RQL.IR.RemoteSchema.html#convertGraphQLField"><span class="hs-identifier hs-var">IR.convertGraphQLField</span></a></span><span> </span><span class="annot"><span class="annottext">GraphQLField Void Variable
-</span><a href="#local-6989586621689086378"><span class="hs-identifier hs-var">rootField</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-75"></span><span>      </span><span id="local-6989586621689086372"><span class="annot"><span class="annottext">unresolvedSelSet :: SelectionSet NoFragments Name
-</span><a href="#local-6989586621689086372"><span class="hs-identifier hs-var hs-var">unresolvedSelSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Selection NoFragments Variable] -&gt; SelectionSet NoFragments Name
+</span><a href="#local-6989586621689109079"><span class="hs-identifier hs-var">rootField</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-75"></span><span>      </span><span id="local-6989586621689109073"><span class="annot"><span class="annottext">unresolvedSelSet :: SelectionSet NoFragments Name
+</span><a href="#local-6989586621689109073"><span class="hs-identifier hs-var hs-var">unresolvedSelSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Selection NoFragments Variable] -&gt; SelectionSet NoFragments Name
 forall (fragments :: * -&gt; *).
 Functor fragments =&gt;
 SelectionSet fragments Variable -&gt; SelectionSet fragments Name
 </span><a href="Hasura.GraphQL.Execute.Remote.html#unresolveVariables"><span class="hs-identifier hs-var">unresolveVariables</span></a></span><span> </span><span class="annot"><span class="annottext">[Selection NoFragments Variable]
-</span><a href="#local-6989586621689086375"><span class="hs-identifier hs-var">selSet</span></a></span><span>
-</span><span id="line-76"></span><span>      </span><span id="local-6989586621689086371"><span class="annot"><span class="annottext">allVars :: [(VariableDefinition, (Name, Value))]
-</span><a href="#local-6989586621689086371"><span class="hs-identifier hs-var hs-var">allVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Variable -&gt; (VariableDefinition, (Name, Value)))
+</span><a href="#local-6989586621689109076"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621689109072"><span class="annot"><span class="annottext">allVars :: [(VariableDefinition, (Name, Value))]
+</span><a href="#local-6989586621689109072"><span class="hs-identifier hs-var hs-var">allVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Variable -&gt; (VariableDefinition, (Name, Value)))
 -&gt; [Variable] -&gt; [(VariableDefinition, (Name, Value))]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Variable -&gt; (VariableDefinition, (Name, Value))
@@ -184,9 +184,9 @@ forall (fragments :: * -&gt; *) var.
 (Foldable fragments, Hashable var, Eq var) =&gt;
 SelectionSet fragments var -&gt; HashSet var
 </span><a href="Hasura.GraphQL.Execute.Remote.html#collectVariables"><span class="hs-identifier hs-var">collectVariables</span></a></span><span> </span><span class="annot"><span class="annottext">[Selection NoFragments Variable]
-</span><a href="#local-6989586621689086375"><span class="hs-identifier hs-var">selSet</span></a></span><span>
-</span><span id="line-77"></span><span>      </span><span id="local-6989586621689086369"><span class="annot"><span class="annottext">varValues :: HashMap Name Value
-</span><a href="#local-6989586621689086369"><span class="hs-identifier hs-var hs-var">varValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name, Value)] -&gt; HashMap Name Value
+</span><a href="#local-6989586621689109076"><span class="hs-identifier hs-var">selSet</span></a></span><span>
+</span><span id="line-77"></span><span>      </span><span id="local-6989586621689109070"><span class="annot"><span class="annottext">varValues :: HashMap Name Value
+</span><a href="#local-6989586621689109070"><span class="hs-identifier hs-var hs-var">varValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name, Value)] -&gt; HashMap Name Value
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Name, Value)] -&gt; HashMap Name Value)
 -&gt; [(Name, Value)] -&gt; HashMap Name Value
@@ -197,15 +197,15 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(VariableDefinition, (Name, Value)) -&gt; (Name, Value)
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">[(VariableDefinition, (Name, Value))]
-</span><a href="#local-6989586621689086371"><span class="hs-identifier hs-var">allVars</span></a></span><span>
-</span><span id="line-78"></span><span>      </span><span id="local-6989586621689086367"><span class="annot"><span class="annottext">varValsM :: Maybe (HashMap Name Value)
-</span><a href="#local-6989586621689086367"><span class="hs-identifier hs-var hs-var">varValsM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name Value)
+</span><a href="#local-6989586621689109072"><span class="hs-identifier hs-var">allVars</span></a></span><span>
+</span><span id="line-78"></span><span>      </span><span id="local-6989586621689109068"><span class="annot"><span class="annottext">varValsM :: Maybe (HashMap Name Value)
+</span><a href="#local-6989586621689109068"><span class="hs-identifier hs-var hs-var">varValsM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name Value)
 -&gt; Maybe (HashMap Name Value) -&gt; Bool -&gt; Maybe (HashMap Name Value)
 forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><span class="hs-identifier hs-var">bool</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name Value -&gt; Maybe (HashMap Name Value)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Value
-</span><a href="#local-6989586621689086369"><span class="hs-identifier hs-var">varValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name Value)
+</span><a href="#local-6989586621689109070"><span class="hs-identifier hs-var">varValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name Value)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Maybe (HashMap Name Value))
 -&gt; Bool -&gt; Maybe (HashMap Name Value)
@@ -213,17 +213,17 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Value -&gt; Bool
 forall k v. HashMap k v -&gt; Bool
 </span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name Value
-</span><a href="#local-6989586621689086369"><span class="hs-identifier hs-var">varValues</span></a></span><span>
-</span><span id="line-79"></span><span>      </span><span id="local-6989586621689086364"><span class="annot"><span class="annottext">varDefs :: [VariableDefinition]
-</span><a href="#local-6989586621689086364"><span class="hs-identifier hs-var hs-var">varDefs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((VariableDefinition, (Name, Value)) -&gt; VariableDefinition)
+</span><a href="#local-6989586621689109070"><span class="hs-identifier hs-var">varValues</span></a></span><span>
+</span><span id="line-79"></span><span>      </span><span id="local-6989586621689109065"><span class="annot"><span class="annottext">varDefs :: [VariableDefinition]
+</span><a href="#local-6989586621689109065"><span class="hs-identifier hs-var hs-var">varDefs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((VariableDefinition, (Name, Value)) -&gt; VariableDefinition)
 -&gt; [(VariableDefinition, (Name, Value))] -&gt; [VariableDefinition]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(VariableDefinition, (Name, Value)) -&gt; VariableDefinition
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">[(VariableDefinition, (Name, Value))]
-</span><a href="#local-6989586621689086371"><span class="hs-identifier hs-var">allVars</span></a></span><span>
-</span><span id="line-80"></span><span>      </span><span id="local-6989586621689086363"><span class="annot"><span class="annottext">_grQuery :: TypedOperationDefinition NoFragments Name
-</span><a href="#local-6989586621689086363"><span class="hs-identifier hs-var hs-var">_grQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OperationType
+</span><a href="#local-6989586621689109072"><span class="hs-identifier hs-var">allVars</span></a></span><span>
+</span><span id="line-80"></span><span>      </span><span id="local-6989586621689109064"><span class="annot"><span class="annottext">_grQuery :: TypedOperationDefinition NoFragments Name
+</span><a href="#local-6989586621689109064"><span class="hs-identifier hs-var hs-var">_grQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OperationType
 -&gt; Maybe Name
 -&gt; [VariableDefinition]
 -&gt; [Directive Name]
@@ -237,27 +237,27 @@ OperationType
 -&gt; SelectionSet frag var
 -&gt; TypedOperationDefinition frag var
 </span><span class="hs-identifier hs-var">G.TypedOperationDefinition</span></span><span> </span><span class="annot"><span class="annottext">OperationType
-</span><a href="#local-6989586621689086379"><span class="hs-identifier hs-var">tp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OperationName -&gt; Name
+</span><a href="#local-6989586621689109080"><span class="hs-identifier hs-var">tp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OperationName -&gt; Name
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_unOperationName"><span class="hs-identifier hs-var hs-var">_unOperationName</span></a></span><span> </span><span class="annot"><span class="annottext">(OperationName -&gt; Name) -&gt; Maybe OperationName -&gt; Maybe Name
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe OperationName
-</span><a href="#local-6989586621689086376"><span class="hs-identifier hs-var">operationName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
-</span><a href="#local-6989586621689086364"><span class="hs-identifier hs-var">varDefs</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
-</span><a href="#local-6989586621689086372"><span class="hs-identifier hs-var">unresolvedSelSet</span></a></span><span>
-</span><span id="line-81"></span><span>      </span><span id="local-6989586621689086359"><span class="annot"><span class="annottext">_grVariables :: Maybe (HashMap Name Value)
-</span><a href="#local-6989586621689086359"><span class="hs-identifier hs-var hs-var">_grVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name Value)
-</span><a href="#local-6989586621689086367"><span class="hs-identifier hs-var">varValsM</span></a></span><span>
-</span><span id="line-82"></span><span>      </span><span id="local-6989586621689086358"><span class="annot"><span class="annottext">_grOperationName :: Maybe OperationName
-</span><a href="#local-6989586621689086358"><span class="hs-identifier hs-var hs-var">_grOperationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe OperationName
-</span><a href="#local-6989586621689086376"><span class="hs-identifier hs-var">operationName</span></a></span><span>
+</span><a href="#local-6989586621689109077"><span class="hs-identifier hs-var">operationName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[VariableDefinition]
+</span><a href="#local-6989586621689109065"><span class="hs-identifier hs-var">varDefs</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">SelectionSet NoFragments Name
+</span><a href="#local-6989586621689109073"><span class="hs-identifier hs-var">unresolvedSelSet</span></a></span><span>
+</span><span id="line-81"></span><span>      </span><span id="local-6989586621689109060"><span class="annot"><span class="annottext">_grVariables :: Maybe (HashMap Name Value)
+</span><a href="#local-6989586621689109060"><span class="hs-identifier hs-var hs-var">_grVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (HashMap Name Value)
+</span><a href="#local-6989586621689109068"><span class="hs-identifier hs-var">varValsM</span></a></span><span>
+</span><span id="line-82"></span><span>      </span><span id="local-6989586621689109059"><span class="annot"><span class="annottext">_grOperationName :: Maybe OperationName
+</span><a href="#local-6989586621689109059"><span class="hs-identifier hs-var hs-var">_grOperationName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe OperationName
+</span><a href="#local-6989586621689109077"><span class="hs-identifier hs-var">operationName</span></a></span><span>
 </span><span id="line-83"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
 -&gt; ResultCustomizer
 -&gt; GQLReqOutgoing
 -&gt; Maybe RemoteJoins
 -&gt; ExecutionStep
 </span><a href="Hasura.GraphQL.Execute.Backend.html#ExecStepRemote"><span class="hs-identifier hs-var">ExecStepRemote</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaInfo
-</span><a href="#local-6989586621689086381"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
-</span><a href="#local-6989586621689086380"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReq :: forall a.
+</span><a href="#local-6989586621689109082"><span class="hs-identifier hs-var">remoteSchemaInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ResultCustomizer
+</span><a href="#local-6989586621689109081"><span class="hs-identifier hs-var">resultCustomizer</span></a></span><span> </span><span class="annot"><span class="annottext">GQLReq :: forall a.
 Maybe OperationName -&gt; a -&gt; Maybe (HashMap Name Value) -&gt; GQLReq a
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#GQLReq"><span class="hs-identifier hs-type">GH.GQLReq</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Maybe (HashMap Name Value)
 Maybe OperationName
@@ -269,14 +269,14 @@ _grOperationName :: Maybe OperationName
 _grVariables :: Maybe (HashMap Name Value)
 _grQuery :: TypedOperationDefinition NoFragments Name
 </span><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#_grVariables"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span> </span><span class="annot"><span class="annottext">Maybe RemoteJoins
-</span><a href="#local-6989586621689086377"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span>
+</span><a href="#local-6989586621689109078"><span class="hs-identifier hs-var">remoteJoins</span></a></span><span>
 </span><span id="line-84"></span><span>
 </span><span id="line-85"></span><span class="hs-comment">-- | Association between keys uniquely identifying some remote JSON variable and</span><span>
 </span><span id="line-86"></span><span class="hs-comment">-- an 'Int' identifier that will be used to construct a valid variable name to</span><span>
 </span><span id="line-87"></span><span class="hs-comment">-- be used in a GraphQL query.</span><span>
 </span><span id="line-88"></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteJSONVariableMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-var">RemoteJSONVariableMap</span></a></span></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RemoteJSONVariableMap"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-var">RemoteJSONVariableMap</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableKey"><span class="hs-identifier hs-type">RemoteJSONVariableKey</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689086348"><span id="local-6989586621689086350"><span class="annot"><span class="annottext">RemoteJSONVariableMap -&gt; RemoteJSONVariableMap -&gt; Bool
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689109049"><span id="local-6989586621689109051"><span class="annot"><span class="annottext">RemoteJSONVariableMap -&gt; RemoteJSONVariableMap -&gt; Bool
 (RemoteJSONVariableMap -&gt; RemoteJSONVariableMap -&gt; Bool)
 -&gt; (RemoteJSONVariableMap -&gt; RemoteJSONVariableMap -&gt; Bool)
 -&gt; Eq RemoteJSONVariableMap
@@ -285,7 +285,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RemoteJSONVariableMap -&gt; RemoteJSONVariableMap -&gt; Bool
 == :: RemoteJSONVariableMap -&gt; RemoteJSONVariableMap -&gt; Bool
 $c== :: RemoteJSONVariableMap -&gt; RemoteJSONVariableMap -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689086340"><span id="local-6989586621689086342"><span id="local-6989586621689086344"><span class="annot"><span class="annottext">Semigroup RemoteJSONVariableMap
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689109041"><span id="local-6989586621689109043"><span id="local-6989586621689109045"><span class="annot"><span class="annottext">Semigroup RemoteJSONVariableMap
 RemoteJSONVariableMap
 Semigroup RemoteJSONVariableMap
 -&gt; RemoteJSONVariableMap
@@ -307,7 +307,7 @@ $cmappend :: RemoteJSONVariableMap
 mempty :: RemoteJSONVariableMap
 $cmempty :: RemoteJSONVariableMap
 $cp1Monoid :: Semigroup RemoteJSONVariableMap
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689086333"><span id="local-6989586621689086335"><span id="local-6989586621689086337"><span class="annot"><span class="annottext">b -&gt; RemoteJSONVariableMap -&gt; RemoteJSONVariableMap
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monoid</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689109034"><span id="local-6989586621689109036"><span id="local-6989586621689109038"><span class="annot"><span class="annottext">b -&gt; RemoteJSONVariableMap -&gt; RemoteJSONVariableMap
 NonEmpty RemoteJSONVariableMap -&gt; RemoteJSONVariableMap
 RemoteJSONVariableMap
 -&gt; RemoteJSONVariableMap -&gt; RemoteJSONVariableMap
@@ -343,8 +343,8 @@ $c&lt;&gt; :: RemoteJSONVariableMap
 </span><span id="line-94"></span><span class="hs-comment">--</span><span>
 </span><span id="line-95"></span><span class="hs-comment">-- For a detailed explanation of this behavior, see the following comment:</span><span>
 </span><span id="line-96"></span><span class="hs-comment">-- https://github.com/hasura/graphql-engine/issues/7170#issuecomment-880838970</span><span>
-</span><span id="line-97"></span><span id="local-6989586621689086330"><span id="local-6989586621689086331"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteJSONVariableKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableKey"><span class="hs-identifier hs-var">RemoteJSONVariableKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteJSONVariableKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableKey"><span class="hs-identifier hs-var">RemoteJSONVariableKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
-</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689086325"><span id="local-6989586621689086327"><span class="annot"><span class="annottext">RemoteJSONVariableKey -&gt; RemoteJSONVariableKey -&gt; Bool
+</span><span id="line-97"></span><span id="local-6989586621689109031"><span id="local-6989586621689109032"></span></span><span class="hs-keyword">data</span><span> </span><span id="RemoteJSONVariableKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableKey"><span class="hs-identifier hs-var">RemoteJSONVariableKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteJSONVariableKey"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableKey"><span class="hs-identifier hs-var">RemoteJSONVariableKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689109026"><span id="local-6989586621689109028"><span class="annot"><span class="annottext">RemoteJSONVariableKey -&gt; RemoteJSONVariableKey -&gt; Bool
 (RemoteJSONVariableKey -&gt; RemoteJSONVariableKey -&gt; Bool)
 -&gt; (RemoteJSONVariableKey -&gt; RemoteJSONVariableKey -&gt; Bool)
 -&gt; Eq RemoteJSONVariableKey
@@ -363,7 +363,7 @@ forall a.
 $cto :: forall x. Rep RemoteJSONVariableKey x -&gt; RemoteJSONVariableKey
 $cfrom :: forall x. RemoteJSONVariableKey -&gt; Rep RemoteJSONVariableKey x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689086318"><span id="local-6989586621689086320"><span class="annot"><span class="annottext">Int -&gt; RemoteJSONVariableKey -&gt; Int
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689109019"><span id="local-6989586621689109021"><span class="annot"><span class="annottext">Int -&gt; RemoteJSONVariableKey -&gt; Int
 RemoteJSONVariableKey -&gt; Int
 (Int -&gt; RemoteJSONVariableKey -&gt; Int)
 -&gt; (RemoteJSONVariableKey -&gt; Int) -&gt; Hashable RemoteJSONVariableKey
@@ -425,33 +425,33 @@ $chashWithSalt :: Int -&gt; RemoteJSONVariableKey -&gt; Int
 </span><span id="line-149"></span><span class="hs-comment">--     name</span><span>
 </span><span id="line-150"></span><span class="hs-comment">--   }</span><span>
 </span><span id="line-151"></span><span class="hs-comment">-- }</span><span>
-</span><span id="line-152"></span><span id="local-6989586621689086422"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteVariable"><span class="hs-identifier hs-type">resolveRemoteVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-153"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086422"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-152"></span><span id="local-6989586621689109123"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteVariable"><span class="hs-identifier hs-type">resolveRemoteVariable</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-153"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689109123"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-154"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-155"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RemoteSchemaVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-156"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-type">RemoteJSONVariableMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086422"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span><span>
+</span><span id="line-156"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-type">RemoteJSONVariableMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689109123"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span><span>
 </span><span id="line-157"></span><span id="resolveRemoteVariable"><span class="annot"><span class="annottext">resolveRemoteVariable :: UserInfo
 -&gt; RemoteSchemaVariable -&gt; StateT RemoteJSONVariableMap m Variable
-</span><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteVariable"><span class="hs-identifier hs-var hs-var">resolveRemoteVariable</span></a></span></span><span> </span><span id="local-6989586621689086316"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689086316"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-158"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#SessionPresetVariable"><span class="hs-identifier hs-type">SessionPresetVariable</span></a></span><span> </span><span id="local-6989586621689086314"><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689086314"><span class="hs-identifier hs-var">sessionVar</span></a></span></span><span> </span><span id="local-6989586621689086313"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086313"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span id="local-6989586621689086312"><span class="annot"><span class="annottext">SessionArgumentPresetInfo
-</span><a href="#local-6989586621689086312"><span class="hs-identifier hs-var">presetInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-159"></span><span>    </span><span id="local-6989586621689086311"><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteVariable"><span class="hs-identifier hs-var hs-var">resolveRemoteVariable</span></a></span></span><span> </span><span id="local-6989586621689109017"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689109017"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-158"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#SessionPresetVariable"><span class="hs-identifier hs-type">SessionPresetVariable</span></a></span><span> </span><span id="local-6989586621689109015"><span class="annot"><span class="annottext">SessionVariable
+</span><a href="#local-6989586621689109015"><span class="hs-identifier hs-var">sessionVar</span></a></span></span><span> </span><span id="local-6989586621689109014"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689109014"><span class="hs-identifier hs-var">typeName</span></a></span></span><span> </span><span id="local-6989586621689109013"><span class="annot"><span class="annottext">SessionArgumentPresetInfo
+</span><a href="#local-6989586621689109013"><span class="hs-identifier hs-var">presetInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-159"></span><span>    </span><span id="local-6989586621689109012"><span class="annot"><span class="annottext">SessionVariableValue
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">Maybe SessionVariableValue
 -&gt; StateT RemoteJSONVariableMap m SessionVariableValue
 -&gt; StateT RemoteJSONVariableMap m SessionVariableValue
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe SessionVariableValue
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var">getSessionVariableValue</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689086314"><span class="hs-identifier hs-var">sessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariables -&gt; Maybe SessionVariableValue)
+</span><a href="#local-6989586621689109015"><span class="hs-identifier hs-var">sessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariables -&gt; Maybe SessionVariableValue)
 -&gt; SessionVariables -&gt; Maybe SessionVariableValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.Session.html#_uiSession"><span class="hs-identifier hs-var hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689086316"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(StateT RemoteJSONVariableMap m SessionVariableValue
+</span><a href="#local-6989586621689109017"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(StateT RemoteJSONVariableMap m SessionVariableValue
  -&gt; StateT RemoteJSONVariableMap m SessionVariableValue)
 -&gt; StateT RemoteJSONVariableMap m SessionVariableValue
 -&gt; StateT RemoteJSONVariableMap m SessionVariableValue
@@ -470,17 +470,17 @@ Code -&gt; SessionVariableValue -&gt; m a
 -&gt; StateT RemoteJSONVariableMap m SessionVariableValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689086314"><span class="hs-identifier hs-var">sessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariableValue -&gt; SessionVariableValue
+</span><a href="#local-6989586621689109015"><span class="hs-identifier hs-var">sessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall t.
 ToTxt t =&gt;
 t -&gt; SessionVariableValue -&gt; SessionVariableValue
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot; session variable expected, but not found&quot;</span></span><span>
-</span><span id="line-162"></span><span>    </span><span id="local-6989586621689086304"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086304"><span class="hs-identifier hs-var">varName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-162"></span><span>    </span><span id="local-6989586621689109005"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689109005"><span class="hs-identifier hs-var">varName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-163"></span><span>      </span><span class="annot"><span class="annottext">SessionVariable -&gt; Maybe Name
 </span><a href="Hasura.Session.html#sessionVariableToGraphQLName"><span class="hs-identifier hs-var">sessionVariableToGraphQLName</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689086314"><span class="hs-identifier hs-var">sessionVar</span></a></span><span>
+</span><a href="#local-6989586621689109015"><span class="hs-identifier hs-var">sessionVar</span></a></span><span>
 </span><span id="line-164"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name
 -&gt; StateT RemoteJSONVariableMap m Name
 -&gt; StateT RemoteJSONVariableMap m Name
@@ -493,20 +493,20 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; SessionVariableValue -&gt; m a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariableValue
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689086314"><span class="hs-identifier hs-var">sessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
+</span><a href="#local-6989586621689109015"><span class="hs-identifier hs-var">sessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot;' cannot be made into a valid GraphQL name&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-165"></span><span>    </span><span id="local-6989586621689086300"><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689086300"><span class="hs-identifier hs-var">coercedValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-165"></span><span>    </span><span id="local-6989586621689109001"><span class="annot"><span class="annottext">Value Void
+</span><a href="#local-6989586621689109001"><span class="hs-identifier hs-var">coercedValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-166"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SessionArgumentPresetInfo
-</span><a href="#local-6989586621689086312"><span class="hs-identifier hs-var">presetInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689109013"><span class="hs-identifier hs-var">presetInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-167"></span><span>        </span><span class="annot"><span class="annottext">SessionArgumentPresetInfo
 </span><a href="Hasura.RQL.Types.RemoteSchema.html#SessionArgumentPresetScalar"><span class="hs-identifier hs-var">SessionArgumentPresetScalar</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-168"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Name -&gt; SessionVariableValue
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086313"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689109014"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-169"></span><span>            </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot;Int&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-170"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe Integer
@@ -515,7 +515,7 @@ forall a. Read a =&gt; String -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-171"></span><span>                </span><span class="annot"><span class="annottext">Maybe Integer
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code
 -&gt; SessionVariableValue
@@ -530,15 +530,15 @@ Code -&gt; SessionVariableValue -&gt; m a
 -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall t.
 ToTxt t =&gt;
 t -&gt; SessionVariableValue -&gt; SessionVariableValue
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot; cannot be coerced into an Int value&quot;</span></span><span>
-</span><span id="line-172"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689086294"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689086294"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
+</span><span id="line-172"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689108995"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689108995"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void))
 -&gt; Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
@@ -546,12 +546,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value Void
 forall var. Integer -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VInt</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689086294"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621689108995"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-173"></span><span>            </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot;Boolean&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-174"></span><span>              </span><span class="hs-keyword">if</span><span>
 </span><span id="line-175"></span><span>                  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; [SessionVariableValue] -&gt; Bool
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; [SessionVariableValue] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot;true&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
@@ -569,7 +569,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;true&quot;</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; SessionVariableValue -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
 </span><span id="line-177"></span><span>                  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-178"></span><span>                    </span><span class="annot"><span class="annottext">Code
@@ -585,7 +585,7 @@ Code -&gt; SessionVariableValue -&gt; m a
 -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall t.
 ToTxt t =&gt;
@@ -600,7 +600,7 @@ forall a. Read a =&gt; String -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-181"></span><span>                </span><span class="annot"><span class="annottext">Maybe Scientific
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-182"></span><span>                  </span><span class="annot"><span class="annottext">Code
@@ -616,15 +616,15 @@ Code -&gt; SessionVariableValue -&gt; m a
 -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall t.
 ToTxt t =&gt;
 t -&gt; SessionVariableValue -&gt; SessionVariableValue
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot; cannot be coerced into a Float value&quot;</span></span><span>
-</span><span id="line-183"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689086290"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689086290"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
+</span><span id="line-183"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689108991"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689108991"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void))
 -&gt; Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
@@ -632,7 +632,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value Void
 forall var. Scientific -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VFloat</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689086290"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621689108991"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-184"></span><span>            </span><span class="hs-comment">-- The `String`,`ID` and the default case all use the same code. But,</span><span>
 </span><span id="line-185"></span><span>            </span><span class="hs-comment">-- it will be better to not merge all of them into the default case</span><span>
 </span><span id="line-186"></span><span>            </span><span class="hs-comment">-- because it will be helpful to know how all the built-in scalars</span><span>
@@ -646,7 +646,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; Value Void
 forall var. SessionVariableValue -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VString</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
 </span><span id="line-189"></span><span>            </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot;ID&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -656,7 +656,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; Value Void
 forall var. SessionVariableValue -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VString</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
 </span><span id="line-190"></span><span>            </span><span class="hs-comment">-- When we encounter a custom scalar, we just pass it as a string</span><span>
 </span><span id="line-191"></span><span>            </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
@@ -667,11 +667,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; Value Void
 forall var. SessionVariableValue -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VString</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
-</span><span id="line-192"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#SessionArgumentPresetEnum"><span class="hs-identifier hs-type">SessionArgumentPresetEnum</span></a></span><span> </span><span id="local-6989586621689086286"><span class="annot"><span class="annottext">HashSet EnumValue
-</span><a href="#local-6989586621689086286"><span class="hs-identifier hs-var">enumVals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-193"></span><span>          </span><span id="local-6989586621689086285"><span class="annot"><span class="annottext">EnumValue
-</span><a href="#local-6989586621689086285"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span>
+</span><span id="line-192"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#SessionArgumentPresetEnum"><span class="hs-identifier hs-type">SessionArgumentPresetEnum</span></a></span><span> </span><span id="local-6989586621689108987"><span class="annot"><span class="annottext">HashSet EnumValue
+</span><a href="#local-6989586621689108987"><span class="hs-identifier hs-var">enumVals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-193"></span><span>          </span><span id="local-6989586621689108986"><span class="annot"><span class="annottext">EnumValue
+</span><a href="#local-6989586621689108986"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-194"></span><span>            </span><span class="annot"><span class="annottext">Name -&gt; EnumValue
 </span><span class="hs-identifier hs-var">G.EnumValue</span></span><span>
 </span><span id="line-195"></span><span>              </span><span class="annot"><span class="annottext">(Name -&gt; EnumValue)
@@ -685,7 +685,7 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span>
 </span><span id="line-196"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariableValue -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-197"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; SessionVariableValue -&gt; StateT RemoteJSONVariableMap m Name
 forall (m :: * -&gt; *) a.
 QErrM m =&gt;
@@ -695,7 +695,7 @@ Code -&gt; SessionVariableValue -&gt; m a
 -&gt; SessionVariableValue -&gt; StateT RemoteJSONVariableMap m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086311"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
+</span><a href="#local-6989586621689109012"><span class="hs-identifier hs-var">sessionVarVal</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall t.
 ToTxt t =&gt;
@@ -703,10 +703,10 @@ t -&gt; SessionVariableValue -&gt; SessionVariableValue
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot; is not a valid GraphQL name&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-198"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">EnumValue
-</span><a href="#local-6989586621689086285"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; HashSet EnumValue -&gt; Bool
+</span><a href="#local-6989586621689108986"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; HashSet EnumValue -&gt; Bool
 forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
 </span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">HashSet EnumValue
-</span><a href="#local-6989586621689086286"><span class="hs-identifier hs-var">enumVals</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689108987"><span class="hs-identifier hs-var">enumVals</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-199"></span><span>            </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -716,7 +716,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; Value Void
 forall var. EnumValue -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VEnum</span></span><span> </span><span class="annot"><span class="annottext">EnumValue
-</span><a href="#local-6989586621689086285"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span><span>
+</span><a href="#local-6989586621689108986"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span><span>
 </span><span id="line-200"></span><span>            </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code
 -&gt; SessionVariableValue
@@ -731,19 +731,19 @@ Code -&gt; SessionVariableValue -&gt; m a
 -&gt; StateT RemoteJSONVariableMap m (Value Void)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EnumValue
-</span><a href="#local-6989586621689086285"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; SessionVariableValue -&gt; SessionVariableValue
+</span><a href="#local-6989586621689108986"><span class="hs-identifier hs-var">sessionVarEnumVal</span></a></span><span> </span><span class="annot"><span class="annottext">EnumValue -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall t.
 ToTxt t =&gt;
 t -&gt; SessionVariableValue -&gt; SessionVariableValue
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot; is not one of the valid enum values&quot;</span></span><span>
 </span><span id="line-201"></span><span>    </span><span class="hs-comment">-- nullability is false, because we treat presets as hard presets</span><span>
-</span><span id="line-202"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689086280"><span class="annot"><span class="annottext">variableGType :: GType
-</span><a href="#local-6989586621689086280"><span class="hs-identifier hs-var hs-var">variableGType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Nullability -&gt; Name -&gt; GType
+</span><span id="line-202"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689108981"><span class="annot"><span class="annottext">variableGType :: GType
+</span><a href="#local-6989586621689108981"><span class="hs-identifier hs-var hs-var">variableGType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Nullability -&gt; Name -&gt; GType
 </span><span class="hs-identifier hs-var">G.TypeNamed</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><span class="hs-identifier hs-var">G.Nullability</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086313"><span class="hs-identifier hs-var">typeName</span></a></span><span>
+</span><a href="#local-6989586621689109014"><span class="hs-identifier hs-var">typeName</span></a></span><span>
 </span><span id="line-203"></span><span>    </span><span class="annot"><span class="annottext">Variable -&gt; StateT RemoteJSONVariableMap m Variable
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Variable -&gt; StateT RemoteJSONVariableMap m Variable)
@@ -752,43 +752,43 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">VariableInfo -&gt; GType -&gt; InputValue Void -&gt; Variable
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; VariableInfo
 </span><a href="Hasura.GraphQL.Parser.Schema.html#VIRequired"><span class="hs-identifier hs-var">VIRequired</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086304"><span class="hs-identifier hs-var">varName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689086280"><span class="hs-identifier hs-var">variableGType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value Void -&gt; InputValue Void
+</span><a href="#local-6989586621689109005"><span class="hs-identifier hs-var">varName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621689108981"><span class="hs-identifier hs-var">variableGType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value Void -&gt; InputValue Void
 forall v. Value v -&gt; InputValue v
 </span><a href="Hasura.GraphQL.Parser.Schema.html#GraphQLValue"><span class="hs-identifier hs-var">GraphQLValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689086300"><span class="hs-identifier hs-var">coercedValue</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-204"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteJSONValue"><span class="hs-identifier hs-type">RemoteJSONValue</span></a></span><span> </span><span id="local-6989586621689086276"><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689086276"><span class="hs-identifier hs-var">gtype</span></a></span></span><span> </span><span id="local-6989586621689086275"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689086275"><span class="hs-identifier hs-var">jsonValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-205"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689086274"><span class="annot"><span class="annottext">key :: RemoteJSONVariableKey
-</span><a href="#local-6989586621689086274"><span class="hs-identifier hs-var hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Value -&gt; RemoteJSONVariableKey
+</span><a href="#local-6989586621689109001"><span class="hs-identifier hs-var">coercedValue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-204"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteJSONValue"><span class="hs-identifier hs-type">RemoteJSONValue</span></a></span><span> </span><span id="local-6989586621689108977"><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621689108977"><span class="hs-identifier hs-var">gtype</span></a></span></span><span> </span><span id="local-6989586621689108976"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689108976"><span class="hs-identifier hs-var">jsonValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-205"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689108975"><span class="annot"><span class="annottext">key :: RemoteJSONVariableKey
+</span><a href="#local-6989586621689108975"><span class="hs-identifier hs-var hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GType -&gt; Value -&gt; RemoteJSONVariableKey
 </span><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableKey"><span class="hs-identifier hs-var">RemoteJSONVariableKey</span></a></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689086276"><span class="hs-identifier hs-var">gtype</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689086275"><span class="hs-identifier hs-var">jsonValue</span></a></span><span>
-</span><span id="line-206"></span><span>    </span><span id="local-6989586621689086273"><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
-</span><a href="#local-6989586621689086273"><span class="hs-identifier hs-var">varMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(RemoteJSONVariableMap -&gt; HashMap RemoteJSONVariableKey Int)
+</span><a href="#local-6989586621689108977"><span class="hs-identifier hs-var">gtype</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689108976"><span class="hs-identifier hs-var">jsonValue</span></a></span><span>
+</span><span id="line-206"></span><span>    </span><span id="local-6989586621689108974"><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
+</span><a href="#local-6989586621689108974"><span class="hs-identifier hs-var">varMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(RemoteJSONVariableMap -&gt; HashMap RemoteJSONVariableKey Int)
 -&gt; StateT
      RemoteJSONVariableMap m (HashMap RemoteJSONVariableKey Int)
 forall s (m :: * -&gt; *) a. MonadState s m =&gt; (s -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">gets</span></span><span> </span><span class="annot"><span class="annottext">RemoteJSONVariableMap -&gt; HashMap RemoteJSONVariableKey Int
 </span><span class="hs-identifier hs-var">coerce</span></span><span>
-</span><span id="line-207"></span><span>    </span><span id="local-6989586621689086271"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689086271"><span class="hs-identifier hs-var">index</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-207"></span><span>    </span><span id="local-6989586621689108972"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689108972"><span class="hs-identifier hs-var">index</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-208"></span><span>      </span><span class="annot"><span class="annottext">RemoteJSONVariableKey
 -&gt; HashMap RemoteJSONVariableKey Int -&gt; Maybe Int
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">RemoteJSONVariableKey
-</span><a href="#local-6989586621689086274"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
-</span><a href="#local-6989586621689086273"><span class="hs-identifier hs-var">varMap</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689108975"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
+</span><a href="#local-6989586621689108974"><span class="hs-identifier hs-var">varMap</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
 -&gt; StateT RemoteJSONVariableMap m Int
 -&gt; StateT RemoteJSONVariableMap m Int
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-209"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689086269"><span class="annot"><span class="annottext">i :: Int
-</span><a href="#local-6989586621689086269"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int -&gt; Int
+</span><span id="line-209"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689108970"><span class="annot"><span class="annottext">i :: Int
+</span><a href="#local-6989586621689108970"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int -&gt; Int
 forall k v. HashMap k v -&gt; Int
 </span><span class="hs-identifier hs-var">Map.size</span></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
-</span><a href="#local-6989586621689086273"><span class="hs-identifier hs-var">varMap</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621689108974"><span class="hs-identifier hs-var">varMap</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
@@ -813,28 +813,28 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">RemoteJSONVariableKey
-</span><a href="#local-6989586621689086274"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689086269"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
-</span><a href="#local-6989586621689086273"><span class="hs-identifier hs-var">varMap</span></a></span><span>
+</span><a href="#local-6989586621689108975"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689108970"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap RemoteJSONVariableKey Int
+</span><a href="#local-6989586621689108974"><span class="hs-identifier hs-var">varMap</span></a></span><span>
 </span><span id="line-211"></span><span>        </span><span class="annot"><span class="annottext">Int -&gt; StateT RemoteJSONVariableMap m Int
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689086269"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621689108970"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-212"></span><span>    </span><span class="hs-comment">-- This should never fail.</span><span>
-</span><span id="line-213"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689086264"><span class="annot"><span class="annottext">varText :: SessionVariableValue
-</span><a href="#local-6989586621689086264"><span class="hs-identifier hs-var hs-var">varText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
+</span><span id="line-213"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689108965"><span class="annot"><span class="annottext">varText :: SessionVariableValue
+</span><a href="#local-6989586621689108965"><span class="hs-identifier hs-var hs-var">varText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot;hasura_json_var_&quot;</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; SessionVariableValue
 forall a. Show a =&gt; a -&gt; SessionVariableValue
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689086271"><span class="hs-identifier hs-var">index</span></a></span><span>
-</span><span id="line-214"></span><span>    </span><span id="local-6989586621689086262"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086262"><span class="hs-identifier hs-var">varName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689108972"><span class="hs-identifier hs-var">index</span></a></span><span>
+</span><span id="line-214"></span><span>    </span><span id="local-6989586621689108963"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689108963"><span class="hs-identifier hs-var">varName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-215"></span><span>      </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086264"><span class="hs-identifier hs-var">varText</span></a></span><span>
+</span><a href="#local-6989586621689108965"><span class="hs-identifier hs-var">varText</span></a></span><span>
 </span><span id="line-216"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name
 -&gt; StateT RemoteJSONVariableMap m Name
 -&gt; StateT RemoteJSONVariableMap m Name
@@ -846,7 +846,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; SessionVariableValue -&gt; m a
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
-</span><a href="#local-6989586621689086264"><span class="hs-identifier hs-var">varText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
+</span><a href="#local-6989586621689108965"><span class="hs-identifier hs-var">varText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 -&gt; SessionVariableValue -&gt; SessionVariableValue
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
@@ -859,31 +859,31 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">VariableInfo -&gt; GType -&gt; InputValue Void -&gt; Variable
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; VariableInfo
 </span><a href="Hasura.GraphQL.Parser.Schema.html#VIRequired"><span class="hs-identifier hs-var">VIRequired</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689086262"><span class="hs-identifier hs-var">varName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689086276"><span class="hs-identifier hs-var">gtype</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Void -&gt; Variable) -&gt; InputValue Void -&gt; Variable
+</span><a href="#local-6989586621689108963"><span class="hs-identifier hs-var">varName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621689108977"><span class="hs-identifier hs-var">gtype</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Void -&gt; Variable) -&gt; InputValue Void -&gt; Variable
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; InputValue Void
 forall v. Value -&gt; InputValue v
 </span><a href="Hasura.GraphQL.Parser.Schema.html#JSONValue"><span class="hs-identifier hs-var">JSONValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689086275"><span class="hs-identifier hs-var">jsonValue</span></a></span><span>
-</span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#QueryVariable"><span class="hs-identifier hs-type">QueryVariable</span></a></span><span> </span><span id="local-6989586621689086260"><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689086260"><span class="hs-identifier hs-var">variable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; StateT RemoteJSONVariableMap m Variable
+</span><a href="#local-6989586621689108976"><span class="hs-identifier hs-var">jsonValue</span></a></span><span>
+</span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#QueryVariable"><span class="hs-identifier hs-type">QueryVariable</span></a></span><span> </span><span id="local-6989586621689108961"><span class="annot"><span class="annottext">Variable
+</span><a href="#local-6989586621689108961"><span class="hs-identifier hs-var">variable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Variable -&gt; StateT RemoteJSONVariableMap m Variable
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689086260"><span class="hs-identifier hs-var">variable</span></a></span><span>
+</span><a href="#local-6989586621689108961"><span class="hs-identifier hs-var">variable</span></a></span><span>
 </span><span id="line-219"></span><span>
 </span><span id="line-220"></span><span class="hs-comment">-- | TODO: Documentation.</span><span>
-</span><span id="line-221"></span><span id="local-6989586621689086258"><span id="local-6989586621689086259"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteField"><span class="hs-identifier hs-type">resolveRemoteField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-222"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086259"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-221"></span><span id="local-6989586621689108959"><span id="local-6989586621689108960"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteField"><span class="hs-identifier hs-type">resolveRemoteField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-222"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689108960"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-223"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-224"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">IR.RemoteSchemaRootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086258"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RemoteSchemaVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-225"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-type">RemoteJSONVariableMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086259"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">IR.RemoteSchemaRootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086258"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-224"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">IR.RemoteSchemaRootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689108959"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RemoteSchemaVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-225"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-type">RemoteJSONVariableMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689108960"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">IR.RemoteSchemaRootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689108959"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-226"></span><span id="resolveRemoteField"><span class="annot"><span class="annottext">resolveRemoteField :: UserInfo
 -&gt; RemoteSchemaRootField r RemoteSchemaVariable
 -&gt; StateT
      RemoteJSONVariableMap m (RemoteSchemaRootField r Variable)
-</span><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteField"><span class="hs-identifier hs-var hs-var">resolveRemoteField</span></a></span></span><span> </span><span id="local-6989586621689086257"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689086257"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaVariable -&gt; StateT RemoteJSONVariableMap m Variable)
+</span><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteField"><span class="hs-identifier hs-var hs-var">resolveRemoteField</span></a></span></span><span> </span><span id="local-6989586621689108958"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689108958"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RemoteSchemaVariable -&gt; StateT RemoteJSONVariableMap m Variable)
 -&gt; RemoteSchemaRootField r RemoteSchemaVariable
 -&gt; StateT
      RemoteJSONVariableMap m (RemoteSchemaRootField r Variable)
@@ -897,13 +897,13 @@ MonadError QErr m =&gt;
 UserInfo
 -&gt; RemoteSchemaVariable -&gt; StateT RemoteJSONVariableMap m Variable
 </span><a href="Hasura.GraphQL.Execute.Remote.html#resolveRemoteVariable"><span class="hs-identifier hs-var">resolveRemoteVariable</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689086257"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689108958"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-227"></span><span>
 </span><span id="line-228"></span><span class="hs-comment">-- | TODO: Documentation.</span><span>
-</span><span id="line-229"></span><span id="local-6989586621689086254"><span id="local-6989586621689086255"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#runVariableCache"><span class="hs-identifier hs-type">runVariableCache</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-230"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689086255"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-231"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-type">RemoteJSONVariableMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086255"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086254"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-232"></span><span>  </span><span class="annot"><a href="#local-6989586621689086255"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689086254"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-229"></span><span id="local-6989586621689108955"><span id="local-6989586621689108956"><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#runVariableCache"><span class="hs-identifier hs-type">runVariableCache</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-230"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689108956"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-231"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Remote.html#RemoteJSONVariableMap"><span class="hs-identifier hs-type">RemoteJSONVariableMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689108956"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689108955"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-232"></span><span>  </span><span class="annot"><a href="#local-6989586621689108956"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689108955"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-233"></span><span id="runVariableCache"><span class="annot"><span class="annottext">runVariableCache :: StateT RemoteJSONVariableMap m a -&gt; m a
 </span><a href="Hasura.GraphQL.Execute.Remote.html#runVariableCache"><span class="hs-identifier hs-var hs-var">runVariableCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(StateT RemoteJSONVariableMap m a -&gt; RemoteJSONVariableMap -&gt; m a)
 -&gt; RemoteJSONVariableMap -&gt; StateT RemoteJSONVariableMap m a -&gt; m a
