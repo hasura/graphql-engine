@@ -11,6 +11,10 @@ export const GraphQLServiceUrl = () => {
         GraphQL Service URL
         <ToolTip message="Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql" />
       </label>
+      <p className="text-sm text-gray-600 mb-sm">
+        Note: Specifying the server URL via an environmental variable is
+        recommended if you have different URLs for multiple environments.
+      </p>
       <div className="flex shadow-sm rounded">
         <select
           className="inline-flex rounded-l border border-r-0 border-gray-300 bg-white hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
