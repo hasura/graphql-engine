@@ -70,7 +70,7 @@ resolveSourceConfig' sourceName (DC.ConnSourceConfig config) (DataConnectorKind 
   routes@API.Routes {..} <- liftIO $ Agent.Client.client manager _dcoUri
   schemaResponse <- runTraceTWithReporter noReporter "resolve source" $ do
     validateConfiguration routes sourceName dataConnectorName config
-    _schema config
+    _schema (toTxt sourceName) config
   pure
     DC.SourceConfig
       { _scEndpoint = _dcoUri,

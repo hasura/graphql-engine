@@ -129,8 +129,8 @@ projectRow fields performQuery r@(Row row) = forM fields $ \case
             pure $ J.Array $ fmap J.Object $ V.fromList obj
           Nothing -> pure $ J.Array mempty
 
-queryHandler :: StaticData -> API.Config -> API.Query -> Handler API.QueryResponse
-queryHandler (StaticData staticData') _config query =
+queryHandler :: StaticData -> API.SourceName -> API.Config -> API.Query -> Handler API.QueryResponse
+queryHandler (StaticData staticData') _sourceName _config query =
   performQuery query
   where
     performQuery :: API.Query -> Handler API.QueryResponse

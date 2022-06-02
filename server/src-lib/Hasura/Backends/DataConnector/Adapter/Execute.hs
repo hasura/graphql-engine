@@ -10,6 +10,7 @@ where
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Text.Encoding qualified as TE
+import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Agent.Client
 import Hasura.Backends.DataConnector.IR.Export as IR
@@ -20,6 +21,7 @@ import Hasura.EncJSON (EncJSON, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..))
 import Hasura.GraphQL.Namespace qualified as GQL
 import Hasura.Prelude
+import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Session
@@ -39,7 +41,7 @@ instance BackendExecute 'DataConnector where
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = sourceConfig,
           dbsiPreparedQuery = Just plan',
-          dbsiAction = buildAction sourceConfig (DC.query plan')
+          dbsiAction = buildAction sourceName sourceConfig (DC.query plan')
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir = do
@@ -67,15 +69,15 @@ toExplainPlan :: GQL.RootFieldAlias -> DC.Plan -> ExplainPlan
 toExplainPlan fieldName plan_ =
   ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ DC.query $ plan_])
 
-buildAction :: DC.SourceConfig -> IR.Q.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
-buildAction DC.SourceConfig {..} query = do
+buildAction :: RQL.SourceName -> DC.SourceConfig -> IR.Q.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
+buildAction sourceName DC.SourceConfig {..} query = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
   when (DC.queryHasRelations query && not (API.dcRelationships (API.srCapabilities _scSchema))) $
     throw400 NotSupported "Agents must provide their own dataloader."
   API.Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) _scManager _scEndpoint
-  case fmap (_query _scConfig) $ IR.queryToAPI query of
-    Right query' -> do
-      queryResponse <- query'
+  case IR.queryToAPI query of
+    Right queryRequest -> do
+      queryResponse <- _query (toTxt sourceName) _scConfig queryRequest
       pure $ encJFromJValue queryResponse
     Left (IR.ExposedLiteral lit) ->
       throw500 $ "Invalid query constructed: Exposed IR Literal '" <> lit <> "'."

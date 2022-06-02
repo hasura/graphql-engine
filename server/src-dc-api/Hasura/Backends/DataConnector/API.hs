@@ -6,6 +6,8 @@ module Hasura.Backends.DataConnector.API
     SchemaApi,
     QueryApi,
     ConfigHeader,
+    SourceNameHeader,
+    SourceName,
     openApiSchemaJson,
     Routes (..),
     apiClient,
@@ -15,6 +17,7 @@ where
 import Data.Aeson qualified as J
 import Data.Data (Proxy (..))
 import Data.OpenApi (OpenApi)
+import Data.Text (Text)
 import Hasura.Backends.DataConnector.API.V0.API as V0
 import Servant.API
 import Servant.API.Generic
@@ -31,16 +34,22 @@ type ConfigSchemaApi =
 
 type SchemaApi =
   "schema"
+    :> SourceNameHeader
     :> ConfigHeader
     :> Get '[JSON] V0.SchemaResponse
 
 type QueryApi =
   "query"
+    :> SourceNameHeader
     :> ConfigHeader
     :> ReqBody '[JSON] V0.Query
     :> Post '[JSON] V0.QueryResponse
 
 type ConfigHeader = Header' '[Required, Strict] "X-Hasura-DataConnector-Config" V0.Config
+
+type SourceNameHeader = Header' '[Required, Strict] "X-Hasura-DataConnector-SourceName" SourceName
+
+type SourceName = Text
 
 data Routes mode = Routes
   { -- | 'GET /config-schema'
