@@ -1,5 +1,29 @@
 import pickBy from 'lodash.pickby';
+import { Dictionary } from 'ts-essentials';
 import { Schema } from './schema';
+
+interface customizationType {
+  root_fields_namespace?: string;
+  field_names?: {
+    parent_type?: string;
+    prefix?: string;
+    suffix?: string;
+  }[];
+  type_names?: Dictionary<string>;
+}
+
+interface Definition {
+  timeout_seconds: number;
+  url_from_env?: string;
+  url?: string;
+  forward_client_headers: boolean;
+  customization: customizationType;
+  headers: (
+    | { name: string; value_from_env: string }
+    | { name: string; value: string }
+  )[];
+  comment?: string;
+}
 
 export const transformFormData = (values: Schema) => {
   const {
@@ -18,10 +42,10 @@ export const transformFormData = (values: Schema) => {
     },
   } = values;
 
-  const customization: Record<string, any> = {};
+  const customization: customizationType = {};
 
   /* if root field namespace is present */
-  if (root_fields_namespace)
+  if (root_fields_namespace && root_fields_namespace !== '')
     customization.root_fields_namespace = root_fields_namespace;
 
   /* if type prefix & suffix are present */
@@ -67,8 +91,8 @@ export const transformFormData = (values: Schema) => {
     ];
   }
 
-  const definition: Record<string, any> = {
-    url,
+  const definition: Definition = {
+    [url.type === 'from_env' ? 'url_from_env' : 'url']: url.value,
     forward_client_headers,
     comment,
     headers: headers.map(header => {

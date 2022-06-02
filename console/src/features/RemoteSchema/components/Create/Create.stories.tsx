@@ -21,9 +21,7 @@ export const Playground: Story = () => {
   return (
     <>
       <RemoteSchema.Create onSuccess={() => toggle()} />
-      {formSuccess ? (
-        <p data-testid="form-result">Form saved succesfully!</p>
-      ) : null}
+      <div>{formSuccess ? 'Form saved succesfully!' : null}</div>
     </>
   );
 };
@@ -37,7 +35,6 @@ Playground.play = async ({ canvasElement }) => {
   expect(
     await canvas.findByText('Remote Schema name is a required field!')
   ).toBeInTheDocument();
-  expect(await canvas.findByText('Invalid url')).toBeInTheDocument();
 
   // Fill up the fields
   // const nameInput = await canvas.findByLabelText('Name');

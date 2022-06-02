@@ -11,6 +11,7 @@ import { FaExclamationCircle, FaPlusCircle } from 'react-icons/fa';
 import { Headers } from '../Headers';
 import { schema, Schema } from './schema';
 import { transformFormData } from './utils';
+import { GraphQLServiceUrl } from './GraphQLServiceUrl';
 
 type Props = {
   onSuccess?: (remoteSchemaName?: string) => void;
@@ -48,7 +49,7 @@ export const Create = ({ onSuccess }: Props) => {
   };
   const defaultValues: Schema = {
     name: '',
-    url: '',
+    url: { value: '', type: 'from_url' },
     headers: [],
     forward_client_headers: false,
     timeout_seconds: '',
@@ -111,17 +112,7 @@ export const Create = ({ onSuccess }: Props) => {
                 tooltip="A statement to help describe the remote schema in brief"
               />
             </div>
-            <div className="mb-md w-6/12">
-              <InputField
-                name="url"
-                label="GraphQL Service URL"
-                placeholder="https://myservice.com/graphql"
-                description="Note: Specifying the server URL via an environmental variable is
-                recommended if you have different URLs for multiple
-                environments."
-                tooltip="Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql"
-              />
-            </div>
+            <GraphQLServiceUrl />
             <div className="mb-lg w-4/12">
               <label className="block flex items-center text-gray-600 font-semibold mb-xs">
                 GraphQL Server Timeout
