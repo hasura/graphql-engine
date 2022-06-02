@@ -2,27 +2,22 @@
 
 module Hasura.Backends.DataConnector.Adapter.Backend () where
 
---------------------------------------------------------------------------------
-
 import Data.Aeson qualified as J (Value)
 import Data.Text.Casing qualified as C
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
-import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.Function qualified as IR.F
 import Hasura.Backends.DataConnector.IR.Name qualified as IR.N
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Backends.DataConnector.IR.Table as IR.T
-import Hasura.Base.Error (Code (ValidationFailed), QErr, throw400)
+import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable)
 import Hasura.RQL.Types.Common as RQL (boolScalar, floatScalar, stringScalar)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
-
---------------------------------------------------------------------------------
 
 -- | An alias for '()' indicating that a particular associated type has not yet
 -- been implemented for the 'DataConnector' backend.
@@ -50,7 +45,11 @@ instance Backend 'DataConnector where
   type Column 'DataConnector = IR.C.Name
   type ScalarValue 'DataConnector = IR.S.V.Value
   type ScalarType 'DataConnector = IR.S.T.Type
-  type SQLExpression 'DataConnector = IR.E.Expression
+
+  -- This does not actually have to be the full IR Expression, in fact it is only
+  -- required to represent literals, so we use a special type for that.
+  -- The 'SQLExpression' type family should be removed in a future refactor
+  type SQLExpression 'DataConnector = IR.S.V.Literal
   type ScalarSelectionArguments 'DataConnector = Void
   type BooleanOperators 'DataConnector = Const XDisable
   type ExtraTableMetadata 'DataConnector = Unimplemented
@@ -76,7 +75,7 @@ instance Backend 'DataConnector where
   textToScalarValue = error "textToScalarValue: not implemented for the Data Connector backend."
 
   parseScalarValue :: ScalarType 'DataConnector -> J.Value -> Either QErr (ScalarValue 'DataConnector)
-  parseScalarValue = error "parseScalarValue: not implemented for the Data Connector backend."
+  parseScalarValue type' value = runAesonParser (IR.S.V.parseValue type') value
 
   scalarValueToJSON :: ScalarValue 'DataConnector -> J.Value
   scalarValueToJSON = error "scalarValueToJSON: not implemented for the Data Connector backend."

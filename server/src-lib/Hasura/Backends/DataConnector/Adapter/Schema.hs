@@ -9,7 +9,6 @@ import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended ((<<>))
-import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
@@ -162,11 +161,7 @@ comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
   where
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
-      IR.UVLiteral $ IR.E.Array $ mapMaybe (extractLiteral . IR.E.Literal . RQL.cvValue) columnValues
-
-    extractLiteral :: IR.E.Expression -> Maybe IR.S.V.Value
-    extractLiteral (IR.E.Literal lit) = Just lit
-    extractLiteral _ = Nothing
+      IR.UVLiteral . IR.S.V.ArrayLiteral $ RQL.cvValue <$> columnValues
 
 tableArgs' ::
   forall r m n.

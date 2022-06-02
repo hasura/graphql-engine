@@ -3,14 +3,11 @@ module Hasura.Backends.DataConnector.Agent.Query
   )
 where
 
---------------------------------------------------------------------------------
-
 import Autodocodec.Extended
 import Control.Monad (forM)
 import Control.Monad.Except (throwError)
 import Data.Aeson (Object)
 import Data.Aeson qualified as J
-import Data.Coerce
 import Data.Function ((&))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
@@ -25,43 +22,56 @@ import Hasura.Backends.DataConnector.Agent.Data
 import Servant.Server
 import Prelude
 
---------------------------------------------------------------------------------
-
-getOperatorEvaluator :: API.Operator -> API.Value -> API.Value -> API.Value
-getOperatorEvaluator op left right =
+getBinaryComparisonOperatorEvaluator :: API.BinaryComparisonOperator -> API.Value -> API.Value -> Bool
+getBinaryComparisonOperatorEvaluator op left right =
   case op of
-    API.LessThan -> API.Boolean $ left < right
-    API.LessThanOrEqual -> API.Boolean $ left <= right
-    API.GreaterThan -> API.Boolean $ left > right
-    API.GreaterThanOrEqual -> API.Boolean $ left >= right
-    API.Equal -> API.Boolean $ left == right
+    API.LessThan -> (left /= API.Null) && (left /= API.Null) && (left < right)
+    API.LessThanOrEqual -> (left /= API.Null) && (left /= API.Null) && (left <= right)
+    API.GreaterThan -> (left /= API.Null) && (left /= API.Null) && (left > right)
+    API.GreaterThanOrEqual -> (left /= API.Null) && (left /= API.Null) && (left >= right)
+    API.Equal -> (left /= API.Null) && (left /= API.Null) && (left == right)
 
--- TODO(SOLOMON): Move into ExceptT
+getBinaryArrayComparisonOperatorEvaluator :: API.BinaryArrayComparisonOperator -> API.Value -> [API.Value] -> Bool
+getBinaryArrayComparisonOperatorEvaluator op left rights =
+  case op of
+    API.In -> (left /= API.Null) && (left `elem` rights)
+
+getUnaryComparisonOperatorEvaluator :: API.UnaryComparisonOperator -> API.Value -> Bool
+getUnaryComparisonOperatorEvaluator op value =
+  case op of
+    API.IsNull -> value == API.Null
+
 makeFilterPredicate :: Maybe API.Expression -> Row -> Bool
 makeFilterPredicate Nothing _row = True
-makeFilterPredicate (Just e) row = validateBoolean $ evaluate e
+makeFilterPredicate (Just e) row = evaluate e
   where
-    validateBoolean :: API.Value -> Bool
-    validateBoolean (API.Boolean p) = p
-    validateBoolean _ = error $ "Expression does not evaluate to a boolean type: " <> show e
-
-    evaluate :: API.Expression -> API.Value
+    evaluate :: API.Expression -> Bool
     evaluate = \case
-      API.Literal (ValueWrapper val) -> val
-      API.In (ValueWrapper2 expr values) ->
-        let val = evaluate expr
-         in API.Boolean $ elem val values
       API.And (ValueWrapper exprs) ->
-        API.Boolean $ getAll $ foldMap (All . validateBoolean . evaluate) exprs
+        getAll $ foldMap (All . evaluate) exprs
       API.Or (ValueWrapper exprs) ->
-        API.Boolean $ getAny $ foldMap (Any . validateBoolean . evaluate) exprs
+        getAny $ foldMap (Any . evaluate) exprs
       API.Not (ValueWrapper expr) ->
-        API.Boolean $ not $ validateBoolean $ evaluate expr
-      API.IsNull (ValueWrapper expr) ->
-        API.Boolean $ (==) API.Null $ evaluate expr
-      API.Column (ValueWrapper colName) -> fromMaybe API.Null $ Map.lookup colName $ unRow row
-      API.ApplyOperator (ValueWrapper3 op left right) ->
-        getOperatorEvaluator op (evaluate left) (evaluate right)
+        not $ evaluate expr
+      API.ApplyBinaryComparisonOperator (ValueWrapper3 op column comparisonValue) ->
+        let columnValue = getColumnValue column row
+            value = extractScalarComparisonValue comparisonValue
+         in getBinaryComparisonOperatorEvaluator op columnValue value
+      API.ApplyBinaryArrayComparisonOperator (ValueWrapper3 op column comparisonValues) ->
+        let columnValue = getColumnValue column row
+            values = extractScalarComparisonValue <$> comparisonValues
+         in getBinaryArrayComparisonOperatorEvaluator op columnValue values
+      API.ApplyUnaryComparisonOperator (ValueWrapper2 op column) ->
+        let columnValue = getColumnValue column row
+         in getUnaryComparisonOperatorEvaluator op columnValue
+
+    getColumnValue :: API.ColumnName -> Row -> API.Value
+    getColumnValue colName row' = fromMaybe API.Null . Map.lookup colName $ unRow row'
+
+    extractScalarComparisonValue :: API.ComparisonValue -> API.Value
+    extractScalarComparisonValue = \case
+      (API.AnotherColumn (ValueWrapper colName)) -> getColumnValue colName row
+      (API.ScalarValue (ValueWrapper value)) -> value
 
 sortRows :: [Row] -> [API.OrderBy] -> [Row]
 sortRows rows order =
@@ -80,23 +90,22 @@ sortRows rows order =
 
 paginateRows :: [Row] -> Maybe Int -> Maybe Int -> [Row]
 paginateRows rows offset limit =
-  let start = fromMaybe 0 offset
-      end :: Int
-      end = maybe (length rows) (+ start) limit
-   in take (end - start) $ drop start rows
+  let dropRows = maybe id drop offset
+      takeRows = maybe id take limit
+   in takeRows $ dropRows rows
 
 createSubqueryForRelationshipField :: Row -> API.RelField -> Maybe API.Query
 createSubqueryForRelationshipField (Row row) API.RelField {..} =
   let filterConditions =
         Map.toList columnMapping
-          & fmap (\(fk, pk) -> fmap (pk,) $ Map.lookup (coerce fk) row)
+          & fmap (\(pk, fk) -> fmap (fk,) $ Map.lookup (API.unPrimaryKey pk) row)
           & traverse
             ( fmap \(pkColumn, fkValue) ->
-                API.ApplyOperator
+                API.ApplyBinaryComparisonOperator
                   ( ValueWrapper3
                       API.Equal
-                      (API.Column (ValueWrapper (coerce pkColumn)))
-                      (API.Literal (ValueWrapper fkValue))
+                      (API.unForeignKey pkColumn)
+                      (API.ScalarValue (ValueWrapper fkValue))
                   )
             )
    in case filterConditions of
@@ -105,24 +114,32 @@ createSubqueryForRelationshipField (Row row) API.RelField {..} =
            in Just $ query {API.where_ = Just (API.And (ValueWrapper (cnds <> existingFilters)))}
         _ -> Nothing
 
-projectRow :: HashMap Text API.Field -> (API.Query -> Handler API.QueryResponse) -> Row -> Handler Object
-projectRow fields k (Row row) = forM fields $ \case
+projectRow ::
+  HashMap Text API.Field ->
+  (API.Query -> Handler API.QueryResponse) ->
+  Row ->
+  Handler Object
+projectRow fields performQuery r@(Row row) = forM fields $ \case
   API.ColumnField (ValueWrapper colName) -> pure $ maybe J.Null J.toJSON $ Map.lookup colName row
   API.RelationshipField relField ->
-    let subquery = createSubqueryForRelationshipField (Row row) relField
+    let subquery = createSubqueryForRelationshipField r relField
      in case subquery of
           Just subQuery -> do
-            API.QueryResponse obj <- k subQuery
+            API.QueryResponse obj <- performQuery subQuery
             pure $ J.Array $ fmap J.Object $ V.fromList obj
           Nothing -> pure $ J.Array mempty
 
 queryHandler :: StaticData -> API.Config -> API.Query -> Handler API.QueryResponse
-queryHandler sd@(StaticData staticData') config API.Query {..} =
-  case Map.lookup from staticData' of
-    Nothing -> throwError $ err400 {errBody = "query.from is not a valid table"}
-    Just rows -> do
-      let filteredRows = filter (makeFilterPredicate where_) rows
-          sortedRows = sortRows filteredRows $ maybe [] NE.toList orderBy
-          slicedRows = paginateRows sortedRows offset limit
-      projectedRows <- traverse (projectRow fields (queryHandler sd config)) slicedRows
-      pure $ API.QueryResponse projectedRows
+queryHandler (StaticData staticData') _config query =
+  performQuery query
+  where
+    performQuery :: API.Query -> Handler API.QueryResponse
+    performQuery API.Query {..} =
+      case Map.lookup from staticData' of
+        Nothing -> throwError $ err400 {errBody = "query.from is not a valid table"}
+        Just rows -> do
+          let filteredRows = filter (makeFilterPredicate where_) rows
+              sortedRows = sortRows filteredRows $ maybe [] NE.toList orderBy
+              slicedRows = paginateRows sortedRows offset limit
+          projectedRows <- traverse (projectRow fields performQuery) slicedRows
+          pure $ API.QueryResponse projectedRows

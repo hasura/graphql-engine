@@ -2,14 +2,18 @@
 
 module Hasura.Backends.DataConnector.IR.Scalar.Value
   ( Value (..),
+    Literal (..),
+    parseValue,
   )
 where
 
 --------------------------------------------------------------------------------
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson.Types qualified as J
 import Data.Scientific
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Witch qualified
@@ -41,3 +45,17 @@ instance Witch.From Value API.Value where
     Number x -> API.Number x
     Boolean p -> API.Boolean p
     Null -> API.Null
+
+data Literal
+  = ValueLiteral Value
+  | ArrayLiteral [Value]
+  deriving stock (Eq, Show, Generic, Ord)
+  deriving anyclass (Cacheable, Hashable, NFData, ToJSON)
+
+parseValue :: IR.S.T.Type -> J.Value -> J.Parser Value
+parseValue type' val =
+  case (type', val) of
+    (_, J.Null) -> pure Null
+    (IR.S.T.String, value) -> String <$> J.parseJSON value
+    (IR.S.T.Bool, value) -> Boolean <$> J.parseJSON value
+    (IR.S.T.Number, value) -> Number <$> J.parseJSON value

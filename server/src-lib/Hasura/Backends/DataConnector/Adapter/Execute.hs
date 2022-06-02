@@ -77,7 +77,5 @@ buildAction DC.SourceConfig {..} query = do
     Right query' -> do
       queryResponse <- query'
       pure $ encJFromJValue queryResponse
-    Left (IR.InvalidExpression expr) ->
-      throw500 $ "Invalid query constructed: Bad Expression '" <> tshow expr <> "'."
     Left (IR.ExposedLiteral lit) ->
       throw500 $ "Invalid query constructed: Exposed IR Literal '" <> lit <> "'."

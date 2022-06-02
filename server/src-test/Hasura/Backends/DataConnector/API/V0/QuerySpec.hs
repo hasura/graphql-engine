@@ -49,7 +49,7 @@ spec = do
               from = TableName "my_table_name",
               limit = Just 10,
               offset = Just 20,
-              where_ = Just $ Literal $ ValueWrapper $ Boolean True,
+              where_ = Just . And $ ValueWrapper [],
               orderBy = Just [OrderBy (ColumnName "my_column_name") Ascending]
             }
     testToFromJSONToSchema
@@ -59,7 +59,7 @@ spec = do
           "from": "my_table_name",
           "limit": 10,
           "offset": 20,
-          "where": {"type": "literal", "value": true},
+          "where": {"type": "and", "expressions": []},
           "order_by": [{"column": "my_column_name", "ordering": "asc"}]
         }
       |]
