@@ -30,7 +30,6 @@ module.exports = {
   entry: {
     main: [
       `webpack-hot-middleware/client?path=http://${host}:${port}/__webpack_hmr`,
-      'font-awesome-webpack!./src/theme/font-awesome.config.js',
       './src/client.js',
     ],
   },
