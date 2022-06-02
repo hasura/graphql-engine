@@ -1,6 +1,6 @@
 module Test.QuerySpec.BasicSpec (spec) where
 
-import Autodocodec.Extended (ValueWrapper (..), ValueWrapper2 (..), ValueWrapper3 (ValueWrapper3))
+import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (ValueWrapper3))
 import Control.Lens (ix, (^?))
 import Data.Aeson.Lens (AsNumber (_Number), AsPrimitive (_String))
 import Data.HashMap.Strict qualified as HashMap
@@ -95,7 +95,7 @@ spec api config = describe "Basic Queries" $ do
 
   describe "Where" $ do
     it "can filter using an equality expression" $ do
-      let where' = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 2))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
@@ -105,7 +105,7 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter using an inequality expression" $ do
-      let where' = Not (ValueWrapper (ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))))
+      let where' = Not (ValueWrapper (ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 2))))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
@@ -115,7 +115,7 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter using an in expression" $ do
-      let where' = In (ValueWrapper2 (Column (ValueWrapper (ColumnName "id"))) [Number 2, Number 3])
+      let where' = ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (ColumnName "id") (ScalarValue . ValueWrapper <$> [Number 2, Number 3]))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
@@ -125,7 +125,7 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can negate an in expression filter using a not expression" $ do
-      let where' = Not (ValueWrapper (In (ValueWrapper2 (Column (ValueWrapper (ColumnName "id"))) [Number 2, Number 3])))
+      let where' = Not (ValueWrapper (ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (ColumnName "id") (ScalarValue . ValueWrapper <$> [Number 2, Number 3]))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
@@ -135,8 +135,8 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can combine filters using an and expression" $ do
-      let where1 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "artist_id"))) (Literal (ValueWrapper (Number 58))))
-      let where2 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "title"))) (Literal (ValueWrapper (String "Stormbringer"))))
+      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "artist_id") (ScalarValue (ValueWrapper (Number 58))))
+      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "title") (ScalarValue (ValueWrapper (String "Stormbringer"))))
       let where' = And (ValueWrapper [where1, where2])
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
@@ -151,8 +151,8 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can combine filters using an or expression" $ do
-      let where1 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 2))))
-      let where2 = ApplyOperator (ValueWrapper3 Equal (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 3))))
+      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 2))))
+      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 3))))
       let where' = Or (ValueWrapper [where1, where2])
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
@@ -163,7 +163,7 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the greater than operator" $ do
-      let where' = ApplyOperator (ValueWrapper3 GreaterThan (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 300))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (ColumnName "id") (ScalarValue (ValueWrapper (Number 300))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
@@ -173,7 +173,7 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the greater than or equal operator" $ do
-      let where' = ApplyOperator (ValueWrapper3 GreaterThanOrEqual (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 300))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThanOrEqual (ColumnName "id") (ScalarValue (ValueWrapper (Number 300))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
@@ -183,7 +183,7 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the less than operator" $ do
-      let where' = ApplyOperator (ValueWrapper3 LessThan (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 100))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThan (ColumnName "id") (ScalarValue (ValueWrapper (Number 100))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
@@ -193,12 +193,22 @@ spec api config = describe "Basic Queries" $ do
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the less than or equal operator" $ do
-      let where' = ApplyOperator (ValueWrapper3 LessThanOrEqual (Column (ValueWrapper (ColumnName "id"))) (Literal (ValueWrapper (Number 100))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThanOrEqual (ColumnName "id") (ScalarValue (ValueWrapper (Number 100))))
       let query = albumsQuery {where_ = Just where'}
       receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
 
       let expectedAlbums =
             filter ((<= Just 100) . (^? ix "id" . _Number)) Data.albumsAsJson
+
+      receivedAlbums `shouldBe` expectedAlbums
+
+    it "can filter using a greater than operator with a column comparison" $ do
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (ColumnName "id") (AnotherColumn (ValueWrapper (ColumnName "artist_id"))))
+      let query = albumsQuery {where_ = Just where'}
+      receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
+
+      let expectedAlbums =
+            filter (\album -> (album ^? ix "id" . _Number) > (album ^? ix "artist_id" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 

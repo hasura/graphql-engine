@@ -39,13 +39,13 @@ newtype Name ty = Name {unName :: Text}
     )
 
 instance Witch.From API.TableName (Name 'Table) where
-  from (API.TableName n) = coerce @Text @(Name 'Table) n
+  from (API.TableName n) = Name n
 
 instance Witch.From (Name 'Table) API.TableName where
   from (Name n) = API.TableName n
 
 instance Witch.From API.ColumnName (Name 'Column) where
-  from (API.ColumnName n) = coerce @Text @(Name 'Column) n
+  from (API.ColumnName n) = Name n
 
 instance Witch.From (Name 'Column) API.ColumnName where
   from (Name n) = API.ColumnName n

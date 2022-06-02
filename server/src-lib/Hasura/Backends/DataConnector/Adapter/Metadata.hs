@@ -8,23 +8,25 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as Text
-import Data.Text.Extended (toTxt, (<<>))
+import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
-import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
+import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Name qualified as IR.N
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
+import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
-import Hasura.Base.Error (Code (..), QErr, throw400, withPathK)
+import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw500, withPathK)
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..))
+import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
 import Hasura.RQL.Types.Common (OID (..), SourceName)
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
 import Hasura.RQL.Types.Metadata (SourceMetadata (..))
 import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
+import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.RQL.Types.Source (ResolvedSource (..))
 import Hasura.RQL.Types.SourceCustomization (SourceTypeCustomization)
 import Hasura.RQL.Types.Table qualified as RQL.T.T
@@ -138,25 +140,28 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
 -- | This is needed to get permissions to work
 parseBoolExpOperations' ::
   forall m v.
-  MonadError QErr m =>
+  (MonadError QErr m, SchemaCache.TableCoreInfoRM 'DataConnector m) =>
   RQL.T.C.ValueParser 'DataConnector m v ->
   IR.T.Name ->
   RQL.T.T.FieldInfoMap (RQL.T.T.FieldInfo 'DataConnector) ->
   RQL.T.C.ColumnReference 'DataConnector ->
   J.Value ->
   m [OpExpG 'DataConnector v]
-parseBoolExpOperations' rhsParser _table _fields columnRef value =
-  withPathK (toTxt columnRef) $ parseOperations (RQL.T.C.columnReferenceType columnRef) value
+parseBoolExpOperations' rhsParser rootTable fieldInfoMap columnRef value =
+  withPathK (toTxt columnRef) $ parseOperations value
   where
+    columnType :: RQL.T.C.ColumnType 'DataConnector
+    columnType = RQL.T.C.columnReferenceType columnRef
+
     parseWithTy ty = rhsParser (CollectableTypeScalar ty)
 
-    parseOperations :: RQL.T.C.ColumnType 'DataConnector -> J.Value -> m [OpExpG 'DataConnector v]
-    parseOperations columnType = \case
-      J.Object o -> traverse (parseOperation columnType) $ Map.toList o
+    parseOperations :: J.Value -> m [OpExpG 'DataConnector v]
+    parseOperations = \case
+      J.Object o -> traverse parseOperation $ Map.toList o
       v -> pure . AEQ False <$> parseWithTy columnType v
 
-    parseOperation :: RQL.T.C.ColumnType 'DataConnector -> (Text, J.Value) -> m (OpExpG 'DataConnector v)
-    parseOperation columnType (opStr, val) = withPathK opStr $
+    parseOperation :: (Text, J.Value) -> m (OpExpG 'DataConnector v)
+    parseOperation (opStr, val) = withPathK opStr $
       case opStr of
         "_eq" -> parseEq
         "$eq" -> parseEq
@@ -170,31 +175,83 @@ parseBoolExpOperations' rhsParser _table _fields columnRef value =
         "$gte" -> parseGte
         "_lte" -> parseLte
         "$lte" -> parseLte
-        "$in" -> parseIn
         "_in" -> parseIn
-        "$nin" -> parseNin
+        "$in" -> parseIn
         "_nin" -> parseNin
-        -- "$like"          -> parseLike
+        "$nin" -> parseNin
+        "_is_null" -> parseIsNull
+        "$is_null" -> parseIsNull
+        "_ceq" -> parseCeq
+        "$ceq" -> parseCeq
+        "_cneq" -> parseCne
+        "$cneq" -> parseCne
+        "_cgt" -> parseCgt
+        "$cgt" -> parseCgt
+        "_clt" -> parseClt
+        "$clt" -> parseClt
+        "_cgte" -> parseCgte
+        "$cgte" -> parseCgte
+        "_clte" -> parseClte
+        "$clte" -> parseClte
         -- "_like"          -> parseLike
+        -- "$like"          -> parseLike
         --
-        -- "$nlike"         -> parseNlike
         -- "_nlike"         -> parseNlike
+        -- "$nlike"         -> parseNlike
+        --
+        -- "_cast" -> parseCast
+        -- "$cast" -> parseCast
 
         x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
       where
-        colTy = RQL.T.C.columnReferenceType columnRef
-
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val
 
         parseEq = AEQ False <$> parseOne
         parseNeq = ANE False <$> parseOne
-        parseIn = AIN <$> parseManyWithType colTy
-        parseNin = ANIN <$> parseManyWithType colTy
+        parseIn = AIN <$> parseManyWithType columnType
+        parseNin = ANIN <$> parseManyWithType columnType
         parseGt = AGT <$> parseOne
         parseLt = ALT <$> parseOne
         parseGte = AGTE <$> parseOne
         parseLte = ALTE <$> parseOne
+        parseIsNull = bool ANISNOTNULL ANISNULL <$> decodeValue val
+        parseCeq = CEQ <$> decodeAndValidateRhsCol val
+        parseCne = CNE <$> decodeAndValidateRhsCol val
+        parseCgt = CGT <$> decodeAndValidateRhsCol val
+        parseClt = CLT <$> decodeAndValidateRhsCol val
+        parseCgte = CGTE <$> decodeAndValidateRhsCol val
+        parseClte = CLTE <$> decodeAndValidateRhsCol val
+
+        decodeAndValidateRhsCol :: J.Value -> m (RootOrCurrentColumn 'DataConnector)
+        decodeAndValidateRhsCol v = case v of
+          J.String _ -> go IsCurrent fieldInfoMap v
+          J.Array path -> case toList path of
+            [] -> throw400 Unexpected "path cannot be empty"
+            [col] -> go IsCurrent fieldInfoMap col
+            [J.String "$", col] -> do
+              rootTableInfo <-
+                SchemaCache.lookupTableCoreInfo rootTable
+                  >>= flip onNothing (throw500 $ "unexpected: " <> rootTable <<> " doesn't exist")
+              go IsRoot (RQL.T.T._tciFieldInfoMap rootTableInfo) col
+            _ -> throw400 NotSupported "Relationship references are not supported in column comparison RHS"
+          _ -> throw400 Unexpected "a boolean expression JSON must be either a string or an array"
+          where
+            go rootInfo fieldInfoMap' columnValue = do
+              colName <- decodeValue columnValue
+              colInfo <- validateRhsColumn fieldInfoMap' colName
+              pure $ RootOrCurrentColumn rootInfo colInfo
+
+        validateRhsColumn :: RQL.T.T.FieldInfoMap (RQL.T.T.FieldInfo 'DataConnector) -> IR.C.Name -> m IR.C.Name
+        validateRhsColumn fieldInfoMap' rhsCol = do
+          rhsType <- RQL.T.T.askColumnType fieldInfoMap' rhsCol "column operators can only compare table columns"
+          when (columnType /= rhsType) $
+            throw400 UnexpectedPayload $
+              "incompatible column types: "
+                <> columnRef <<> " has type "
+                <> columnType <<> ", but "
+                <> rhsCol <<> " has type " <>> rhsType
+          pure rhsCol
 
 parseCollectableType' ::
   MonadError QErr m =>
@@ -207,7 +264,7 @@ parseCollectableType' collectableType = \case
     | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType HSU.userIdHeader
   val -> case collectableType of
     CollectableTypeScalar scalarType ->
-      PSESQLExp . IR.E.Literal <$> RQL.T.C.parseScalarValueColumnType scalarType val
+      PSESQLExp . IR.S.V.ValueLiteral <$> RQL.T.C.parseScalarValueColumnType scalarType val
     CollectableTypeArray _ ->
       throw400 NotSupported "Array types are not supported by the Data Connector backend"
 

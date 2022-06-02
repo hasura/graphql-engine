@@ -19,10 +19,12 @@ import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Min (..))
 import Data.Text as T
 import Data.Text.Encoding qualified as TE
+import Data.Text.Extended ((<>>))
 import Data.These
 import Data.Vector qualified as V
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types
+import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Export qualified as IR
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
@@ -81,7 +83,7 @@ mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = transla
       QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
       m Plan
     translateQueryDB =
-      traverse replaceSessionVariables >=> \case
+      \case
         QDBMultipleRows s -> do
           query <- translateAnnSelect IR.Q.Many s
           pure $
@@ -96,19 +98,20 @@ mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = transla
 
     translateAnnSelect ::
       IR.Q.Cardinality ->
-      AnnSimpleSelectG 'DataConnector Void IR.E.Expression ->
+      AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
       m IR.Q.Query
-    translateAnnSelect card s = do
-      tableName <- case _asnFrom s of
+    translateAnnSelect card selectG = do
+      tableName <- case _asnFrom selectG of
         FromTable tn -> pure tn
-        _ -> throw400 NotSupported "SelectFromG: not supported"
-      fields <- translateFields card (_asnFields s)
+        FromIdentifier _ -> throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
+        FromFunction {} -> throw400 NotSupported "AnnSelectG: FromFunction not supported"
+      fields <- translateFields card (_asnFields selectG)
       let whereClauseWithPermissions =
-            case _saWhere (_asnArgs s) of
-              Just expr -> BoolAnd [expr, _tpFilter (_asnPerm s)]
-              Nothing -> _tpFilter (_asnPerm s)
+            case _saWhere (_asnArgs selectG) of
+              Just expr -> BoolAnd [expr, _tpFilter (_asnPerm selectG)]
+              Nothing -> _tpFilter (_asnPerm selectG)
       whereClause <- translateBoolExp whereClauseWithPermissions
-      orderBy <- translateOrderBy (_saOrderBy $ _asnArgs s)
+      orderBy <- translateOrderBy (_saOrderBy $ _asnArgs selectG)
       pure
         IR.Q.Query
           { from = tableName,
@@ -117,17 +120,17 @@ mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = transla
               fmap getMin $
                 foldMap
                   (fmap Min)
-                  [ _saLimit (_asnArgs s),
-                    _tpLimit (_asnPerm s)
+                  [ _saLimit (_asnArgs selectG),
+                    _tpLimit (_asnPerm selectG)
                   ],
-            offset = fmap fromIntegral (_saOffset (_asnArgs s)),
+            offset = fmap fromIntegral (_saOffset (_asnArgs selectG)),
             where_ = Just whereClause,
             orderBy = orderBy,
             cardinality = card
           }
 
     translateOrderBy ::
-      Maybe (NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector IR.E.Expression)) ->
+      Maybe (NE.NonEmpty (AnnotatedOrderByItemG 'DataConnector (UnpreparedValue 'DataConnector))) ->
       m [IR.O.OrderBy]
     translateOrderBy = \case
       Nothing -> pure []
@@ -142,108 +145,161 @@ mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = transla
                     -- NOTE: Picking a default ordering.
                     ordering = fromMaybe IR.O.Ascending obiType
                   }
-            _ -> throw400 NotSupported "translateOrderBy: references unsupported in the Data Connector backend"
+            AOCObjectRelation {} ->
+              throw400 NotSupported "translateOrderBy: AOCObjectRelation unsupported in the Data Connector backend"
+            AOCArrayAggregation {} ->
+              throw400 NotSupported "translateOrderBy: AOCArrayAggregation unsupported in the Data Connector backend"
 
     translateFields ::
       IR.Q.Cardinality ->
-      AnnFieldsG 'DataConnector Void IR.E.Expression ->
+      AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
       m (HashMap Text IR.Q.Field)
-    translateFields card xs = do
-      fields <- traverse (traverse (translateField card)) xs
+    translateFields cardinality fields = do
+      translatedFields <- traverse (traverse (translateField cardinality)) fields
       pure $
         HashMap.fromList $
           mapMaybe
             sequence
-            ( [ (getFieldNameTxt f, field)
-                | (f, field) <- fields
-              ]
-            )
+            [(getFieldNameTxt f, field) | (f, field) <- translatedFields]
 
     translateField ::
       IR.Q.Cardinality ->
-      AnnFieldG 'DataConnector Void IR.E.Expression ->
+      AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
       m (Maybe IR.Q.Field)
-    translateField _card (AFColumn colField) =
-      -- TODO: make sure certain fields in colField are not in use, since we don't
-      -- support them
-      pure $ Just $ IR.Q.Column (IR.Q.ColumnContents $ _acfColumn colField)
-    translateField card (AFObjectRelation objRel) = do
-      fields <- translateFields card (_aosFields (_aarAnnSelect objRel))
-      whereClause <- translateBoolExp (_aosTableFilter (_aarAnnSelect objRel))
-      pure $
-        Just $
-          IR.Q.Relationship $
-            IR.Q.RelationshipContents
-              (HashMap.mapKeys IR.Q.PrimaryKey $ fmap IR.Q.ForeignKey $ _aarColumnMapping objRel)
-              ( IR.Q.Query
-                  { fields = fields,
-                    from = _aosTableFrom (_aarAnnSelect objRel),
-                    where_ = Just whereClause,
-                    limit = Nothing,
-                    offset = Nothing,
-                    orderBy = [],
-                    cardinality = card
-                  }
-              )
-    translateField _card (AFArrayRelation (ASSimple arrRel)) = do
-      query <- translateAnnSelect IR.Q.Many (_aarAnnSelect arrRel)
-      pure $ Just $ IR.Q.Relationship $ IR.Q.RelationshipContents (HashMap.mapKeys IR.Q.PrimaryKey $ fmap IR.Q.ForeignKey $ _aarColumnMapping arrRel) query
-    translateField _card (AFExpression _literal) =
-      pure Nothing
-    translateField _ _ = throw400 NotSupported "translateField: field type not supported"
+    translateField cardinality = \case
+      AFColumn colField ->
+        -- TODO: make sure certain fields in colField are not in use, since we don't
+        -- support them
+        pure $ Just $ IR.Q.Column (IR.Q.ColumnContents $ _acfColumn colField)
+      AFObjectRelation objRel -> do
+        fields <- translateFields cardinality (_aosFields (_aarAnnSelect objRel))
+        whereClause <- translateBoolExp (_aosTableFilter (_aarAnnSelect objRel))
+        pure . Just . IR.Q.Relationship $
+          IR.Q.RelationshipContents
+            (HashMap.mapKeys IR.Q.PrimaryKey . fmap IR.Q.ForeignKey $ _aarColumnMapping objRel)
+            ( IR.Q.Query
+                { fields = fields,
+                  from = _aosTableFrom (_aarAnnSelect objRel),
+                  where_ = Just whereClause,
+                  limit = Nothing,
+                  offset = Nothing,
+                  orderBy = [],
+                  cardinality = cardinality
+                }
+            )
+      AFArrayRelation (ASSimple arrRel) -> do
+        query <- translateAnnSelect IR.Q.Many (_aarAnnSelect arrRel)
+        pure . Just . IR.Q.Relationship $
+          IR.Q.RelationshipContents
+            (HashMap.mapKeys IR.Q.PrimaryKey $ fmap IR.Q.ForeignKey $ _aarColumnMapping arrRel)
+            query
+      AFArrayRelation (ASAggregate _) ->
+        throw400 NotSupported "translateField: AFArrayRelation ASAggregate not supported"
+      AFExpression _literal ->
+        pure Nothing
 
-    replaceSessionVariables ::
+    prepareLiterals ::
       UnpreparedValue 'DataConnector ->
-      m IR.E.Expression
-    replaceSessionVariables (UVLiteral e) = pure e
-    replaceSessionVariables (UVParameter _ e) = pure (IR.E.Literal (cvValue e))
-    replaceSessionVariables UVSession = throw400 NotSupported "replaceSessionVariables: UVSession"
-    replaceSessionVariables (UVSessionVar _ v) =
+      m IR.S.Literal
+    prepareLiterals (UVLiteral literal) = pure $ literal
+    prepareLiterals (UVParameter _ e) = pure (IR.S.ValueLiteral (cvValue e))
+    prepareLiterals UVSession = throw400 NotSupported "prepareLiterals: UVSession"
+    prepareLiterals (UVSessionVar _ v) =
       case getSessionVariableValue v session of
-        Nothing -> throw400 NotSupported "session var not found"
-        Just s -> pure (IR.E.Literal (IR.S.String s))
+        Nothing -> throw400 NotSupported ("prepareLiterals: session var not found: " <>> v)
+        Just s -> pure (IR.S.ValueLiteral (IR.S.String s))
 
     translateBoolExp ::
-      AnnBoolExp 'DataConnector IR.E.Expression ->
+      AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
       m IR.E.Expression
-    translateBoolExp (BoolAnd xs) =
-      IR.E.And <$> traverse translateBoolExp xs
-    translateBoolExp (BoolOr xs) =
-      IR.E.Or <$> traverse translateBoolExp xs
-    translateBoolExp (BoolNot x) =
-      IR.E.Not <$> translateBoolExp x
-    translateBoolExp (BoolFld (AVColumn c xs)) =
-      IR.E.And
-        <$> sequence
-          [translateOp (IR.E.Column (ciColumn c)) x | x <- xs]
-    translateBoolExp _ =
-      throw400 NotSupported "An expression type is not supported by the Data Connector backend"
+    translateBoolExp = \case
+      BoolAnd xs ->
+        IR.E.And <$> traverse (translateBoolExp) xs
+      BoolOr xs ->
+        IR.E.Or <$> traverse (translateBoolExp) xs
+      BoolNot x ->
+        IR.E.Not <$> (translateBoolExp) x
+      BoolFld (AVColumn c xs) ->
+        IR.E.And
+          <$> sequence
+            [translateOp (ciColumn c) x | x <- xs]
+      BoolFld (AVRelationship _ _) ->
+        throw400 NotSupported "The BoolFld AVRelationship expression type is not supported by the Data Connector backend"
+      BoolExists _ ->
+        throw400 NotSupported "The BoolExists expression type is not supported by the Data Connector backend"
 
     translateOp ::
-      IR.E.Expression ->
-      OpExpG 'DataConnector IR.E.Expression ->
+      IR.C.Name ->
+      OpExpG 'DataConnector (UnpreparedValue 'DataConnector) ->
       m IR.E.Expression
-    translateOp lhs = \case
-      AEQ _ rhs ->
-        pure $ IR.E.ApplyOperator IR.E.Equal lhs rhs
-      ANE _ rhs ->
-        pure $ IR.E.Not (IR.E.ApplyOperator IR.E.Equal lhs rhs)
-      AGT rhs ->
-        pure $ IR.E.ApplyOperator IR.E.GreaterThan lhs rhs
-      ALT rhs ->
-        pure $ IR.E.ApplyOperator IR.E.LessThan lhs rhs
-      AGTE rhs ->
-        pure $ IR.E.ApplyOperator IR.E.GreaterThanOrEqual lhs rhs
-      ALTE rhs ->
-        pure $ IR.E.ApplyOperator IR.E.LessThanOrEqual lhs rhs
-      ANISNULL ->
-        pure $ IR.E.IsNull lhs
-      ANISNOTNULL ->
-        pure $ IR.E.Not (IR.E.IsNull lhs)
-      AIN (IR.E.Array rhs) -> pure $ IR.E.In lhs rhs
-      ANIN (IR.E.Array rhs) -> pure $ IR.E.Not $ IR.E.In lhs rhs
-      _ ->
-        throw400 NotSupported "An operator is not supported by the Data Connector backend"
+    translateOp columnName opExp = do
+      preparedOpExp <- traverse prepareLiterals $ opExp
+      case preparedOpExp of
+        AEQ _ (IR.S.ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.Equal value
+        AEQ _ (IR.S.ArrayLiteral _array) ->
+          throw400 NotSupported "Array literals not supported for AEQ operator"
+        ANE _ (IR.S.ValueLiteral value) ->
+          pure . IR.E.Not $ mkApplyBinaryComparisonOperatorToScalar IR.E.Equal value
+        ANE _ (IR.S.ArrayLiteral _array) ->
+          throw400 NotSupported "Array literals not supported for ANE operator"
+        AGT (IR.S.ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.GreaterThan value
+        AGT (IR.S.ArrayLiteral _array) ->
+          throw400 NotSupported "Array literals not supported for AGT operator"
+        ALT (IR.S.ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.LessThan value
+        ALT (IR.S.ArrayLiteral _array) ->
+          throw400 NotSupported "Array literals not supported for ALT operator"
+        AGTE (IR.S.ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.GreaterThanOrEqual value
+        AGTE (IR.S.ArrayLiteral _array) ->
+          throw400 NotSupported "Array literals not supported for AGTE operator"
+        ALTE (IR.S.ValueLiteral value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar IR.E.LessThanOrEqual value
+        ALTE (IR.S.ArrayLiteral _array) ->
+          throw400 NotSupported "Array literals not supported for ALTE operator"
+        ANISNULL ->
+          pure $ IR.E.ApplyUnaryComparisonOperator IR.E.IsNull columnName
+        ANISNOTNULL ->
+          pure $ IR.E.Not (IR.E.ApplyUnaryComparisonOperator IR.E.IsNull columnName)
+        AIN literal -> pure $ inOperator literal
+        ANIN literal -> pure . IR.E.Not $ inOperator literal
+        CEQ rootOrCurrentColumn ->
+          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
+        CNE rootOrCurrentColumn ->
+          IR.E.Not <$> mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
+        CGT rootOrCurrentColumn ->
+          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThan rootOrCurrentColumn
+        CLT rootOrCurrentColumn ->
+          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThan rootOrCurrentColumn
+        CGTE rootOrCurrentColumn ->
+          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThanOrEqual rootOrCurrentColumn
+        CLTE rootOrCurrentColumn ->
+          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThanOrEqual rootOrCurrentColumn
+        ALIKE _literal ->
+          throw400 NotSupported "The ALIKE operator is not supported by the Data Connector backend"
+        ANLIKE _literal ->
+          throw400 NotSupported "The ANLIKE operator is not supported by the Data Connector backend"
+        ACast _literal ->
+          throw400 NotSupported "The ACast operator is not supported by the Data Connector backend"
+      where
+        mkApplyBinaryComparisonOperatorToAnotherColumn :: IR.E.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> m IR.E.Expression
+        mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) = do
+          case rootOrCurrent of
+            IsRoot -> throw400 NotSupported "Comparing columns on the root table in a BoolExp is not supported by the Data Connector backend"
+            IsCurrent -> pure $ IR.E.ApplyBinaryComparisonOperator operator columnName (IR.E.AnotherColumn otherColumnName)
+
+        inOperator :: IR.S.Literal -> IR.E.Expression
+        inOperator literal =
+          let values = case literal of
+                IR.S.ArrayLiteral array -> IR.E.ScalarValue <$> array
+                IR.S.ValueLiteral value -> [IR.E.ScalarValue value]
+           in IR.E.ApplyBinaryArrayComparisonOperator IR.E.In columnName values
+
+        mkApplyBinaryComparisonOperatorToScalar :: IR.E.BinaryComparisonOperator -> IR.S.Value -> IR.E.Expression
+        mkApplyBinaryComparisonOperatorToScalar operator value =
+          IR.E.ApplyBinaryComparisonOperator operator columnName (IR.E.ScalarValue value)
 
 -- | We need to modify any JSON substructures which appear as a result
 -- of fetching object relationships, to peel off the outer array sent

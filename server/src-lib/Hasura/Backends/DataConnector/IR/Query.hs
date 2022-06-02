@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 module Hasura.Backends.DataConnector.IR.Query
   ( Query (..),
     Field (..),

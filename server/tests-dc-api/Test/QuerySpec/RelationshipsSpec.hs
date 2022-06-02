@@ -38,7 +38,8 @@ spec api config = describe "Relationship Queries" $ do
 
     let joinInAlbums (artist :: Object) =
           let artistId = artist ^? ix "id" . _Number
-              albums = maybe [] (\artistId' -> filter (\album -> album ^? ix "artist_id" . _Number == Just artistId') Data.albumsAsJson) artistId
+              albumFilter artistId' album = album ^? ix "artist_id" . _Number == Just artistId'
+              albums = maybe [] (\artistId' -> filter (albumFilter artistId') Data.albumsAsJson) artistId
               albums' = Object . HashMap.delete "artist_id" <$> albums
            in HashMap.insert "albums" (Array . Vector.fromList $ albums') artist
 

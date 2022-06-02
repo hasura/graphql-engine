@@ -2,12 +2,16 @@
 
 module Hasura.Backends.DataConnector.IR.Expression
   ( Expression (..),
-    Operator (..),
+    BinaryComparisonOperator (..),
+    BinaryArrayComparisonOperator (..),
+    UnaryComparisonOperator (..),
+    ComparisonValue (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
+import Autodocodec.Extended (ValueWrapper (..), ValueWrapper2 (..), ValueWrapper3 (..))
 import Data.Aeson (FromJSON, ToJSON)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -32,27 +36,7 @@ import Witch qualified
 --
 -- e.g. https://www.postgresql.org/docs/13/sql-expressions.html
 data Expression
-  = -- | A constant 'Scalar.Value'.
-    Literal IR.S.Value
-  | -- | A literal array of 'Scalar.Value's.
-    --
-    -- NOTE: This constructor is necessary for purposes of parsing
-    -- into the RQL IR but should never be exposed by the GDW API.
-    Array [IR.S.Value]
-  | -- | A construct for making multiple comparisons between groups of
-    -- 'Scalar.Value's.
-    --
-    -- The right-hand side is a collection of unique 'Scalar.Value's; the
-    -- result is "true" if the result of the left-hand 'Expression' is equal to
-    -- any of these 'Scalar.Value's.
-    --
-    -- cf. https://www.postgresql.org/docs/13/functions-comparisons.html#FUNCTIONS-COMPARISONS-IN-SCALAR
-    --
-    -- Consider switching this to a 'Set' after the typeclass methods which use
-    -- this type have been implemented and we have an opportunity to see how
-    -- its used in practice.
-    In Expression [IR.S.Value]
-  | -- | A logical @AND@ fold.
+  = -- | A logical @AND@ fold.
     --
     -- cf. https://www.postgresql.org/docs/13/functions-logical.html
     And [Expression]
@@ -64,26 +48,45 @@ data Expression
     --
     -- cf. https://www.postgresql.org/docs/13/functions-logical.html
     Not Expression
-  | -- | A comparison predicate which returns "true" if an expression evaluates
-    -- to 'Scalar.Null'.
-    IsNull Expression
-  | -- | The textual name associated with some "column" of data within a
-    -- datasource.
-    --
-    -- XXX(jkachmar): It's unclear whether "column" is the right descriptor for
-    -- this construct; what we want here seems closer to an "identifier".
-    --
-    -- cf. https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
-    Column IR.C.Name
-  | -- | Apply a comparison 'Operator' to two expressions; the result of this
-    -- application will return "true" or "false" depending on the 'Operator'
-    -- that's being applied.
-    --
-    -- XXX(jkachmar): Consider renaming 'Operator' to @ComparisonOperator@ and
-    -- this sub-expression to @ApplyComparisonOperator@ for clarity.
-    ApplyOperator Operator Expression Expression
+  | -- | Apply a 'BinaryComparisonOperator' that compares a column to a 'ComparisonValue';
+    -- the result of this application will return "true" or "false" depending on the
+    -- 'BinaryComparisonOperator' that's being applied.
+    ApplyBinaryComparisonOperator BinaryComparisonOperator IR.C.Name ComparisonValue
+  | -- | Apply a 'BinaryArrayComparisonOperator' that evaluates a column with the
+    -- 'BinaryArrayComparisonOperator' against an array of 'ComparisonValue's.
+    -- The result of this application will return "true" or "false" depending
+    -- on the 'BinaryArrayComparisonOperator' that's being applied.
+    ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator IR.C.Name [ComparisonValue]
+  | -- | Apply a 'UnaryComparisonOperator' that evaluates a column with the
+    -- 'UnaryComparisonOperator'; the result of this application will return "true" or
+    -- "false" depending on the 'UnaryComparisonOperator' that's being applied.
+    ApplyUnaryComparisonOperator UnaryComparisonOperator IR.C.Name
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance Witch.From Expression API.Expression where
+  from = \case
+    And exprs -> API.And . ValueWrapper $ Witch.from <$> exprs
+    Or exprs -> API.Or . ValueWrapper $ Witch.from <$> exprs
+    Not expr -> API.Not . ValueWrapper $ Witch.from expr
+    ApplyBinaryComparisonOperator op column value ->
+      API.ApplyBinaryComparisonOperator $ ValueWrapper3 (Witch.from op) (Witch.from column) (Witch.from value)
+    ApplyUnaryComparisonOperator op column ->
+      API.ApplyUnaryComparisonOperator $ ValueWrapper2 (Witch.from op) (Witch.from column)
+    ApplyBinaryArrayComparisonOperator op column values ->
+      API.ApplyBinaryArrayComparisonOperator $ ValueWrapper3 (Witch.from op) (Witch.from column) (Witch.from <$> values)
+
+instance Witch.From API.Expression Expression where
+  from = \case
+    API.And (ValueWrapper exprs) -> And $ Witch.from <$> exprs
+    API.Or (ValueWrapper exprs) -> Or $ Witch.from <$> exprs
+    API.Not (ValueWrapper expr) -> Not $ Witch.from expr
+    API.ApplyBinaryComparisonOperator (ValueWrapper3 op column value) ->
+      ApplyBinaryComparisonOperator (Witch.from op) (Witch.from column) (Witch.from value)
+    API.ApplyBinaryArrayComparisonOperator (ValueWrapper3 op column values) ->
+      ApplyBinaryArrayComparisonOperator (Witch.from op) (Witch.from column) (Witch.from <$> values)
+    API.ApplyUnaryComparisonOperator (ValueWrapper2 op column) ->
+      ApplyUnaryComparisonOperator (Witch.from op) (Witch.from column)
 
 --------------------------------------------------------------------------------
 
@@ -96,7 +99,7 @@ data Expression
 --
 -- We should define the semantics of these comparisons in a way that is clear
 -- and carefully considered.
-data Operator
+data BinaryComparisonOperator
   = LessThan
   | LessThanOrEqual
   | GreaterThan
@@ -105,16 +108,52 @@ data Operator
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
-instance Witch.From API.Operator Operator where
+instance Witch.From API.BinaryComparisonOperator BinaryComparisonOperator where
   from API.LessThan = LessThan
   from API.LessThanOrEqual = LessThanOrEqual
   from API.GreaterThan = GreaterThan
   from API.GreaterThanOrEqual = GreaterThanOrEqual
   from API.Equal = Equal
 
-instance Witch.From Operator API.Operator where
+instance Witch.From BinaryComparisonOperator API.BinaryComparisonOperator where
   from LessThan = API.LessThan
   from LessThanOrEqual = API.LessThanOrEqual
   from GreaterThan = API.GreaterThan
   from GreaterThanOrEqual = API.GreaterThanOrEqual
   from Equal = API.Equal
+
+data UnaryComparisonOperator
+  = IsNull
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance Witch.From API.UnaryComparisonOperator UnaryComparisonOperator where
+  from API.IsNull = IsNull
+
+instance Witch.From UnaryComparisonOperator API.UnaryComparisonOperator where
+  from IsNull = API.IsNull
+
+data BinaryArrayComparisonOperator
+  = In
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance Witch.From API.BinaryArrayComparisonOperator BinaryArrayComparisonOperator where
+  from API.In = In
+
+instance Witch.From BinaryArrayComparisonOperator API.BinaryArrayComparisonOperator where
+  from In = API.In
+
+data ComparisonValue
+  = AnotherColumn IR.C.Name
+  | ScalarValue IR.S.Value
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance Witch.From ComparisonValue API.ComparisonValue where
+  from (AnotherColumn column) = API.AnotherColumn $ ValueWrapper (Witch.from column)
+  from (ScalarValue value) = API.ScalarValue . ValueWrapper $ Witch.from value
+
+instance Witch.From API.ComparisonValue ComparisonValue where
+  from (API.AnotherColumn (ValueWrapper column)) = AnotherColumn (Witch.from column)
+  from (API.ScalarValue (ValueWrapper value)) = ScalarValue $ Witch.from value
