@@ -20,11 +20,14 @@ import Test.QuerySpec qualified
 import Test.SchemaSpec qualified
 import Prelude
 
-tests :: Client IO (NamedRoutes Routes) -> API.Config -> API.Capabilities -> Spec
-tests api agentConfig capabilities = do
+testSourceName :: API.SourceName
+testSourceName = "dc-api-tests"
+
+tests :: Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
+tests api sourceName agentConfig capabilities = do
   Test.ConfigSchemaSpec.spec api agentConfig
-  Test.SchemaSpec.spec api agentConfig capabilities
-  Test.QuerySpec.spec api agentConfig capabilities
+  Test.SchemaSpec.spec api sourceName agentConfig capabilities
+  Test.QuerySpec.spec api sourceName agentConfig capabilities
 
 main :: IO ()
 main = do
@@ -33,7 +36,7 @@ main = do
     Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
       agentCapabilities <- getAgentCapabilities api _toAgentConfig _toAgentCapabilities
-      runSpec (tests api _toAgentConfig agentCapabilities) (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
+      runSpec (tests api testSourceName _toAgentConfig agentCapabilities) (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
     ExportOpenAPISpec ->
       Text.putStrLn $ encodeToLazyText openApiSchemaJson
 
@@ -50,7 +53,7 @@ throwClientError = either throwIO pure
 
 getAgentCapabilities :: Client IO (NamedRoutes Routes) -> API.Config -> AgentCapabilities -> IO API.Capabilities
 getAgentCapabilities api agentConfig = \case
-  AutoDetect -> fmap API.srCapabilities $ api // _schema $ agentConfig
+  AutoDetect -> API.srCapabilities <$> (api // _schema) testSourceName agentConfig
   Explicit capabilities -> pure capabilities
 
 applyTestConfig :: Config -> TestOptions -> Config

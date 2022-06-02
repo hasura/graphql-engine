@@ -12,5 +12,5 @@ import Prelude
 
 --------------------------------------------------------------------------------
 
-schemaHandler :: API.Config -> Handler API.SchemaResponse
-schemaHandler _config = pure schema
+schemaHandler :: API.SourceName -> API.Config -> Handler API.SchemaResponse
+schemaHandler _sourceName _config = pure schema

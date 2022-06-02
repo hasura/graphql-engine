@@ -17,11 +17,11 @@ import Test.Hspec (Spec, describe, it)
 import Test.Hspec.Expectations.Pretty (shouldBe)
 import Prelude
 
-spec :: Client IO (NamedRoutes Routes) -> Config -> Spec
-spec api config = describe "Relationship Queries" $ do
+spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
+spec api sourceName config = describe "Relationship Queries" $ do
   it "perform a many to one query by joining artist to albums" $ do
     let query = albumsWithArtistQuery id
-    receivedAlbums <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
+    receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
 
     let joinInArtist (album :: Object) =
           let artist = (album ^? ix "artist_id" . _Number) >>= \artistId -> Data.artistsAsJsonById ^? ix artistId
@@ -34,7 +34,7 @@ spec api config = describe "Relationship Queries" $ do
 
   it "perform a one to many query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
-    receivedArtists <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) config query
+    receivedArtists <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
 
     let joinInAlbums (artist :: Object) =
           let artistId = artist ^? ix "id" . _Number
