@@ -3,7 +3,10 @@ import { headersSchema } from '../Headers';
 
 export const schema = z.object({
   name: z.string().min(1, 'Remote Schema name is a required field!'),
-  url: z.string().url().min(1, 'URL is a required field!'),
+  url: z.object({
+    value: z.string(),
+    type: z.literal('from_url').or(z.literal('from_env')),
+  }),
   headers: headersSchema,
   forward_client_headers: z.preprocess(val => {
     if (val === 'true') return true;
