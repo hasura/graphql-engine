@@ -213,14 +213,6 @@
     padding-left: 10px !important;
   }
 }
-.title::before {
-  font-family: FontAwesome;
-  font-size: 10px;
-  content: '\f078';
-  display: inline-block;
-  margin-right: 6px;
-}
-
 .titleClosed::before {
   transform: rotate(-90deg);
 }

@@ -48,8 +48,6 @@ server-build:
 	if [ ! -d "$(DIST_PATH)/common" ]; then \
 		mkdir -p $(DIST_PATH); \
 		gsutil -m cp -r gs://$(BUCKET_NAME)/console/assets/common "$(DIST_PATH)"; \
-		mv "$(DIST_PATH)/common/css/font-awesome.min.css.gz" "$(DIST_PATH)/common/css/font-awesome.min.css"; \
-		gzip "$(DIST_PATH)/common/css/font-awesome.min.css"; \
 	fi
 	rm -rf "$(DIST_PATH)/versioned"
 	npm run build

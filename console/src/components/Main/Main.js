@@ -294,11 +294,11 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <FaCog className={styles.question} />;
+        return <FaCog className={'w-sm h-sm' + styles.question} />;
       }
       return (
         <div className={styles.question}>
-          <FaCog />
+          <FaCog className="w-sm h-sm" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>
@@ -466,7 +466,9 @@ class Main extends React.Component {
               {!this.state.loveConsentState.isDismissed ? (
                 <div
                   id="dropdown_wrapper"
-                  className={`${this.state.isLoveSectionOpen ? 'open' : ''}`}
+                  className={`self-stretch ${
+                    this.state.isLoveSectionOpen ? 'open' : ''
+                  }`}
                 >
                   <LoveSection
                     closeLoveSection={this.closeLoveSection}

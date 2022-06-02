@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { Link } from 'react-router';
 import {
+  FaChevronDown,
+  FaChevronRight,
   FaDatabase,
   FaFolder,
   FaFolderOpen,
@@ -22,6 +24,15 @@ type SourceItemsTypes =
   | 'enum'
   | 'function'
   | 'table';
+
+const sourceItemsTypesToIcons: Record<SourceItemsTypes, ReactNode> = {
+  enum: <FaListUl />,
+  database: <FaDatabase />,
+  function: <FaDatabase />,
+  schema: <></>,
+  table: <FaTable />,
+  view: <></>,
+};
 
 type SourceItem = {
   name: string;
@@ -138,7 +149,7 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
                 style={isActive ? activeStyle : {}}
               >
                 {item.type === 'enum' ? (
-                  <FaListUl />
+                  <FaListUl className="mr-1" />
                 ) : (
                   <FaTable className="mr-1" />
                 )}
@@ -214,6 +225,17 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
             `${styles.title} ${isOpen ? '' : styles.titleClosed}`
           }
         >
+          {isOpen ? (
+            <FaChevronDown
+              className="text-xs mr-1"
+              style={{ strokeWidth: 50 }}
+            />
+          ) : (
+            <FaChevronRight
+              className="text-xs mr-1"
+              style={{ strokeWidth: 50 }}
+            />
+          )}
           {isOpen ? <FaFolderOpen /> : <FaFolder />} {item.name}
         </span>
       </div>
@@ -319,7 +341,18 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           }
           style={showActiveStyle ? activeStyle : {}}
         >
-          {item.name}
+          {isOpen ? (
+            <FaChevronDown
+              className="text-xs mr-1"
+              style={{ strokeWidth: 50 }}
+            />
+          ) : (
+            <FaChevronRight
+              className="text-xs mr-1"
+              style={{ strokeWidth: 50 }}
+            />
+          )}
+          {sourceItemsTypesToIcons[item.type]} {item.name}
         </span>
       </div>
       {isOpen && item.children
