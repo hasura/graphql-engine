@@ -50,6 +50,7 @@ is `graphql-default`, the field names generated will be `my_table`, `my_tableByP
 - server: fix failure when executing consecutive delete mutations on mssql (#8462)
 - server: bugfix: insertion of multiple empty objects should result in multiple entries (#8475)
 - console: add support for application/x-www-form-urlencoded in rest connectors (#8097)
+- cli: add support for multiple admin secrets
 
 ## v2.7.0
 

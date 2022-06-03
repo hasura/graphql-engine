@@ -182,6 +182,9 @@ type ServerConfig struct {
 	AccessKey string `yaml:"access_key,omitempty"`
 	// AdminSecret (optional) Admin secret required to query the endpoint
 	AdminSecret string `yaml:"admin_secret,omitempty"`
+	// Config option to allow specifying multiple admin secrets
+	// https://hasura.io/docs/latest/graphql/cloud/security/multiple-admin-secrets/
+	AdminSecrets []string `yaml:"admin_secrets,omitempty"`
 	// APIPaths (optional) API paths for server
 	APIPaths *ServerAPIPaths `yaml:"api_paths,omitempty"`
 	// InsecureSkipTLSVerify - indicates if TLS verification is disabled or not.
@@ -193,6 +196,22 @@ type ServerConfig struct {
 
 	HTTPClient                 *httpc.Client              `yaml:"-"`
 	HasuraServerInternalConfig HasuraServerInternalConfig `yaml:"-"`
+}
+
+func (c *ServerConfig) GetAdminSecret() string {
+	// when HGE is configured with an admin secret, all API requests to HGE should be
+	// authenticated using a x-hasura-admin-secret header.
+	// admin secrets can be configured with two environment variables
+	// 	- HASURA_GRAPHQL_ADMIN_SECRET (ref: https://hasura.io/docs/latest/graphql/core/deployment/deployment-guides/docker/#docker-secure)
+	// 	- HASURA_GRAPHQL_ADMIN_SECRETS (ref: https://hasura.io/docs/latest/graphql/cloud/security/multiple-admin-secrets/)
+	// the environment variable HASURA_GRAPHQL_ADMIN_SECRETS takes precedence when set
+	if len(c.AdminSecrets) > 0 {
+		// when HASURA_GRAPHQL_ADMIN_SECRETS environment variable is set, use the first available admin secret as the value of the header
+		return c.AdminSecrets[0]
+	} else if c.AdminSecret != "" {
+		return c.AdminSecret
+	}
+	return ""
 }
 
 func (c *ServerConfig) GetHasuraInternalServerConfig(client *httpc.Client) error {
@@ -642,10 +661,7 @@ func (ec *ExecutionContext) Validate() error {
 		return fmt.Errorf("error in getting server feature flags %w", err)
 	}
 
-	// Set Headers
-	if ec.Config.AdminSecret != "" {
-		ec.AddRequestHeaders(map[string]string{GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret})
-	}
+	ec.AddRequestHeaders(map[string]string{GetAdminSecretHeaderName(ec.Version): ec.Config.GetAdminSecret()})
 
 	ec.Config.HTTPClient.SetHeaders(ec.requestHeaders)
 
@@ -829,12 +845,24 @@ func (ec *ExecutionContext) readConfig() error {
 		adminSecret = v.GetString("access_key")
 	}
 
+	// Admin secrets can be specified as a string value of format
+	// ["secret1", "secret2"], similar to how the corresponding environment variable
+	// HASURA_GRAPHQL_ADMIN_SECRETS is configured with the server
+	adminSecretsList := v.GetString("admin_secrets")
+	adminSecrets := []string{}
+	if len(adminSecretsList) > 0 {
+		if err = json.Unmarshal([]byte(adminSecretsList), &adminSecrets); err != nil {
+			return fmt.Errorf("parsing 'admin_secrets' from config.yaml / environment variable HASURA_GRAPHQL_ADMIN_SECRETS failed: expected value of format [\"secret1\", \"secret2\"]: %w", err)
+		}
+	}
+
 	ec.Config = &Config{
 		Version:            ConfigVersion(v.GetInt("version")),
 		DisableInteractive: v.GetBool("disable_interactive"),
 		ServerConfig: ServerConfig{
-			Endpoint:    v.GetString("endpoint"),
-			AdminSecret: adminSecret,
+			Endpoint:     v.GetString("endpoint"),
+			AdminSecret:  adminSecret,
+			AdminSecrets: adminSecrets,
 			APIPaths: &ServerAPIPaths{
 				V1Query:    v.GetString("api_paths.query"),
 				V2Query:    v.GetString("api_paths.v2_query"),
