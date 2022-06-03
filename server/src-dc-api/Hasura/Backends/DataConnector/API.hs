@@ -2,7 +2,6 @@
 module Hasura.Backends.DataConnector.API
   ( module V0,
     Api,
-    ConfigSchemaApi,
     SchemaApi,
     QueryApi,
     ConfigHeader,
@@ -28,9 +27,9 @@ import Prelude
 --------------------------------------------------------------------------------
 -- Servant Routes
 
-type ConfigSchemaApi =
-  "config-schema"
-    :> Get '[JSON] V0.ConfigSchemaResponse
+type CapabilitiesApi =
+  "capabilities"
+    :> Get '[JSON] V0.CapabilitiesResponse
 
 type SchemaApi =
   "schema"
@@ -52,8 +51,8 @@ type SourceNameHeader = Header' '[Required, Strict] "X-Hasura-DataConnector-Sour
 type SourceName = Text
 
 data Routes mode = Routes
-  { -- | 'GET /config-schema'
-    _configSchema :: mode :- ConfigSchemaApi,
+  { -- | 'GET /capabilities'
+    _capabilities :: mode :- CapabilitiesApi,
     -- | 'GET /schema'
     _schema :: mode :- SchemaApi,
     -- | 'POST /query'
@@ -63,11 +62,11 @@ data Routes mode = Routes
 
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = ConfigSchemaApi :<|> SchemaApi :<|> QueryApi
+type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi
-openApiSchema = toOpenApi (Proxy :: Proxy Api)
+openApiSchema = toOpenApi (Proxy @Api)
 
 -- | The OpenAPI 3.0 schema for the API
 --

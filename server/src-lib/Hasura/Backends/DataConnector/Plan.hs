@@ -77,7 +77,7 @@ mkPlan ::
   SourceConfig ->
   QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
   m Plan
-mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = translateQueryDB ir
+mkPlan session (SourceConfig {..}) ir = translateQueryDB ir
   where
     translateQueryDB ::
       QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -88,12 +88,12 @@ mkPlan session (SourceConfig {_scSchema = API.SchemaResponse {..}}) ir = transla
           query <- translateAnnSelect IR.Q.Many s
           pure $
             Plan query $ \API.QueryResponse {getQueryResponse = response} ->
-              fmap API.QueryResponse $ traverse (postProcessResponseRow srCapabilities query) response
+              fmap API.QueryResponse $ traverse (postProcessResponseRow _scCapabilities query) response
         QDBSingleRow s -> do
           query <- translateAnnSelect IR.Q.OneOrZero s
           pure $
             Plan query $ \API.QueryResponse {getQueryResponse = response} ->
-              fmap API.QueryResponse $ traverse (postProcessResponseRow srCapabilities query) response
+              fmap API.QueryResponse $ traverse (postProcessResponseRow _scCapabilities query) response
         QDBAggregation {} -> throw400 NotSupported "QDBAggregation: not supported"
 
     translateAnnSelect ::

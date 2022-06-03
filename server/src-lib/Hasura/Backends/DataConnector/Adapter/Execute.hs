@@ -12,6 +12,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (_scCapabilities))
 import Hasura.Backends.DataConnector.Agent.Client
 import Hasura.Backends.DataConnector.IR.Export as IR
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
@@ -72,7 +73,7 @@ toExplainPlan fieldName plan_ =
 buildAction :: RQL.SourceName -> DC.SourceConfig -> IR.Q.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
 buildAction sourceName DC.SourceConfig {..} query = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
-  when (DC.queryHasRelations query && not (API.dcRelationships (API.srCapabilities _scSchema))) $
+  when (DC.queryHasRelations query && not (API.dcRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
   API.Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) _scManager _scEndpoint
   case IR.queryToAPI query of

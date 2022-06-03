@@ -30,6 +30,7 @@ instance Cacheable ConnSourceConfig where
 data SourceConfig = SourceConfig
   { _scEndpoint :: BaseUrl,
     _scConfig :: API.Config,
+    _scCapabilities :: API.Capabilities,
     _scSchema :: API.SchemaResponse,
     _scManager :: Manager
   }
@@ -41,8 +42,11 @@ instance J.ToJSON SourceConfig where
   toJSON _ = J.String "SourceConfig"
 
 instance Eq SourceConfig where
-  SourceConfig ep1 config1 schema1 _ == SourceConfig ep2 config2 schema2 _ =
-    ep1 == ep2 && config1 == config2 && schema1 == schema2
+  SourceConfig ep1 capabilities1 config1 schema1 _ == SourceConfig ep2 capabilities2 config2 schema2 _ =
+    ep1 == ep2
+      && capabilities1 == capabilities2
+      && config1 == config2
+      && schema1 == schema2
 
 instance Cacheable SourceConfig where
   unchanged _ = (==)

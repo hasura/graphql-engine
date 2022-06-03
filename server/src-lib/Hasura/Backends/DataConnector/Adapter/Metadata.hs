@@ -9,6 +9,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
+import Hasura.Backends.DataConnector.API (Routes (_capabilities))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
@@ -68,6 +69,11 @@ resolveSourceConfig' sourceName (DC.ConnSourceConfig config) (DataConnectorKind 
       `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
   manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
   routes@API.Routes {..} <- liftIO $ Agent.Client.client manager _dcoUri
+
+  -- TODO: capabilities applies to all sources for an agent.
+  -- We should be able to call it once per agent and store it in the SchemaCache
+  API.CapabilitiesResponse {crCapabilities} <- runTraceTWithReporter noReporter "capabilities" _capabilities
+
   schemaResponse <- runTraceTWithReporter noReporter "resolve source" $ do
     validateConfiguration routes sourceName dataConnectorName config
     _schema (toTxt sourceName) config
@@ -75,6 +81,7 @@ resolveSourceConfig' sourceName (DC.ConnSourceConfig config) (DataConnectorKind 
     DC.SourceConfig
       { _scEndpoint = _dcoUri,
         _scConfig = config,
+        _scCapabilities = crCapabilities,
         _scSchema = schemaResponse,
         _scManager = manager
       }
@@ -87,8 +94,8 @@ validateConfiguration ::
   API.Config ->
   TraceT (ExceptT QErr m) ()
 validateConfiguration API.Routes {..} sourceName dataConnectorName config = do
-  configSchemaResponse <- _configSchema
-  let errors = API.validateConfigAgainstConfigSchema configSchemaResponse config
+  API.CapabilitiesResponse {crConfigSchemaResponse} <- _capabilities
+  let errors = API.validateConfigAgainstConfigSchema crConfigSchemaResponse config
   unless (null errors) $
     let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
      in throw400
