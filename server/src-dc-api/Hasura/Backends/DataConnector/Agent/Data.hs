@@ -39,8 +39,7 @@ staticData = fromJust $ do
 schema :: API.SchemaResponse
 schema =
   API.SchemaResponse
-    { API.srCapabilities = API.Capabilities {API.dcRelationships = True},
-      API.srTables =
+    { API.srTables =
         [ API.TableInfo
             { API.dtiName = API.TableName "artists",
               API.dtiColumns =

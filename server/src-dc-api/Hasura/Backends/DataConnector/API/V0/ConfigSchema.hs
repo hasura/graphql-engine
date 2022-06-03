@@ -9,6 +9,7 @@ module Hasura.Backends.DataConnector.API.V0.ConfigSchema
   )
 where
 
+import Autodocodec qualified
 import Control.DeepSeq (NFData)
 import Control.Lens ((%~), (&), (.~), (^?))
 import Data.Aeson (FromJSON (..), Object, ToJSON (..), Value (..), eitherDecode, encode, object, withObject, (.:), (.=), (<?>))
@@ -69,6 +70,9 @@ instance ToJSON ConfigSchemaResponse where
           [ "configSchema" .= configSchemaValue,
             "otherSchemas" .= otherSchemasValue
           ]
+
+instance Autodocodec.HasCodec ConfigSchemaResponse where
+  codec = Autodocodec.codecViaAeson "Configuration schemas"
 
 instance ToSchema ConfigSchemaResponse where
   declareNamedSchema _ =

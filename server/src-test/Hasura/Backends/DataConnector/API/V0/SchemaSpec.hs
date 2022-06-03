@@ -15,18 +15,10 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "Capabilities" $ do
-    testToFromJSONToSchema (Capabilities False) [aesonQQ|{"relationships": false}|]
-    jsonOpenApiProperties genCapabilities
   describe "SchemaResponse" $ do
-    testToFromJSONToSchema (SchemaResponse (Capabilities True) []) [aesonQQ|{"capabilities": {"relationships": true}, "tables": []}|]
+    testToFromJSONToSchema (SchemaResponse []) [aesonQQ|{"tables": []}|]
     jsonOpenApiProperties genSchemaResponse
-
-genCapabilities :: MonadGen m => m Capabilities
-genCapabilities = Capabilities <$> Gen.bool
 
 genSchemaResponse :: MonadGen m => m SchemaResponse
 genSchemaResponse =
-  SchemaResponse
-    <$> genCapabilities
-    <*> Gen.list (linear 0 5) genTableInfo
+  SchemaResponse <$> Gen.list (linear 0 5) genTableInfo

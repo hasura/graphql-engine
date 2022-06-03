@@ -163,6 +163,7 @@ library dc-api
   exposed-modules:     Autodocodec.Extended
                      , Hasura.Backends.DataConnector.API
                      , Hasura.Backends.DataConnector.API.V0.API
+                     , Hasura.Backends.DataConnector.API.V0.Capabilities
                      , Hasura.Backends.DataConnector.API.V0.Column
                      , Hasura.Backends.DataConnector.API.V0.ConfigSchema
                      , Hasura.Backends.DataConnector.API.V0.Expression
@@ -947,6 +948,7 @@ test-suite graphql-engine-tests
     Database.MSSQL.TransactionSpec
     Hasura.AppSpec
     Hasura.Backends.DataConnector.API.V0Spec
+    Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
     Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec
     Hasura.Backends.DataConnector.API.V0.ExpressionSpec
@@ -1204,7 +1206,7 @@ test-suite tests-dc-api
       Command
     , Paths_graphql_engine
     , Test.Data
-    , Test.ConfigSchemaSpec
+    , Test.CapabilitiesSpec
     , Test.QuerySpec
     , Test.QuerySpec.BasicSpec
     , Test.QuerySpec.RelationshipsSpec

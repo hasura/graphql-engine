@@ -11,7 +11,7 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
-import Test.ConfigSchemaSpec qualified
+import Test.CapabilitiesSpec qualified
 import Test.Hspec (Spec)
 import Test.Hspec.Core.Runner (runSpec)
 import Test.Hspec.Core.Util (filterPredicate)
@@ -25,8 +25,8 @@ testSourceName = "dc-api-tests"
 
 tests :: Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
 tests api sourceName agentConfig capabilities = do
-  Test.ConfigSchemaSpec.spec api agentConfig
-  Test.SchemaSpec.spec api sourceName agentConfig capabilities
+  Test.CapabilitiesSpec.spec api agentConfig capabilities
+  Test.SchemaSpec.spec api sourceName agentConfig
   Test.QuerySpec.spec api sourceName agentConfig capabilities
 
 main :: IO ()
@@ -35,7 +35,7 @@ main = do
   case command of
     Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
-      agentCapabilities <- getAgentCapabilities api _toAgentConfig _toAgentCapabilities
+      agentCapabilities <- getAgentCapabilities api _toAgentCapabilities
       runSpec (tests api testSourceName _toAgentConfig agentCapabilities) (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
     ExportOpenAPISpec ->
       Text.putStrLn $ encodeToLazyText openApiSchemaJson
@@ -51,9 +51,9 @@ mkIOApiClient TestOptions {..} = do
 throwClientError :: Either ClientError a -> IO a
 throwClientError = either throwIO pure
 
-getAgentCapabilities :: Client IO (NamedRoutes Routes) -> API.Config -> AgentCapabilities -> IO API.Capabilities
-getAgentCapabilities api agentConfig = \case
-  AutoDetect -> API.srCapabilities <$> (api // _schema) testSourceName agentConfig
+getAgentCapabilities :: Client IO (NamedRoutes Routes) -> AgentCapabilities -> IO API.Capabilities
+getAgentCapabilities api = \case
+  AutoDetect -> API.crCapabilities <$> (api // _capabilities)
   Explicit capabilities -> pure capabilities
 
 applyTestConfig :: Config -> TestOptions -> Config

@@ -23,20 +23,24 @@ import Prelude
 
 --------------------------------------------------------------------------------
 
-configHandler :: Handler API.ConfigSchemaResponse
-configHandler =
+capabilitiesHandler :: Handler API.CapabilitiesResponse
+capabilitiesHandler =
   pure $
-    API.ConfigSchemaResponse
-      { _csrConfigSchema =
-          mempty
-            { OpenApi._schemaType = Just OpenApi.OpenApiObject,
-              OpenApi._schemaNullable = Just False
-            },
-        _csrOtherSchemas = mempty
+    API.CapabilitiesResponse
+      { crCapabilities = API.Capabilities {API.dcRelationships = True},
+        crConfigSchemaResponse =
+          API.ConfigSchemaResponse
+            { _csrConfigSchema =
+                mempty
+                  { OpenApi._schemaType = Just OpenApi.OpenApiObject,
+                    OpenApi._schemaNullable = Just False
+                  },
+              _csrOtherSchemas = mempty
+            }
       }
 
 dcReferenceServer :: Server API.Api
-dcReferenceServer = configHandler :<|> schemaHandler :<|> queryHandler staticData
+dcReferenceServer = capabilitiesHandler :<|> schemaHandler :<|> queryHandler staticData
 
 -- TODO(SOLOMON):
 dcMockableServer :: Server API.Api

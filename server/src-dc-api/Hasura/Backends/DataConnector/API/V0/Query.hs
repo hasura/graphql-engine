@@ -10,6 +10,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     RelField (..),
     ForeignKey (..),
     PrimaryKey (..),
+    QueryResponse (..),
   )
 where
 
@@ -17,8 +18,9 @@ where
 
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
+import Control.DeepSeq (NFData)
 import Control.Lens.TH (makePrisms)
-import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
+import Data.Aeson (FromJSON, FromJSONKey, Object, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.HashMap.Strict qualified as M
 import Data.Hashable (Hashable)
@@ -116,3 +118,12 @@ deriving via Autodocodec Field instance FromJSON Field
 deriving via Autodocodec Field instance ToJSON Field
 
 deriving via Autodocodec Field instance ToSchema Field
+
+--------------------------------------------------------------------------------
+-- Query Response
+
+-- | The resolved query response provided by the 'POST /query'
+-- endpoint encoded as 'J.Value'.
+newtype QueryResponse = QueryResponse {getQueryResponse :: [Object]}
+  deriving newtype (Eq, Ord, Show, NFData)
+  deriving (ToJSON, FromJSON, ToSchema) via Autodocodec [Object]
