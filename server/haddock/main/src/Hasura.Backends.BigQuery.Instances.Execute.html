@@ -41,7 +41,7 @@
 </span><span id="line-41"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="MultiplexedQuery"><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MultiplexedQuery"><span class="hs-identifier hs-var">MultiplexedQuery</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ExecutionMonad"><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#ExecutionMonad"><span class="hs-identifier hs-var">ExecutionMonad</span></a></span></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621689112919"><span class="annot"><span class="annottext">mkDBQueryPlan :: UserInfo
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621689113426"><span class="annot"><span class="annottext">mkDBQueryPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
@@ -59,7 +59,7 @@ UserInfo
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m (DBStepInfo 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryPlan"><span class="hs-identifier hs-var">bqDBQueryPlan</span></a></span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621689112916"><span class="annot"><span class="annottext">mkDBMutationPlan :: UserInfo
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621689113423"><span class="annot"><span class="annottext">mkDBMutationPlan :: UserInfo
 -&gt; StringifyNumbers
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
@@ -80,7 +80,7 @@ UserInfo
 -&gt; MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m (DBStepInfo 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBMutationPlan"><span class="hs-identifier hs-var">bqDBMutationPlan</span></a></span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621689112913"><span class="annot"><span class="annottext">mkLiveQuerySubscriptionPlan :: UserInfo
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621689113420"><span class="annot"><span class="annottext">mkLiveQuerySubscriptionPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
 -&gt; Maybe Name
@@ -97,7 +97,7 @@ UserInfo
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Cannot currently perform subscriptions on BigQuery sources.&quot;</span></span><span>
-</span><span id="line-48"></span><span>  </span><span id="local-6989586621689112910"><span class="annot"><span class="annottext">mkDBStreamingSubscriptionPlan :: UserInfo
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621689113417"><span class="annot"><span class="annottext">mkDBStreamingSubscriptionPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
 -&gt; (RootFieldAlias,
@@ -113,7 +113,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Cannot currently perform subscriptions on BigQuery sources.&quot;</span></span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621689112908"><span class="annot"><span class="annottext">mkDBQueryExplain :: RootFieldAlias
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621689113415"><span class="annot"><span class="annottext">mkDBQueryExplain :: RootFieldAlias
 -&gt; UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
@@ -134,7 +134,7 @@ RootFieldAlias
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m (AnyBackend DBStepInfo)
 </span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryExplain"><span class="hs-identifier hs-var">bqDBQueryExplain</span></a></span><span>
-</span><span id="line-51"></span><span>  </span><span id="local-6989586621689112905"><span class="annot"><span class="annottext">mkSubscriptionExplain :: SubscriptionQueryPlan 'BigQuery (MultiplexedQuery 'BigQuery)
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621689113412"><span class="annot"><span class="annottext">mkSubscriptionExplain :: SubscriptionQueryPlan 'BigQuery (MultiplexedQuery 'BigQuery)
 -&gt; m SubscriptionQueryPlanExplanation
 </span><a href="Hasura.GraphQL.Execute.Backend.html#mkSubscriptionExplain"><span class="hs-identifier hs-var hs-var hs-var hs-var">mkSubscriptionExplain</span></a></span></span><span> </span><span class="annot"><span class="annottext">SubscriptionQueryPlan 'BigQuery (MultiplexedQuery 'BigQuery)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -147,7 +147,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span id="line-55"></span><span>  </span><span class="hs-comment">--</span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-comment">-- This function is just a stub for future implementation; for now it just</span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-comment">-- throws a 500 error.</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621689112903"><span class="annot"><span class="annottext">mkDBRemoteRelationshipPlan :: UserInfo
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621689113410"><span class="annot"><span class="annottext">mkDBRemoteRelationshipPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
 -&gt; NonEmpty Object
@@ -182,27 +182,27 @@ UserInfo
 </span><span id="line-61"></span><span class="hs-comment">-- query</span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryPlan"><span class="hs-identifier hs-type">bqDBQueryPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689113053"><span class="annot"><a href="#local-6989586621689113053"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113053"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689113560"><span class="annot"><a href="#local-6989586621689113560"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113560"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier hs-type">QueryDB</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-71"></span><span>  </span><span class="annot"><a href="#local-6989586621689113053"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="#local-6989586621689113560"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span id="bqDBQueryPlan"><span class="annot"><span class="annottext">bqDBQueryPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m (DBStepInfo 'BigQuery)
-</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryPlan"><span class="hs-identifier hs-var hs-var">bqDBQueryPlan</span></a></span></span><span> </span><span id="local-6989586621689112900"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689112900"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621689112899"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689112899"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689112898"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
-</span><a href="#local-6989586621689112898"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689112897"><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112897"><span class="hs-identifier hs-var">qrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryPlan"><span class="hs-identifier hs-var hs-var">bqDBQueryPlan</span></a></span></span><span> </span><span id="local-6989586621689113407"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689113407"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621689113406"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689113406"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689113405"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621689113405"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689113404"><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113404"><span class="hs-identifier hs-var">qrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-comment">-- TODO (naveen): Append query tags to the query</span><span>
-</span><span id="line-74"></span><span>  </span><span id="local-6989586621689112896"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689112896"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIrConfig
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621689113403"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621689113403"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIrConfig
 -&gt; UserInfo
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m Select
@@ -215,13 +215,13 @@ FromIrConfig
 </span><a href="Hasura.Backends.BigQuery.Plan.html#planNoPlan"><span class="hs-identifier hs-var">planNoPlan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; FromIrConfig
 </span><a href="Hasura.Backends.BigQuery.FromIr.html#bigQuerySourceConfigToFromIrConfig"><span class="hs-identifier hs-var">BigQuery.bigQuerySourceConfigToFromIrConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 BigQuerySourceConfig
-</span><a href="#local-6989586621689112898"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689112900"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112897"><span class="hs-identifier hs-var">qrf</span></a></span><span>
-</span><span id="line-75"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689112893"><span class="annot"><span class="annottext">action :: TraceT (ExceptT QErr IO) EncJSON
-</span><a href="#local-6989586621689112893"><span class="hs-identifier hs-var hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-76"></span><span>        </span><span id="local-6989586621689112892"><span class="annot"><span class="annottext">Either ExecuteProblem RecordSet
-</span><a href="#local-6989586621689112892"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689113405"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689113407"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113404"><span class="hs-identifier hs-var">qrf</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689113400"><span class="annot"><span class="annottext">action :: TraceT (ExceptT QErr IO) EncJSON
+</span><a href="#local-6989586621689113400"><span class="hs-identifier hs-var hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-76"></span><span>        </span><span id="local-6989586621689113399"><span class="annot"><span class="annottext">Either ExecuteProblem RecordSet
+</span><a href="#local-6989586621689113399"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-77"></span><span>          </span><span class="annot"><span class="annottext">BigQuerySourceConfig
 -&gt; Execute RecordSet
 -&gt; TraceT (ExceptT QErr IO) (Either ExecuteProblem RecordSet)
@@ -232,26 +232,26 @@ BigQuerySourceConfig
 </span><a href="Hasura.Backends.BigQuery.Execute.html#runExecute"><span class="hs-identifier hs-var">DataLoader.runExecute</span></a></span><span>
 </span><span id="line-78"></span><span>            </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 BigQuerySourceConfig
-</span><a href="#local-6989586621689112898"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><a href="#local-6989586621689113405"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
 </span><span id="line-79"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.BigQuery.Execute.html#executeSelect"><span class="hs-identifier hs-var">DataLoader.executeSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689112896"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113403"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either ExecuteProblem RecordSet
-</span><a href="#local-6989586621689112892"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-81"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689112889"><span class="annot"><span class="annottext">ExecuteProblem
-</span><a href="#local-6989586621689112889"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; TraceT (ExceptT QErr IO) EncJSON
+</span><a href="#local-6989586621689113399"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-81"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689113396"><span class="annot"><span class="annottext">ExecuteProblem
+</span><a href="#local-6989586621689113396"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; TraceT (ExceptT QErr IO) EncJSON
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; Value -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500WithDetail"><span class="hs-identifier hs-var">throw500WithDetail</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExecuteProblem -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Execute.html#executeProblemMessage"><span class="hs-identifier hs-var">executeProblemMessage</span></a></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem
-</span><a href="#local-6989586621689112889"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; TraceT (ExceptT QErr IO) EncJSON)
+</span><a href="#local-6989586621689113396"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; TraceT (ExceptT QErr IO) EncJSON)
 -&gt; Value -&gt; TraceT (ExceptT QErr IO) EncJSON
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem
-</span><a href="#local-6989586621689112889"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-82"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689112886"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689112886"><span class="hs-identifier hs-var">recordSet</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; TraceT (ExceptT QErr IO) EncJSON
+</span><a href="#local-6989586621689113396"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-82"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689113393"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689113393"><span class="hs-identifier hs-var">recordSet</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; TraceT (ExceptT QErr IO) EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; TraceT (ExceptT QErr IO) EncJSON)
 -&gt; EncJSON -&gt; TraceT (ExceptT QErr IO) EncJSON
@@ -259,8 +259,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">Cardinality -&gt; RecordSet -&gt; EncJSON
 </span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#recordSetToEncJSON"><span class="hs-identifier hs-var">recordSetToEncJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Cardinality
 </span><a href="Hasura.Backends.BigQuery.Types.html#%24sel%3AselectCardinality%3ASelect"><span class="hs-identifier hs-var hs-var">BigQuery.selectCardinality</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689112896"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689112886"><span class="hs-identifier hs-var">recordSet</span></a></span><span>
+</span><a href="#local-6989586621689113403"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689113393"><span class="hs-identifier hs-var">recordSet</span></a></span><span>
 </span><span id="line-83"></span><span>  </span><span class="annot"><span class="annottext">DBStepInfo 'BigQuery -&gt; m (DBStepInfo 'BigQuery)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(DBStepInfo 'BigQuery -&gt; m (DBStepInfo 'BigQuery))
@@ -278,36 +278,36 @@ SourceName
 -&gt; ExecutionMonad b EncJSON
 -&gt; DBStepInfo b
 </span><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-var">DBStepInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689112899"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
-</span><a href="#local-6989586621689112898"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+</span><a href="#local-6989586621689113406"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621689113405"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#selectSQLTextForExplain"><span class="hs-identifier hs-var">selectSQLTextForExplain</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689112896"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TraceT (ExceptT QErr IO) EncJSON
+</span><a href="#local-6989586621689113403"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TraceT (ExceptT QErr IO) EncJSON
 ExecutionMonad 'BigQuery EncJSON
-</span><a href="#local-6989586621689112893"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><a href="#local-6989586621689113400"><span class="hs-identifier hs-var">action</span></a></span><span>
 </span><span id="line-84"></span><span>
 </span><span id="line-85"></span><span class="hs-comment">-- | Convert the dataloader's 'RecordSet' type to JSON.</span><span>
 </span><span id="line-86"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Execute.html#recordSetToEncJSON"><span class="hs-identifier hs-type">recordSetToEncJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Cardinality"><span class="hs-identifier hs-type">BigQuery.Cardinality</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordSet"><span class="hs-identifier hs-type">DataLoader.RecordSet</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-87"></span><span id="recordSetToEncJSON"><span class="annot"><span class="annottext">recordSetToEncJSON :: Cardinality -&gt; RecordSet -&gt; EncJSON
-</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#recordSetToEncJSON"><span class="hs-identifier hs-var hs-var">recordSetToEncJSON</span></a></span></span><span> </span><span id="local-6989586621689112880"><span class="annot"><span class="annottext">Cardinality
-</span><a href="#local-6989586621689112880"><span class="hs-identifier hs-var">cardinality</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordSet"><span class="hs-identifier hs-type">DataLoader.RecordSet</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689112878"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
+</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#recordSetToEncJSON"><span class="hs-identifier hs-var hs-var">recordSetToEncJSON</span></a></span></span><span> </span><span id="local-6989586621689113387"><span class="annot"><span class="annottext">Cardinality
+</span><a href="#local-6989586621689113387"><span class="hs-identifier hs-var">cardinality</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordSet"><span class="hs-identifier hs-type">DataLoader.RecordSet</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689113385"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
 $sel:rows:RecordSet :: RecordSet -&gt; Vector (InsOrdHashMap FieldNameText OutputValue)
 rows :: Vector (InsOrdHashMap FieldNameText OutputValue)
 </span><a href="Hasura.Backends.BigQuery.Execute.html#%24sel%3Arows%3ARecordSet"><span class="hs-identifier hs-var hs-var">rows</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Cardinality
-</span><a href="#local-6989586621689112880"><span class="hs-identifier hs-var">cardinality</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689113387"><span class="hs-identifier hs-var">cardinality</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-89"></span><span>    </span><span class="annot"><span class="annottext">Cardinality
 </span><a href="Hasura.Backends.BigQuery.Types.html#One"><span class="hs-identifier hs-var">BigQuery.One</span></a></span><span>
-</span><span id="line-90"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689112875"><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
-</span><a href="#local-6989586621689112875"><span class="hs-identifier hs-var">row</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
-</span><a href="#local-6989586621689112878"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
+</span><span id="line-90"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689113382"><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
+</span><a href="#local-6989586621689113382"><span class="hs-identifier hs-var">row</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
+</span><a href="#local-6989586621689113385"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
 -&gt; Int -&gt; Maybe (InsOrdHashMap FieldNameText OutputValue)
 forall a. Vector a -&gt; Int -&gt; Maybe a
 </span><span class="hs-operator hs-var">V.!?</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112873"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
-</span><a href="#local-6989586621689112875"><span class="hs-identifier hs-var">row</span></a></span><span>
+</span><a href="#local-6989586621689113380"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
+</span><a href="#local-6989586621689113382"><span class="hs-identifier hs-var">row</span></a></span><span>
 </span><span id="line-91"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EncJSON] -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromList"><span class="hs-identifier hs-var">encJFromList</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector EncJSON -&gt; [EncJSON]
@@ -317,8 +317,8 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 -&gt; Vector EncJSON
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112873"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
-</span><a href="#local-6989586621689112878"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113380"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
+</span><a href="#local-6989586621689113385"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">Cardinality
 </span><a href="Hasura.Backends.BigQuery.Types.html#Many"><span class="hs-identifier hs-var">BigQuery.Many</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EncJSON] -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromList"><span class="hs-identifier hs-var">encJFromList</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector EncJSON -&gt; [EncJSON]
@@ -328,11 +328,11 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 -&gt; Vector EncJSON
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112873"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
-</span><a href="#local-6989586621689112878"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113380"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldNameText OutputValue)
+</span><a href="#local-6989586621689113385"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>    </span><span id="local-6989586621689112873"><span class="annot"><span class="annottext">encJFromRecord :: InsOrdHashMap FieldNameText OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112873"><span class="hs-identifier hs-var hs-var">encJFromRecord</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621689113380"><span class="annot"><span class="annottext">encJFromRecord :: InsOrdHashMap FieldNameText OutputValue -&gt; EncJSON
+</span><a href="#local-6989586621689113380"><span class="hs-identifier hs-var hs-var">encJFromRecord</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">InsOrdHashMap Text EncJSON -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromInsOrdHashMap"><span class="hs-identifier hs-var">encJFromInsOrdHashMap</span></a></span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap Text EncJSON -&gt; EncJSON)
 -&gt; (InsOrdHashMap FieldNameText OutputValue
@@ -344,7 +344,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; InsOrdHashMap Text OutputValue -&gt; InsOrdHashMap Text EncJSON
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112867"><span class="hs-identifier hs-var">encJFromOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap Text OutputValue -&gt; InsOrdHashMap Text EncJSON)
+</span><a href="#local-6989586621689113374"><span class="hs-identifier hs-var">encJFromOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap Text OutputValue -&gt; InsOrdHashMap Text EncJSON)
 -&gt; (InsOrdHashMap FieldNameText OutputValue
     -&gt; InsOrdHashMap Text OutputValue)
 -&gt; InsOrdHashMap FieldNameText OutputValue
@@ -358,118 +358,118 @@ forall k' k v.
 (k -&gt; k') -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k' v
 </span><span class="hs-identifier hs-var">OMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">FieldNameText -&gt; Text
 </span><span class="hs-identifier hs-var">coerce</span></span><span>
-</span><span id="line-96"></span><span>    </span><span id="local-6989586621689112867"><span class="annot"><span class="annottext">encJFromOutputValue :: OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112867"><span class="hs-identifier hs-var hs-var">encJFromOutputValue</span></a></span></span><span> </span><span id="local-6989586621689112865"><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689112865"><span class="hs-identifier hs-var">outputValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-96"></span><span>    </span><span id="local-6989586621689113374"><span class="annot"><span class="annottext">encJFromOutputValue :: OutputValue -&gt; EncJSON
+</span><a href="#local-6989586621689113374"><span class="hs-identifier hs-var hs-var">encJFromOutputValue</span></a></span></span><span> </span><span id="local-6989586621689113372"><span class="annot"><span class="annottext">OutputValue
+</span><a href="#local-6989586621689113372"><span class="hs-identifier hs-var">outputValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-97"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689112865"><span class="hs-identifier hs-var">outputValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689113372"><span class="hs-identifier hs-var">outputValue</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">OutputValue
 </span><a href="Hasura.Backends.BigQuery.Execute.html#NullOutputValue"><span class="hs-identifier hs-var">DataLoader.NullOutputValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">Aeson.Null</span></span><span>
-</span><span id="line-99"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DecimalOutputValue"><span class="hs-identifier hs-type">DataLoader.DecimalOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112860"><span class="annot"><span class="annottext">Decimal
-</span><a href="#local-6989586621689112860"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decimal -&gt; EncJSON
+</span><span id="line-99"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DecimalOutputValue"><span class="hs-identifier hs-type">DataLoader.DecimalOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113367"><span class="annot"><span class="annottext">Decimal
+</span><a href="#local-6989586621689113367"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Decimal -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Decimal
-</span><a href="#local-6989586621689112860"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-100"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigDecimalOutputValue"><span class="hs-identifier hs-type">DataLoader.BigDecimalOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112858"><span class="annot"><span class="annottext">BigDecimal
-</span><a href="#local-6989586621689112858"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BigDecimal -&gt; EncJSON
+</span><a href="#local-6989586621689113367"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-100"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BigDecimalOutputValue"><span class="hs-identifier hs-type">DataLoader.BigDecimalOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113365"><span class="annot"><span class="annottext">BigDecimal
+</span><a href="#local-6989586621689113365"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BigDecimal -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">BigDecimal
-</span><a href="#local-6989586621689112858"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-101"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FloatOutputValue"><span class="hs-identifier hs-type">DataLoader.FloatOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112856"><span class="annot"><span class="annottext">Float64
-</span><a href="#local-6989586621689112856"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float64 -&gt; EncJSON
+</span><a href="#local-6989586621689113365"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-101"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#FloatOutputValue"><span class="hs-identifier hs-type">DataLoader.FloatOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113363"><span class="annot"><span class="annottext">Float64
+</span><a href="#local-6989586621689113363"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Float64 -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Float64
-</span><a href="#local-6989586621689112856"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-102"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TextOutputValue"><span class="hs-identifier hs-type">DataLoader.TextOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112854"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689112854"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
+</span><a href="#local-6989586621689113363"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-102"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TextOutputValue"><span class="hs-identifier hs-type">DataLoader.TextOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113361"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689113361"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689112854"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-103"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BytesOutputValue"><span class="hs-identifier hs-type">DataLoader.BytesOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112852"><span class="annot"><span class="annottext">Base64
-</span><a href="#local-6989586621689112852"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Base64 -&gt; EncJSON
+</span><a href="#local-6989586621689113361"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-103"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BytesOutputValue"><span class="hs-identifier hs-type">DataLoader.BytesOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113359"><span class="annot"><span class="annottext">Base64
+</span><a href="#local-6989586621689113359"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Base64 -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Base64
-</span><a href="#local-6989586621689112852"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-104"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DateOutputValue"><span class="hs-identifier hs-type">DataLoader.DateOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112850"><span class="annot"><span class="annottext">Date
-</span><a href="#local-6989586621689112850"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Date -&gt; EncJSON
+</span><a href="#local-6989586621689113359"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-104"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DateOutputValue"><span class="hs-identifier hs-type">DataLoader.DateOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113357"><span class="annot"><span class="annottext">Date
+</span><a href="#local-6989586621689113357"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Date -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Date
-</span><a href="#local-6989586621689112850"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-105"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TimestampOutputValue"><span class="hs-identifier hs-type">DataLoader.TimestampOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112848"><span class="annot"><span class="annottext">Timestamp
-</span><a href="#local-6989586621689112848"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; EncJSON
+</span><a href="#local-6989586621689113357"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-105"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TimestampOutputValue"><span class="hs-identifier hs-type">DataLoader.TimestampOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113355"><span class="annot"><span class="annottext">Timestamp
+</span><a href="#local-6989586621689113355"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Timestamp -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Timestamp
-</span><a href="#local-6989586621689112848"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-106"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TimeOutputValue"><span class="hs-identifier hs-type">DataLoader.TimeOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112846"><span class="annot"><span class="annottext">Time
-</span><a href="#local-6989586621689112846"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Time -&gt; EncJSON
+</span><a href="#local-6989586621689113355"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-106"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#TimeOutputValue"><span class="hs-identifier hs-type">DataLoader.TimeOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113353"><span class="annot"><span class="annottext">Time
+</span><a href="#local-6989586621689113353"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Time -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Time
-</span><a href="#local-6989586621689112846"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-107"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DatetimeOutputValue"><span class="hs-identifier hs-type">DataLoader.DatetimeOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112844"><span class="annot"><span class="annottext">Datetime
-</span><a href="#local-6989586621689112844"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Datetime -&gt; EncJSON
+</span><a href="#local-6989586621689113353"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-107"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#DatetimeOutputValue"><span class="hs-identifier hs-type">DataLoader.DatetimeOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113351"><span class="annot"><span class="annottext">Datetime
+</span><a href="#local-6989586621689113351"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Datetime -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Datetime
-</span><a href="#local-6989586621689112844"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-108"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#GeographyOutputValue"><span class="hs-identifier hs-type">DataLoader.GeographyOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112842"><span class="annot"><span class="annottext">Geography
-</span><a href="#local-6989586621689112842"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Geography -&gt; EncJSON
+</span><a href="#local-6989586621689113351"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#GeographyOutputValue"><span class="hs-identifier hs-type">DataLoader.GeographyOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113349"><span class="annot"><span class="annottext">Geography
+</span><a href="#local-6989586621689113349"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Geography -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Geography
-</span><a href="#local-6989586621689112842"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-109"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BoolOutputValue"><span class="hs-identifier hs-type">DataLoader.BoolOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112840"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689112840"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; EncJSON
+</span><a href="#local-6989586621689113349"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#BoolOutputValue"><span class="hs-identifier hs-type">DataLoader.BoolOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113347"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689113347"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689112840"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-110"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#IntegerOutputValue"><span class="hs-identifier hs-type">DataLoader.IntegerOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112838"><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689112838"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; EncJSON
+</span><a href="#local-6989586621689113347"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-110"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#IntegerOutputValue"><span class="hs-identifier hs-type">DataLoader.IntegerOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113345"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689113345"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; EncJSON
 forall a. ToJSON a =&gt; a -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689112838"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-111"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ArrayOutputValue"><span class="hs-identifier hs-type">DataLoader.ArrayOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112836"><span class="annot"><span class="annottext">Vector OutputValue
-</span><a href="#local-6989586621689112836"><span class="hs-identifier hs-var">vector</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689113345"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-111"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#ArrayOutputValue"><span class="hs-identifier hs-type">DataLoader.ArrayOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113343"><span class="annot"><span class="annottext">Vector OutputValue
+</span><a href="#local-6989586621689113343"><span class="hs-identifier hs-var">vector</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-112"></span><span>          </span><span class="annot"><span class="annottext">[EncJSON] -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromList"><span class="hs-identifier hs-var">encJFromList</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector EncJSON -&gt; [EncJSON]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(OutputValue -&gt; EncJSON) -&gt; Vector OutputValue -&gt; Vector EncJSON
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112867"><span class="hs-identifier hs-var">encJFromOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">Vector OutputValue
-</span><a href="#local-6989586621689112836"><span class="hs-identifier hs-var">vector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113374"><span class="hs-identifier hs-var">encJFromOutputValue</span></a></span><span> </span><span class="annot"><span class="annottext">Vector OutputValue
+</span><a href="#local-6989586621689113343"><span class="hs-identifier hs-var">vector</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>        </span><span class="hs-comment">-- Really, the case below shouldn't be happening. But if it</span><span>
 </span><span id="line-114"></span><span>        </span><span class="hs-comment">-- does, it's not a problem either. The output will just have</span><span>
 </span><span id="line-115"></span><span>        </span><span class="hs-comment">-- a record in it.</span><span>
-</span><span id="line-116"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordOutputValue"><span class="hs-identifier hs-type">DataLoader.RecordOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689112834"><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
-</span><a href="#local-6989586621689112834"><span class="hs-identifier hs-var">record</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue -&gt; EncJSON
-</span><a href="#local-6989586621689112873"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
-</span><a href="#local-6989586621689112834"><span class="hs-identifier hs-var">record</span></a></span><span>
+</span><span id="line-116"></span><span>        </span><span class="annot"><a href="Hasura.Backends.BigQuery.Execute.html#RecordOutputValue"><span class="hs-identifier hs-type">DataLoader.RecordOutputValue</span></a></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689113341"><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
+</span><a href="#local-6989586621689113341"><span class="hs-identifier hs-var">record</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue -&gt; EncJSON
+</span><a href="#local-6989586621689113380"><span class="hs-identifier hs-var">encJFromRecord</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldNameText OutputValue
+</span><a href="#local-6989586621689113341"><span class="hs-identifier hs-var">record</span></a></span><span>
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="hs-comment">-- mutation</span><span>
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBMutationPlan"><span class="hs-identifier hs-type">bqDBMutationPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-121"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689113051"><span class="annot"><a href="#local-6989586621689113051"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-122"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113051"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689113558"><span class="annot"><a href="#local-6989586621689113558"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113558"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-123"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-124"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-125"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-126"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-127"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-128"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationDB"><span class="hs-identifier hs-type">MutationDB</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-129"></span><span>  </span><span class="annot"><a href="#local-6989586621689113051"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-129"></span><span>  </span><span class="annot"><a href="#local-6989586621689113558"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-130"></span><span id="bqDBMutationPlan"><span class="annot"><span class="annottext">bqDBMutationPlan :: UserInfo
 -&gt; StringifyNumbers
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
 -&gt; MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m (DBStepInfo 'BigQuery)
-</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBMutationPlan"><span class="hs-identifier hs-var hs-var">bqDBMutationPlan</span></a></span></span><span> </span><span id="local-6989586621689112833"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689112833"><span class="hs-identifier hs-var">_userInfo</span></a></span></span><span> </span><span id="local-6989586621689112832"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689112832"><span class="hs-identifier hs-var">_stringifyNum</span></a></span></span><span> </span><span id="local-6989586621689112831"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689112831"><span class="hs-identifier hs-var">_sourceName</span></a></span></span><span> </span><span id="local-6989586621689112830"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
-</span><a href="#local-6989586621689112830"><span class="hs-identifier hs-var">_sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689112829"><span class="annot"><span class="annottext">MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112829"><span class="hs-identifier hs-var">_mrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBMutationPlan"><span class="hs-identifier hs-var hs-var">bqDBMutationPlan</span></a></span></span><span> </span><span id="local-6989586621689113340"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689113340"><span class="hs-identifier hs-var">_userInfo</span></a></span></span><span> </span><span id="local-6989586621689113339"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689113339"><span class="hs-identifier hs-var">_stringifyNum</span></a></span></span><span> </span><span id="local-6989586621689113338"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689113338"><span class="hs-identifier hs-var">_sourceName</span></a></span></span><span> </span><span id="local-6989586621689113337"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621689113337"><span class="hs-identifier hs-var">_sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689113336"><span class="annot"><span class="annottext">MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113336"><span class="hs-identifier hs-var">_mrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-131"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; m (DBStepInfo 'BigQuery)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -477,28 +477,28 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span class="hs-comment">-- explain</span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span id="local-6989586621689112828"><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryExplain"><span class="hs-identifier hs-type">bqDBQueryExplain</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-136"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689112828"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-135"></span><span id="local-6989586621689113335"><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryExplain"><span class="hs-identifier hs-type">bqDBQueryExplain</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-136"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113335"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-139"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier hs-type">QueryDB</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-142"></span><span>  </span><span class="annot"><a href="#local-6989586621689112828"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-142"></span><span>  </span><span class="annot"><a href="#local-6989586621689113335"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-143"></span><span id="bqDBQueryExplain"><span class="annot"><span class="annottext">bqDBQueryExplain :: RootFieldAlias
 -&gt; UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m (AnyBackend DBStepInfo)
-</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryExplain"><span class="hs-identifier hs-var hs-var">bqDBQueryExplain</span></a></span></span><span> </span><span id="local-6989586621689112827"><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621689112827"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689112826"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689112826"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621689112825"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689112825"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689112824"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
-</span><a href="#local-6989586621689112824"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689112823"><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112823"><span class="hs-identifier hs-var">qrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-144"></span><span>  </span><span id="local-6989586621689112822"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689112822"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIrConfig
+</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryExplain"><span class="hs-identifier hs-var hs-var">bqDBQueryExplain</span></a></span></span><span> </span><span id="local-6989586621689113334"><span class="annot"><span class="annottext">RootFieldAlias
+</span><a href="#local-6989586621689113334"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689113333"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689113333"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621689113332"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689113332"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689113331"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621689113331"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689113330"><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113330"><span class="hs-identifier hs-var">qrf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621689113329"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621689113329"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FromIrConfig
 -&gt; UserInfo
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m Select
@@ -511,13 +511,13 @@ FromIrConfig
 </span><a href="Hasura.Backends.BigQuery.Plan.html#planNoPlan"><span class="hs-identifier hs-var">planNoPlan</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BigQuerySourceConfig -&gt; FromIrConfig
 </span><a href="Hasura.Backends.BigQuery.FromIr.html#bigQuerySourceConfigToFromIrConfig"><span class="hs-identifier hs-var">BigQuery.bigQuerySourceConfigToFromIrConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 BigQuerySourceConfig
-</span><a href="#local-6989586621689112824"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689112826"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112823"><span class="hs-identifier hs-var">qrf</span></a></span><span>
-</span><span id="line-145"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689112821"><span class="annot"><span class="annottext">textSQL :: Text
-</span><a href="#local-6989586621689112821"><span class="hs-identifier hs-var hs-var">textSQL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select -&gt; Text
+</span><a href="#local-6989586621689113331"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689113333"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113330"><span class="hs-identifier hs-var">qrf</span></a></span><span>
+</span><span id="line-145"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689113328"><span class="annot"><span class="annottext">textSQL :: Text
+</span><a href="#local-6989586621689113328"><span class="hs-identifier hs-var hs-var">textSQL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#selectSQLTextForExplain"><span class="hs-identifier hs-var">selectSQLTextForExplain</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689112822"><span class="hs-identifier hs-var">select</span></a></span><span>
+</span><a href="#local-6989586621689113329"><span class="hs-identifier hs-var">select</span></a></span><span>
 </span><span id="line-146"></span><span>  </span><span class="annot"><span class="annottext">AnyBackend DBStepInfo -&gt; m (AnyBackend DBStepInfo)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(AnyBackend DBStepInfo -&gt; m (AnyBackend DBStepInfo))
@@ -544,8 +544,8 @@ SourceName
 -&gt; ExecutionMonad b EncJSON
 -&gt; DBStepInfo b
 </span><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-var">DBStepInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689112825"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
-</span><a href="#local-6989586621689112824"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PreparedQuery 'BigQuery)
+</span><a href="#local-6989586621689113332"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621689113331"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (PreparedQuery 'BigQuery)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(ExecutionMonad 'BigQuery EncJSON -&gt; DBStepInfo 'BigQuery)
 -&gt; ExecutionMonad 'BigQuery EncJSON -&gt; DBStepInfo 'BigQuery
@@ -565,13 +565,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-151"></span><span>            </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Maybe Text -&gt; Maybe [Text] -&gt; ExplainPlan
 </span><a href="Hasura.GraphQL.Execute.Backend.html#ExplainPlan"><span class="hs-identifier hs-var">ExplainPlan</span></a></span><span>
 </span><span id="line-152"></span><span>              </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621689112827"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621689113334"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-153"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe Text) -&gt; Text -&gt; Maybe Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689112821"><span class="hs-identifier hs-var">textSQL</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113328"><span class="hs-identifier hs-var">textSQL</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-154"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Text] -&gt; Maybe [Text]
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Maybe [Text]) -&gt; [Text] -&gt; Maybe [Text]
@@ -580,7 +580,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">T.lines</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; [Text]) -&gt; Text -&gt; [Text]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689112821"><span class="hs-identifier hs-var">textSQL</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113328"><span class="hs-identifier hs-var">textSQL</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-155"></span><span>
 </span><span id="line-156"></span><span class="hs-comment">-- | Get the SQL text for a select, with parameters left as $1, $2, .. holes.</span><span>
 </span><span id="line-157"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Execute.html#selectSQLTextForExplain"><span class="hs-identifier hs-type">selectSQLTextForExplain</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#Select"><span class="hs-identifier hs-type">BigQuery.Select</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
@@ -631,8 +631,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-181"></span><span class="hs-comment">--   Backend 'BigQuery</span><span>
 </span><span id="line-182"></span><span class="hs-comment">-- @</span><span>
 </span><span id="line-183"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBRemoteRelationshipPlan"><span class="hs-identifier hs-type">bqDBRemoteRelationshipPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-184"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689113041"><span class="annot"><a href="#local-6989586621689113041"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-185"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113041"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689113548"><span class="annot"><a href="#local-6989586621689113548"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-185"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113548"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-186"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-187"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-188"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -647,7 +647,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-197"></span><span>  </span><span class="hs-comment">-- response along with the relationship.</span><span>
 </span><span id="line-198"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-199"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SourceRelationshipSelection"><span class="hs-identifier hs-type">SourceRelationshipSelection</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-200"></span><span>  </span><span class="annot"><a href="#local-6989586621689113041"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-200"></span><span>  </span><span class="annot"><a href="#local-6989586621689113548"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-201"></span><span id="bqDBRemoteRelationshipPlan"><span class="annot"><span class="annottext">bqDBRemoteRelationshipPlan :: UserInfo
 -&gt; SourceName
 -&gt; SourceConfig 'BigQuery
@@ -657,15 +657,15 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; (FieldName,
     SourceRelationshipSelection 'BigQuery Void UnpreparedValue)
 -&gt; m (DBStepInfo 'BigQuery)
-</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBRemoteRelationshipPlan"><span class="hs-identifier hs-var hs-var">bqDBRemoteRelationshipPlan</span></a></span></span><span> </span><span id="local-6989586621689112813"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689112813"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621689112812"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689112812"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689112811"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
-</span><a href="#local-6989586621689112811"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689112810"><span class="annot"><span class="annottext">NonEmpty Object
-</span><a href="#local-6989586621689112810"><span class="hs-identifier hs-var">lhs</span></a></span></span><span> </span><span id="local-6989586621689112809"><span class="annot"><span class="annottext">HashMap FieldName (Column 'BigQuery, ScalarType 'BigQuery)
-</span><a href="#local-6989586621689112809"><span class="hs-identifier hs-var">lhsSchema</span></a></span></span><span> </span><span id="local-6989586621689112808"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689112808"><span class="hs-identifier hs-var">argumentId</span></a></span></span><span> </span><span id="local-6989586621689112807"><span class="annot"><span class="annottext">(FieldName,
+</span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBRemoteRelationshipPlan"><span class="hs-identifier hs-var hs-var">bqDBRemoteRelationshipPlan</span></a></span></span><span> </span><span id="local-6989586621689113320"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689113320"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span id="local-6989586621689113319"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689113319"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689113318"><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621689113318"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689113317"><span class="annot"><span class="annottext">NonEmpty Object
+</span><a href="#local-6989586621689113317"><span class="hs-identifier hs-var">lhs</span></a></span></span><span> </span><span id="local-6989586621689113316"><span class="annot"><span class="annottext">HashMap FieldName (Column 'BigQuery, ScalarType 'BigQuery)
+</span><a href="#local-6989586621689113316"><span class="hs-identifier hs-var">lhsSchema</span></a></span></span><span> </span><span id="local-6989586621689113315"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689113315"><span class="hs-identifier hs-var">argumentId</span></a></span></span><span> </span><span id="local-6989586621689113314"><span class="annot"><span class="annottext">(FieldName,
  SourceRelationshipSelection 'BigQuery Void UnpreparedValue)
-</span><a href="#local-6989586621689112807"><span class="hs-identifier hs-var">relationship</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689113314"><span class="hs-identifier hs-var">relationship</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-202"></span><span>  </span><span class="annot"><span class="annottext">(ReaderT QueryTagsComment m (DBStepInfo 'BigQuery)
  -&gt; QueryTagsComment -&gt; m (DBStepInfo 'BigQuery))
 -&gt; QueryTagsComment
@@ -694,33 +694,33 @@ UserInfo
 -&gt; QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
 -&gt; m (DBStepInfo 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.Instances.Execute.html#bqDBQueryPlan"><span class="hs-identifier hs-var">bqDBQueryPlan</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689112813"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689112812"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
-</span><a href="#local-6989586621689112811"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112804"><span class="hs-identifier hs-var">rootSelection</span></a></span><span>
+</span><a href="#local-6989586621689113320"><span class="hs-identifier hs-var">userInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689113319"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
+</span><a href="#local-6989586621689113318"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113311"><span class="hs-identifier hs-var">rootSelection</span></a></span><span>
 </span><span id="line-203"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-204"></span><span>    </span><span id="local-6989586621689112803"><span class="annot"><span class="annottext">coerceToColumn :: FieldName -&gt; ColumnName
-</span><a href="#local-6989586621689112803"><span class="hs-identifier hs-var hs-var">coerceToColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ColumnName
+</span><span id="line-204"></span><span>    </span><span id="local-6989586621689113310"><span class="annot"><span class="annottext">coerceToColumn :: FieldName -&gt; ColumnName
+</span><a href="#local-6989586621689113310"><span class="hs-identifier hs-var hs-var">coerceToColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ColumnName
 </span><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-var">BigQuery.ColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ColumnName)
 -&gt; (FieldName -&gt; Text) -&gt; FieldName -&gt; ColumnName
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var hs-var">getFieldNameTxt</span></a></span><span>
-</span><span id="line-205"></span><span>    </span><span id="local-6989586621689112800"><span class="annot"><span class="annottext">joinColumnMapping :: HashMap ColumnName (ColumnName, ScalarType)
-</span><a href="#local-6989586621689112800"><span class="hs-identifier hs-var hs-var">joinColumnMapping</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(FieldName -&gt; ColumnName)
+</span><span id="line-205"></span><span>    </span><span id="local-6989586621689113307"><span class="annot"><span class="annottext">joinColumnMapping :: HashMap ColumnName (ColumnName, ScalarType)
+</span><a href="#local-6989586621689113307"><span class="hs-identifier hs-var hs-var">joinColumnMapping</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(FieldName -&gt; ColumnName)
 -&gt; HashMap FieldName (ColumnName, ScalarType)
 -&gt; HashMap ColumnName (ColumnName, ScalarType)
 forall k2 k1 v.
 (Eq k2, Hashable k2) =&gt;
 (k1 -&gt; k2) -&gt; HashMap k1 v -&gt; HashMap k2 v
 </span><span class="hs-identifier hs-var">mapKeys</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; ColumnName
-</span><a href="#local-6989586621689112803"><span class="hs-identifier hs-var">coerceToColumn</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (Column 'BigQuery, ScalarType 'BigQuery)
+</span><a href="#local-6989586621689113310"><span class="hs-identifier hs-var">coerceToColumn</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (Column 'BigQuery, ScalarType 'BigQuery)
 HashMap FieldName (ColumnName, ScalarType)
-</span><a href="#local-6989586621689112809"><span class="hs-identifier hs-var">lhsSchema</span></a></span><span>
+</span><a href="#local-6989586621689113316"><span class="hs-identifier hs-var">lhsSchema</span></a></span><span>
 </span><span id="line-206"></span><span>
-</span><span id="line-207"></span><span>    </span><span class="annot"><a href="#local-6989586621689112798"><span class="hs-identifier hs-type">rowsArgument</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span>
-</span><span id="line-208"></span><span>    </span><span id="local-6989586621689112798"><span class="annot"><span class="annottext">rowsArgument :: UnpreparedValue 'BigQuery
-</span><a href="#local-6989586621689112798"><span class="hs-identifier hs-var hs-var">rowsArgument</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-207"></span><span>    </span><span class="annot"><a href="#local-6989586621689113305"><span class="hs-identifier hs-type">rowsArgument</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span>
+</span><span id="line-208"></span><span>    </span><span id="local-6989586621689113305"><span class="annot"><span class="annottext">rowsArgument :: UnpreparedValue 'BigQuery
+</span><a href="#local-6989586621689113305"><span class="hs-identifier hs-var hs-var">rowsArgument</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-209"></span><span>      </span><span class="annot"><span class="annottext">Maybe VariableInfo
 -&gt; ColumnValue 'BigQuery -&gt; UnpreparedValue 'BigQuery
 forall (b :: BackendType).
@@ -752,13 +752,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Object -&gt; Text
 forall a. ToJSON a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">Aeson.encodeToLazyText</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Object
-</span><a href="#local-6989586621689112810"><span class="hs-identifier hs-var">lhs</span></a></span><span>
+</span><a href="#local-6989586621689113317"><span class="hs-identifier hs-var">lhs</span></a></span><span>
 </span><span id="line-212"></span><span>
-</span><span id="line-213"></span><span>    </span><span id="local-6989586621689112791"><span class="annot"><span class="annottext">recordSetDefinitionList :: [(ColumnName, ScalarType)]
-</span><a href="#local-6989586621689112791"><span class="hs-identifier hs-var hs-var">recordSetDefinitionList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-213"></span><span>    </span><span id="local-6989586621689113298"><span class="annot"><span class="annottext">recordSetDefinitionList :: [(ColumnName, ScalarType)]
+</span><a href="#local-6989586621689113298"><span class="hs-identifier hs-var hs-var">recordSetDefinitionList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-214"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName -&gt; ColumnName
-</span><a href="#local-6989586621689112803"><span class="hs-identifier hs-var">coerceToColumn</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689112808"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621689113310"><span class="hs-identifier hs-var">coerceToColumn</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689113315"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.BigQuery.Types.html#IntegerScalarType"><span class="hs-identifier hs-var">BigQuery.IntegerScalarType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ColumnName, ScalarType)
 -&gt; [(ColumnName, ScalarType)] -&gt; [(ColumnName, ScalarType)]
 forall a. a -&gt; [a] -&gt; [a]
@@ -771,11 +771,11 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">(ColumnName, ScalarType) -&gt; ScalarType
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">HashMap ColumnName (ColumnName, ScalarType)
-</span><a href="#local-6989586621689112800"><span class="hs-identifier hs-var">joinColumnMapping</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113307"><span class="hs-identifier hs-var">joinColumnMapping</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-215"></span><span>
-</span><span id="line-216"></span><span>    </span><span class="annot"><a href="#local-6989586621689112788"><span class="hs-identifier hs-type">jsonToRecordSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectFromG"><span class="hs-identifier hs-type">IR.SelectFromG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-217"></span><span>    </span><span id="local-6989586621689112788"><span class="annot"><span class="annottext">jsonToRecordSet :: SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112788"><span class="hs-identifier hs-var hs-var">jsonToRecordSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><a href="#local-6989586621689113295"><span class="hs-identifier hs-type">jsonToRecordSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectFromG"><span class="hs-identifier hs-type">IR.SelectFromG</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-217"></span><span>    </span><span id="local-6989586621689113295"><span class="annot"><span class="annottext">jsonToRecordSet :: SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113295"><span class="hs-identifier hs-var hs-var">jsonToRecordSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-218"></span><span>      </span><span class="annot"><span class="annottext">FunctionName 'BigQuery
 -&gt; FunctionArgsExp 'BigQuery (UnpreparedValue 'BigQuery)
 -&gt; Maybe [(Column 'BigQuery, ScalarType 'BigQuery)]
@@ -800,7 +800,7 @@ forall a. [a] -&gt; HashMap Text a -&gt; FunctionArgsExpG a
 -&gt; ArgumentExp (UnpreparedValue 'BigQuery)
 forall v. v -&gt; ArgumentExp v
 </span><a href="Hasura.Backends.BigQuery.Types.html#AEInput"><span class="hs-identifier hs-var">BigQuery.AEInput</span></a></span><span> </span><span class="annot"><span class="annottext">UnpreparedValue 'BigQuery
-</span><a href="#local-6989586621689112798"><span class="hs-identifier hs-var">rowsArgument</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689113305"><span class="hs-identifier hs-var">rowsArgument</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-222"></span><span>            </span><span class="annot"><span class="annottext">HashMap Text (ArgumentExp (UnpreparedValue 'BigQuery))
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
@@ -808,10 +808,10 @@ forall a. Monoid a =&gt; a
 </span><span id="line-224"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(ColumnName, ScalarType)] -&gt; Maybe [(ColumnName, ScalarType)]
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">[(ColumnName, ScalarType)]
-</span><a href="#local-6989586621689112791"><span class="hs-identifier hs-var">recordSetDefinitionList</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113298"><span class="hs-identifier hs-var">recordSetDefinitionList</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-225"></span><span>
-</span><span id="line-226"></span><span>    </span><span id="local-6989586621689112804"><span class="annot"><span class="annottext">rootSelection :: QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112804"><span class="hs-identifier hs-var hs-var">rootSelection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-226"></span><span>    </span><span id="local-6989586621689113311"><span class="annot"><span class="annottext">rootSelection :: QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery)
+</span><a href="#local-6989586621689113311"><span class="hs-identifier hs-var hs-var">rootSelection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-227"></span><span>      </span><span class="annot"><span class="annottext">HashMap (Column 'BigQuery) (Column 'BigQuery)
 -&gt; SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
 -&gt; Column 'BigQuery
@@ -835,15 +835,15 @@ forall a b. (a, b) -&gt; a
 -&gt; HashMap ColumnName ColumnName
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap ColumnName (ColumnName, ScalarType)
-</span><a href="#local-6989586621689112800"><span class="hs-identifier hs-var">joinColumnMapping</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113307"><span class="hs-identifier hs-var">joinColumnMapping</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-229"></span><span>        </span><span class="annot"><span class="annottext">SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
-</span><a href="#local-6989586621689112788"><span class="hs-identifier hs-var">jsonToRecordSet</span></a></span><span>
+</span><a href="#local-6989586621689113295"><span class="hs-identifier hs-var">jsonToRecordSet</span></a></span><span>
 </span><span id="line-230"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ColumnName
 </span><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-var">BigQuery.ColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ColumnName) -&gt; Text -&gt; ColumnName
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689112808"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689113315"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-231"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType 'BigQuery -&gt; ColumnType 'BigQuery
 forall (b :: BackendType). ScalarType b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-var">ColumnScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType 'BigQuery
@@ -851,5 +851,5 @@ ScalarType
 </span><a href="Hasura.Backends.BigQuery.Types.html#IntegerScalarType"><span class="hs-identifier hs-var">BigQuery.IntegerScalarType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-232"></span><span>        </span><span class="annot"><span class="annottext">(FieldName,
  SourceRelationshipSelection 'BigQuery Void UnpreparedValue)
-</span><a href="#local-6989586621689112807"><span class="hs-identifier hs-var">relationship</span></a></span><span>
+</span><a href="#local-6989586621689113314"><span class="hs-identifier hs-var">relationship</span></a></span><span>
 </span><span id="line-233"></span></pre></body></html>
