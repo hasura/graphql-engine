@@ -60,6 +60,9 @@ args:
         type: String
       - name: extensions
         type: json
+    
+    scalars:
+    - name: myCustomScalar
 
     objects:
     - name: UserId
@@ -444,12 +447,48 @@ args:
 
 - type: create_action
   args:
+    name: pgscalar_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: json!
+      handler: http://127.0.0.1:5593/json-response
+
+- type: create_action
+  args:
+    name: custom_scalar_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: myCustomScalar!
+      handler: http://127.0.0.1:5593/json-response
+
+- type: create_action
+  args:
     name: scalar_array_response
     definition:
       kind: synchronous
       arguments:
       output_type: '[String]!'
       handler: http://127.0.0.1:5593/scalar-array-response
+
+- type: create_action
+  args:
+    name: custom_scalar_array_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: '[myCustomScalar!]!'
+      handler: http://127.0.0.1:5593/custom-scalar-array-response
+
+- type: create_action
+  args:
+    name: custom_scalar_nested_array_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: '[[myCustomScalar!]]!'
+      handler: http://127.0.0.1:5593/custom-scalar-array-response
 
 - type: create_select_permission
   args:

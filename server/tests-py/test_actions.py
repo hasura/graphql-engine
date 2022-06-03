@@ -96,7 +96,7 @@ class TestActionsSync:
 
     def test_expecting_scalar_string_output_type_got_object(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_scalar_response_got_object.yaml')
-    
+
     def test_expecting_object_output_type_got_scalar_string(self, hge_ctx):
         check_query_secret(hge_ctx, self.dir() + '/expecting_object_response_got_scalar.yaml')
 
@@ -118,6 +118,34 @@ class TestActionsSync:
 
     def test_expecting_object_response_with_nested_null(self, hge_ctx):
        check_query_f(hge_ctx, self.dir() + '/expecting_object_response_with_nested_null.yaml')
+    
+    def test_expecting_jsonb_response_success(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir() + '/expecting_jsonb_response_success.yaml')
+       
+    def test_expecting_custom_scalar_response_success(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir() + '/expecting_custom_scalar_response_success.yaml')
+    
+    def test_expecting_custom_scalar_array_response_success(self, hge_ctx):
+       check_query_f(hge_ctx, self.dir() + '/expecting_custom_scalar_array_response_success.yaml')
+    
+    def test_expecting_custom_scalar_array_response_got_different_type(self, hge_ctx):
+        query_obj = {
+            "query": """
+                mutation {
+                    custom_scalar_nested_array_response
+                }
+            """
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query_obj, headers)
+        assert code == 200, resp
+
+        error_message = resp['errors'][0]['message']
+
+        assert error_message == 'expecting array for the action webhook response', error_message
 
     def test_expecting_object_response_with_nested_null_wrong_field(self, hge_ctx):
         query_obj = {

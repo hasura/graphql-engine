@@ -109,6 +109,7 @@ Response 2:
 
 ### Bug fixes and improvements
 
+- server: add support for custom scalar in action output type (#4185)
 - server: add support for MSSQL event triggers (#7228)
 - server: update pg_dump to be compatible with postgres 14 (#7676)
 - server: fix bug where timestamp values sent to postgres would erroneously trim leading zeroes (#8096)

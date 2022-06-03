@@ -147,8 +147,10 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
             pure aoTScalar
           | Just objectType <- Map.lookup outputBaseType _actObjects ->
             pure $ AOTObject objectType
+          | Just (NOCTScalar s) <- Map.lookup outputBaseType _actNonObjects -> do
+            pure (AOTScalar s)
           | otherwise ->
-            throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object type defined in custom types")
+            throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object or scalar type defined in custom types")
     -- If the Action is sync:
     --      1. Check if the output type has only top level relations (if any)
     --   If the Action is async:

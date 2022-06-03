@@ -372,7 +372,15 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         elif req_path == "/scalar-response":
             self._send_response(HTTPStatus.OK, "some-string")
+
+        elif req_path == "/json-response":
+            resp, status = self.json_response()
+            self._send_response(status, resp)
         
+        elif req_path == "/custom-scalar-array-response":
+            resp, status = self.custom_scalar_array_response()
+            self._send_response(status, resp)
+
         elif req_path == "/scalar-array-response":
             self._send_response(HTTPStatus.OK, ["foo", "bar", None])
 
@@ -601,6 +609,18 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
     def null_response(self):
         response = None
+        return response, HTTPStatus.OK
+    
+    def json_response(self):
+        response = {
+            'foo': 'bar'
+        }
+        return response, HTTPStatus.OK
+    
+    def custom_scalar_array_response(self):
+        response = [{
+            'foo': 'bar'
+        }]
         return response, HTTPStatus.OK
 
     def recursive_output(self):

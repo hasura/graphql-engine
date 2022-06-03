@@ -1,0 +1,12 @@
+description: pgScalar (custom scalar) response should be allowed
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      pgscalar_response
+    }
+response:
+  data:
+    pgscalar_response:
+      foo: bar

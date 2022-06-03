@@ -62,7 +62,23 @@ args:
     clear_data: true
 - type: drop_action
   args:
+    name: pgscalar_response
+    clear_data: true
+- type: drop_action
+  args:
+    name: custom_scalar_response
+    clear_data: true
+- type: drop_action
+  args:
     name: scalar_array_response
+    clear_data: true
+- type: drop_action
+  args:
+    name: custom_scalar_array_response
+    clear_data: true
+- type: drop_action
+  args:
+    name: custom_scalar_nested_array_response
     clear_data: true
 - type: drop_action
   args:
