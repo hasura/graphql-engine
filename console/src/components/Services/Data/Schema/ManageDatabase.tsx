@@ -173,7 +173,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             onClick={() => setShowUrl(true)}
           >
             <FaEye aria-hidden="true" />
-            <p className="ml-xs">Show Connection String</p>
+            <div className="ml-xs">Show Connection String</div>
           </span>
         )}
         {showUrl && (
