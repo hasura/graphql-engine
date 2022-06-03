@@ -39,6 +39,7 @@ module Hasura.Backends.Postgres.SQL.Types
     qualifiedObjectToName,
     PGScalarType (..),
     textToPGScalarType,
+    pgScalarTranslations,
     pgScalarTypeToText,
     PGTypeKind (..),
     QualifiedPGType (..),

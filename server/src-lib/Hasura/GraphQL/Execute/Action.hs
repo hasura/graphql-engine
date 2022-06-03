@@ -142,7 +142,7 @@ resolveActionExecution ::
   Maybe GQLQueryText ->
   ActionExecution
 resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExecContext {..} gqlQueryText =
-  ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields) <$> runWebhook
+  ActionExecution $ first (encJFromOrderedValue . makeActionResponseNoRelations _aaeFields _aaeOutputType _aaeOutputFields True) <$> runWebhook
   where
     handlerPayload = ActionWebhookPayload (ActionContext _aaeName) _aecSessionVariables _aaePayload gqlQueryText
 
@@ -166,8 +166,8 @@ resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExe
           _aaeResponseTransform
 
 -- | Build action response from the Webhook JSON response when there are no relationships defined
-makeActionResponseNoRelations :: IR.ActionFields -> ActionWebhookResponse -> AO.Value
-makeActionResponseNoRelations annFields webhookResponse =
+makeActionResponseNoRelations :: IR.ActionFields -> GraphQLType -> IR.ActionOutputFields -> Bool -> ActionWebhookResponse -> AO.Value
+makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputField webhookResponse =
   let mkResponseObject :: IR.ActionFields -> HashMap Text J.Value -> AO.Value
       mkResponseObject fields obj =
         AO.object $
@@ -191,13 +191,27 @@ makeActionResponseNoRelations annFields webhookResponse =
    in -- NOTE (Sam): This case would still not allow for aliased fields to be
       -- a part of the response. Also, seeing that none of the other `annField`
       -- types would be caught in the example, I've chosen to leave it as it is.
-      case webhookResponse of
-        AWRArray objs -> AO.array $ map mkResponseArray objs
-        AWRObject obj -> mkResponseObject annFields (mapKeys G.unName obj)
-        AWRNum n -> AO.toOrdered n
-        AWRBool b -> AO.toOrdered b
-        AWRString s -> AO.toOrdered s
-        AWRNull -> AO.Null
+      -- NOTE: (Pranshi) Bool here is applied to specify if we want to check ActionOutputFields
+      -- (in async actions, we have object types, which need to be validated
+      -- and ActionOutputField information is not present in `resolveAsyncActionQuery` -
+      -- so added a boolean which will make sure that the response is validated)
+      if gTypeContains isCustomScalar (unGraphQLType outputType) outputF && shouldCheckOutputField
+        then AO.toOrdered $ J.toJSON webhookResponse
+        else case webhookResponse of
+          AWRArray objs -> AO.array $ map mkResponseArray objs
+          AWRObject obj ->
+            mkResponseObject annFields (mapKeys G.unName obj)
+          AWRNull -> AO.Null
+          _ -> AO.toOrdered $ J.toJSON webhookResponse
+
+gTypeContains :: (G.GType -> IR.ActionOutputFields -> Bool) -> G.GType -> IR.ActionOutputFields -> Bool
+gTypeContains fun gType aof = case gType of
+  t@(G.TypeNamed _ _) -> fun t aof
+  (G.TypeList _ expectedType) -> gTypeContains fun expectedType aof
+
+isCustomScalar :: G.GType -> IR.ActionOutputFields -> Bool
+isCustomScalar (G.TypeNamed _ name) outputF = isJust (lookup (G.unName name) pgScalarTranslations) || (Map.null outputF && (not (isInBuiltScalar (G.unName name))))
+isCustomScalar (G.TypeList _ _) _ = False
 
 {- Note: [Async action architecture]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -266,7 +280,7 @@ resolveAsyncActionQuery userInfo annAction =
           IR.AsyncOutput annFields ->
             fromMaybe AO.Null <$> forM
               _alrResponsePayload
-              \response -> makeActionResponseNoRelations annFields <$> decodeValue response
+              \response -> makeActionResponseNoRelations annFields outputType Map.empty False <$> decodeValue response
           IR.AsyncId -> pure $ AO.String $ actionIdToText actionId
           IR.AsyncCreatedAt -> pure $ AO.toOrdered $ J.toJSON _alrCreatedAt
           IR.AsyncErrors -> pure $ AO.toOrdered $ J.toJSON _alrErrors
@@ -570,7 +584,7 @@ callWebhook
                 | HTTP.statusIsSuccessful responseStatus -> do
                   modifyQErr addInternalToErr $ do
                     webhookResponse <- decodeValue responseValue
-                    validateResponse responseValue outputType
+                    validateResponse responseValue outputType outputFields
                     pure (webhookResponse, mkSetCookieHeaders responseWreq)
                 | HTTP.statusIsClientError responseStatus -> do
                   ActionWebhookErrorResponse message maybeCode maybeExtensions <-
@@ -604,44 +618,37 @@ callWebhook
                   throwUnexpected $
                     "expecting not null value for field " <>> fieldName
 
-      isScalar :: Text -> Bool
-      isScalar s
-        | s == "Int" = True
-        | s == "Float" = True
-        | s == "String" = True
-        | s == "Boolean" = True
-        | otherwise = False
-
       -- Validates the webhook response against the output type
-      validateResponse :: J.Value -> GraphQLType -> m ()
-      validateResponse webhookResponse' outputType' =
-        case (webhookResponse', outputType') of
-          (J.Null, _) -> unless (isNullableType outputType') $ throwUnexpected "got null for the action webhook response"
-          (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
-            unless (G.unName name == "Int" || G.unName name == "Float") $
-              throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> G.unName name
-          (J.Bool _, (GraphQLType (G.TypeNamed _ name))) ->
-            unless (G.unName name == "Boolean") $
-              throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
-          (J.String _, (GraphQLType (G.TypeNamed _ name))) ->
-            unless (G.unName name == "String") $
-              throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
-          (J.Array _, (GraphQLType (G.TypeNamed _ name))) ->
-            throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
-          (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) ->
-            traverse_ (\o -> validateResponse o (GraphQLType outputType'')) objs
-          (ob@(J.Object _), (GraphQLType (G.TypeNamed _ name))) -> do
-            case J.parse (fmap AWRObject . J.parseJSON) ob of
-              J.Error s -> throwUnexpected $ "failed to parse webhookResponse as Object, error: " <> T.pack s -- This should never happen
-              J.Success (AWRObject awr) -> do
-                when (isScalar (G.unName name)) $
-                  throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
-                validateResponseObject awr
-              J.Success _ ->
-                throwUnexpected "Webhook response not an object" -- This should never happen
-                -- Expected output type is an array and webhook response is not an array
-          (_, (GraphQLType (G.TypeList _ _))) ->
-            throwUnexpected $ "expecting array for the action webhook response"
+      validateResponse :: J.Value -> GraphQLType -> IR.ActionOutputFields -> m ()
+      validateResponse webhookResponse' outputType' outputF =
+        unless (isCustomScalar (unGraphQLType outputType') outputF) do
+          case (webhookResponse', outputType') of
+            (J.Null, _) -> unless (isNullableType outputType') $ throwUnexpected "got null for the action webhook response"
+            (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
+              unless (G.unName name == G.unName intScalar || G.unName name == G.unName floatScalar) $
+                throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> G.unName name
+            (J.Bool _, (GraphQLType (G.TypeNamed _ name))) ->
+              unless (G.unName name == G.unName boolScalar) $
+                throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
+            (J.String _, (GraphQLType (G.TypeNamed _ name))) ->
+              unless (G.unName name == G.unName stringScalar || G.unName name == G.unName idScalar) $
+                throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+            (J.Array _, (GraphQLType (G.TypeNamed _ name))) ->
+              throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
+            (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) ->
+              traverse_ (\o -> validateResponse o (GraphQLType outputType'') outputF) objs
+            (ob@(J.Object _), (GraphQLType (G.TypeNamed _ name))) -> do
+              case J.parse (fmap AWRObject . J.parseJSON) ob of
+                J.Error s -> throwUnexpected $ "failed to parse webhookResponse as Object, error: " <> T.pack s -- This should never happen
+                J.Success (AWRObject awr) -> do
+                  when (isInBuiltScalar (G.unName name)) $
+                    throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
+                  validateResponseObject awr
+                J.Success _ ->
+                  throwUnexpected "Webhook response not an object" -- This should never happen
+                  -- Expected output type is an array and webhook response is not an array
+            (_, (GraphQLType (G.TypeList _ _))) ->
+              throwUnexpected $ "expecting array for the action webhook response"
 
 processOutputSelectionSet ::
   TF.ArgumentExp v ->

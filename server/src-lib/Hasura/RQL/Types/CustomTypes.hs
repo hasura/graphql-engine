@@ -6,6 +6,7 @@ module Hasura.RQL.Types.CustomTypes
     GraphQLType (..),
     isListType,
     isNullableType,
+    isInBuiltScalar,
     EnumTypeName (..),
     EnumValueDefinition (..),
     EnumTypeDefinition (..),
@@ -85,6 +86,15 @@ isListType (GraphQLType ty) = G.isListType ty
 
 isNullableType :: GraphQLType -> Bool
 isNullableType (GraphQLType ty) = G.isNullable ty
+
+isInBuiltScalar :: Text -> Bool
+isInBuiltScalar s
+  | s == G.unName intScalar = True
+  | s == G.unName floatScalar = True
+  | s == G.unName stringScalar = True
+  | s == G.unName boolScalar = True
+  | s == G.unName idScalar = True
+  | otherwise = False
 
 newtype InputObjectFieldName = InputObjectFieldName {unInputObjectFieldName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)
