@@ -17,6 +17,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Time.Clock qualified as C
+import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.ScheduledTrigger
@@ -108,13 +109,14 @@ resolveCronTrigger ::
 resolveCronTrigger env CronTriggerMetadata {..} = do
   webhookInfo <- resolveWebhook env ctWebhook
   headerInfo <- getHeaderInfosFromConf env ctHeaders
+  let urlTemplate = printURLTemplate $ unInputWebhook ctWebhook
   pure $
     CronTriggerInfo
       ctName
       ctSchedule
       ctPayload
       ctRetryConf
-      webhookInfo
+      (EnvRecord urlTemplate webhookInfo)
       headerInfo
       ctComment
       ctRequestTransform

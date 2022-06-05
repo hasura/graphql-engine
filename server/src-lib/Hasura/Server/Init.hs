@@ -230,7 +230,6 @@ mkServeOptions rso = do
   eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst eventsHttpPoolSizeEnv)
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   maybeAsyncActionsFetchInterval <- withEnv (rsoAsyncActionsFetchInterval rso) (fst asyncActionsFetchIntervalEnv)
-  logHeadersFromEnv <- withEnvBool (rsoLogHeadersFromEnv rso) (fst logHeadersFromEnvEnv)
   enableRemoteSchemaPerms <-
     bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled
       <$> withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv)
@@ -306,7 +305,6 @@ mkServeOptions rso = do
       eventsHttpPoolSize
       eventsFetchInterval
       asyncActionsFetchInterval
-      logHeadersFromEnv
       enableRemoteSchemaPerms
       connectionOptions
       webSocketKeepAlive
@@ -534,12 +532,6 @@ asyncActionsFetchIntervalEnv =
     "Interval in milliseconds to sleep before trying to fetch new async actions. "
       ++ "Value \"0\" implies completely disable fetching async actions from storage. "
       ++ "Default 1000 milliseconds"
-  )
-
-logHeadersFromEnvEnv :: (String, String)
-logHeadersFromEnvEnv =
-  ( "HASURA_GRAPHQL_LOG_HEADERS_FROM_ENV",
-    "Log headers sent instead of logging referenced environment variables."
   )
 
 retriesNumEnv :: (String, String)
@@ -1266,13 +1258,6 @@ parseGraphqlAsyncActionsFetchInterval =
           <> help (snd eventsFetchIntervalEnv)
       )
 
-parseLogHeadersFromEnv :: Parser Bool
-parseLogHeadersFromEnv =
-  switch
-    ( long "log-headers-from-env"
-        <> help (snd devModeEnv)
-    )
-
 parseEnableRemoteSchemaPerms :: Parser Bool
 parseEnableRemoteSchemaPerms =
   switch
@@ -1507,7 +1492,6 @@ serveOptionsParser =
     <*> parseGraphqlEventsHttpPoolSize
     <*> parseGraphqlEventsFetchInterval
     <*> parseGraphqlAsyncActionsFetchInterval
-    <*> parseLogHeadersFromEnv
     <*> parseEnableRemoteSchemaPerms
     <*> parseWebSocketCompression
     <*> parseWebSocketKeepAlive

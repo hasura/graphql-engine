@@ -749,12 +749,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
       serverConfigCtx
       newLogTVar
 
-  let eventLogBehavior =
-        LogBehavior
-          { _lbHeader = if soLogHeadersFromEnv then LogEnvValue else LogEnvVarname,
-            _lbResponse = if soDevMode then LogEntireResponse else LogSanitisedResponse
-          }
-
   lockedEventsCtx <-
     liftIO $
       LockedEventsCtx
@@ -765,7 +759,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
 
   case soEventingMode of
     EventingEnabled -> do
-      startEventTriggerPollerThread logger eventLogBehavior lockedEventsCtx cacheRef
+      startEventTriggerPollerThread logger lockedEventsCtx cacheRef
       startAsyncActionsPollerThread logger lockedEventsCtx cacheRef actionSubState
 
       -- start a background thread to create new cron events
@@ -773,7 +767,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
         C.forkManagedT "runCronEventsGenerator" logger $
           runCronEventsGenerator logger (getSchemaCache cacheRef)
 
-      startScheduledEventsPollerThread logger eventLogBehavior lockedEventsCtx cacheRef
+      startScheduledEventsPollerThread logger lockedEventsCtx cacheRef
     EventingDisabled ->
       unLogger logger $ mkGenericStrLog LevelInfo "server" "starting in eventing disabled mode"
 
@@ -899,7 +893,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             C.sleep (5) -- sleep for 5 seconds and then repeat
             waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
 
-    startEventTriggerPollerThread logger eventLogBehavior lockedEventsCtx cacheRef = do
+    startEventTriggerPollerThread logger lockedEventsCtx cacheRef = do
       let maxEvThrds = fromMaybe defaultMaxEventThreads soEventsHttpPoolSize
           fetchI = milliseconds $ fromMaybe (Milliseconds defaultFetchInterval) soEventsFetchInterval
           allSources = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
@@ -923,7 +917,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             (C.ThreadShutdown (liftIO eventsGracefulShutdownAction))
             $ processEventQueue
               logger
-              eventLogBehavior
               _scHttpManager
               (getSchemaCache cacheRef)
               eventEngineCtx
@@ -967,7 +960,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
         C.forkManagedT "asyncActionSubscriptionsProcessor" logger $
           asyncActionSubscriptionsProcessor actionSubState
 
-    startScheduledEventsPollerThread logger eventLogBehavior lockedEventsCtx cacheRef = do
+    startScheduledEventsPollerThread logger lockedEventsCtx cacheRef = do
       -- prepare scheduled triggers
       lift $ prepareScheduledEvents logger
 
@@ -992,7 +985,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           $ processScheduledTriggers
             env
             logger
-            eventLogBehavior
             _scHttpManager
             (getSchemaCache cacheRef)
             lockedEventsCtx

@@ -279,7 +279,7 @@ data CronTriggerInfo = CronTriggerInfo
     ctiSchedule :: !CronSchedule,
     ctiPayload :: !(Maybe Value),
     ctiRetryConf :: !STRetryConf,
-    ctiWebhookInfo :: !ResolvedWebhook,
+    ctiWebhookInfo :: !(EnvRecord ResolvedWebhook),
     ctiHeaders :: ![EventHeaderInfo],
     ctiComment :: !(Maybe Text),
     ctiRequestTransform :: !(Maybe RequestTransform),

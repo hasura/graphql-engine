@@ -43,6 +43,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
+import Data.URL.Template (printURLTemplate)
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Prelude
@@ -354,10 +355,15 @@ getWebhookInfoFromConf ::
 getWebhookInfoFromConf env webhookConf = case webhookConf of
   WCValue w -> do
     resolvedWebhook <- resolveWebhook env w
-    return $ WebhookConfInfo webhookConf resolvedWebhook
+    let urlTemplate = printURLTemplate $ unInputWebhook w
+    -- `urlTemplate` can either be the template value({{TEST}}) or a plain text.
+    -- When `urlTemplate` is a template value then '_envVarName' of the 'EnvRecord'
+    -- will be the template value i.e '{{TEST}}'
+    -- When `urlTemplate` is a plain text then '_envVarName' of the 'EnvRecord'  will be the plain text value.
+    return $ WebhookConfInfo webhookConf (EnvRecord urlTemplate resolvedWebhook)
   WCEnv webhookEnvVar -> do
     envVal <- getEnv env webhookEnvVar
-    return $ WebhookConfInfo webhookConf (ResolvedWebhook envVal)
+    return $ WebhookConfInfo webhookConf (EnvRecord webhookEnvVar (ResolvedWebhook envVal))
 
 buildEventTriggerInfo ::
   forall b m.

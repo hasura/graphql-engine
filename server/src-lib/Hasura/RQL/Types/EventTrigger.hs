@@ -40,7 +40,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (InputWebhook, ResolvedWebhook, SourceName)
+import Hasura.RQL.Types.Common (EnvRecord, InputWebhook, ResolvedWebhook, SourceName)
 import Hasura.RQL.Types.Eventing
 import Hasura.SQL.Backend
 
@@ -166,7 +166,7 @@ instance FromJSON WebhookConf where
 
 data WebhookConfInfo = WebhookConfInfo
   { wciWebhookConf :: !WebhookConf,
-    wciCachedValue :: !ResolvedWebhook
+    wciCachedValue :: !(EnvRecord ResolvedWebhook)
   }
   deriving (Show, Eq, Generic)
 
