@@ -36,9 +36,6 @@ module Hasura.Eventing.EventTrigger
     defaultFetchBatchSize,
     Event (..),
     EventEngineCtx (..),
-    LogBehavior (..),
-    HeaderLogBehavior (..),
-    ResponseLogBehavior (..),
     -- Exported for testing
     saveLockedEventTriggerEvents,
     removeEventTriggerEventFromLockedEvents,
@@ -219,7 +216,6 @@ processEventQueue ::
     MonadMask m
   ) =>
   L.Logger L.Hasura ->
-  LogBehavior ->
   HTTP.Manager ->
   IO SchemaCache ->
   EventEngineCtx ->
@@ -227,7 +223,7 @@ processEventQueue ::
   ServerMetrics ->
   MaintenanceMode () ->
   m (Forever m)
-processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics maintenanceMode = do
+processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEventsCtx {leEvents} serverMetrics maintenanceMode = do
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
@@ -395,7 +391,7 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                   retryConf = etiRetryConf eti
                   timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
                   httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-                  (headers, logHeaders) = prepareHeaders logBehavior (etiHeaders eti)
+                  (headers, logHeaders) = prepareHeaders (etiHeaders eti)
                   ep = createEventPayload retryConf e
                   payload = J.encode $ J.toJSON ep
                   extraLogCtx = ExtraLogContext (epId ep) (Just $ etiName eti)
@@ -403,9 +399,9 @@ processEventQueue logger logBehavior httpMgr getSchemaCache EventEngineCtx {..} 
                   responseTransform = mkResponseTransform <$> etiResponseTransform eti
               eitherReqRes <-
                 runExceptT $
-                  mkRequest headers httpTimeout payload requestTransform webhook >>= \reqDetails -> do
+                  mkRequest headers httpTimeout payload requestTransform (_envVarValue webhook) >>= \reqDetails -> do
                     let request = extractRequest reqDetails
-                        logger' res details = logHTTPForET res extraLogCtx details logBehavior
+                        logger' res details = logHTTPForET res extraLogCtx details (_envVarName webhook) logHeaders
                     -- Event Triggers have a configuration parameter called
                     -- HASURA_GRAPHQL_EVENTS_HTTP_WORKERS, which is used
                     -- to control the concurrency of http delivery.

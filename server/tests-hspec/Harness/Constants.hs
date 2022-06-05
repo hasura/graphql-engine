@@ -248,7 +248,6 @@ serveOptions =
       soEventsHttpPoolSize = Nothing,
       soEventsFetchInterval = Nothing,
       soAsyncActionsFetchInterval = Skip,
-      soLogHeadersFromEnv = False,
       soEnableRemoteSchemaPermissions = RemoteSchemaPermsDisabled,
       soConnectionOptions = WS.defaultConnectionOptions,
       soWebsocketKeepAlive = Init.defaultKeepAliveDelay,

@@ -126,6 +126,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Set qualified as Set
 import Data.TByteString qualified as TBS
 import Data.Time.Clock
+import Data.URL.Template (printURLTemplate)
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -230,13 +231,12 @@ processCronEvents ::
     MonadMetadataStorage (MetadataStorageT m)
   ) =>
   L.Logger L.Hasura ->
-  LogBehavior ->
   HTTP.Manager ->
   [CronEvent] ->
   IO SchemaCache ->
   TVar (Set.Set CronEventId) ->
   m ()
-processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents = do
+processCronEvents logger httpMgr cronEvents getSC lockedCronEvents = do
   cronTriggersInfo <- scCronTriggers <$> liftIO getSC
   -- save the locked cron events that have been fetched from the
   -- database, the events stored here will be unlocked in case a
@@ -264,7 +264,6 @@ processCronEvents logger logBehavior httpMgr cronEvents getSC lockedCronEvents =
           runMetadataStorageT $
             flip runReaderT (logger, httpMgr) $
               processScheduledEvent
-                logBehavior
                 id'
                 ctiHeaders
                 retryCtx
@@ -283,7 +282,6 @@ processOneOffScheduledEvents ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
-  LogBehavior ->
   HTTP.Manager ->
   [OneOffScheduledEvent] ->
   TVar (Set.Set OneOffScheduledEventId) ->
@@ -291,7 +289,6 @@ processOneOffScheduledEvents ::
 processOneOffScheduledEvents
   env
   logger
-  logBehavior
   httpMgr
   oneOffEvents
   lockedOneOffScheduledEvents = do
@@ -303,6 +300,7 @@ processOneOffScheduledEvents
       (either logInternalError pure) =<< runMetadataStorageT do
         webhookInfo <- resolveWebhook env _ooseWebhookConf
         headerInfo <- getHeaderInfosFromConf env _ooseHeaderConf
+
         let payload =
               ScheduledEventWebhookPayload
                 _ooseId
@@ -314,12 +312,13 @@ processOneOffScheduledEvents
                 _ooseRequestTransform
                 _ooseResponseTransform
             retryCtx = RetryContext _ooseTries _ooseRetryConf
-
+            webhookEnvRecord = EnvRecord (getTemplateFromUrl _ooseWebhookConf) webhookInfo
         flip runReaderT (logger, httpMgr) $
-          processScheduledEvent logBehavior _ooseId headerInfo retryCtx payload webhookInfo OneOff
+          processScheduledEvent _ooseId headerInfo retryCtx payload webhookEnvRecord OneOff
         removeEventFromLockedEvents _ooseId lockedOneOffScheduledEvents
     where
       logInternalError err = liftIO . L.unLogger logger $ ScheduledTriggerInternalErr err
+      getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
 
 processScheduledTriggers ::
   ( MonadIO m,
@@ -328,12 +327,11 @@ processScheduledTriggers ::
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
-  LogBehavior ->
   HTTP.Manager ->
   IO SchemaCache ->
   LockedEventsCtx ->
   m (Forever m)
-processScheduledTriggers env logger logBehavior httpMgr getSC LockedEventsCtx {..} = do
+processScheduledTriggers env logger httpMgr getSC LockedEventsCtx {..} = do
   return $
     Forever () $
       const $ do
@@ -341,8 +339,8 @@ processScheduledTriggers env logger logBehavior httpMgr getSC LockedEventsCtx {.
         case result of
           Left e -> logInternalError e
           Right (cronEvents, oneOffEvents) -> do
-            processCronEvents logger logBehavior httpMgr cronEvents getSC leCronEvents
-            processOneOffScheduledEvents env logger logBehavior httpMgr oneOffEvents leOneOffEvents
+            processCronEvents logger httpMgr cronEvents getSC leCronEvents
+            processOneOffScheduledEvents env logger httpMgr oneOffEvents leOneOffEvents
         -- NOTE: cron events are scheduled at times with minute resolution (as on
         -- unix), while one-off events can be set for arbitrary times. The sleep
         -- time here determines how overdue a scheduled event (cron or one-off)
@@ -359,15 +357,14 @@ processScheduledEvent ::
     Tracing.HasReporter m,
     MonadMetadataStorage m
   ) =>
-  LogBehavior ->
   ScheduledEventId ->
   [EventHeaderInfo] ->
   RetryContext ->
   ScheduledEventWebhookPayload ->
-  ResolvedWebhook ->
+  EnvRecord ResolvedWebhook ->
   ScheduledEventType ->
   m ()
-processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookUrl type' =
+processScheduledEvent eventId eventHeaders retryCtx payload webhookUrl type' =
   Tracing.runTraceT traceNote do
     currentTime <- liftIO getCurrentTime
     let retryConf = _rctxConf retryCtx
@@ -381,7 +378,7 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
                 unNonNegativeDiffTime $
                   strcTimeoutSeconds retryConf
             httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-            (headers, decodedHeaders) = prepareHeaders logBehavior eventHeaders
+            (headers, decodedHeaders) = prepareHeaders eventHeaders
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
             webhookReqBodyJson = J.toJSON payload
             webhookReqBody = J.encode webhookReqBodyJson
@@ -390,9 +387,9 @@ processScheduledEvent logBehavior eventId eventHeaders retryCtx payload webhookU
 
         eitherReqRes <-
           runExceptT $
-            mkRequest headers httpTimeout webhookReqBody requestTransform webhookUrl >>= \reqDetails -> do
+            mkRequest headers httpTimeout webhookReqBody requestTransform (_envVarValue webhookUrl) >>= \reqDetails -> do
               let request = extractRequest reqDetails
-                  logger e d = logHTTPForST e extraLogCtx d logBehavior
+                  logger e d = logHTTPForST e extraLogCtx d (_envVarName webhookUrl) decodedHeaders
                   sessionVars = _rdSessionVars reqDetails
               resp <- invokeRequest reqDetails responseTransform sessionVars logger
               pure (request, resp)
