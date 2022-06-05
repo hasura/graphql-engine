@@ -692,7 +692,7 @@ export interface RemoteField {
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/remote-relationships.html#inputarguments
  */
 export interface InputArguments {
-  [InputField: string]: PGColumn;
+  [InputField: string]: InputArguments | string;
 }
 
 // //////////////////////////////

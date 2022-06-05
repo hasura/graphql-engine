@@ -39,7 +39,7 @@ test('transformDbToRemoteSchema returns new and legacy formats consistently', ()
         "lhs_fields": Array [
           "id",
         ],
-        "relationshipName": "old_payload",
+        "relationshipName": "t",
         "remoteSchemaName": "remoteSchema3",
         "remote_field": Object {
           "test": Object {

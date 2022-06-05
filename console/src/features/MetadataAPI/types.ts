@@ -2,6 +2,7 @@ import { HasuraMetadataV3 } from '@/metadata/types';
 import { MetadataQueryType } from '@/metadata/queryUtils';
 import { IntrospectionQuery } from 'graphql';
 import { RemoteField } from '../RemoteRelationships/RemoteSchemaRelationships/types';
+
 import { DataTarget } from '../Datasources';
 
 export interface MetadataResponse {
