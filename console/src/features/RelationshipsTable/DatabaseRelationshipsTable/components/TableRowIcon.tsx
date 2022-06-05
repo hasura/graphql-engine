@@ -7,7 +7,7 @@ import {
   FaTable,
 } from 'react-icons/fa';
 
-const className = 'fill-current text-sm text-muted mr-1';
+const className = 'fill-current text-sm text-muted p-0';
 
 interface TableRowIconProps {
   type:

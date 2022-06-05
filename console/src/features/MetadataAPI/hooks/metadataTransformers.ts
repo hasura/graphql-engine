@@ -11,7 +11,7 @@ import {
   DbToRemoteSchemaRelationship,
 } from '../types';
 
-interface TransformDbToRemoteSchemaArgs {
+export interface TransformDbToRemoteSchemaArgs {
   target: DataTarget;
   remote_relationships: RemoteRelationship[];
 }

@@ -1,14 +1,18 @@
-import { RemoteRelationship } from '@/metadata/types';
-
 export const dbToRemoteSchemaRelationships = {
   target: {
     database: 'default',
     schema: 'public',
     table: 'user',
   },
-  remote_relationships: ([
+  remote_relationships: [
     {
       definition: {
+        to_source: {
+          relationship_type: '',
+          source: '',
+          table: { name: '', schema: '' },
+          field_mapping: {},
+        },
         to_remote_schema: {
           remote_field: {
             test: {
@@ -29,6 +33,12 @@ export const dbToRemoteSchemaRelationships = {
     },
     {
       definition: {
+        to_source: {
+          relationship_type: '',
+          source: '',
+          table: { name: '', schema: '' },
+          field_mapping: {},
+        },
         remote_field: {
           test: {
             arguments: {
@@ -43,7 +53,7 @@ export const dbToRemoteSchemaRelationships = {
         hasura_fields: ['id'],
         remote_schema: 'remoteSchema3',
       },
-      name: 'old_payload',
+      name: 't',
     },
-  ] as unknown) as RemoteRelationship[],
+  ],
 };
