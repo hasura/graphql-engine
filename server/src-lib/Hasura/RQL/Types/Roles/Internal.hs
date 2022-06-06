@@ -94,7 +94,7 @@ rolePermInfoToCombineRolePermInfo RolePermInfo {..} =
     modifySingleSelectPerm SelPermInfo {..} =
       let columnCaseBoolExp = fmap AnnColumnCaseBoolExpField spiFilter
           colsWithColCaseBoolExp = spiCols $> Just columnCaseBoolExp
-          scalarCompFieldsWithColCaseBoolExp = spiScalarComputedFields $> Just columnCaseBoolExp
+          scalarCompFieldsWithColCaseBoolExp = spiComputedFields $> Just columnCaseBoolExp
        in CombinedSelPermInfo
             [colsWithColCaseBoolExp]
             [scalarCompFieldsWithColCaseBoolExp]

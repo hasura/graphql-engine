@@ -353,7 +353,7 @@ instance
 --   to combine more than one select permissions for inherited roles.
 data CombinedSelPermInfo (b :: BackendType) = CombinedSelPermInfo
   { cspiCols :: ![(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
-    cspiScalarComputedFields :: ![(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
+    cspiComputedFields :: ![(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
     cspiFilter :: ![(AnnBoolExpPartialSQL b)],
     cspiLimit :: !(Maybe (Max Int)),
     cspiAllowAgg :: !Any,
@@ -379,7 +379,7 @@ combinedSelPermInfoToSelPermInfo ::
 combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
   SelPermInfo
     (mergeColumnsWithBoolExp <$> M.unionsAll cspiCols)
-    (mergeColumnsWithBoolExp <$> M.unionsAll cspiScalarComputedFields)
+    (mergeColumnsWithBoolExp <$> M.unionsAll cspiComputedFields)
     (BoolOr cspiFilter)
     (getMax <$> cspiLimit)
     (getAny cspiAllowAgg)
@@ -419,9 +419,10 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
     -- bool exp will determine if the column should be nullified in a row, when
     -- there aren't requisite permissions.
     spiCols :: !(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))),
-    -- | HashMap of accessible scalar computed fields to the role, mapped to
-    -- `AnnColumnCaseBoolExpPartialSQL`, simililar to `spiCols`
-    spiScalarComputedFields :: !(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))),
+    -- | HashMap of accessible computed fields to the role, mapped to
+    -- `AnnColumnCaseBoolExpPartialSQL`, simililar to `spiCols`.
+    -- These computed fields do not return rows of existing table.
+    spiComputedFields :: !(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))),
     spiFilter :: !(AnnBoolExpPartialSQL b),
     spiLimit :: !(Maybe Int),
     spiAllowAgg :: !Bool,
