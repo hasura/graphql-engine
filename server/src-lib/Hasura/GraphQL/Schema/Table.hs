@@ -191,7 +191,7 @@ tableSelectFields sourceInfo tableInfo = do
     canBeSelected (Just permissions) (FIComputedField computedFieldInfo) =
       case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
         ReturnsScalar _ ->
-          pure $ Map.member (_cfiName computedFieldInfo) $ spiScalarComputedFields permissions
+          pure $ Map.member (_cfiName computedFieldInfo) $ spiComputedFields permissions
         ReturnsTable tableName -> do
           tableInfo' <- askTableInfo sourceInfo tableName
           isJust <$> tableSelectPermissions @b tableInfo'

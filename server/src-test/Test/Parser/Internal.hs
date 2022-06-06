@@ -175,7 +175,7 @@ mkParser table cib =
     selPermInfo =
       SelPermInfo
         { spiCols = HM.fromList . fmap ((,Nothing) . unsafePGCol . cibName) $ cib,
-          spiScalarComputedFields = mempty,
+          spiComputedFields = mempty,
           spiFilter = upiFilter,
           spiLimit = Nothing,
           spiAllowAgg = True,

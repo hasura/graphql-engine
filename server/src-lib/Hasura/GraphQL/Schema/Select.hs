@@ -1355,7 +1355,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
   case _cfiReturnType of
     PG.CFRScalar scalarReturnType -> do
       caseBoolExpMaybe <-
-        hoistMaybe (Map.lookup _cfiName (spiScalarComputedFields selectPermissions))
+        hoistMaybe (Map.lookup _cfiName (spiComputedFields selectPermissions))
       let caseBoolExpUnpreparedValue =
             (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExpMaybe
           fieldArgsParser = do

@@ -189,7 +189,7 @@ checkSelectPermOnScalarComputedField ::
   m ()
 checkSelectPermOnScalarComputedField selPermInfo computedField = do
   role <- askCurRole
-  unless (M.member computedField $ spiScalarComputedFields selPermInfo) $
+  unless (M.member computedField $ spiComputedFields selPermInfo) $
     throw400 PermissionDenied $ permErrMsg role
   where
     permErrMsg role

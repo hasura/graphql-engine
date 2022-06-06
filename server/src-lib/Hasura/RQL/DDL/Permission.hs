@@ -343,7 +343,7 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
         askColumnType fieldInfoMap pgCol autoInferredErr
 
   -- validate computed fields
-  scalarComputedFields <-
+  validComputedFields <-
     withPathK "computed_fields" $
       indexedForM computedFields $ \fieldName -> do
         computedFieldInfo <- askComputedFieldInfo fieldInfoMap fieldName
@@ -363,7 +363,7 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
   let deps =
         mkParentDep @b source tn :
         boolExpDeps ++ map (mkColDep @b DRUntyped source tn) pgCols
-          ++ map (mkComputedFieldDep @b DRUntyped source tn) scalarComputedFields
+          ++ map (mkComputedFieldDep @b DRUntyped source tn) validComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
@@ -372,10 +372,10 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
       throw400 NotSupported "unexpected negative value"
 
   let pgColsWithFilter = HM.fromList $ map (,Nothing) pgCols
-      scalarComputedFieldsWithFilter = HS.toMap (HS.fromList scalarComputedFields) $> Nothing
+      computedFieldsWithFilter = HS.toMap (HS.fromList validComputedFields) $> Nothing
 
   let selPermInfo =
-        SelPermInfo pgColsWithFilter scalarComputedFieldsWithFilter boolExp mLimit allowAgg depHeaders
+        SelPermInfo pgColsWithFilter computedFieldsWithFilter boolExp mLimit allowAgg depHeaders
 
   return (selPermInfo, deps)
   where

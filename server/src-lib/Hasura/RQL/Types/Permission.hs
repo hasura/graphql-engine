@@ -217,7 +217,8 @@ data SelPerm (b :: BackendType) = SelPerm
     spLimit :: !(Maybe Int),
     -- | Allow aggregation
     spAllowAggregations :: !Bool,
-    -- | Allowed computed fields
+    -- | Allowed computed fields which should not
+    -- include the fields returning rows of existing table.
     spComputedFields :: ![ComputedFieldName]
   }
   deriving (Show, Eq, Generic)
