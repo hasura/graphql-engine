@@ -296,7 +296,7 @@ spiRequiredHeaders :: forall (b :: BackendType). SelPermInfo b -&gt; HashSet Tex
 spiAllowAgg :: forall (b :: BackendType). SelPermInfo b -&gt; Bool
 spiLimit :: forall (b :: BackendType). SelPermInfo b -&gt; Maybe Int
 spiFilter :: forall (b :: BackendType). SelPermInfo b -&gt; AnnBoolExpPartialSQL b
-spiScalarComputedFields :: forall (b :: BackendType).
+spiComputedFields :: forall (b :: BackendType).
 SelPermInfo b
 -&gt; HashMap
      ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
@@ -307,7 +307,7 @@ spiRequiredHeaders :: HashSet Text
 spiAllowAgg :: Bool
 spiLimit :: Maybe Int
 spiFilter :: AnnBoolExpPartialSQL b
-spiScalarComputedFields :: HashMap
+spiComputedFields :: HashMap
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 spiCols :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="Hasura.RQL.Types.Table.html#spiRequiredHeaders"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
@@ -337,7 +337,7 @@ forall a. a -&gt; Maybe a
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="#local-6989586621689055385"><span class="hs-identifier hs-var hs-var">scalarCompFieldsWithColCaseBoolExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
-</span><a href="#local-6989586621689055400"><span class="hs-identifier hs-var">spiScalarComputedFields</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
+</span><a href="#local-6989586621689055400"><span class="hs-identifier hs-var">spiComputedFields</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 -&gt; Maybe (AnnColumnCaseBoolExpPartialSQL b)
 -&gt; HashMap

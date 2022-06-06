@@ -1218,7 +1218,7 @@ FieldInfoMap (FieldInfo backend)
 </span><span id="line-344"></span><span>
 </span><span id="line-345"></span><span>  </span><span class="hs-comment">-- validate computed fields</span><span>
 </span><span id="line-346"></span><span>  </span><span id="local-6989586621689065555"><span class="annot"><span class="annottext">[ComputedFieldName]
-</span><a href="#local-6989586621689065555"><span class="hs-identifier hs-var">scalarComputedFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689065555"><span class="hs-identifier hs-var">validComputedFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-347"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m [ComputedFieldName] -&gt; m [ComputedFieldName]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -1353,7 +1353,7 @@ DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DRUntyped"><span class="hs-identifier hs-var">DRUntyped</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="#local-6989586621689065566"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621689065565"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ComputedFieldName]
-</span><a href="#local-6989586621689065555"><span class="hs-identifier hs-var">scalarComputedFields</span></a></span><span>
+</span><a href="#local-6989586621689065555"><span class="hs-identifier hs-var">validComputedFields</span></a></span><span>
 </span><span id="line-367"></span><span>      </span><span id="local-6989586621689065541"><span class="annot"><span class="annottext">depHeaders :: HashSet Text
 </span><a href="#local-6989586621689065541"><span class="hs-identifier hs-var hs-var">depHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BoolExp b -&gt; HashSet Text
 forall (b :: BackendType). BoolExp b -&gt; HashSet Text
@@ -1413,14 +1413,14 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Column b]
 </span><a href="#local-6989586621689065562"><span class="hs-identifier hs-var">pgCols</span></a></span><span>
-</span><span id="line-375"></span><span>      </span><span id="local-6989586621689065534"><span class="annot"><span class="annottext">scalarComputedFieldsWithFilter :: HashMap
+</span><span id="line-375"></span><span>      </span><span id="local-6989586621689065534"><span class="annot"><span class="annottext">computedFieldsWithFilter :: HashMap
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
-</span><a href="#local-6989586621689065534"><span class="hs-identifier hs-var hs-var">scalarComputedFieldsWithFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ComputedFieldName -&gt; HashMap ComputedFieldName ()
+</span><a href="#local-6989586621689065534"><span class="hs-identifier hs-var hs-var">computedFieldsWithFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashSet ComputedFieldName -&gt; HashMap ComputedFieldName ()
 forall a. HashSet a -&gt; HashMap a ()
 </span><span class="hs-identifier hs-var">HS.toMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ComputedFieldName] -&gt; HashSet ComputedFieldName
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldName]
-</span><a href="#local-6989586621689065555"><span class="hs-identifier hs-var">scalarComputedFields</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap ComputedFieldName ()
+</span><a href="#local-6989586621689065555"><span class="hs-identifier hs-var">validComputedFields</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap ComputedFieldName ()
 -&gt; Maybe (AnnColumnCaseBoolExpPartialSQL b)
 -&gt; HashMap
      ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
@@ -1451,7 +1451,7 @@ HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="Hasura.RQL.Types.Table.html#SelPermInfo"><span class="hs-identifier hs-var">SelPermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="#local-6989586621689065535"><span class="hs-identifier hs-var">pgColsWithFilter</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
-</span><a href="#local-6989586621689065534"><span class="hs-identifier hs-var">scalarComputedFieldsWithFilter</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExpPartialSQL b
+</span><a href="#local-6989586621689065534"><span class="hs-identifier hs-var">computedFieldsWithFilter</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExpPartialSQL b
 </span><a href="#local-6989586621689065560"><span class="hs-identifier hs-var">boolExp</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
 </span><a href="#local-6989586621689065540"><span class="hs-identifier hs-var">mLimit</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621689065529"><span class="hs-identifier hs-var">allowAgg</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet Text

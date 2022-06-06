@@ -10613,7 +10613,8 @@ SelPerm :: !PermColSpec b -> !BoolExp b -> !Maybe Int -> !Bool -> ![ComputedFiel
 -- | Allow aggregation
 [spAllowAggregations] :: SelPerm (b :: BackendType) -> !Bool
 
--- | Allowed computed fields
+-- | Allowed computed fields which should not include the fields returning
+--   rows of existing table.
 [spComputedFields] :: SelPerm (b :: BackendType) -> ![ComputedFieldName]
 type SelPermDef b = PermDef b SelPerm
 data DelPerm (b :: BackendType)
@@ -15994,7 +15995,7 @@ InsPermInfo :: !HashSet (Column b) -> !AnnBoolExpPartialSQL b -> !PreSetColsPart
 data CombinedSelPermInfo (b :: BackendType)
 CombinedSelPermInfo :: ![HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))] -> ![HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))] -> ![AnnBoolExpPartialSQL b] -> !Maybe (Max Int) -> !Any -> !HashSet Text -> CombinedSelPermInfo (b :: BackendType)
 [cspiCols] :: CombinedSelPermInfo (b :: BackendType) -> ![HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))]
-[cspiScalarComputedFields] :: CombinedSelPermInfo (b :: BackendType) -> ![HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))]
+[cspiComputedFields] :: CombinedSelPermInfo (b :: BackendType) -> ![HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))]
 [cspiFilter] :: CombinedSelPermInfo (b :: BackendType) -> ![AnnBoolExpPartialSQL b]
 [cspiLimit] :: CombinedSelPermInfo (b :: BackendType) -> !Maybe (Max Int)
 [cspiAllowAgg] :: CombinedSelPermInfo (b :: BackendType) -> !Any
@@ -16010,9 +16011,10 @@ SelPermInfo :: !HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)) ->
 --   be nullified in a row, when there aren't requisite permissions.
 [spiCols] :: SelPermInfo (b :: BackendType) -> !HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 
--- | HashMap of accessible scalar computed fields to the role, mapped to
---   <a>AnnColumnCaseBoolExpPartialSQL</a>, simililar to <a>spiCols</a>
-[spiScalarComputedFields] :: SelPermInfo (b :: BackendType) -> !HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
+-- | HashMap of accessible computed fields to the role, mapped to
+--   <a>AnnColumnCaseBoolExpPartialSQL</a>, simililar to <a>spiCols</a>.
+--   These computed fields do not return rows of existing table.
+[spiComputedFields] :: SelPermInfo (b :: BackendType) -> !HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 [spiFilter] :: SelPermInfo (b :: BackendType) -> !AnnBoolExpPartialSQL b
 [spiLimit] :: SelPermInfo (b :: BackendType) -> !Maybe Int
 [spiAllowAgg] :: SelPermInfo (b :: BackendType) -> !Bool
