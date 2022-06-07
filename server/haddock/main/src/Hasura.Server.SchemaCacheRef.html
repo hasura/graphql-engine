@@ -61,39 +61,39 @@
 </span><span id="line-58"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-comment">-- | Build a new 'SchemaCacheRef'</span><span>
-</span><span id="line-61"></span><span id="local-6989586621689146677"><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#initialiseSchemaCacheRef"><span class="hs-identifier hs-type">initialiseSchemaCacheRef</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-62"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689146677"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetrics"><span class="hs-identifier hs-type">ServerMetrics</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689146677"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-type">SchemaCacheRef</span></a></span></span><span>
+</span><span id="line-61"></span><span id="local-6989586621689147469"><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#initialiseSchemaCacheRef"><span class="hs-identifier hs-type">initialiseSchemaCacheRef</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689147469"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetrics"><span class="hs-identifier hs-type">ServerMetrics</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689147469"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-type">SchemaCacheRef</span></a></span></span><span>
 </span><span id="line-63"></span><span id="initialiseSchemaCacheRef"><span class="annot"><span class="annottext">initialiseSchemaCacheRef :: ServerMetrics -&gt; RebuildableSchemaCache -&gt; m SchemaCacheRef
-</span><a href="Hasura.Server.SchemaCacheRef.html#initialiseSchemaCacheRef"><span class="hs-identifier hs-var hs-var">initialiseSchemaCacheRef</span></a></span></span><span> </span><span id="local-6989586621689146676"><span class="annot"><span class="annottext">ServerMetrics
-</span><a href="#local-6989586621689146676"><span class="hs-identifier hs-var">serverMetrics</span></a></span></span><span> </span><span id="local-6989586621689146675"><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146675"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO SchemaCacheRef -&gt; m SchemaCacheRef
+</span><a href="Hasura.Server.SchemaCacheRef.html#initialiseSchemaCacheRef"><span class="hs-identifier hs-var hs-var">initialiseSchemaCacheRef</span></a></span></span><span> </span><span id="local-6989586621689147468"><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621689147468"><span class="hs-identifier hs-var">serverMetrics</span></a></span></span><span> </span><span id="local-6989586621689147467"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621689147467"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO SchemaCacheRef -&gt; m SchemaCacheRef
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO SchemaCacheRef -&gt; m SchemaCacheRef)
 -&gt; IO SchemaCacheRef -&gt; m SchemaCacheRef
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621689146673"><span class="annot"><span class="annottext">MVar ()
-</span><a href="#local-6989586621689146673"><span class="hs-identifier hs-var">cacheLock</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO (MVar ())
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621689147465"><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621689147465"><span class="hs-identifier hs-var">cacheLock</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO (MVar ())
 forall (m :: * -&gt; *) a. MonadBase IO m =&gt; a -&gt; m (MVar a)
 </span><span class="hs-identifier hs-var">newMVar</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621689146671"><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
-</span><a href="#local-6989586621689146671"><span class="hs-identifier hs-var">cacheCell</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(RebuildableSchemaCache, SchemaCacheVer)
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621689147463"><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
+</span><a href="#local-6989586621689147463"><span class="hs-identifier hs-var">cacheCell</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(RebuildableSchemaCache, SchemaCacheVer)
 -&gt; IO (IORef (RebuildableSchemaCache, SchemaCacheVer))
 forall a. a -&gt; IO (IORef a)
 </span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146675"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaCacheVer
+</span><a href="#local-6989586621689147467"><span class="hs-identifier hs-var">schemaCache</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaCacheVer
 </span><a href="Hasura.RQL.Types.SchemaCache.html#initSchemaCacheVer"><span class="hs-identifier hs-var">initSchemaCacheVer</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-66"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689146668"><span class="annot"><span class="annottext">metadataVersionGauge :: Gauge
-</span><a href="#local-6989586621689146668"><span class="hs-identifier hs-var hs-var">metadataVersionGauge</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689147460"><span class="annot"><span class="annottext">metadataVersionGauge :: Gauge
+</span><a href="#local-6989586621689147460"><span class="hs-identifier hs-var hs-var">metadataVersionGauge</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
 </span><a href="Hasura.Server.Metrics.html#smSchemaCacheMetadataResourceVersion"><span class="hs-identifier hs-var hs-var">smSchemaCacheMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
-</span><a href="#local-6989586621689146676"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
+</span><a href="#local-6989586621689147468"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
 </span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">Gauge -&gt; RebuildableSchemaCache -&gt; IO ()
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Gauge -&gt; RebuildableSchemaCache -&gt; m ()
 </span><a href="Hasura.Server.SchemaCacheRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-var">updateMetadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689146668"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146675"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
+</span><a href="#local-6989586621689147460"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621689147467"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
 </span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">SchemaCacheRef -&gt; IO SchemaCacheRef
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SchemaCacheRef -&gt; IO SchemaCacheRef)
@@ -104,46 +104,46 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Gauge
 -&gt; SchemaCacheRef
 </span><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-var">SchemaCacheRef</span></a></span><span> </span><span class="annot"><span class="annottext">MVar ()
-</span><a href="#local-6989586621689146673"><span class="hs-identifier hs-var">cacheLock</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
-</span><a href="#local-6989586621689146671"><span class="hs-identifier hs-var">cacheCell</span></a></span><span> </span><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689146668"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span>
+</span><a href="#local-6989586621689147465"><span class="hs-identifier hs-var">cacheLock</span></a></span><span> </span><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
+</span><a href="#local-6989586621689147463"><span class="hs-identifier hs-var">cacheCell</span></a></span><span> </span><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689147460"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="hs-comment">-- | Set the 'SchemaCacheRef' to the 'RebuildableSchemaCache' produced by the</span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- given action.</span><span>
 </span><span id="line-72"></span><span class="hs-comment">--</span><span>
 </span><span id="line-73"></span><span class="hs-comment">-- An internal lock ensures that at most one update to the 'SchemaCacheRef' may</span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- proceed at a time.</span><span>
-</span><span id="line-75"></span><span id="local-6989586621689146665"><span id="local-6989586621689146666"><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#withSchemaCacheUpdate"><span class="hs-identifier hs-type">withSchemaCacheUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689146666"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689146666"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-75"></span><span id="local-6989586621689147457"><span id="local-6989586621689147458"><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#withSchemaCacheUpdate"><span class="hs-identifier hs-type">withSchemaCacheUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689147458"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689147458"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-type">SchemaCacheRef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">STM.TVar</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-80"></span><span>  </span><span class="annot"><a href="#local-6989586621689146666"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689146665"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-81"></span><span>  </span><span class="annot"><a href="#local-6989586621689146666"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689146665"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="#local-6989586621689147458"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689147457"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="#local-6989586621689147458"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689147457"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
 </span><span id="line-82"></span><span id="withSchemaCacheUpdate"><span class="annot"><span class="annottext">withSchemaCacheUpdate :: SchemaCacheRef
 -&gt; Logger Hasura
 -&gt; Maybe (TVar Bool)
 -&gt; m (a, RebuildableSchemaCache)
 -&gt; m a
-</span><a href="Hasura.Server.SchemaCacheRef.html#withSchemaCacheUpdate"><span class="hs-identifier hs-var hs-var">withSchemaCacheUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-type">SchemaCacheRef</span></a></span><span> </span><span id="local-6989586621689146664"><span class="annot"><span class="annottext">MVar ()
-</span><a href="#local-6989586621689146664"><span class="hs-identifier hs-var">lock</span></a></span></span><span> </span><span id="local-6989586621689146663"><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
-</span><a href="#local-6989586621689146663"><span class="hs-identifier hs-var">cacheRef</span></a></span></span><span> </span><span id="local-6989586621689146662"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689146662"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689146661"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689146661"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689146660"><span class="annot"><span class="annottext">Maybe (TVar Bool)
-</span><a href="#local-6989586621689146660"><span class="hs-identifier hs-var">mLogCheckerTVar</span></a></span></span><span> </span><span id="local-6989586621689146659"><span class="annot"><span class="annottext">m (a, RebuildableSchemaCache)
-</span><a href="#local-6989586621689146659"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.SchemaCacheRef.html#withSchemaCacheUpdate"><span class="hs-identifier hs-var hs-var">withSchemaCacheUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-type">SchemaCacheRef</span></a></span><span> </span><span id="local-6989586621689147456"><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621689147456"><span class="hs-identifier hs-var">lock</span></a></span></span><span> </span><span id="local-6989586621689147455"><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
+</span><a href="#local-6989586621689147455"><span class="hs-identifier hs-var">cacheRef</span></a></span></span><span> </span><span id="local-6989586621689147454"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689147454"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689147453"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689147453"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689147452"><span class="annot"><span class="annottext">Maybe (TVar Bool)
+</span><a href="#local-6989586621689147452"><span class="hs-identifier hs-var">mLogCheckerTVar</span></a></span></span><span> </span><span id="local-6989586621689147451"><span class="annot"><span class="annottext">m (a, RebuildableSchemaCache)
+</span><a href="#local-6989586621689147451"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-83"></span><span>  </span><span class="annot"><span class="annottext">MVar () -&gt; (() -&gt; m a) -&gt; m a
 forall (m :: * -&gt; *) a b.
 MonadBaseControl IO m =&gt;
 MVar a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-identifier hs-var">withMVarMasked</span></span><span> </span><span class="annot"><span class="annottext">MVar ()
-</span><a href="#local-6989586621689146664"><span class="hs-identifier hs-var">lock</span></a></span><span> </span><span class="annot"><span class="annottext">((() -&gt; m a) -&gt; m a) -&gt; (() -&gt; m a) -&gt; m a
+</span><a href="#local-6989586621689147456"><span class="hs-identifier hs-var">lock</span></a></span><span> </span><span class="annot"><span class="annottext">((() -&gt; m a) -&gt; m a) -&gt; (() -&gt; m a) -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-84"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621689146657"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689146657"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689146656"><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146656"><span class="hs-identifier hs-var">newSC</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (a, RebuildableSchemaCache)
-</span><a href="#local-6989586621689146659"><span class="hs-identifier hs-var">action</span></a></span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621689147449"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689147449"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689147448"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621689147448"><span class="hs-identifier hs-var">newSC</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (a, RebuildableSchemaCache)
+</span><a href="#local-6989586621689147451"><span class="hs-identifier hs-var">action</span></a></span><span>
 </span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
@@ -156,7 +156,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; IO ()
 forall a. IORef a -&gt; (a -&gt; a) -&gt; IO ()
 </span><span class="hs-identifier hs-var">modifyIORef'</span></span><span> </span><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
-</span><a href="#local-6989586621689146663"><span class="hs-identifier hs-var">cacheRef</span></a></span><span> </span><span class="annot"><span class="annottext">(((RebuildableSchemaCache, SchemaCacheVer)
+</span><a href="#local-6989586621689147455"><span class="hs-identifier hs-var">cacheRef</span></a></span><span> </span><span class="annot"><span class="annottext">(((RebuildableSchemaCache, SchemaCacheVer)
   -&gt; (RebuildableSchemaCache, SchemaCacheVer))
  -&gt; IO ())
 -&gt; ((RebuildableSchemaCache, SchemaCacheVer)
@@ -164,15 +164,15 @@ forall a. IORef a -&gt; (a -&gt; a) -&gt; IO ()
 -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689146654"><span class="annot"><span class="annottext">SchemaCacheVer
-</span><a href="#local-6989586621689146654"><span class="hs-identifier hs-var">prevVer</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-88"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689146653"><span class="annot"><span class="annottext">newVer :: SchemaCacheVer
-</span><a href="#local-6989586621689146653"><span class="hs-identifier hs-var hs-var">newVer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCacheVer -&gt; SchemaCacheVer
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689147446"><span class="annot"><span class="annottext">SchemaCacheVer
+</span><a href="#local-6989586621689147446"><span class="hs-identifier hs-var">prevVer</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-88"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689147445"><span class="annot"><span class="annottext">newVer :: SchemaCacheVer
+</span><a href="#local-6989586621689147445"><span class="hs-identifier hs-var hs-var">newVer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCacheVer -&gt; SchemaCacheVer
 </span><a href="Hasura.RQL.Types.SchemaCache.html#incSchemaCacheVer"><span class="hs-identifier hs-var">incSchemaCacheVer</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCacheVer
-</span><a href="#local-6989586621689146654"><span class="hs-identifier hs-var">prevVer</span></a></span><span>
+</span><a href="#local-6989586621689147446"><span class="hs-identifier hs-var">prevVer</span></a></span><span>
 </span><span id="line-89"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146656"><span class="hs-identifier hs-var">newSC</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaCacheVer
-</span><a href="#local-6989586621689146653"><span class="hs-identifier hs-var">newVer</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689147448"><span class="hs-identifier hs-var">newSC</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SchemaCacheVer
+</span><a href="#local-6989586621689147445"><span class="hs-identifier hs-var">newVer</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>
 </span><span id="line-91"></span><span>      </span><span class="hs-comment">-- update metric with new metadata version</span><span>
 </span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">Gauge -&gt; RebuildableSchemaCache -&gt; IO ()
@@ -180,45 +180,45 @@ forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Gauge -&gt; RebuildableSchemaCache -&gt; m ()
 </span><a href="Hasura.Server.SchemaCacheRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-var">updateMetadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689146662"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146656"><span class="hs-identifier hs-var">newSC</span></a></span><span>
+</span><a href="#local-6989586621689147454"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621689147448"><span class="hs-identifier hs-var">newSC</span></a></span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689146651"><span class="annot"><span class="annottext">inconsistentObjectsList :: [InconsistentMetadata]
-</span><a href="#local-6989586621689146651"><span class="hs-identifier hs-var hs-var">inconsistentObjectsList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; [InconsistentMetadata]
+</span><span id="line-94"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689147443"><span class="annot"><span class="annottext">inconsistentObjectsList :: [InconsistentMetadata]
+</span><a href="#local-6989586621689147443"><span class="hs-identifier hs-var hs-var">inconsistentObjectsList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; [InconsistentMetadata]
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scInconsistentObjs"><span class="hs-identifier hs-var hs-var">scInconsistentObjs</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; [InconsistentMetadata])
 -&gt; SchemaCache -&gt; [InconsistentMetadata]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146656"><span class="hs-identifier hs-var">newSC</span></a></span><span>
-</span><span id="line-95"></span><span>          </span><span id="local-6989586621689146648"><span class="annot"><span class="annottext">logInconsistentMetadata' :: IO ()
-</span><a href="#local-6989586621689146648"><span class="hs-identifier hs-var hs-var">logInconsistentMetadata'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; [InconsistentMetadata] -&gt; IO ()
+</span><a href="#local-6989586621689147448"><span class="hs-identifier hs-var">newSC</span></a></span><span>
+</span><span id="line-95"></span><span>          </span><span id="local-6989586621689147440"><span class="annot"><span class="annottext">logInconsistentMetadata' :: IO ()
+</span><a href="#local-6989586621689147440"><span class="hs-identifier hs-var hs-var">logInconsistentMetadata'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; [InconsistentMetadata] -&gt; IO ()
 </span><a href="Hasura.Server.SchemaCacheRef.html#logInconsistentMetadata"><span class="hs-identifier hs-var">logInconsistentMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689146661"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
-</span><a href="#local-6989586621689146651"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span>
+</span><a href="#local-6989586621689147453"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><a href="#local-6989586621689147443"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span>
 </span><span id="line-96"></span><span>      </span><span class="hs-comment">-- log any inconsistent objects only once and not everytime this method is called</span><span>
 </span><span id="line-97"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (TVar Bool)
-</span><a href="#local-6989586621689146660"><span class="hs-identifier hs-var">mLogCheckerTVar</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689147452"><span class="hs-identifier hs-var">mLogCheckerTVar</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">Maybe (TVar Bool)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="annot"><span class="annottext">IO ()
-</span><a href="#local-6989586621689146648"><span class="hs-identifier hs-var">logInconsistentMetadata'</span></a></span><span>
-</span><span id="line-99"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689146647"><span class="annot"><span class="annottext">TVar Bool
-</span><a href="#local-6989586621689146647"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-100"></span><span>          </span><span id="local-6989586621689146646"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689146646"><span class="hs-identifier hs-var">logCheck</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Bool -&gt; IO Bool
+</span><a href="#local-6989586621689147440"><span class="hs-identifier hs-var">logInconsistentMetadata'</span></a></span><span>
+</span><span id="line-99"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689147439"><span class="annot"><span class="annottext">TVar Bool
+</span><a href="#local-6989586621689147439"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-100"></span><span>          </span><span id="local-6989586621689147438"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689147438"><span class="hs-identifier hs-var">logCheck</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Bool -&gt; IO Bool
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO Bool -&gt; IO Bool) -&gt; IO Bool -&gt; IO Bool
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TVar Bool -&gt; IO Bool
 forall a. TVar a -&gt; IO a
 </span><span class="hs-identifier hs-var">STM.readTVarIO</span></span><span> </span><span class="annot"><span class="annottext">TVar Bool
-</span><a href="#local-6989586621689146647"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span><span>
+</span><a href="#local-6989586621689147439"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span><span>
 </span><span id="line-101"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
-</span><a href="#local-6989586621689146651"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689147443"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689146646"><span class="hs-identifier hs-var">logCheck</span></a></span><span>
+</span><a href="#local-6989586621689147438"><span class="hs-identifier hs-var">logCheck</span></a></span><span>
 </span><span id="line-102"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-103"></span><span>              </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
 forall a. STM a -&gt; IO a
@@ -227,17 +227,17 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TVar Bool -&gt; Bool -&gt; STM ()
 forall a. TVar a -&gt; a -&gt; STM ()
 </span><span class="hs-identifier hs-var">STM.writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar Bool
-</span><a href="#local-6989586621689146647"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689147439"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-104"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-105"></span><span>              </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689146646"><span class="hs-identifier hs-var">logCheck</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689147438"><span class="hs-identifier hs-var">logCheck</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
-</span><a href="#local-6989586621689146651"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><a href="#local-6989586621689147443"><span class="hs-identifier hs-var">inconsistentObjectsList</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-106"></span><span>                </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
@@ -247,21 +247,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TVar Bool -&gt; Bool -&gt; STM ()
 forall a. TVar a -&gt; a -&gt; STM ()
 </span><span class="hs-identifier hs-var">STM.writeTVar</span></span><span> </span><span class="annot"><span class="annottext">TVar Bool
-</span><a href="#local-6989586621689146647"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689147439"><span class="hs-identifier hs-var">logCheckerTVar</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-107"></span><span>                </span><span class="annot"><span class="annottext">IO ()
-</span><a href="#local-6989586621689146648"><span class="hs-identifier hs-var">logInconsistentMetadata'</span></a></span><span>
+</span><a href="#local-6989586621689147440"><span class="hs-identifier hs-var">logInconsistentMetadata'</span></a></span><span>
 </span><span id="line-108"></span><span>
 </span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">a -&gt; m a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689146657"><span class="hs-identifier hs-var">res</span></a></span><span>
+</span><a href="#local-6989586621689147449"><span class="hs-identifier hs-var">res</span></a></span><span>
 </span><span id="line-110"></span><span>
 </span><span id="line-111"></span><span class="hs-comment">-- | Read the contents of the 'SchemaCacheRef'</span><span>
 </span><span id="line-112"></span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#readSchemaCacheRef"><span class="hs-identifier hs-type">readSchemaCacheRef</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-type">SchemaCacheRef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCacheVer"><span class="hs-identifier hs-type">SchemaCacheVer</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span id="readSchemaCacheRef"><span class="annot"><span class="annottext">readSchemaCacheRef :: SchemaCacheRef -&gt; IO (RebuildableSchemaCache, SchemaCacheVer)
-</span><a href="Hasura.Server.SchemaCacheRef.html#readSchemaCacheRef"><span class="hs-identifier hs-var hs-var">readSchemaCacheRef</span></a></span></span><span> </span><span id="local-6989586621689146638"><span class="annot"><span class="annottext">SchemaCacheRef
-</span><a href="#local-6989586621689146638"><span class="hs-identifier hs-var">scRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
+</span><a href="Hasura.Server.SchemaCacheRef.html#readSchemaCacheRef"><span class="hs-identifier hs-var hs-var">readSchemaCacheRef</span></a></span></span><span> </span><span id="local-6989586621689147430"><span class="annot"><span class="annottext">SchemaCacheRef
+</span><a href="#local-6989586621689147430"><span class="hs-identifier hs-var">scRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IORef (RebuildableSchemaCache, SchemaCacheVer)
 -&gt; IO (RebuildableSchemaCache, SchemaCacheVer)
 forall a. IORef a -&gt; IO a
 </span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">(IORef (RebuildableSchemaCache, SchemaCacheVer)
@@ -271,15 +271,15 @@ forall a. IORef a -&gt; IO a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SchemaCacheRef -&gt; IORef (RebuildableSchemaCache, SchemaCacheVer)
 </span><a href="Hasura.Server.SchemaCacheRef.html#_scrCache"><span class="hs-identifier hs-var hs-var">_scrCache</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCacheRef
-</span><a href="#local-6989586621689146638"><span class="hs-identifier hs-var">scRef</span></a></span><span>
+</span><a href="#local-6989586621689147430"><span class="hs-identifier hs-var">scRef</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- | Utility function. Read the latest 'SchemaCache' from the 'SchemaCacheRef'.</span><span>
 </span><span id="line-116"></span><span class="hs-comment">--</span><span>
 </span><span id="line-117"></span><span class="hs-comment">-- &gt; getSchemaCache == fmap (lastBuiltSchemaCache . fst) . readSchemaCacheRef</span><span>
 </span><span id="line-118"></span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#getSchemaCache"><span class="hs-identifier hs-type">getSchemaCache</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#SchemaCacheRef"><span class="hs-identifier hs-type">SchemaCacheRef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span><span>
 </span><span id="line-119"></span><span id="getSchemaCache"><span class="annot"><span class="annottext">getSchemaCache :: SchemaCacheRef -&gt; IO SchemaCache
-</span><a href="Hasura.Server.SchemaCacheRef.html#getSchemaCache"><span class="hs-identifier hs-var hs-var">getSchemaCache</span></a></span></span><span> </span><span id="local-6989586621689146636"><span class="annot"><span class="annottext">SchemaCacheRef
-</span><a href="#local-6989586621689146636"><span class="hs-identifier hs-var">scRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
+</span><a href="Hasura.Server.SchemaCacheRef.html#getSchemaCache"><span class="hs-identifier hs-var hs-var">getSchemaCache</span></a></span></span><span> </span><span id="local-6989586621689147428"><span class="annot"><span class="annottext">SchemaCacheRef
+</span><a href="#local-6989586621689147428"><span class="hs-identifier hs-var">scRef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache -&gt; SchemaCache
 </span><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#lastBuiltSchemaCache"><span class="hs-identifier hs-var hs-var">lastBuiltSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">(RebuildableSchemaCache -&gt; SchemaCache)
 -&gt; ((RebuildableSchemaCache, SchemaCacheVer)
     -&gt; RebuildableSchemaCache)
@@ -293,20 +293,20 @@ forall a b. (a, b) -&gt; a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">SchemaCacheRef -&gt; IO (RebuildableSchemaCache, SchemaCacheVer)
 </span><a href="Hasura.Server.SchemaCacheRef.html#readSchemaCacheRef"><span class="hs-identifier hs-var">readSchemaCacheRef</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaCacheRef
-</span><a href="#local-6989586621689146636"><span class="hs-identifier hs-var">scRef</span></a></span><span>
+</span><a href="#local-6989586621689147428"><span class="hs-identifier hs-var">scRef</span></a></span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span class="hs-comment">-- | Utility function</span><span>
 </span><span id="line-122"></span><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#logInconsistentMetadata"><span class="hs-identifier hs-type">logInconsistentMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html#InconsistentMetadata"><span class="hs-identifier hs-type">InconsistentMetadata</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span id="logInconsistentMetadata"><span class="annot"><span class="annottext">logInconsistentMetadata :: Logger Hasura -&gt; [InconsistentMetadata] -&gt; IO ()
-</span><a href="Hasura.Server.SchemaCacheRef.html#logInconsistentMetadata"><span class="hs-identifier hs-var hs-var">logInconsistentMetadata</span></a></span></span><span> </span><span id="local-6989586621689146633"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689146633"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689146632"><span class="annot"><span class="annottext">[InconsistentMetadata]
-</span><a href="#local-6989586621689146632"><span class="hs-identifier hs-var">objs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.SchemaCacheRef.html#logInconsistentMetadata"><span class="hs-identifier hs-var hs-var">logInconsistentMetadata</span></a></span></span><span> </span><span id="local-6989586621689147425"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689147425"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689147424"><span class="annot"><span class="annottext">[InconsistentMetadata]
+</span><a href="#local-6989586621689147424"><span class="hs-identifier hs-var">objs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-124"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[InconsistentMetadata] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
-</span><a href="#local-6989586621689146632"><span class="hs-identifier hs-var">objs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+</span><a href="#local-6989586621689147424"><span class="hs-identifier hs-var">objs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-125"></span><span>    </span><span class="annot"><span class="annottext">Logger Hasura
@@ -319,21 +319,21 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">L.unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689146633"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataLog -&gt; IO ()) -&gt; MetadataLog -&gt; IO ()
+</span><a href="#local-6989586621689147425"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataLog -&gt; IO ()) -&gt; MetadataLog -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata] -&gt; MetadataLog
 </span><a href="Hasura.Server.Logging.html#mkInconsMetadataLog"><span class="hs-identifier hs-var">mkInconsMetadataLog</span></a></span><span> </span><span class="annot"><span class="annottext">[InconsistentMetadata]
-</span><a href="#local-6989586621689146632"><span class="hs-identifier hs-var">objs</span></a></span><span>
+</span><a href="#local-6989586621689147424"><span class="hs-identifier hs-var">objs</span></a></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- Internal helper. Set the gague metric to the metadata version of the schema</span><span>
 </span><span id="line-128"></span><span class="hs-comment">-- cache, if it exists.</span><span>
-</span><span id="line-129"></span><span id="local-6989586621689146733"><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-type">updateMetadataVersionGauge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689146733"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Gauge</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689146733"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-129"></span><span id="local-6989586621689147525"><span class="annot"><a href="Hasura.Server.SchemaCacheRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-type">updateMetadataVersionGauge</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689147525"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Gauge</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Cache.Common.html#RebuildableSchemaCache"><span class="hs-identifier hs-type">RebuildableSchemaCache</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689147525"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-130"></span><span id="updateMetadataVersionGauge"><span class="annot"><span class="annottext">updateMetadataVersionGauge :: Gauge -&gt; RebuildableSchemaCache -&gt; m ()
-</span><a href="Hasura.Server.SchemaCacheRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-var hs-var">updateMetadataVersionGauge</span></a></span></span><span> </span><span id="local-6989586621689146629"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689146629"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span></span><span> </span><span id="local-6989586621689146628"><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146628"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-131"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689146627"><span class="annot"><span class="annottext">metadataVersion :: Maybe MetadataResourceVersion
-</span><a href="#local-6989586621689146627"><span class="hs-identifier hs-var hs-var">metadataVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; Maybe MetadataResourceVersion
+</span><a href="Hasura.Server.SchemaCacheRef.html#updateMetadataVersionGauge"><span class="hs-identifier hs-var hs-var">updateMetadataVersionGauge</span></a></span></span><span> </span><span id="local-6989586621689147421"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689147421"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span></span><span> </span><span id="local-6989586621689147420"><span class="annot"><span class="annottext">RebuildableSchemaCache
+</span><a href="#local-6989586621689147420"><span class="hs-identifier hs-var">schemaCache</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689147419"><span class="annot"><span class="annottext">metadataVersion :: Maybe MetadataResourceVersion
+</span><a href="#local-6989586621689147419"><span class="hs-identifier hs-var hs-var">metadataVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaCache -&gt; Maybe MetadataResourceVersion
 </span><a href="Hasura.RQL.Types.SchemaCache.html#scMetadataResourceVersion"><span class="hs-identifier hs-var hs-var">scMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">(SchemaCache -&gt; Maybe MetadataResourceVersion)
 -&gt; (RebuildableSchemaCache -&gt; SchemaCache)
 -&gt; RebuildableSchemaCache
@@ -344,7 +344,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; RebuildableSchemaCache -&gt; Maybe MetadataResourceVersion
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RebuildableSchemaCache
-</span><a href="#local-6989586621689146628"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
+</span><a href="#local-6989586621689147420"><span class="hs-identifier hs-var">schemaCache</span></a></span><span>
 </span><span id="line-132"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
@@ -356,12 +356,12 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (a -&gt; f b) -&gt; t a -&gt; f ()
 </span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Gauge -&gt; Int64 -&gt; IO ()
 </span><span class="hs-identifier hs-var">Gauge.set</span></span><span> </span><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689146629"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">(Int64 -&gt; IO ())
+</span><a href="#local-6989586621689147421"><span class="hs-identifier hs-var">metadataVersionGauge</span></a></span><span> </span><span class="annot"><span class="annottext">(Int64 -&gt; IO ())
 -&gt; (MetadataResourceVersion -&gt; Int64)
 -&gt; MetadataResourceVersion
 -&gt; IO ()
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Int64
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getMetadataResourceVersion"><span class="hs-identifier hs-var hs-var">getMetadataResourceVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResourceVersion
-</span><a href="#local-6989586621689146627"><span class="hs-identifier hs-var">metadataVersion</span></a></span><span>
+</span><a href="#local-6989586621689147419"><span class="hs-identifier hs-var">metadataVersion</span></a></span><span>
 </span><span id="line-133"></span></pre></body></html>
