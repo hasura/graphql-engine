@@ -7,10 +7,8 @@ import {
   showErrorNotification,
 } from '../../Common/Notification';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import metaDataStyles from '../Settings.scss';
 import { reloadMetadata } from '../../../../metadata/actions';
-
-import styles from '../Settings.scss';
+import { focusYellowRing } from '../../Data/constants';
 
 class ReloadMetadata extends Component {
   constructor(props) {
@@ -79,7 +77,7 @@ class ReloadMetadata extends Component {
           size="sm"
           disabled={this.state.isReloading}
           onClick={reloadMetadataAndLoadInconsistentMetadata}
-          className={`${metaDataStyles.add_mar_right_mid}`}
+          className="mr-sm"
         >
           {this.props.buttonText || buttonText}
         </Button>
@@ -87,9 +85,9 @@ class ReloadMetadata extends Component {
           <Tooltip message={btnTooltipMessage} tooltipStyle={tooltipStyle} />
         )}
         {showReloadRemoteSchemas && (
-          <>
+          <div className="items-center flex">
             <label
-              className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small} ${metaDataStyles.add_mar_left_small}`}
+              className="cursor-pointer mr-xs ml-md mb-0"
               disabled={this.state.isReloading}
             >
               <input
@@ -97,16 +95,16 @@ class ReloadMetadata extends Component {
                 onChange={this.toggleShouldReloadRemoteSchemas}
                 checked={shouldReloadRemoteSchemas}
                 readOnly
-                className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer} legacy-input-fix`}
+                className={`mr-xs cursor-pointer ${focusYellowRing} rounded-sm !mr-xs`}
               />
               Reload all remote schemas
             </label>
             <Tooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
-          </>
+          </div>
         )}
-        <>
+        <div className="items-center flex">
           <label
-            className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small} ${metaDataStyles.add_mar_left_small} ${styles.metaDataMargin}`}
+            className="cursor-pointer mr-xs ml-md mb-0"
             disabled={this.state.isReloading}
           >
             <input
@@ -114,12 +112,12 @@ class ReloadMetadata extends Component {
               onChange={this.toggleShouldReloadAllSources}
               checked={shouldReloadAllSources}
               readOnly
-              className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer} legacy-input-fix`}
+              className={`mr-xs cursor-pointer ${focusYellowRing} rounded-sm !mr-xs`}
             />
             Reload all databases
           </label>
           <Tooltip message="Check this if you have inconsistent databases." />
-        </>
+        </div>
       </>
     );
   }

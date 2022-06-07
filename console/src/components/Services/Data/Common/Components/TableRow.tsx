@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { dataSource } from '../../../../../dataSources';
-import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 import { TableColumn } from '../../../../../dataSources/types';
+import { focusYellowRing } from '../../constants';
 
 const getColumnInfo = (
   col: TableColumn,
@@ -116,17 +116,14 @@ export const TableRow: React.FC<TableRowProps> = ({
   };
 
   return (
-    <div className="form-group">
-      <label
-        className={`col-sm-3 control-label ${styles.insertBoxLabel}`}
-        title={colName}
-      >
+    <div className="items-center flex pb-xs">
+      <div className="w-2/12 overflow-hidden overflow-ellipsis" title={colName}>
         {colName}
-      </label>
-      <label className={`${styles.radioLabel} radio-inline`}>
+      </div>
+      <div className="flex items-center mr-sm">
         <input
           type="radio"
-          className="legacy-input-fix"
+          className={`${focusYellowRing} !m-0 !mr-sm`}
           ref={node => {
             setRef('insertRadioNode', node);
           }}
@@ -134,6 +131,8 @@ export const TableRow: React.FC<TableRowProps> = ({
           defaultChecked={columnValueType === 'value'}
           disabled={isDisabled}
         />
+      </div>
+      <div className="flex items-center mr-sm relative">
         <TypedInput
           inputRef={(node: HTMLInputElement) => {
             setRef('valueNode', node);
@@ -148,25 +147,25 @@ export const TableRow: React.FC<TableRowProps> = ({
           disabled={isDisabled}
           index={index}
         />
-      </label>
-      <label className={`${styles.radioLabel} radio-inline`}>
+      </div>
+      <div className="flex items-center mr-sm">
         <input
           type="radio"
-          className="legacy-input-fix"
+          className={`${focusYellowRing} !m-0 !mr-sm`}
           ref={node => {
             setRef('nullNode', node);
           }}
           disabled={!isNullable}
           defaultChecked={columnValueType === 'null'}
           name={`${colName}-value`}
-          data-test={`nullable-radio-${index}`}
+          data-test={`null-value-radio-${index}`}
         />
-        <span className={styles.radioSpan}>NULL</span>
-      </label>
-      <label className={`${styles.radioLabel} radio-inline`}>
+        <div>NULL</div>
+      </div>
+      <div className="flex items-center mr-sm">
         <input
           type="radio"
-          className="legacy-input-fix"
+          className={`${focusYellowRing} !m-0 !mr-sm`}
           ref={node => {
             setRef('defaultNode', node);
           }}
@@ -175,8 +174,8 @@ export const TableRow: React.FC<TableRowProps> = ({
           defaultChecked={columnValueType === 'default'}
           data-test={`typed-input-default-${index}`}
         />
-        <span className={styles.radioSpan}>Default</span>
-      </label>
+        <div>Default</div>
+      </div>
     </div>
   );
 };

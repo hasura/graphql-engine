@@ -1,6 +1,6 @@
 import React from 'react';
-import styles from '../../../Common/TableCommon/Table.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
+import { focusYellowRing } from '../constants';
 
 type MigrationCheckboxProps = {
   isChecked: boolean;
@@ -14,15 +14,14 @@ const MigrationCheckbox = ({
   isCLIMode,
 }: MigrationCheckboxProps) =>
   isCLIMode && (
-    <div className={`form-group ${styles.add_mar_top_small}`}>
-      <label className={`col-sm-3 control-label ${styles.insertBoxLabel}`} />
-      <label className={styles.labelText}>
+    <div className="flex items-center">
+      <label className="text-sm">
         <input
           type="checkbox"
           checked={isChecked}
           title="This is a migration"
           onChange={onChange}
-          className={`${styles.migrationCheckbox} legacy-input-fix`}
+          className={`${focusYellowRing} !m-0 !mr-sm`}
         />
         This is a migration
         <ToolTip

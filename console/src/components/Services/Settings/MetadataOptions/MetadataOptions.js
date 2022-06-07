@@ -39,7 +39,7 @@ const MetadataOptions = props => {
           </div>
         </div>
 
-        <div key="meta_data_2">
+        <div key="meta_data_2" className="flex">
           <ReloadMetadata {...props} />
         </div>
 
