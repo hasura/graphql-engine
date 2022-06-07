@@ -1,5 +1,5 @@
 BUILDDIR   := bin
-BINARY_ASSETS := $(BUILDDIR)/cli-ext-hasura-node12-linux-x64 $(BUILDDIR)/cli-ext-hasura-node12-macos-x64 $(BUILDDIR)/cli-ext-hasura-node12-win-x64.exe $(BUILDDIR)/cli-ext-hasura-node12-linux-arm64 $(BUILDDIR)/cli-ext-hasura-node16-macos-arm64
+BINARY_ASSETS := $(BUILDDIR)/cli-ext-linux-amd64 $(BUILDDIR)/cli-ext-darwin-amd64 $(BUILDDIR)/cli-ext-windows-amd64 $(BUILDDIR)/cli-ext-linux-arm64 $(BUILDDIR)/cli-ext-darwin-arm64
 BINARY_ASSET_CHECKSUMS := $(patsubst %,%.sha256,$(BINARY_ASSETS))
 GLOBALBUILDDIR ?= /build
 
