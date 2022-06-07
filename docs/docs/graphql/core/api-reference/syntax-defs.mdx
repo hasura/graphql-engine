@@ -33,7 +33,7 @@ keywords:
 }
 ```
 
-## BigQueryTableName {#bigquerytablename}
+## BigQuery TableName {#bigquerytablename}
 
 ```
 {
@@ -65,6 +65,15 @@ keywords:
 {
     "name": String,
     "schema": String
+}
+```
+
+## BigQuery FunctionName {#bigqueryfunctionname}
+
+```
+{
+    "name": String,
+    "dataset": String
 }
 ```
 
@@ -1174,6 +1183,14 @@ via [Custom Types](/graphql/core/api-reference/metadata-api/custom-types.mdx)
 | function         | true     | [FunctionName](#functionname) | The SQL function                                                                                                                                        |
 | table_argument   | false    | String                        | Name of the argument which accepts a table row type. If omitted, the first argument is considered a table argument                                      |
 | session_argument | false    | String                        | Name of the argument which accepts the Hasura session object as a JSON/JSONB value. If omitted, the Hasura session object is not passed to the function |
+
+## BigQuery ComputedFieldDefinition {#bigquerycomputedfielddefinition}
+
+| Key              | Required | Schema                                         | Description                                                                    |
+|------------------|----------|------------------------------------------------|--------------------------------------------------------------------------------|
+| function         | true     | [BigQuery FunctionName](#bigqueryfunctionname) | The user defined SQL function                                                  |
+| argument_mapping | true     | Object (`String` : `String`)                   | Mapping from the argument name of the function to the column name of the table |
+| return_table     | false    | [BigQuery TableName](#bigquerytablename)       | Name of the table which the function returns                                   |
 
 ## Function Configuration {#function-configuration}
 
