@@ -7,7 +7,7 @@ module Hasura.RQL.Types.Backend
     XDisable,
     XEnable,
     ComputedFieldReturnType (..),
-    _ReturnsScalar,
+    _ReturnsTable,
     SupportedNamingCase (..),
   )
 where

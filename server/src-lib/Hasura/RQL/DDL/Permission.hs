@@ -426,10 +426,7 @@ buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withP
                 <<> " are auto-derived from the permissions on its returning table "
                 <> returnTable
                 <<> " and cannot be specified manually"
-          ReturnsOthers ->
-            throw400 NotSupported $
-              "cannot define select permissions on computed field " <> fieldName
-                <<> " which does not return existing table or scalar type"
+          ReturnsOthers -> pure fieldName
 
   let deps =
         mkParentDep @b source tableName :

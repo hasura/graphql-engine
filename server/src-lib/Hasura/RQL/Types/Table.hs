@@ -1069,12 +1069,15 @@ mkAdminRolePermInfo tableInfo =
     fields = _tciFieldInfoMap tableInfo
     pgCols = map ciColumn $ getCols fields
     pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
-    scalarComputedFields =
-      HS.fromList $ map _cfiName $ onlyScalarComputedFields $ getComputedFieldInfos fields
-    scalarComputedFields' = HS.toMap scalarComputedFields $> Nothing
+    computedFields =
+      -- Fetch the list of computed fields not returning rows of existing table.
+      -- For other computed fields returning existing table rows, the admin role can query them
+      -- as their permissions are derived from returning table permissions.
+      HS.fromList $ map _cfiName $ removeComputedFieldsReturningExistingTable $ getComputedFieldInfos fields
+    computedFields' = HS.toMap computedFields $> Nothing
 
     tableName = _tciName tableInfo
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
-    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
+    s = SelPermInfo pgColsWithFilter computedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
     u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing M.empty False mempty
     d = DelPermInfo tableName annBoolExpTrue False mempty
