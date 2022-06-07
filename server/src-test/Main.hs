@@ -47,7 +47,6 @@ import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.IR.SelectSpec qualified as SelectSpec
 import Hasura.RQL.MetadataSpec qualified as MetadataSpec
 import Hasura.RQL.PermissionSpec qualified as PermSpec
-import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.AllowlistSpec qualified as AllowlistSpec
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec

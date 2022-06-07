@@ -142,7 +142,6 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.EventTrigger (getHeaderInfosFromConf)
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing

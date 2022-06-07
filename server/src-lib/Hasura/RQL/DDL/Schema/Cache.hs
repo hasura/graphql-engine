@@ -28,7 +28,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Retry qualified as Retry
 import Data.Aeson
 import Data.Align (align)
-import Data.Dependent.Map qualified as DMap
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as M
@@ -90,7 +89,6 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
-import Hasura.SQL.Tag
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -717,7 +715,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                               invalidationKeys,
                               orderedRoles
                             )
-                      returnA -< (so, DMap.singleton (backendTag @b) $ ScalarSet scalars)
+                      returnA -< (so, BackendMap.singleton scalars)
                   )
                   -<
                     ( exists,
@@ -828,7 +826,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               ( map mkActionMetadataObject actionList,
                 "custom types are inconsistent"
               )
-          returnA -< (M.empty, emptyAnnotatedCustomTypes)
+          returnA -< (mempty, mempty)
 
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
@@ -1154,7 +1152,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         Inc.ArrowCache m arr,
         ArrowWriter (Seq CollectedInfo) arr
       ) =>
-      ( (AnnotatedCustomTypes, DMap.DMap BackendTag ScalarSet, OrderedRoles),
+      ( (AnnotatedCustomTypes, BackendMap ScalarSet, OrderedRoles),
         [ActionMetadata]
       )
         `arr` HashMap ActionName ActionInfo

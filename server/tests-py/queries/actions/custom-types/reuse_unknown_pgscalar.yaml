@@ -16,7 +16,7 @@ response:
                 description:
         objects:
           - name: User
-            relationships:
+            relationships: []
             description:
             fields:
               - arguments:
@@ -31,8 +31,8 @@ response:
                 name: unknown_pgtype
                 type: unknown_type
                 description:
-        scalars:
-        enums:
+        scalars: []
+        enums: []
       reason:
         'Inconsistent object: validation for the given custom types failed because
         the type "unknown_type" for field "unknown_pgtype" in  object type "User" does

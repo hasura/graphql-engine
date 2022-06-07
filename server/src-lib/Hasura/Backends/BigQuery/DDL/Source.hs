@@ -140,7 +140,7 @@ resolveSource sourceConfig customization =
                         let RestTableSchema fields = schema
                     ],
                 _rsFunctions = functions,
-                _rsPgScalars = mempty
+                _rsScalars = mempty
               }
           )
 

@@ -2,25 +2,30 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Source
-  ( BackendSourceInfo,
-    MaintenanceModeVersion (..),
-    MonadResolveSource (..),
-    ResolvedSource (..),
-    SourceCache,
+  ( -- * Metadata
     SourceInfo (..),
-    SourceResolver,
-    SourceTables,
+    BackendSourceInfo,
+    SourceCache,
+    unsafeSourceConfiguration,
+    unsafeSourceFunctions,
+    unsafeSourceInfo,
+    unsafeSourceName,
+    unsafeSourceTables,
     siConfiguration,
     siFunctions,
     siName,
     siQueryTagsConfig,
     siTables,
     siCustomization,
-    unsafeSourceConfiguration,
-    unsafeSourceFunctions,
-    unsafeSourceInfo,
-    unsafeSourceName,
-    unsafeSourceTables,
+
+    -- * Schema cache
+    ResolvedSource (..),
+    ScalarSet (..),
+
+    -- * Source resolver
+    SourceResolver,
+    MonadResolveSource (..),
+    MaintenanceModeVersion (..),
   )
 where
 
@@ -42,6 +47,9 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.Tracing qualified as Tracing
+
+--------------------------------------------------------------------------------
+-- Metadata
 
 data SourceInfo b = SourceInfo
   { _siName :: !SourceName,
@@ -86,14 +94,17 @@ unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 unsafeSourceConfiguration :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 
+--------------------------------------------------------------------------------
+-- Schema cache
+
 -- | Contains Postgres connection configuration and essential metadata from the
 -- database to build schema cache for tables and function.
 data ResolvedSource b = ResolvedSource
-  { _rsConfig :: !(SourceConfig b),
-    _rsCustomization :: !(SourceTypeCustomization),
-    _rsTables :: !(DBTablesMetadata b),
-    _rsFunctions :: !(DBFunctionsMetadata b),
-    _rsPgScalars :: !(HashSet (ScalarType b))
+  { _rsConfig :: SourceConfig b,
+    _rsCustomization :: SourceTypeCustomization,
+    _rsTables :: DBTablesMetadata b,
+    _rsFunctions :: DBFunctionsMetadata b,
+    _rsScalars :: ScalarSet b
   }
 
 instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
@@ -105,8 +116,25 @@ instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
             "info" .= ("Successfully resolved source" :: Text)
           ]
 
-type SourceTables b = HashMap SourceName (TableCache b)
+-- | A set of scalar types for a given backend.
+--
+-- 'ScalarType' is a type family, and as such cannot be used in an
+-- `AnyBackend`. This lighttweight newtype wrapper allows us to do so.
+data ScalarSet b where
+  ScalarSet :: Backend b => HashSet (ScalarType b) -> ScalarSet b
 
+instance Backend b => Semigroup (ScalarSet b) where
+  ScalarSet s1 <> ScalarSet s2 = ScalarSet $ s1 <> s2
+
+instance Backend b => Monoid (ScalarSet b) where
+  mempty = ScalarSet mempty
+
+--------------------------------------------------------------------------------
+-- Source resolver
+
+-- | FIXME: this should be either in 'BackendMetadata', or into a new dedicated
+-- 'BackendResolve', instead of listing backends explicitly. It could also be
+-- moved to the app level.
 type SourceResolver b =
   SourceName -> SourceConnConfiguration b -> IO (Either QErr (SourceConfig b))
 
@@ -130,6 +158,7 @@ instance (MonadResolveSource m) => MonadResolveSource (Q.TxET QErr m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
+-- FIXME: why is this here?
 data MaintenanceModeVersion
   = -- | should correspond to the source catalog version from which the user
     -- is migrating from

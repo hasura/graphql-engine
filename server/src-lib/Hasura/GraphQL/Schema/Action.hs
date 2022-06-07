@@ -68,10 +68,10 @@ actionExecute customTypes actionInfo = runMaybeT do
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
-  inputArguments <- lift $ actionInputArguments (_actNonObjects customTypes) $ _adArguments definition
+  inputArguments <- lift $ actionInputArguments (_actInputTypes customTypes) $ _adArguments definition
   parserOutput <- case outputObject of
     AOTObject aot -> do
-      selectionSet <- lift $ actionOutputFields outputType aot (_actObjects customTypes)
+      selectionSet <- lift $ actionOutputFields outputType aot (_actObjectTypes customTypes)
       pure $ P.subselection fieldName description inputArguments selectionSet
     AOTScalar ast -> do
       let selectionSet = customScalarParser ast
@@ -104,7 +104,7 @@ actionExecute customTypes actionInfo = runMaybeT do
 actionAsyncMutation ::
   forall r m n.
   MonadBuildSchemaBase r m n =>
-  NonObjectTypeMap ->
+  HashMap G.Name AnnotatedInputType ->
   ActionInfo ->
   m (Maybe (FieldParser n IR.AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
@@ -135,7 +135,7 @@ actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
 actionAsyncQuery ::
   forall r m n.
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
-  AnnotatedObjects ->
+  HashMap G.Name AnnotatedObjectType ->
   ActionInfo ->
   m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
@@ -213,16 +213,16 @@ actionOutputFields ::
   MonadBuildSchemaBase r m n =>
   G.GType ->
   AnnotatedObjectType ->
-  AnnotatedObjects ->
+  HashMap G.Name AnnotatedObjectType ->
   m (Parser 'Output n (AnnotatedActionFields))
 actionOutputFields outputType annotatedObject objectTypes = do
   let outputObject = _aotDefinition annotatedObject
   scalarOrEnumOrObjectFields <- forM (toList $ _otdFields outputObject) outputFieldParser
-  relationshipFields <- forM (_otdRelationships outputObject) $ traverse relationshipFieldParser
+  relationshipFields <- traverse relationshipFieldParser $ _otdRelationships outputObject
   outputTypeName <- P.mkTypename $ unObjectTypeName $ _otdName outputObject
   let allFieldParsers =
         scalarOrEnumOrObjectFields
-          <> maybe [] (concat . catMaybes . toList) relationshipFields
+          <> concat (catMaybes relationshipFields)
       outputTypeDescription = _otdDescription outputObject
   pure $
     outputParserModifier outputType $
@@ -310,13 +310,13 @@ mkDefinitionList (AOTObject AnnotatedObjectType {..}) =
   where
     ObjectTypeDefinition {..} = _aotDefinition
     fieldReferences =
-      Map.unions $ map _trFieldMapping $ maybe [] toList _otdRelationships
+      Map.unions $ map _trFieldMapping _otdRelationships
 
 actionInputArguments ::
   forall r m n.
   MonadBuildSchemaBase r m n =>
-  NonObjectTypeMap ->
-  [ArgumentDefinition (G.GType, NonObjectCustomType)] ->
+  HashMap G.Name AnnotatedInputType ->
+  [ArgumentDefinition (G.GType, AnnotatedInputType)] ->
   m (InputFieldsParser n J.Value)
 actionInputArguments nonObjectTypeMap arguments = do
   argumentParsers <- for arguments $ \argument -> do
@@ -336,7 +336,7 @@ actionInputArguments nonObjectTypeMap arguments = do
       G.Name ->
       Maybe G.Description ->
       G.GType ->
-      NonObjectCustomType ->
+      AnnotatedInputType ->
       m (InputFieldsParser n (Maybe J.Value))
     argumentParser name description gType nonObjectType = do
       let mkResult :: forall k. ('Input P.<: k) => Parser k n J.Value -> InputFieldsParser n (Maybe J.Value)
@@ -398,6 +398,7 @@ customScalarParser = \case
         | _stdName == boolScalar -> J.toJSON <$> P.boolean
         | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name pgScalarType ->
+    -- TODO: use column parser here instead
     let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
      in P.Parser
           { pType = schemaType,

@@ -37,7 +37,7 @@ import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Prelude
-import Hasura.RQL.Types.CustomTypes
+import Hasura.RQL.Types.Common
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 
 --------------------------------------------------------------------------------
