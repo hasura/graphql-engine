@@ -120,7 +120,7 @@ getTableDiff oldtm newtm =
     uniqueOrPrimaryCons =
       map _cName $
         maybeToList (_pkConstraint <$> _ptmiPrimaryKey (tmInfo newtm))
-          <> toList (_ptmiUniqueConstraints $ tmInfo newtm)
+          <> (_ucConstraint <$> toList (_ptmiUniqueConstraints (tmInfo newtm)))
 
     mNewDesc = _ptmiDescription $ tmInfo newtm
 

@@ -159,15 +159,15 @@ transformTable tableInfo =
 transformColumn ::
   SysColumn ->
   (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
-transformColumn columnInfo =
-  let rciName = ColumnName $ scName columnInfo
-      rciPosition = scColumnId columnInfo
+transformColumn sysCol =
+  let rciName = ColumnName $ scName sysCol
+      rciPosition = scColumnId sysCol
 
-      rciIsNullable = scIsNullable columnInfo
+      rciIsNullable = scIsNullable sysCol
       rciDescription = Nothing
-      rciType = parseScalarType $ styName $ scJoinedSysType columnInfo
+      rciType = parseScalarType $ styName $ scJoinedSysType sysCol
       foreignKeys =
-        scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
+        scJoinedForeignKeyColumns sysCol <&> \foreignKeyColumn ->
           let _fkConstraint = Constraint "fk_mssql" $ OID $ sfkcConstraintObjectId foreignKeyColumn
 
               schemaName = SchemaName $ ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
@@ -175,7 +175,7 @@ transformColumn columnInfo =
               _fkColumnMapping = NEHashMap.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
            in ForeignKey {..}
 
-      colIsImmutable = scIsComputed columnInfo || scIsIdentity columnInfo
+      colIsImmutable = scIsComputed sysCol || scIsIdentity sysCol
       rciMutability = ColumnMutability {_cmIsInsertable = not colIsImmutable, _cmIsUpdatable = not colIsImmutable}
    in (RawColumnInfo {..}, foreignKeys)
 

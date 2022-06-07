@@ -8,6 +8,7 @@ module Harness.Test.Context
   ( run,
     runWithLocalTestEnvironment,
     Context (..),
+    context,
     ContextName (..),
     BackendType (..),
     defaultSource,
@@ -101,9 +102,9 @@ runWithLocalTestEnvironment ::
   (Options -> SpecWith (TestEnvironment, a)) ->
   SpecWith TestEnvironment
 runWithLocalTestEnvironment contexts tests =
-  for_ contexts \context@Context {name, customOptions} -> do
+  for_ contexts \ctx@Context {name, customOptions} -> do
     let options = fromMaybe defaultOptions customOptions
-    describe (show name) $ aroundAllWith (contextBracket context) (tests options)
+    describe (show name) $ aroundAllWith (contextBracket ctx) (tests options)
   where
     -- We want to be able to report exceptions happening both during the tests
     -- and at teardown, which is why we use a custom re-implementation of
@@ -187,6 +188,15 @@ data Context a = Context
     -- this field is 'Nothing', tests are given the 'defaultOptions'.
     customOptions :: Maybe Options
   }
+
+-- | A simple smart constructor for a 'Context'.
+context :: ContextName -> Context ()
+context name = Context {..}
+  where
+    mkLocalTestEnvironment = noLocalTestEnvironment
+    setup = const (pure ())
+    teardown = const (pure ())
+    customOptions = Nothing
 
 -- | A name describing the given context.
 data ContextName

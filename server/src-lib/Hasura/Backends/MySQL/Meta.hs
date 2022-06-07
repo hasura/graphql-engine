@@ -68,9 +68,13 @@ mergeMetadata InformationSchema {..} =
           if isColumnKey == UNI
             then
               HS.singleton
-                ( Constraint
-                    (ConstraintName $ fromMaybe "" isConstraintName)
-                    (OID $ fromIntegral $ fromMaybe 0 isConstraintOrdinalPosition)
+                ( UniqueConstraint
+                    { _ucConstraint =
+                        Constraint
+                          (ConstraintName $ fromMaybe "" isConstraintName)
+                          (OID $ fromIntegral $ fromMaybe 0 isConstraintOrdinalPosition),
+                      _ucColumns = HS.singleton (Column isColumnName)
+                    }
                 )
             else HS.empty,
         _ptmiForeignKeys =

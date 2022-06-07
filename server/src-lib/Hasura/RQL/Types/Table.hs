@@ -25,6 +25,7 @@ module Hasura.RQL.Types.Table
     TableCoreInfoG (..),
     TableCustomRootFields (..),
     TableInfo (..),
+    UniqueConstraint (..),
     UpdPermInfo (..),
     ViewInfo (..),
     askColInfo,
@@ -236,10 +237,10 @@ getAllCustomRootFields (TableCustomRootFields select selectByPk selectAgg insert
   ]
 
 data FieldInfo (b :: BackendType)
-  = FIColumn !(ColumnInfo b)
-  | FIRelationship !(RelInfo b)
-  | FIComputedField !(ComputedFieldInfo b)
-  | FIRemoteRelationship !(RemoteFieldInfo (DBJoinField b))
+  = FIColumn (ColumnInfo b)
+  | FIRelationship (RelInfo b)
+  | FIComputedField (ComputedFieldInfo b)
+  | FIRemoteRelationship (RemoteFieldInfo (DBJoinField b))
   deriving (Generic)
 
 deriving instance Backend b => Eq (FieldInfo b)
@@ -305,11 +306,11 @@ getComputedFieldInfos :: FieldInfoMap (FieldInfo backend) -> [ComputedFieldInfo 
 getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
 
 data InsPermInfo (b :: BackendType) = InsPermInfo
-  { ipiCols :: !(HS.HashSet (Column b)),
-    ipiCheck :: !(AnnBoolExpPartialSQL b),
-    ipiSet :: !(PreSetColsPartial b),
-    ipiBackendOnly :: !Bool,
-    ipiRequiredHeaders :: !(HS.HashSet Text)
+  { ipiCols :: HS.HashSet (Column b),
+    ipiCheck :: AnnBoolExpPartialSQL b,
+    ipiSet :: PreSetColsPartial b,
+    ipiBackendOnly :: Bool,
+    ipiRequiredHeaders :: HS.HashSet Text
   }
   deriving (Generic)
 
@@ -479,13 +480,13 @@ instance
   toJSON = genericToJSON hasuraJSON
 
 data UpdPermInfo (b :: BackendType) = UpdPermInfo
-  { upiCols :: !(HS.HashSet (Column b)),
-    upiTable :: !(TableName b),
-    upiFilter :: !(AnnBoolExpPartialSQL b),
-    upiCheck :: !(Maybe (AnnBoolExpPartialSQL b)),
-    upiSet :: !(PreSetColsPartial b),
-    upiBackendOnly :: !Bool,
-    upiRequiredHeaders :: !(HashSet Text)
+  { upiCols :: HS.HashSet (Column b),
+    upiTable :: TableName b,
+    upiFilter :: AnnBoolExpPartialSQL b,
+    upiCheck :: Maybe (AnnBoolExpPartialSQL b),
+    upiSet :: PreSetColsPartial b,
+    upiBackendOnly :: Bool,
+    upiRequiredHeaders :: HashSet Text
   }
   deriving (Generic)
 
@@ -527,10 +528,10 @@ instance
   toJSON = genericToJSON hasuraJSON
 
 data DelPermInfo (b :: BackendType) = DelPermInfo
-  { dpiTable :: !(TableName b),
-    dpiFilter :: !(AnnBoolExpPartialSQL b),
+  { dpiTable :: TableName b,
+    dpiFilter :: AnnBoolExpPartialSQL b,
     dpiBackendOnly :: !Bool,
-    dpiRequiredHeaders :: !(HashSet Text)
+    dpiRequiredHeaders :: HashSet Text
   }
   deriving (Generic)
 
@@ -572,10 +573,10 @@ instance
   toJSON = genericToJSON hasuraJSON
 
 data RolePermInfo (b :: BackendType) = RolePermInfo
-  { _permIns :: !(Maybe (InsPermInfo b)),
-    _permSel :: !(Maybe (SelPermInfo b)),
-    _permUpd :: !(Maybe (UpdPermInfo b)),
-    _permDel :: !(Maybe (DelPermInfo b))
+  { _permIns :: Maybe (InsPermInfo b),
+    _permSel :: Maybe (SelPermInfo b),
+    _permUpd :: Maybe (UpdPermInfo b),
+    _permDel :: Maybe (DelPermInfo b)
   }
   deriving (Generic)
 
@@ -629,16 +630,16 @@ type RolePermInfoMap b = M.HashMap RoleName (RolePermInfo b)
 
 -- data TableConstraint
 --   = TableConstraint
---   { tcType :: !ConstraintType
---   , tcName :: !ConstraintName
+--   { tcType :: ConstraintType
+--   , tcName :: ConstraintName
 --   } deriving (Show, Eq)
 
 -- $(deriveJSON hasuraJSON ''TableConstraint)
 
 data ViewInfo = ViewInfo
-  { viIsUpdatable :: !Bool,
-    viIsDeletable :: !Bool,
-    viIsInsertable :: !Bool
+  { viIsUpdatable :: Bool,
+    viIsDeletable :: Bool,
+    viIsInsertable :: Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -706,7 +707,7 @@ instance (Backend b) => Cacheable (TableConfig b)
 
 $(makeLenses ''TableConfig)
 
-emptyTableConfig :: (TableConfig b)
+emptyTableConfig :: TableConfig b
 emptyTableConfig =
   TableConfig emptyCustomRootFields M.empty Nothing Automatic
 
@@ -745,8 +746,8 @@ instance (Backend b) => ToJSON (TableConfig b) where
         ]
 
 data Constraint (b :: BackendType) = Constraint
-  { _cName :: !(ConstraintName b),
-    _cOid :: !OID
+  { _cName :: ConstraintName b,
+    _cOid :: OID
   }
   deriving (Generic)
 
@@ -767,8 +768,8 @@ instance Backend b => FromJSON (Constraint b) where
   parseJSON = genericParseJSON hasuraJSON
 
 data PrimaryKey (b :: BackendType) a = PrimaryKey
-  { _pkConstraint :: !(Constraint b),
-    _pkColumns :: !(NESeq a)
+  { _pkConstraint :: Constraint b,
+    _pkColumns :: NESeq a
   }
   deriving (Generic, Foldable)
 
@@ -790,10 +791,40 @@ instance (Backend b, FromJSON a) => FromJSON (PrimaryKey b a) where
 
 $(makeLenses ''PrimaryKey)
 
+-- | Data type modelling uniqueness constraints. Occasionally this will include
+-- primary keys, although those are tracked separately in `TableCoreInfoG`.
+--
+-- For more information about unique constraints, visit the postgresql documentation:
+-- <https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-UNIQUE-CONSTRAINTS>.
+data UniqueConstraint (b :: BackendType) = UniqueConstraint
+  { -- | The postgresql name and object id of a unique constraint.
+    _ucConstraint :: Constraint b,
+    -- | The set of columns which should be unique for this particular constraint.
+    --   Used for permissions calculation.
+    _ucColumns :: HashSet (Column b)
+  }
+  deriving (Generic)
+
+deriving instance Backend b => Eq (UniqueConstraint b)
+
+deriving instance Backend b => Show (UniqueConstraint b)
+
+instance Backend b => NFData (UniqueConstraint b)
+
+instance Backend b => Hashable (UniqueConstraint b)
+
+instance Backend b => Cacheable (UniqueConstraint b)
+
+instance Backend b => ToJSON (UniqueConstraint b) where
+  toJSON = genericToJSON hasuraJSON
+
+instance Backend b => FromJSON (UniqueConstraint b) where
+  parseJSON = genericParseJSON hasuraJSON
+
 data ForeignKey (b :: BackendType) = ForeignKey
-  { _fkConstraint :: !(Constraint b),
-    _fkForeignTable :: !(TableName b),
-    _fkColumnMapping :: !(NEHashMap (Column b) (Column b))
+  { _fkConstraint :: Constraint b,
+    _fkForeignTable :: TableName b,
+    _fkColumnMapping :: NEHashMap (Column b) (Column b)
   }
   deriving (Generic)
 
@@ -816,18 +847,18 @@ instance Backend b => FromJSON (ForeignKey b) where
 -- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
 -- information is accumulated. See also 'TableCoreInfo'.
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
-  { _tciName :: !(TableName b),
-    _tciDescription :: !(Maybe PG.PGDescription), -- TODO make into type family?
-    _tciSystemDefined :: !SystemDefined,
-    _tciFieldInfoMap :: !(FieldInfoMap field),
-    _tciPrimaryKey :: !(Maybe (PrimaryKey b primaryKeyColumn)),
+  { _tciName :: TableName b,
+    _tciDescription :: Maybe PG.PGDescription, -- TODO make into type family?
+    _tciSystemDefined :: SystemDefined,
+    _tciFieldInfoMap :: FieldInfoMap field,
+    _tciPrimaryKey :: Maybe (PrimaryKey b primaryKeyColumn),
     -- | Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
-    _tciUniqueConstraints :: !(HashSet (Constraint b)),
-    _tciForeignKeys :: !(HashSet (ForeignKey b)),
-    _tciViewInfo :: !(Maybe ViewInfo),
-    _tciEnumValues :: !(Maybe EnumValues),
-    _tciCustomConfig :: !(TableConfig b),
-    _tciExtraTableMetadata :: !(ExtraTableMetadata b)
+    _tciUniqueConstraints :: HashSet (UniqueConstraint b),
+    _tciForeignKeys :: HashSet (ForeignKey b),
+    _tciViewInfo :: Maybe ViewInfo,
+    _tciEnumValues :: Maybe EnumValues,
+    _tciCustomConfig :: TableConfig b,
+    _tciExtraTableMetadata :: ExtraTableMetadata b
   }
   deriving (Generic)
 
@@ -844,16 +875,22 @@ $(makeLenses ''TableCoreInfoG)
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 
 tciUniqueOrPrimaryKeyConstraints ::
-  TableCoreInfoG b f pkCol -> Maybe (NonEmpty (Constraint b))
+  forall b f.
+  (Eq (Column b), Hashable (Column b)) =>
+  TableCoreInfoG b f (ColumnInfo b) ->
+  Maybe (NonEmpty (UniqueConstraint b))
 tciUniqueOrPrimaryKeyConstraints info =
   NE.nonEmpty $
-    maybeToList (_pkConstraint <$> _tciPrimaryKey info)
-      <> toList (_tciUniqueConstraints info)
+    maybeToList (primaryToUnique <$> _tciPrimaryKey info)
+      <> (toList (_tciUniqueConstraints info))
+  where
+    primaryToUnique :: PrimaryKey b (ColumnInfo b) -> UniqueConstraint b
+    primaryToUnique pk = UniqueConstraint (_pkConstraint pk) (HS.fromList . fmap ciColumn . toList $ _pkColumns pk)
 
 data TableInfo (b :: BackendType) = TableInfo
   { _tiCoreInfo :: TableCoreInfo b,
-    _tiRolePermInfoMap :: !(RolePermInfoMap b),
-    _tiEventTriggerInfoMap :: !(EventTriggerInfoMap b),
+    _tiRolePermInfoMap :: RolePermInfoMap b,
+    _tiEventTriggerInfoMap :: EventTriggerInfoMap b,
     _tiAdminRolePermInfo :: RolePermInfo b
   }
   deriving (Generic)
@@ -918,15 +955,15 @@ instance Backend b => FromJSON (ForeignKeyMetadata b) where
 
 -- | Metadata of any Backend table which is being extracted from source database
 data DBTableMetadata (b :: BackendType) = DBTableMetadata
-  { _ptmiOid :: !OID,
-    _ptmiColumns :: ![RawColumnInfo b],
-    _ptmiPrimaryKey :: !(Maybe (PrimaryKey b (Column b))),
-    -- | Does /not/ include the primary key!
-    _ptmiUniqueConstraints :: !(HashSet (Constraint b)),
-    _ptmiForeignKeys :: !(HashSet (ForeignKeyMetadata b)),
-    _ptmiViewInfo :: !(Maybe ViewInfo),
-    _ptmiDescription :: !(Maybe PG.PGDescription),
-    _ptmiExtraTableMetadata :: !(ExtraTableMetadata b)
+  { _ptmiOid :: OID,
+    _ptmiColumns :: [RawColumnInfo b],
+    _ptmiPrimaryKey :: Maybe (PrimaryKey b (Column b)),
+    -- | Does /not/ include the primary key
+    _ptmiUniqueConstraints :: HashSet (UniqueConstraint b),
+    _ptmiForeignKeys :: HashSet (ForeignKeyMetadata b),
+    _ptmiViewInfo :: Maybe ViewInfo,
+    _ptmiDescription :: Maybe PG.PGDescription,
+    _ptmiExtraTableMetadata :: ExtraTableMetadata b
   }
   deriving (Generic)
 

@@ -110,7 +110,9 @@ LEFT JOIN LATERAL
 -- primary key
 LEFT JOIN LATERAL
   ( SELECT jsonb_build_object(
-      'constraint', jsonb_build_object('name', class.relname, 'oid', class.oid :: integer),
+      'constraint', jsonb_build_object(
+        'name', class.relname,
+        'oid', class.oid :: integer),
       'columns', coalesce(columns.info, '[]')
     ) AS info
     FROM pg_catalog.pg_index idx
@@ -128,10 +130,24 @@ LEFT JOIN LATERAL
 
 -- unique constraints
 LEFT JOIN LATERAL
-  ( SELECT jsonb_agg(jsonb_build_object('name', class.relname, 'oid', class.oid :: integer)) AS info
+  ( SELECT jsonb_agg(
+      jsonb_build_object(
+        'constraint', jsonb_build_object(
+          'name', class.relname,
+          'oid', class.oid :: integer
+          ),
+        'columns', columns.info
+        )
+      ) AS info
     FROM pg_catalog.pg_index idx
     JOIN pg_catalog.pg_class class
       ON class.oid = idx.indexrelid
+    LEFT JOIN LATERAL
+      ( SELECT jsonb_agg("column".attname) AS info
+        FROM pg_catalog.pg_attribute "column"
+        WHERE "column".attrelid = "table".oid
+          AND "column".attnum = ANY (idx.indkey)
+      ) AS columns ON true
     WHERE idx.indrelid = "table".oid
       AND idx.indisunique
       AND NOT idx.indisprimary

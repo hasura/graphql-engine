@@ -16,6 +16,8 @@ module Harness.Backend.Citus
     untrackTable,
     setup,
     teardown,
+    setupPermissions,
+    teardownPermissions,
   )
 where
 
@@ -36,6 +38,7 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context (BackendType (Citus), defaultSource)
+import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -245,3 +248,11 @@ teardown tables (testEnvironment, _) = do
           (untrackTable testEnvironment table)
           (dropTable table)
       )
+
+-- | Setup the given permissions to the graphql engine in a TestEnvironment.
+setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
+setupPermissions permissions env = Permissions.setup "citus" permissions env
+
+-- | Remove the given permissions from the graphql engine in a TestEnvironment.
+teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
+teardownPermissions permissions env = Permissions.teardown "citus" permissions env
