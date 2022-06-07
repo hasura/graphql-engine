@@ -29,7 +29,7 @@ func getCliExtFileContent(ec *cli.ExecutionContext) ([]byte, error) {
 		return cliExtFileContent, nil
 	}
 
-	cliExtVersion := "v2.0.0"
+	cliExtVersion := "v2.4.0-beta.3"
 	ec.Logger.Warn("Unable to find an embedded cli-ext. So trying to fetch it from CDN")
 	ec.Logger.Warn("Tip: --cli-ext-path can be used for setting up cli-ext from local file system")
 	CDNpath := fmt.Sprintf("https://graphql-engine-cdn.hasura.io/cli-ext/releases/versioned/%s/cli-ext-%s-%s",
