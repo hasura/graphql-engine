@@ -1,6 +1,6 @@
-This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L1298).
+This note is in [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L1296).
 It is referenced at:
-  - line 222 of [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L222)
+  - line 220 of [Hasura.RQL.DDL.Schema.Cache](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Schema/Cache.hs#L220)
 
 # Keep invalidation keys for inconsistent objects
 

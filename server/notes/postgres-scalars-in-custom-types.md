@@ -1,8 +1,7 @@
-This note is in [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L36).
+This note is in [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L78).
 It is referenced at:
   - line 119 of [Hasura.RQL.DDL.Action](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Action.hs#L119)
-  - line 68 of [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L68)
-  - line 274 of [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L274)
+  - line 313 of [Hasura.RQL.DDL.CustomTypes](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/CustomTypes.hs#L313)
 
 # Postgres scalars in custom types
 
@@ -27,4 +26,8 @@ GraphQL types. To support this, we have to take a few extra steps:
      appear elsewhere in the GraphQL schema, so we record which base types were
      referenced while validating the custom type definitions and make sure to
      include them in the generated schema explicitly.
+
+We currently have no plan to extend that functionality to other backends; if we
+do, we will probably choose to prefix such types with an explicit tag to avoid
+having to disambiguate type names across backends.
 
