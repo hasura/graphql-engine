@@ -19,6 +19,7 @@ module Harness.GraphqlEngine
     postGraphql,
     postGraphqlWithPair,
     postGraphqlWithHeaders,
+    postWithHeadersStatus,
     clearMetadata,
     postV2Query,
 

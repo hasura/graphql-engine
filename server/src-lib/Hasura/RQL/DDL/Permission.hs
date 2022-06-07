@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeFamilyDependencies #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.RQL.DDL.Permission
   ( CreatePerm,
@@ -52,6 +53,7 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Types
+import Hasura.Server.Types (StreamingSubscriptionsCtx (..))
 import Hasura.Session
 
 {- Note [Backend only permissions]
@@ -208,10 +210,12 @@ buildPermInfo ::
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
+  RoleName ->
+  StreamingSubscriptionsCtx ->
   PermDefPermission b perm ->
   m (WithDeps (PermInfo perm b))
-buildPermInfo x1 x2 x3 = \case
-  SelPerm' p -> buildSelPermInfo x1 x2 x3 p
+buildPermInfo x1 x2 x3 roleName streamingSubscriptionsCtx = \case
+  SelPerm' p -> buildSelPermInfo x1 x2 x3 roleName streamingSubscriptionsCtx p
   InsPerm' p -> buildInsPermInfo x1 x2 x3 p
   UpdPerm' p -> buildUpdPermInfo x1 x2 x3 p
   DelPerm' p -> buildDelPermInfo x1 x2 x3 p
@@ -321,20 +325,87 @@ buildInsPermInfo source tn fieldInfoMap (InsPerm checkCond set mCols backendOnly
     insCols = interpColSpec allInsCols (fromMaybe PCStar mCols)
     relInInsErr = "Only table columns can have insert permissions defined, not relationships or other field types"
 
+-- | validate the values present in the `query_root_fields` and the `subscription_root_fields`
+--   present in the select permission
+validateAllowedRootFields ::
+  forall b m.
+  (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
+  SourceName ->
+  TableName b ->
+  RoleName ->
+  StreamingSubscriptionsCtx ->
+  SelPerm b ->
+  m (AllowedRootFields QueryRootFieldType, AllowedRootFields SubscriptionRootFieldType)
+validateAllowedRootFields sourceName tableName roleName streamSubsCtx SelPerm {..} = do
+  tableCoreInfo <- lookupTableCoreInfo @b tableName >>= (`onNothing` (throw500 $ "unexpected: table not found " <>> tableName))
+
+  -- validate the query_root_fields and subscription_root_fields values
+  let needToValidatePrimaryKeyRootField =
+        QRFTSelectByPk `rootFieldNeedsValidation` spAllowedQueryRootFields
+          || SRFTSelectByPk `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
+      needToValidateAggregationRootField =
+        QRFTSelectAggregate `rootFieldNeedsValidation` spAllowedQueryRootFields
+          || SRFTSelectAggregate `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
+      needToValidateStreamingRootField =
+        SRFTSelectStream `rootFieldNeedsValidation` spAllowedSubscriptionRootFields
+
+  when needToValidatePrimaryKeyRootField $ validatePrimaryKeyRootField tableCoreInfo
+  when needToValidateAggregationRootField $ validateAggregationRootField
+  when needToValidateStreamingRootField $ validateStreamingRootField
+
+  pure (spAllowedQueryRootFields, spAllowedSubscriptionRootFields)
+  where
+    rootFieldNeedsValidation rootField = \case
+      ARFAllowAllRootFields -> False
+      ARFAllowConfiguredRootFields allowedRootFields -> rootField `HS.member` allowedRootFields
+
+    pkValidationError =
+      throw400 ValidationFailed $
+        "The \"select_by_pk\" field cannot be included in the query_root_fields or subscription_root_fields"
+          <> " because the role "
+          <> roleName
+          <<> " does not have access to the primary key of the table "
+          <> tableName
+          <<> " in the source " <>> sourceName
+    validatePrimaryKeyRootField TableCoreInfo {..} =
+      case _tciPrimaryKey of
+        Nothing -> pkValidationError
+        Just (PrimaryKey _ pkCols) ->
+          case spColumns of
+            PCStar -> pure ()
+            PCCols (HS.fromList -> selPermCols) ->
+              -- Check if all the primary key columns of the table are
+              -- accessible to the current role
+              unless (all ((`HS.member` selPermCols) . ciColumn) pkCols) pkValidationError
+
+    validateAggregationRootField =
+      unless spAllowAggregations $
+        throw400 ValidationFailed $
+          "The \"select_aggregate\" root field can only be enabled in the query_root_fields or "
+            <> " the subscription_root_fields when \"allow_aggregations\" is set to true"
+
+    validateStreamingRootField =
+      unless (streamSubsCtx == StreamingSubscriptionsEnabled) $
+        throw400 ValidationFailed $
+          "The \"select_stream\" root field can only be included in the query_root_fields or "
+            <> " the subscription_root_fields when streaming subscriptions is enabled"
+
 buildSelPermInfo ::
   forall b m.
   (QErrM m, TableCoreInfoRM b m, BackendMetadata b) =>
   SourceName ->
   TableName b ->
   FieldInfoMap (FieldInfo b) ->
+  RoleName ->
+  StreamingSubscriptionsCtx ->
   SelPerm b ->
   m (WithDeps (SelPermInfo b))
-buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
+buildSelPermInfo source tableName fieldInfoMap roleName streamSubsCtx sp = withPathK "permission" $ do
   let pgCols = interpColSpec (map ciColumn $ (getCols fieldInfoMap)) $ spColumns sp
 
-  (boolExp, boolExpDeps) <-
+  (spiFilter, boolExpDeps) <-
     withPathK "filter" $
-      procBoolExp source tn fieldInfoMap $ spFilter sp
+      procBoolExp source tableName fieldInfoMap $ spFilter sp
 
   -- check if the columns exist
   void $
@@ -361,25 +432,25 @@ buildSelPermInfo source tn fieldInfoMap sp = withPathK "permission" $ do
                 <<> " which does not return existing table or scalar type"
 
   let deps =
-        mkParentDep @b source tn :
-        boolExpDeps ++ map (mkColDep @b DRUntyped source tn) pgCols
-          ++ map (mkComputedFieldDep @b DRUntyped source tn) validComputedFields
-      depHeaders = getDependentHeaders $ spFilter sp
-      mLimit = spLimit sp
+        mkParentDep @b source tableName :
+        boolExpDeps ++ map (mkColDep @b DRUntyped source tableName) pgCols
+          ++ map (mkComputedFieldDep @b DRUntyped source tableName) validComputedFields
+      spiRequiredHeaders = getDependentHeaders $ spFilter sp
+      spiLimit = spLimit sp
 
-  withPathK "limit" $ for_ mLimit \value ->
+  withPathK "limit" $ for_ spiLimit \value ->
     when (value < 0) $
       throw400 NotSupported "unexpected negative value"
 
-  let pgColsWithFilter = HM.fromList $ map (,Nothing) pgCols
-      computedFieldsWithFilter = HS.toMap (HS.fromList validComputedFields) $> Nothing
+  let spiCols = HM.fromList $ map (,Nothing) pgCols
+      spiComputedFields = HS.toMap (HS.fromList validComputedFields) $> Nothing
 
-  let selPermInfo =
-        SelPermInfo pgColsWithFilter computedFieldsWithFilter boolExp mLimit allowAgg depHeaders
+  (spiAllowedQueryRootFields, spiAllowedSubscriptionRootFields) <-
+    validateAllowedRootFields source tableName roleName streamSubsCtx sp
 
-  return (selPermInfo, deps)
+  return (SelPermInfo {..}, deps)
   where
-    allowAgg = spAllowAggregations sp
+    spiAllowAgg = spAllowAggregations sp
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 

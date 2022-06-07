@@ -52,7 +52,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendSchema 'MSSQL where
   -- top level parsers
-  buildTableQueryFields = GSB.buildTableQueryFields
+  buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
   buildTableRelayQueryFields = msBuildTableRelayQueryFields
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser

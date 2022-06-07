@@ -349,15 +349,15 @@ updateSelPermFlds ::
   Rename b ->
   PermDefPermission b SelPerm ->
   m (PermDefPermission b SelPerm)
-updateSelPermFlds refQT rename (SelPerm' (SelPerm cols fltr limit aggAllwd computedFields)) = do
+updateSelPermFlds refQT rename (SelPerm' (SelPerm cols fltr limit aggAllwd computedFields allowedQueryRootFieldTypes allowedSubsRootFieldTypes)) = do
   case rename of
     RTable rt -> do
       let updFltr = updateTableInBoolExp rt fltr
-      pure $ SelPerm' $ SelPerm cols updFltr limit aggAllwd computedFields
+      pure $ SelPerm' $ SelPerm cols updFltr limit aggAllwd computedFields allowedQueryRootFieldTypes allowedSubsRootFieldTypes
     RField rf -> do
       updFltr <- updateFieldInBoolExp refQT rf fltr
       let updCols = updateCols refQT rf cols
-      pure $ SelPerm' $ SelPerm updCols updFltr limit aggAllwd computedFields
+      pure $ SelPerm' $ SelPerm updCols updFltr limit aggAllwd computedFields allowedQueryRootFieldTypes allowedSubsRootFieldTypes
 
 updateUpdPermFlds ::
   (MonadReader (TableCache b) m, Backend b) =>

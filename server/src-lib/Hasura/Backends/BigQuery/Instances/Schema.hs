@@ -45,7 +45,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendSchema 'BigQuery where
   -- top level parsers
-  buildTableQueryFields = GSB.buildTableQueryFields
+  buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
   buildTableRelayQueryFields = bqBuildTableRelayQueryFields
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = bqBuildTableInsertMutationFields

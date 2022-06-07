@@ -322,6 +322,14 @@ Configuration properties for particular column, as specified on [ColumnConfig](#
 | filter             | true     | [BoolExp](#boolexp)                   | Only the rows where this expression holds true are selectable      |
 | limit              | false    | `Integer`                   | The maximum number of rows that can be returned                    |
 | allow_aggregations | false    | `Boolean`                   | Toggle allowing aggregate queries                                  |
+| query_root_fields  | false | [QueryRootField](#queryRootField) array | Only given root fields will be enabled in the `query` root field. An empty list will mean no query root fields are enabled . |
+| subscription_root_fields | false | [SubscriptionRootField](#subscriptionRootField) array | Only given root fields will be enabled in the `subscription` root field. An empty list will mean no subscription root fields are enabled. |
+
+:::info Note
+
+The `query_root_fields` and the `subscription_root_fields` are only available in v2.8.0 and above
+
+:::
 
 ## UpdatePermission {#updatepermission}
 
@@ -772,6 +780,36 @@ session variable of the same name.
 
 :::
 
+## Query root field {#queryRootField}
+
+<div className="parsed-literal haskell-pre">
+
+<pre>
+<code>
+<a href="#select">select</a>{` | `}
+<a href="#selectByPk">select_by_pk</a>{` | `}
+<a href="#selectAggregate">select_aggregate</a>
+</code>
+</pre>
+
+
+</div>
+
+## Subscription root field {#subscriptionRootField}
+
+<div className="parsed-literal haskell-pre">
+
+<pre>
+<code>
+<a href="#select">select</a>{` | `}
+<a href="#selectByPk">select_by_pk</a>{` | `}
+<a href="#selectAggregate">select_aggregate</a>{` | `}
+<a href="#selectStream">select_stream</a>
+</code>
+</pre>
+
+</div>
+
 ## RemoteSchemaName {#remoteschemaname}
 
 <div className="parsed-literal">
@@ -877,7 +915,7 @@ session variable of the same name.
   "type_names": {
     "prefix": String,
     "suffix": String
-    }, 
+    },
   "naming_convention": String
 }
 ```

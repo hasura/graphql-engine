@@ -8,6 +8,7 @@ module Hasura.RQL.IR.Root
     ActionMutation (..),
     QueryRootField,
     MutationRootField,
+    SubscriptionRootField,
     QueryDBRoot (..),
     MutationDBRoot (..),
     RemoteRelationshipField (..),
@@ -98,4 +99,11 @@ type MutationRootField v =
     (MutationDBRoot (RemoteRelationshipField v) v)
     (RemoteSchemaRootField (RemoteRelationshipField v) RQL.RemoteSchemaVariable)
     (MutationActionRoot v)
+    JO.Value
+
+type SubscriptionRootField v =
+  RootField
+    (QueryDBRoot (RemoteRelationshipField v) v)
+    (RemoteSchemaRootField (RemoteRelationshipField v) RQL.RemoteSchemaVariable)
+    (QueryActionRoot v)
     JO.Value

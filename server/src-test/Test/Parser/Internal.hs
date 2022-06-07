@@ -26,6 +26,7 @@ import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
 import Hasura.RQL.Types.Common (Comment (..), FieldName (..), SystemDefined (..))
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.Permission (AllowedRootFields (..))
 import Hasura.RQL.Types.Source (SourceInfo)
 import Hasura.RQL.Types.Table (CustomRootField (..), FieldInfo (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
@@ -179,7 +180,9 @@ mkParser table cib =
           spiFilter = upiFilter,
           spiLimit = Nothing,
           spiAllowAgg = True,
-          spiRequiredHeaders = mempty
+          spiRequiredHeaders = mempty,
+          spiAllowedQueryRootFields = ARFAllowAllRootFields,
+          spiAllowedSubscriptionRootFields = ARFAllowAllRootFields
         }
 
     tableCustomRootFields :: TableCustomRootFields

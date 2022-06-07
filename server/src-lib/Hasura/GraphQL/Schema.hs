@@ -46,6 +46,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryTags
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
@@ -270,16 +271,13 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
         mkTypename <- asks getter
-        uncustomizedQueryFields <- buildQueryFields sourceInfo validTables validFunctions
-        uncustomizedStreamSubscriptionFields <-
-          case streamingSubscriptionsCtx of
-            StreamingSubscriptionsEnabled -> buildTableStreamSubscriptionFields sourceInfo validTables
-            StreamingSubscriptionsDisabled -> pure mempty
+        (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
+          buildQueryAndSubscriptionFields sourceInfo validTables validFunctions streamingSubscriptionsCtx
         (,,,)
           <$> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__query))
-            (pure uncustomizedQueryFields)
+            (pure uncustomizedQueryRootFields)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
@@ -291,7 +289,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__subscription))
-            (pure $ uncustomizedStreamSubscriptionFields <> uncustomizedQueryFields)
+            (pure uncustomizedSubscriptionRootFields)
       where
         sourceCustomization =
           if EFNamingConventions `elem` expFeatures
@@ -336,8 +334,9 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
     -- FIXME: for now this is PG-only. This isn't a problem yet since for now only PG supports relay.
     -- To fix this, we'd need to first generalize `nodeField`.
     nodeField_ <- fmap NotNamespaced <$> nodeField
-    let (queryPGFields', mutationFrontendFields, mutationBackendFields) = mconcat fieldsList
+    let (queryPGFields', mutationFrontendFields, mutationBackendFields, subscriptionPGFields') = mconcat fieldsList
         queryPGFields = nodeField_ : queryPGFields'
+        subscriptionPGFields = nodeField_ : subscriptionPGFields'
 
     -- Remote schema mutations aren't exposed in relay because many times it throws
     -- the conflicting definitions error between the relay types like `Node`, `PageInfo` etc
@@ -346,7 +345,7 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
     mutationParserBackend <-
       buildMutationParser mempty allActionInfos customTypes mutationBackendFields
     subscriptionParser <-
-      buildSubscriptionParser queryPGFields [] customTypes []
+      buildSubscriptionParser subscriptionPGFields [] customTypes []
     queryParserFrontend <-
       queryWithIntrospectionHelper queryPGFields mutationParserFrontend subscriptionParser
     queryParserBackend <-
@@ -387,19 +386,22 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
         m
         ( [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))],
           [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))]
+          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
+          [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))]
         )
     buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
       withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
 
+        (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
+          buildRelayQueryAndSubscriptionFields sourceInfo validTables validFunctions
         mkTypename <- asks getter
-        (,,)
+        (,,,)
           <$> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__query))
-            (buildRelayQueryFields sourceInfo validTables validFunctions)
+            (pure uncustomizedQueryRootFields)
           <*> customizeFields
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
@@ -408,6 +410,10 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
             sourceCustomization
             (mkTypename <> P.MkTypename (<> G.__mutation_backend))
             (buildMutationFields Backend sourceInfo validTables validFunctions)
+          <*> customizeFields
+            sourceCustomization
+            (mkTypename <> P.MkTypename (<> G.__subscription))
+            (pure uncustomizedSubscriptionRootFields)
       where
         sourceCustomization =
           if EFNamingConventions `elem` expFeatures
@@ -557,76 +563,87 @@ buildRemoteSchemaParser remoteSchemaPermsCtx roleName context = do
   for maybeIntrospection \introspection ->
     buildRemoteParser introspection (_rscRemoteRelationships context) (_rscInfo context)
 
-buildQueryFields ::
+-- | `buildQueryAndSubscriptionFields` builds the query and the subscription
+--   fields of the tables tracked in the source. The query root fields and
+--   the subscription root fields may not be equal because a root field may be
+--   enabled in the `query_root_field` and not in the `subscription_root_field`,
+--   so a tuple of array of field parsers corresponding to query field parsers and
+--   subscription field parsers.
+buildQueryAndSubscriptionFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildQueryFields sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
+  StreamingSubscriptionsCtx ->
+  m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)])
+buildQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> functions) streamingSubsCtx = do
   roleName <- asks getter
   functionPermsCtx <- retrieve soFunctionPermsContext
-  tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
-    tableIdentifierName <- getTableIdentifierName @b tableInfo
-    mkRF $ buildTableQueryFields sourceInfo tableName tableInfo tableIdentifierName
-  functionSelectExpParsers <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
-    guard $
-      roleName == adminRoleName
-        || roleName `Map.member` _fiPermissions functionInfo
-        || functionPermsCtx == FunctionPermissionsInferred
-    let targetTableName = _fiReturnType functionInfo
-    lift $ mkRF $ buildFunctionQueryFields sourceInfo functionName functionInfo targetTableName
-  pure $ concat $ tableSelectExpParsers <> catMaybes functionSelectExpParsers
+  functionSelectExpParsers <-
+    concat . catMaybes
+      <$> for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
+        guard $
+          roleName == adminRoleName
+            || roleName `Map.member` _fiPermissions functionInfo
+            || functionPermsCtx == FunctionPermissionsInferred
+        let targetTableName = _fiReturnType functionInfo
+        lift $ mkRFs $ buildFunctionQueryFields sourceInfo functionName functionInfo targetTableName
+
+  (tableQueryFields, tableSubscriptionFields) <-
+    unzip . catMaybes
+      <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
+        tableIdentifierName <- getTableIdentifierName @b tableInfo
+        lift $ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamingSubsCtx tableIdentifierName
+
+  let tableQueryRootFields = fmap mkRF $ concat tableQueryFields
+      tableSubscriptionRootFields = fmap mkRF $ concat tableSubscriptionFields
+
+  pure
+    ( tableQueryRootFields <> functionSelectExpParsers,
+      tableSubscriptionRootFields <> functionSelectExpParsers
+    )
   where
+    mkRFs = mkRootFields sourceName sourceConfig queryTagsConfig QDBR
     mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
     sourceName = _siName sourceInfo
     sourceConfig = _siConfiguration sourceInfo
     queryTagsConfig = _siQueryTagsConfig sourceInfo
 
-buildTableStreamSubscriptionFields ::
-  forall b r m n.
-  MonadBuildSchema b r m n =>
-  SourceInfo b ->
-  TableCache b ->
-  m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildTableStreamSubscriptionFields sourceInfo tables = do
-  tableSelectExpParsers <- for (Map.toList tables) \(tableName, tableInfo) -> do
-    tableGQLName <- getTableIdentifierName @b tableInfo
-    mkRF $
-      buildTableStreamingSubscriptionFields
-        sourceInfo
-        tableName
-        tableInfo
-        tableGQLName
-  pure $ concat tableSelectExpParsers
-  where
-    mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
-    sourceName = _siName sourceInfo
-    sourceConfig = _siConfiguration sourceInfo
-    queryTagsConfig = _siQueryTagsConfig sourceInfo
-
-buildRelayQueryFields ::
+buildRelayQueryAndSubscriptionFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableCache b ->
   FunctionCache b ->
-  m [P.FieldParser n (QueryRootField UnpreparedValue)]
-buildRelayQueryFields sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
-  tableConnectionFields <- for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
-    tableIdentifierName <- getTableIdentifierName @b tableInfo
-    pkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
-    lift $ mkRF $ buildTableRelayQueryFields sourceInfo tableName tableInfo tableIdentifierName pkeyColumns
+  m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)])
+buildRelayQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
+  (tableConnectionQueryFields, tableConnectionSubscriptionFields) <-
+    unzip . catMaybes
+      <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
+        tableIdentifierName <- getTableIdentifierName @b tableInfo
+        SelPermInfo {..} <- MaybeT $ tableSelectPermissions tableInfo
+        pkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
+        relayRootFields <- lift $ mkRFs $ buildTableRelayQueryFields sourceInfo tableName tableInfo tableIdentifierName pkeyColumns
+        let includeRelayWhen True = Just relayRootFields
+            includeRelayWhen False = Nothing
+        pure
+          ( includeRelayWhen (isRootFieldAllowed QRFTSelect spiAllowedQueryRootFields),
+            includeRelayWhen (isRootFieldAllowed SRFTSelect spiAllowedSubscriptionRootFields)
+          )
+
   functionConnectionFields <- for (Map.toList functions) $ \(functionName, functionInfo) -> runMaybeT do
     let returnTableName = _fiReturnType functionInfo
     -- FIXME: only extract the TableInfo once to avoid redundant cache lookups
     returnTableInfo <- lift $ askTableInfo sourceInfo returnTableName
     pkeyColumns <- MaybeT $ (^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns) <$> pure returnTableInfo
-    lift $ mkRF $ buildFunctionRelayQueryFields sourceInfo functionName functionInfo returnTableName pkeyColumns
-  pure $ concat $ catMaybes $ tableConnectionFields <> functionConnectionFields
+    lift $ mkRFs $ buildFunctionRelayQueryFields sourceInfo functionName functionInfo returnTableName pkeyColumns
+  pure $
+    ( concat $ catMaybes $ tableConnectionQueryFields <> functionConnectionFields,
+      concat $ catMaybes $ tableConnectionSubscriptionFields <> functionConnectionFields
+    )
   where
-    mkRF = mkRootField sourceName sourceConfig queryTagsConfig QDBR
+    mkRFs = mkRootFields sourceName sourceConfig queryTagsConfig QDBR
     sourceName = _siName sourceInfo
     sourceConfig = _siConfiguration sourceInfo
     queryTagsConfig = _siQueryTagsConfig sourceInfo
@@ -644,11 +661,11 @@ buildMutationFields scenario sourceInfo tables (takeExposedAs FEAMutation -> fun
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableIdentifierName <- getTableIdentifierName @b tableInfo
     inserts <-
-      mkRF (MDBR . MDBInsert) $ buildTableInsertMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
+      mkRFs (MDBR . MDBInsert) $ buildTableInsertMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
     updates <-
-      mkRF (MDBR . MDBUpdate) $ buildTableUpdateMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
+      mkRFs (MDBR . MDBUpdate) $ buildTableUpdateMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
     deletes <-
-      mkRF (MDBR . MDBDelete) $ buildTableDeleteMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
+      mkRFs (MDBR . MDBDelete) $ buildTableDeleteMutationFields scenario sourceInfo tableName tableInfo tableIdentifierName
     pure $ concat [inserts, updates, deletes]
   functionMutations <- for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
     let targetTableName = _fiReturnType functionInfo
@@ -658,11 +675,11 @@ buildMutationFields scenario sourceInfo tables (takeExposedAs FEAMutation -> fun
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
       roleName == adminRoleName || roleName `Map.member` (_fiPermissions functionInfo)
-    lift $ mkRF MDBR $ buildFunctionMutationFields sourceInfo functionName functionInfo targetTableName
+    lift $ mkRFs MDBR $ buildFunctionMutationFields sourceInfo functionName functionInfo targetTableName
   pure $ concat $ tableMutations <> catMaybes functionMutations
   where
-    mkRF :: forall a db remote action raw. (a -> db b) -> m [FieldParser n a] -> m [FieldParser n (RootField db remote action raw)]
-    mkRF = mkRootField sourceName sourceConfig queryTagsConfig
+    mkRFs :: forall a db remote action raw. (a -> db b) -> m [FieldParser n a] -> m [FieldParser n (RootField db remote action raw)]
+    mkRFs = mkRootFields sourceName sourceConfig queryTagsConfig
     sourceName = _siName sourceInfo
     sourceConfig = _siConfiguration sourceInfo
     queryTagsConfig = _siQueryTagsConfig sourceInfo
@@ -797,25 +814,39 @@ customizeFields SourceCustomization {..} =
 -- In order to build the complete schema these must be
 -- homogenised and be annotated with query-tag data, which this function makes
 -- easy.
+-- This function converts a single field parser. @mkRootFields@ transforms a
+-- list of field parsers.
 mkRootField ::
+  forall b n a db remote action raw.
+  (HasTag b, Functor n) =>
+  SourceName ->
+  SourceConfig b ->
+  Maybe QueryTagsConfig ->
+  (a -> db b) ->
+  FieldParser n a ->
+  FieldParser n (RootField db remote action raw)
+mkRootField sourceName sourceConfig queryTagsConfig inj =
+  fmap
+    ( RFDB sourceName
+        . AB.mkAnyBackend @b
+        . SourceConfigWith sourceConfig queryTagsConfig
+        . inj
+    )
+
+-- | `mkRootFields` is `mkRootField` applied on a list of `FieldParser`.
+mkRootFields ::
   forall b m n a db remote action raw.
   (HasTag b, Functor m, Functor n) =>
   SourceName ->
   SourceConfig b ->
   Maybe QueryTagsConfig ->
   (a -> db b) ->
-  m [FieldParser n a] ->
-  m [FieldParser n (RootField db remote action raw)]
-mkRootField sourceName sourceConfig queryTagsConfig inj =
+  m [(FieldParser n a)] ->
+  m [(FieldParser n (RootField db remote action raw))]
+mkRootFields sourceName sourceConfig queryTagsConfig inj =
   fmap
     ( map
-        ( fmap
-            ( RFDB sourceName
-                . AB.mkAnyBackend @b
-                . SourceConfigWith sourceConfig queryTagsConfig
-                . inj
-            )
-        )
+        (mkRootField sourceName sourceConfig queryTagsConfig inj)
     )
 
 takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b

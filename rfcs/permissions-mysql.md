@@ -107,10 +107,10 @@ The GraphQL-Engine applies permissions at three points of processing:
 
 Since parser/schema generation is a single unified abstraction in
 GraphQL-Engine, all a backend needs to do to support permissions is a suitable
-implementation of type class methods `MonadSchema.buildTableQueryFields`,
+implementation of type class methods `MonadSchema.buildTableQueryAndSubscriptionFields`,
 `buildTableInsertMutationFields` etc..
 
-`buildTableQueryFields` et al. are given as inputs a representation of the
+`buildTableQueryAndSubscriptionFields` et al. are given as inputs a representation of the
 permissions for a table (in the context of some role), which for _Column
 Permissions_ list the exposed columns and for _Row Permissions_ contain
 backend-specific Boolean Expression IR fragments, which are supposed to end up
@@ -136,7 +136,7 @@ CRUD-actions on permissions.
    implementation of the `BackendAPI MySQL` instance.
 
 3. For SQL generation of a _Query_, the case that translates an `AnnSelectG`
-   <a name="footnote-2-ref"></a>[[2]](#footnote-2-def). Any applicable _Row 
+   <a name="footnote-2-ref"></a>[[2]](#footnote-2-def). Any applicable _Row
    Permissions_ and _Limit Permissions_ are found in
    the field `_asnPerm` and need to translate into `WHERE` and `LIMIT` clauses
    respectably.
