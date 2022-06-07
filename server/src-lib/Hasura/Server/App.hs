@@ -920,11 +920,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
             -- error running the health check
             logError err
             Spock.setStatus HTTP.status500 >> Spock.text errorMsg
-          Right False -> do
-            -- unhealthy
-            logError (internalError errorMsg)
-            Spock.setStatus HTTP.status500 >> Spock.text errorMsg
-          Right True -> do
+          Right _ -> do
             -- healthy
             sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
             let responseText =

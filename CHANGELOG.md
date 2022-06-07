@@ -92,6 +92,7 @@ is `graphql-default`, the field names generated will be `my_table`, `my_tableByP
 
 ### Bug fixes and improvements
 
+- server: errors from healthcheck are now logged as internal errors
 - server: do not expand environment variable references in logs or API responses from remote schemas, actions and event triggers for security reasons (fix #3935)
 - server: extend backend_only setting for update and delete permissions
 - server: add support for scalar array response type in actions (#3661)
