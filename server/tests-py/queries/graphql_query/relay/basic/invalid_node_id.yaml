@@ -16,4 +16,4 @@ response:
   - extensions:
       path: "$.selectionSet.node"
       code: validation-failed
-    message: the node id is invalid
+    message: invalid node id

@@ -75,7 +75,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
   )
 import Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy (processOrderByItems)
 import Hasura.Backends.Postgres.Translate.Types
-import Hasura.GraphQL.Schema.Common (currentNodeIdVersion, nodeIdVersionInt)
+import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))
@@ -273,7 +273,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     (fieldName,)
       <$> case field of
         AFExpression t -> pure $ S.SELit t
-        AFNodeId _ tn pKeys -> pure $ mkNodeId tn pKeys
+        AFNodeId _ sn tn pKeys -> pure $ mkNodeId sn tn pKeys
         AFColumn c -> toSQLCol c
         AFObjectRelation objSel -> withWriteObjectRelation $ do
           let AnnRelationSelectG relName relMapping annObjSel = objSel
@@ -371,8 +371,8 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
       Nothing -> sqlExp
       Just (S.ColumnOp opText cExp) -> S.mkSQLOpExp opText sqlExp cExp
 
-    mkNodeId :: QualifiedTable -> PrimaryKeyColumns ('Postgres pgKind) -> S.SQLExp
-    mkNodeId (QualifiedObject tableSchema tableName) pkeyColumns =
+    mkNodeId :: SourceName -> QualifiedTable -> PrimaryKeyColumns ('Postgres pgKind) -> S.SQLExp
+    mkNodeId _sourceName (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
             toJSONableExp LeaveNumbersAlone (ciType pgColumnInfo) False $
               S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ ciColumn pgColumnInfo

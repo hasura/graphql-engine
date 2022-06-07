@@ -9,7 +9,6 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Constants qualified as G
@@ -43,10 +42,10 @@ remoteRelationshipField ::
   RemoteRelationshipParserBuilder
 remoteRelationshipField sourceCache remoteSchemaCache = RemoteRelationshipParserBuilder
   \RemoteFieldInfo {..} -> runMaybeT do
-    queryType <- retrieve soQueryType
+    queryType <- retrieve scSchemaKind
     -- https://github.com/hasura/graphql-engine/issues/5144
     -- The above issue is easily fixable by removing the following guard
-    guard $ queryType == ET.QueryHasura
+    guard $ isHasuraSchema queryType
     case _rfiRHS of
       RFISource anyRemoteSourceFieldInfo ->
         dispatchAnyBackend @BackendSchema anyRemoteSourceFieldInfo \remoteSourceFieldInfo -> do

@@ -34,9 +34,9 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Introspect
 import Hasura.GraphQL.Schema.Postgres
+import Hasura.GraphQL.Schema.Relay
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
-import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -120,7 +120,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
           <$> case queryType of
             QueryHasura ->
               buildRoleContext
-                (_sccSQLGenCtx, queryType, _sccFunctionPermsCtx)
+                (_sccSQLGenCtx, _sccFunctionPermsCtx)
                 sources
                 allRemoteSchemas
                 allActionInfos
@@ -133,7 +133,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
             QueryRelay ->
               (,mempty,G.SchemaIntrospection mempty)
                 <$> buildRelayRoleContext
-                  (_sccSQLGenCtx, queryType, _sccFunctionPermsCtx)
+                  (_sccSQLGenCtx, _sccFunctionPermsCtx)
                   sources
                   allActionInfos
                   customTypes
@@ -157,7 +157,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
 buildRoleContext ::
   forall m.
   (MonadError QErr m, MonadIO m) =>
-  (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) ->
+  (SQLGenCtx, FunctionPermissionsCtx) ->
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   [ActionInfo] ->
@@ -174,19 +174,18 @@ buildRoleContext ::
     )
 buildRoleContext options sources remotes allActionInfos customTypes role remoteSchemaPermsCtx expFeatures streamingSubscriptionsCtx globalDefaultNC = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
-        queryType,
         functionPermsCtx
         ) = options
       schemaOptions =
         SchemaOptions
           stringifyNum
           dangerousBooleanCollapse
-          queryType
           functionPermsCtx
           remoteSchemaPermsCtx
           optimizePermissionFilters
       schemaContext =
         SchemaContext
+          HasuraSchema
           sources
           (remoteRelationshipField sources (fst <$> remotes))
   runMonadSchema schemaOptions schemaContext role $ do
@@ -299,7 +298,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
 buildRelayRoleContext ::
   forall m.
   (MonadError QErr m, MonadIO m) =>
-  (SQLGenCtx, GraphQLQueryType, FunctionPermissionsCtx) ->
+  (SQLGenCtx, FunctionPermissionsCtx) ->
   SourceCache ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
@@ -309,14 +308,12 @@ buildRelayRoleContext ::
   m (RoleContext GQLContext)
 buildRelayRoleContext options sources allActionInfos customTypes role expFeatures globalDefaultNC = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
-        queryType,
         functionPermsCtx
         ) = options
       schemaOptions =
         SchemaOptions
           stringifyNum
           dangerousBooleanCollapse
-          queryType
           functionPermsCtx
           RemoteSchemaPermsDisabled
           optimizePermissionFilters
@@ -325,18 +322,15 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
       -- are not supported yet, we use `mempty` below for `RemoteSchemaMap`.
       schemaContext =
         SchemaContext
+          (RelaySchema $ nodeInterface sources)
           sources
           (remoteRelationshipField sources mempty)
   runMonadSchema schemaOptions schemaContext role do
+    node <- fmap NotNamespaced <$> nodeField sources
     fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
-
-    -- Add node root field.
-    -- FIXME: for now this is PG-only. This isn't a problem yet since for now only PG supports relay.
-    -- To fix this, we'd need to first generalize `nodeField`.
-    nodeField_ <- fmap NotNamespaced <$> nodeField
-    let (queryPGFields', mutationFrontendFields, mutationBackendFields, subscriptionPGFields') = mconcat fieldsList
-        queryPGFields = nodeField_ : queryPGFields'
-        subscriptionPGFields = nodeField_ : subscriptionPGFields'
+    let (queryFields, mutationFrontendFields, mutationBackendFields, subscriptionFields) = mconcat fieldsList
+        allQueryFields = node : queryFields
+        allSubscriptionFields = node : subscriptionFields
 
     -- Remote schema mutations aren't exposed in relay because many times it throws
     -- the conflicting definitions error between the relay types like `Node`, `PageInfo` etc
@@ -345,11 +339,11 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
     mutationParserBackend <-
       buildMutationParser mempty allActionInfos customTypes mutationBackendFields
     subscriptionParser <-
-      buildSubscriptionParser subscriptionPGFields [] customTypes []
+      buildSubscriptionParser allSubscriptionFields [] customTypes []
     queryParserFrontend <-
-      queryWithIntrospectionHelper queryPGFields mutationParserFrontend subscriptionParser
+      queryWithIntrospectionHelper allQueryFields mutationParserFrontend subscriptionParser
     queryParserBackend <-
-      queryWithIntrospectionHelper queryPGFields mutationParserBackend subscriptionParser
+      queryWithIntrospectionHelper allQueryFields mutationParserBackend subscriptionParser
 
     -- In order to catch errors early, we attempt to generate the data
     -- required for introspection, which ends up doing a few correctness
@@ -447,12 +441,12 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         SchemaOptions
           LeaveNumbersAlone -- stringifyNum doesn't apply to remotes
           True -- booleanCollapse doesn't apply to remotes
-          QueryHasura
           FunctionPermissionsInferred -- function permissions don't apply to remotes
           remoteSchemaPermsCtx
           False
       fakeSchemaContext =
         SchemaContext
+          HasuraSchema
           mempty
           ignoreRemoteRelationship
       -- chosen arbitrarily to be as improbable as possible

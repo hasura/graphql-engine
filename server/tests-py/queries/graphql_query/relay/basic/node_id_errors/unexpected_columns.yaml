@@ -16,6 +16,6 @@ query:
 response:
   errors:
   - extensions:
-      path: "$.selectionSet.node"
+      path: "$.selectionSet.node.args.id"
       code: validation-failed
-    message: 'the node id is invalid: unexpected column values [2]'
+    message: 'invalid node id: unexpected column values [2]'

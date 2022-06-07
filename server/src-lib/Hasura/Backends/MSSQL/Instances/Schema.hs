@@ -35,7 +35,6 @@ import Hasura.RQL.IR.Insert qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.Types.Backend hiding (BackendInsert)
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
@@ -80,7 +79,6 @@ instance BackendSchema 'MSSQL where
   countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField = msComputedField
-  node = msNode
 
 ----------------------------------------------------------------
 
@@ -469,24 +467,3 @@ msRemoteRelationshipField ::
   m (Maybe [FieldParser n (AnnotatedField 'MSSQL)])
 msRemoteRelationshipField _remoteFieldInfo = pure Nothing
 -}
-
--- | The 'node' root field of a Relay request. Relay is currently unsupported on MSSQL,
--- meaning this parser will never be called: any attempt to create this parser should
--- therefore fail.
-msNode ::
-  MonadBuildSchema 'MSSQL r m n =>
-  m
-    ( Parser
-        'Output
-        n
-        ( HashMap
-            (TableName 'MSSQL)
-            ( SourceName,
-              SourceConfig 'MSSQL,
-              SelPermInfo 'MSSQL,
-              PrimaryKeyColumns 'MSSQL,
-              AnnotatedFields 'MSSQL
-            )
-        )
-    )
-msNode = throw500 "MSSQL does not support relay; `node` should never be exposed in the schema."

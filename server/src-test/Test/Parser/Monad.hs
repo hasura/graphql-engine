@@ -15,10 +15,9 @@ import Data.Aeson.Internal (JSONPath)
 import Data.Has (Has (..))
 import Data.Text qualified as T
 import Hasura.Base.Error (Code, QErr)
-import Hasura.GraphQL.Execute.Types (GraphQLQueryType (..))
 import Hasura.GraphQL.Parser.Class (MonadParse (..), MonadSchema (..))
 import Hasura.GraphQL.Parser.Schema (MkTypename (..))
-import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaOptions (..), ignoreRemoteRelationship)
+import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaKind (..), SchemaOptions (..), ignoreRemoteRelationship)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (StringifyNumbers (LeaveNumbersAlone))
 import Hasura.RQL.Types.Function (FunctionPermissionsCtx (..))
@@ -64,7 +63,6 @@ instance Has SchemaOptions SchemaEnvironment where
       SchemaOptions
         { soStringifyNum = LeaveNumbersAlone,
           soDangerousBooleanCollapse = False,
-          soQueryType = QueryHasura,
           soFunctionPermsContext = FunctionPermissionsInferred,
           soRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
           soOptimizePermissionFilters = False
@@ -78,7 +76,8 @@ instance Has SchemaContext SchemaEnvironment where
   getter =
     const
       SchemaContext
-        { scSourceCache = notImplemented "scSourceCache",
+        { scSchemaKind = HasuraSchema,
+          scSourceCache = mempty,
           scRemoteRelationshipParserBuilder = ignoreRemoteRelationship
         }
 
