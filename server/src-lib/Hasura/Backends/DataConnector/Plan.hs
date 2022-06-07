@@ -1,10 +1,7 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 module Hasura.Backends.DataConnector.Plan
   ( SourceConfig (..),
-    Plan (..),
     mkPlan,
-    renderPlan,
+    renderQuery,
     queryHasRelations,
   )
 where
@@ -12,7 +9,6 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as J
-import Data.Align
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -20,9 +16,6 @@ import Data.Semigroup (Any (..), Min (..))
 import Data.Text as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended ((<>>))
-import Data.These
-import Data.Vector qualified as V
-import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Export qualified as IR
@@ -43,15 +36,6 @@ import Hasura.Session
 
 --------------------------------------------------------------------------------
 
--- | A 'Plan' consists of an 'IR.Q' describing the query to be
--- performed by the Agent and a continuation for post processing the
--- response. See the 'postProcessResponseRow' haddock for more
--- information on why we need a post-processor.
-data Plan = Plan
-  { query :: IR.Q.Query,
-    postProcessor :: (API.QueryResponse -> Either ResponseError API.QueryResponse)
-  }
-
 -- | Error type for the postProcessor continuation. Failure can occur if the Agent
 -- returns bad data.
 data ResponseError
@@ -65,9 +49,9 @@ data ResponseError
 -- | Extract the 'IR.Q' from a 'Plan' and render it as 'Text'.
 --
 -- NOTE: This is for logging and debug purposes only.
-renderPlan :: Plan -> Text
-renderPlan =
-  TE.decodeUtf8 . BL.toStrict . J.encode . IR.queryToAPI . query
+renderQuery :: IR.Q.Query -> Text
+renderQuery =
+  TE.decodeUtf8 . BL.toStrict . J.encode . IR.queryToAPI
 
 -- | Map a 'QueryDB 'DataConnector' term into a 'Plan'
 mkPlan ::
@@ -76,24 +60,16 @@ mkPlan ::
   SessionVariables ->
   SourceConfig ->
   QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  m Plan
-mkPlan session (SourceConfig {..}) ir = translateQueryDB ir
+  m IR.Q.Query
+mkPlan session (SourceConfig {}) ir = translateQueryDB ir
   where
     translateQueryDB ::
       QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      m Plan
+      m IR.Q.Query
     translateQueryDB =
       \case
-        QDBMultipleRows s -> do
-          query <- translateAnnSelect IR.Q.Many s
-          pure $
-            Plan query $ \API.QueryResponse {getQueryResponse = response} ->
-              fmap API.QueryResponse $ traverse (postProcessResponseRow _scCapabilities query) response
-        QDBSingleRow s -> do
-          query <- translateAnnSelect IR.Q.OneOrZero s
-          pure $
-            Plan query $ \API.QueryResponse {getQueryResponse = response} ->
-              fmap API.QueryResponse $ traverse (postProcessResponseRow _scCapabilities query) response
+        QDBMultipleRows s -> translateAnnSelect IR.Q.Many s
+        QDBSingleRow s -> translateAnnSelect IR.Q.OneOrZero s
         QDBAggregation {} -> throw400 NotSupported "QDBAggregation: not supported"
 
     translateAnnSelect ::
@@ -177,6 +153,7 @@ mkPlan session (SourceConfig {..}) ir = translateQueryDB ir
         pure . Just . IR.Q.Relationship $
           IR.Q.RelationshipContents
             (HashMap.mapKeys IR.Q.PrimaryKey . fmap IR.Q.ForeignKey $ _aarColumnMapping objRel)
+            IR.Q.ObjectRelationship
             ( IR.Q.Query
                 { fields = fields,
                   from = _aosTableFrom (_aarAnnSelect objRel),
@@ -192,6 +169,7 @@ mkPlan session (SourceConfig {..}) ir = translateQueryDB ir
         pure . Just . IR.Q.Relationship $
           IR.Q.RelationshipContents
             (HashMap.mapKeys IR.Q.PrimaryKey $ fmap IR.Q.ForeignKey $ _aarColumnMapping arrRel)
+            IR.Q.ArrayRelationship
             query
       AFArrayRelation (ASAggregate _) ->
         throw400 NotSupported "translateField: AFArrayRelation ASAggregate not supported"
@@ -300,62 +278,6 @@ mkPlan session (SourceConfig {..}) ir = translateQueryDB ir
         mkApplyBinaryComparisonOperatorToScalar :: IR.E.BinaryComparisonOperator -> IR.S.Value -> IR.E.Expression
         mkApplyBinaryComparisonOperatorToScalar operator value =
           IR.E.ApplyBinaryComparisonOperator operator columnName (IR.E.ScalarValue value)
-
--- | We need to modify any JSON substructures which appear as a result
--- of fetching object relationships, to peel off the outer array sent
--- by the backend.
---
--- This function takes a response object, and the 'Plan' used to
--- fetch it, and modifies any such arrays accordingly.
-postProcessResponseRow ::
-  API.Capabilities ->
-  IR.Q.Query ->
-  J.Object ->
-  Either ResponseError J.Object
-postProcessResponseRow capabilities IR.Q.Query {fields} row =
-  sequenceA $ alignWith go fields row
-  where
-    go :: These IR.Q.Field J.Value -> Either ResponseError J.Value
-    go (This field) =
-      case field of
-        IR.Q.Literal literal ->
-          pure (J.String literal)
-        _ ->
-          Left RequiredFieldMissing
-    go That {} =
-      Left UnexpectedFields
-    go (These field value) =
-      case field of
-        IR.Q.Literal {} ->
-          Left UnexpectedFields
-        IR.Q.Column {} ->
-          pure value
-        IR.Q.Relationship (IR.Q.RelationshipContents _ subquery@IR.Q.Query {cardinality}) ->
-          case value of
-            J.Array rows -> do
-              processed <- traverse (postProcessResponseRow capabilities subquery <=< parseObject) (toList rows)
-              applyCardinalityToResponse cardinality processed
-            other
-              | API.dcRelationships capabilities ->
-                Left ExpectedArray
-              | otherwise ->
-                pure other
-
-parseObject :: J.Value -> Either ResponseError J.Object
-parseObject = \case
-  J.Object obj -> pure obj
-  _ -> Left ExpectedObject
-
--- | If a fk-to-pk lookup comes from an object relationship then we
--- expect 0 or 1 items in the response and we should return it as an object.
--- if it's an array, we have to send back all of the results
-applyCardinalityToResponse :: IR.Q.Cardinality -> [J.Object] -> Either ResponseError J.Value
-applyCardinalityToResponse IR.Q.OneOrZero = \case
-  [] -> pure J.Null
-  [x] -> pure $ J.Object x
-  _ -> Left UnexpectedResponseCardinality
-applyCardinalityToResponse IR.Q.Many =
-  pure . J.Array . V.fromList . fmap J.Object
 
 -- | Validate if a 'IR.Q' contains any relationships.
 queryHasRelations :: IR.Q.Query -> Bool

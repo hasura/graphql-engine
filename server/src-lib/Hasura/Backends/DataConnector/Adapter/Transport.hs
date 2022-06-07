@@ -9,6 +9,7 @@ import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
 import Hasura.Backends.DataConnector.Adapter.Execute ()
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig)
+import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.Plan qualified as DC
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.EncJSON (EncJSON)
@@ -49,7 +50,7 @@ runDBQuery' ::
   Logger Hasura ->
   SourceConfig ->
   Tracing.TraceT (ExceptT QErr IO) a ->
-  Maybe DC.Plan ->
+  Maybe IR.Q.Query ->
   m (DiffTime, a)
 runDBQuery' requestId query fieldName _userInfo logger _sourceConfig action ir = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName ir requestId
@@ -61,13 +62,13 @@ runDBQuery' requestId query fieldName _userInfo logger _sourceConfig action ir =
 mkQueryLog ::
   GQLReqUnparsed ->
   RootFieldAlias ->
-  Maybe DC.Plan ->
+  Maybe IR.Q.Query ->
   RequestId ->
   HGL.QueryLog
-mkQueryLog gqlQuery fieldName maybePlan requestId =
+mkQueryLog gqlQuery fieldName maybeQuery requestId =
   HGL.QueryLog
     gqlQuery
-    ((\plan -> (fieldName, HGL.GeneratedQuery (DC.renderPlan plan) J.Null)) <$> maybePlan)
+    ((\query -> (fieldName, HGL.GeneratedQuery (DC.renderQuery query) J.Null)) <$> maybeQuery)
     requestId
     HGL.QueryLogKindDatabase
 

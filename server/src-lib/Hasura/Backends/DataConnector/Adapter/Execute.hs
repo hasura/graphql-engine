@@ -31,29 +31,29 @@ import Hasura.Tracing qualified as Tracing
 --------------------------------------------------------------------------------
 
 instance BackendExecute 'DataConnector where
-  type PreparedQuery 'DataConnector = DC.Plan
+  type PreparedQuery 'DataConnector = IR.Q.Query
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = Tracing.TraceT (ExceptT QErr IO)
 
   mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir = do
-    plan' <- DC.mkPlan _uiSession sourceConfig ir
+    query' <- DC.mkPlan _uiSession sourceConfig ir
     pure
       DBStepInfo
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = sourceConfig,
-          dbsiPreparedQuery = Just plan',
-          dbsiAction = buildAction sourceName sourceConfig (DC.query plan')
+          dbsiPreparedQuery = Just query',
+          dbsiAction = buildAction sourceName sourceConfig query'
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir = do
-    plan' <- DC.mkPlan _uiSession sourceConfig ir
+    query' <- DC.mkPlan _uiSession sourceConfig ir
     pure $
       mkAnyBackend @'DataConnector
         DBStepInfo
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = sourceConfig,
-            dbsiPreparedQuery = Just plan',
-            dbsiAction = pure . encJFromJValue . toExplainPlan fieldName $ plan'
+            dbsiPreparedQuery = Just query',
+            dbsiAction = pure . encJFromJValue . toExplainPlan fieldName $ query'
           }
   mkDBMutationPlan _ _ _ _ _ =
     throw400 NotSupported "mkDBMutationPlan: not implemented for the Data Connector backend."
@@ -66,9 +66,9 @@ instance BackendExecute 'DataConnector where
   mkSubscriptionExplain _ =
     throw400 NotSupported "mkSubscriptionExplain: not implemented for the Data Connector backend."
 
-toExplainPlan :: GQL.RootFieldAlias -> DC.Plan -> ExplainPlan
-toExplainPlan fieldName plan_ =
-  ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ DC.query $ plan_])
+toExplainPlan :: GQL.RootFieldAlias -> IR.Q.Query -> ExplainPlan
+toExplainPlan fieldName query' =
+  ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ query'])
 
 buildAction :: RQL.SourceName -> DC.SourceConfig -> IR.Q.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
 buildAction sourceName DC.SourceConfig {..} query = do

@@ -4,6 +4,7 @@ module Hasura.Backends.DataConnector.IR.Query
     Cardinality (..),
     ColumnContents (..),
     RelationshipContents (..),
+    RelType (..),
     PrimaryKey (..),
     ForeignKey (..),
   )
@@ -111,12 +112,25 @@ instance Witch.From ColumnContents API.Field where
 -- NOTE: The 'ToJSON' instance is only intended for logging purposes.
 data RelationshipContents = RelationshipContents
   { joinCondition :: HashMap PrimaryKey ForeignKey,
+    relationType :: RelType,
     query :: Query
   }
-  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving stock (Eq, Ord, Show, Generic, Data)
 
 instance ToJSON RelationshipContents where
   toJSON = J.genericToJSON J.defaultOptions
+
+-- | Relationships can either be Object (One-To-One) or Array (One-To-Many) type.
+data RelType = ObjectRelationship | ArrayRelationship
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+instance ToJSON RelType where
+  toJSON = J.genericToJSON J.defaultOptions
+
+instance Witch.From RelType API.RelType where
+  from = \case
+    ObjectRelationship -> API.ObjectRelationship
+    ArrayRelationship -> API.ArrayRelationship
 
 --------------------------------------------------------------------------------
 

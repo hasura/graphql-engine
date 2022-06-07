@@ -41,6 +41,6 @@ fromField = \case
   IR.Q.Literal lit -> Left $ ExposedLiteral lit
 
 rcToAPI :: IR.Q.RelationshipContents -> Either QueryError API.Field
-rcToAPI (IR.Q.RelationshipContents joinCondition query) =
+rcToAPI (IR.Q.RelationshipContents joinCondition relType query) =
   let joinCondition' = M.mapKeys Witch.from $ fmap Witch.from joinCondition
-   in fmap (API.RelationshipField . API.RelField joinCondition') $ queryToAPI query
+   in fmap (API.RelationshipField . API.RelField joinCondition' (Witch.from relType)) $ queryToAPI query

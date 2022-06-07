@@ -35,9 +35,10 @@ spec = do
       let fieldMapping = Map.fromList [(PrimaryKey $ ColumnName "id", ForeignKey $ ColumnName "my_foreign_id")]
           query = Query mempty (TableName "my_table_name") Nothing Nothing Nothing Nothing
       testToFromJSONToSchema
-        (RelationshipField $ RelField fieldMapping query)
+        (RelationshipField $ RelField fieldMapping ArrayRelationship query)
         [aesonQQ|
         { "type": "relationship",
+          "relation_type": "array",
           "column_mapping": {"id": "my_foreign_id"},
           "query": {"fields": {}, "from": "my_table_name"}
         }

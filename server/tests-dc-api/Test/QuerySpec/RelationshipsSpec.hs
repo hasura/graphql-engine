@@ -57,7 +57,7 @@ albumsWithArtistQuery modifySubquery =
         HashMap.fromList
           [ ("id", columnField "id"),
             ("title", columnField "title"),
-            ("artist", RelationshipField $ RelField joinFieldMapping artistsSubquery)
+            ("artist", RelationshipField $ RelField joinFieldMapping ObjectRelationship artistsSubquery)
           ]
    in albumsQuery {fields}
 
@@ -74,7 +74,7 @@ artistsWithAlbumsQuery modifySubquery =
         HashMap.fromList
           [ ("id", columnField "id"),
             ("name", columnField "name"),
-            ("albums", RelationshipField $ RelField joinFieldMapping albumsSubquery)
+            ("albums", RelationshipField $ RelField joinFieldMapping ArrayRelationship albumsSubquery)
           ]
    in artistsQuery {fields}
 

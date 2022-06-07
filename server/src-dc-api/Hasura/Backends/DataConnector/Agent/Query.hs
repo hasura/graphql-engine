@@ -124,9 +124,16 @@ projectRow fields performQuery r@(Row row) = forM fields $ \case
   API.RelationshipField relField ->
     let subquery = createSubqueryForRelationshipField r relField
      in case subquery of
-          Just subQuery -> do
-            API.QueryResponse obj <- performQuery subQuery
-            pure $ J.Array $ fmap J.Object $ V.fromList obj
+          Just subQuery ->
+            case API.relationType relField of
+              API.ArrayRelationship -> do
+                API.QueryResponse obj <- performQuery subQuery
+                pure $ J.Array $ fmap J.Object $ V.fromList obj
+              API.ObjectRelationship -> do
+                API.QueryResponse obj <- performQuery subQuery
+                if null obj
+                  then pure J.Null
+                  else pure $ J.Object $ head obj
           Nothing -> pure $ J.Array mempty
 
 queryHandler :: StaticData -> API.SourceName -> API.Config -> API.Query -> Handler API.QueryResponse
