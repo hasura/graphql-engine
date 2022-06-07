@@ -15,8 +15,6 @@ import { exportMetadata } from '@/metadata/actions';
 import _push from '../../Data/push';
 
 const Add = ({ isRequesting, dispatch, ...props }) => {
-  const styles = require('../RemoteSchema.scss');
-
   useEffect(() => {
     return () => {
       dispatch({ type: RESET });
@@ -45,9 +43,11 @@ const Add = ({ isRequesting, dispatch, ...props }) => {
   }
 
   return (
-    <div className={styles.addWrapper}>
+    <div>
       <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />
-      <div className={styles.heading_text}>Add a new remote schema</div>
+      <div className={'text-subtitle font-bold mb-sm'}>
+        Add a new remote schema
+      </div>
       <form
         onSubmit={e => {
           e.preventDefault();
@@ -55,7 +55,7 @@ const Add = ({ isRequesting, dispatch, ...props }) => {
         }}
       >
         <Common isNew {...props} dispatch={dispatch} />
-        <div className={styles.commonBtn}>
+        <div className={'item-center pt-md pb-sm'}>
           <Button
             type="submit"
             color="yellow"

@@ -52,6 +52,8 @@ module.exports = {
         base: ['1rem', { lineHeight: '1.5rem' }],
         lg: ['1.143rem', { lineHeight: '1.429rem' }],
         xl: ['1.714rem', { lineHeight: '2.143rem' }],
+        subtitle: ['1.300rem', { lineHeight: '2.143rem' }], // ~20 px
+        title: ['1.5rem', { lineHeight: '2.143rem' }], // ~24 px
       },
     },
   },

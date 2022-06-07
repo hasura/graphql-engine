@@ -3,7 +3,6 @@ import { RemoteSchema } from '../../../../metadata/types';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { Tabs } from '../Common/Tabs';
 import { appPrefix } from '../constants';
-import styles from '../RemoteSchema.scss';
 
 export type RSPWrapperProps = {
   params: { remoteSchemaName: string };
@@ -66,9 +65,7 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
         showLoader={false}
         testPrefix="remote-schema-container-tabs"
       />
-      <div className={styles.add_pad_top}>
-        {permissionRenderer(currentRemoteSchema)}
-      </div>
+      <div className="pt-md">{permissionRenderer(currentRemoteSchema)}</div>
     </>
   );
 };

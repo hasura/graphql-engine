@@ -2,7 +2,6 @@ import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
-import styles from '../Events.scss';
 import { getAddSTRoute } from '../../../Common/utils/routesUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import { CRON_TRIGGER } from '../constants';
@@ -30,17 +29,14 @@ const Landing: React.FC<Props> = props => {
   );
 
   return (
-    <div
-      className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
-    >
-      <div className={styles.padd_left}>
-        <div className={styles.display_flex}>
-          <h2 className={`${styles.headerText} ${styles.inline_block}`}>
-            {CRON_TRIGGER}s
-          </h2>
+    <div className="pl-0 w-full mt-md">
+      <div className="pl-md">
+        <div className="flex">
+          <h2 className="text-xl font-bold mr-md">{CRON_TRIGGER}s</h2>
           <Button
             color="yellow"
             size="sm"
+            className="ml-md"
             onClick={() => dispatch(_push(getAddSTRoute()))}
           >
             Create
@@ -54,7 +50,7 @@ const Landing: React.FC<Props> = props => {
             imgAlt={CRON_TRIGGER}
             description={topicDescription}
           />
-          <hr className={`${styles.clear_fix} my-lg`} />
+          <hr className="clear-both my-lg" />
         </div>
       </div>
     </div>

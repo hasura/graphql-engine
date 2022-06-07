@@ -13,7 +13,6 @@ import {
   ADHOC_EVENTS_HEADING,
   EVENTS_SERVICE_HEADING,
 } from '../constants';
-import styles from '../Events.scss';
 import { Dispatch } from '../../../../types';
 
 interface Props {
@@ -51,9 +50,7 @@ const STContainer: React.FC<Props> = ({ children, tabName }) => {
   ];
 
   return (
-    <div
-      className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
-    >
+    <div>
       <Helmet
         title={getReactHelmetTitle(
           `${tabInfo[tabName].display_text} - ${ADHOC_EVENTS_HEADING}`,
@@ -70,7 +67,7 @@ const STContainer: React.FC<Props> = ({ children, tabName }) => {
         showLoader={false}
         testPrefix="adhoc-events-container-tabs"
       />
-      <div className={styles.add_pad_top}>{children}</div>
+      <div className="pt-5">{children}</div>
     </div>
   );
 };

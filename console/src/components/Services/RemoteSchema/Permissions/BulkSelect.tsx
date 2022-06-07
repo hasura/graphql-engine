@@ -1,7 +1,6 @@
 import React from 'react';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import Button from '../../../Common/Button/Button';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 export type BulkSelectProps = {
   bulkSelect: string[];
@@ -15,7 +14,7 @@ const BulkSelect: React.FC<BulkSelectProps> = ({
   const getSelectedRoles = () => {
     return bulkSelect.map((role: string) => {
       return (
-        <span key={role} className={styles.add_pad_right}>
+        <span key={role} className="pr-sm">
           <b>{role}</b>{' '}
         </span>
       );
@@ -32,13 +31,13 @@ const BulkSelect: React.FC<BulkSelectProps> = ({
   };
 
   return (
-    <div id="bulk-section" className={styles.activeEdit}>
-      <div className={styles.editPermsHeading}>Apply Bulk Actions</div>
+    <div id="bulk-section" className="bg-white border border-gray-300 p-sm">
+      <div className="text-lg font-bold mb-md">Apply Bulk Actions</div>
       <div>
-        <span className={styles.add_pad_right}>Selected Roles</span>
+        <span className="pr-sm">Selected Roles</span>
         {getSelectedRoles()}
       </div>
-      <div className={`${styles.add_mar_top} ${styles.add_mar_bottom_mid}`}>
+      <div className="mt-sm mb-sm">
         <Button onClick={handleBulkRemoveClick} color="red" size="sm">
           Remove All Permissions
         </Button>

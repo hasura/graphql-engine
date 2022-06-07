@@ -40,7 +40,6 @@ import { Button } from '@/new-components/Button';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getEventRequestSampleInput } from '../utils';
 import TableHeader from '../TableCommon/TableHeader';
-import styles from './ModifyEvent.scss';
 import { updateSchemaInfo } from '../../../Data/DataActions';
 import { useEventTriggerModify } from '../state';
 import Info from './Info';
@@ -340,13 +339,12 @@ const Modify: React.FC<Props> = props => {
           Event Info
         </h2>
         <Info currentTrigger={currentTrigger} />
-        <div className={styles.container}>
+        <div className="relative">
           <WebhookEditor
             currentTrigger={currentTrigger}
             webhook={state.webhook}
             setWebhook={setState.webhook}
             save={saveWrapper('webhook')}
-            styles={styles}
           />
           <OperationEditor
             currentTrigger={currentTrigger}
@@ -357,7 +355,6 @@ const Modify: React.FC<Props> = props => {
             setOperations={setState.operations}
             operationColumns={state.operationColumns}
             setOperationColumns={setState.operationColumns}
-            styles={styles}
             save={saveWrapper('ops')}
             isAllColumnChecked={state.isAllColumnChecked}
             handleColumnRadioButton={setState.toggleAllColumnChecked}
@@ -366,13 +363,11 @@ const Modify: React.FC<Props> = props => {
             conf={state.retryConf}
             setRetryConf={setState.retryConf}
             currentTrigger={currentTrigger}
-            styles={styles}
             save={saveWrapper('retry_conf')}
           />
           <HeadersEditor
             headers={state.headers}
             setHeaders={setState.headers}
-            styles={styles}
             currentTrigger={currentTrigger}
             save={saveWrapper('headers')}
           />

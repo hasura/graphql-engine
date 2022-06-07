@@ -7,7 +7,6 @@ type RetryConfEditorProps = {
   currentTrigger: EventTrigger;
   conf: RetryConf;
   setRetryConf: (r: RetryConf) => void;
-  styles: Record<string, string>;
   save: (success: VoidCallback, error: VoidCallback) => void;
 };
 
@@ -15,7 +14,7 @@ const tdHeadStyle = 'px-3 py-3 whitespace-nowrap font-medium';
 const tdValStyle = 'px-3 py-3 whitespace-nowrap text-gray-600';
 
 const RetryConfEditor = (props: RetryConfEditorProps) => {
-  const { currentTrigger, conf, setRetryConf, styles, save } = props;
+  const { currentTrigger, conf, setRetryConf, save } = props;
 
   const existingConf = currentTrigger.configuration.retry_conf;
 
@@ -54,7 +53,7 @@ const RetryConfEditor = (props: RetryConfEditorProps) => {
 
   return (
     <div className="mb-lg w-6/12">
-      <h2 className="text-lg font-semibold mb-xs flex items-center">
+      <h2 className="text-lg font-bold mb-xs flex items-center">
         Retry Configuration
       </h2>
       <p className="text-sm mb-sm text-gray-600">
@@ -67,7 +66,6 @@ const RetryConfEditor = (props: RetryConfEditorProps) => {
         saveFunc={save}
         service="modify-trigger"
         expandCallback={reset}
-        styles={styles}
       />
     </div>
   );

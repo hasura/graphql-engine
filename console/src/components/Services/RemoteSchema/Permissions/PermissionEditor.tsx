@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { GraphQLSchema } from 'graphql';
 import { generateSDL, getArgTreeFromPermissionSDL } from './utils';
 import Button from '../../../Common/Button/Button';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import {
   RemoteSchemaFields,
   FieldType,
@@ -80,7 +79,7 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
 
   if (!isEditing) return null;
 
-  const buttonStyle = styles.add_mar_right;
+  const buttonStyle = 'mr-sm';
 
   const closeEditor = () => {
     permCloseEdit();
@@ -125,8 +124,8 @@ const PermissionEditor: React.FC<PermissionEditorProps> = props => {
   const isSaveDisabled = isEmpty(resultString) || isFetching;
 
   return (
-    <div className={styles.activeEdit}>
-      <div className={styles.tree}>
+    <div className="bg-white p-sm border border-gray-300">
+      <div>
         <PermissionEditorContext.Provider
           value={{ argTree, setArgTree, scrollToElement }}
         >

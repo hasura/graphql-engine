@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
 import globals from '../../../../../Globals';
-import styles from '../../Events.scss';
 import { ADHOC_EVENTS_HEADING } from '../../constants';
 import TopicDescription from '../../../Common/Landing/TopicDescription';
 import { getAddAdhocEventRoute } from '../../../../Common/utils/routesUtils';
@@ -31,17 +30,15 @@ const Info: React.FC = () => {
   );
 
   return (
-    <div
-      className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
-    >
-      <div className={styles.padd_left}>
+    <div className="pl-0 pt-md">
+      <div className="pl-5">
         <TopicDescription
           title="What are Scheduled events?"
           imgUrl={`${globals.assetsPath}/common/img/scheduled-event.png`}
           imgAlt={ADHOC_EVENTS_HEADING}
           description={topicDescription}
         />
-        <hr className={`${styles.clear_fix} my-lg`} />
+        <hr className="my-lg" />
       </div>
     </div>
   );

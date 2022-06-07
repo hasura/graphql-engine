@@ -294,11 +294,11 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <FaCog className={'w-sm h-sm' + styles.question} />;
+        return <FaCog size="1.3rem" className={styles.question} />;
       }
       return (
         <div className={styles.question}>
-          <FaCog className="w-sm h-sm" />
+          <FaCog size="2rem" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>

@@ -11,14 +11,13 @@ type HeaderEditorProps = {
   headers: Header[];
   setHeaders: (h: Header[]) => void;
   save: (success: VoidCallback, error: VoidCallback) => void;
-  styles: Record<string, string>;
 };
 
 const thStyle =
   'px-md py-sm text-left text-sm font-medium text-gray-600 uppercase tracking-wider';
 
 const HeadersEditor = (props: HeaderEditorProps) => {
-  const { setHeaders, headers, styles, save, currentTrigger } = props;
+  const { setHeaders, headers, save, currentTrigger } = props;
 
   const existingHeaders = parseServerHeaders(
     currentTrigger.configuration.headers
@@ -38,15 +37,9 @@ const HeadersEditor = (props: HeaderEditorProps) => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className={thStyle}>
-                  Key
-                </th>
-                <th scope="col" className={thStyle}>
-                  Type
-                </th>
-                <th scope="col" className={thStyle}>
-                  Value
-                </th>
+                <th className={thStyle}>Key</th>
+                <th className={thStyle}>Type</th>
+                <th className={thStyle}>Value</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -69,13 +62,13 @@ const HeadersEditor = (props: HeaderEditorProps) => {
           </table>
         </div>
       ) : (
-        <div className={styles.modifyProperty}>No headers</div>
+        <div>No headers</div>
       )}
     </>
   );
 
   const expanded = () => (
-    <div className={styles.modifyOpsPadLeft}>
+    <div>
       <Headers headers={headers} setHeaders={setHeaders} />
     </div>
   );
@@ -93,7 +86,6 @@ const HeadersEditor = (props: HeaderEditorProps) => {
         property="headers"
         service="modify-trigger"
         saveFunc={save}
-        styles={styles}
       />
     </div>
   );

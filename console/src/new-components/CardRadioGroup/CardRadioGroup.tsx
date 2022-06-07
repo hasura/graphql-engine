@@ -36,24 +36,27 @@ export const CardRadioGroup = <T extends string = string>(
             key={iValue}
             onClick={() => onChange(iValue)}
           >
-            <p className="flex items-center font-semibold text-muted">
+            <div>
               <input
                 id={`radio-select-${iValue}`}
                 type="radio"
                 value={iValue}
                 x-model="relationType"
-                className="cursor-pointer rounded-full border shadow-sm border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
+                className="cursor-pointer rounded-full border shadow-sm border-gray-300 hover:border-gray-400 focus:ring-yellow-400 !mt-0"
+                onChange={() => onChange(iValue)}
                 checked={value === iValue}
                 data-test={`radio-select-${iValue}`}
               />
+            </div>
+            <div className="ml-sm">
               <label
                 htmlFor={`radio-select-${iValue}`}
-                className="cursor-pointer ml-sm font-semibold"
+                className="cursor-pointer font-semibold"
               >
                 {title}
               </label>
-            </p>
-            <p className="text-muted pl-6">{body}</p>
+              <p className="text-muted">{body}</p>
+            </div>
           </div>
         );
       })}

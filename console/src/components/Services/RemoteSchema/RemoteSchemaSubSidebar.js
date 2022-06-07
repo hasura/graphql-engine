@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { IoGitBranch } from 'react-icons/io5';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import WarningSymbol from '../../Common/WarningSymbol/WarningSymbol';
 
 const RemoteSchemaSubSidebar = ({
@@ -46,7 +45,7 @@ const RemoteSchemaSubSidebar = ({
     if (_dataList.length === 0) {
       childList = (
         <li
-          className={styles.noChildren}
+          className={'text-md font-normal text-gray-500'}
           data-test="remote-schema-sidebar-no-schemas"
         >
           <i>No remote schemas available</i>
@@ -61,7 +60,7 @@ const RemoteSchemaSubSidebar = ({
             location.pathname.includes(`/remote-schemas/`) &&
             location.pathname.includes(`/${d.name}/`)
           ) {
-            activeTableClass = styles.activeLink;
+            activeTableClass = 'text-orange-400';
           }
 
           const inconsistentCurrentSchema = inconsistentRemoteSchemas.find(
@@ -78,11 +77,11 @@ const RemoteSchemaSubSidebar = ({
                 to={`${appPrefix}/manage/${d.name}/details`}
                 data-test={d.name}
               >
-                <IoGitBranch className={styles.tableIcon} aria-hidden="true" />
+                <IoGitBranch aria-hidden="true" size="12px" className="mr-xs" />
                 {d.name}
                 {inconsistentCurrentSchema ? (
                   <WarningSymbol
-                    customStyle={styles.padLeft4}
+                    customStyle="ml-xs"
                     tooltipText={
                       'This remote schema is in an inconsistent state. ' +
                       'Fields from this remote schema are currently not exposed over the GraphQL API'

@@ -1,8 +1,6 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import ReactTable from 'react-table';
-
-import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
 import { Event } from '../../types';
 import {
@@ -41,27 +39,27 @@ const RenderEventSubTable: React.FC<RenderSubTableProps> = ({
   rowsFormatted,
   headings,
 }) => (
-  <div className={styles.addPadding20Px}>
+  <div className="p-md">
     {event.webhook_conf && (
-      <div className={`row ${styles.add_mar_bottom_mid}`}>
-        <div className="col-md-2">
+      <div className="row mb-sm">
+        <div className="w-1/6">
           <b>Webhook:</b>
         </div>
-        <div className="col-md-4">{event.webhook_conf}</div>
+        <div className="w-1/3">{event.webhook_conf}</div>
       </div>
     )}
     {event.comment && (
-      <div className={`row ${styles.add_mar_bottom_mid}`}>
-        <div className="col-md-2">
+      <div className="row mb-xs">
+        <div className="w-1/6">
           <b>Comment:</b>
         </div>
-        <div className="col-md-4">{event.comment}</div>
+        <div className="w-4/6">{event.comment}</div>
       </div>
     )}
-    <div className={styles.add_mar_bottom_mid}>
+    <div className="mb-xs">
       <b>Recent Invocations:</b>
     </div>
-    <div className={`${styles.invocationsSection}`}>
+    <div>
       {rows.length ? (
         <ReactTable
           data={rowsFormatted}
@@ -167,8 +165,8 @@ const EventsSubTable: React.FC<Props> = ({
 
   if (loading) {
     return (
-      <div className={styles.addPadding20Px}>
-        <div className={styles.add_mar_bottom_mid}>
+      <div className="p-md">
+        <div className="pb-xs">
           <b>Recent Invocations:</b>
         </div>
         <Spinner />
@@ -194,10 +192,7 @@ const EventsSubTable: React.FC<Props> = ({
     // Insert cells corresponding to all rows
     invocationColumns.forEach(col => {
       newRow[col] = (
-        <div
-          className={styles.tableCellCenterAlignedOverflow}
-          key={`${col}-${col}-${i}`}
-        >
+        <div className="text-center overflow-hidden" key={`${col}-${col}-${i}`}>
           {sanitiseRow(col, r)}
         </div>
       );

@@ -4,7 +4,6 @@ import { GraphQLInputField } from 'graphql';
 import { getChildArguments } from './utils';
 import RSPInput from './RSPInput';
 import { ArgTreeType } from './types';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 interface ArgSelectProps {
   valueField: GraphQLInputField;
@@ -77,22 +76,16 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
       <>
         {!hideInputArgName ? (
           <>
-            <button onClick={toggleExpandMode} style={{ marginLeft: '-1em' }}>
+            <button onClick={toggleExpandMode} className="-ml-xs">
               {expanded ? '-' : '+'}
             </button>
             {!expanded && (
-              <label
-                className={`${styles.argSelect} ${styles.fw_medium}`}
-                htmlFor={k}
-              >
+              <label className="cursor-pointer font-normal" htmlFor={k}>
                 {k}:
               </label>
             )}
             {expanded && (
-              <label
-                className={`${styles.argSelect} ${styles.fw_large}`}
-                htmlFor={k}
-              >
+              <label className="cursor-poonter font-semibold" htmlFor={k}>
                 {k}:
               </label>
             )}

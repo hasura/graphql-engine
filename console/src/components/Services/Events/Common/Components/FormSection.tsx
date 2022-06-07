@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from '../../Events.scss';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
 
 interface Props extends React.ComponentProps<React.FC> {
@@ -10,18 +9,10 @@ interface Props extends React.ComponentProps<React.FC> {
 
 const FormSection: React.FC<Props> = ({ children, id, tooltip, heading }) => {
   return (
-    <div className={styles.add_mar_bottom}>
-      <h2
-        className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-      >
+    <div className="mb-md">
+      <h2 className="text-sm font-bold pb-md mb-xs">
         {heading}
-        {tooltip && (
-          <Tooltip
-            id={id}
-            message={tooltip}
-            className={styles.add_mar_left_mid}
-          />
-        )}
+        {tooltip && <Tooltip id={id} message={tooltip} className="ml-xs" />}
       </h2>
       {children}
       <hr className="my-md" />

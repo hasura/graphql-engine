@@ -2,7 +2,6 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import { useScheduledTrigger, LocalScheduledTriggerState } from '../state';
-import styles from '../ScheduledTriggers.scss';
 import Button from '../../../../Common/Button/Button';
 import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
 import {
@@ -11,7 +10,7 @@ import {
 } from '../../../../Common/utils/reactUtils';
 import { MapStateToProps } from '../../../../../types';
 import { addScheduledTrigger } from '../../ServerIO';
-import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
+import { EVENTS_SERVICE_HEADING, CRON_TRIGGER, heading } from '../../constants';
 
 interface Props extends InjectedProps {
   initState?: LocalScheduledTriggerState;
@@ -29,16 +28,14 @@ const Main: React.FC<Props> = props => {
   };
 
   return (
-    <div className={styles.add_mar_bottom}>
+    <div className="md-md">
       <Helmet
         title={getReactHelmetTitle(
           `Create ${CRON_TRIGGER}`,
           EVENTS_SERVICE_HEADING
         )}
       />
-      <div className={`${styles.heading_text} ${styles.add_mar_bottom}`}>
-        Create a cron trigger
-      </div>
+      <div className={`${heading} mb-md`}>Create a cron trigger</div>
       <CronTriggerFrom state={state} setState={setState} />
       {!readOnlyMode && (
         <Button
@@ -46,7 +43,7 @@ const Main: React.FC<Props> = props => {
           color="yellow"
           size="sm"
           disabled={state.loading.add}
-          className={`${styles.add_mar_right}`}
+          className="mr-xl"
         >
           {state.loading.add ? 'Creating...' : 'Create'}
         </Button>

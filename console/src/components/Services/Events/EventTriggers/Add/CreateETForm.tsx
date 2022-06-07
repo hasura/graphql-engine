@@ -1,6 +1,5 @@
 import React from 'react';
 import { LocalEventTriggerState } from '../state';
-import styles from '../TableCommon/EventTable.scss';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
@@ -17,6 +16,7 @@ import {
 import ColumnList from '../Common/ColumnList';
 import FormLabel from './FormLabel';
 import DebouncedDropdownInput from '../Common/DropdownWrapper';
+import { inputStyles, subHeading } from '../../constants';
 
 type CreateETFormProps = {
   state: LocalEventTriggerState;
@@ -78,7 +78,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         placeholder="trigger_name"
         required
         pattern="^[A-Za-z]+[A-Za-z0-9_\\-]*$"
-        className={`${styles.tableNameInput} form-control`}
+        className={`w-72 ${inputStyles}`}
         value={name}
         onChange={handleTriggerNameChange}
         maxLength={42}
@@ -86,7 +86,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       <hr className="my-md" />
       <FormLabel title="Database" tooltip={tooltip.triggerNameSource} />
       <select
-        className={`${styles.select} form-control ${styles.add_pad_left}`}
+        className={`${inputStyles} pl-md w-72`}
         onChange={handleDatabaseChange}
         data-test="select-source"
         value={source}
@@ -102,43 +102,45 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       </select>
       <hr className="my-md" />
       <FormLabel title="Schema/Table" tooltip={tooltip.postgresDescription} />
-      <select
-        onChange={handleSchemaChange}
-        data-test="select-schema"
-        className={`${styles.selectTrigger} form-control`}
-        value={table.schema}
-      >
-        <option value="">Select schema</option>
-        {Object.keys(databaseInfo)
-          .sort()
-          .map(s => (
-            <option value={s} key={s}>
-              {s}
-            </option>
-          ))}
-      </select>
-      <select
-        onChange={handleTableChange}
-        data-test="select-table"
-        required
-        className={`${styles.selectTrigger} form-control ${styles.add_mar_left}`}
-        value={table.name}
-      >
-        <option value="">Select table</option>
-        {databaseInfo[table.schema] &&
-          Object.keys(databaseInfo[table.schema])
+      <div className="flex">
+        <select
+          onChange={handleSchemaChange}
+          data-test="select-schema"
+          className={`${inputStyles} w-72`}
+          value={table.schema}
+        >
+          <option value="">Select schema</option>
+          {Object.keys(databaseInfo)
             .sort()
-            .map(t => {
-              return (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              );
-            })}
-      </select>
+            .map(s => (
+              <option value={s} key={s}>
+                {s}
+              </option>
+            ))}
+        </select>
+        <select
+          onChange={handleTableChange}
+          data-test="select-table"
+          required
+          className={`${inputStyles} w-72 ml-md`}
+          value={table.name}
+        >
+          <option value="">Select table</option>
+          {databaseInfo[table.schema] &&
+            Object.keys(databaseInfo[table.schema])
+              .sort()
+              .map(t => {
+                return (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                );
+              })}
+        </select>
+      </div>
       <hr className="my-md" />
-      <div className={`${styles.add_mar_bottom} ${styles.selectOperations}`}>
-        <div className={`${styles.add_mar_bottom} ${styles.selectOperations}`}>
+      <div className="mb-md">
+        <div className="mb-md cursor-pointer">
           <FormLabel
             title="Trigger Operations"
             tooltip={tooltip.operationsDescription}
@@ -152,13 +154,13 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         </div>
       </div>
       <hr className="my-md" />
-      <div className={styles.add_mar_bottom}>
+      <div className="mb-md">
         <FormLabel
           title="Webhook (HTTP/S) Handler"
           tooltip={tooltip.webhookUrlDescription}
         />
         <div>
-          <div className={styles.dropdown_wrapper}>
+          <div className="w-72">
             <DebouncedDropdownInput
               dropdownOptions={[
                 { display_text: 'URL', value: 'static' },
@@ -169,7 +171,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
               onButtonChange={handleWebhookTypeChange}
               onHandlerValChange={handleWebhookValueChange}
               required
-              bsClass={styles.dropdown_button}
+              bsClass="w-72"
               handlerVal={webhook.value}
               id="webhook-url"
               inputPlaceHolder={
@@ -189,7 +191,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       </div>
       <hr className="my-md" />
       <CollapsibleToggle
-        title={<h4 className={styles.subheading_text}>Advanced Settings</h4>}
+        title={<h4 className={subHeading}>Advanced Settings</h4>}
         testId="advanced-settings"
       >
         <div>
@@ -199,9 +201,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
               tooltip={tooltip.advancedOperationDescription}
             />
             {operations.update ? (
-              <div
-                className={`${styles.clear_fix} ${styles.listenColumnWrapper}`}
-              >
+              <div className="clear-both w-72">
                 <ColumnList
                   operationColumns={operationColumns}
                   table={table}
@@ -212,16 +212,14 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
                 />
               </div>
             ) : (
-              <div
-                className={`${styles.clear_fix} ${styles.listenColumnWrapper}`}
-              >
+              <div className="clear-both w-80">
                 <i>Applicable only if update operation is selected.</i>
               </div>
             )}
           </div>
           <hr className="my-md" />
-          <div className={styles.add_mar_top}>
-            <h4 className={styles.subheading_text}>Retry Logic</h4>
+          <div className="mt-md">
+            <h4 className={subHeading}>Retry Logic</h4>
             <RetryConfEditor
               retryConf={retryConf}
               setRetryConf={handleRetryConfChange}
@@ -229,8 +227,8 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
             />
           </div>
           <hr className="my-md" />
-          <div className={styles.add_mar_top}>
-            <h4 className={styles.subheading_text}>Headers</h4>
+          <div className="mt-md">
+            <h4 className={subHeading}>Headers</h4>
             <Headers headers={headers} setHeaders={handleHeadersChange} />
           </div>
         </div>

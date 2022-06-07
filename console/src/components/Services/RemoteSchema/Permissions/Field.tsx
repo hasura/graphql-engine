@@ -10,7 +10,6 @@ import { PermissionEditorContext } from './context';
 import { CollapsedField } from './CollapsedField';
 import { ArgSelect } from './ArgSelect';
 import { isEmpty } from '../../../Common/utils/jsUtils';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { generateTypeString, getChildArguments } from './utils';
 import Pen from './Pen';
 
@@ -114,10 +113,7 @@ export const Field: React.FC<FieldProps> = ({
 
   return (
     <>
-      <span
-        className={`${styles.padd_small_left} ${styles.fw_large}`}
-        id={i.name}
-      >
+      <span className="pl-xs font-semibold" id={i.name}>
         {i.name}
       </span>
       {(i.isInputObjectType &&
@@ -146,7 +142,7 @@ export const Field: React.FC<FieldProps> = ({
         </>
       ) : null}
       {i.return && (
-        <span className={styles.fw_large}>
+        <span className="font-semibold">
           :
           <a
             onClick={handleClick}

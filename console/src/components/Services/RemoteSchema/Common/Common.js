@@ -13,6 +13,8 @@ import {
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 import GraphQLCustomizationEdit from './GraphQLCustomization/GraphQLCustomizationEdit';
 
+import { focusYellowRing, inputStyles, subHeading } from '../constants';
+
 class Common extends React.Component {
   getPlaceHolderText(valType) {
     if (valType === 'static') {
@@ -40,8 +42,6 @@ class Common extends React.Component {
   }
 
   render() {
-    const styles = require('../RemoteSchema.scss');
-
     const {
       name,
       manualUrl,
@@ -96,19 +96,15 @@ class Common extends React.Component {
     const getTimeoutSection = () => {
       return (
         <React.Fragment>
-          <div className={styles.subheading_text}>
+          <div className={subHeading}>
             GraphQL server timeout
             <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
               <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
             </OverlayTrigger>
           </div>
-          <label
-            className={
-              styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
-            }
-          >
+          <label className="ml-0 pl-0">
             <input
-              className={'form-control'}
+              className={`${inputStyles} w-72`}
               type="text"
               placeholder="Timeout in seconds"
               value={timeoutConf}
@@ -125,20 +121,16 @@ class Common extends React.Component {
     };
 
     return (
-      <div className={styles.CommonWrapper}>
-        <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
+      <div>
+        <div className={`${subHeading} pt-md`}>
           Remote Schema name *
           <OverlayTrigger placement="right" overlay={tooltips.schema}>
             <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
           </OverlayTrigger>
         </div>
-        <label
-          className={
-            styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
-          }
-        >
+        <label className="ml-0 pl-0 w-80">
           <input
-            className={'form-control'}
+            className={inputStyles}
             type="text"
             placeholder="Name of the schema"
             value={name}
@@ -152,13 +144,13 @@ class Common extends React.Component {
           />
         </label>
         <hr className="my-md" />
-        <div className={styles.subheading_text}>
+        <div className={subHeading}>
           GraphQL server URL *
           <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
             <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
           </OverlayTrigger>
         </div>
-        <div className={styles.wd_300}>
+        <div className={'w-80'}>
           <DropdownButton
             dropdownOptions={[
               { display_text: 'URL', value: 'manualUrl' },
@@ -176,7 +168,7 @@ class Common extends React.Component {
             onButtonChange={this.toggleUrlParam.bind(this)}
             onInputChange={this.handleInputChange.bind(this)}
             required={urlRequired}
-            bsClass={styles.dropdown_button}
+            bsClass={`${inputStyles} w-80`}
             inputVal={manualUrl || envName}
             disabled={isDisabled}
             id="graphql-server-url"
@@ -193,30 +185,30 @@ class Common extends React.Component {
           Note: Specifying the server URL via an environmental variable is
           recommended if you have different URLs for multiple environments.
         </small>
-        <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
+        <div className={`${subHeading} pt-md`}>
           Headers for the remote GraphQL server
         </div>
-        <div className={styles.check_box}>
-          <label>
+        <div>
+          <label className="mb-md justify-center mr-sm">
             <input
               onChange={this.toggleForwardHeaders.bind(this)}
-              className={`${styles.display_inline} ${styles.add_mar_right} legacy-input-fix`}
+              className={`${focusYellowRing} m-0`}
               type="checkbox"
               value="forwardHeaders"
               data-test="forward-remote-schema-headers"
               checked={forwardClientHeaders}
               disabled={isDisabled}
             />
-            <span>Forward all headers from client</span>
+            <span className="ml-md">Forward all headers from client</span>
           </label>
           <OverlayTrigger
             placement="right"
             overlay={tooltips.clientHeaderForward}
           >
-            <FaQuestionCircle aria-hidden="true" />
+            <FaQuestionCircle aria-hidden="true" size={'1em'} />
           </OverlayTrigger>
         </div>
-        <div className={styles.subheading_text + ' ' + styles.font_normal}>
+        <div className={`${subHeading} font-normal`}>
           Additional headers:
           <OverlayTrigger
             placement="right"
@@ -240,17 +232,15 @@ class Common extends React.Component {
         <hr className="my-md" />
         {getTimeoutSection()}
         <hr className="my-md" />
-        <div className={styles.subheading_text}>
+        <div className={subHeading}>
           Comment
           <OverlayTrigger placement="right" overlay={tooltips.comment}>
             <FaQuestionCircle aria-hidden="true" className="mb-1 ml-xs" />
           </OverlayTrigger>
         </div>
-        <label
-          className={`${styles.inputLabel} radio-inline ${styles.padd_left_remove}`}
-        >
+        <label className="pl-0">
           <input
-            className="form-control"
+            className={`${inputStyles} w-72`}
             type="text"
             placeholder="Comment"
             value={comment}

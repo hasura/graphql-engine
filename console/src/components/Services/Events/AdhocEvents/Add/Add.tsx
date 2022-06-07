@@ -2,7 +2,6 @@ import React from 'react';
 import DateTimePicker from 'react-datetime';
 import { Moment } from 'moment';
 import { useAdhocEventAdd } from './state';
-import styles from '../../Events.scss';
 import Button from '../../../../Common/Button/Button';
 import { Dispatch } from '../../../../../types';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
@@ -11,6 +10,7 @@ import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import FormSection from '../../Common/Components/FormSection';
 import { createScheduledEvent } from '../../ServerIO';
+import { inputStyles } from '../../constants';
 
 type Props = {
   dispatch: Dispatch;
@@ -46,7 +46,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
   };
 
   return (
-    <div className={styles.add_mar_bottom}>
+    <div className="mb-md">
       <FormSection
         id="event-webhook"
         tooltip="The HTTP endpoint that must be triggered"
@@ -56,7 +56,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
           type="text"
           placeholder="http://httpbin.org/post"
           data-test="one-off-webhook"
-          className={`form-control ${styles.inputWidthLarge}`}
+          className={`${inputStyles} w-72`}
           value={webhook}
           onChange={setWebhookValue}
         />
@@ -66,12 +66,12 @@ const Add: React.FC<Props> = ({ dispatch }) => {
         tooltip="The time that this event must be delivered"
         id="event-time"
       >
-        <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
+        <div className="mb-xs flex">
           <DateTimePicker
             value={time}
             onChange={setTimeValue}
             inputProps={{
-              className: `form-control ${styles.inputWidthLarge}`,
+              className: `${inputStyles} w-72`,
             }}
           />
         </div>
@@ -89,7 +89,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
         />
       </FormSection>
       <CollapsibleToggle
-        title={<h2 className={styles.subheading_text}>Advanced</h2>}
+        title={<h2 className="text-sm font-bold pb-md mt-0 mb-0">Advanced</h2>}
         testId="event-advanced-configuration"
       >
         <FormSection
@@ -117,7 +117,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
           <input
             type="text"
             placeholder="comment"
-            className={`form-control ${styles.inputWidthLarge} ${styles.add_mar_right_mid}`}
+            className={`${inputStyles} w-72 mr-xs`}
             value={comment || ''}
             onChange={setComment}
           />

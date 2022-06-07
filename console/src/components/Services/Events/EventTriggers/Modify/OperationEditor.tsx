@@ -13,6 +13,7 @@ import {
 import { Operations } from '../Common/Operations';
 import { TableColumn } from '../../../../../dataSources/types';
 import { ColumnSelectionRadioButton } from '../Common/ColumnSelectionRadioButton';
+import { focusYellowRing } from '../../constants';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
@@ -21,7 +22,6 @@ type OperationEditorProps = {
   setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
   operationColumns: ETOperationColumn[];
   setOperationColumns: (operationColumns: ETOperationColumn[]) => void;
-  styles: Record<string, string>;
   save: (success: VoidCallback, error: VoidCallback) => void;
   isAllColumnChecked: boolean;
   handleColumnRadioButton: () => void;
@@ -30,7 +30,6 @@ type OperationEditorProps = {
 export const OperationEditor: React.FC<OperationEditorProps> = props => {
   const {
     allTableColumns,
-    styles,
     save,
     currentTrigger,
     operations,
@@ -57,19 +56,19 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
     opCols: ETOperationColumn[],
     readOnly: boolean
   ) => (
-    <div className={styles.modifyOps}>
+    <div>
       <label className="block text-gray-600 font-medium mb-sm">
         Trigger Method
       </label>
-      <div
-        className={`${styles.modifyOpsCollapsedContent} ${styles.add_mar_bottom_mid} col-md-12 ${styles.padd_remove}`}
-      >
-        <Operations
-          selectedOperations={ops}
-          setOperations={setOperations}
-          readOnly={readOnly}
-          tableName={currentTrigger.table_name}
-        />
+      <div className="flex">
+        <div className="mb-sm w-full p-0">
+          <Operations
+            selectedOperations={ops}
+            setOperations={setOperations}
+            readOnly={readOnly}
+            tableName={currentTrigger.table_name}
+          />
+        </div>
       </div>
       <div>
         <label className="block text-gray-600 font-medium mb-xs">
@@ -79,10 +78,10 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
           Trigger columns to listen to for updates.
         </p>
       </div>
-      <div className={styles.modifyOpsCollapsedContent}>
+      <div>
         {ops.update ? (
           <>
-            <div className={`col-md-12 ${styles.padd_remove} checkbox`}>
+            <div className={`w-full p-0 m-sm ${focusYellowRing}`}>
               <ColumnSelectionRadioButton
                 isAllColumnChecked={isAllColumnChecked}
                 handleColumnRadioButton={handleColumnRadioButton}
@@ -91,7 +90,7 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
             </div>
             <>
               {!isAllColumnChecked ? (
-                <div className={`col-md-12 ${styles.padd_remove}`}>
+                <div className="w-fill p-0">
                   {opCols.map(col => {
                     const toggle = () => {
                       if (!readOnly) {
@@ -107,22 +106,19 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
                     };
                     return (
                       <label
-                        className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove} ${styles.cursorPointer}`}
+                        className="m-sm float-left p-0 pointer-cursor"
                         key={col.name}
                         onChange={toggle}
                       >
                         <input
                           type="checkbox"
-                          className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer} legacy-input-fix`}
+                          className={`!mr-xs cursor-pointer ${focusYellowRing}`}
                           checked={col.enabled}
                           disabled={readOnly}
                           readOnly
                         />
                         {col.name}
-                        <small className={styles.addPaddSmall}>
-                          {' '}
-                          ({col.type})
-                        </small>
+                        <small className="p-xs"> ({col.type})</small>
                       </label>
                     );
                   })}
@@ -131,9 +127,7 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
             </>
           </>
         ) : (
-          <div
-            className={`col-md-12 ${styles.padd_remove} ${styles.modifyOpsCollapsedtitle}`}
-          >
+          <div className="w-full p-0">
             <i>Applicable only if update operation is selected.</i>
           </div>
         )}
@@ -146,13 +140,12 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
   const expanded = () => renderEditor(operations, operationColumns, false);
 
   return (
-    <div className={`${styles.container} ${styles.borderBottom}`}>
-      <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>Trigger Operations</h4>
+    <div className="w-full pb-md">
+      <div>
+        <h4 className="font-bold text-md mb-md">Trigger Operations</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}
-          styles={styles}
           property="ops"
           service="modify-trigger"
           saveFunc={save}
