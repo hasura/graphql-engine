@@ -1151,7 +1151,7 @@ instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
 
   getDatabaseUid = runInSeparateTx getDbId
-  checkMetadataStorageHealth = lift (asks fst) >>= checkDbConnection
+  checkMetadataStorageHealth = runInSeparateTx $ checkDbConnection
 
   getDeprivedCronTriggerStats = runInSeparateTx . getDeprivedCronTriggerStatsTx
   getScheduledEventsForDelivery = runInSeparateTx getScheduledEventsForDeliveryTx

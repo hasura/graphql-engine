@@ -33,7 +33,6 @@ import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Control.Monad.Validate
 import Data.Aeson
 import Data.Aeson.Extended
-import Data.Either (isRight)
 import Data.Hashable.Time ()
 import Database.PG.Query qualified as Q
 import Database.PG.Query.Connection qualified as Q
@@ -149,15 +148,10 @@ withTraceContext ctx tx = setTraceContextInTx ctx >> tx
 
 deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (Q.TxET e m)
 
-checkDbConnection :: MonadIO m => Q.PGPool -> m Bool
-checkDbConnection pool = do
-  e <- liftIO $ runExceptT $ Q.runTx' pool select1Query
-  pure $ isRight e
-  where
-    select1Query :: Q.TxE QErr Int
-    select1Query =
-      runIdentity . Q.getRow
-        <$> Q.withQE defaultTxErrorHandler [Q.sql| SELECT 1 |] () False
+checkDbConnection :: MonadTx m => m ()
+checkDbConnection = do
+  Q.Discard () <- liftTx $ Q.withQE defaultTxErrorHandler [Q.sql| SELECT 1; |] () False
+  pure ()
 
 doesSchemaExist :: MonadTx m => SchemaName -> m Bool
 doesSchemaExist schemaName =

@@ -96,7 +96,7 @@ class (MonadError QErr m) => MonadMetadataStorage m where
 
   -- get the @db_uuid@ that we store in the database.
   getDatabaseUid :: m Text
-  checkMetadataStorageHealth :: m Bool
+  checkMetadataStorageHealth :: m ()
 
   -- Scheduled triggers
   -- TODO:-
