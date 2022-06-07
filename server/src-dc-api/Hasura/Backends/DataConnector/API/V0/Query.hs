@@ -8,6 +8,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
   ( Query (..),
     Field (..),
     RelField (..),
+    RelType (..),
     ForeignKey (..),
     PrimaryKey (..),
     QueryResponse (..),
@@ -63,8 +64,17 @@ instance HasCodec Query where
 
 --------------------------------------------------------------------------------
 
+data RelType = ObjectRelationship | ArrayRelationship
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+instance HasCodec RelType where
+  codec =
+    named "RelType" $
+      disjointStringConstCodec [(ObjectRelationship, "object"), (ArrayRelationship, "array")]
+
 data RelField = RelField
   { columnMapping :: M.HashMap PrimaryKey ForeignKey,
+    relationType :: RelType,
     query :: Query
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -73,6 +83,7 @@ instance HasObjectCodec RelField where
   objectCodec =
     RelField
       <$> requiredField "column_mapping" "Mapping from local fields to remote fields" .= columnMapping
+      <*> requiredField "relation_type" "Relation Type" .= relationType
       <*> requiredField "query" "Relationship query" .= query
 
 --------------------------------------------------------------------------------

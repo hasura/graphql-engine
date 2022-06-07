@@ -141,6 +141,34 @@ data:
     - id: 5
 |]
 
+  describe "Array Relationships" $ do
+    it "joins on album id" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+query getArtist {
+  artists_by_pk(id: 1) {
+    id
+    name
+    albums {
+      title
+    }
+  }
+}
+|]
+        )
+        [yaml|
+data:
+  artists_by_pk:
+    - name: AC/DC
+      id: 1
+      albums:
+        - title: For Those About To Rck We Salute You
+        - title: Let There Be Rock
+|]
+
   describe "Object Relationships" $ do
     it "joins on artist id" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -165,7 +193,7 @@ data:
     - id: 1
       title: "For Those About To Rck We Salute You"
       artist:
-        - name: "AC/DC"
+        name: "AC/DC"
 |]
 
   describe "Where Clause Tests" $ do
