@@ -7,13 +7,10 @@ module Hasura.SQL.Tag
   )
 where
 
-import Data.GADT.Compare (GCompare (..), GEq (..), GOrdering (GEQ, GGT, GLT))
 import Hasura.Prelude
 import Hasura.SQL.Backend
 import Hasura.SQL.TH
 import Language.Haskell.TH hiding (reify)
-import Type.Reflection (type (:~:) (Refl))
-import Unsafe.Coerce (unsafeCoerce)
 
 -- | A singleton-like GADT that associates a tag to each backend.
 -- It is generated with Template Haskell for each 'Backend'. Its
@@ -81,17 +78,3 @@ reify t =
        -- no default case: every constructor should be handled
        Nothing
    )
-
--- We need those instances to be able to use a @BackendTag@ as a key in a
--- dependent map. Using @BackendType@ as a data kind, makes it difficult to use
--- @Typeable@, hence the reliance on `unsafeCoerce`.
-instance GEq BackendTag where
-  geq b1 b2
-    | reify b1 == reify b2 = unsafeCoerce $ Just Refl
-    | otherwise = Nothing
-
-instance GCompare BackendTag where
-  gcompare b1 b2 = case compare (reify b1) (reify b2) of
-    EQ -> unsafeCoerce GEQ
-    LT -> GLT
-    GT -> GGT

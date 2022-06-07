@@ -141,7 +141,7 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
               _rsCustomization = customization,
               _rsTables = tables,
               _rsFunctions = mempty,
-              _rsPgScalars = mempty
+              _rsScalars = mempty
             }
 
 -- | This is needed to get permissions to work

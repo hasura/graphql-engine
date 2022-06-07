@@ -156,7 +156,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
     functionsMeta <- fetchFunctionMetadata allFunctions
     pgScalars <- fetchPgScalars
     pure (tablesMeta, functionsMeta, pgScalars)
-  pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta pgScalars
+  pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta (ScalarSet pgScalars)
   where
     -- A helper function to list all functions underpinning computed fields from a table metadata
     getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]

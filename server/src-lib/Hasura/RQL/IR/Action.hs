@@ -57,6 +57,7 @@ import Hasura.RQL.Types.Common (EnvRecord, FieldName, Fields, ResolvedWebhook, S
 import Hasura.RQL.Types.CustomTypes
   ( AnnotatedObjectType (..),
     AnnotatedOutputType (..),
+    GraphQLType (..),
     ObjectFieldDefinition (..),
     ObjectFieldName (..),
     ObjectTypeDefinition (..),
@@ -101,7 +102,7 @@ $(makePrisms ''ActionFieldG)
 data AnnActionExecution (r :: Type) = AnnActionExecution
   { _aaeName :: !RQL.ActionName,
     -- | output type
-    _aaeOutputType :: !RQL.GraphQLType,
+    _aaeOutputType :: !GraphQLType,
     -- | output selection
     _aaeFields :: !(ActionFieldsG r),
     -- | jsonified input arguments
@@ -145,7 +146,7 @@ type AsyncActionQueryFieldsG r = Fields (AsyncActionQueryFieldG r)
 data AnnActionAsyncQuery (b :: BackendType) (r :: Type) = AnnActionAsyncQuery
   { _aaaqName :: !RQL.ActionName,
     _aaaqActionId :: !RQL.ActionId,
-    _aaaqOutputType :: !RQL.GraphQLType,
+    _aaaqOutputType :: !GraphQLType,
     _aaaqFields :: !(AsyncActionQueryFieldsG r),
     _aaaqDefinitionList :: ![(Column b, ScalarType b)],
     _aaaqStringifyNum :: !StringifyNumbers,

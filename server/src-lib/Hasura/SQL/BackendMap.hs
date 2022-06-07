@@ -2,6 +2,7 @@
 
 module Hasura.SQL.BackendMap
   ( BackendMap,
+    singleton,
     lookup,
     elems,
   )
@@ -14,8 +15,8 @@ import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text.Extended (toTxt)
-import Hasura.Prelude hiding (lookup)
-import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend'', parseAnyBackendFromJSON, unpackAnyBackend)
+import Hasura.Prelude hiding (empty, lookup)
+import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend'', mkAnyBackend, parseAnyBackendFromJSON, unpackAnyBackend)
 import Hasura.SQL.Backend (BackendType, parseBackendTypeFromText)
 import Hasura.SQL.Tag (HasTag, backendTag, reify)
 
@@ -28,6 +29,9 @@ newtype BackendMap (i :: BackendType -> Type) = BackendMap (Map BackendType (Any
 deriving newtype instance i `SatisfiesForAllBackends` Show => Show (BackendMap i)
 
 deriving newtype instance i `SatisfiesForAllBackends` Eq => Eq (BackendMap i)
+
+singleton :: forall b i. HasTag b => i b -> BackendMap i
+singleton value = BackendMap $ Map.singleton (reify $ backendTag @b) (mkAnyBackend value)
 
 -- | Get a value from the map for the particular 'BackendType' 'b'. This function
 -- is usually used with a type application.

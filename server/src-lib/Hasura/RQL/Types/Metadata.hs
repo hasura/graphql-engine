@@ -1213,10 +1213,10 @@ metadataToOrdJSON
       customTypesToOrdJSON :: CustomTypes -> AO.Value
       customTypesToOrdJSON (CustomTypes inpObjs objs scalars enums) =
         AO.object . catMaybes $
-          [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON =<< inpObjs,
-            listToMaybeOrdPair "objects" objectTypeToOrdJSON =<< objs,
-            listToMaybeOrdPair "scalars" scalarTypeToOrdJSON =<< scalars,
-            listToMaybeOrdPair "enums" enumTypeToOrdJSON =<< enums
+          [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON inpObjs,
+            listToMaybeOrdPair "objects" objectTypeToOrdJSON objs,
+            listToMaybeOrdPair "scalars" scalarTypeToOrdJSON scalars,
+            listToMaybeOrdPair "enums" enumTypeToOrdJSON enums
           ]
         where
           inputObjectToOrdJSON :: InputObjectTypeDefinition -> AO.Value
@@ -1243,7 +1243,7 @@ metadataToOrdJSON
               ]
                 <> catMaybes
                   [ maybeDescriptionToMaybeOrdPair descM,
-                    maybeAnyToMaybeOrdPair "relationships" AO.toOrdered rels
+                    listToMaybeOrdPair "relationships" AO.toOrdered rels
                   ]
             where
               fieldDefinitionToOrdJSON :: ObjectFieldDefinition GraphQLType -> AO.Value

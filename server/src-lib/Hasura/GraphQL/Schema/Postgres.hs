@@ -28,7 +28,7 @@ buildActionQueryFields customTypes actionInfo =
       fmap (fmap (RFAction . AQQuery)) <$> actionExecute customTypes actionInfo
     ActionMutation ActionSynchronous -> pure Nothing
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjects customTypes) actionInfo
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjectTypes customTypes) actionInfo
 
 buildActionMutationFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
@@ -41,7 +41,7 @@ buildActionMutationFields customTypes actionInfo =
     ActionMutation ActionSynchronous ->
       fmap (fmap (RFAction . AMSync)) <$> actionExecute customTypes actionInfo
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation (_actNonObjects customTypes) actionInfo
+      fmap (fmap (RFAction . AMAsync)) <$> actionAsyncMutation (_actInputTypes customTypes) actionInfo
 
 buildActionSubscriptionFields ::
   MonadBuildSchema ('Postgres 'Vanilla) r m n =>
@@ -53,4 +53,4 @@ buildActionSubscriptionFields customTypes actionInfo =
     ActionQuery -> pure Nothing
     ActionMutation ActionSynchronous -> pure Nothing
     ActionMutation ActionAsynchronous ->
-      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjects customTypes) actionInfo
+      fmap (fmap (RFAction . AQAsync)) <$> actionAsyncQuery (_actObjectTypes customTypes) actionInfo

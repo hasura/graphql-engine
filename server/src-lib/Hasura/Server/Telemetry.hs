@@ -208,7 +208,7 @@ computeActionsMetrics actionCache =
       length . L.nub
         . concatMap
           ( \aInfo -> map _trName $ case (snd . _aiOutputType $ aInfo) of
-              AOTObject aot -> maybe [] toList . _otdRelationships . _aotDefinition $ aot
+              AOTObject aot -> _otdRelationships . _aotDefinition $ aot
               AOTScalar _ -> []
           )
         $ actions

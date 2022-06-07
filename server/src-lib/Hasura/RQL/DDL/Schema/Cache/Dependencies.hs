@@ -23,7 +23,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
@@ -227,7 +226,7 @@ deleteMetadataObject = \case
   MORemoteSchemaRemoteRelationship remoteSchema typeName relationshipName ->
     boRemoteSchemas . ix remoteSchema . _1 . rscRemoteRelationships . ix typeName %~ OMap.delete relationshipName
   MOCronTrigger name -> boCronTriggers %~ M.delete name
-  MOCustomTypes -> boCustomTypes %~ const emptyAnnotatedCustomTypes
+  MOCustomTypes -> boCustomTypes %~ const mempty
   MOAction name -> boActions %~ M.delete name
   MOEndpoint name -> boEndpoints %~ M.delete name
   MOActionPermission name role -> boActions . ix name . aiPermissions %~ M.delete role

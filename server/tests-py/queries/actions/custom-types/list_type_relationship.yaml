@@ -4,7 +4,7 @@ status: 400
 response:
   internal:
     - definition:
-        input_objects:
+        input_objects: []
         objects:
           - name: User
             relationships:
@@ -26,8 +26,8 @@ response:
                 name: names
                 type: "[String!]"
                 description:
-        scalars:
-        enums:
+        scalars: []
+        enums: []
       reason:
         'Inconsistent object: validation for the given custom types failed because
         the type of the field "names" for relationship "Names" in object type "User"
