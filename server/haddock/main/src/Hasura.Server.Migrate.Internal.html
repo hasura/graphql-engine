@@ -25,8 +25,8 @@
 </span><span id="line-25"></span><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-type">getCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxE</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span>
 </span><span id="line-26"></span><span id="getCatalogVersion"><span class="annot"><span class="annottext">getCatalogVersion :: TxE QErr Float
 </span><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-var hs-var">getCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-27"></span><span>  </span><span id="local-6989586621689000021"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689000021"><span class="hs-identifier hs-var">versionText</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621689002822"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689002822"><span class="hs-identifier hs-var">versionText</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">Identity Text -&gt; Text
 forall a. Identity a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity Text -&gt; Text)
@@ -62,12 +62,12 @@ forall a. Read a =&gt; String -&gt; Either String a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689000021"><span class="hs-identifier hs-var">versionText</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((String -&gt; TxE QErr Float) -&gt; TxE QErr Float)
+</span><a href="#local-6989586621689002822"><span class="hs-identifier hs-var">versionText</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((String -&gt; TxE QErr Float) -&gt; TxE QErr Float)
 -&gt; (String -&gt; TxE QErr Float) -&gt; TxE QErr Float
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-35"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621689000011"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689000011"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr Float
+</span><span id="line-35"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621689002812"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689002812"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr Float
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TxE QErr Float) -&gt; Text -&gt; TxE QErr Float
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -75,7 +75,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Unexpected: couldn't convert &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689000021"><span class="hs-identifier hs-var">versionText</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689002822"><span class="hs-identifier hs-var">versionText</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; to float, err:&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -83,9 +83,9 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689000011"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621689002812"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#from3To4"><span class="hs-identifier hs-type">from3To4</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689000008"><span class="annot"><a href="#local-6989586621689000008"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689000008"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689000008"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#from3To4"><span class="hs-identifier hs-type">from3To4</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689002809"><span class="annot"><a href="#local-6989586621689002809"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689002809"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689002809"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span id="from3To4"><span class="annot"><span class="annottext">from3To4 :: m ()
 </span><a href="Hasura.Server.Migrate.Internal.html#from3To4"><span class="hs-identifier hs-var hs-var">from3To4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
@@ -112,8 +112,8 @@ Query -&gt; r -&gt; Bool -&gt; TxT m ()
 </span><span id="line-44"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621689000004"><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621689000004"><span class="hs-identifier hs-var">eventTriggers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621689002805"><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
+</span><a href="#local-6989586621689002805"><span class="hs-identifier hs-var">eventTriggers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">((TriggerName, AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
   InputWebhook, Int, Int, AltJ (Maybe [HeaderConf]))
  -&gt; EventTriggerConf ('Postgres 'Vanilla))
@@ -124,7 +124,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(TriggerName, AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
  InputWebhook, Int, Int, AltJ (Maybe [HeaderConf]))
 -&gt; EventTriggerConf ('Postgres 'Vanilla)
-</span><a href="#local-6989586621689000003"><span class="hs-identifier hs-var">uncurryEventTrigger</span></a></span><span>
+</span><a href="#local-6989586621689002804"><span class="hs-identifier hs-var">uncurryEventTrigger</span></a></span><span>
 </span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">([(TriggerName, AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
    InputWebhook, Int, Int, AltJ (Maybe [HeaderConf]))]
  -&gt; [EventTriggerConf ('Postgres 'Vanilla)])
@@ -160,11 +160,11 @@ forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
 </span><span class="hs-identifier hs-var">forM_</span></span><span> </span><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621689000004"><span class="hs-identifier hs-var">eventTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf ('Postgres 'Vanilla) -&gt; TxET PGTxErr IO ()
+</span><a href="#local-6989586621689002805"><span class="hs-identifier hs-var">eventTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf ('Postgres 'Vanilla) -&gt; TxET PGTxErr IO ()
 forall (m :: * -&gt; *) (b :: BackendType).
 (MonadIO m, Backend b) =&gt;
 EventTriggerConf b -&gt; TxT m ()
-</span><a href="#local-6989586621689000000"><span class="hs-identifier hs-var">updateEventTrigger3To4</span></a></span><span>
+</span><a href="#local-6989586621689002801"><span class="hs-identifier hs-var">updateEventTrigger3To4</span></a></span><span>
 </span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">Query -&gt; () -&gt; Bool -&gt; TxET PGTxErr IO ()
 forall (m :: * -&gt; *) r.
 (MonadIO m, ToPrepArgs r) =&gt;
@@ -183,7 +183,7 @@ Query -&gt; r -&gt; Bool -&gt; TxT m ()
 </span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>    </span><span class="annot"><a href="#local-6989586621689000003"><span class="hs-identifier hs-type">uncurryEventTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><a href="#local-6989586621689002804"><span class="hs-identifier hs-type">uncurryEventTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-69"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-70"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier hs-type">InputWebhook</span></a></span><span class="hs-special">,</span><span>
@@ -192,16 +192,16 @@ Query -&gt; r -&gt; Bool -&gt; TxT m ()
 </span><span id="line-74"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>      </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>    </span><span id="local-6989586621689000003"><span class="annot"><span class="annottext">uncurryEventTrigger :: (TriggerName, AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621689002804"><span class="annot"><span class="annottext">uncurryEventTrigger :: (TriggerName, AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
  InputWebhook, Int, Int, AltJ (Maybe [HeaderConf]))
 -&gt; EventTriggerConf ('Postgres 'Vanilla)
-</span><a href="#local-6989586621689000003"><span class="hs-identifier hs-var hs-var">uncurryEventTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621688999999"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621688999999"><span class="hs-identifier hs-var">trn</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621688999997"><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688999997"><span class="hs-identifier hs-var">tDef</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688999996"><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621688999996"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688999995"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688999995"><span class="hs-identifier hs-var">nr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621688999994"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688999994"><span class="hs-identifier hs-var">rint</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621688999993"><span class="annot"><span class="annottext">Maybe [HeaderConf]
-</span><a href="#local-6989586621688999993"><span class="hs-identifier hs-var">headers</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689002804"><span class="hs-identifier hs-var hs-var">uncurryEventTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689002800"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689002800"><span class="hs-identifier hs-var">trn</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689002798"><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
+</span><a href="#local-6989586621689002798"><span class="hs-identifier hs-var">tDef</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689002797"><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621689002797"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689002796"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689002796"><span class="hs-identifier hs-var">nr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689002795"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689002795"><span class="hs-identifier hs-var">rint</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689002794"><span class="annot"><span class="annottext">Maybe [HeaderConf]
+</span><a href="#local-6989586621689002794"><span class="hs-identifier hs-var">headers</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">TriggerName
 -&gt; TriggerOpsDef ('Postgres 'Vanilla)
 -&gt; Maybe InputWebhook
@@ -222,27 +222,27 @@ TriggerName
 -&gt; Maybe MetadataResponseTransform
 -&gt; EventTriggerConf b
 </span><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-var">EventTriggerConf</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621688999999"><span class="hs-identifier hs-var">trn</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
-</span><a href="#local-6989586621688999997"><span class="hs-identifier hs-var">tDef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InputWebhook -&gt; Maybe InputWebhook
+</span><a href="#local-6989586621689002800"><span class="hs-identifier hs-var">trn</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
+</span><a href="#local-6989586621689002798"><span class="hs-identifier hs-var">tDef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InputWebhook -&gt; Maybe InputWebhook
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621688999996"><span class="hs-identifier hs-var">w</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689002797"><span class="hs-identifier hs-var">w</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Maybe Int -&gt; RetryConf
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-var">RetryConf</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688999995"><span class="hs-identifier hs-var">nr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621688999994"><span class="hs-identifier hs-var">rint</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689002796"><span class="hs-identifier hs-var">nr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689002795"><span class="hs-identifier hs-var">rint</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [HeaderConf]
-</span><a href="#local-6989586621688999993"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RequestTransform
+</span><a href="#local-6989586621689002794"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RequestTransform
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-79"></span><span>    </span><span id="local-6989586621689000000"><span class="annot"><span class="annottext">updateEventTrigger3To4 :: EventTriggerConf b -&gt; TxT m ()
-</span><a href="#local-6989586621689000000"><span class="hs-identifier hs-var hs-var">updateEventTrigger3To4</span></a></span></span><span> </span><span id="local-6989586621688999990"><span class="annot"><span class="annottext">etc :: EventTriggerConf b
-</span><a href="#local-6989586621688999990"><span class="hs-identifier hs-var">etc</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span id="local-6989586621688999989"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621688999989"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef b
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621689002801"><span class="annot"><span class="annottext">updateEventTrigger3To4 :: EventTriggerConf b -&gt; TxT m ()
+</span><a href="#local-6989586621689002801"><span class="hs-identifier hs-var hs-var">updateEventTrigger3To4</span></a></span></span><span> </span><span id="local-6989586621689002791"><span class="annot"><span class="annottext">etc :: EventTriggerConf b
+</span><a href="#local-6989586621689002791"><span class="hs-identifier hs-var">etc</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span id="local-6989586621689002790"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689002790"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe InputWebhook
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">RetryConf
@@ -268,16 +268,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf b -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf b
-</span><a href="#local-6989586621688999990"><span class="hs-identifier hs-var">etc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621688999989"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689002791"><span class="hs-identifier hs-var">etc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621689002790"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span id="local-6989586621688999987"><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-type">setCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621688999987"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621688999987"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-90"></span><span id="local-6989586621689002788"><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-type">setCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689002788"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689002788"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-91"></span><span id="setCatalogVersion"><span class="annot"><span class="annottext">setCatalogVersion :: Text -&gt; UTCTime -&gt; m ()
-</span><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-var hs-var">setCatalogVersion</span></a></span></span><span> </span><span id="local-6989586621688999986"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688999986"><span class="hs-identifier hs-var">ver</span></a></span></span><span> </span><span id="local-6989586621688999985"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621688999985"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-var hs-var">setCatalogVersion</span></a></span></span><span> </span><span id="local-6989586621689002787"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689002787"><span class="hs-identifier hs-var">ver</span></a></span></span><span> </span><span id="local-6989586621689002786"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621689002786"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr () -&gt; m ()) -&gt; TxE QErr () -&gt; m ()
@@ -297,8 +297,8 @@ forall (m :: * -&gt; *) r e.
     DO UPDATE SET version = $1, upgraded_on = $2
   |]</span></span><span>
 </span><span id="line-100"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621688999986"><span class="hs-identifier hs-var">ver</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621688999985"><span class="hs-identifier hs-var">time</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689002787"><span class="hs-identifier hs-var">ver</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621689002786"><span class="hs-identifier hs-var">time</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-102"></span></pre></body></html>
