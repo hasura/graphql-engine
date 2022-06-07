@@ -1123,6 +1123,7 @@ test-suite tests-hspec
     Harness.Test.BackendType
     Harness.Test.Context
     Harness.Test.Schema
+    Harness.Test.Permissions
 
  -- Harness.Quoter
     Harness.Quoter.Graphql
@@ -1135,13 +1136,14 @@ test-suite tests-hspec
     Test.BackendOnlyPermissionsSpec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
-    Test.DirectivesSpec
     Test.DC.QuerySpec
+    Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
     Test.InsertEnumColumnSpec
+    Test.InsertOnConflictSpec
     Test.LimitOffsetSpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec

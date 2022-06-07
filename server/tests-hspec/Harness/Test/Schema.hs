@@ -3,6 +3,7 @@
 -- | Common interface for setup/teardown for all backends - schema and data
 module Harness.Test.Schema
   ( Table (..),
+    table,
     Reference (..),
     Column (..),
     ScalarType (..),
@@ -60,6 +61,11 @@ data Table = Table
     tableData :: [[ScalarValue]]
   }
   deriving (Show, Eq)
+
+-- | Create a table from just a name.
+-- Use record updates to modify the result.
+table :: Text -> Table
+table tableName = Table tableName [] [] [] []
 
 -- | Foreign keys for backends that support it.
 data Reference = Reference
