@@ -57,6 +57,7 @@ import Control.Monad.STM (atomically)
 import Control.Monad.Stateless
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
+import Control.Retry qualified as Retry
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
 import Data.ByteString.Lazy.Char8 qualified as BLC
@@ -806,10 +807,15 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
 
   pure app
   where
+    isRetryRequired _ resp = do
+      return $ case resp of
+        Right _ -> False
+        Left err -> qeCode err == ConcurrentUpdate
+
     prepareScheduledEvents (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "scheduled_triggers" "preparing data"
-      res <- runMetadataStorageT unlockAllLockedScheduledEvents
-      onLeft res $ throwErrJExit EventSubSystemError
+      res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ runMetadataStorageT unlockAllLockedScheduledEvents)
+      onLeft res (\err -> logger $ mkGenericStrLog LevelError "scheduled_triggers" (show $ qeError err))
 
     getProcessingScheduledEventsCount :: LockedEventsCtx -> IO Int
     getProcessingScheduledEventsCount LockedEventsCtx {..} = do
@@ -831,7 +837,8 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           let sourceNameString = T.unpack $ sourceNameToText sourceName
           logger $ mkGenericStrLog LevelInfo "event_triggers" $ "unlocking events of source: " ++ sourceNameString
           onJust (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
-            unlockEventsInSource @b sourceConfig sourceLockedEvents >>= \case
+            res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b sourceConfig sourceLockedEvents)
+            case res of
               Left err ->
                 logger $
                   mkGenericStrLog LevelWarn "event_trigger" $
