@@ -24,33 +24,25 @@ module Hasura.GraphQL.Schema.Select
     tablePermissionsInfo,
     tableSelectionSet,
     tableSelectionList,
-    nodePG,
-    nodeField,
   )
 where
 
 import Control.Lens hiding (index)
 import Data.Aeson qualified as J
-import Data.Aeson.Extended qualified as J
 import Data.Aeson.Internal qualified as J
-import Data.Align (align)
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
-import Data.Parser.JSONPath
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
-import Data.Text qualified as T
 import Data.Text.Extended
-import Data.These (partitionThese)
 import Data.Traversable (mapAccumL)
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
 import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Base.Error
-import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -80,7 +72,6 @@ import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.Server.Utils (executeJSONPath)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -365,7 +356,13 @@ tableSelectionSet ::
   m (Maybe (Parser 'Output n (AnnotatedFields b)))
 tableSelectionSet sourceInfo tableInfo = runMaybeT do
   _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
-  lift $ memoizeOn 'tableSelectionSet (_siName sourceInfo, tableName) do
+  schemaKind <- lift $ retrieve scSchemaKind
+  -- If this check fails, it means we're attempting to build a Relay schema, but
+  -- the current backend b does't support Relay; rather than returning an
+  -- incomplete selection set, we fail early and return 'Nothing'. This check
+  -- must happen first, since we can't memoize a @Maybe Parser@.
+  guard $ isHasuraSchema schemaKind || isJust (relayExtension @b)
+  lift $ memoizeOn 'tableSelectionSet (sourceName, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectTypename <- P.mkTypename tableGQLName
     let xRelay = relayExtension @b
@@ -376,7 +373,7 @@ tableSelectionSet sourceInfo tableInfo = runMaybeT do
       concat
         <$> for
           tableFields
-          (fieldSelection sourceInfo tableName tableInfo tablePkeyColumns)
+          (fieldSelection sourceInfo tableName tableInfo)
 
     -- We don't check *here* that the subselection set is non-empty,
     -- even though the GraphQL specification requires that it is (see
@@ -386,14 +383,13 @@ tableSelectionSet sourceInfo tableInfo = runMaybeT do
     -- required, meaning that not having this check here does not allow
     -- for the construction of invalid queries.
 
-    queryType <- retrieve soQueryType
-    case (queryType, tablePkeyColumns, xRelay) of
+    case (schemaKind, tablePkeyColumns, xRelay) of
       -- A relay table
-      (ET.QueryRelay, Just pkeyColumns, Just xRelayInfo) -> do
+      (RelaySchema nodeBuilder, Just pkeyColumns, Just xRelayInfo) -> do
         let nodeIdFieldParser =
-              P.selection_ G._id Nothing P.identifier $> IR.AFNodeId xRelayInfo tableName pkeyColumns
+              P.selection_ G._id Nothing P.identifier $> IR.AFNodeId xRelayInfo sourceName tableName pkeyColumns
             allFieldParsers = fieldParsers <> [nodeIdFieldParser]
-        nodeInterface <- node @b
+        nodeInterface <- runNodeBuilder nodeBuilder
         pure $
           P.selectionSetObject objectTypename description allFieldParsers [nodeInterface]
             <&> parsedSelectionsToFields IR.AFExpression
@@ -402,6 +398,7 @@ tableSelectionSet sourceInfo tableInfo = runMaybeT do
           P.selectionSetObject objectTypename description fieldParsers []
             <&> parsedSelectionsToFields IR.AFExpression
   where
+    sourceName = _siName sourceInfo
     tableName = tableInfoName tableInfo
     tableCoreInfo = _tiCoreInfo tableInfo
 
@@ -1060,61 +1057,56 @@ fieldSelection ::
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
-  Maybe (PrimaryKeyColumns b) ->
   FieldInfo b ->
   m [FieldParser n (AnnotatedField b)]
-fieldSelection sourceInfo table tableInfo maybePkeyColumns = \case
+fieldSelection sourceInfo table tableInfo = \case
   FIColumn columnInfo ->
     maybeToList <$> runMaybeT do
-      queryType <- retrieve soQueryType
+      schemaKind <- retrieve scSchemaKind
       let fieldName = ciName columnInfo
-      if fieldName == G._id && queryType == ET.QueryRelay
-        then do
-          xRelayInfo <- hoistMaybe $ relayExtension @b
-          pkeyColumns <- hoistMaybe maybePkeyColumns
-          pure $
-            P.selection_ fieldName Nothing P.identifier
-              $> IR.AFNodeId xRelayInfo table pkeyColumns
-        else do
-          let columnName = ciColumn columnInfo
-          selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
-          guard $ columnName `Map.member` spiCols selectPermissions
-          let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
-              caseBoolExpUnpreparedValue =
-                (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
-              pathArg = scalarSelectionArgumentsParser $ ciType columnInfo
-              -- In an inherited role, when a column is part of all the select
-              -- permissions which make up the inherited role then the nullability
-              -- of the field is determined by the nullability of the DB column
-              -- otherwise it is marked as nullable explicitly, ignoring the column's
-              -- nullability. We do this because
-              -- in multiple roles we execute an SQL query like:
-              --
-              --  select
-              --    (case when (P1 or P2) then addr else null end) as addr,
-              --    (case when P2 then phone else null end) as phone
-              -- from employee
-              -- where (P1 or P2)
-              --
-              -- In the above example, P(n) is a predicate configured for a role
-              --
-              -- NOTE: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/FGALanguageICDE07.pdf
-              -- The above is the paper which talks about the idea of cell-level
-              -- authorization and multiple roles. The paper says that we should only
-              -- allow the case analysis only on nullable columns.
-              nullability = ciIsNullable columnInfo || isJust caseBoolExp
-          field <- lift $ columnParser (ciType columnInfo) (G.Nullability nullability)
-          pure $
-            P.selection fieldName (ciDescription columnInfo) pathArg field
-              <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
+      -- If the field name is 'id' and we're building a schema for the Relay
+      -- API, Node's id field will take precedence; consequently we simply
+      -- ignore the original.
+      guard $ isHasuraSchema schemaKind || fieldName /= G._id
+      let columnName = ciColumn columnInfo
+      selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+      guard $ columnName `Map.member` spiCols selectPermissions
+      let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
+          caseBoolExpUnpreparedValue =
+            (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
+          pathArg = scalarSelectionArgumentsParser $ ciType columnInfo
+          -- In an inherited role, when a column is part of all the select
+          -- permissions which make up the inherited role then the nullability
+          -- of the field is determined by the nullability of the DB column
+          -- otherwise it is marked as nullable explicitly, ignoring the column's
+          -- nullability. We do this because
+          -- in multiple roles we execute an SQL query like:
+          --
+          --  select
+          --    (case when (P1 or P2) then addr else null end) as addr,
+          --    (case when P2 then phone else null end) as phone
+          -- from employee
+          -- where (P1 or P2)
+          --
+          -- In the above example, P(n) is a predicate configured for a role
+          --
+          -- NOTE: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/FGALanguageICDE07.pdf
+          -- The above is the paper which talks about the idea of cell-level
+          -- authorization and multiple roles. The paper says that we should only
+          -- allow the case analysis only on nullable columns.
+          nullability = ciIsNullable columnInfo || isJust caseBoolExp
+      field <- lift $ columnParser (ciType columnInfo) (G.Nullability nullability)
+      pure $
+        P.selection fieldName (ciDescription columnInfo) pathArg field
+          <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
   FIRelationship relationshipInfo ->
     concat . maybeToList <$> relationshipField sourceInfo table relationshipInfo
   FIComputedField computedFieldInfo ->
     maybeToList <$> computedField sourceInfo computedFieldInfo table tableInfo
   FIRemoteRelationship remoteFieldInfo -> do
-    queryType <- retrieve soQueryType
-    case (queryType, _rfiRHS remoteFieldInfo) of
-      (ET.QueryRelay, RFISchema _) ->
+    schemaKind <- retrieve scSchemaKind
+    case (schemaKind, _rfiRHS remoteFieldInfo) of
+      (RelaySchema _, RFISchema _) ->
         -- Remote schemas aren't currently supported in Relay, and we therefore
         -- cannot include remote relationships to them while building a
         -- Relay-specific schema: attempting to do so would raise an error, as
@@ -1321,8 +1313,7 @@ relationshipField sourceInfo table ri = runMaybeT do
       remoteAggField <- lift $ selectTableAggregate sourceInfo otherTableInfo relAggFieldName relAggDesc
       remoteConnectionField <- runMaybeT $ do
         -- Parse array connection field only for relay schema
-        queryType <- retrieve soQueryType
-        guard $ queryType == ET.QueryRelay
+        RelaySchema _ <- retrieve scSchemaKind
         _xRelayInfo <- hoistMaybe $ relayExtension @b
         pkeyColumns <-
           MaybeT $
@@ -1583,185 +1574,3 @@ tablePermissionsInfo selectPermissions =
     { IR._tpFilter = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions,
       IR._tpLimit = spiLimit selectPermissions
     }
-
------------------------- Node interface from Relay ---------------------------
-
-{- Note [Relay Node Id]
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The 'Node' interface in Relay schema has exactly one field which returns
-a non-null 'ID' value. Each table object type in Relay schema should implement
-'Node' interface to provide global object identification.
-See https://relay.dev/graphql/objectidentification.htm for more details.
-
-To identify each row in a table, we need to encode the table information
-(schema and name) and primary key column values in the 'Node' id.
-
-Node id data:
--------------
-We are using JSON format for encoding and decoding the node id. The JSON
-schema looks like following
-
-'[<version-integer>, "<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]'
-
-It is represented in the type @'NodeId'. The 'version-integer' represents the JSON
-schema version to enable any backward compatibility if it is broken in upcoming versions.
-
-The stringified JSON is Base64 encoded and sent to client. Also the same
-base64 encoded JSON string is accepted for 'node' field resolver's 'id' input.
--}
-
-data V1NodeId = V1NodeId
-  { _nidTable :: !(TableName ('Postgres 'Vanilla)),
-    _nidColumns :: !(NESeq.NESeq J.Value)
-  }
-  deriving (Show, Eq)
-
--- | The Relay 'Node' inteface's 'id' field value.
--- See Note [Relay Node id].
-data NodeId
-  = NodeIdV1 !V1NodeId
-  deriving (Show, Eq)
-
-instance J.FromJSON NodeId where
-  parseJSON v = do
-    valueList <- J.parseJSON v
-    case valueList of
-      [] -> fail "unexpected GUID format, found empty list"
-      J.Number 1 : rest -> NodeIdV1 <$> parseNodeIdV1 rest
-      J.Number n : _ -> fail $ "unsupported GUID version: " <> show n
-      _ -> fail "unexpected GUID format, needs to start with a version number"
-    where
-      parseNodeIdV1 (schemaValue : (nameValue : (firstColumn : remainingColumns))) =
-        V1NodeId
-          <$> (PG.QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
-          <*> pure (firstColumn NESeq.:<|| Seq.fromList remainingColumns)
-      parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
-
-throwInvalidNodeId :: MonadParse n => Text -> n a
-throwInvalidNodeId t = parseError $ "the node id is invalid: " <> t
-
--- | The 'node' root field of a Relay request.
-nodePG ::
-  forall m n r.
-  MonadBuildSchema ('Postgres 'Vanilla) r m n =>
-  m
-    ( P.Parser
-        'Output
-        n
-        ( HashMap
-            (TableName ('Postgres 'Vanilla))
-            ( SourceName,
-              SourceConfig ('Postgres 'Vanilla),
-              SelPermInfo ('Postgres 'Vanilla),
-              PrimaryKeyColumns ('Postgres 'Vanilla),
-              AnnotatedFields ('Postgres 'Vanilla)
-            )
-        )
-    )
-nodePG = memoizeOn 'nodePG () do
-  let idDescription = G.Description "A globally unique identifier"
-      idField = P.selection_ G._id (Just idDescription) P.identifier
-      nodeInterfaceDescription = G.Description "An object with globally unique ID"
-  sources <- retrieve scSourceCache
-  tCase <- asks getter
-  tables <-
-    Map.fromList . catMaybes <$> sequence do
-      (sourceName, sourceInfo) <- Map.toList sources
-      pgInfo <- maybeToList $ AB.unpackAnyBackend @('Postgres 'Vanilla) sourceInfo
-      tableName <- Map.keys $ takeValidTables $ _siTables pgInfo
-      pure $ runMaybeT do
-        tableInfo <- lift $ askTableInfo pgInfo tableName
-        tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
-        selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
-        annotatedFieldsParser <-
-          MaybeT $
-            P.withTypenameCustomization
-              (mkCustomizedTypename (_scTypeNames $ _siCustomization pgInfo) tCase)
-              (tableSelectionSet pgInfo tableInfo)
-        pure
-          ( tableName,
-            (sourceName,_siConfiguration pgInfo,selectPermissions,tablePkeyColumns,)
-              <$> annotatedFieldsParser
-          )
-  pure $
-    P.selectionSetInterface
-      G._Node
-      (Just nodeInterfaceDescription)
-      [idField]
-      tables
-
-nodeField ::
-  forall m n r.
-  MonadBuildSchema ('Postgres 'Vanilla) r m n =>
-  m (P.FieldParser n (IR.QueryRootField IR.UnpreparedValue))
-nodeField = do
-  let idDescription = G.Description "A globally unique id"
-      idArgument = P.field G._id (Just idDescription) P.identifier
-  stringifyNum <- retrieve soStringifyNum
-  nodeObject <- node
-  return $
-    P.subselection G._node Nothing idArgument nodeObject
-      `P.bindField` \(ident, parseds) -> do
-        NodeIdV1 (V1NodeId table columnValues) <- parseNodeId ident
-        (source, sourceConfig, perms, pkeyColumns, fields) <-
-          onNothing (Map.lookup table parseds) $
-            withArgsPath $ throwInvalidNodeId $ "the table " <>> ident
-        whereExp <- buildNodeIdBoolExp columnValues pkeyColumns
-        return $
-          IR.RFDB source $
-            AB.mkAnyBackend $
-              IR.SourceConfigWith sourceConfig Nothing $
-                IR.QDBR $
-                  IR.QDBSingleRow $
-                    IR.AnnSelectG
-                      { IR._asnFields = fields,
-                        IR._asnFrom = IR.FromTable table,
-                        IR._asnPerm = tablePermissionsInfo perms,
-                        IR._asnArgs =
-                          IR.SelectArgs
-                            { IR._saWhere = Just whereExp,
-                              IR._saOrderBy = Nothing,
-                              IR._saLimit = Nothing,
-                              IR._saOffset = Nothing,
-                              IR._saDistinct = Nothing
-                            },
-                        IR._asnStrfyNum = stringifyNum
-                      }
-  where
-    parseNodeId :: Text -> n NodeId
-    parseNodeId =
-      either (withArgsPath . throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
-    withArgsPath = withPath (++ [Key "args", Key "id"])
-
-    buildNodeIdBoolExp ::
-      NESeq.NESeq J.Value ->
-      NESeq.NESeq (ColumnInfo ('Postgres 'Vanilla)) ->
-      n (IR.AnnBoolExp ('Postgres 'Vanilla) (IR.UnpreparedValue ('Postgres 'Vanilla)))
-    buildNodeIdBoolExp columnValues pkeyColumns = do
-      let firstPkColumn NESeq.:<|| remainingPkColumns = pkeyColumns
-          firstColumnValue NESeq.:<|| remainingColumns = columnValues
-          (nonAlignedPkColumns, nonAlignedColumnValues, alignedTuples) =
-            partitionThese $ toList $ align remainingPkColumns remainingColumns
-
-      unless (null nonAlignedPkColumns) $
-        throwInvalidNodeId $
-          "primary key columns " <> dquoteList (map ciColumn nonAlignedPkColumns) <> " are missing"
-
-      unless (null nonAlignedColumnValues) $
-        throwInvalidNodeId $
-          "unexpected column values " <> J.encodeToStrictText nonAlignedColumnValues
-
-      let allTuples = (firstPkColumn, firstColumnValue) : alignedTuples
-
-      flip onLeft (parseErrorWith ParseFailed . qeError) $
-        runExcept $
-          fmap IR.BoolAnd $
-            for allTuples $ \(columnInfo, columnValue) -> do
-              let modifyErrFn t =
-                    "value of column " <> ciColumn columnInfo
-                      <<> " in node id: " <> t
-                  pgColumnType = ciType columnInfo
-              pgValue <- modifyErr modifyErrFn $ parseScalarValueColumnType pgColumnType columnValue
-              let unpreparedValue = IR.UVParameter Nothing $ ColumnValue pgColumnType pgValue
-              pure $ IR.BoolFld $ IR.AVColumn columnInfo [IR.AEQ True unpreparedValue]

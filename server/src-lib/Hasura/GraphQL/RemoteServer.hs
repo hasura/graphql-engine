@@ -20,7 +20,6 @@ import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
-import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Monad (ParseT, runSchemaT)
 import Hasura.GraphQL.Schema.Common
@@ -127,7 +126,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
             -- we don't support remote schemas in Relay, but the check is
             -- performed ahead of time, meaning that the value here is
             -- irrelevant
-            soQueryType = QueryHasura,
             -- doesn't apply to remote schemas
             soFunctionPermsContext = FunctionPermissionsInferred,
             -- we default to no permissions
@@ -136,6 +134,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
             soOptimizePermissionFilters = False
           },
         SchemaContext
+          HasuraSchema
           mempty
           ignoreRemoteRelationship
       )

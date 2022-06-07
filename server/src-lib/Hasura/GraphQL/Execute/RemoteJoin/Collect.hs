@@ -285,8 +285,8 @@ transformAnnFields fields = do
   annotatedFields <-
     fields & traverseFields \case
       -- AnnFields which do not need to be transformed.
-      AFNodeId x qt pkeys ->
-        pure (AFNodeId x qt pkeys, Nothing)
+      AFNodeId x sn qt pkeys ->
+        pure (AFNodeId x sn qt pkeys, Nothing)
       AFColumn c ->
         pure (AFColumn c, Nothing)
       AFExpression t ->

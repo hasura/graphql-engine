@@ -67,8 +67,6 @@ instance BackendSchema 'DataConnector where
     error "aggregateOrderByCountType: not implemented for the Data Connector backend."
   computedField =
     error "computedField: not implemented for the Data Connector backend."
-  node =
-    error "node: not implemented for the Data Connector backend."
 
 --------------------------------------------------------------------------------
 

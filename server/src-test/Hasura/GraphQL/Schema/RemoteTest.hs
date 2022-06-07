@@ -124,6 +124,7 @@ buildQueryParsers introspection = do
           HasuraCase :: NamingCase,
           undefined :: SchemaOptions,
           SchemaContext
+            HasuraSchema
             mempty
             ignoreRemoteRelationship
         )

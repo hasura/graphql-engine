@@ -36,7 +36,6 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source (SourceInfo)
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
-import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -71,7 +70,6 @@ instance BackendSchema 'BigQuery where
   countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
-  node = bqNode
 
 ----------------------------------------------------------------
 -- Top level parsers
@@ -509,24 +507,3 @@ bqRemoteRelationshipField ::
   m (Maybe [FieldParser n (AnnotatedField 'BigQuery)])
 bqRemoteRelationshipField _remoteFieldInfo = pure Nothing
 -}
-
--- | The 'node' root field of a Relay request. Relay is currently unsupported on BigQuery,
--- meaning this parser will never be called: any attempt to create this parser should
--- therefore fail.
-bqNode ::
-  MonadBuildSchema 'BigQuery r m n =>
-  m
-    ( Parser
-        'Output
-        n
-        ( HashMap
-            (TableName 'BigQuery)
-            ( SourceName,
-              SourceConfig 'BigQuery,
-              SelPermInfo 'BigQuery,
-              PrimaryKeyColumns 'BigQuery,
-              AnnotatedFields 'BigQuery
-            )
-        )
-    )
-bqNode = throw500 "BigQuery does not support relay; `node` should never be exposed in the schema."

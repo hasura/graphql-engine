@@ -57,11 +57,10 @@ import Hasura.RQL.IR.Update qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function (FunctionInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table (RolePermInfo (..), SelPermInfo, TableInfo, UpdPermInfo)
+import Hasura.RQL.Types.Table (RolePermInfo (..), TableInfo, UpdPermInfo)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -97,35 +96,16 @@ class PostgresSchema (pgKind :: PostgresKind) where
     m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
   pgkRelayExtension ::
     Maybe (XRelay ('Postgres pgKind))
-  pgkNode ::
-    BS.MonadBuildSchema ('Postgres pgKind) r m n =>
-    m
-      ( Parser
-          'Output
-          n
-          ( HashMap
-              ( TableName ('Postgres pgKind)
-              )
-              ( SourceName,
-                SourceConfig ('Postgres pgKind),
-                SelPermInfo ('Postgres pgKind),
-                PrimaryKeyColumns ('Postgres pgKind),
-                AnnotatedFields ('Postgres pgKind)
-              )
-          )
-      )
 
 instance PostgresSchema 'Vanilla where
   pgkBuildTableRelayQueryFields = buildTableRelayQueryFields
   pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
   pgkRelayExtension = Just ()
-  pgkNode = nodePG
 
 instance PostgresSchema 'Citus where
   pgkBuildTableRelayQueryFields _ _ _ _ _ = pure []
   pgkBuildFunctionRelayQueryFields _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
-  pgkNode = undefined
 
 -- postgres schema
 
@@ -171,7 +151,6 @@ instance
   countTypeInput = countTypeInput
   aggregateOrderByCountType = PG.PGInteger
   computedField = computedFieldPG
-  node = pgkNode
 
 backendInsertParser ::
   forall pgKind m r n.

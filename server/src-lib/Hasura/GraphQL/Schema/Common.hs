@@ -3,10 +3,13 @@
 module Hasura.GraphQL.Schema.Common
   ( SchemaOptions (..),
     SchemaContext (..),
+    SchemaKind (..),
     RemoteRelationshipParserBuilder (..),
+    NodeInterfaceParserBuilder (..),
     MonadBuildSchemaBase,
     retrieve,
     ignoreRemoteRelationship,
+    isHasuraSchema,
     AggSelectExp,
     AnnotatedField,
     AnnotatedFields,
@@ -24,10 +27,8 @@ module Hasura.GraphQL.Schema.Common
     getTableRoles,
     askTableInfo,
     comparisonAggOperators,
-    currentNodeIdVersion,
     mapField,
     mkDescriptionWith,
-    nodeIdVersionInt,
     numericAggOperators,
     optionalFieldParser,
     parsedSelectionsToFields,
@@ -43,7 +44,6 @@ module Hasura.GraphQL.Schema.Common
   )
 where
 
-import Data.Aeson qualified as J
 import Data.Either (isRight)
 import Data.Has
 import Data.HashMap.Strict qualified as Map
@@ -52,12 +52,12 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
-import Hasura.GraphQL.Execute.Types qualified as ET (GraphQLQueryType)
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
+import Hasura.GraphQL.Schema.Node
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -83,8 +83,6 @@ data SchemaOptions = SchemaOptions
     soStringifyNum :: StringifyNumbers,
     -- | should boolean fields be collapsed to True when null is given?
     soDangerousBooleanCollapse :: Bool,
-    -- | what kind of schema is being built (Hasura or Relay)
-    soQueryType :: ET.GraphQLQueryType,
     -- | whether function permissions should be inferred
     soFunctionPermsContext :: FunctionPermissionsCtx,
     -- | whether remote schema permissions are enabled
@@ -95,11 +93,23 @@ data SchemaOptions = SchemaOptions
 
 -- | Aggregation of contextual information required to build the schema.
 data SchemaContext = SchemaContext
-  { -- | the set of all sources (TODO: remove this?)
+  { -- | the kind of schema being built
+    scSchemaKind :: SchemaKind,
+    -- | the set of all sources (TODO: remove this?)
     scSourceCache :: SourceCache,
     -- | how to process remote relationships
     scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder
   }
+
+-- | The kind of schema we're building, and its associated options.
+data SchemaKind
+  = HasuraSchema
+  | RelaySchema NodeInterfaceParserBuilder
+
+isHasuraSchema :: SchemaKind -> Bool
+isHasuraSchema = \case
+  HasuraSchema -> True
+  RelaySchema _ -> False
 
 -- | The set of common constraints required to build the schema.
 type MonadBuildSchemaBase r m n =
@@ -137,6 +147,19 @@ newtype RemoteRelationshipParserBuilder
 -- be used in tests or to build a source or remote schema in isolation.
 ignoreRemoteRelationship :: RemoteRelationshipParserBuilder
 ignoreRemoteRelationship = RemoteRelationshipParserBuilder $ const $ pure Nothing
+
+-- | How to build the 'Relay' node.
+--
+-- Similarly to what we do for remote relationships, we pass in the context the
+-- builder function required to build the 'Node' interface, in order to avoid
+-- the cross-sources cycles it creates otherwise.
+newtype NodeInterfaceParserBuilder = NodeInterfaceParserBuilder
+  { runNodeBuilder ::
+      ( forall r n m.
+        MonadBuildSchemaBase r m n =>
+        m (P.Parser 'P.Output n NodeMap)
+      )
+  }
 
 -- TODO: move this to Prelude?
 retrieve ::
@@ -247,23 +270,6 @@ numericAggOperators =
 
 comparisonAggOperators :: [G.Name]
 comparisonAggOperators = [$$(G.litName "max"), $$(G.litName "min")]
-
-data NodeIdVersion
-  = NIVersion1
-  deriving (Show, Eq)
-
-nodeIdVersionInt :: NodeIdVersion -> Int
-nodeIdVersionInt NIVersion1 = 1
-
-currentNodeIdVersion :: NodeIdVersion
-currentNodeIdVersion = NIVersion1
-
-instance J.FromJSON NodeIdVersion where
-  parseJSON v = do
-    versionInt :: Int <- J.parseJSON v
-    case versionInt of
-      1 -> pure NIVersion1
-      _ -> fail $ "expecting version 1 for node id, but got " <> show versionInt
 
 mkDescriptionWith :: Maybe PG.PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of

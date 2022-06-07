@@ -577,10 +577,10 @@ data AnnFieldG (b :: BackendType) (r :: Type) v
   = AFColumn (AnnColumnField b v)
   | AFObjectRelation (ObjectRelationSelectG b r v)
   | AFArrayRelation (ArraySelectG b r v)
-  | AFComputedField (XComputedField b) !ComputedFieldName !(ComputedFieldSelect b r v)
+  | AFComputedField (XComputedField b) ComputedFieldName (ComputedFieldSelect b r v)
   | -- | A remote relationship field
     AFRemote (RemoteRelationshipSelect b r)
-  | AFNodeId (XRelay b) !(TableName b) !(PrimaryKeyColumns b)
+  | AFNodeId (XRelay b) SourceName (TableName b) (PrimaryKeyColumns b)
   | AFExpression Text
   deriving stock (Functor, Foldable, Traversable)
 
