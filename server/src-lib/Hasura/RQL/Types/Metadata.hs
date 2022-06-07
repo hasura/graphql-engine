@@ -1041,14 +1041,16 @@ metadataToOrdJSON
             selPermDefToOrdJSON :: Backend b => SelPermDef b -> AO.Value
             selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON
               where
-                selPermToOrdJSON (SelPerm columns fltr limit allowAgg computedFieldsPerm) =
+                selPermToOrdJSON (SelPerm columns fltr limit allowAgg computedFieldsPerm allowedQueryRootFieldTypes allowedSubscriptionRootFieldTypes) =
                   AO.object $
                     catMaybes
                       [ columnsPair,
                         computedFieldsPermPair,
                         filterPair,
                         limitPair,
-                        allowAggPair
+                        allowAggPair,
+                        allowedQueryRootFieldsPair,
+                        allowedSubscriptionRootFieldsPair
                       ]
                   where
                     columnsPair = Just ("columns", AO.toOrdered columns)
@@ -1059,6 +1061,16 @@ metadataToOrdJSON
                       if allowAgg
                         then Just ("allow_aggregations", AO.toOrdered allowAgg)
                         else Nothing
+                    allowedQueryRootFieldsPair =
+                      case allowedQueryRootFieldTypes of
+                        ARFAllowAllRootFields -> Nothing
+                        ARFAllowConfiguredRootFields configuredRootFields ->
+                          Just ("query_root_fields", AO.toOrdered configuredRootFields)
+                    allowedSubscriptionRootFieldsPair =
+                      case allowedSubscriptionRootFieldTypes of
+                        ARFAllowAllRootFields -> Nothing
+                        ARFAllowConfiguredRootFields configuredRootFields ->
+                          Just ("subscription_root_fields", AO.toOrdered configuredRootFields)
 
             updPermDefToOrdJSON :: forall b. Backend b => UpdPermDef b -> AO.Value
             updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON

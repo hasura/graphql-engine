@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -20,12 +21,18 @@ module Hasura.RQL.Types.Permission
     PermDefPermission (..),
     unPermDefPermission,
     reflectPermDefPermission,
+    SubscriptionRootFieldType (..),
+    QueryRootFieldType (..),
+    AllowedRootFields (..),
+    isRootFieldAllowed,
   )
 where
 
 import Control.Lens (makeLenses)
 import Data.Aeson
+import Data.Aeson.Casing (snakeCase)
 import Data.Aeson.TH
+import Data.HashSet qualified as Set
 import Data.Hashable
 import Data.Kind (Type)
 import Data.Text qualified as T
@@ -183,6 +190,33 @@ instance Backend b => ToAesonPairs (PermDef b perm) where
       "comment" .= comment
     ]
 
+data QueryRootFieldType
+  = QRFTSelect
+  | QRFTSelectByPk
+  | QRFTSelectAggregate
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (Cacheable, Hashable, NFData)
+
+instance FromJSON QueryRootFieldType where
+  parseJSON = genericParseJSON defaultOptions {constructorTagModifier = snakeCase . drop 4}
+
+instance ToJSON QueryRootFieldType where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase . drop 4}
+
+data SubscriptionRootFieldType
+  = SRFTSelect
+  | SRFTSelectByPk
+  | SRFTSelectAggregate
+  | SRFTSelectStream
+  deriving stock (Show, Eq, Generic)
+  deriving anyclass (Cacheable, Hashable, NFData)
+
+instance FromJSON SubscriptionRootFieldType where
+  parseJSON = genericParseJSON defaultOptions {constructorTagModifier = snakeCase . drop 4}
+
+instance ToJSON SubscriptionRootFieldType where
+  toJSON = genericToJSON defaultOptions {constructorTagModifier = snakeCase . drop 4}
+
 -- Insert permission
 data InsPerm (b :: BackendType) = InsPerm
   { ipCheck :: !(BoolExp b),
@@ -207,36 +241,100 @@ instance Backend b => ToJSON (InsPerm b) where
 
 type InsPermDef b = PermDef b InsPerm
 
+data AllowedRootFields rootFieldType
+  = ARFAllowAllRootFields
+  | ARFAllowConfiguredRootFields (Set.HashSet rootFieldType)
+  deriving (Show, Eq, Generic)
+
+instance (Cacheable rootFieldType) => Cacheable (AllowedRootFields rootFieldType)
+
+instance (NFData rootFieldType) => NFData (AllowedRootFields rootFieldType)
+
+instance (ToJSON rootFieldType) => ToJSON (AllowedRootFields rootFieldType) where
+  toJSON = \case
+    ARFAllowAllRootFields -> String "allow all root fields"
+    ARFAllowConfiguredRootFields configuredRootFields -> toJSON configuredRootFields
+
+instance Semigroup (HashSet rootFieldType) => Semigroup (AllowedRootFields rootFieldType) where
+  ARFAllowAllRootFields <> _ = ARFAllowAllRootFields
+  _ <> ARFAllowAllRootFields = ARFAllowAllRootFields
+  ARFAllowConfiguredRootFields rfL <> ARFAllowConfiguredRootFields rfR =
+    ARFAllowConfiguredRootFields (rfL <> rfR)
+
+isRootFieldAllowed :: (Eq rootField) => rootField -> AllowedRootFields rootField -> Bool
+isRootFieldAllowed rootField = \case
+  ARFAllowAllRootFields -> True
+  ARFAllowConfiguredRootFields allowedRootFields -> rootField `elem` allowedRootFields
+
 -- Select constraint
 data SelPerm (b :: BackendType) = SelPerm
   { -- | Allowed columns
-    spColumns :: !(PermColSpec b),
+    spColumns :: PermColSpec b,
     -- | Filter expression
-    spFilter :: !(BoolExp b),
+    spFilter :: BoolExp b,
     -- | Limit value
-    spLimit :: !(Maybe Int),
+    spLimit :: Maybe Int,
     -- | Allow aggregation
-    spAllowAggregations :: !Bool,
+    spAllowAggregations :: Bool,
     -- | Allowed computed fields which should not
     -- include the fields returning rows of existing table.
-    spComputedFields :: ![ComputedFieldName]
+    spComputedFields :: [ComputedFieldName],
+    spAllowedQueryRootFields :: AllowedRootFields QueryRootFieldType,
+    spAllowedSubscriptionRootFields :: AllowedRootFields SubscriptionRootFieldType
   }
   deriving (Show, Eq, Generic)
 
 instance Backend b => Cacheable (SelPerm b)
 
 instance Backend b => ToJSON (SelPerm b) where
-  toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
+  toJSON SelPerm {..} =
+    let queryRootFieldsPair =
+          case spAllowedQueryRootFields of
+            ARFAllowAllRootFields -> mempty
+            ARFAllowConfiguredRootFields configuredRootFields ->
+              ["query_root_fields" .= configuredRootFields]
+        subscriptionRootFieldsPair =
+          case spAllowedSubscriptionRootFields of
+            ARFAllowAllRootFields -> mempty
+            ARFAllowConfiguredRootFields configuredRootFields ->
+              ["subscription_root_fields" .= configuredRootFields]
+        limitPair =
+          case spLimit of
+            Nothing -> mempty
+            Just limit -> ["limit" .= limit]
+     in object $
+          [ "columns" .= spColumns,
+            "filter" .= spFilter,
+            "allow_aggregations" .= spAllowAggregations,
+            "computed_fields" .= spComputedFields
+          ]
+            <> queryRootFieldsPair
+            <> subscriptionRootFieldsPair
+            <> limitPair
 
 instance Backend b => FromJSON (SelPerm b) where
-  parseJSON =
-    withObject "SelPerm" $ \o ->
+  parseJSON = do
+    withObject "SelPerm" $ \o -> do
+      queryRootFieldsMaybe <- o .:? "query_root_fields"
+      subscriptionRootFieldsMaybe <- o .:? "subscription_root_fields"
+      allowedQueryRootFields <-
+        case queryRootFieldsMaybe of
+          Just configuredQueryRootFields -> do
+            pure $ ARFAllowConfiguredRootFields configuredQueryRootFields
+          Nothing -> pure ARFAllowAllRootFields
+      allowedSubscriptionRootFields <-
+        case subscriptionRootFieldsMaybe of
+          Just configuredSubscriptionRootFields -> pure $ ARFAllowConfiguredRootFields configuredSubscriptionRootFields
+          Nothing -> pure $ ARFAllowAllRootFields
+
       SelPerm
         <$> o .: "columns"
         <*> o .: "filter"
         <*> o .:? "limit"
         <*> o .:? "allow_aggregations" .!= False
         <*> o .:? "computed_fields" .!= []
+        <*> pure allowedQueryRootFields
+        <*> pure allowedSubscriptionRootFields
 
 type SelPermDef b = PermDef b SelPerm
 

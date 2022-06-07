@@ -112,6 +112,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.Permission (AllowedRootFields (..), QueryRootFieldType (..), SubscriptionRootFieldType (..))
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.SQL.AnyBackend (runBackend)
@@ -352,17 +353,19 @@ instance
 -- | This type is only used as an intermediate type
 --   to combine more than one select permissions for inherited roles.
 data CombinedSelPermInfo (b :: BackendType) = CombinedSelPermInfo
-  { cspiCols :: ![(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
-    cspiComputedFields :: ![(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
-    cspiFilter :: ![(AnnBoolExpPartialSQL b)],
-    cspiLimit :: !(Maybe (Max Int)),
-    cspiAllowAgg :: !Any,
-    cspiRequiredHeaders :: !(HS.HashSet Text)
+  { cspiCols :: [(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
+    cspiComputedFields :: [(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)))],
+    cspiFilter :: [(AnnBoolExpPartialSQL b)],
+    cspiLimit :: Maybe (Max Int),
+    cspiAllowAgg :: Any,
+    cspiRequiredHeaders :: HS.HashSet Text,
+    cspiAllowedQueryRootFieldTypes :: AllowedRootFields QueryRootFieldType,
+    cspiAllowedSubscriptionRootFieldTypes :: AllowedRootFields SubscriptionRootFieldType
   }
 
 instance (Backend b) => Semigroup (CombinedSelPermInfo b) where
-  CombinedSelPermInfo colsL scalarComputedFieldsL filterL limitL allowAggL reqHeadersL
-    <> CombinedSelPermInfo colsR scalarComputedFieldsR filterR limitR allowAggR reqHeadersR =
+  CombinedSelPermInfo colsL scalarComputedFieldsL filterL limitL allowAggL reqHeadersL allowedQueryRFTypesL allowedSubsRFTypesL
+    <> CombinedSelPermInfo colsR scalarComputedFieldsR filterR limitR allowAggR reqHeadersR allowedQueryRFTypesR allowedSubsRFTypesR =
       CombinedSelPermInfo
         (colsL <> colsR)
         (scalarComputedFieldsL <> scalarComputedFieldsR)
@@ -370,6 +373,8 @@ instance (Backend b) => Semigroup (CombinedSelPermInfo b) where
         (limitL <> limitR)
         (allowAggL <> allowAggR)
         (reqHeadersL <> reqHeadersR)
+        (allowedQueryRFTypesL <> allowedQueryRFTypesR)
+        (allowedSubsRFTypesL <> allowedSubsRFTypesR)
 
 combinedSelPermInfoToSelPermInfo ::
   Backend b =>
@@ -384,6 +389,8 @@ combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
     (getMax <$> cspiLimit)
     (getAny cspiAllowAgg)
     cspiRequiredHeaders
+    cspiAllowedQueryRootFieldTypes
+    cspiAllowedSubscriptionRootFieldTypes
   where
     mergeColumnsWithBoolExp ::
       NonEmpty (Maybe (GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b)))) ->
@@ -418,15 +425,19 @@ data SelPermInfo (b :: BackendType) = SelPermInfo
     -- inherited role, for a non-inherited role, it will be `Nothing`. The above
     -- bool exp will determine if the column should be nullified in a row, when
     -- there aren't requisite permissions.
-    spiCols :: !(M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))),
+    spiCols :: M.HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
     -- | HashMap of accessible computed fields to the role, mapped to
     -- `AnnColumnCaseBoolExpPartialSQL`, simililar to `spiCols`.
     -- These computed fields do not return rows of existing table.
-    spiComputedFields :: !(M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))),
-    spiFilter :: !(AnnBoolExpPartialSQL b),
-    spiLimit :: !(Maybe Int),
-    spiAllowAgg :: !Bool,
-    spiRequiredHeaders :: !(HashSet Text)
+    spiComputedFields :: M.HashMap ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b)),
+    spiFilter :: AnnBoolExpPartialSQL b,
+    spiLimit :: Maybe Int,
+    spiAllowAgg :: Bool,
+    spiRequiredHeaders :: HashSet Text,
+    -- | allowed root field types to be exposed in the query_root
+    spiAllowedQueryRootFields :: AllowedRootFields QueryRootFieldType,
+    -- | allowed root field types to be exposed in the subscription_root
+    spiAllowedSubscriptionRootFields :: AllowedRootFields SubscriptionRootFieldType
   }
   deriving (Generic)
 
@@ -1052,18 +1063,18 @@ askRemoteRel fieldInfoMap relName = do
       throw400 UnexpectedPayload "expecting a remote relationship"
 
 mkAdminRolePermInfo :: Backend b => TableCoreInfo b -> RolePermInfo b
-mkAdminRolePermInfo ti =
+mkAdminRolePermInfo tableInfo =
   RolePermInfo (Just i) (Just s) (Just u) (Just d)
   where
-    fields = _tciFieldInfoMap ti
+    fields = _tciFieldInfoMap tableInfo
     pgCols = map ciColumn $ getCols fields
     pgColsWithFilter = M.fromList $ map (,Nothing) pgCols
     scalarComputedFields =
       HS.fromList $ map _cfiName $ onlyScalarComputedFields $ getComputedFieldInfos fields
     scalarComputedFields' = HS.toMap scalarComputedFields $> Nothing
 
-    tn = _tciName ti
+    tableName = _tciName tableInfo
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False mempty
-    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty False mempty
-    d = DelPermInfo tn annBoolExpTrue False mempty
+    s = SelPermInfo pgColsWithFilter scalarComputedFields' annBoolExpTrue Nothing True mempty ARFAllowAllRootFields ARFAllowAllRootFields
+    u = UpdPermInfo (HS.fromList pgCols) tableName annBoolExpTrue Nothing M.empty False mempty
+    d = DelPermInfo tableName annBoolExpTrue False mempty

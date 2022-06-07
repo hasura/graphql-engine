@@ -48,7 +48,7 @@ module Hasura.GraphQL.Schema.Build
     buildFunctionQueryFieldsPG,
     buildTableDeleteMutationFields,
     buildTableInsertMutationFields,
-    buildTableQueryFields,
+    buildTableQueryAndSubscriptionFields,
     buildTableStreamingSubscriptionFields,
     buildTableUpdateMutationFields,
   )
@@ -63,17 +63,20 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
+import Hasura.GraphQL.Schema.Table (tableSelectPermissions)
 import Hasura.GraphQL.Schema.Update (updateTable, updateTableByPk)
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
+import Hasura.Server.Types (StreamingSubscriptionsCtx (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Builds field name with proper case. Please note that this is a pure
@@ -93,15 +96,22 @@ setFieldNameCase tCase tInfo crf getFieldName tableName =
     crfName = fmap (`C.Identifier` []) (_crfName crf)
     fieldIdentifier = fromMaybe (getFieldName (fromMaybe tableName tccName)) crfName
 
-buildTableQueryFields ::
+-- | buildTableQueryAndSubscriptionFields builds the field parsers of a table.
+--   It returns a tuple with array of field parsers that correspond to the field
+--   parsers of the query root and the field parsers of the subscription root
+buildTableQueryAndSubscriptionFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
+  StreamingSubscriptionsCtx ->
   C.GQLNameIdentifier ->
-  (m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))])
-buildTableQueryFields sourceInfo tableName tableInfo gqlName = do
+  m
+    ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
+      [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+    )
+buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx gqlName = do
   tCase <- asks getter
   -- select table
   selectName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelect mkSelectField gqlName
@@ -109,12 +119,48 @@ buildTableQueryFields sourceInfo tableName tableInfo gqlName = do
   selectPKName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectByPk mkSelectByPkField gqlName
   -- select table aggregate
   selectAggName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectAggregate mkSelectAggregateField gqlName
-  catMaybes
-    <$> sequenceA
-      [ optionalFieldParser QDBMultipleRows $ selectTable sourceInfo tableInfo selectName selectDesc,
-        optionalFieldParser QDBSingleRow $ selectTableByPk sourceInfo tableInfo selectPKName selectPKDesc,
-        optionalFieldParser QDBAggregation $ selectTableAggregate sourceInfo tableInfo selectAggName selectAggDesc
-      ]
+
+  selectPermission <- tableSelectPermissions tableInfo
+
+  selectTableParser <- optionalFieldParser QDBMultipleRows $ selectTable sourceInfo tableInfo selectName selectDesc
+  selectTableByPkParser <- optionalFieldParser QDBSingleRow $ selectTableByPk sourceInfo tableInfo selectPKName selectPKDesc
+  selectTableAggregateParser <- optionalFieldParser QDBAggregation $ selectTableAggregate sourceInfo tableInfo selectAggName selectAggDesc
+
+  case selectPermission of
+    -- No select permission found for the current role, so
+    -- no root fields will be accessible to the role
+    Nothing -> pure (mempty, mempty)
+    -- Filter the root fields which have been enabled
+    Just SelPermInfo {..} -> do
+      selectStreamParser <-
+        if (isRootFieldAllowed SRFTSelectStream spiAllowedSubscriptionRootFields && streamSubCtx == StreamingSubscriptionsEnabled)
+          then buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo gqlName
+          else pure mempty
+
+      let (querySelectTableParser, subscriptionSelectTableParser) =
+            getQueryAndSubscriptionRootFields
+              selectTableParser
+              (isRootFieldAllowed QRFTSelect spiAllowedQueryRootFields)
+              (isRootFieldAllowed SRFTSelect spiAllowedSubscriptionRootFields)
+
+          (querySelectTableByPkParser, subscriptionSelectTableByPkParser) =
+            getQueryAndSubscriptionRootFields
+              selectTableByPkParser
+              (isRootFieldAllowed QRFTSelectByPk spiAllowedQueryRootFields)
+              (isRootFieldAllowed SRFTSelectByPk spiAllowedSubscriptionRootFields)
+
+          (querySelectTableAggParser, subscriptionSelectTableAggParser) =
+            getQueryAndSubscriptionRootFields
+              selectTableAggregateParser
+              (isRootFieldAllowed QRFTSelectAggregate spiAllowedQueryRootFields)
+              (isRootFieldAllowed SRFTSelectAggregate spiAllowedSubscriptionRootFields)
+
+          queryRootFields = catMaybes [querySelectTableParser, querySelectTableByPkParser, querySelectTableAggParser]
+          subscriptionRootFields =
+            selectStreamParser
+              <> catMaybes [subscriptionSelectTableParser, subscriptionSelectTableByPkParser, subscriptionSelectTableAggParser]
+
+      pure (queryRootFields, subscriptionRootFields)
   where
     selectDesc = buildFieldDescription defaultSelectDesc $ _crfComment _tcrfSelect
     selectPKDesc = buildFieldDescription defaultSelectPKDesc $ _crfComment _tcrfSelectByPk
@@ -124,6 +170,16 @@ buildTableQueryFields sourceInfo tableName tableInfo gqlName = do
     defaultSelectAggDesc = "fetch aggregated fields from the table: " <>> tableName
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
 
+    -- This function checks if a root field is allowed to be exposed
+    -- in the query root and a subscription root and when it is allowed,
+    -- the parser will be returned.
+    getQueryAndSubscriptionRootFields parser allowedInQuery allowedInSubscription =
+      case (allowedInQuery, allowedInSubscription) of
+        (True, True) -> (parser, parser)
+        (True, False) -> (parser, Nothing)
+        (False, True) -> (Nothing, parser)
+        (False, False) -> (Nothing, Nothing)
+
 buildTableStreamingSubscriptionFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
@@ -132,11 +188,12 @@ buildTableStreamingSubscriptionFields ::
   TableInfo b ->
   C.GQLNameIdentifier ->
   m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo gqlName = do
+buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo tableIdentifier = do
   tCase <- asks getter
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner : " <>> tableName
-  selectStreamName <- mkRootFieldName $ setFieldNameCase tCase tableInfo (_tcrfSelect customRootFields) mkSelectStreamField gqlName
+  selectStreamName <-
+    mkRootFieldName $ setFieldNameCase tCase tableInfo (_tcrfSelect customRootFields) mkSelectStreamField tableIdentifier
   catMaybes
     <$> sequenceA
       [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceInfo tableInfo selectStreamName selectDesc

@@ -136,7 +136,7 @@ instance
   BackendSchema ('Postgres pgKind)
   where
   -- top level parsers
-  buildTableQueryFields = GSB.buildTableQueryFields
+  buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser

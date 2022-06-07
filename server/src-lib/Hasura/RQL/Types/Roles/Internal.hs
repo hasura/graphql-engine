@@ -102,6 +102,8 @@ rolePermInfoToCombineRolePermInfo RolePermInfo {..} =
             (Max <$> spiLimit)
             (Any spiAllowAgg)
             spiRequiredHeaders
+            spiAllowedQueryRootFields
+            spiAllowedSubscriptionRootFields
 
 -- | `OnlyRelevantEq` is a type class to implement checking if
 --   two types have the relevant info of a type equal. This typeclass is almost

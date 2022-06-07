@@ -35,7 +35,7 @@ import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance BackendSchema 'MySQL where
-  buildTableQueryFields = GSB.buildTableQueryFields
+  buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
   buildTableRelayQueryFields = buildTableRelayQueryFields'
   buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = buildTableInsertMutationFields'

@@ -326,6 +326,8 @@ instance (Cacheable a) => Cacheable (G.ObjectTypeDefinition a)
 
 instance (Cacheable a, Cacheable possibleTypes) => Cacheable (G.TypeDefinition a possibleTypes)
 
+instance Cacheable a => Cacheable (Identity a)
+
 instance Cacheable N.URI
 
 instance Cacheable UT.Variable
