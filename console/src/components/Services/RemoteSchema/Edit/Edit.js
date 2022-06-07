@@ -20,7 +20,6 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import globals from '../../../../Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import styles from '../RemoteSchema.scss';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { Tabs } from '../Common/Tabs';
 
@@ -134,9 +133,9 @@ class Edit extends React.Component {
 
     const generateMigrateBtns = () => {
       return (
-        <div className={styles.commonBtn}>
+        <div className="mt-lg">
           <Button
-            className={styles.button_mar_right}
+            className="mr-sm"
             color="yellow"
             size="sm"
             type="submit"
@@ -160,7 +159,7 @@ class Edit extends React.Component {
           </Button>
           {this.state.deleteConfirmationError ? (
             <span
-              className={styles.delete_confirmation_error}
+              className={'ml-md text-red-500'}
               data-test="delete-confirmation-error"
             >
               * {this.state.deleteConfirmationError}
@@ -200,7 +199,7 @@ class Edit extends React.Component {
     }
 
     return (
-      <div className={styles.addWrapper}>
+      <div>
         <Helmet
           title={`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
         />
@@ -212,6 +211,7 @@ class Edit extends React.Component {
           baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
           showLoader={isFetching}
         />
+
         {isFetching ? null : (
           <form
             onSubmit={e => {

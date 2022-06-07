@@ -8,7 +8,6 @@ import { FaTimes } from 'react-icons/fa';
 
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
-import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
 import ExpanderButton from './ExpanderButton';
 import { sanitiseRow } from '../../utils';
@@ -29,7 +28,7 @@ const CancelEventButton: React.FC<CancelButtonProps> = ({
 }) => (
   <Button
     key={id}
-    className={styles.add_mar_right_small}
+    className="mr-xs"
     onClick={onClickHandler}
     color="white"
     size="xs"
@@ -67,7 +66,7 @@ const EventsTable: React.FC<Props> = props => {
   const [pageSize, setPageSize] = React.useState(filterState.limit ?? 10);
 
   if (!rows.length) {
-    return <div className={styles.add_mar_top}>No data available</div>;
+    return <div className="mt-sm">No data available</div>;
   }
 
   const sortedColumns = columns.sort(ordinalColSort);
@@ -269,7 +268,7 @@ const EventsTable: React.FC<Props> = props => {
           invocationDataTriggerColumns.forEach(col => {
             newRow[col] = (
               <div
-                className={styles.tableCellCenterAlignedOverflow}
+                className="text-center overflow-hidden"
                 key={`${identifier}-${col}-${row.index}`}
               >
                 {sanitiseRow(col, r)}

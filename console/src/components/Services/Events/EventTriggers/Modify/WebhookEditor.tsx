@@ -1,5 +1,6 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
+import { inputStyles } from '../../constants';
 import { EventTrigger, URLConf, VoidCallback } from '../../types';
 import { parseServerWebhook } from '../../utils';
 import DebouncedDropdownInput from '../Common/DropdownWrapper';
@@ -9,11 +10,10 @@ type WebhookEditorProps = {
   webhook: URLConf;
   setWebhook: (w: URLConf) => void;
   save: (success: VoidCallback, error: VoidCallback) => void;
-  styles: Record<string, string>;
 };
 
 const WebhookEditor = (props: WebhookEditorProps) => {
-  const { currentTrigger, webhook, setWebhook, save, styles } = props;
+  const { currentTrigger, webhook, setWebhook, save } = props;
 
   const existingWebhook = parseServerWebhook(
     currentTrigger.configuration.webhook,
@@ -50,7 +50,7 @@ const WebhookEditor = (props: WebhookEditorProps) => {
   );
 
   const expanded = () => (
-    <div className={styles.modifyWhDropdownWrapper}>
+    <div className="pb-sm pt-sm max-w-80">
       <DebouncedDropdownInput
         dropdownOptions={[
           { display_text: 'URL', value: 'static' },
@@ -61,7 +61,7 @@ const WebhookEditor = (props: WebhookEditorProps) => {
         onButtonChange={handleWebhookTypeChange}
         onHandlerValChange={handleWebhookValueChange}
         required
-        bsClass={styles.dropdown_button}
+        bsClass={`${inputStyles} w-72`}
         handlerVal={webhook.value}
         id="webhook-url"
         inputPlaceHolder={
@@ -78,18 +78,15 @@ const WebhookEditor = (props: WebhookEditorProps) => {
   );
 
   return (
-    <div className={`${styles.container} ${styles.borderBottom}`}>
-      <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Webhook (HTTP/S) Handler
-        </h4>
+    <div className="w-full border-b border-solid border-gray-300 mb-md">
+      <div className="mb-md">
+        <h4 className="text-md font-bold mb-md">Webhook (HTTP/S) Handler</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}
           expandCallback={reset}
           property="webhook"
           service="modify-trigger"
-          styles={styles}
           saveFunc={save}
         />
       </div>

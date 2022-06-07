@@ -39,10 +39,9 @@ import { Button } from '@/new-components/Button';
 import { Table } from '@/dataSources/types';
 import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
-import styles from '../TableCommon/EventTable.scss';
 import { Header } from '../../../../Common/Headers/Headers';
 import { createEventTrigger } from '../../ServerIO';
-import { EVENTS_SERVICE_HEADING } from '../../constants';
+import { EVENTS_SERVICE_HEADING, heading } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
@@ -371,22 +370,18 @@ const Add: React.FC<Props> = props => {
   return (
     <div className="w-full overflow-y-auto bg-gray-50">
       <div className="max-w-6xl">
-        <div
-          className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
-        >
+        <div className="pt-lg pb-lg clear-both pl-md">
           <Helmet
             title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
           />
-          <div className={styles.subHeader}>
-            <h2 className={styles.heading_text}>Create a new event trigger</h2>
+          <div>
+            <h2 className={heading}>Create a new event trigger</h2>
             <div className="clearfix" />
           </div>
           <br />
-          <div className={`container-fluid ${styles.padd_left_remove}`}>
+          <div className="w-full pl-0">
             <form onSubmit={submit}>
-              <div
-                className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-              >
+              <div className="w-full pl-0">
                 <CreateETForm
                   state={state}
                   databaseInfo={databaseInfo}

@@ -2,7 +2,7 @@ import React from 'react';
 import { ToolTip } from '@/new-components/Tooltip';
 import { RetryConf } from '../../types';
 import Tooltip from '../../../../Common/Tooltip/Tooltip';
-import styles from '../../Events.scss';
+import { inputStyles } from '../../constants';
 
 type Props = {
   setRetryConf: (r: RetryConf) => void;
@@ -10,9 +10,54 @@ type Props = {
   legacyTooltip?: boolean;
 };
 
+type RetryInputRowType = {
+  label: string;
+  tooltipProps?:
+    | {
+        id: string;
+        message: string;
+      }
+    | undefined;
+  inputProps: {
+    name: string;
+    'data-test': string;
+    value: number | undefined;
+    placeholder: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  };
+};
+
+const RetryInputRow = ({
+  label,
+  tooltipProps,
+  inputProps,
+}: RetryInputRowType) => {
+  return (
+    <div className="items-center flex mb-xs">
+      <div className="w-64 pl-0">
+        <label className="flex items-center">
+          {label}
+          {tooltipProps ? (
+            <Tooltip {...tooltipProps} />
+          ) : (
+            <ToolTip message="Number of retries that Hasura makes to the webhook in case of failure" />
+          )}
+        </label>
+      </div>
+      <div className="pl-0">
+        <input
+          className={`${inputStyles} w-64`}
+          type="number"
+          min="0"
+          {...inputProps}
+        />
+      </div>
+    </div>
+  );
+};
+
 const RetryConfEditor: React.FC<Props> = props => {
   const { retryConf, setRetryConf, legacyTooltip = true } = props;
-
   const handleRetryConfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const label = e.target.name;
     const value = e.target.value;
@@ -24,87 +69,63 @@ const RetryConfEditor: React.FC<Props> = props => {
 
   return (
     <div>
-      <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
-        <div className={`col-md-3 ${styles.padd_left_remove}`}>
-          <label className="flex items-center">
-            Number of retries
-            {legacyTooltip ? (
-              <Tooltip
-                id="retry-conf-num-retries"
-                message="Number of retries that Hasura makes to the webhook in case of failure"
-              />
-            ) : (
-              <ToolTip message="Number of retries that Hasura makes to the webhook in case of failure" />
-            )}
-          </label>
-        </div>
-        <div className={`col-md-6 ${styles.padd_left_remove}`}>
-          <input
-            onChange={handleRetryConfChange}
-            name="num_retries"
-            data-test="no-of-retries"
-            className={`${styles.display_inline} form-control ${styles.width300}`}
-            type="number"
-            min="0"
-            value={retryConf.num_retries}
-            placeholder="number of retries (default: 0)"
-          />
-        </div>
-      </div>
-      <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
-        <div className={`col-md-3 ${styles.padd_left_remove}`}>
-          <label className="flex items-center">
-            Retry interval in seconds
-            {legacyTooltip ? (
-              <Tooltip
-                id="retry-conf-interval-sec"
-                message="Interval (in seconds) between each retry"
-              />
-            ) : (
-              <ToolTip message="Interval (in seconds) between each retry" />
-            )}
-          </label>
-        </div>
-        <div className={`col-md-6 ${styles.padd_left_remove}`}>
-          <input
-            onChange={handleRetryConfChange}
-            name="interval_sec"
-            data-test="interval-seconds"
-            className={`${styles.display_inline} form-control ${styles.width300}`}
-            type="number"
-            min="0"
-            value={retryConf.interval_sec}
-            placeholder="interval time in seconds (default: 10)"
-          />
-        </div>
-      </div>
-      <div className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}>
-        <div className={`col-md-3 ${styles.padd_left_remove}`}>
-          <label className="flex items-center">
-            Timeout in seconds
-            {legacyTooltip ? (
-              <Tooltip
-                id="retry-conf-timeout-sec"
-                message="Request timeout for the webhook"
-              />
-            ) : (
-              <ToolTip message="Request timeout for the webhook" />
-            )}
-          </label>
-        </div>
-        <div className={`col-md-6 ${styles.padd_left_remove}`}>
-          <input
-            onChange={handleRetryConfChange}
-            name="timeout_sec"
-            data-test="timeout-seconds"
-            className={`${styles.display_inline} form-control ${styles.width300}`}
-            type="number"
-            min="0"
-            value={retryConf.timeout_sec}
-            placeholder="timeout in seconds (default: 60)"
-          />
-        </div>
-      </div>
+      <RetryInputRow
+        label="Number of retries"
+        inputProps={{
+          name: 'num_retries',
+          'data-test': 'no-of-retries',
+          value: retryConf.num_retries,
+          placeholder: 'number of retries (default: 0)',
+          onChange: handleRetryConfChange,
+        }}
+        tooltipProps={
+          legacyTooltip
+            ? {
+                id: 'retry-conf-num-retries',
+                message:
+                  'Number of retries that Hasura makes to the webhook in case of failure',
+              }
+            : undefined
+        }
+      />
+      <RetryInputRow
+        label="Retry interval in seconds"
+        inputProps={{
+          name: 'interval_sec',
+          'data-test': 'interval-seconds',
+          value: retryConf.interval_sec,
+          placeholder: 'interval time in seconds (default: 10)',
+          onChange: handleRetryConfChange,
+        }}
+        tooltipProps={
+          legacyTooltip
+            ? {
+                id: 'retry-conf-interval-sec',
+                message: 'Interval (in seconds) between each retry"',
+              }
+            : undefined
+        }
+      />
+
+      <RetryInputRow
+        label="Timeout in seconds"
+        inputProps={{
+          name: 'timeout_sec',
+          'data-test': 'timeout-seconds',
+          value: retryConf.timeout_sec,
+          placeholder: 'timeout in seconds (default: 60)',
+          onChange: handleRetryConfChange,
+        }}
+        tooltipProps={
+          legacyTooltip
+            ? {
+                id: 'retry-conf-timeout-sec',
+                message: 'Request timeout for the webhook',
+              }
+            : undefined
+        }
+      />
+
       {/* exists(retryConf.tolerance_sec) ? (
         <div
           className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}

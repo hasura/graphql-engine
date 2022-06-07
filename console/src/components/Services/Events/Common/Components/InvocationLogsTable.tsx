@@ -8,7 +8,6 @@ import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
-import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
 import ExpanderButton from './ExpanderButton';
 import { redeliverDataEvent } from '../../ServerIO';
@@ -33,9 +32,9 @@ const RedliverEventButton: React.FC<RedeliverButtonProps> = ({
     size="xs"
     title="Redeliver event"
     onClick={onClickHandler}
-    className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
+    className="cursor-pointer mr-xs"
   >
-    <ReloadIcon className="" />
+    <ReloadIcon />
   </Button>
 );
 
@@ -87,7 +86,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
         show={eventId === redeliveredEventId}
         onClose={() => setRedeliveredEventId(null)}
         onCancel={() => setRedeliveredEventId(null)}
-        customClass={styles.redeliverModal}
+        customClass="w-3/4 mb-0"
       >
         <RedeliverEvent
           eventId={redeliveredEventId}
@@ -99,7 +98,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
   };
 
   if (rows.length === 0) {
-    return <div className={styles.add_mar_top}>No data available</div>;
+    return <div className="mt-sm">No data available</div>;
   }
 
   const sortedColumns = columns.sort(ordinalColSort);

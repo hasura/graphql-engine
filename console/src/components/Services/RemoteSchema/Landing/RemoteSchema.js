@@ -10,8 +10,6 @@ import TryItOut from '../../Common/Landing/TryItOut';
 
 class RemoteSchema extends React.Component {
   render() {
-    const styles = require('../RemoteSchema.scss');
-
     const { dispatch, readOnlyMode } = this.props;
 
     const getAddBtn = () => {
@@ -29,7 +27,7 @@ class RemoteSchema extends React.Component {
           data-test="data-create-remote-schemas"
           color="yellow"
           size="sm"
-          className={styles.add_mar_left}
+          className="ml-sm"
           onClick={handleClick}
         >
           Add
@@ -38,16 +36,12 @@ class RemoteSchema extends React.Component {
     };
 
     return (
-      <div
-        className={`${styles.padd_left_remove} ${styles.remoteSchemaWrapper} container-fluid ${styles.padd_top}`}
-      >
-        <div className={styles.padd_left}>
+      <div className={`pl-0 pt-0`}>
+        <div className="m-sm">
           <Helmet title={`${pageTitle}s | Hasura`} />
           <div>
-            <div className={styles.display_flex}>
-              <h2 className={`${styles.headerText} ${styles.inline_block}`}>
-                Remote Schemas
-              </h2>
+            <div className="flex">
+              <h2 className="text-xl font-bold mr-md">Remote Schemas</h2>
               {getAddBtn()}
             </div>
             <hr className="my-md" />
@@ -59,7 +53,7 @@ class RemoteSchema extends React.Component {
               description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
               knowMoreHref="https://hasura.io/docs/latest/graphql/core/remote-schemas/index.html"
             />
-            <hr className={`${styles.clear_fix} my-lg`} />
+            <hr className={`clear-both my-lg`} />
 
             <TryItOut
               service="remoteSchema"

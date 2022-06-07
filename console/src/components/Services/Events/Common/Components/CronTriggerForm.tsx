@@ -6,11 +6,11 @@ import { useScheduledTrigger, defaultCronExpr } from '../../CronTriggers/state';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Toggle from '../../../../Common/Toggle/Toggle';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
-import styles from '../../Events.scss';
 import Headers from '../../../../Common/Headers/Headers';
 import RetryConf from './RetryConfEditor';
 import FrequentlyUsedCrons from './FrequentlyUsedCrons';
 import FormSection from './FormSection';
+import { inputStyles, subHeading } from '../../constants';
 
 type Props = ReturnType<typeof useScheduledTrigger>;
 
@@ -46,7 +46,7 @@ const Form: React.FC<Props> = props => {
         <input
           type="text"
           placeholder="name"
-          className={`form-control ${styles.inputWidthLarge}`}
+          className={`${inputStyles} w-80`}
           value={name}
           onChange={setName}
         />
@@ -59,7 +59,7 @@ const Form: React.FC<Props> = props => {
         <input
           type="text"
           placeholder="http://httpbin.org/post"
-          className={`form-control ${styles.inputWidthLarge}`}
+          className={`${inputStyles} w-80`}
           value={webhook}
           onChange={setWebhookValue}
         />
@@ -69,16 +69,16 @@ const Form: React.FC<Props> = props => {
         tooltip="Schedule for your cron (events are created based on the UTC timezone)"
         heading="Cron Schedule"
       >
-        <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
+        <div className="mb-5 flex flex-row items-center">
           <input
             type="text"
             placeholder={defaultCronExpr}
-            className={`form-control ${styles.inputWidthLarge} ${styles.add_mar_right_mid}`}
+            className={`${inputStyles} w-80 mr-5`}
             value={schedule}
             onChange={setScheduleValue}
           />
           <a
-            className={styles.cursorPointer}
+            className="cursor-pointer"
             href="https://crontab.guru/#*_*_*_*_*"
             target="_blank"
             rel="noopener noreferrer"
@@ -101,7 +101,7 @@ const Form: React.FC<Props> = props => {
         />
       </FormSection>
       <CollapsibleToggle
-        title={<h2 className={styles.subheading_text}>Advanced</h2>}
+        title={<h2 className={subHeading}>Advanced</h2>}
         testId="advanced-configuration"
       >
         <FormSection
@@ -126,11 +126,11 @@ const Form: React.FC<Props> = props => {
           heading="Include in Metadata"
           tooltip="If enabled, this cron trigger will be included in the metadata of GraphqL Engine i.e. it will be a part of the metadata that is exported as migrations."
         >
-          <div className={`${styles.display_flex} ${styles.add_mar_right_mid}`}>
+          <div className="flex mr-xs">
             <Toggle
               checked={includeInMetadata}
               onChange={setState.toggleIncludeInMetadata}
-              className={styles.add_mar_right_mid}
+              className="mr-xs"
               icons={false}
             />
             <span>Include this trigger in Hasura Metadata</span>
@@ -144,7 +144,7 @@ const Form: React.FC<Props> = props => {
           <input
             type="text"
             placeholder="comment"
-            className={`form-control ${styles.inputWidthLarge} ${styles.add_mar_right_mid}`}
+            className={`${inputStyles} mr-2.5 w-4/12`}
             value={comment || ''}
             onChange={setComment}
           />

@@ -5,7 +5,6 @@ import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import InvocationLogDetails from '../../Common/Components/InvocationLogDetails';
 import { getEventLogs } from '../../ServerIO';
 import { InvocationLog } from '../../types';
-import styles from '../../Events.scss';
 import { Dispatch } from '../../../../../types';
 
 type Props = {
@@ -65,10 +64,8 @@ const RedeliverEvent: React.FC<Props> = ({
   return (
     <div className="content-fluid">
       <div>
-        <div
-          className={`${styles.padd_left_remove} col-md-12 ${styles.padd_right_remove}`}
-        >
-          <div className={`${styles.padd_left_remove} col-md-6`}>
+        <div className="pl-0 w-full pr-0">
+          <div className="pl-0 w-1/2">
             <div> Request </div>
             <AceEditor
               mode="json"
@@ -83,11 +80,9 @@ const RedeliverEvent: React.FC<Props> = ({
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
             />
           </div>
-          <div className={`${styles.padd_right_remove} col-md-6`}>
-            <div className={styles.display_flex}>
-              <div className={styles.add_mar_right}>
-                Latest Invocation Response
-              </div>
+          <div className="pr-0 w-1/2">
+            <div className="flex">
+              <div className="mr-sm">Latest Invocation Response</div>
             </div>
             <AceEditor
               mode="json"
@@ -110,10 +105,9 @@ const RedeliverEvent: React.FC<Props> = ({
             />
           </div>
         </div>
-        <div
-          className={`${styles.redeliverEventSection} ${styles.padd_top} redeliverEventSection`}
-        >
-          <div className={styles.add_mar_bottom}>
+        clear: both; margin: 0;
+        <div className="m-0 clear-both pt-md">
+          <div className="m-md">
             <em>Recent Invocations</em>
           </div>
           <ReactTable

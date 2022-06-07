@@ -3,13 +3,12 @@ import PropTypes from 'prop-types';
 import Modal from 'react-bootstrap/lib/Modal';
 import AceEditor from 'react-ace';
 import { connect } from 'react-redux';
-
+//TODO: check
 import {
   invokeManualTrigger,
   loadEventInvocations,
   RESET,
 } from './InvokeManualTriggerAction';
-import styles from './InvokeManualTrigger.scss';
 import { FaSpinner } from 'react-icons/fa';
 
 /* This component accepts for following props
@@ -104,8 +103,8 @@ class InvokeManualTrigger extends React.PureComponent {
         response = "Can't parse response";
       }
       return (
-        <div className={styles.displayFlexContainer}>
-          <div className={`${styles.padd_left_remove} col-md-6`}>
+        <div className="flex">
+          <div className={`pl-0 w-1/2`}>
             <div> Request </div>
             <AceEditor
               mode="json"
@@ -120,7 +119,7 @@ class InvokeManualTrigger extends React.PureComponent {
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
             />
           </div>
-          <div className={`${styles.padd_right_remove} col-md-6`}>
+          <div className={`pl-0 w-1/2`}>
             <div> Latest Invocation Response</div>
             <AceEditor
               mode="json"
@@ -145,22 +144,16 @@ class InvokeManualTrigger extends React.PureComponent {
      * If there is no error, get the event info. Otherwise check if the err is an object with `error` as key. Print a default message finally
      * */
     const getEventIdErrorText = error => {
-      return <span className={styles.error_text}>{error}</span>;
+      return <span className="text-red-600">{error}</span>;
     };
     const eventInfo =
       (!err && getEventId()) ||
       (err && 'error' in err && getEventIdErrorText(err.error)) ||
       getEventIdErrorText('Unable to invoke trigger');
     const getEventData = () => (
-      <div
-        className={`${styles.remove_padding_left} container-fluid ${styles.clear_fix} ${styles.padd_right_remove}`}
-      >
-        <div
-          className={`${styles.remove_padding_left} col-md-12 ${styles.padd_right_remove}`}
-        >
-          <div className={`${styles.margin_bottom_20} `}>
-            Event ID - {eventInfo}
-          </div>
+      <div className="pl-0 w-full clear-both pr-0">
+        <div className="pl-0 w-full pr-0">
+          <div className={`mb-md`}>Event ID - {eventInfo}</div>
           {!err && getEventPayload()}
         </div>
       </div>
@@ -173,7 +166,7 @@ class InvokeManualTrigger extends React.PureComponent {
             minHeight: '100px',
           }}
           onHide={this.onModalClose}
-          dialogClassName={styles.invoke_trigger_modal}
+          dialogClassName="w-3/4"
           id="invokeEventTrigger"
         >
           <Modal.Header closeButton>

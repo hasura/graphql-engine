@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FieldType, ExpandedItems, PermissionEdit } from './types';
 import { Field } from './Field';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { addDepFields, getExpandedItems } from './utils';
+import { focusYellowRing } from '../constants';
 
 type RSPTreeComponentProps = {
   list: FieldType[];
@@ -77,12 +77,16 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
   };
 
   return (
-    <ul className="pl-md">
+    <ul
+      className={`pl-md  border-gray-300 border-dotted ${
+        depth === 1 ? '' : 'border-l-2'
+      }`}
+    >
       {list.map(
         (i: FieldType, ix) =>
           !i.name.startsWith('enum') &&
           !i.name.startsWith('scalar') && (
-            <li key={i.name} className={styles.treeNodes}>
+            <li key={i.name}>
               {i.checked !== undefined && (
                 <input
                   type="checkbox"
@@ -91,7 +95,7 @@ const Tree: React.FC<RSPTreeComponentProps> = ({
                   checked={i.checked}
                   data-test={`checkbox-${i.name}`}
                   onChange={onCheck(ix)}
-                  className="legacy-input-fix"
+                  className={`${focusYellowRing} m-0 !mr-xs`}
                 />
               )}
               {i.children && (

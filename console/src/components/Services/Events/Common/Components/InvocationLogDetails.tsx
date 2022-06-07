@@ -3,7 +3,7 @@ import AceEditor from 'react-ace';
 import 'brace/mode/json';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
-import styles from '../../Events.scss';
+import { subHeading } from '../../constants';
 
 type Props = {
   requestPayload: string;
@@ -12,11 +12,11 @@ type Props = {
 
 const InvocationLogDetails = ({ requestPayload, responsePayload }: Props) => {
   return (
-    <div className={styles.addPadding20Px}>
+    <div className="p-md">
       <Tabs animation={false} defaultActiveKey={1} id="requestResponseTab">
         <Tab eventKey={1} title="Request">
-          <div className={styles.add_mar_top}>
-            <div className={styles.subheading_text}>Request</div>
+          <div className="mt-sm">
+            <div className={subHeading}>Request</div>
             <AceEditor
               mode="json"
               theme="github"
@@ -31,8 +31,8 @@ const InvocationLogDetails = ({ requestPayload, responsePayload }: Props) => {
           </div>
         </Tab>
         <Tab eventKey={2} title="Response">
-          <div className={styles.add_mar_top}>
-            <div className={styles.subheading_text}>Response</div>
+          <div className="mt-sm">
+            <div className={subHeading}>Response</div>
             <AceEditor
               mode="json"
               theme="github"

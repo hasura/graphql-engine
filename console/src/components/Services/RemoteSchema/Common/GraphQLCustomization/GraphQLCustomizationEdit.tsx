@@ -3,8 +3,6 @@ import { OverlayTrigger } from 'react-bootstrap';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import { GraphQLSchema } from 'graphql';
 import { FaQuestionCircle } from 'react-icons/fa';
-
-import styles from '../../RemoteSchema.scss';
 import { Button } from '../../../../Common';
 import { graphQLCustomization as GType } from '../../types';
 import TypeMapping from './TypeMapping';
@@ -13,6 +11,7 @@ import { useIntrospectionSchemaRemote } from '../../graphqlUtils';
 import globals from '../../../../../Globals';
 import { Dispatch } from '../../../../../types';
 import { checkDefaultGQLScalarType } from '../../Permissions/utils';
+import { inputStyles } from '../../constants';
 
 type Props = {
   graphQLCustomization: GType;
@@ -146,7 +145,10 @@ const GraphQLCustomizationEdit = ({
           {!graphQLCustomization ? 'Add' : 'Edit'}
         </Button>
       ) : (
-        <div className={styles.CustomEditor} data-test="remote-schema-editor">
+        <div
+          className="border border-gray-300 p-md mt-xs w-[700px] bg-white"
+          data-test="remote-schema-editor"
+        >
           <Button size="xs" onClick={() => setOpenEditor(false)}>
             close
           </Button>
@@ -156,7 +158,7 @@ const GraphQLCustomizationEdit = ({
             <div className="w-2/3">
               <input
                 type="text"
-                className="form-control"
+                className={inputStyles}
                 placeholder="namespace_"
                 value={rootFieldNamespace || ''}
                 data-test="remote-schema-customization-root-field-input"
@@ -177,7 +179,7 @@ const GraphQLCustomizationEdit = ({
             <div className="w-2/3">
               <input
                 type="text"
-                className="form-control"
+                className={inputStyles}
                 placeholder="prefix_"
                 value={typeNames?.prefix || ''}
                 data-test="remote-schema-customization-type-name-prefix-input"
@@ -199,7 +201,7 @@ const GraphQLCustomizationEdit = ({
             <div className="w-2/3">
               <input
                 type="text"
-                className="form-control"
+                className={inputStyles}
                 placeholder="_suffix"
                 value={typeNames?.suffix || ''}
                 data-test="remote-schema-customization-type-name-suffix-input"

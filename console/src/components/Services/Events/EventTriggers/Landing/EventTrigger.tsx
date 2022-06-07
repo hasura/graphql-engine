@@ -14,7 +14,6 @@ import {
 } from '../../../../Common/utils/reactUtils';
 
 import TryItOut from '../../../Common/Landing/TryItOut';
-import styles from '../../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import { EVENTS_SERVICE_HEADING, EVENT_TRIGGER } from '../../constants';
 import _push from '../../../Data/push';
 
@@ -38,7 +37,7 @@ insert_user(objects: [{name: "testuser"}] ){
           description={`An ${EVENT_TRIGGER} atomically captures events (insert, update, delete) on a specified table and then reliably calls a HTTP webhook to run some custom business logic.`}
           knowMoreHref="https://hasura.io/docs/latest/graphql/core/event-triggers/index.html"
         />
-        <hr className={`${styles.clear_fix} my-lg`} />
+        <hr className="clear-both my-lg" />
       </div>
     );
   };
@@ -55,7 +54,7 @@ insert_user(objects: [{name: "testuser"}] ){
         color="yellow"
         size="sm"
         type="submit"
-        className={styles.add_mar_left}
+        className="ml-md"
         onClick={handleClick}
       >
         Create
@@ -66,22 +65,18 @@ insert_user(objects: [{name: "testuser"}] ){
   const footerEvent = (
     <span>
       Head to the Events tab and see an event invoked under{' '}
-      <span className={styles.fontWeightBold}> test-trigger</span>.
+      <span className="font-bold"> test-trigger</span>.
     </span>
   );
 
   return (
-    <div
-      className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
-    >
-      <div className={styles.padd_left}>
+    <div className="pl-0 w-full pt-md">
+      <div className="pl-md">
         <Helmet
           title={getReactHelmetTitle(EVENT_TRIGGER, EVENTS_SERVICE_HEADING)}
         />
-        <div className={styles.display_flex}>
-          <h2 className={`${styles.headerText} ${styles.inline_block}`}>
-            {EVENT_TRIGGER}s
-          </h2>
+        <div className="flex">
+          <h2 className="text-xl font-bold mr-md">{EVENT_TRIGGER}s</h2>
           {getAddBtn()}
         </div>
         <hr className="my-md" />

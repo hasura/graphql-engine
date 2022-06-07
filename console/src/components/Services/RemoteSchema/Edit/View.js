@@ -13,36 +13,35 @@ import {
 } from '../Add/addRemoteSchemaReducer';
 import { Tabs } from '../Common/Tabs';
 import { appPrefix } from '../constants';
-import styles from '../RemoteSchema.scss';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
 const RSHeadersDisplay = ({ data }) =>
   data.length > 0 ? (
-    <tr>
-      <td>Headers</td>
-      <td>
+    <div className="w-4/5 flex border-t-0 border border-gray-300 bg-gray-50">
+      <div className="w-1/3 p-sm border-r border-gray-300">Headers</div>
+      <div className="w-2/3 p-sm">
         {data &&
           data
             .filter(header => !!header.name)
             .map((header, index) => [
-              <tr key={header}>
-                <td>
-                  {`${header.name}: `}
+              <div className="flex justify-start items-start">
+                {`${header.name}: `}
+                <div>
                   {header.type === 'static'
                     ? header.value
                     : '<' + header.value + '>'}
-                </td>
-              </tr>,
-              index !== data.length - 1 ? <hr className="my-md" /> : null,
+                </div>
+              </div>,
+              index !== data.length - 1 ? <hr className="my-sm" /> : null,
             ])}
-      </td>
-    </tr>
+      </div>
+    </div>
   ) : null;
 
 const RSReloadSchema = ({ readOnlyMode, remoteSchemaName, ...props }) =>
   !readOnlyMode && remoteSchemaName && remoteSchemaName.length > 0 ? (
-    <div className={`${styles.commonBtn} ${styles.detailsRefreshButton}`}>
+    <div className="pt-sm">
       <ReloadRemoteSchema {...props} remoteSchemaName={remoteSchemaName} />
       <ToolTip
         placement="right"
@@ -137,9 +136,7 @@ class ViewStitchedSchema extends React.Component {
     );
 
     return (
-      <div
-        className={styles.view_stitch_schema_wrapper + ' ' + styles.addWrapper}
-      >
+      <div className={''}>
         <Tabs
           appPrefix={appPrefix}
           currentTab="details"
@@ -149,23 +146,20 @@ class ViewStitchedSchema extends React.Component {
         />
         <br />
         <div>
-          <div className={styles.detailsSection}>
-            <table className="table table-striped table-bordered">
-              <thead />
-              <tbody>
-                <tr>
-                  <td>GraphQL Server URL</td>
-                  <td>{manualUrl || `<${envName}>`}</td>
-                </tr>
-                <RSHeadersDisplay data={filterHeaders} />
-              </tbody>
-            </table>
+          <div>
+            <div className="mt-md w-4/5 flex border border-gray-300 bg-gray-50">
+              <div className="w-1/3 p-xs border-r border-gray-300">
+                GraphQL Server URL
+              </div>
+              <div className="w-2/3 p-xs">{manualUrl || `<${envName}>`}</div>
+            </div>
+            <RSHeadersDisplay data={filterHeaders} />
           </div>
           {inconsistencyDetails && (
-            <div className={styles.add_mar_bottom}>
-              <div className={styles.subheading_text}>
+            <div className="md-sm">
+              <div className="text-lg font-bold">
                 <WarningSymbol tooltipText={'Inconsistent schema'} />
-                <span className={styles.add_mar_left_mid}>
+                <span className="ml-sm">
                   This remote schema is in an inconsistent state.
                 </span>
               </div>

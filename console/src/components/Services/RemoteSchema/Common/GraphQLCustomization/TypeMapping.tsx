@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { inputStyles } from '../../constants';
 
 type TypeMap = { type: string; custom_name: string };
 
@@ -24,7 +25,7 @@ const SelectOne = ({
   <select
     value={value}
     onChange={onChange}
-    className="form-control font-normal"
+    className={`${inputStyles} font-normal`}
     data-test={`remote-schema-customization-${label}-lhs-input`}
   >
     <option value="" className="text-base">
@@ -91,7 +92,7 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
               <input
                 type="text"
                 value={custom_name}
-                className="form-control font-normal"
+                className={`${inputStyles} font-normal`}
                 onChange={e => {
                   onModifyItem(i, { type, custom_name: e.target.value });
                 }}
@@ -128,7 +129,7 @@ const TypeMapping = ({ types, typeMappings, onChange, label }: Props) => {
           <input
             type="text"
             value={newMap.custom_name}
-            className="form-control font-normal"
+            className={`${inputStyles} font-normal`}
             data-test={`remote-schema-customization-${
               label ?? 'no-value'
             }-rhs-input`}

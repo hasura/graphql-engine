@@ -4,7 +4,6 @@ import Pen from './Pen';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import { isNumberString } from '../../../Common/utils/jsUtils';
 import { ArgTreeType } from './types';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 interface RSPInputProps {
   k: string;
@@ -86,7 +85,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
             <button
               value="X-Hasura-User-Id"
               onClick={toggleSessionVariable}
-              className={styles.sessionVarButton}
+              className="text-green-600 cursor-pointer text-xs font-bold"
             >
               [X-Hasura-User-Id]
             </button>

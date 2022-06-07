@@ -5,7 +5,6 @@ import { useScheduledTrigger } from '../state';
 import { ScheduledTrigger } from '../../types';
 import { Dispatch } from '../../../../../types';
 import { parseServerScheduledTrigger } from '../utils';
-import styles from '../../Events.scss';
 import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
 import { saveScheduledTrigger, deleteScheduledTrigger } from '../../ServerIO';
 
@@ -57,7 +56,7 @@ const Modify: React.FC<Props> = props => {
   };
 
   return (
-    <div className={styles.add_mar_bottom}>
+    <div className="mb-md">
       <CronTriggerFrom state={state} setState={setState} />
       <div>
         <Button
@@ -65,7 +64,7 @@ const Modify: React.FC<Props> = props => {
           color="yellow"
           size="sm"
           disabled={state.loading.modify}
-          className={`${styles.add_mar_right}`}
+          className="mr-md"
         >
           {state.loading.modify ? 'Saving...' : 'Save'}
         </Button>
@@ -74,7 +73,7 @@ const Modify: React.FC<Props> = props => {
           color="red"
           size="sm"
           disabled={state.loading.delete}
-          className={`${styles.add_mar_right}`}
+          className="mr-md"
         >
           {state.loading.delete ? 'Deleting...' : 'Delete'}
         </Button>

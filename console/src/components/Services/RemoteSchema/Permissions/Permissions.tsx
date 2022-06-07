@@ -5,7 +5,6 @@ import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { useIntrospectionSchemaRemote } from '../graphqlUtils';
 import globals from '../../../../Globals';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { getRemoteSchemaFields, buildSchemaFromRoleDefn } from './utils';
 import {
   RemoteSchemaFields,
@@ -110,7 +109,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
     return (
       <div>
         Error introspecting remote schema.{' '}
-        <a onClick={introspect} className={styles.cursorPointer} role="button">
+        <a onClick={introspect} className="cursor-pointer" role="button">
           {' '}
           Try again{' '}
         </a>
@@ -143,7 +142,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
           permRemoveMultipleRoles={permRemoveMultipleRoles}
         />
       )}
-      <div className={`${styles.add_mar_bottom}`}>
+      <div className="mb-sm">
         {!readOnlyMode && (
           <PermissionEditor
             key={permissionEdit.isNewRole ? 'NEW' : permissionEdit.role}

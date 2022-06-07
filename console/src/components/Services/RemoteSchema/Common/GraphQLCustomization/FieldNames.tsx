@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { OverlayTrigger } from 'react-bootstrap';
 import { FaQuestionCircle } from 'react-icons/fa';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
-import styles from '../../RemoteSchema.scss';
 import { Button } from '../../../../Common';
 import TypeMapping from './TypeMapping';
+import { inputStyles } from '../../constants';
 
 type FieldNameType = {
   parentType?: string;
@@ -44,7 +44,7 @@ const SelectOne = ({
   <select
     value={value}
     onChange={onChange}
-    className="form-control"
+    className={inputStyles}
     data-test={label}
   >
     <option value="">Select Type ...</option>
@@ -74,7 +74,7 @@ const FieldNames = ({
   }, [fieldName]);
 
   return (
-    <div className={styles.CustomEditor}>
+    <div className="border border-gray-300 p-md mt-xs">
       {mode === 'edit' ? null : (
         <div>
           <Button size="xs" onClick={onClose}>
@@ -104,7 +104,7 @@ const FieldNames = ({
         <div className="w-2/3">
           <input
             type="text"
-            className="form-control"
+            className={inputStyles}
             placeholder="prefix_"
             value={fieldNameInput?.prefix || ''}
             onChange={e =>
@@ -123,7 +123,7 @@ const FieldNames = ({
         <div className="w-2/3">
           <input
             type="text"
-            className="form-control"
+            className={inputStyles}
             placeholder="_suffix"
             value={fieldNameInput?.suffix || ''}
             onChange={e =>
