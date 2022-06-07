@@ -30,11 +30,11 @@ import {
 } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
-import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 import { getPersistedPageSize } from './tableUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import ExportData from './ExportData';
 import { dataSource, getTableCustomColumnName } from '../../../../dataSources';
+import { inputStyles } from '../../Actions/constants.js';
 
 const history = createHistory();
 
@@ -53,7 +53,7 @@ const renderCols = (
 
   return (
     <select
-      className="form-control"
+      className={inputStyles}
       onChange={onChange}
       value={colName.trim()}
       data-test={
@@ -79,7 +79,7 @@ const renderCols = (
 
 const renderOps = (opName, onChange, key) => (
   <select
-    className="form-control"
+    className={inputStyles}
     onChange={onChange}
     value={opName.trim()}
     data-test={`filter-op-${key}`}
@@ -130,14 +130,14 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
     }
 
     return (
-      <div key={i} className={`${styles.inputRow} row`}>
-        <div className="col-xs-4">
+      <div key={i} className="flex mb-xs">
+        <div className="w-4/12">
           {renderCols(colName, tableSchema, dSetFilterCol, 'filter', i, [])}
         </div>
-        <div className="col-xs-3">{renderOps(opName, dSetFilterOp, i)}</div>
-        <div className="col-xs-4">
+        <div className="w-3/12 ml-xs">{renderOps(opName, dSetFilterOp, i)}</div>
+        <div className="w-3/12 ml-xs">
           <input
-            className="form-control"
+            type="text"
             placeholder="-- value --"
             value={getDefaultValue(clause[colName][opName], opName)}
             onChange={e => {
@@ -147,9 +147,10 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
               }
             }}
             data-test={`filter-value-${i}`}
+            className={inputStyles}
           />
         </div>
-        <div className="text-center col-xs-1">{removeIcon}</div>
+        <div className="w-1/12">{removeIcon}</div>
       </div>
     );
   });
@@ -177,8 +178,8 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
     }
 
     return (
-      <div key={i} className={`${styles.inputRow} row`}>
-        <div className="col-xs-6">
+      <div key={i} className="flex mb-xs">
+        <div className="w-6/12 mr-xs">
           {renderCols(
             c.column,
             tableSchema,
@@ -188,10 +189,10 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
             currentOrderBy
           )}
         </div>
-        <div className="col-xs-5">
+        <div className="w-6/12">
           <select
             value={c.column ? c.type : ''}
-            className="form-control"
+            className={inputStyles}
             onChange={e => {
               dispatch(setOrderType(e.target.value, i));
             }}
@@ -204,7 +205,7 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
             <option value="desc">Desc</option>
           </select>
         </div>
-        <div className="col-xs-1 text-center">{removeIcon}</div>
+        <div className="">{removeIcon}</div>
       </div>
     );
   });
@@ -289,7 +290,7 @@ class FilterQuery extends Component {
     };
 
     return (
-      <div className={styles.add_mar_top}>
+      <div className="mt-sm">
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -298,27 +299,23 @@ class FilterQuery extends Component {
             dispatch(runQuery(tableSchema));
           }}
         >
-          <div>
-            <div
-              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
-            >
-              <span className={styles.subheading_text}>Filter</span>
+          <div className="flex">
+            <div className="w-1/2 pl-0">
+              <div className="text-lg font-bold pb-md">Filter</div>
               {renderWheres(whereAnd, tableSchema, dispatch)}
             </div>
-            <div
-              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
-            >
-              <b className={styles.subheading_text}>Sort</b>
+            <div className="w-1/2 pl-0">
+              <div className="text-lg font-bold pb-md">Sort</div>
               {renderSorts(orderBy, tableSchema, dispatch)}
             </div>
           </div>
-          <div className={`${styles.padd_right} ${styles.clear_fix}`}>
+          <div className="pr-sm clear-both mt-sm">
             <Button
               type="submit"
               color="yellow"
               size="sm"
               data-test="run-query"
-              className={styles.add_mar_right}
+              className="mr-sm"
             >
               Run query
             </Button>
@@ -326,7 +323,7 @@ class FilterQuery extends Component {
             {tableSchema.is_enum ? (
               <ReloadEnumValuesButton
                 dispatch={dispatch}
-                tooltipStyle={styles.add_mar_left_mid}
+                tooltipStyle="ml-sm"
               />
             ) : null}
           </div>

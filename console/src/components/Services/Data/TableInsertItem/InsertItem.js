@@ -9,7 +9,6 @@ import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
 import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { findTable, isFeatureSupported } from '../../../../dataSources';
-import styles from '../../../Common/TableCommon/Table.scss';
 import { TableRow } from '../Common/Components/TableRow';
 import { generateTableDef } from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
@@ -209,7 +208,7 @@ class InsertItem extends Component {
 
     return (
       <RightContainer>
-        <div className={styles.container + ' container-fluid'}>
+        <div>
           <TableHeader
             count={count}
             dispatch={dispatch}
@@ -220,42 +219,46 @@ class InsertItem extends Component {
             readOnlyMode={readOnlyMode}
           />
           <br />
-          <div className={styles.insertContainer + ' container-fluid'}>
-            <div className="col-xs-9">
-              <form id="insertForm" className="form-horizontal">
-                <div className={styles.form_flex}>
-                  {elements}
+          <div>
+            <div className="justiy-center w-9/12 pl-md">
+              <form id="insertForm">
+                <div className="flex flex-col pt-sm">{elements}</div>
+                <div className="my-sm">
                   <MigrationCheckbox
                     onChange={this.toggleMigrationCheckBox}
                     isChecked={this.state.isMigration}
                     isCLIMode={isCLIMode}
                   />
                 </div>
-                <div className={styles.display_flex}>
-                  <Button
-                    type="submit"
-                    color="yellow"
-                    size="sm"
-                    onClick={onClickSave}
-                    data-test="insert-save-button"
-                  >
-                    {buttonText}
-                  </Button>
-                  <Button
-                    color="white"
-                    size="sm"
-                    onClick={onClickClear}
-                    data-test="clear-button"
-                  >
-                    Clear
-                  </Button>
+                <div className="flex items-center">
+                  <div className="mr-md">
+                    <Button
+                      type="submit"
+                      color="yellow"
+                      size="sm"
+                      onClick={onClickSave}
+                      data-test="insert-save-button"
+                    >
+                      {buttonText}
+                    </Button>
+                  </div>
+                  <div className="mr-md">
+                    <Button
+                      color="white"
+                      size="sm"
+                      onClick={onClickClear}
+                      data-test="clear-button"
+                    >
+                      Clear
+                    </Button>
+                  </div>
                   {currentTable.is_enum ? (
                     <ReloadEnumValuesButton dispatch={dispatch} />
                   ) : null}
                 </div>
               </form>
             </div>
-            <div className="col-xs-3">{alert}</div>
+            <div className="w-3/12">{alert}</div>
           </div>
           <br />
           <br />

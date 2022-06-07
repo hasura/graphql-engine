@@ -67,7 +67,7 @@ import {
   persistPageSizeChange,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
-import styles from '../../../Common/TableCommon/Table.scss';
+import { inputStyles } from '../constants';
 
 const ViewRows = props => {
   const {
@@ -160,9 +160,8 @@ const ViewRows = props => {
 
     _gridHeadings.push({
       Header: (
-        <div className={styles.tableCenterContent}>
+        <div className="flex- w-full justify-center items-center">
           <input
-            className={`${styles.inputCheckbox} ${styles.headerInputCheckbox} legacy-input-fix`}
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
             }
@@ -193,10 +192,9 @@ const ViewRows = props => {
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis">
-            <span className={styles.tableHeaderCell}>
-              {columnName} {sortIcon}
-            </span>
+          <div className="flex">
+            <div>{columnName}</div>
+            <div className="absolute right-2.5">{sortIcon}</div>
           </div>
         ),
         accessor: columnName,
@@ -211,8 +209,8 @@ const ViewRows = props => {
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis">
-            <span className={styles.tableHeaderCell}>{relName}</span>
+          <div>
+            <div>{relName}</div>
           </div>
         ),
         accessor: relName,
@@ -303,7 +301,7 @@ const ViewRows = props => {
 
           return (
             <Button
-              className={styles.add_mar_right_small}
+              className={'mr-xs'}
               color="white"
               size="xs"
               onClick={disabled ? disabledOnClick : handleClick}
@@ -445,7 +443,7 @@ const ViewRows = props => {
           const triggerTitle = 'Invoke event trigger';
 
           return (
-            <div className={styles.display_inline}>
+            <div className="inline">
               <Dropdown
                 testId={`data_browse_rows_trigger_${rowIndex}`}
                 options={triggerOptions}
@@ -485,7 +483,7 @@ const ViewRows = props => {
         return (
           <div
             key={rowIndex}
-            className={`${styles.tableCenterContent} ${styles.overflowUnset}`}
+            className="flex w-full justify-center items-center overflow-unset"
           >
             {cloneButton}
             {editButton}
@@ -501,9 +499,8 @@ const ViewRows = props => {
 
       // Check for bulk actions
       newRow.tableRowSelectAction = (
-        <div className={styles.tableCenterContent}>
+        <div className="flex w-full justify-center items-center">
           <input
-            className={`${styles.inputCheckbox} legacy-input-fix`}
             type="checkbox"
             disabled={_disableBulkSelect}
             title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}
@@ -575,7 +572,7 @@ const ViewRows = props => {
 
             return (
               <div
-                className={isExpanded ? styles.tableCellExpanded : ''}
+                className={isExpanded ? 'whitespace-pre-wrap' : ''}
                 title={cellTitle}
               >
                 {cellValue}
@@ -612,7 +609,7 @@ const ViewRows = props => {
 
             cellValue = getRelExpander(
               'Close',
-              styles.expanded,
+              'text-red-500',
               handleCloseClick
             );
           } else {
@@ -749,11 +746,11 @@ const ViewRows = props => {
 
     if (selectedRows.length > 0) {
       selectedRowsSection = (
-        <div className={`${styles.display_flex} ${styles.add_padd_left_18}`}>
-          <b className={styles.padd_small_right}>Selected:</b>
+        <div className="flex mb-sm">
+          <b className="pr-xs">Selected:</b>
           {selectedRows.length}
           <button
-            className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
+            className="ml-xs text-md bg-white border rounded-sm border-gray-400 px-1"
             title="Delete selected rows"
             onClick={handleDeleteItems}
             data-test="bulk-delete"
@@ -973,10 +970,10 @@ const ViewRows = props => {
     const PaginationWithOnlyNav = () => {
       const newPage = curFilter.offset / curFilter.limit;
       return (
-        <div className={`row flex justify-around`}>
+        <div className="flex ml-sm mr-sm justify-around">
           <div>
             <button
-              className="bg-gray-100 btn"
+              className="bg-gray-100 py-xs px-md rounded-sm text-gray-500 disabled:text-gray-300"
               onClick={() => handlePageChange(newPage - 1)}
               disabled={curFilter.offset === 0}
               data-test="custom-pagination-prev"
@@ -984,14 +981,14 @@ const ViewRows = props => {
               prev
             </button>
           </div>
-          <div style={{ minWidth: '35%' }}>
+          <div className="w-1/3">
             <select
+              className={inputStyles}
               value={curFilter.limit}
               onChange={e => {
                 e.persist();
                 handlePageSizeChange(parseInt(e.target.value, 10) || 10);
               }}
-              className="form-control"
               data-test="pagination-select"
             >
               <option disabled value="">
@@ -1007,7 +1004,7 @@ const ViewRows = props => {
           </div>
           <div>
             <button
-              className="bg-gray-100 btn"
+              className="bg-gray-100 py-xs px-md rounded-sm text-gray-500 disabled:text-gray-300"
               onClick={() => handlePageChange(newPage + 1)}
               disabled={curRows.length === 0}
               data-test="custom-pagination-next"
@@ -1069,10 +1066,10 @@ const ViewRows = props => {
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
-      <div className={`row ${styles.add_mar_top}`}>
+      <div className="ml-0 mt-md">
         {getSelectedRowsSection()}
-        <div className="col-xs-12">
-          <div className={styles.tableContainer}>{renderTableBody()}</div>
+        <div className="w-full">
+          <div className="">{renderTableBody()}</div>
           <br />
           <br />
           <div>{getChildComponent()}</div>

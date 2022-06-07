@@ -13,7 +13,6 @@ import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { fetchEnumOptions } from './EditActions';
 import { TableRow } from '../Common/Components/TableRow';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
-import styles from '../../../Common/TableCommon/Table.scss';
 
 class EditItem extends Component {
   constructor() {
@@ -163,7 +162,7 @@ class EditItem extends Component {
 
     return (
       <RightContainer>
-        <div className={styles.container + ' container-fluid'}>
+        <div className="flex flex-col w-1/2">
           <TableHeader
             count={count}
             dispatch={dispatch}
@@ -174,9 +173,9 @@ class EditItem extends Component {
             readOnlyMode={readOnlyMode}
           />
           <br />
-          <div className={styles.insertContainer + ' container-fluid'}>
-            <div className="col-xs-9">
-              <form id="updateForm" className="form-horizontal">
+          <div>
+            <div className="w-9/12">
+              <form id="updateForm">
                 {elements}
                 <Button
                   type="submit"
