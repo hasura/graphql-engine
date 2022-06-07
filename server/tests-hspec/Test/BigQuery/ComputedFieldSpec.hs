@@ -40,7 +40,7 @@ bigquerySetup (testEnv, ()) = do
   -- Create functions in BigQuery
   BigQuery.runSql_ createFunctionsSQL
 
-  -- Add computed fields
+  -- Add computed fields and define select permissions
   let dataset = Constants.bigqueryDataset
   GraphqlEngine.postMetadata_
     testEnv
@@ -77,16 +77,78 @@ args:
       return_table:
         name: article
         dataset: *dataset
+
+# Role user_1 has select permissions on author and article tables.
+# user_1 can query search_articles_1 computed field.
+- type: bigquery_create_select_permission
+  args:
+    source: bigquery
+    table:
+      dataset: *dataset
+      name: author
+    role: user_1
+    permission:
+      columns: '*'
+      filter: {}
+      computed_fields:
+      - search_articles_1
+
+- type: bigquery_create_select_permission
+  args:
+    source: bigquery
+    table:
+      dataset: *dataset
+      name: article
+    role: user_1
+    permission:
+      columns: '*'
+      filter: {}
+
+# Role user_2 has select permissions only on author table.
+- type: bigquery_create_select_permission
+  args:
+    source: bigquery
+    table:
+      dataset: *dataset
+      name: author
+    role: user_2
+    permission:
+      columns: '*'
+      filter: {}
 |]
 
 bigqueryTeardown :: (TestEnvironment, ()) -> IO ()
 bigqueryTeardown (testEnv, ()) = do
-  -- Drop computed fields metadata
+  -- Drop permissions and computed fields metadata
   let dataset = Constants.bigqueryDataset
       dropComputedFieldsYaml =
         [yaml|
 type: bulk
 args:
+- type: bigquery_drop_select_permission
+  args:
+    source: bigquery
+    table:
+      dataset: *dataset
+      name: author
+    role: user_1
+
+- type: bigquery_drop_select_permission
+  args:
+    source: bigquery
+    table:
+      dataset: *dataset
+      name: article
+    role: user_1
+
+- type: bigquery_drop_select_permission
+  args:
+    source: bigquery
+    table:
+      dataset: *dataset
+      name: author
+    role: user_2
+
 - type: bigquery_drop_computed_field
   args:
     source: bigquery
@@ -246,4 +308,107 @@ data:
       title: Article 3 Title
       content: Article 3 by Author 2, has search keyword
       author_id: '2'
+|]
+
+  it "Query with computed fields as user_1 role" $ \testEnv ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithHeaders
+          testEnv
+          [("X-Hasura-Role", "user_1")]
+          [graphql|
+query {
+  hasura_author(order_by: {id: asc}){
+    id
+    name
+    search_articles_1(args: {search: "%1%"}){
+      id
+      title
+      content
+    }
+    search_articles_2(args: {search: "%keyword%"}){
+      id
+      title
+      content
+      author_id
+    }
+  }
+}
+|]
+      )
+      [yaml|
+data:
+  hasura_author:
+  - id: '1'
+    name: Author 1
+    search_articles_1:
+    - id: '1'
+      title: Article 1 Title
+      content: Article 1 by Author 1
+    search_articles_2: []
+  - id: '2'
+    name: Author 2
+    search_articles_1: []
+    search_articles_2:
+    - id: '3'
+      title: Article 3 Title
+      content: Article 3 by Author 2, has search keyword
+      author_id: '2'
+|]
+
+  it "Query with computed field search_articles_1 as user_2 role" $ \testEnv ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithHeaders
+          testEnv
+          [("X-Hasura-Role", "user_2")]
+          [graphql|
+query {
+  hasura_author(order_by: {id: asc}){
+    id
+    name
+    search_articles_1(args: {search: "%1%"}){
+      id
+      title
+      content
+    }
+  }
+}
+|]
+      )
+      [yaml|
+errors:
+- extensions:
+    path: "$.selectionSet.hasura_author.selectionSet.search_articles_1"
+    code: validation-failed
+  message: 'field "search_articles_1" not found in type: ''hasura_author'''
+|]
+
+  it "Query with computed field search_articles_2 as user_2 role" $ \testEnv ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphqlWithHeaders
+          testEnv
+          [("X-Hasura-Role", "user_2")]
+          [graphql|
+query {
+  hasura_author(order_by: {id: asc}){
+    id
+    name
+    search_articles_2(args: {search: "%keyword%"}){
+      id
+      title
+      content
+      author_id
+    }
+  }
+}
+|]
+      )
+      [yaml|
+errors:
+- extensions:
+    path: "$.selectionSet.hasura_author.selectionSet.search_articles_2"
+    code: validation-failed
+  message: 'field "search_articles_2" not found in type: ''hasura_author'''
 |]

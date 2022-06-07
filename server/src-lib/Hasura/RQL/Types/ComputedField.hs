@@ -15,7 +15,7 @@ module Hasura.RQL.Types.ComputedField
     cfiXComputedFieldInfo,
     computedFieldNameToText,
     fromComputedField,
-    onlyScalarComputedFields,
+    removeComputedFieldsReturningExistingTable,
   )
 where
 
@@ -107,5 +107,11 @@ instance (Backend b) => ToJSON (ComputedFieldInfo b) where
 
 $(makeLenses ''ComputedFieldInfo)
 
-onlyScalarComputedFields :: forall backend. (Backend backend) => [ComputedFieldInfo backend] -> [ComputedFieldInfo backend]
-onlyScalarComputedFields = filter (has _ReturnsScalar . computedFieldReturnType @backend . _cfiReturnType)
+-- | Filter computed fields not returning rows of existing table
+removeComputedFieldsReturningExistingTable ::
+  forall backend.
+  (Backend backend) =>
+  [ComputedFieldInfo backend] ->
+  [ComputedFieldInfo backend]
+removeComputedFieldsReturningExistingTable =
+  filter (not . has _ReturnsTable . computedFieldReturnType @backend . _cfiReturnType)
