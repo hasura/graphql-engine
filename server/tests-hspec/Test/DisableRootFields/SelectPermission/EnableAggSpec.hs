@@ -162,8 +162,8 @@ internal:
     comment: null
     permission:
       query_root_fields:
-      - select
       - select_aggregate
+      - select
       allow_aggregations: false
       computed_fields: []
       columns:
