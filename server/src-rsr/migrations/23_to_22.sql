@@ -171,7 +171,7 @@ FROM
   JOIN pg_type rt ON (rt.oid = p.prorettype)
   JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
 WHERE
-  pn.nspname :: text NOT LIKE 'pg_%'
+  pn.nspname :: text NOT LIKE 'pg\_%'
   AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
   AND (NOT EXISTS (
           SELECT

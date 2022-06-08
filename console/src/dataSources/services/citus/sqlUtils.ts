@@ -181,7 +181,7 @@ export const getFetchTablesListQuery = (options: {
 export const schemaListSql = (
   schemas?: string[]
 ) => `SELECT schema_name FROM information_schema.schemata WHERE
-schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views', 'columnar', 'citus', 'citus_internal') AND schema_name NOT LIKE 'pg_%'
+schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views', 'columnar', 'citus', 'citus_internal') AND schema_name NOT LIKE 'pg\\_%'
 ${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
@@ -193,7 +193,7 @@ FROM
 	information_schema.schemata
 WHERE
 	schema_name NOT IN('information_schema', 'hdb_catalog', 'hdb_views', 'columnar', 'citus', 'citus_internal')
-	AND schema_name NOT LIKE 'pg_%'
+	AND schema_name NOT LIKE 'pg\\_%'
 ORDER BY
 	schema_name ASC;
 `;

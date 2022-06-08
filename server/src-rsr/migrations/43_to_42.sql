@@ -375,7 +375,7 @@ FROM
   JOIN pg_namespace rtn ON (rtn.oid = rt.typnamespace)
   LEFT JOIN pg_description pd ON p.oid = pd.objoid
 WHERE
-  pn.nspname :: text NOT LIKE 'pg_%'
+  pn.nspname :: text NOT LIKE 'pg\_%'
   AND pn.nspname :: text NOT IN ('information_schema', 'hdb_catalog', 'hdb_views')
   AND (NOT EXISTS (
           SELECT
