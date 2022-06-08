@@ -1,4 +1,4 @@
-This note is in [Hasura.GraphQL.Parser.Internal.Input](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Input.hs#L59).
+This note is in [Hasura.GraphQL.Parser.Internal.Input](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Input.hs#L63).
 It is referenced at:
   - line 70 of [Hasura.GraphQL.Parser.Internal.TypeChecking](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/TypeChecking.hs#L70)
 

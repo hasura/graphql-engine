@@ -1,4 +1,4 @@
-This note is in [Hasura.RQL.DDL.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Permission.hs#L59).
+This note is in [Hasura.RQL.DDL.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/Permission.hs#L61).
 It is referenced at:
   - line 74 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L74)
   - line 121 of [Hasura.GraphQL.Schema.Mutation](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Mutation.hs#L121)
