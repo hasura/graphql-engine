@@ -45,11 +45,7 @@ class AddExistingTableView extends Component {
     }
 
     return (
-      <div
-        className={
-          'container-fluid ' + styles.clear_fix + ' ' + styles.padd_top
-        }
-      >
+      <div className={'pl-sm pr-sm mx-auto clear-both pt-sm'}>
         <Helmet title="Add Existing Table/View - Data | Hasura" />
         <div className={styles.subHeader}>
           <h2 className={styles.heading_text}>Add an existing table or view</h2>

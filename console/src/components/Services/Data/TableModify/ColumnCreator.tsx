@@ -18,6 +18,7 @@ import {
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import { focusYellowRing, inputStyles } from '../constants';
 
 const initialColumnEditorState = {
   colName: '',
@@ -162,7 +163,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
         onChange={e => colName.onChange(e.target.value)}
         placeholder="column name"
         type="text"
-        className="form-control"
+        className={inputStyles}
         data-test="column-name"
       />
     );
@@ -188,7 +189,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
         ) : (
           <input
             type="text"
-            className="form-control col-type-0"
+            className={inputStyles}
             onChange={e => {
               e.persist();
               colType.onChange(e.target.value);
@@ -209,7 +210,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
             checked={colNull.checked}
             onChange={e => colNull.onChange(e.target.checked)}
             style={{ margin: '0' }}
-            className="legacy-input-fix"
+            className={focusYellowRing}
             data-test="nullable-checkbox"
           />
           <span className="ml-xs">Nullable</span>
@@ -227,7 +228,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
             checked={colUnique.checked}
             onChange={e => colUnique.onChange(e.target.checked)}
             style={{ margin: '0' }}
-            className="legacy-input-fix"
+            className={focusYellowRing}
             data-test="unique-checkbox"
           />
           <span className="ml-xs">Unique</span>
@@ -254,7 +255,7 @@ const ColumnCreator: React.VFC<ColumnCreatorProps> = ({
       <CustomInputAutoSuggest
         placeholder="default value"
         options={defaultOptions}
-        className="form-control"
+        className={inputStyles}
         value={colDefault.value}
         onChange={(_, params) => colDefault.onChange(params.newValue)}
         data-test="default-value"

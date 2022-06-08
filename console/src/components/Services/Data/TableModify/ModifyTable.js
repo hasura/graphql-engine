@@ -29,7 +29,6 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
 import RootFields from './RootFields';
-import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
@@ -185,18 +184,17 @@ class ModifyTable extends React.Component {
           <div>
             <div>
               {isFeatureSupported('tables.modify.readOnly') && (
-                <div className={styles.readOnly}>
-                  <p className={styles.readOnlyText}>
+                <div className={'py-sm px-sm bg-gray-200 rounded-md mb-md'}>
+                  <p className="mb-xs font-bold">
                     <FaFlask aria-hidden="true" /> Coming soon for{' '}
                     {driverToLabel[currentDriver]}
                   </p>
-                  <p className={styles.noMargin}>
+                  <p className="m-0">
                     This page is currently read-only, but we're actively working
                     on making it available for the Console.
                   </p>
                 </div>
               )}
-
               {isFeatureSupported('tables.modify.comments.view') && (
                 <>
                   <div className="w-full sm:w-6/12 mb-lg">
@@ -348,21 +346,21 @@ class ModifyTable extends React.Component {
                   </div>
                 </>
               )}
-              {isFeatureSupported('tables.modify.indexes.view') ? (
-                <>
-                  <div className="w-full sm:w-6/12 mb-md">
-                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                      Indexes
-                      <Tooltip message={indexFieldsDescription} />
-                    </h4>
-                    <IndexFields tableSchema={table} />
-                  </div>
-                </>
-              ) : null}
+              {/* {isFeatureSupported('tables.modify.indexes.view') ? ( */}
+              <>
+                <div className="w-full sm:w-6/12 mb-md">
+                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                    Indexes
+                    <Tooltip message={indexFieldsDescription} />
+                  </h4>
+                  <IndexFields tableSchema={table} />
+                </div>
+              </>
+              {/* ) : null} */}
 
-              {table.table_type === 'PARTITIONED TABLE' && (
-                <PartitionInfo table={table} dispatch={dispatch} />
-              )}
+              {/* {table.table_type === 'PARTITIONED TABLE' && ( */}
+              <PartitionInfo table={table} dispatch={dispatch} />
+              {/* )} */}
 
               {isFeatureSupported('tables.modify.triggers') && (
                 <>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaEdit } from 'react-icons/fa';
+import { inputStyles } from '../constants';
 import {
   activateCommentEdit,
   updateCommentInput,
@@ -61,7 +62,7 @@ const TableCommentEditor = ({
       <div className="flex items-center">
         <input
           onChange={commentEdited}
-          className="form-control"
+          className={inputStyles}
           type="text"
           value={tableCommentEdit.value}
           defaultValue={tableComment}

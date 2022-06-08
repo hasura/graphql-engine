@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { inputStyles } from '../../constants';
 
 const UniqueKeySelector = ({
   uniqueKeys,
@@ -85,7 +86,7 @@ const UniqueKeySelector = ({
     return (
       <div className="flex" key={numCols}>
         <select
-          className="form-control"
+          className={inputStyles}
           data-test={`unique-key-${index}-column-${numCols}`}
           onChange={selectUniqueCol}
           value={''}

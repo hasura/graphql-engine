@@ -7,22 +7,9 @@ import TableColumnDefault from './TableColumnDefault';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { FaTimes } from 'react-icons/fa';
-
-/* Custom style object for searchable select box */
-const customSelectBoxStyles = {
-  dropdownIndicator: {
-    padding: '5px',
-  },
-  singleValue: {
-    color: '#555555',
-  },
-  valueContainer: {
-    padding: '0px 12px',
-  },
-};
+import { focusYellowRing, inputStyles } from '../utils';
 
 const TableColumn = props => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
   const {
     column,
     colLength,
@@ -90,14 +77,14 @@ const TableColumn = props => {
     <div key={i} className="grid mb-sm gap-sm grid-cols-1 sm:grid-cols-5">
       <input
         type="text"
-        className={`${styles.input} form-control`}
+        className={`${inputStyles}`}
         value={column.name}
         placeholder="column_name"
         onChange={onColumnChange.bind(undefined, i, column.nullable || false)}
         data-test={`column-${i}`}
       />
       <span
-        className={`${styles.inputDefault} ${styles.defaultWidth}`}
+        // className={`mt-sm w-72`}
         data-test={`col-type-${i}`}
       >
         {isFeatureSupported('tables.create.frequentlyUsedColumns') ? (
@@ -109,13 +96,12 @@ const TableColumn = props => {
             }
             colIdentifier={i}
             bsClass={`col-type-${i} add_table_column_selector`}
-            styleOverrides={customSelectBoxStyles}
+            styleOverrides={focusYellowRing}
           />
         ) : (
           <input
             type="text"
-            style={{ maxWidth: '200px' }}
-            className={`${styles.input} form-control col-type-${i}`}
+            className={`${inputStyles} max-w-48 col-type-${i}`}
             onChange={e => {
               e.persist();
               onColTypeChange(i, e.target.value);
@@ -124,7 +110,7 @@ const TableColumn = props => {
           />
         )}
       </span>
-      <span className={`${styles.inputDefault} ${styles.defaultWidth}`}>
+      <span className={inputStyles}>
         <TableColumnDefault
           onChange={setColDefaultValue}
           colIndex={i}
@@ -136,7 +122,7 @@ const TableColumn = props => {
       <div className="flex items-center">
         <label className="flex items-center mr-sm">
           <input
-            className={`legacy-input-fix`}
+            className={focusYellowRing}
             style={{ margin: '0' }}
             checked={column.nullable}
             type="checkbox"
@@ -147,7 +133,7 @@ const TableColumn = props => {
         </label>
         <label className="flex items-center">
           <input
-            className={`legacy-input-fix`}
+            className={focusYellowRing}
             style={{ margin: '0' }}
             checked={isColumnUnique}
             type="checkbox"

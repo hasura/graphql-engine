@@ -17,7 +17,6 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import styles from './ModifyTable.scss';
 import {
   getTableCustomColumnNames,
   findTable,
@@ -29,6 +28,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import ComputedFields from './ComputedFields';
 import RootFields from './RootFields';
 import FeatureDisabled from '../FeatureDisabled';
+import { inputStyles } from '../constants';
 
 const ModifyView = props => {
   const {
@@ -127,7 +127,7 @@ const ModifyView = props => {
             <div className="ml-auto w-6/12">
               <input
                 type="text"
-                className={'form-control'}
+                className={inputStyles}
                 value={customColumnNames[columnName] || ''}
                 placeholder={`${columnName} (default)`}
                 onChange={setCustomColumnName}
@@ -196,7 +196,7 @@ const ModifyView = props => {
   const untrackBtn = (
     <Button
       type="submit"
-      className={styles.add_mar_right}
+      className="mr-sm"
       color="white"
       size="sm"
       onClick={untrackOnclick}
@@ -295,7 +295,9 @@ const ModifyView = props => {
         {deleteBtn}
         <br />
         <br />
-        <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
+        <div className="top-150 r-50 bottom-0 min-w-13 grid-cols-3">
+          {alert}
+        </div>
       </div>
     </RightContainer>
   );

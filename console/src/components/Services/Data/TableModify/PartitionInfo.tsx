@@ -3,7 +3,6 @@ import { FaColumns, FaTable } from 'react-icons/fa';
 import { Table, Partition } from '../../../../dataSources/types';
 import { Dispatch } from '../../../../types';
 import { fetchPartitionDetails } from '../DataActions';
-import styles from './ModifyTable.scss';
 
 interface Props {
   table: Table;
@@ -68,10 +67,7 @@ const PartitionInfo: React.FC<Props> = ({ table, dispatch }) => {
                 return (
                   <div className="mt-sm">
                     <span className="font-semibold mr-xs">
-                      <FaTable
-                        className={styles.partitionLabel}
-                        aria-hidden="true"
-                      />{' '}
+                      <FaTable className="mr-xs" aria-hidden="true" />{' '}
                       {p.partition_name} -{' '}
                     </span>
                     <HighlightedText value={p.partition_def} />

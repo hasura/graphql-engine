@@ -15,6 +15,7 @@ import { Dispatch } from '../../../../types';
 import { Schema, ComputedField, Table } from '../../../../dataSources/types';
 import { PGFunction } from '../../../../dataSources/services/postgresql/types';
 import { CommentInput } from '../Common/Components/CommentInput';
+import { inputStyles } from '../constants';
 
 interface ComputedFieldsEditorProps {
   table: Table;
@@ -328,7 +329,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               type="text"
               value={computedFieldName}
               onChange={handleNameChange}
-              className="form-control"
+              className={inputStyles}
               data-test="computed-field-name-input"
             />
           </div>
@@ -361,7 +362,6 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               </h4>
               <RawSqlButton
                 dataTestId="create-function"
-                className=""
                 sql=""
                 dispatch={dispatch}
                 source={source}
@@ -407,7 +407,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               value={computedFieldTableRowArg ?? undefined}
               placeholder="default: first argument"
               onChange={handleTableRowArgChange}
-              className="form-control"
+              className={inputStyles}
               data-test="computed-field-first-arg-input"
             />
           </div>
@@ -427,7 +427,7 @@ const ComputedFieldsEditor: React.FC<ComputedFieldsEditorProps> = ({
               value={computedFieldTableSessionArg ?? ''}
               placeholder="hasura_session"
               onChange={handleTableSesssionArgChange}
-              className="form-control"
+              className={inputStyles}
             />
           </div>
 

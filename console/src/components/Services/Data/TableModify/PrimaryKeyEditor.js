@@ -9,8 +9,6 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { showSuccessNotification } from '../../Common/Notification';
 import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
 
-import styles from './ModifyTable.scss';
-
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const PrimaryKeyEditor = ({
@@ -64,7 +62,7 @@ const PrimaryKeyEditor = ({
   // expanded editor content
   const pkEditorExpanded = () => (
     <div>
-      <div className={`${styles.add_mar_top_small} ${styles.add_mar_bottom}`}>
+      <div className="mt-xs mb-xs">
         <PrimaryKeySelector
           dispatch={dispatch}
           setPk={setPrimaryKeys}

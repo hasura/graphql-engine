@@ -20,7 +20,6 @@ import {
 
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
-import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { dataSource } from '../../../../dataSources';
 
@@ -110,7 +109,7 @@ const ColumnEditorList = ({
       return (
         <GqlCompatibilityWarning
           identifier={colName}
-          className={styles.add_mar_left_small}
+          className="ml-xs"
           ifWarningCanBeFixed
         />
       );
@@ -266,7 +265,7 @@ const ColumnEditorList = ({
           saveFunc={onSubmit}
           readOnlyMode={readOnlyMode}
           removeFunc={columnProperties.pkConstraint ? null : onDelete}
-          collapsedClass={styles.display_flex}
+          collapsedClass="flex items-center"
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
           expandCallback={editorExpandCallback}

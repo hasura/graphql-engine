@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaTimes } from 'react-icons/fa';
-import styles from '../../../../Common/TableCommon/Table.scss';
+import { inputStyles } from '../../constants';
 
 const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
   const numPks = primaryKeys.length;
@@ -62,7 +62,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
         <div key={i} className="flex items-center">
           <select
             value={pk || ''}
-            className={`w-full form-control ${styles.add_pad_left}`}
+            className={`w-full ${inputStyles} pd-sm`}
             onChange={dispatchSet}
             data-test={`primary-key-select-${i}`}
           >
