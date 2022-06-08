@@ -18,17 +18,19 @@ module Harness.Test.Context
     Options (..),
     combineOptions,
     defaultOptions,
+    contextRepl,
   )
 where
 
 import Control.Applicative ((<|>))
 import Data.Foldable (for_)
 import Data.Maybe (fromMaybe)
-import Harness.Exceptions (catchRethrow, mask)
+import Harness.Exceptions
 import Harness.Test.BackendType
+import Harness.Test.Hspec.Extended
 import Harness.TestEnvironment (TestEnvironment)
-import Test.Hspec (ActionWith, HasCallStack, SpecWith, aroundAllWith, describe)
-import Test.Hspec.Core.Spec (Item (..), mapSpecItem)
+import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
+import Test.Hspec.Core.Spec (mapSpecItem)
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -69,23 +71,6 @@ run contexts tests = do
 actionWithTestEnvironmentMapping :: ActionWith TestEnvironment -> ActionWith (TestEnvironment, ())
 actionWithTestEnvironmentMapping actionWith (testEnvironment, _) = actionWith testEnvironment
 
--- | Modify an 'Item'@ a@ by way of mapping its 'ActionWith'@ a@ function to
--- some 'ActionWith'@ b@, producing an 'Item'@ b@.
---
--- This can be useful when one wants to modify the testEnvironment parameter in a
--- 'SpecWith' test tree, without having to resolve the type mismatch using some
--- combination of type families and helper type classes.
---
--- NOTE: This should go in some sort of @Test.Hspec.Core.Spec.Extended@ module.
-mapItemAction :: (ActionWith a -> ActionWith b) -> Item a -> Item b
-mapItemAction mapActionWith item@Item {itemExample} =
-  let mappedExample params next callback =
-        itemExample
-          params
-          (next . mapActionWith)
-          callback
-   in item {itemExample = mappedExample}
-
 -- | Runs the given tests, for each provided 'Context'@ a@.
 --
 -- Each 'Context' provides distinct setup and teardown functions; 'runWithLocalTestEnvironment'
@@ -102,34 +87,54 @@ runWithLocalTestEnvironment ::
   (Options -> SpecWith (TestEnvironment, a)) ->
   SpecWith TestEnvironment
 runWithLocalTestEnvironment contexts tests =
-  for_ contexts \ctx@Context {name, customOptions} -> do
-    let options = fromMaybe defaultOptions customOptions
-    describe (show name) $ aroundAllWith (contextBracket ctx) (tests options)
-  where
-    -- We want to be able to report exceptions happening both during the tests
-    -- and at teardown, which is why we use a custom re-implementation of
-    -- @bracket@.
-    contextBracket ::
-      Context a ->
-      ((TestEnvironment, a) -> IO ()) ->
-      TestEnvironment ->
-      IO ()
-    contextBracket Context {mkLocalTestEnvironment, setup, teardown} actionWith globalTestEnvironment =
-      mask \restore -> do
-        localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
-        let testEnvironment = (globalTestEnvironment, localTestEnvironment)
+  for_ contexts \c -> do
+    let n = name c
+        co = customOptions c
+        options = fromMaybe defaultOptions co
+    describe (show n) $ aroundAllWith (contextBracket c) (tests options)
 
-        catchRethrow
-          (setup testEnvironment)
-          (teardown testEnvironment)
+-- We want to be able to report exceptions happening both during the tests
+-- and at teardown, which is why we use a custom re-implementation of
+-- @bracket@.
+contextBracket ::
+  Context a ->
+  ((TestEnvironment, a) -> IO ()) ->
+  TestEnvironment ->
+  IO ()
+contextBracket Context {mkLocalTestEnvironment, setup, teardown} actionWith globalTestEnvironment =
+  mask \restore -> do
+    localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
+    let testEnvironment = (globalTestEnvironment, localTestEnvironment)
 
-        -- Run tests.
-        _ <-
-          catchRethrow
-            (restore $ actionWith testEnvironment)
-            (teardown testEnvironment)
-        -- If no exception occurred, run the normal teardown function.
-        teardown testEnvironment
+    _ <-
+      catchRethrow
+        (setup testEnvironment)
+        (teardown testEnvironment)
+
+    -- Run tests.
+    _ <-
+      catchRethrow
+        (restore $ actionWith testEnvironment)
+        (teardown testEnvironment)
+    -- If no exception occurred, run the normal teardown function.
+    teardown testEnvironment
+
+-- | A function that makes it easy to perform setup and teardown when
+-- debugging/developing tests within a repl.
+contextRepl ::
+  Context a ->
+  TestEnvironment ->
+  IO (IO ())
+contextRepl Context {mkLocalTestEnvironment, setup, teardown} globalTestEnvironment = do
+  localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
+  let testEnvironment = (globalTestEnvironment, localTestEnvironment)
+
+  catchRethrow
+    (setup testEnvironment)
+    (teardown testEnvironment)
+
+  -- If no exception occurred, run the normal teardown function.
+  return (teardown testEnvironment)
 
 --------------------------------------------------------------------------------
 

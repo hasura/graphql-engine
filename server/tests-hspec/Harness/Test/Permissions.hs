@@ -1,8 +1,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Common interface for setup/teardown of permissions metadata.
+-- | This module captures what different backends happen to have in common with
+-- regard to permission metadata handling.
 --
--- It's preferable to use the backend-specific versions of 'setup' and 'teardown'.
+-- Tests should never use the setup function in this module directly but instead
+-- rely those exposed in specific backend harness modules.
 module Harness.Test.Permissions
   ( Permission (..),
     createPermission,
@@ -41,6 +43,9 @@ data Permission
         permissionColumns :: [Text]
       }
 
+-- | Send a JSON payload of the common `*_create_*_permission` form.
+-- Backends where the format of this api call deviates significantly from this
+-- should implement their own variation in its harness module.
 createPermission :: Text -> TestEnvironment -> Permission -> IO ()
 createPermission backendPrefix env InsertPermission {..} = do
   let requestType = backendPrefix <> "_create_insert_permission"

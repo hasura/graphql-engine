@@ -309,6 +309,62 @@ finishes running. Now based on what you want to, you can either run
 the Hasura's Graphql engine to debug this further or directly inspect
 the database using [any of it's clients](https://en.wikipedia.org/wiki/Comparison_of_database_administration_tools).
 
+### Using GHCI
+
+Alternatively it is also possible to manually start up the test environment in the GHCI repl.
+
+An example session:
+
+```
+$ cabal repl graphql-engine:tests-hspec
+GHCi, version 8.10.7: https://www.haskell.org/ghc/  :? for help
+[ 1 of 59] Compiling Harness.Constants ( tests-hspec/Harness/Constants.hs, interpreted )
+...
+[59 of 59] Compiling Main             ( tests-hspec/Spec.hs, interpreted )
+Ok, 59 modules loaded.
+*Main> :module *Main *SpecHook *Test.SomeSpecImDeveloping
+*Main *SpecHook *Test.SomeSpecImDeveloping> te <- SpecHook.setupTestEnvironment
+*Main *SpecHook *Test.SomeSpecImDeveloping> te
+<TestEnvironment: http://127.0.0.1:35975 >
+*Main *SpecHook *Test.SomeSpecImDeveloping> -- Setup the instance according to the Context
+*Main *SpecHook *Test.SomeSpecImDeveloping> cleanupPG <- Context.contextRepl Test.SomeSpecImDeveloping.postgresContext te
+*Main *SpecHook *Test.SomeSpecImDeveloping>
+*Main *SpecHook *Test.SomeSpecImDeveloping> -- run tests or parts of tests manually here
+*Main *SpecHook *Test.SomeSpecImDeveloping> Test.SomeSpecImDeveloping.someExample te
+*Main *SpecHook *Test.SomeSpecImDeveloping>
+*Main *SpecHook *Test.SomeSpecImDeveloping> -- run the test with the hspec runner
+*Main *SpecHook *Test.SomeSpecImDeveloping> hspec (aroundAllWith (\a () ->a te) Test.SomeSpecImDeveloping>.spec)
+Postgres
+  ... [✔]
+Citus
+  ... [✔]
+*Main *SpecHook *Test.SomeSpecImDeveloping>
+*Main *SpecHook *Test.SomeSpecImDeveloping> -- Or perform other manual inspections, e.g. via the console or ghci.
+*Main *SpecHook *Test.SomeSpecImDeveloping>
+*Main *SpecHook *Test.SomeSpecImDeveloping> -- Cleanup before reloading
+*Main *SpecHook *Test.SomeSpecImDeveloping> cleanupPG
+*Main *SpecHook *Test.SomeSpecImDeveloping> SpecHook.teardownTestEnvironment te
+
+*Main *SpecHook *Test.SomeSpecImDeveloping> -- Reload changes made to the test module or HGE.
+*Main *SpecHook *Test.SomeSpecImDeveloping> :reload
+```
+
+Points to note:
+
+* `SpecHook.setupTestEnvironment` starts the HGE server, and its url is revealed by `instance Show TestEnvironment`.
+* `SpecHook.teardownTestEnvironment` stops it again.
+  * This is a good idea to do before issuing the `:reload` command, because
+    reloading loses the `te` reference but leaves the thread running!
+* `Context.contextRepl` runs the setup action of a given `Context` and returns a
+  corresponding teardown action.
+  * After running this you can interact with the HGE console in the same state
+    as when the tests are run.
+  * Or you can run individual test `Example`s or `Spec`s.
+* To successfully debug/develop a test in the GHCI repl, the test module should:
+  * define its `Context`s as toplevel values,
+  * define its `Example`s as toplevel values,
+  * ... such that they can be used directly in the repl.
+
 ## Style guide
 
 ### Stick to [Simple Haskell](https://www.simplehaskell.org/)

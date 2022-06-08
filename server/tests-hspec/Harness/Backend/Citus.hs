@@ -18,6 +18,8 @@ module Harness.Backend.Citus
     teardown,
     setupPermissions,
     teardownPermissions,
+    setupTablesAction,
+    setupPermissionsAction,
   )
 where
 
@@ -38,6 +40,7 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context (BackendType (Citus), defaultSource)
+import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
@@ -236,6 +239,18 @@ setup tables (testEnvironment, _) = do
   for_ tables $ \table -> do
     Schema.trackObjectRelationships Citus table testEnvironment
     Schema.trackArrayRelationships Citus table testEnvironment
+
+setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+setupTablesAction ts env =
+  SetupAction
+    (setup ts (env, ()))
+    (const $ teardown ts (env, ()))
+
+setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
+setupPermissionsAction permissions env =
+  SetupAction
+    (setupPermissions permissions env)
+    (const $ teardownPermissions permissions env)
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.

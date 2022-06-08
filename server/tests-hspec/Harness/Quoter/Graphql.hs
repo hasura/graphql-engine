@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 
 -- | GraphQL quasi quoter with built-in interpolation.
 -- Interpolation works via the #{expression} syntax.
@@ -86,14 +86,14 @@ parseInterpolatedGQL = first show . P.parse parseParts "graphqlQQ"
 -- ideal here, but this is what was (implicitly) happening before.
 interpret :: [GraphqlPart] -> ExpQ
 interpret =
-  appE (varE 'fromString)
-    . appE (varE 'concat)
+  appE [|fromString|]
+    . appE [|concat|]
     . listE
     . fmap go
   where
     go :: GraphqlPart -> ExpQ
     go (GPRaw s) = stringE s
-    go (GPExpression e) = appE (varE 'jsonToString) (pure e)
+    go (GPExpression e) = appE [|jsonToString|] (pure e)
 
 -- TODO: Is there a direct way, without going through 'Text'?
 jsonToString :: ToJSON a => a -> String

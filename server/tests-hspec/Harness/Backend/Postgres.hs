@@ -18,6 +18,8 @@ module Harness.Backend.Postgres
     teardown,
     setupPermissions,
     teardownPermissions,
+    setupTablesAction,
+    setupPermissionsAction,
   )
 where
 
@@ -38,6 +40,7 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context (BackendType (Postgres), defaultBackendTypeString, defaultSource)
+import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
@@ -258,6 +261,18 @@ teardown tables (testEnvironment, _) = do
           (untrackTable testEnvironment table)
           (dropTable table)
       )
+
+setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+setupTablesAction ts env =
+  SetupAction
+    (setup ts (env, ()))
+    (const $ teardown ts (env, ()))
+
+setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
+setupPermissionsAction permissions env =
+  SetupAction
+    (setupPermissions permissions env)
+    (const $ teardownPermissions permissions env)
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
