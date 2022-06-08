@@ -56,12 +56,12 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
       try {
         const rows = result.slice(1).map(row => ({
           from: {
-            table: row[0],
-            column: row[1].split(','),
+            table: row[0]?.replace(/"/g, ''),
+            column: row[1].split(',')?.map(i => i?.replace(/"/g, '')),
           },
           to: {
-            table: row[2],
-            column: row[3].split(','),
+            table: row[2]?.replace(/"/g, ''),
+            column: row[3].split(',')?.map(i => i?.replace(/"/g, '')),
           },
         }));
 

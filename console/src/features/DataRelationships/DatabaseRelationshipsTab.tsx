@@ -84,14 +84,15 @@ const useFormState = () => {
       return;
     }
 
-    mutation.mutate({
-      query: {
-        type: 'delete_remote_relationship' as allowedMetadataTypes,
-        args: {
-          table: createTable(row?.relationship?.target),
+    if (row && 'relationship' in row && 'target' in row.relationship)
+      mutation.mutate({
+        query: {
+          type: 'delete_remote_relationship' as allowedMetadataTypes,
+          args: {
+            table: createTable(row?.relationship?.target),
+          },
         },
-      },
-    });
+      });
   };
 
   const onClick = ({ type, row }: OnClickHandlerArgs) => {

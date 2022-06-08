@@ -15,22 +15,21 @@ export type DataTarget =
   | BigQueryDataTarget
   | MysqlDataTarget;
 
+export type TableRelationshipsType = {
+  from: {
+    table: string;
+    column: string[];
+  };
+  to: {
+    table: string;
+    column: string[];
+  };
+};
+
 export type TUseTableRelationshipsQuery = (props: {
   target: DataTarget;
   queryOptions?: RunSQLQueryOptions<string[], any>;
-}) => UseQueryResult<
-  {
-    from: {
-      table: string;
-      column: string[];
-    };
-    to: {
-      table: string;
-      column: string[];
-    };
-  }[],
-  APIError
->;
+}) => UseQueryResult<TableRelationshipsType[], APIError>;
 
 interface Driver {
   useTableRelationshipsQuery: TUseTableRelationshipsQuery;

@@ -10,13 +10,14 @@ interface CardRadioGroupItem<T> {
 interface CardRadioGroupProps<T> {
   value?: T;
   items: Array<CardRadioGroupItem<T>>;
+  disabled?: boolean;
   onChange: (option: T) => void;
 }
 
 export const CardRadioGroup = <T extends string = string>(
   props: CardRadioGroupProps<T>
 ) => {
-  const { value, items, onChange } = props;
+  const { value, items, disabled = false, onChange } = props;
   const isCardNumberLessThenThree = items?.length === 1 || items?.length === 2;
 
   return (
@@ -46,6 +47,7 @@ export const CardRadioGroup = <T extends string = string>(
                 onChange={() => onChange(iValue)}
                 checked={value === iValue}
                 data-test={`radio-select-${iValue}`}
+                disabled={disabled}
               />
             </div>
             <div className="ml-sm">

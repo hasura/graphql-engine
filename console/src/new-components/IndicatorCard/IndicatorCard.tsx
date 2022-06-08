@@ -43,7 +43,7 @@ export const IndicatorCard = ({
   return (
     <div
       className={clsx(
-        'flex items-center bg-white rounded p-md border border-gray-300 border-l-4 ',
+        'flex items-center bg-white rounded p-md border border-gray-300 border-l-4 mb-sm',
         cardColors[status]
       )}
     >
