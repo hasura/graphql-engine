@@ -30,6 +30,8 @@ where
 
 import Control.Lens (Lens', (.~), (^?))
 import Data.Aeson
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as HS
@@ -185,7 +187,12 @@ procSetObj source tn fieldInfoMap mObj = do
   return (HM.fromList setColTups, depHeaders, deps)
   where
     setObj = fromMaybe mempty mObj
-    depHeaders = getDepHeadersFromVal $ Object $ mapKeys toTxt setObj
+    depHeaders =
+      getDepHeadersFromVal $
+        Object $
+          KM.fromList $
+            map (first (K.fromText . toTxt)) $
+              HM.toList setObj
 
     getDepReason = bool DRSessionVariable DROnType . isStaticValue
 

@@ -66,6 +66,8 @@ module Hasura.GraphQL.ParameterizedQueryHash
 where
 
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString qualified as B
 import Data.HashMap.Strict qualified as Map
 import Hasura.GraphQL.Parser (InputValue (..), Variable (..))
@@ -106,7 +108,7 @@ data ParameterizedQueryHashList
 -- 'J.ToJSON' instance were modified to no longer always return objects
 parameterizedQueryHashListToObject :: ParameterizedQueryHashList -> J.Object
 parameterizedQueryHashListToObject =
-  Map.fromList . \case
+  KM.fromList . \case
     -- when a non-graphql query is executed, or when the request fails,
     -- there are no hashes to log
     PQHSetEmpty -> []
@@ -156,8 +158,8 @@ normalizeSelectionSet = (normalizeSelection =<<)
       J.Object vals -> G.VObject $
         -- FIXME(#3479): THIS WILL CREATE INVALID GRAPHQL OBJECTS
         Map.fromList $
-          flip map (Map.toList vals) $ \(key, val) ->
-            (G.unsafeMkName key, jsonToNormalizedGQLVal val)
+          flip map (KM.toList vals) $ \(key, val) ->
+            (G.unsafeMkName (K.toText key), jsonToNormalizedGQLVal val)
 
     normalizeValue :: G.Value Variable -> G.Value Void
     normalizeValue = \case

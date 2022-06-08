@@ -28,6 +28,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.Either (isLeft)
@@ -214,9 +215,9 @@ decodeGQResp encJson =
   let gqResp =
         case J.decode @J.Value (encJToLBS encJson) of
           Just (J.Object v) ->
-            case Map.lookup "error" v of
+            case KM.lookup "error" v of
               Just err -> Just (Right $ J.encode err)
-              Nothing -> Right . J.encode <$> Map.lookup "data" v
+              Nothing -> Right . J.encode <$> KM.lookup "data" v
           _ -> Nothing
    in (gqResp, encJson)
 

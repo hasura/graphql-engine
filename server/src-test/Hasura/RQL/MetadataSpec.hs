@@ -15,6 +15,7 @@ where
 import Control.Lens ((%~), (.~), (^?!))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as Aeson
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens (key, _Object)
 import Data.HashMap.Strict qualified as HM
 import Data.Proxy (Proxy (..))
@@ -274,9 +275,9 @@ mk_bigquery_remote_relationship_argument action =
   mk_backend_remote_relationship_argument "bigquery" action
     & key "args" . key "table"
       .~ Aeson.Object
-        ( HM.fromList
-            [ ("name" :: Text, "profiles"),
-              ("dataset" :: Text, "test")
+        ( KM.fromList
+            [ ("name", "profiles"),
+              ("dataset", "test")
             ]
         )
 

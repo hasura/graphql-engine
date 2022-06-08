@@ -22,9 +22,9 @@ module Hasura.RQL.Types.Relationships.Local
 where
 
 import Control.Lens (makeLenses)
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.Aeson.Types
-import Data.HashMap.Strict qualified as HM
 import Data.Text qualified as T
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -99,8 +99,8 @@ instance (Backend b, ToJSON a) => ToJSON (RelUsing b a) where
 
 instance (FromJSON a, Backend b) => FromJSON (RelUsing b a) where
   parseJSON (Object o) = do
-    let fkeyOnM = HM.lookup "foreign_key_constraint_on" o
-        manualM = HM.lookup "manual_configuration" o
+    let fkeyOnM = KM.lookup "foreign_key_constraint_on" o
+        manualM = KM.lookup "manual_configuration" o
         msgFrag = "one of foreign_key_constraint_on/manual_configuration should be present"
     case (fkeyOnM, manualM) of
       (Nothing, Nothing) -> fail $ "atleast " <> msgFrag

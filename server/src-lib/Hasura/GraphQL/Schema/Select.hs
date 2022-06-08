@@ -30,6 +30,7 @@ where
 import Control.Lens hiding (index)
 import Data.Aeson qualified as J
 import Data.Aeson.Internal qualified as J
+import Data.Aeson.Key qualified as K
 import Data.ByteString.Lazy qualified as BL
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
@@ -877,7 +878,7 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
       case maybeOrderBys of
         Nothing -> forM (NESeq.toNonEmpty pkeyColumns) $
           \columnInfo -> do
-            let columnJsonPath = [J.Key $ toTxt $ ciColumn columnInfo]
+            let columnJsonPath = [J.Key $ K.fromText $ toTxt $ ciColumn columnInfo]
                 columnType = ciType columnInfo
             columnValue <-
               iResultToMaybe (executeJSONPath columnJsonPath cursorValue)
@@ -892,7 +893,7 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
             let IR.OrderByItemG orderType annObCol nullsOrder = orderBy
                 columnType = getOrderByColumnType annObCol
             orderByItemValue <-
-              iResultToMaybe (executeJSONPath (getPathFromOrderBy annObCol) cursorValue)
+              iResultToMaybe (executeJSONPath (map (J.Key . K.fromText) (getPathFromOrderBy annObCol)) cursorValue)
                 `onNothing` throwInvalidCursor
             pgValue <- liftQErr $ parseScalarValueColumnType columnType orderByItemValue
             let unresolvedValue = IR.UVParameter Nothing $ ColumnValue columnType pgValue
@@ -904,25 +905,25 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
         liftQErr = either (parseError . qeError) pure . runExcept
 
         mkAggregateOrderByPath = \case
-          IR.AAOCount -> [J.Key "count"]
-          IR.AAOOp t col -> [J.Key t, J.Key $ toTxt $ ciColumn col]
+          IR.AAOCount -> ["count"]
+          IR.AAOOp t col -> [t, toTxt $ ciColumn col]
 
         getPathFromOrderBy = \case
           IR.AOCColumn columnInfo ->
-            let pathElement = J.Key $ toTxt $ ciColumn columnInfo
+            let pathElement = toTxt $ ciColumn columnInfo
              in [pathElement]
           IR.AOCObjectRelation relInfo _ obCol ->
-            let pathElement = J.Key $ relNameToTxt $ riName relInfo
+            let pathElement = relNameToTxt $ riName relInfo
              in pathElement : getPathFromOrderBy obCol
           IR.AOCArrayAggregation relInfo _ aggOb ->
-            let fieldName = J.Key $ relNameToTxt (riName relInfo) <> "_aggregate"
+            let fieldName = relNameToTxt (riName relInfo) <> "_aggregate"
              in fieldName : mkAggregateOrderByPath aggOb
           IR.AOCComputedField cfob ->
             let fieldNameText = computedFieldNameToText $ IR._cfobName cfob
              in case IR._cfobOrderByElement cfob of
-                  IR.CFOBEScalar _ -> [J.Key fieldNameText]
+                  IR.CFOBEScalar _ -> [fieldNameText]
                   IR.CFOBETableAggregation _ _ aggOb ->
-                    J.Key (fieldNameText <> "_aggregate") : mkAggregateOrderByPath aggOb
+                    (fieldNameText <> "_aggregate") : mkAggregateOrderByPath aggOb
 
         getOrderByColumnType = \case
           IR.AOCColumn columnInfo -> ciType columnInfo

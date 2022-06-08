@@ -3,10 +3,11 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-  - message: 'expected one of the values red, purple, yellow, orange, green, or blue for type "colors_enum", but found "not_a_real_color"'
-    extensions:
+  - extensions:
       code: validation-failed
       path: $.selectionSet.users.args.where.favorite_color._eq
+    message: expected one of the values orange, yellow, green, purple, blue, or red
+      for type "colors_enum", but found "not_a_real_color"
 query:
   query: |
     query ($color: colors_enum) {

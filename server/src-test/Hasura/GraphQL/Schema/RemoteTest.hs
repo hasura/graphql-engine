@@ -1,9 +1,12 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.GraphQL.Schema.RemoteTest (spec) where
 
 import Control.Lens (Prism', prism', to, (^..), _Right)
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString.Lazy qualified as LBS
 import Data.HashMap.Strict.Extended qualified as M
 import Data.Text qualified as T
@@ -99,7 +102,7 @@ mkTestVariableValues vars = runIdentity $
     value <- J.eitherDecode vars `onLeft` (throw500 . T.pack)
     case value of
       J.Object vs ->
-        M.fromList <$> for (M.toList vs) \(name, val) -> do
+        M.fromList <$> for (KM.toList vs) \(K.toText -> name, val) -> do
           gname <- G.mkName name `onNothing` throw500 ("wrong Name: " <>> name)
           pure (gname, val)
       _ -> throw500 "variables must be an object"
@@ -229,7 +232,7 @@ query($a: A!) {
                      Variable
                        (VIRequired G._a)
                        (G.TypeNamed (G.Nullability False) G._A)
-                       (JSONValue $ J.Object $ M.fromList [("b", J.Object $ M.fromList [("c", J.Object $ M.fromList [("i", J.Number 0)])])])
+                       (JSONValue $ J.Object $ KM.fromList [("b", J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])])
                )
 
 testNoVarExpansionIfNoPresetUnlessTopLevelOptionalField :: Spec
@@ -282,7 +285,7 @@ query($a: A) {
                  G.VVariable $
                    RemoteJSONValue
                      (G.TypeNamed (G.Nullability True) G._A)
-                     (J.Object $ M.fromList [("b", J.Object $ M.fromList [("c", J.Object $ M.fromList [("i", J.Number 0)])])])
+                     (J.Object $ KM.fromList [("b", J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])])
                )
 
 testPartialVarExpansionIfPreset :: Spec
@@ -341,7 +344,7 @@ query($a: A!) {
                          G.VVariable $
                            RemoteJSONValue
                              (G.TypeNamed (G.Nullability True) G._B)
-                             (J.Object $ M.fromList [("c", J.Object $ M.fromList [("i", J.Number 0)])])
+                             (J.Object $ KM.fromList [("c", J.Object $ KM.fromList [("i", J.Number 0)])])
                        )
                      ]
                )

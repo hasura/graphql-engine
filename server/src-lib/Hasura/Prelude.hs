@@ -94,7 +94,6 @@ import Data.HashMap.Strict.InsOrd as M (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet as M (HashSet)
 import Data.HashSet qualified as HSet
-import Data.Hashable (hashWithSalt)
 import Data.Hashable as M (Hashable)
 import Data.List as M
   ( find,
@@ -275,9 +274,6 @@ readJson = J.eitherDecodeStrict . txtToBs . T.pack
 -- @foo_bar@.
 hasuraJSON :: J.Options
 hasuraJSON = J.aesonPrefix J.snakeCase
-
-instance (Hashable a) => Hashable (Seq a) where
-  hashWithSalt i = hashWithSalt i . toList
 
 -- Fancy trace debugging
 

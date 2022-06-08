@@ -2,8 +2,8 @@ module Test.QuerySpec.BasicSpec (spec) where
 
 import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (ValueWrapper3))
 import Control.Lens (ix, (^?))
+import Data.Aeson.KeyMap qualified as KeyMap
 import Data.Aeson.Lens (AsNumber (_Number), AsPrimitive (_String))
-import Data.HashMap.Strict qualified as HashMap
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.Ord (Down (..))
@@ -27,28 +27,29 @@ spec api sourceName config = describe "Basic Queries" $ do
       receivedArtists `shouldBe` expectedArtists
 
     it "can query for a list of albums with a subset of columns" $ do
-      let fields = HashMap.fromList [("artist_id", columnField "artist_id"), ("title", columnField "title")]
+      let fields = KeyMap.fromList [("artist_id", columnField "artist_id"), ("title", columnField "title")]
       let query = albumsQuery {fields}
       receivedAlbums <- (Data.sortBy "title" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let filterToRequiredProperties =
-            HashMap.filterWithKey (\propName _value -> propName == "artist_id" || propName == "title")
+            KeyMap.filterWithKey (\propName _value -> propName == "artist_id" || propName == "title")
 
       let expectedAlbums = Data.sortBy "title" $ filterToRequiredProperties <$> Data.albumsAsJson
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can project columns into fields with different names" $ do
-      let fields = HashMap.fromList [("artist_id", columnField "id"), ("artist_name", columnField "name")]
+      let fields = KeyMap.fromList [("artist_id", columnField "id"), ("artist_name", columnField "name")]
       let query = artistsQuery {fields}
       receivedArtists <- (Data.sortBy "artist_id" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let renameProperties =
-            HashMap.mapKeys
+            KeyMap.mapKeyVal
               ( \case
                   "id" -> "artist_id"
                   "name" -> "artist_name"
                   other -> other
               )
+              id
 
       let expectedArtists = Data.sortBy "artist_id" $ renameProperties <$> Data.artistsAsJson
       receivedArtists `shouldBe` expectedArtists
@@ -214,13 +215,13 @@ spec api sourceName config = describe "Basic Queries" $ do
 
 artistsQuery :: Query
 artistsQuery =
-  let fields = HashMap.fromList [("id", columnField "id"), ("name", columnField "name")]
+  let fields = KeyMap.fromList [("id", columnField "id"), ("name", columnField "name")]
       tableName = TableName "artists"
    in Query fields tableName Nothing Nothing Nothing Nothing
 
 albumsQuery :: Query
 albumsQuery =
-  let fields = HashMap.fromList [("id", columnField "id"), ("artist_id", columnField "artist_id"), ("title", columnField "title")]
+  let fields = KeyMap.fromList [("id", columnField "id"), ("artist_id", columnField "artist_id"), ("title", columnField "title")]
       tableName = TableName "albums"
    in Query fields tableName Nothing Nothing Nothing Nothing
 

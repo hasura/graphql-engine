@@ -31,16 +31,17 @@ where
 import Control.Applicative hiding (empty)
 import Control.Lens (prism)
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens (AsNumber (..))
 import Data.Aeson.Parser (jstring)
 import Data.Attoparsec.ByteString (Parser)
 import Data.Attoparsec.ByteString qualified as A
 import Data.Attoparsec.ByteString.Char8 qualified as A8
-import Data.Bifunctor (second)
+import Data.Bifunctor (bimap, second)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as L
 import Data.Data (Typeable)
-import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Hashable (Hashable (..))
 import Data.Scientific (Scientific)
@@ -172,7 +173,7 @@ array = Array . V.fromList
 -- | Convert Aeson Value to Ordered Value
 toOrdered :: (J.ToJSON a) => a -> Value
 toOrdered v = case J.toJSON v of
-  J.Object obj -> Object $ fromList $ map (second toOrdered) $ Map.toList obj
+  J.Object obj -> Object $ fromList $ map (bimap K.toText toOrdered) $ KM.toList obj
   J.Array arr -> Array $ V.fromList $ map toOrdered $ V.toList arr
   J.String text -> String text
   J.Number number -> Number number
@@ -184,8 +185,8 @@ fromOrdered :: Value -> J.Value
 fromOrdered v = case v of
   Object obj ->
     J.Object $
-      Map.fromList $
-        map (second fromOrdered) $
+      KM.fromList $
+        map (bimap K.fromText fromOrdered) $
           Data.Aeson.Ordered.toList obj
   Array arr -> J.Array $ V.fromList $ map fromOrdered $ V.toList arr
   String text -> J.String text

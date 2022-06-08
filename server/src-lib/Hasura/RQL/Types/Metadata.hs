@@ -107,10 +107,10 @@ where
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended (FromJSONWithContext (..), mapWithJSONPath)
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.TH
 import Data.Aeson.Types
-import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as HS
 import Data.List.Extended qualified as L
@@ -390,7 +390,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       rrKey = "remote_relationships"
 
       getUnexpectedKeys o =
-        HS.fromList (M.keys o) `HS.difference` expectedKeySet
+        HS.fromList (KM.keys o) `HS.difference` expectedKeySet
 
       expectedKeySet =
         HS.fromList

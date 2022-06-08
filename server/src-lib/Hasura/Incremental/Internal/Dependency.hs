@@ -14,18 +14,20 @@ module Hasura.Incremental.Internal.Dependency
   )
 where
 
-import Data.Aeson (Value)
+import Data.Aeson (Key, Value)
+import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString (ByteString)
 import Data.CaseInsensitive (CI)
 import Data.Dependent.Map qualified as DM
 import Data.Functor.Classes (Eq1 (..), Eq2 (..))
 import Data.GADT.Compare
-import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.InsOrd qualified as OHM
 import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet.InsOrd qualified as OSet
 import Data.Int
+import Data.Map.Strict as M
 import Data.Scientific (Scientific)
 import Data.Set (Set)
 import Data.Text.NonEmpty
@@ -224,6 +226,8 @@ instance Cacheable Word8 where unchanged _ = (==)
 
 instance Cacheable Word16 where unchanged _ = (==)
 
+instance Cacheable Key where unchanged _ = (==)
+
 -- instances for CronSchedule from package `cron`
 instance Cacheable StepField
 
@@ -274,7 +278,18 @@ instance (Cacheable a) => Cacheable (Set a) where
 instance (Hashable k, Cacheable k, Cacheable v) => Cacheable (InsOrdHashMap k v) where
   unchanged accesses l r = unchanged accesses (toHashMap l) (toHashMap r)
     where
-      toHashMap = Map.fromList . OMap.toList
+      toHashMap = HM.fromList . OHM.toList
+
+instance (Cacheable k, Cacheable v) => Cacheable (M.Map k v) where
+  unchanged accesses = liftEq2 (unchanged accesses) (unchanged accesses)
+
+instance (Cacheable v) => Cacheable (KM.KeyMap v) where
+  -- This instance takes advantage of the fact that the (default) internal
+  -- representation of `Data.Aeson.KeyMap` is `Data.Strict.Map Data.Aeson.Key`
+  -- from aeson-2.0.1.0 and onwards.
+  unchanged accesses l r = unchanged accesses (toMap l) (toMap r)
+    where
+      toMap = KM.toMap
 
 instance Cacheable ()
 

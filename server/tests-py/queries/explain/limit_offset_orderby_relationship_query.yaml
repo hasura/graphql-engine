@@ -1,4 +1,5 @@
-description: Explain query with limit, offset and order by with an object relationship's column
+description: Explain query with limit, offset and order by with an object relationship's
+  column
 url: /v1/graphql/explain
 status: 200
 query:
@@ -13,12 +14,14 @@ query:
       }
 response:
 - field: article
-  sql: 'SELECT  coalesce(json_agg("root" ORDER BY "root.or.author.pg.id" DESC NULLS
-    FIRST), ''[]'' ) AS "root" FROM  (SELECT  "_2_root.or.author"."root.or.author.pg.id"
-    AS "root.or.author.pg.id", row_to_json((SELECT  "_3_e"  FROM  (SELECT  "_0_root.base"."id"
-    AS "id", "_0_root.base"."title" AS "title", "_0_root.base"."content" AS "content"       )
-    AS "_3_e"      ) ) AS "root" FROM  (SELECT  *  FROM "public"."article"  WHERE
-    (''true'')     ) AS "_0_root.base" LEFT OUTER JOIN LATERAL (SELECT  "_1_root.or.author.base"."id"
-    AS "root.or.author.pg.id" FROM  (SELECT  *  FROM "public"."author"  WHERE (("_0_root.base"."author_id")
-    = ("id"))    LIMIT 1 ) AS "_1_root.or.author.base"      ) AS "_2_root.or.author" ON (''true'')    ORDER
-    BY "root.or.author.pg.id" DESC NULLS FIRST LIMIT 3 OFFSET 2) AS "_4_root"      '
+  sql: "SELECT  coalesce(json_agg(\"root\" ORDER BY \"root.or.author.pg.id\" DESC\
+    \ NULLS FIRST), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_3_e\"\
+    \  FROM  (SELECT  \"_0_root.base\".\"id\" AS \"id\", \"_0_root.base\".\"title\"\
+    \ AS \"title\", \"_0_root.base\".\"content\" AS \"content\"       ) AS \"_3_e\"\
+    \      ) ) AS \"root\", \"_2_root.or.author\".\"root.or.author.pg.id\" AS \"root.or.author.pg.id\"\
+    \ FROM  (SELECT  *  FROM \"public\".\"article\"  WHERE ('true')     ) AS \"_0_root.base\"\
+    \ LEFT OUTER JOIN LATERAL (SELECT  \"_1_root.or.author.base\".\"id\" AS \"root.or.author.pg.id\"\
+    \ FROM  (SELECT  *  FROM \"public\".\"author\"  WHERE ((\"_0_root.base\".\"author_id\"\
+    ) = (\"id\"))    LIMIT 1 ) AS \"_1_root.or.author.base\"      ) AS \"_2_root.or.author\"\
+    \ ON ('true')    ORDER BY \"root.or.author.pg.id\" DESC NULLS FIRST LIMIT 3 OFFSET\
+    \ 2) AS \"_4_root\"      "

@@ -1,5 +1,6 @@
 module Data.Parser.JSONPathSpec (spec) where
 
+import Data.Aeson.Key qualified as K
 import Data.Parser.JSONPath
 import Data.Text qualified as T
 import Hasura.Base.Error (encodeJSONPath)
@@ -40,4 +41,4 @@ generateJSONPath = map (either id id) <$> listOf1 genPathElementEither
       keyRight <- Right <$> genKey
       elements [indexLeft, keyRight]
     genIndex = Index <$> choose (0, 100)
-    genKey = Key . T.pack <$> listOf1 (elements $ alphaNumerics ++ ".,!@#$%^&*_-?:;|/\"")
+    genKey = Key . K.fromText . T.pack <$> listOf1 (elements $ alphaNumerics ++ ".,!@#$%^&*_-?:;|/\"")

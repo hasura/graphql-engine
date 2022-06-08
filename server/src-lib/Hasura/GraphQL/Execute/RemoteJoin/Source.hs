@@ -20,8 +20,11 @@ module Hasura.GraphQL.Execute.RemoteJoin.Source
 where
 
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.Ordered qualified as JO
+import Data.Bifunctor (bimap)
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.IntMap.Strict qualified as IntMap
@@ -99,10 +102,11 @@ buildSourceJoinCall ::
 buildSourceJoinCall userInfo jaFieldName joinArguments remoteSourceJoin = do
   let rows =
         IntMap.toList joinArguments <&> \(argumentId, argument) ->
-          Map.insert "__argument_id__" (J.toJSON argumentId) $
-            Map.map JO.fromOrdered $
-              Map.mapKeys getFieldNameTxt $
-                unJoinArgument argument
+          KM.insert "__argument_id__" (J.toJSON argumentId) $
+            KM.fromList $
+              map (bimap (K.fromText . getFieldNameTxt) JO.fromOrdered) $
+                Map.toList $
+                  unJoinArgument argument
       rowSchema = fmap snd (_rsjJoinColumns remoteSourceJoin)
   for (NE.nonEmpty rows) $ \nonEmptyRows -> do
     let sourceConfig = _rsjSourceConfig remoteSourceJoin

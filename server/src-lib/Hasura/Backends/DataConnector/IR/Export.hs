@@ -9,6 +9,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson (ToJSON)
+import Data.Aeson.KeyMap (fromHashMapText)
 import Data.HashMap.Strict qualified as M
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
@@ -26,7 +27,7 @@ queryToAPI IR.Q.Query {..} = do
   fields' <- traverse fromField fields
   pure $
     API.Query
-      { fields = fields',
+      { fields = fromHashMapText fields',
         from = Witch.from from,
         limit = limit,
         offset = offset,

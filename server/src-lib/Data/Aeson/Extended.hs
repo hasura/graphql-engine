@@ -24,10 +24,10 @@ import Hasura.Prelude
 -------------------------------------------------------------------------------
 
 class ToJSONKeyValue a where
-  toJSONKeyValue :: a -> (Text, Value)
+  toJSONKeyValue :: a -> (Key, Value)
 
 class FromJSONKeyValue a where
-  parseJSONKeyValue :: (Text, Value) -> Parser a
+  parseJSONKeyValue :: (Key, Value) -> Parser a
 
 instance ToJSONKeyValue Void where
   toJSONKeyValue = absurd
@@ -51,7 +51,7 @@ class FromJSONWithContext ctx a | a -> ctx where
 -- @
 -- object $ ["foo" .= 0] <> catMaybes [ "bar" .=? Nothing, "baz" .=? 2 ]
 -- @
-(.=?) :: (ToJSON v, KeyValue kv) => Text -> Maybe v -> Maybe kv
+(.=?) :: (ToJSON v, KeyValue kv) => Key -> Maybe v -> Maybe kv
 (.=?) k = fmap (k .=)
 {-# INLINE (.=?) #-}
 

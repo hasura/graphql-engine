@@ -27,6 +27,8 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Control qualified as MTC
 import Data.Aeson hiding (json)
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString.Char8 qualified as B8
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
@@ -986,7 +988,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
     -- are treated as if they came from query arguments, but allow
     -- us to pass non-scalar values.
     let bodyParams = case J.decodeStrict body of
-          Just (J.Object o) -> M.toList o
+          Just (J.Object o) -> map (first K.toText) $ KM.toList o
           _ -> []
         allParams = fmap Left <$> queryParams <|> fmap Right <$> bodyParams
 

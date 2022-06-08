@@ -4,7 +4,6 @@ module Hasura.QuickCheck.Instances () where
 
 -------------------------------------------------------------------------------
 
-import Data.Aeson qualified as Aeson
 import Data.Aeson.Types qualified as Aeson.Types
 import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.HashMap.Strict.InsOrd qualified as InsOrd.HashMap
@@ -57,18 +56,6 @@ instance
   where
   arbitrary = InsOrd.HashMap.fromList <$> arbitrary
   shrink = fmap InsOrd.HashMap.fromList . shrink . InsOrd.HashMap.toList
-
-instance Arbitrary Aeson.Value where
-  arbitrary =
-    elements $
-      -- This is not exhaustive, because it wasn't needed.
-      [ Aeson.Object mempty,
-        Aeson.Array mempty,
-        Aeson.String mempty,
-        Aeson.Number 0,
-        Aeson.Bool False,
-        Aeson.Null
-      ]
 
 instance Arbitrary Aeson.Types.JSONPathElement where
   arbitrary = Aeson.Types.Index <$> arbitrary

@@ -3,6 +3,8 @@
 module Hasura.Backends.DataConnector.Adapter.Metadata () where
 
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -164,7 +166,7 @@ parseBoolExpOperations' rhsParser rootTable fieldInfoMap columnRef value =
 
     parseOperations :: J.Value -> m [OpExpG 'DataConnector v]
     parseOperations = \case
-      J.Object o -> traverse parseOperation $ Map.toList o
+      J.Object o -> traverse (parseOperation . first K.toText) $ KM.toList o
       v -> pure . AEQ False <$> parseWithTy columnType v
 
     parseOperation :: (Text, J.Value) -> m (OpExpG 'DataConnector v)

@@ -30,6 +30,7 @@ import Data.Aeson
     object,
     (.=),
   )
+import Data.Aeson.Key qualified as K
 import Data.Foldable (for_)
 import Data.String
 import Data.Text (Text, pack, replace)
@@ -367,7 +368,7 @@ trackArrayRelationships backend Table {tableName, tableReferences} testEnvironme
                     "name" .= String referenceTargetTable
                   ],
               "column_mapping"
-                .= object [referenceLocalColumn .= referenceTargetColumn]
+                .= object [K.fromText referenceLocalColumn .= referenceTargetColumn]
             ]
         payload =
           [yaml|
@@ -402,7 +403,7 @@ trackObjectRelationships backend Table {tableName, tableReferences} testEnvironm
                     "name" .= String referenceTargetTable
                   ],
               "column_mapping"
-                .= object [referenceLocalColumn .= referenceTargetColumn]
+                .= object [K.fromText referenceLocalColumn .= referenceTargetColumn]
             ]
         payload =
           [yaml|

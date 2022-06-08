@@ -13,8 +13,9 @@ module Test.Aeson.Utils
 where
 
 import Data.Aeson
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types (parseEither)
-import Data.HashMap.Strict qualified as Map
 import Data.OpenApi
 import Data.Vector qualified as Vec
 import Hasura.Prelude
@@ -75,7 +76,7 @@ jsonOpenApiProperties gen = do
   validateAgainstOpenApiSchema gen
 
 genObject :: MonadGen m => m Object
-genObject = Map.fromList <$> Gen.list (linear 0 5) ((,) <$> Gen.text (linear 0 5) Gen.unicode <*> genValue)
+genObject = KM.fromList . map (first K.fromText) <$> Gen.list (linear 0 5) ((,) <$> Gen.text (linear 0 5) Gen.unicode <*> genValue)
 
 genValue :: MonadGen m => m Value
 genValue =

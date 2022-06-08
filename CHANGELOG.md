@@ -113,6 +113,49 @@ Note: Custom field names and custom table names will override the naming convent
 is `graphql-default`, the field names generated will be `my_table`, `my_tableByPk`,
 `my_tableAggregate` and so on).
 
+### Behaviour Changes
+
+- cli: change the ordering used for object fields in metadata files to alphabetical order
+
+  Example:
+  <table>
+     <thead>
+        <tr>
+           <th>Server Metadata (JSON)</th>
+           <th>Old behaviour (YAML)</th>
+           <th>New Behaviour (YAML)</th>
+        </tr>
+     </thead>
+     <tbody>
+        <tr>
+           <td>
+              <pre>
+  {
+    "function": {
+      "schema": "public",
+      "name": "search_albums"
+    }
+  }
+         </pre>
+           </td>
+           <td>
+              <pre>
+  function:
+    schema: public
+    name: search_albums
+        </pre>
+           </td>
+           <td>
+              <pre>
+  function:
+    name: search_albums
+    schema: public
+        </pre>
+           </td>
+        </tr>
+     </tbody>
+  </table>
+
 ### Bug fixes and improvements
 
 - server: errors from `/healthz` endpoint are now logged with more details

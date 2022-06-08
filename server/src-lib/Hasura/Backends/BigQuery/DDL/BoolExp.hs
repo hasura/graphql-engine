@@ -4,7 +4,8 @@ module Hasura.Backends.BigQuery.DDL.BoolExp
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Text.Extended
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
@@ -31,7 +32,7 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
 
     parseOperations :: ColumnType 'BigQuery -> J.Value -> m [OpExpG 'BigQuery v]
     parseOperations columnType = \case
-      J.Object o -> mapM (parseOperation columnType) $ Map.toList o
+      J.Object o -> mapM (parseOperation columnType . first K.toText) $ KM.toList o
       v -> pure . AEQ False <$> parseWithTy columnType v
 
     parseOperation :: ColumnType 'BigQuery -> (Text, J.Value) -> m (OpExpG 'BigQuery v)

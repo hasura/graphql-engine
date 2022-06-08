@@ -12,6 +12,7 @@ module Hasura.Backends.Postgres.Instances.Schema
 where
 
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.Extended qualified as M
@@ -294,7 +295,7 @@ pgScalarSelectionArgumentsParser columnType
       Left err -> parseError $ T.pack $ "parse json path error: " ++ err
       Right [] -> pure Nothing
       Right jPaths -> pure $ Just $ PG.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
-    elToColExp (Key k) = PG.SELit k
+    elToColExp (Key k) = PG.SELit $ K.toText k
     elToColExp (Index i) = PG.SELit $ tshow i
 
 orderByOperatorsHasuraCase ::

@@ -53,6 +53,7 @@ where
 
 import Data.Aeson
 import Data.Aeson.Encoding (text)
+import Data.Aeson.Key qualified as K
 import Data.Aeson.TH
 import Data.Aeson.Types (toJSONKeyText)
 import Data.List (uncons)
@@ -225,7 +226,7 @@ instance (ToJSON a) => ToJSON (QualifiedObject a) where
       ]
 
 instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
-  toJSONKey = ToJSONKeyText qualifiedObjectToText (text . qualifiedObjectToText)
+  toJSONKey = ToJSONKeyText (K.fromText . qualifiedObjectToText) (text . qualifiedObjectToText)
 
 instance (ToTxt a) => ToTxt (QualifiedObject a) where
   toTxt = qualifiedObjectToText

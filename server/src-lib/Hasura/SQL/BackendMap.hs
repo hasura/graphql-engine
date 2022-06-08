@@ -10,7 +10,8 @@ where
 
 import Data.Aeson (FromJSON, ToJSON, Value, object, withObject)
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as HashMap
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Kind (Type)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
@@ -52,16 +53,16 @@ instance i `SatisfiesForAllBackends` FromJSON => FromJSON (BackendMap i) where
       BackendMap . Map.fromList
         <$> traverse
           ( \(backendTypeStr, val) -> do
-              backendType <- parseBackendTypeFromText backendTypeStr
+              backendType <- parseBackendTypeFromText $ K.toText backendTypeStr
               (backendType,) <$> parseAnyBackendFromJSON backendType val
           )
-          (HashMap.toList obj)
+          (KM.toList obj)
 
 instance i `SatisfiesForAllBackends` ToJSON => ToJSON (BackendMap i) where
   toJSON (BackendMap backendMap) =
     object $ valueToPair <$> Map.elems backendMap
     where
-      valueToPair :: AnyBackend i -> (Text, Value)
+      valueToPair :: AnyBackend i -> (K.Key, Value)
       valueToPair value = dispatchAnyBackend'' @ToJSON @HasTag value $ \(v :: i b) ->
-        let backendTypeText = toTxt . reify $ backendTag @b
+        let backendTypeText = K.fromText . toTxt . reify $ backendTag @b
          in (backendTypeText, J.toJSON v)

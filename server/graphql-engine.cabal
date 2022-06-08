@@ -202,7 +202,6 @@ library
                      , dc-api
                      , free
                      , hashable
-                     , hashable-time
                      , http-client-tls
                      , http-conduit
                      , http-media
@@ -251,7 +250,6 @@ library
                      , vector-instances
                      , wai
                      , witch
-                     , hashable-time
 
                      -- Encoder related
                      , uuid
@@ -395,6 +393,7 @@ library
                      , Control.Monad.Trans.Managed
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
+                     , Data.Aeson.KeyMap.Extended
                      , Data.Aeson.Ordered
                      , Data.Environment
                      , Data.HashMap.Strict.Extended

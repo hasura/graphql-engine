@@ -43,6 +43,8 @@ import Control.Lens.Plated
 import Control.Lens.TH
 import Data.Aeson.Extended
 import Data.Aeson.Internal
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.HashMap.Strict qualified as M
 import Data.Monoid
@@ -82,7 +84,7 @@ instance (Backend b, Hashable a) => Hashable (GBoolExp b a)
 
 instance (Backend b, FromJSONKeyValue a) => FromJSON (GBoolExp b a) where
   parseJSON = withObject "boolean expression" \o ->
-    BoolAnd <$> forM (M.toList o) \(k, v) ->
+    BoolAnd <$> forM (KM.toList o) \(k, v) ->
       if
           | k == "$or" -> BoolOr <$> parseJSON v <?> Key k
           | k == "_or" -> BoolOr <$> parseJSON v <?> Key k
@@ -170,10 +172,10 @@ instance NFData ColExp
 instance Cacheable ColExp
 
 instance FromJSONKeyValue ColExp where
-  parseJSONKeyValue (k, v) = ColExp (FieldName k) <$> parseJSON v
+  parseJSONKeyValue (k, v) = ColExp (FieldName (K.toText k)) <$> parseJSON v
 
 instance ToJSONKeyValue ColExp where
-  toJSONKeyValue (ColExp k v) = (getFieldNameTxt k, v)
+  toJSONKeyValue (ColExp k v) = (K.fromText (getFieldNameTxt k), v)
 
 -- | This @BoolExp@ type is a simple alias for the boolean expressions used in permissions, that
 -- uses 'ColExp' as the term in GBoolExp.
@@ -408,15 +410,15 @@ instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgument
 instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONKeyValue (AnnBoolExpFld b a) where
   toJSONKeyValue = \case
     AVColumn pci opExps ->
-      ( toTxt $ ciColumn pci,
+      ( K.fromText $ toTxt $ ciColumn pci,
         toJSON (pci, object . pure . toJSONKeyValue <$> opExps)
       )
     AVRelationship ri relBoolExp ->
-      ( relNameToTxt $ riName ri,
+      ( K.fromText $ relNameToTxt $ riName ri,
         toJSON (ri, toJSON relBoolExp)
       )
     AVComputedField cfBoolExp ->
-      ( toTxt $ _acfbName cfBoolExp,
+      ( K.fromText $ toTxt $ _acfbName cfBoolExp,
         let function = _acfbFunction cfBoolExp
          in case _acfbBoolExp cfBoolExp of
               CFBEScalar opExps -> toJSON (function, object . pure . toJSONKeyValue <$> opExps)

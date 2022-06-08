@@ -1,11 +1,7 @@
 - server
 + project
-@@ -4,22 +4,29 @@
--        use_prepared_statements: true
--          retries: 1
+@@ -13,13 +13,20 @@
 -    tables: []
-+          retries: 1
-+        use_prepared_statements: true
 +    tables:
 +      - table:
 +          name: t3

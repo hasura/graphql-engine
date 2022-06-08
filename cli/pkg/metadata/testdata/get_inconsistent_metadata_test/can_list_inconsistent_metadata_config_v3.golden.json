@@ -4,15 +4,6 @@
     {
       "definition": {
         "schema": "public",
-        "name": "t1"
-      },
-      "reason": "Inconsistent object: no such table/view exists in source: \"t1\"",
-      "name": "table t1 in source default",
-      "type": "table"
-    },
-    {
-      "definition": {
-        "schema": "public",
         "name": "t2"
       },
       "reason": "Inconsistent object: no such table/view exists in source: \"t2\"",
@@ -35,6 +26,15 @@
       },
       "reason": "Inconsistent object: no such table/view exists in source: \"pub.t3\"",
       "name": "table pub.t3 in source default",
+      "type": "table"
+    },
+    {
+      "definition": {
+        "schema": "public",
+        "name": "t1"
+      },
+      "reason": "Inconsistent object: no such table/view exists in source: \"t1\"",
+      "name": "table t1 in source default",
       "type": "table"
     }
   ]

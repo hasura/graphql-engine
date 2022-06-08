@@ -16,10 +16,11 @@ import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson (Value)
 import Data.Aeson qualified
 import Data.Aeson qualified as Aeson
+import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.KeyMap.Extended qualified as KM
 import Data.Aeson.Text qualified as Aeson.Text
 import Data.Conduit (runConduitRes, (.|))
 import Data.Conduit.List qualified as CL
-import Data.HashMap.Strict qualified as HashMap
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
 import Data.Text.Encoding.Error qualified as TE
@@ -63,12 +64,12 @@ shouldReturnYaml options actualIO rawExpected = do
 stringifyExpectedToActual :: Value -> Value -> Value
 stringifyExpectedToActual (Aeson.Number n) (Aeson.String _) =
   Aeson.String (LT.toStrict . Aeson.Text.encodeToLazyText $ n)
-stringifyExpectedToActual (Aeson.Object hm) (Aeson.Object hm') =
+stringifyExpectedToActual (Aeson.Object km) (Aeson.Object km') =
   let stringifyKV k v =
-        case HashMap.lookup k hm' of
+        case KM.lookup k km' of
           Just v' -> stringifyExpectedToActual v v'
           Nothing -> v
-   in Aeson.Object (HashMap.mapWithKey stringifyKV hm)
+   in Aeson.Object (KM.mapWithKey stringifyKV km)
 stringifyExpectedToActual (Aeson.Array as) (Aeson.Array bs) =
   Aeson.Array (Vector.zipWith stringifyExpectedToActual as bs)
 stringifyExpectedToActual expected _ = expected

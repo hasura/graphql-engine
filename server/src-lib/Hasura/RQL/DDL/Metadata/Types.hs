@@ -29,10 +29,10 @@ where
 
 import Control.Lens (makeLenses)
 import Data.Aeson
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as H
 import Data.Text qualified as T
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
@@ -192,7 +192,7 @@ data ReplaceMetadata
 
 instance FromJSON ReplaceMetadata where
   parseJSON = withObject "ReplaceMetadata" $ \o -> do
-    if H.member "metadata" o
+    if KM.member "metadata" o
       then RMReplaceMetadataV2 <$> parseJSON (Object o)
       else RMReplaceMetadataV1 <$> parseJSON (Object o)
 
