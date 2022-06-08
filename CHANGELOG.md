@@ -2,18 +2,22 @@
 
 ## Next release
 
-### Disabling query/subscription root fields
+### Bug fixes and improvements
 
-When a table is tracked in the graphql-engine, automatically three root fields are generated
+## v2.8.0-beta.1
+
+### Disabling query/subscription root fields 
+
+When a table is tracked in graphql-engine, three root fields are generated automatically
 namely `<table>`, `<table>_by_pk` and `<table>_aggregate` in the `query` and the `subscription`
-root.
+root. You can now control which root fields are exposed for a given role by specifying them in the select permission.
 
-Sometimes we may not want a role to access a table directly but it may still be required to tracked so that:
+The main use-case for this feature is to disable APIs that access the table directly but which still need to be tracked so that:
 
 1. It can be accessed via a relationship to another table
-2. It can be used in select permissions in another table, if there's a relationship between the two tables.
+2. It can be used in select permissions for another table via a relationship
 
-For such use-cases, we can disable all the root fields of the given table. This can be done in the following manner:
+For such use-cases, we can disable all the root fields of the given table. This can be done by setting the select permission as follows:
 
 ```json
 {
@@ -31,8 +35,8 @@ For such use-cases, we can disable all the root fields of the given table. This 
  }
 ```
 
-Another use case to use this feature is to allow a role to directly access a table only
-if it has access to the primary key value. It can be done in the following manner:
+Another use-case is to allow a role to directly access a table only
+if it has access to the primary key value. This can be done by setting the select permission as follows:
 
 ```json
 {
@@ -50,18 +54,36 @@ if it has access to the primary key value. It can be done in the following manne
  }
 ```
 
+Note that console support for this permission will be released later.
 
-### Naming conventions in HGE
+
+### Introducing naming conventions (experimental)
+
 Now, users can specify the naming convention of the auto-generated names in the HGE.
-This is an experimental feature and is postgres only for now. There are two naming
-conventions possible as of now:
+This is an experimental feature and is supported for postgres databases only for now. There are two naming
+conventions possible:
 | Naming Convention | Field names | Type names  | Arguments  | Enum values |
 |-------------------|-------------|-------------|------------|-------------|
 | `hasura-default`  | Snake case  | Snake case  | Snake case | as defined  |
 | `graphql-default` | Camel case  | Pascal case | Camel case | Uppercased  |
 
-To configure the naming convention for a source, set the naming convention in source-
+Suppose there is a table called `my_table` and it has columns `id`, `date_of_birth`, `last_seen`, then with
+`graphql-default` naming convention we will get the following auto-generated API:
+
+```
+query {
+  myTable(orderBy: {dateOfBirth: asc}, limit: 10) {
+    id
+    dateOfBirth
+    lastSeen
+  }
+}
+```
+
+
+To configure the naming convention for a source, set the naming convention in source 
 customisation while adding the source:
+
 ```JSON
 {
   "resource_version": 2,
@@ -81,26 +103,26 @@ customisation while adding the source:
   }
 }
 ```
-To set the default naming convention (this will be used across the sources in HGE),
-use the environment variable `HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION`. Please note
-that the global default can be overridden by the source customisation mentioned above.
 
-Note: The naming convention won't be applied to the custom field names and custom
-table names (i.e. if the custom table name is `my_table` and `naming_convention`
+To set the default naming convention globally,
+use the environment variable `HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION`.  Note
+that the global default can be overridden by the source customisation setting mentioned above.
+
+Note: Custom field names and custom table names will override the naming convention 
+(i.e. if the custom table name is `my_table` and `naming_convention`
 is `graphql-default`, the field names generated will be `my_table`, `my_tableByPk`,
 `my_tableAggregate` and so on).
 
 ### Bug fixes and improvements
 
-- server: errors from healthcheck are now logged as internal errors
+- server: errors from `/healthz` endpoint are now logged with more details
 - server: do not expand environment variable references in logs or API responses from remote schemas, actions and event triggers for security reasons (fix #3935)
-- server: extend backend_only setting for update and delete permissions
-- server: add support for scalar array response type in actions (#3661)
+- server: introduce [backend_only permissions](https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules/#backend-only-permissions) for update and delete mutations (fix #5275)
+- server: add support for scalar array response type in actions
 - server: add support for table computed fields in bigquery backends
 - server: fix failure when executing consecutive delete mutations on mssql (#8462)
 - server: bugfix: insertion of multiple empty objects should result in multiple entries (#8475)
 - console: add support for application/x-www-form-urlencoded in rest connectors (#8097)
-- cli: add support for multiple admin secrets
 - server: restore the ability to do no-op upserts (#8260).
 
 ## v2.7.0
