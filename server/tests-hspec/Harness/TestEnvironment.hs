@@ -20,6 +20,9 @@ data TestEnvironment = TestEnvironment
   { server :: Server
   }
 
+instance Show TestEnvironment where
+  show TestEnvironment {server} = "<TestEnvironment: " ++ urlPrefix server ++ ":" ++ show (port server) ++ " >"
+
 -- | Information about a server that we're working with.
 data Server = Server
   { -- | The port to connect on.

@@ -1099,6 +1099,7 @@ test-suite tests-hspec
   other-modules:
     SpecHook
 
+
  -- Harness
     Harness.Constants
     Harness.Env
@@ -1121,6 +1122,9 @@ test-suite tests-hspec
  -- Harness.Test
     Harness.Test.BackendType
     Harness.Test.Context
+    Harness.Test.Fixture
+    Harness.Test.Hspec.Extended
+    Harness.Test.Introspection
     Harness.Test.Schema
     Harness.Test.Permissions
 

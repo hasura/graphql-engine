@@ -29,6 +29,26 @@
 # - functions:
 #   - {name: unsafePerformIO, within: []} # unsafePerformIO can only appear in no modules
 
+- functions:
+      - name: "Test.Hspec.focus"
+        within: []
+        message: "Specs with focusing should only be used during development"
+
+      - name: "Test.Hspec.fit"
+        within: []
+        message: "Specs with focusing should only be used during development"
+
+      - name: "Test.Hspec.fspecify"
+        within: []
+        message: "Specs with focusing should only be used during development"
+
+      - name: "Test.Hspec.fdescribe"
+        within: []
+        message: "Specs with focusing should only be used during development"
+
+      - name: "Test.Hspec.fcontext"
+        within: []
+        message: "Specs with focusing should only be used during development"
 
 # Add custom hints for this project
 #

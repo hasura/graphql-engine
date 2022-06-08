@@ -15,6 +15,8 @@ module Harness.Backend.Mysql
     untrackTable,
     setup,
     teardown,
+    setupTablesAction,
+    setupPermissionsAction,
   )
 where
 
@@ -33,7 +35,9 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (BackendType (MySQL), defaultBackendTypeString, defaultSource)
+import Harness.Test.Context (BackendType (MySQL))
+import Harness.Test.Fixture
+import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -240,3 +244,23 @@ teardown tables (testEnvironment, _) = do
           (untrackTable testEnvironment table)
           (dropTable table)
       )
+
+setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+setupTablesAction ts env =
+  SetupAction
+    (setup ts (env, ()))
+    (const $ teardown ts (env, ()))
+
+setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
+setupPermissionsAction permissions env =
+  SetupAction
+    (setupPermissions permissions env)
+    (const $ teardownPermissions permissions env)
+
+-- | Setup the given permissions to the graphql engine in a TestEnvironment.
+setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
+setupPermissions permissions env = Permissions.setup "mysql" permissions env
+
+-- | Remove the given permissions from the graphql engine in a TestEnvironment.
+teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
+teardownPermissions permissions env = Permissions.teardown "mysql" permissions env

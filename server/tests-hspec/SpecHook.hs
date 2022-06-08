@@ -1,5 +1,7 @@
 module SpecHook
   ( hook,
+    setupTestEnvironment,
+    teardownTestEnvironment,
   )
 where
 
