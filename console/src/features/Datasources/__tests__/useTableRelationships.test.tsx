@@ -113,29 +113,29 @@ describe('@features/Datasources/useTableRelationships hook', () => {
         Object {
           "from": Object {
             "column": Array [
-              "\\"AlbumId\\"",
+              "AlbumId",
             ],
-            "table": "\\"Track\\"",
+            "table": "Track",
           },
           "to": Object {
             "column": Array [
-              "\\"AlbumId\\"",
+              "AlbumId",
             ],
-            "table": "\\"Album\\"",
+            "table": "Album",
           },
         },
         Object {
           "from": Object {
             "column": Array [
-              "\\"ArtistId\\"",
+              "ArtistId",
             ],
-            "table": "\\"Album\\"",
+            "table": "Album",
           },
           "to": Object {
             "column": Array [
-              "\\"ArtistId\\"",
+              "ArtistId",
             ],
-            "table": "\\"Artist\\"",
+            "table": "Artist",
           },
         },
       ]

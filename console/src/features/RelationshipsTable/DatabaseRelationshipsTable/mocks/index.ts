@@ -1,5 +1,5 @@
 export const metadata = {
-  resource_version: 1,
+  resource_version: 75,
   metadata: {
     version: 3,
     sources: [
@@ -10,80 +10,167 @@ export const metadata = {
           {
             table: {
               schema: 'public',
-              name: 'user',
+              name: 'Album',
             },
+            object_relationships: [
+              {
+                name: 'newmanual',
+                using: {
+                  manual_configuration: {
+                    remote_table: {
+                      schema: 'public',
+                      name: 'Album',
+                    },
+                    insertion_order: null,
+                    column_mapping: {
+                      Title: 'ArtistId',
+                    },
+                  },
+                },
+              },
+              {
+                name: 'testName',
+                using: {
+                  foreign_key_constraint_on: 'ArtistId',
+                },
+              },
+              {
+                name: 'testNewRnNamerr',
+                using: {
+                  manual_configuration: {
+                    remote_table: {
+                      schema: 'public',
+                      name: 'Album',
+                    },
+                    insertion_order: null,
+                    column_mapping: {
+                      AlbumId: 'ArtistId',
+                    },
+                  },
+                },
+              },
+            ],
+            array_relationships: [
+              {
+                name: 'TracksName',
+                using: {
+                  foreign_key_constraint_on: {
+                    column: 'AlbumId',
+                    table: {
+                      schema: 'public',
+                      name: 'Track',
+                    },
+                  },
+                },
+              },
+              {
+                name: 'manualReln',
+                using: {
+                  manual_configuration: {
+                    remote_table: {
+                      schema: 'public',
+                      name: 'Artist',
+                    },
+                    insertion_order: null,
+                    column_mapping: {
+                      Title: 'Name',
+                    },
+                  },
+                },
+              },
+            ],
             remote_relationships: [
               {
                 definition: {
-                  to_remote_schema: {
-                    remote_field: {
-                      test: {
-                        arguments: {
-                          where: {
-                            id: {
-                              _eq: '$id',
-                            },
-                          },
-                        },
-                      },
-                    },
-                    remote_schema: 'remoteSchema1',
-                    lhs_fields: ['id'],
-                  },
-                },
-                name: 'new_payload',
-              },
-              {
-                definition: {
                   remote_field: {
-                    test: {
+                    country: {
                       arguments: {
-                        where: {
-                          id: {
-                            _eq: '$id',
-                          },
-                        },
+                        code: '$AlbumId',
                       },
                     },
                   },
-                  hasura_fields: ['id'],
-                  remote_schema: 'remoteSchema1',
+                  hasura_fields: ['AlbumId'],
+                  remote_schema: 'countries',
                 },
-                name: 'legacy_payload',
+                name: 'RS_countries',
               },
               {
                 definition: {
                   to_source: {
                     relationship_type: 'object',
-                    source: 'bigquery_test',
+                    source: 'test2',
                     table: {
-                      dataset: 'sensei',
-                      name: 'table1',
+                      schema: '_onetoone',
+                      name: 'owner',
                     },
                     field_mapping: {
-                      id: 'field1',
+                      AlbumId: 'id',
                     },
                   },
                 },
-                name: 'object_relationship',
-              },
-              {
-                definition: {
-                  to_source: {
-                    relationship_type: 'array',
-                    source: 'bigquery_test',
-                    table: {
-                      dataset: 'sensei',
-                      name: 'table1',
-                    },
-                    field_mapping: {
-                      name: 'id',
-                    },
-                  },
-                },
-                name: 'array_relationship',
+                name: 'test',
               },
             ],
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'Artist',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'Customer',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'Employee',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'Genre',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'Invoice',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'InvoiceLine',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'MediaType',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'Playlist',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'PlaylistTrack',
+            },
+          },
+          {
+            table: {
+              schema: 'public',
+              name: 'Track',
+            },
           },
         ],
         configuration: {
@@ -102,6 +189,128 @@ export const metadata = {
           },
         },
       },
+      {
+        name: 'test2',
+        kind: 'postgres',
+        tables: [
+          {
+            table: {
+              schema: '_onetoone',
+              name: 'owner',
+            },
+          },
+          {
+            table: {
+              schema: '_onetoone',
+              name: 'passport_info',
+            },
+          },
+        ],
+        configuration: {
+          connection_info: {
+            use_prepared_statements: false,
+            database_url: {
+              from_env: 'HASURA_GRAPHQL_DATABASE_URL',
+            },
+            isolation_level: 'read-committed',
+          },
+        },
+      },
     ],
+    remote_schemas: [
+      {
+        name: 'c',
+        definition: {
+          url: 'https://countries.trevorblades.com/',
+          timeout_seconds: 60,
+          customization: {
+            type_names: {
+              suffix: 'c',
+              prefix: 'c',
+              mapping: {},
+            },
+            root_fields_namespace: 'cc',
+          },
+        },
+      },
+      {
+        name: 'countries',
+        definition: {
+          url: 'https://countries.trevorblades.com/',
+          timeout_seconds: 60,
+        },
+        comment: '',
+        remote_relationships: [
+          {
+            relationships: [
+              {
+                definition: {
+                  to_source: {
+                    relationship_type: 'array',
+                    source: 'default',
+                    table: {
+                      schema: 'public',
+                      name: 'Album',
+                    },
+                    field_mapping: {
+                      code: 'AlbumId',
+                    },
+                  },
+                },
+                name: 'test',
+              },
+              {
+                definition: {
+                  to_source: {
+                    relationship_type: 'array',
+                    source: 'default',
+                    table: {
+                      schema: 'public',
+                      name: 'Album',
+                    },
+                    field_mapping: {
+                      name: 'Title',
+                    },
+                  },
+                },
+                name: 'sss',
+              },
+            ],
+            type_name: 'Country',
+          },
+        ],
+      },
+    ],
+    custom_types: {
+      objects: [
+        {
+          name: 'LoginResponse',
+          fields: [
+            {
+              name: 'accessToken',
+              type: 'String!',
+            },
+          ],
+        },
+        {
+          name: 'AddResult',
+          fields: [
+            {
+              name: 'sum',
+              type: 'Int',
+            },
+          ],
+        },
+      ],
+    },
   },
+};
+
+export const relationshipQueryResponse = {
+  result_type: 'TuplesOk',
+  result: [
+    ['source_table', 'source_column', 'target_table', 'target_column'],
+    ['"Album"', '"ArtistId"', '"Artist"', '"ArtistId"'],
+    ['"Track"', '"AlbumId"', '"Album"', '"AlbumId"'],
+  ],
 };

@@ -8,7 +8,7 @@ import {
   DatabaseRelationshipsTableProps,
 } from './DatabaseRelationshipTable';
 
-import { metadata } from './mocks';
+import { metadata, relationshipQueryResponse } from './mocks';
 
 const url = 'http://localhost:8080';
 
@@ -21,6 +21,9 @@ export default {
       rest.post(`${url}/v1/metadata`, (_req, res, ctx) =>
         res(ctx.json(metadata))
       ),
+      rest.post(`${url}/v1/query`, (_req, res, ctx) =>
+        res(ctx.json(relationshipQueryResponse))
+      ),
     ],
   },
 } as Meta;
@@ -30,5 +33,5 @@ export const Primary: Story<DatabaseRelationshipsTableProps> = args => (
 );
 
 Primary.args = {
-  target: { database: 'default', table: 'user', schema: 'public' },
+  target: { database: 'default', table: 'Album', schema: 'public' },
 };

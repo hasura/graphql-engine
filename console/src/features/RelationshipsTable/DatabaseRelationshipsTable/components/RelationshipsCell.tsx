@@ -18,7 +18,7 @@ export const RelationshipCell = ({ row }: RelationshipCellProps) => {
     <div className="flex items-center gap-4">
       <div className="flex gap-2 items-center">
         <TableRowIcon type={row.fromType} />
-        {row?.source}
+        {row?.reference}
         {row?.fieldsFrom.map(field => (
           <React.Fragment key={field}>
             &nbsp;/
@@ -30,7 +30,7 @@ export const RelationshipCell = ({ row }: RelationshipCellProps) => {
       <FaArrowRight className="fill-current text-sm text-muted col-span-1" />
       <div className="flex gap-2 items-center">
         <TableRowIcon type={row.toType} />
-        {row?.destination}
+        {row?.target}
         {row?.fieldsTo.map(field => (
           <React.Fragment key={field}>
             &nbsp;/
