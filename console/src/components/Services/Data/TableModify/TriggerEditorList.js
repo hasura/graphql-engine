@@ -5,8 +5,6 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { deleteTrigger } from './ModifyActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
-import styles from './ModifyTable.scss';
-
 const TriggerEditorList = ({ tableSchema, dispatch }) => {
   const triggers = tableSchema.triggers;
 
@@ -112,12 +110,10 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
               maxLines={100}
               width="100%"
               showPrintMargin={false}
-              className={styles.add_mar_top_small}
+              className="mt-xs"
             />
             {commentText && (
-              <div className={`${styles.text_gray} ${styles.add_mar_top}`}>
-                {commentText}
-              </div>
+              <div className="text-gray-500 mt-sm">{commentText}</div>
             )}
           </div>
         </div>

@@ -4,6 +4,7 @@ import AceEditor from 'react-ace';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { checkConstraintExpression } from '../TooltipMessages';
+import { inputStyles } from '../../constants';
 
 export const ConstraintExpandedContent = ({
   nameOnChange,
@@ -22,7 +23,7 @@ export const ConstraintExpandedContent = ({
           type="text"
           value={name}
           onChange={nameOnChange}
-          className="form-control"
+          className={inputStyles}
         />
       </div>
       <div>

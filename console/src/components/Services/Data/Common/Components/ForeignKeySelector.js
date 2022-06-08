@@ -4,6 +4,7 @@ import { updateSchemaInfo } from '../../DataActions';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import { dataSource } from '../../../../../dataSources';
 import { FaTimes } from 'react-icons/fa';
+import { inputStyles } from '../../constants';
 
 const ForeignKeySelector = ({
   foreignKey,
@@ -58,7 +59,7 @@ const ForeignKeySelector = ({
         </h4>
         <select
           value={refSchemaName || ''}
-          className="form-control"
+          className={inputStyles}
           data-test={`foreign-key-ref-schema-${index}`}
           onChange={dispatchSetRefSchema}
         >
@@ -124,7 +125,7 @@ const ForeignKeySelector = ({
         </h4>
         <select
           value={refTableName || ''}
-          className={`form-control`}
+          className={inputStyles}
           data-test={`foreign-key-ref-table-${index}`}
           onChange={dispatchSetRefTable}
           disabled={!refSchemaName}

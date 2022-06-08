@@ -6,6 +6,7 @@ import { getValidAlterOptions, convertToArrayOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 import { dataSource, isFeatureSupported } from '../../../../dataSources';
+import { inputStyles } from '../constants';
 
 const ColumnEditor = ({
   onSubmit,
@@ -82,7 +83,7 @@ const ColumnEditor = ({
         </label>
         <div className="ml-auto w-6/12">
           <input
-            className="form-control"
+            className={`${inputStyles} disabled:bg-gray-100`}
             value={selectedProperties[colName].customFieldName}
             onChange={updateColumnCustomField}
             placeholder={`${colName} (default)`}
@@ -98,7 +99,7 @@ const ColumnEditor = ({
     return (
       <CustomInputAutoSuggest
         options={defaultOptions}
-        className="form-control"
+        className={inputStyles}
         value={selectedProperties[colName].default || ''}
         onChange={updateColumnDefault}
         type="text"
@@ -108,7 +109,7 @@ const ColumnEditor = ({
   };
 
   return (
-    <div className="">
+    <div>
       <form className="space-y-md" onSubmit={onSubmit}>
         <div className="flex items-center">
           <label className="flex items-center text-gray-600 font-semibold">
@@ -116,7 +117,7 @@ const ColumnEditor = ({
           </label>
           <div className="ml-auto w-6/12">
             <input
-              className="form-control w-full"
+              className={`${inputStyles} disabled:bg-gray-100 w-full`}
               value={selectedProperties[colName].name}
               onChange={updateColumnName}
               type="text"
@@ -140,7 +141,7 @@ const ColumnEditor = ({
             ) : (
               <input
                 type="text"
-                className={`form-control col-type-${0}`}
+                className={`${inputStyles} disabled:bg-gray-100`}
                 value={
                   alterOptionsValueMap?.[columnTypePG]?.value ?? columnTypePG
                 }
@@ -159,7 +160,7 @@ const ColumnEditor = ({
           </label>
           <div className="ml-auto w-6/12">
             <select
-              className="form-control"
+              className={`${inputStyles} disabled:bg-gray-100`}
               value={selectedProperties[colName].isNullable}
               onChange={toggleColumnNullable}
               disabled={columnProperties.pkConstraint}
@@ -176,7 +177,7 @@ const ColumnEditor = ({
           </label>
           <div className="ml-auto w-6/12">
             <select
-              className="form-control"
+              className={`${inputStyles} disabled:bg-gray-100`}
               value={
                 !!(
                   selectedProperties[colName].isUnique ||
@@ -204,7 +205,7 @@ const ColumnEditor = ({
           </label>
           <div className="ml-auto w-6/12">
             <input
-              className="form-control"
+              className={`${inputStyles} disabled:bg-gray-100`}
               value={selectedProperties[colName].comment || ''}
               onChange={updateColumnComment}
               type="text"
