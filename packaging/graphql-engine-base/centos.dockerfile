@@ -1,6 +1,6 @@
-# DATE VERSION: 2022-04-12
+# DATE VERSION: 2022-05-16
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
-FROM quay.io/centos/centos@sha256:fc45f3e1294861d7851a87be152b1ab2350d755744077d5ee12b725fdca87919
+FROM quay.io/centos/centos@sha256:e0dd15bcd9aaeebec1c74236e9764cd18e198f35631d72e07039c9a2aa66fa4e
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
 ARG TARGETPLATFORM
