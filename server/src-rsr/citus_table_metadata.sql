@@ -229,5 +229,5 @@ LEFT JOIN LATERAL
 -- all these identify table-like things
 WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p')
   -- and tables not from any system schemas
-  AND "table".table_schema NOT LIKE 'pg_%'
+  AND "table".table_schema NOT LIKE 'pg\_%'
   AND "table".table_schema NOT IN ('information_schema', 'hdb_catalog');

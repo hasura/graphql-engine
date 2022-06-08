@@ -130,7 +130,7 @@ FROM (
                           , 'gen_salt'
                           , 'hmac'
                           )
-        AND "function".function_schema NOT LIKE 'pg_%'
+        AND "function".function_schema NOT LIKE 'pg\_%'
         AND "function".function_schema NOT IN ('information_schema', 'hdb_catalog')
         AND (NOT EXISTS (
                 SELECT

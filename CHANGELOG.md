@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
+
 ## v2.8.0-beta.1
 
 ### Disabling query/subscription root fields 
@@ -165,6 +167,7 @@ is `graphql-default`, the field names generated will be `my_table`, `my_tableByP
 - server: add support for table computed fields in bigquery backends
 - server: fix failure when executing consecutive delete mutations on mssql (#8462)
 - server: bugfix: insertion of multiple empty objects should result in multiple entries (#8475)
+- server: allow schemas prefixed with `pg`, but not `pg_` (fix hasura/graphql-engine#8435)
 - console: add support for application/x-www-form-urlencoded in rest connectors (#8097)
 - server: restore the ability to do no-op upserts (#8260).
 
