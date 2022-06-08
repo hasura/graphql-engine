@@ -120,10 +120,10 @@ export const TableRow: React.FC<TableRowProps> = ({
       <div className="w-2/12 overflow-hidden overflow-ellipsis" title={colName}>
         {colName}
       </div>
-      <div className="flex items-center mr-sm">
+      <div>
         <input
           type="radio"
-          className={`${focusYellowRing} !m-0 !mr-sm`}
+          className={`${focusYellowRing} !m-0 !mr-sm `}
           ref={node => {
             setRef('insertRadioNode', node);
           }}
@@ -148,7 +148,7 @@ export const TableRow: React.FC<TableRowProps> = ({
           index={index}
         />
       </div>
-      <div className="flex items-center mr-sm">
+      <div className="flex items-center mr-sm relative">
         <input
           type="radio"
           className={`${focusYellowRing} !m-0 !mr-sm`}
@@ -162,7 +162,7 @@ export const TableRow: React.FC<TableRowProps> = ({
         />
         <div>NULL</div>
       </div>
-      <div className="flex items-center mr-sm">
+      <div className="flex items-center mr-sm relative">
         <input
           type="radio"
           className={`${focusYellowRing} !m-0 !mr-sm`}
