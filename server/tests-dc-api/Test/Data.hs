@@ -16,6 +16,7 @@ where
 
 import Control.Lens (ix, (^?))
 import Data.Aeson (FromJSON (..), Object, eitherDecodeStrict, withObject, (.:))
+import Data.Aeson.Key qualified as K
 import Data.Aeson.Lens (_Number)
 import Data.ByteString (ByteString)
 import Data.FileEmbed (embedFile, makeRelativeToProject)
@@ -86,5 +87,5 @@ albums = sortOn _albumId . either error id . eitherDecodeStrict $ albumsBS
 albumsAsJson :: [Object]
 albumsAsJson = sortBy "id" . either error id . eitherDecodeStrict $ albumsBS
 
-sortBy :: Text -> [Object] -> [Object]
+sortBy :: K.Key -> [Object] -> [Object]
 sortBy propName = sortOn (^? ix propName)

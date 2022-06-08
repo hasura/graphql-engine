@@ -5,6 +5,7 @@ from context import PytestConf
 import json
 import textwrap
 import ruamel.yaml as yaml
+import warnings
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -1354,10 +1355,12 @@ class TestGraphQLExplainPostgresMSSQLMySQL:
                 with open(f, 'w') as outfile:
                     conf['response'][0]['sql'] = resp_json[0]['sql']
                     yaml.YAML(typ='rt').dump(conf, outfile) # , default_flow_style=False)
+                warnings.warn("Wrote new output due to --accept, allowing test to pass")
 
-            # Outputing response for embedding in test
-            assert p, \
-                f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+            else:
+                # Outputing response for embedding in test
+                assert p, \
+                    f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
 
         elif explain_query_type == "subscription":
             # Comparing only with generated 'sql' since the 'plan' may differ.
@@ -1370,10 +1373,12 @@ class TestGraphQLExplainPostgresMSSQLMySQL:
                 with open(f, 'w') as outfile:
                     conf['response']['sql'] = resp_json['sql']
                     yaml.YAML().dump(conf, outfile)
+                warnings.warn("Wrote new output due to --accept, allowing test to pass")
 
-            # Outputing response for embedding in test
-            assert p, \
-                f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+            else:
+                # Outputing response for embedding in test
+                assert p, \
+                    f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
         else:
             assert False, "Test programmer error"
 

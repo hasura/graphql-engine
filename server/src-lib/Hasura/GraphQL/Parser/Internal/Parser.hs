@@ -13,6 +13,7 @@ module Hasura.GraphQL.Parser.Internal.Parser
 where
 
 import Data.Aeson qualified as A
+import Data.Aeson.Key qualified as K
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
@@ -186,10 +187,10 @@ selectionSetObject name description parsers implementsInterfaces =
                 | _fName == $$(litName "__typename") ->
                   pure $ SelectTypename $ getName name
                 | Just parser <- M.lookup _fName parserMap ->
-                  withPath (++ [Key (unName _fName)]) $
+                  withPath (++ [Key (K.fromText (unName _fName))]) $
                     SelectField <$> parser selectionField
                 | otherwise ->
-                  withPath (++ [Key (unName _fName)]) $
+                  withPath (++ [Key (K.fromText (unName _fName))]) $
                     parseError $ "field " <> _fName <<> " not found in type: " <> squote name
           _dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
           -- insert processing of custom directives here

@@ -13,10 +13,11 @@ query:
       }
 response:
 - field: article
-  sql: 'SELECT  coalesce(json_agg("root" ORDER BY "root.pg.author_id" DESC NULLS FIRST),
-    ''[]'' ) AS "root" FROM  (SELECT  "_0_root.base"."author_id" AS "root.pg.author_id",
-    row_to_json((SELECT  "_1_e"  FROM  (SELECT  "_0_root.base"."id" AS "id", "_0_root.base"."title"
-    AS "title", "_0_root.base"."content" AS "content"       ) AS "_1_e"      ) ) AS
-    "root" FROM  (SELECT  *  FROM "public"."article"  WHERE (''true'')   ORDER BY
-    "author_id" DESC NULLS FIRST LIMIT 5 ) AS "_0_root.base"    ORDER BY "root.pg.author_id"
-    DESC NULLS FIRST  ) AS "_2_root"      '
+  sql: "SELECT  coalesce(json_agg(\"root\" ORDER BY \"root.pg.author_id\" DESC NULLS\
+    \ FIRST), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_1_e\"  FROM\
+    \  (SELECT  \"_0_root.base\".\"id\" AS \"id\", \"_0_root.base\".\"title\" AS \"\
+    title\", \"_0_root.base\".\"content\" AS \"content\"       ) AS \"_1_e\"     \
+    \ ) ) AS \"root\", \"_0_root.base\".\"author_id\" AS \"root.pg.author_id\" FROM\
+    \  (SELECT  *  FROM \"public\".\"article\"  WHERE ('true')   ORDER BY \"author_id\"\
+    \ DESC NULLS FIRST LIMIT 5 ) AS \"_0_root.base\"    ORDER BY \"root.pg.author_id\"\
+    \ DESC NULLS FIRST  ) AS \"_2_root\"      "

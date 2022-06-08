@@ -33,7 +33,7 @@ import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Control.Monad.Validate
 import Data.Aeson
 import Data.Aeson.Extended
-import Data.Hashable.Time ()
+import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as Q
 import Database.PG.Query.Connection qualified as Q
 import Hasura.Backends.Postgres.Execute.Types as ET

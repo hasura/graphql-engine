@@ -545,7 +545,6 @@ elif [ "$MODE" = "test" ]; then
       fi
     done
 
-    echo ""
     echo " Ok"
 
     add_sources $HASURA_GRAPHQL_SERVER_PORT

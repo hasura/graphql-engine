@@ -51,6 +51,7 @@ where
 import Control.Arrow.Extended
 import Data.Aeson
 import Data.Aeson.Internal
+import Data.Aeson.Key qualified as K
 import Data.Aeson.Types
 import Data.Text qualified as T
 import Database.PG.Query qualified as Q
@@ -229,7 +230,7 @@ encodeJSONPath = format "$"
   where
     format pfx [] = pfx
     format pfx (Index idx : parts) = format (pfx ++ "[" ++ show idx ++ "]") parts
-    format pfx (Key key : parts) = format (pfx ++ formatKey key) parts
+    format pfx (Key key : parts) = format (pfx ++ formatKey (K.toText key)) parts
 
     formatKey key
       | specialChars sKey = "['" ++ sKey ++ "']"
@@ -354,7 +355,7 @@ withPathE f = proc (e, (pe, s)) -> (| mapErrorA ((e, s) >- f) |) (injectPrefix p
     injectPrefix pe (QErr path st msg code i) = QErr (pe : path) st msg code i
 
 withPathKA :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (Text, s)) a
-withPathKA f = second (first $ arr Key) >>> withPathE f
+withPathKA f = second (first $ arr (Key . K.fromText)) >>> withPathE f
 
 withPathK :: (QErrM m) => Text -> m a -> m a
 withPathK a = runKleisli proc m -> (| withPathKA (m >- bindA) |) a

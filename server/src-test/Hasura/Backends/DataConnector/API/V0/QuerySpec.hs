@@ -4,6 +4,7 @@
 module Hasura.Backends.DataConnector.API.V0.QuerySpec (spec) where
 
 import Autodocodec.Extended
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.HashMap.Strict qualified as Map
 import Hasura.Backends.DataConnector.API.V0.API
@@ -46,7 +47,7 @@ spec = do
   describe "Query" $ do
     let query =
           Query
-            { fields = Map.fromList [("my_field_alias", ColumnField $ ValueWrapper $ ColumnName "my_field_name")],
+            { fields = KM.fromList [("my_field_alias", ColumnField $ ValueWrapper $ ColumnName "my_field_name")],
               from = TableName "my_table_name",
               limit = Just 10,
               offset = Just 20,

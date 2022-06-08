@@ -4,7 +4,6 @@ module Autodocodec.Extended
   ( disjointEnumCodec,
     HasObjectCodec (..),
     DisjunctCodec (..),
-    disjointMatchChoiceCodec,
     disjointMatchChoicesNECodec,
     disjointStringConstCodec,
     TypeAlternative (..),
@@ -98,19 +97,6 @@ requiredTypeField typeName =
 
 altCodec :: HasObjectCodec a => Text -> Text -> JSONCodec a
 altCodec typeName typeFieldValue = object typeName $ requiredTypeField typeFieldValue *> objectCodec
-
--- | Disjoint version of matchChoiceCodec
-disjointMatchChoiceCodec ::
-  -- | First codec
-  Codec context input output ->
-  -- | Second codec
-  Codec context input' output ->
-  -- | Rendering chooser
-  (newInput -> Either input input') ->
-  Codec context newInput output
-disjointMatchChoiceCodec c1 c2 renderingChooser =
-  dimapCodec (either id id) renderingChooser $
-    disjointEitherCodec c1 c2
 
 data DisjunctCodec context newInput output where
   DisjunctCodec :: (newInput -> Maybe input) -> Codec context input output -> DisjunctCodec context newInput output

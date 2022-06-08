@@ -35,11 +35,11 @@ import Data.Bifoldable
 import Data.Bifunctor
 import Data.Bitraversable
 import Data.Char (toLower)
-import Data.Hashable.Time ()
 import Data.Semigroup (Max (..))
 import Data.Text (unpack)
 import Data.Text qualified as T
 import Data.Time
+import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as Q
 import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))

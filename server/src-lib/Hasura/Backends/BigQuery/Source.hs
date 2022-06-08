@@ -22,9 +22,9 @@ import Control.Concurrent.MVar
 import Crypto.PubKey.RSA.Types qualified as Cry
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.ByteString.Lazy qualified as BL
-import Data.HashMap.Strict qualified as HM
 import Data.Int qualified as Int
 import Data.Text.Encoding qualified as TE
 import Data.X509 qualified as X509
@@ -92,7 +92,7 @@ data ConfigurationJSON a
 
 instance J.FromJSON a => J.FromJSON (ConfigurationJSON a) where
   parseJSON = \case
-    J.Object o | Just (J.String text) <- HM.lookup "from_env" o -> pure (FromEnvJSON text)
+    J.Object o | Just (J.String text) <- KM.lookup "from_env" o -> pure (FromEnvJSON text)
     J.String s -> case J.eitherDecode . BL.fromStrict . TE.encodeUtf8 $ s of
       Left {} -> fail "error parsing configuration json"
       Right sa -> pure sa

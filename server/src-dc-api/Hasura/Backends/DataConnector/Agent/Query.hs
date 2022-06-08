@@ -8,14 +8,13 @@ import Control.Monad (forM)
 import Control.Monad.Except (throwError)
 import Data.Aeson (Object)
 import Data.Aeson qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.Function ((&))
-import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as Map
 import Data.List (foldl', sortBy)
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe (fromMaybe, maybeToList)
 import Data.Monoid (All (..), Any (..))
-import Data.Text (Text)
 import Data.Vector qualified as V
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Agent.Data
@@ -115,7 +114,7 @@ createSubqueryForRelationshipField (Row row) API.RelField {..} =
         _ -> Nothing
 
 projectRow ::
-  HashMap Text API.Field ->
+  KM.KeyMap API.Field ->
   (API.Query -> Handler API.QueryResponse) ->
   Row ->
   Handler Object

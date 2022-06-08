@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Hasura.RQL.Types.Relationships.ToSchema
   ( ToSchemaRelationshipDef (..),
@@ -19,6 +20,8 @@ where
 
 import Control.Lens (makeLenses)
 import Data.Aeson
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.Aeson.Types (prependFailure)
 import Data.Bifunctor (bimap)
@@ -67,9 +70,9 @@ instance FromJSON RemoteFields where
   parseJSON = prependFailure details . fmap RemoteFields . parseRemoteFields
     where
       details = "Remote fields are represented by an object that maps each field name to its arguments."
-      parseRemoteFields = withObject "RemoteFields" \hashmap -> case HM.toList hashmap of
-        [(fieldNameText, callValue)] -> do
-          fieldName <- parseJSON (String fieldNameText)
+      parseRemoteFields = withObject "RemoteFields" \hashmap -> case KM.toList hashmap of
+        [(fieldNameKey, callValue)] -> do
+          fieldName <- parseJSON $ String $ K.toText fieldNameKey
           callObject <- parseJSON callValue
           arguments <- callObject .: "arguments"
           maybeSubField <- callObject .:? "field"
@@ -86,7 +89,7 @@ instance ToJSON RemoteFields where
     where
       remoteFieldsJson (field :| subfields) =
         object
-          [ G.unName (fcName field)
+          [ K.fromText (G.unName (fcName field))
               .= object
                 ( catMaybes
                     [ Just $ "arguments" .= fcArguments field,
@@ -126,8 +129,8 @@ instance FromJSON RemoteArguments where
     where
       details = "Remote arguments are represented by an object that maps each argument name to its value."
 
-      parseObjectFieldsToGValue hashMap =
-        HM.fromList <$> for (HM.toList hashMap) \(key, value) -> do
+      parseObjectFieldsToGValue keyMap =
+        HM.fromList <$> for (KM.toList keyMap) \(K.toText -> key, value) -> do
           name <- G.mkName key `onNothing` fail (T.unpack key <> " is an invalid key name")
           parsedValue <- parseValueAsGValue value
           pure (name, parsedValue)
@@ -160,7 +163,7 @@ instance ToJSON RemoteArguments where
   toJSON (RemoteArguments fields) = fieldsToObject fields
     where
       fieldsToObject =
-        Object . HM.fromList . map (bimap G.unName gValueToValue) . HM.toList
+        Object . KM.fromList . map (bimap (K.fromText . G.unName) gValueToValue) . HM.toList
 
       gValueToValue =
         \case

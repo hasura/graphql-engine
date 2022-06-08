@@ -7,7 +7,8 @@ module Hasura.Backends.MSSQL.DDL.BoolExp
 where
 
 import Data.Aeson qualified as J
-import Data.HashMap.Strict qualified as Map
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Text qualified as T
 import Data.Text.Extended (dquote, toTxt, (<<>))
 import Hasura.Backends.MSSQL.Types.Internal hiding (ColumnType)
@@ -35,7 +36,7 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
 
     parseOperations :: ColumnType 'MSSQL -> J.Value -> m [OpExpG 'MSSQL v]
     parseOperations columnType = \case
-      J.Object o -> mapM (parseOperation columnType) $ Map.toList o
+      J.Object o -> mapM (parseOperation columnType . first K.toText) $ KM.toList o
       v -> pure . AEQ False <$> parseWithTy columnType v
 
     parseOperation :: ColumnType 'MSSQL -> (Text, J.Value) -> m (OpExpG 'MSSQL v)

@@ -419,7 +419,7 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
   buildSchemaCacheWithOptions (CatalogUpdate $ Just recreateEventTriggersSources) cacheInvalidations metadata
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
   pure . encJFromJValue . J.object $
-    [ ("message" :: Text) J..= ("success" :: Text),
+    [ "message" J..= ("success" :: Text),
       "is_consistent" J..= null inconsObjs
     ]
       <> ["inconsistent_objects" J..= inconsObjs | not (null inconsObjs)]

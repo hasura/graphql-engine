@@ -45,6 +45,8 @@ where
 import Control.Exception (try)
 import Control.Lens (preview, set, view, (.~))
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
 import Data.Aeson.TH
 import Data.ByteString qualified as BS
@@ -52,7 +54,6 @@ import Data.ByteString.Lazy qualified as LBS
 import Data.CaseInsensitive qualified as CI
 import Data.Either
 import Data.Has
-import Data.HashMap.Lazy qualified as HML
 import Data.Int (Int64)
 import Data.TByteString qualified as TBS
 import Data.Text qualified as T
@@ -185,7 +186,7 @@ instance J.ToJSON (HTTPRespExtra a) where
         HVEnv txt -> J.String txt
       getRedactedHeaders =
         J.Object $
-          foldr (\(HeaderConf name val) -> HML.insert name (getValue val)) HML.empty logHeaders
+          foldr (\(HeaderConf name val) -> KM.insert (J.fromText name) (getValue val)) mempty logHeaders
       updateReqDetail v reqType =
         let webhookRedactedReq = J.toJSON v & key reqType . key "url" .~ J.String webhookVarName
             redactedReq = webhookRedactedReq & key reqType . key "headers" .~ getRedactedHeaders

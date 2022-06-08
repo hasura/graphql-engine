@@ -23,6 +23,7 @@ import Control.Lens (at, non)
 import Control.Lens.Extended (to, (^?))
 import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
@@ -110,7 +111,7 @@ instance (Backend b) => ToJSON (CreateFromSourceRelationship b) where
           -- fields will be omitted from the serialized JSON. This could only
           -- happen if the ToJSON instance of RemoteRelationshipDefinition were
           -- changed to return something that isn't an object.
-          J.Object obj -> commonFields <> Map.toList obj
+          J.Object obj -> commonFields <> KM.toList obj
           _ -> []
       -- new format
       _ -> ("definition" .= _crrDefinition) : commonFields

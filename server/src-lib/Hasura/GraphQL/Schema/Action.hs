@@ -8,6 +8,8 @@ module Hasura.GraphQL.Schema.Action
 where
 
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.Text.Extended
@@ -329,8 +331,8 @@ actionInputArguments nonObjectTypeMap arguments = do
       [(G.Name, InputFieldsParser n (Maybe J.Value))] ->
       InputFieldsParser n J.Object
     inputFieldsToObject inputFields =
-      let mkTuple (name, parser) = fmap (G.unName name,) <$> parser
-       in Map.fromList . catMaybes <$> traverse mkTuple inputFields
+      let mkTuple (name, parser) = fmap (K.fromText (G.unName name),) <$> parser
+       in KM.fromList . catMaybes <$> traverse mkTuple inputFields
 
     argumentParser ::
       G.Name ->

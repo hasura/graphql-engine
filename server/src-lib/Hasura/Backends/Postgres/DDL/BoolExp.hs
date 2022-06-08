@@ -10,6 +10,8 @@ module Hasura.Backends.Postgres.DDL.BoolExp
 where
 
 import Data.Aeson
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as Map
 import Data.Text qualified as T
 import Data.Text.Extended
@@ -53,7 +55,7 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
 
     parseOperations :: ColumnReference ('Postgres pgKind) -> Value -> m [OpExpG ('Postgres pgKind) v]
     parseOperations column = \case
-      Object o -> mapM (parseOperation column) (Map.toList o)
+      Object o -> mapM (parseOperation column . first K.toText) (KM.toList o)
       val -> pure . AEQ False <$> rhsParser columnType val
       where
         columnType = CollectableTypeScalar $ columnReferenceType column

@@ -22,12 +22,12 @@ import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
 import Control.Lens.TH (makePrisms)
 import Data.Aeson (FromJSON, FromJSONKey, Object, ToJSON, ToJSONKey)
+import Data.Aeson.KeyMap qualified as KM
 import Data.Data (Data)
 import Data.HashMap.Strict qualified as M
 import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
-import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
@@ -40,7 +40,7 @@ import Prelude
 -- | A serializable request to retrieve strutured data from some
 -- source.
 data Query = Query
-  { fields :: M.HashMap Text Field,
+  { fields :: KM.KeyMap Field,
     from :: API.V0.TableName,
     limit :: Maybe Int,
     offset :: Maybe Int,

@@ -31,8 +31,13 @@ function add_postgres_source() {
 
     echo ""
     echo "Adding Postgres source"
-    curl --fail "$metadata_url" \
-    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$db_url"'"}}}}'
+    # FIXME: Without a loop here `dev.sh test` fails for me here. With the loop
+    # I get “source with name \"default\" already exists”
+    until curl -s "$metadata_url" \
+        --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$db_url"'"}}}}'; &>/dev/null; do
+      echo -n '.' && sleep 0.2
+    done
+    echo " Ok"
 }
 
 function add_citus_source() {

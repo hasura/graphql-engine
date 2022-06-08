@@ -25,6 +25,8 @@ import Control.Exception (try)
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
@@ -168,14 +170,14 @@ resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExe
 -- | Build action response from the Webhook JSON response when there are no relationships defined
 makeActionResponseNoRelations :: IR.ActionFields -> GraphQLType -> IR.ActionOutputFields -> Bool -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputField webhookResponse =
-  let mkResponseObject :: IR.ActionFields -> HashMap Text J.Value -> AO.Value
+  let mkResponseObject :: IR.ActionFields -> KM.KeyMap J.Value -> AO.Value
       mkResponseObject fields obj =
         AO.object $
           flip mapMaybe fields $ \(fieldName, annField) ->
             let fieldText = getFieldNameTxt fieldName
              in (fieldText,) <$> case annField of
                   IR.ACFExpression t -> Just $ AO.String t
-                  IR.ACFScalar fname -> AO.toOrdered <$> Map.lookup (G.unName fname) obj
+                  IR.ACFScalar fname -> AO.toOrdered <$> KM.lookup (K.fromText $ G.unName fname) obj
                   IR.ACFNestedObject _ nestedFields -> do
                     let mkValue :: J.Value -> Maybe AO.Value
                         mkValue = \case
@@ -183,7 +185,7 @@ makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputFiel
                           J.Array a -> Just $ AO.array $ mapMaybe mkValue $ toList a
                           J.Null -> Just AO.Null
                           _ -> Nothing
-                    Map.lookup fieldText obj >>= mkValue
+                    KM.lookup (K.fromText fieldText) obj >>= mkValue
       mkResponseArray :: J.Value -> AO.Value
       mkResponseArray = \case
         (J.Object o) -> mkResponseObject annFields o
@@ -200,7 +202,7 @@ makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputFiel
         else case webhookResponse of
           AWRArray objs -> AO.array $ map mkResponseArray objs
           AWRObject obj ->
-            mkResponseObject annFields (mapKeys G.unName obj)
+            mkResponseObject annFields $ KM.fromHashMapText $ mapKeys G.unName obj
           AWRNull -> AO.Null
           _ -> AO.toOrdered $ J.toJSON webhookResponse
 

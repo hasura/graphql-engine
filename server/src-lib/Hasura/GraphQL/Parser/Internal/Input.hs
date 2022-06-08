@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 -- | Defines the 'Parser' type and its primitive combinators.
 module Hasura.GraphQL.Parser.Internal.Input
   ( InputFieldsParser (..),
@@ -14,6 +16,8 @@ where
 
 import Control.Lens.Extended hiding (enum, index)
 import Data.Aeson qualified as A
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict.Extended qualified as M
 import Data.HashSet qualified as S
 import Data.Parser.JSONPath
@@ -225,7 +229,7 @@ field ::
 field name description parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description $ InputFieldInfo (pType parser) Nothing],
-      ifParser = \values -> withPath (++ [Key (unName name)]) do
+      ifParser = \values -> withPath (++ [Key (K.fromText (unName name))]) do
         value <-
           onNothing (M.lookup name values <|> nullableDefault) $
             parseError ("missing required field " <>> name)
@@ -259,7 +263,7 @@ fieldOptional name description parser =
         ],
       ifParser =
         M.lookup name
-          >>> withPath (++ [Key (unName name)])
+          >>> withPath (++ [Key (K.fromText (unName name))])
             . traverse (pInputParser parser <=< peelVariable expectedType)
     }
   where
@@ -281,7 +285,7 @@ fieldWithDefault name description defaultValue parser =
     { ifDefinitions = [Definition name description $ InputFieldInfo (pType parser) (Just defaultValue)],
       ifParser =
         M.lookup name
-          >>> withPath (++ [Key (unName name)]) . \case
+          >>> withPath (++ [Key (K.fromText (unName name))]) . \case
             Just value -> peelVariableWith True expectedType value >>= pInputParser parser
             Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
     }
@@ -339,7 +343,7 @@ object name description parser =
           GraphQLValue (VObject fields) -> parseFields $ GraphQLValue <$> fields
           JSONValue (A.Object fields) -> do
             translatedFields <-
-              M.fromList <$> for (M.toList fields) \(key, val) -> do
+              M.fromList <$> for (KM.toList fields) \(K.toText -> key, val) -> do
                 name' <-
                   mkName key
                     `onNothing` parseError
@@ -359,7 +363,7 @@ object name description parser =
       -- handles parsing the fields it cares about
       for_ (M.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $
-          withPath (++ [Key (unName fieldName)]) $
+          withPath (++ [Key (K.fromText (unName fieldName))]) $
             parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
       ifParser parser fields
 

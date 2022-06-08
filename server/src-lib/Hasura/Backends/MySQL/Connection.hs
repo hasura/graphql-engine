@@ -12,10 +12,11 @@ where
 
 import Data.Aeson hiding (Result)
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Text (encodeToTextBuilder)
 import Data.ByteString (ByteString)
 import Data.Environment qualified as Env
-import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Pool
 import Data.Scientific (fromFloatDigits)
@@ -96,8 +97,8 @@ parseFieldResult f@Field {..} mBs =
 fieldsToAeson :: [Field] -> [[Maybe ByteString]] -> [Value]
 fieldsToAeson column rows =
   [ Object $
-      HM.fromList $
-        [ (decodeUtf8 (fieldName c)) .= (parseFieldResult c r)
+      KM.fromList $
+        [ (K.fromText (decodeUtf8 (fieldName c))) .= (parseFieldResult c r)
           | (c, r) <- (zip column row :: [(Field, Maybe ByteString)])
         ]
     | row <- (rows :: [[Maybe ByteString]])

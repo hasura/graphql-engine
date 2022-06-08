@@ -7,7 +7,9 @@ where
 
 import Control.Applicative
 import Control.Monad (void)
+import Data.Aeson (Key)
 import Data.Aeson.Internal (JSONPath, JSONPathElement (..))
+import Data.Aeson.Key qualified as K
 import Data.Attoparsec.Text
 import Data.Bifunctor
 import Data.Text qualified as T
@@ -29,7 +31,7 @@ element =
   Key <$> (optional (char '.') *> name) -- field or .field
     <|> bracketElement -- [42] or ['field']
 
-name :: Parser T.Text
+name :: Parser Key
 name = go <?> "property name"
   where
     go = do
@@ -38,7 +40,7 @@ name = go <?> "property name"
           <|> char '_'
           <?> "first character of property name must be a letter or underscore"
       otherChars <- many' (letter <|> digit <|> satisfy (inClass "-_"))
-      pure $ T.pack (firstChar : otherChars)
+      pure $ K.fromText $ T.pack (firstChar : otherChars)
 
 -- | Parses a JSON property key or index in square bracket format, e.g.
 -- > [42]
@@ -56,7 +58,7 @@ bracketElement = do
   where
     quotedString delimiter = do
       void $ char delimiter
-      result <- T.pack <$> many' (charOrEscape delimiter)
+      result <- K.fromText . T.pack <$> many' (charOrEscape delimiter)
       void $ char delimiter
       pure result
 

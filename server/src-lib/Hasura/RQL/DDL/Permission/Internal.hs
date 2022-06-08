@@ -13,6 +13,7 @@ module Hasura.RQL.DDL.Permission.Internal
 where
 
 import Control.Lens hiding ((.=))
+import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Types
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as Set
@@ -101,7 +102,7 @@ getDepHeadersFromVal val = case val of
         | otherwise -> []
       _ -> []
     parseObject o =
-      concatMap getDepHeadersFromVal (M.elems o)
+      concatMap getDepHeadersFromVal (KM.elems o)
 
 getDependentHeaders :: BoolExp b -> HashSet Text
 getDependentHeaders (BoolExp boolExp) =

@@ -7,24 +7,24 @@
       "tables": [
         {
           "table": {
-            "schema": "public",
-            "name": "test"
+            "name": "test",
+            "schema": "public"
           }
         }
       ],
       "configuration": {
         "connection_info": {
-          "use_prepared_statements": false,
           "database_url": {
             "from_env": "HASURA_GRAPHQL_DATABASE_URL"
           },
           "isolation_level": "read-committed",
           "pool_settings": {
             "connection_lifetime": 600,
-            "retries": 1,
             "idle_timeout": 180,
-            "max_connections": 50
-          }
+            "max_connections": 50,
+            "retries": 1
+          },
+          "use_prepared_statements": false
         }
       }
     }

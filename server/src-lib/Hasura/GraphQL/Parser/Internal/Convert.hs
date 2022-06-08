@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 -- | This module defines all functions that convert between different
 -- representations of values in the schema; most commonly: GraphQL literals,
 -- JSON values, and 'InputValue', a type that provides an abstraction above both
@@ -9,6 +11,8 @@ module Hasura.GraphQL.Parser.Internal.Convert
 where
 
 import Data.Aeson qualified as A
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict.Extended qualified as M
 import Data.Int (Int64)
 import Data.Scientific (toBoundedInteger)
@@ -51,7 +55,7 @@ jsonToGraphQL = \case
     Nothing -> pure $ G.VFloat val
   A.Array vals -> G.VList <$> traverse jsonToGraphQL (toList vals)
   A.Object vals ->
-    G.VObject . M.fromList <$> for (M.toList vals) \(key, val) -> do
+    G.VObject . M.fromList <$> for (KM.toList vals) \(K.toText -> key, val) -> do
       graphQLName <-
         G.mkName key
           `onNothing` throwError

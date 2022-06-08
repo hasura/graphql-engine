@@ -25,6 +25,15 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 		projectDirectory string
 		endpointString   string
 	}
+    // Named for reuse below. We only care about the inconsistent_objects array
+    // as a set, i.e. ordering may change:
+	v3Expected :=
+		`{"is_consistent":false,"inconsistent_objects":[
+			{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},
+			{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},
+			{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"},
+			{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"}
+			]}`
 	tests := []struct {
 		name    string
 		fields  fields
@@ -37,7 +46,7 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 				projectDirectory: "testdata/projectv3",
 				endpointString:   hgeEndpoint,
 			},
-			`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"},{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"}]}`,
+			v3Expected,
 			false,
 		},
 		{
@@ -46,7 +55,7 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 				projectDirectory: "testdata/projectv3-file-mode-json",
 				endpointString:   hgeEndpoint,
 			},
-			`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"},{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"}]}`,
+			v3Expected,
 			false,
 		},
 		{
@@ -55,7 +64,7 @@ func TestProjectMetadataOps_Apply(t *testing.T) {
 				projectDirectory: "testdata/projectv3-file-mode-yaml",
 				endpointString:   hgeEndpoint,
 			},
-			`{"is_consistent":false,"inconsistent_objects":[{"definition":{"name":"t1","schema":"public"},"name":"table t1 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t1\"","type":"table"},{"definition":{"name":"t2","schema":"public"},"name":"table t2 in source default","reason":"Inconsistent object: no such table/view exists in source: \"t2\"","type":"table"},{"definition":{"name":"t4","schema":"pub"},"name":"table pub.t4 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t4\"","type":"table"},{"definition":{"name":"t3","schema":"pub"},"name":"table pub.t3 in source default","reason":"Inconsistent object: no such table/view exists in source: \"pub.t3\"","type":"table"}]}`,
+			v3Expected,
 			false,
 		},
 		{

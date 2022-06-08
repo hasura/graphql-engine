@@ -14,6 +14,7 @@ where
 import Control.Exception (fromException)
 import Control.Lens hiding ((.=))
 import Data.Aeson qualified as J
+import Data.Aeson.KeyMap qualified as KM
 import Data.CaseInsensitive (original)
 import Data.HashMap.Strict qualified as M
 import Data.Text qualified as T
@@ -100,7 +101,7 @@ serializeHTTPExceptionMessage (HttpException (HTTP.InvalidUrlException url reaso
 encodeHTTPRequestJSON :: HTTP.Request -> J.Value
 encodeHTTPRequestJSON request =
   J.Object $
-    M.fromList
+    KM.fromList
       [ ("host", J.toJSON $ TE.decodeUtf8 $ HTTP.host request),
         ("port", J.toJSON $ HTTP.port request),
         ("secure", J.toJSON $ HTTP.secure request),

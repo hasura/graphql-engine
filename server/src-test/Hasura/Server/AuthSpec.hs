@@ -9,6 +9,8 @@ import Crypto.JOSE.JWK qualified as Jose
 import Crypto.JWT qualified as JWT
 import Data.Aeson ((.=))
 import Data.Aeson qualified as J
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Parser.JSONPath
@@ -30,11 +32,11 @@ spec = do
   setupAuthModeTests
   parseClaimsMapTests
 
-allowedRolesClaimText :: Text
-allowedRolesClaimText = sessionVariableToText allowedRolesClaim
+allowedRolesClaimText :: K.Key
+allowedRolesClaimText = K.fromText $ sessionVariableToText allowedRolesClaim
 
-defaultRoleClaimText :: Text
-defaultRoleClaimText = sessionVariableToText defaultRoleClaim
+defaultRoleClaimText :: K.Key
+defaultRoleClaimText = K.fromText $ sessionVariableToText defaultRoleClaim
 
 -- Unit test the core of our authentication code. This doesn't test the details
 -- of resolving roles from JWT or webhook.
@@ -67,7 +69,7 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
                   (mkSessionVariablesHeaders mempty)
 
           processAuthZHeader _jwtCtx _authzHeader =
-            pure (mapKeys mkSessionVariable claims, Nothing)
+            pure (Map.fromList $ map (first (mkSessionVariable . K.toText)) $ KM.toList claims, Nothing)
 
           processJwt = processJwt_ processAuthZHeader tokenIssuer (const JHAuthorization)
 
@@ -472,7 +474,7 @@ parseClaimsMapTests = describe "parseClaimMapTests" $ do
                   "exp" .= (1626420800 :: Int) -- we ignore these non session variables, in the response
                 ]
             claimsSetWithSub =
-              (JWT.emptyClaimsSet & JWT.claimSub .~ Just "random") & JWT.unregisteredClaims .~ unregisteredClaims
+              (JWT.emptyClaimsSet & JWT.claimSub .~ Just "random") & JWT.unregisteredClaims .~ KM.toMapText unregisteredClaims
         parseClaimsMap_ claimsSetWithSub (JCNamespace (ClaimNsPath (mkJSONPathE "$")) defaultClaimsFormat)
           -- "$" JSON path signifies the claims are to be found in the root of the JWT token
           `shouldReturn` Right defaultClaimsMap
@@ -646,6 +648,6 @@ setupAuthMode' mAdminSecretHash mWebHook jwtSecrets mUnAuthRole =
             (error "H.Manager")
             (Logger $ void . return)
 
-mkClaimsSetWithUnregisteredClaims :: HashMap Text J.Value -> JWT.ClaimsSet
+mkClaimsSetWithUnregisteredClaims :: J.Object -> JWT.ClaimsSet
 mkClaimsSetWithUnregisteredClaims unregisteredClaims =
-  JWT.emptyClaimsSet & JWT.unregisteredClaims .~ unregisteredClaims
+  JWT.emptyClaimsSet & JWT.unregisteredClaims .~ KM.toMapText unregisteredClaims
