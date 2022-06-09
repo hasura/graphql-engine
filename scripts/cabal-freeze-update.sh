@@ -98,7 +98,7 @@ else
         sed -ri "/\s+any.$package_name ==/d" "$FREEZE_FILE"
         sed -ri "/\s+$package_name /d" "$FREEZE_FILE"  # baked in flags
         # add back target version
-        sed -i "\$s/\$/, $package_name ==$package_version/" "$FREEZE_FILE"
+        sed -i "\$s/\$/ $package_name ==$package_version,/" "$FREEZE_FILE"
     done 
 
     freeze_line_count_orig=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
@@ -126,7 +126,10 @@ else
             freeze_line_count=$(wc -l "$FREEZE_FILE" | awk '{print $1}')
             if [ "$freeze_line_count" -eq "$freeze_line_count_prev" ]; then
                 # No longer making progress, so...
-                echo_error "It looks like we can't find a build plan :( Exiting"
+                echo_error "It looks like we can't find a build plan :("
+                echo_error "With the freeze file in its current state, try doing:"
+                echo_error "    $ cabal freeze --enable-tests --enable-benchmarks --minimize-conflict-set"
+                echo_error "Exiting"
                 exit 31
             else
                 echo -ne "Relaxed $((freeze_line_count_orig-freeze_line_count)) constraints so far...\r"
