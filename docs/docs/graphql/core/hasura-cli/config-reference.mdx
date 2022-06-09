@@ -17,6 +17,13 @@ keywords:
 Hasura CLI commands can get key values from flags, ENV variables, a
 `.env` file or the configuration file `config.yaml`.
 
+:::info Note
+
+Precedence order is flag > ENV vars > `.env` file values >
+configuration file values > default.
+
+:::
+
 ## Configuration file
 
 In order for the Hasura CLI to work, the `config.yaml` file is required (created automatically via the [hasura init](/graphql/core/hasura-cli/hasura_init.mdx) command). The configuration file can be configured with the following config keys:
@@ -25,6 +32,7 @@ In order for the Hasura CLI to work, the `config.yaml` file is required (created
 version: 
 endpoint: 
 admin_secret:
+admin_secrets:
 insecure_skip_tls_verify:
 certificate_authority:
 access_key: #deprecated
@@ -51,6 +59,7 @@ actions:
 | version                         | false    | 1                              | 3                       |
 | endpoint                        | true     | 1                              | `http://localhost:8080` |
 | admin_secret                    | false    | 1                              |                         |
+| admin_secrets                   | false    | 3 (added in `v2.8.0`)          |                         |
 | access_key                      | false    | 1 (Deprecated)                 |                         |
 | insecure_skip_tls_verify        | false    | 1 (added in `v1.2.0`)          | false                   |
 | certificate_authority           | false    | 1 (added in `v1.2.0`)          |                         |
@@ -87,6 +96,7 @@ The configuration can also be set in the form of environment variables:
 | `HASURA_GRAPHQL_VERSION`                         | `version`                         | Config version to be used.                                                                                                                      |
 | `HASURA_GRAPHQL_ENDPOINT`                        | `endpoint`                        | http(s) endpoint for Hasura GraphQL engine.                                                                                                     |
 | `HASURA_GRAPHQL_ADMIN_SECRET`                    | `admin_secret`                    | Admin secret for Hasura GraphQL engine.                                                                                                         |
+| `HASURA_GRAPHQL_ADMIN_SECRETS`                   | `admin_secrets`                   | [Admin secrets](/graphql/cloud/security/multiple-admin-secrets.mdx) for Hasura GraphQL engine *(Cloud/EE only)*. eg: `HASURA_GRAPHQL_ADMIN_SECRETS='["foo", "bar", "baz"]'`                                             |
 | `HASURA_GRAPHQL_ACCESS_KEY`                      | `access_key`                      | Access key for Hasura GraphQL engine. Note: Deprecated. Use admin secret instead.                                                               |
 | `HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY`        | `insecure_skip_tls_verify`        | Skip verifying SSL certificate for the Hasura endpoint. Useful if you have a self-singed certificate and don't have access to the CA cert.      |
 | `HASURA_GRAPHQL_CERTIFICATE_AUTHORITY`           | `certificate_authority`           | Path to the CA certificate for validating the self-signed certificate for the Hasura endpoint.                                                  |
@@ -134,10 +144,3 @@ present at the project root directory.
 
 :::
 
-:::info Note
-
-
-Precedence order is flag > ENV vars > `.env` file values >
-configuration file values > default.
-
-:::
