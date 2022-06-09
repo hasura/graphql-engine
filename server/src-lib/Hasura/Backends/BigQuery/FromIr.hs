@@ -1303,6 +1303,9 @@ fromComputedFieldSelect = \case
                   Rql.JASMultipleRows -> Many
                   Rql.JASSingleObject -> One,
               selectAsStruct = AsStruct,
+              -- Using 'LIMIT' after 'FROM <function>' expression in a
+              -- computed field select sub-query causes query exception.
+              -- See https://github.com/hasura/graphql-engine/issues/8562 for more details.
               selectTop = NoTop
             }
     pure $ FunctionExpression (FunctionName "ARRAY" Nothing) [SelectExpression selectWithCardinality]
