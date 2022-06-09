@@ -12,7 +12,16 @@
       -- things. While these functions may not all be used, they're still worth
       -- keeping around until this module is extracted from the monorepo.
     , "^Control.Arrow.Extended.*"
+
+    , "^Data.Aeson.Ordered.*"
+    , "^Data.HashMap.Strict.Multi.*"
     , "^Data.HashMap.Strict.NonEmpty.*"
+    , "^Data.Sequence.NonEmpty.*"
+    , "^Data.Text.Casing.*"
+    , "^Data.Text.Extended.*"
+    , "^Data.Trie.*"
+
+    , "^Database.MSSQL.Transaction.*"
 
       -- Debugging functions. They are not entry points, but if we include them
       -- as such, Weeder won't try to get rid of the definitions.
@@ -20,6 +29,20 @@
       -- https://github.com/ocharles/weeder/pull/58
     , "^Hasura.Prelude.ltrace$"
     , "^Hasura.Prelude.ltraceM$"
+
+      -- TemplateHaskell and QuasiQuotes aren't detected by Weeder, so we have
+      -- to sort through these manually.
+    , "^Data.Text.NonEmpty.nonEmptyTextQQ$"
+
+    , "^Hasura.SQL.TH.backendCase$"
+    , "^Hasura.SQL.TH.backendConstructors$"
+    , "^Hasura.SQL.TH.backendData$"
+    , "^Hasura.SQL.TH.forEachBackend$"
+    , "^Hasura.SQL.TH.getBackendTagName$"
+    , "^Hasura.SQL.TH.getBackendTypeValue$"
+    , "^Hasura.SQL.TH.getBackendValue$"
+    , "^Hasura.SQL.TH.getBackendValueName$"
+    , "^Hasura.SQL.TH.mkDispatch$"
     ]
 
 , type-class-roots = True

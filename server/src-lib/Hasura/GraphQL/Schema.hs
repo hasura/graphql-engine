@@ -7,7 +7,7 @@ module Hasura.GraphQL.Schema
 where
 
 import Control.Concurrent.Extended (forConcurrentlyEIO)
-import Control.Lens.Extended
+import Control.Lens
 import Data.Aeson.Ordered qualified as JO
 import Data.Has
 import Data.HashMap.Strict qualified as Map
@@ -102,7 +102,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
       nonTableRoles =
         Set.insert adminRoleName $
-          (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
+          Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
             <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources

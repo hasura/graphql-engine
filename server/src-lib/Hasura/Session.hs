@@ -3,7 +3,6 @@ module Hasura.Session
     mkRoleName,
     mkRoleNameSafe,
     adminRoleName,
-    isAdmin,
     roleNameToTxt,
     SessionVariable,
     mkSessionVariable,
@@ -77,9 +76,6 @@ mkRoleNameSafe = RoleName
 
 adminRoleName :: RoleName
 adminRoleName = RoleName $ mkNonEmptyTextUnsafe "admin"
-
-isAdmin :: RoleName -> Bool
-isAdmin = (adminRoleName ==)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
   deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData, Ord)

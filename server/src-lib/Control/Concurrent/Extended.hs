@@ -12,8 +12,6 @@ module Control.Concurrent.Extended
     forConcurrentlyEIO,
 
     -- * Deprecated
-    threadDelay,
-    forkIO,
     ImmortalThreadLog (..),
     ThreadState (..),
     ThreadShutdown (..),
@@ -21,7 +19,7 @@ module Control.Concurrent.Extended
   )
 where
 
-import Control.Concurrent hiding (forkIO, threadDelay)
+import Control.Concurrent hiding (threadDelay)
 import Control.Concurrent qualified as Base
 import Control.Concurrent.Async as A
 import Control.Concurrent.Async.Lifted.Safe qualified as LA
@@ -49,18 +47,6 @@ import Prelude
 -- have different meanings!
 sleep :: DiffTime -> IO ()
 sleep = Base.threadDelay . round . Microseconds
-
-{-# DEPRECATED threadDelay "Please use `sleep` instead (and read the docs!)" #-}
-threadDelay :: Int -> IO ()
-threadDelay = Base.threadDelay
-
-{-# DEPRECATED
-  forkIO
-  "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync'\
-  \ or our 'forkImmortal' instead formore robust threading."
-  #-}
-forkIO :: IO () -> IO ThreadId
-forkIO = Base.forkIO
 
 -- | Note: Please consider using 'forkManagedT' instead to ensure reliable
 -- resource cleanup.

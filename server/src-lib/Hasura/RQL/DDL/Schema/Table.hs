@@ -21,7 +21,7 @@ module Hasura.RQL.DDL.Schema.Table
 where
 
 import Control.Arrow.Extended
-import Control.Lens.Extended hiding ((.=))
+import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Ordered qualified as JO
@@ -355,7 +355,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
       indirectDeps = mapMaybe getIndirectDep allDeps
 
   -- Report bach with an error if cascade is not set
-  when (not (null indirectDeps) && not cascade) $
+  unless (null indirectDeps || cascade) $
     reportDependentObjectsExist indirectDeps
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do

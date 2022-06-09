@@ -31,7 +31,6 @@ module Hasura.Server.Utils
     redactSensitiveHeader,
     requestIdHeader,
     sqlHeader,
-    htmlHeader,
     useBackendOnlyPermissionsHeader,
     userIdHeader,
     userRoleHeader,
@@ -74,9 +73,6 @@ jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
 sqlHeader :: HTTP.Header
 sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
-
-htmlHeader :: HTTP.Header
-htmlHeader = ("Content-Type", "text/html; charset=utf-8")
 
 gzipHeader :: HTTP.Header
 gzipHeader = ("Content-Encoding", "gzip")

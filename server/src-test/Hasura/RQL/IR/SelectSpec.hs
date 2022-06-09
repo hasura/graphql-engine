@@ -1,7 +1,6 @@
 module Hasura.RQL.IR.SelectSpec (spec) where
 
 import Data.Bifoldable
-import Data.List.Extended (singleton)
 import Hasura.Backends.Postgres.RQLGenerator
 import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
@@ -25,6 +24,9 @@ genMyPair genR genV = do
 spec :: Spec
 spec = do
   describe "bifoldMapAnnSelectG" $ do
+    let singleton :: a -> [a]
+        singleton x = [x]
+
     it "bifoldMapAnnSelectG (const mempty) == foldMap" $
       hedgehog $ do
         annSelectG :: AnnSelectG ('Postgres 'Vanilla) (MyPair ('Postgres 'Vanilla) Int) Int <-

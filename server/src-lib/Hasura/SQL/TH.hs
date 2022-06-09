@@ -20,7 +20,6 @@ module Hasura.SQL.TH
     getBackendTypeValue,
     getBackendTagName,
     getBackendValueName,
-    backendList,
     backendCase,
     backendData,
     mkDispatch,
@@ -69,10 +68,6 @@ getBackendTagName backend = mkName $ concatMap nameBase backend ++ "Tag"
 -- | Associates to a backend the Name of its corresponding 'AnyBackend' constructor.
 getBackendValueName :: BackendConstructor -> Name
 getBackendValueName backend = mkName $ concatMap nameBase backend ++ "Value"
-
--- | Creates a list of values by associating an expression to each backend.
-backendList :: (BackendConstructor -> Q Exp) -> Q Exp
-backendList f = ListE <$> forEachBackend f
 
 -- | Creates a case expression with a match for each backend. It is not possible
 -- do directly expand a @Q [Match]@, which is a body of a case, hence the need

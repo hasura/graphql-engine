@@ -388,7 +388,6 @@ library
                      , Control.Arrow.Interpret
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
-                     , Control.Lens.Extended
                      , Control.Monad.Stateless
                      , Control.Monad.Trans.Managed
                      , Control.Monad.Unique

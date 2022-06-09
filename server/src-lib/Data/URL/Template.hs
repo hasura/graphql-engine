@@ -7,7 +7,6 @@ module Data.URL.Template
     mkPlainURLTemplate,
     parseURLTemplate,
     renderURLTemplate,
-    genURLTemplate,
   )
 where
 
@@ -96,6 +95,3 @@ instance Arbitrary URLTemplate where
     where
       genText = TIText . T.pack <$> listOf1 (elements $ alphaNumerics <> " ://")
       genVariable = TIVariable <$> arbitrary
-
-genURLTemplate :: Gen URLTemplate
-genURLTemplate = arbitrary
