@@ -4,10 +4,8 @@ module Data.List.Extended
     getDifference,
     getDifferenceOn,
     getOverlapWith,
-    hasNoDuplicates,
     longestCommonPrefix,
     appendToNonEmpty,
-    singleton,
     module L,
   )
 where
@@ -40,9 +38,6 @@ getOverlapWith getKey left right =
   where
     mkMap = Map.fromList . map (\v -> (getKey v, v))
 
-hasNoDuplicates :: (Eq a, Hashable a) => [a] -> Bool
-hasNoDuplicates xs = Set.size (Set.fromList xs) == length xs
-
 -- | Returns the longest prefix common to all given lists. Returns an empty list on an empty list.
 --
 -- >>> longestCommonPrefix ["abcd", "abce", "abgh"]
@@ -59,7 +54,3 @@ longestCommonPrefix (x : xs) = foldr prefix x xs
 appendToNonEmpty :: NE.NonEmpty a -> [a] -> NE.NonEmpty a
 appendToNonEmpty (neHead NE.:| neList) list =
   neHead NE.:| (neList <> list)
-
--- | As of base-4.15.0.0 (GHC > 9) singleton now exists in Data.List so we should be able to remove this when we upgrade.
-singleton :: a -> [a]
-singleton = pure

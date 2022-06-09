@@ -19,8 +19,7 @@ module Hasura.RQL.DDL.RemoteRelationship
   )
 where
 
-import Control.Lens (at, non)
-import Control.Lens.Extended (to, (^?))
+import Control.Lens (at, non, to, (^?))
 import Data.Aeson (FromJSON (..), ToJSON (..), (.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM

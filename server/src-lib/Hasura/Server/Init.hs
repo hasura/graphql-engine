@@ -31,7 +31,6 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.Server.Auth
 import Hasura.Server.Cors
@@ -1452,12 +1451,6 @@ mkGenericStrLog logLevel k msg =
 mkGenericLog :: (J.ToJSON a) => L.LogLevel -> Text -> a -> StartupLog
 mkGenericLog logLevel k msg =
   StartupLog logLevel k $ J.toJSON msg
-
-inconsistentMetadataLog :: SchemaCache -> StartupLog
-inconsistentMetadataLog sc =
-  StartupLog L.LevelWarn "inconsistent_metadata" infoVal
-  where
-    infoVal = J.object ["objects" J..= scInconsistentObjs sc]
 
 serveOptionsParser :: L.EnabledLogTypes impl => Parser (RawServeOptions impl)
 serveOptionsParser =

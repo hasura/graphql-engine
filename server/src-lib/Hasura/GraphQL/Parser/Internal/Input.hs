@@ -14,7 +14,7 @@ module Hasura.GraphQL.Parser.Internal.Input
   )
 where
 
-import Control.Lens.Extended hiding (enum, index)
+import Control.Lens hiding (enum, index)
 import Data.Aeson qualified as A
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM

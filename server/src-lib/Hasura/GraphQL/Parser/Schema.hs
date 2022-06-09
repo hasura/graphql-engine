@@ -51,7 +51,7 @@ module Hasura.GraphQL.Parser.Schema
   )
 where
 
-import Control.Lens.Extended
+import Control.Lens
 import Data.Aeson qualified as J
 import Data.Functor.Classes
 import Data.Has
