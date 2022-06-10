@@ -65,7 +65,7 @@ instance BackendSchema 'BigQuery where
   -- indivdual components
   columnParser = bqColumnParser
   scalarSelectionArgumentsParser = bqScalarSelectionArgumentsParser
-  orderByOperators = bqOrderByOperators
+  orderByOperators _sourceInfo = bqOrderByOperators
   comparisonExps = bqComparisonExps
   countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
@@ -219,32 +219,35 @@ bqScalarSelectionArgumentsParser _columnType = pure Nothing
 
 bqOrderByOperators ::
   NamingCase ->
-  NonEmpty
-    ( Definition P.EnumValueInfo,
-      (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)
-    )
-bqOrderByOperators _tCase =
-  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
-  NE.fromList
-    [ ( define G._asc "in ascending order, nulls first",
-        (BigQuery.AscOrder, BigQuery.NullsFirst)
-      ),
-      ( define G._asc_nulls_first "in ascending order, nulls first",
-        (BigQuery.AscOrder, BigQuery.NullsFirst)
-      ),
-      ( define G._asc_nulls_last "in ascending order, nulls last",
-        (BigQuery.AscOrder, BigQuery.NullsLast)
-      ),
-      ( define G._desc "in descending order, nulls last",
-        (BigQuery.DescOrder, BigQuery.NullsLast)
-      ),
-      ( define G._desc_nulls_first "in descending order, nulls first",
-        (BigQuery.DescOrder, BigQuery.NullsFirst)
-      ),
-      ( define G._desc_nulls_last "in descending order, nulls last",
-        (BigQuery.DescOrder, BigQuery.NullsLast)
+  ( G.Name,
+    NonEmpty
+      ( Definition P.EnumValueInfo,
+        (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)
       )
-    ]
+  )
+bqOrderByOperators _tCase =
+  (G._order_by,) $
+    -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
+    NE.fromList
+      [ ( define G._asc "in ascending order, nulls first",
+          (BigQuery.AscOrder, BigQuery.NullsFirst)
+        ),
+        ( define G._asc_nulls_first "in ascending order, nulls first",
+          (BigQuery.AscOrder, BigQuery.NullsFirst)
+        ),
+        ( define G._asc_nulls_last "in ascending order, nulls last",
+          (BigQuery.AscOrder, BigQuery.NullsLast)
+        ),
+        ( define G._desc "in descending order, nulls last",
+          (BigQuery.DescOrder, BigQuery.NullsLast)
+        ),
+        ( define G._desc_nulls_first "in descending order, nulls first",
+          (BigQuery.DescOrder, BigQuery.NullsFirst)
+        ),
+        ( define G._desc_nulls_last "in descending order, nulls last",
+          (BigQuery.DescOrder, BigQuery.NullsLast)
+        )
+      ]
   where
     define name desc = P.Definition name (Just desc) P.EnumValueInfo
 

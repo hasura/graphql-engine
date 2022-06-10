@@ -219,8 +219,10 @@ class
     InputFieldsParser n (Maybe (ScalarSelectionArguments b))
 
   orderByOperators ::
+    SourceInfo b ->
     NamingCase ->
-    NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b))
+    (G.Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType b, NullsOrderType b)))
+
   comparisonExps ::
     MonadBuildSchema b r m n =>
     ColumnType b ->

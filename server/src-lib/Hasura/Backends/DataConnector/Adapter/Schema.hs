@@ -9,12 +9,15 @@ import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended ((<<>))
+import Data.Text.NonEmpty qualified as NET
+import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), ComparisonExp, MonadBuildSchema)
 import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
@@ -102,17 +105,20 @@ columnParser' columnType (GQL.Nullability isNullable) = do
       | isNullable = fmap (fromMaybe IR.S.V.Null) . P.nullable
       | otherwise = id
 
-orderByOperators' :: NamingCase -> NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector))
-orderByOperators' _tCase =
-  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
-  NE.fromList
-    [ ( define $$(GQL.litName "asc") "in ascending order",
-        (IR.O.Ascending, ())
-      ),
-      ( define $$(GQL.litName "desc") "in descending order",
-        (IR.O.Descending, ())
-      )
-    ]
+orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector)))
+orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
+  let dcName = Adapter._scDataConnectorName _siConfiguration
+      orderBy = fromMaybe G._order_by $ GQL.mkName $ NET.unNonEmptyText (Adapter.unDataConnectorName dcName) <> "_order_by"
+   in (orderBy,) $
+        -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
+        NE.fromList
+          [ ( define $$(GQL.litName "asc") "in ascending order",
+              (IR.O.Ascending, ())
+            ),
+            ( define $$(GQL.litName "desc") "in descending order",
+              (IR.O.Descending, ())
+            )
+          ]
   where
     define name desc = P.Definition name (Just desc) P.EnumValueInfo
 

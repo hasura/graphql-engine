@@ -33,6 +33,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Constants qualified as GQL
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
@@ -145,7 +146,7 @@ instance
   --  memory growth, "This is turning a CAF Into a function, And the output is
   --  likely no longer going to be shared even for the same arguments, and even
   --  though the domain is extremely small (just HasuraCase or GraphqlCase)."
-  orderByOperators = \case
+  orderByOperators _sourceInfo = \case
     HasuraCase -> orderByOperatorsHasuraCase
     GraphqlCase -> orderByOperatorsGraphqlCase
   comparisonExps = comparisonExps
@@ -299,39 +300,40 @@ pgScalarSelectionArgumentsParser columnType
     elToColExp (Index i) = PG.SELit $ tshow i
 
 orderByOperatorsHasuraCase ::
-  NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind)))
+  (G.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
 orderByOperatorsHasuraCase = orderByOperators HasuraCase
 
 orderByOperatorsGraphqlCase ::
-  NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind)))
+  (G.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
 orderByOperatorsGraphqlCase = orderByOperators GraphqlCase
 
 -- | Do NOT use this function directly, this should be used via
 --  @orderByOperatorsHasuraCase@ or @orderByOperatorsGraphqlCase@
 orderByOperators ::
   NamingCase ->
-  NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind)))
+  (G.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
 orderByOperators tCase =
-  NE.fromList
-    [ ( define (applyFieldNameCaseCust tCase G._asc) "in ascending order, nulls last",
-        (PG.OTAsc, PG.NLast)
-      ),
-      ( define (applyFieldNameCaseCust tCase G._asc_nulls_first) "in ascending order, nulls first",
-        (PG.OTAsc, PG.NFirst)
-      ),
-      ( define (applyFieldNameCaseCust tCase G._asc_nulls_last) "in ascending order, nulls last",
-        (PG.OTAsc, PG.NLast)
-      ),
-      ( define (applyFieldNameCaseCust tCase G._desc) "in descending order, nulls first",
-        (PG.OTDesc, PG.NFirst)
-      ),
-      ( define (applyFieldNameCaseCust tCase G._desc_nulls_first) "in descending order, nulls first",
-        (PG.OTDesc, PG.NFirst)
-      ),
-      ( define (applyFieldNameCaseCust tCase G._desc_nulls_last) "in descending order, nulls last",
-        (PG.OTDesc, PG.NLast)
-      )
-    ]
+  (GQL._order_by,) $
+    NE.fromList
+      [ ( define (applyFieldNameCaseCust tCase G._asc) "in ascending order, nulls last",
+          (PG.OTAsc, PG.NLast)
+        ),
+        ( define (applyFieldNameCaseCust tCase G._asc_nulls_first) "in ascending order, nulls first",
+          (PG.OTAsc, PG.NFirst)
+        ),
+        ( define (applyFieldNameCaseCust tCase G._asc_nulls_last) "in ascending order, nulls last",
+          (PG.OTAsc, PG.NLast)
+        ),
+        ( define (applyFieldNameCaseCust tCase G._desc) "in descending order, nulls first",
+          (PG.OTDesc, PG.NFirst)
+        ),
+        ( define (applyFieldNameCaseCust tCase G._desc_nulls_first) "in descending order, nulls first",
+          (PG.OTDesc, PG.NFirst)
+        ),
+        ( define (applyFieldNameCaseCust tCase G._desc_nulls_last) "in descending order, nulls last",
+          (PG.OTDesc, PG.NLast)
+        )
+      ]
   where
     define name desc = P.Definition name (Just desc) P.EnumValueInfo
 

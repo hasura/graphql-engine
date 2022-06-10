@@ -74,7 +74,7 @@ instance BackendSchema 'MSSQL where
   -- individual components
   columnParser = msColumnParser
   scalarSelectionArgumentsParser = msScalarSelectionArgumentsParser
-  orderByOperators = msOrderByOperators
+  orderByOperators _sourceInfo = msOrderByOperators
   comparisonExps = msComparisonExps
   countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
@@ -301,32 +301,35 @@ msScalarSelectionArgumentsParser _columnType = pure Nothing
 
 msOrderByOperators ::
   NamingCase ->
-  NonEmpty
-    ( Definition P.EnumValueInfo,
-      (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)
-    )
-msOrderByOperators _tCase =
-  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
-  NE.fromList
-    [ ( define G._asc "in ascending order, nulls first",
-        (MSSQL.AscOrder, MSSQL.NullsFirst)
-      ),
-      ( define G._asc_nulls_first "in ascending order, nulls first",
-        (MSSQL.AscOrder, MSSQL.NullsFirst)
-      ),
-      ( define G._asc_nulls_last "in ascending order, nulls last",
-        (MSSQL.AscOrder, MSSQL.NullsLast)
-      ),
-      ( define G._desc "in descending order, nulls last",
-        (MSSQL.DescOrder, MSSQL.NullsLast)
-      ),
-      ( define G._desc_nulls_first "in descending order, nulls first",
-        (MSSQL.DescOrder, MSSQL.NullsFirst)
-      ),
-      ( define G._desc_nulls_last "in descending order, nulls last",
-        (MSSQL.DescOrder, MSSQL.NullsLast)
+  ( G.Name,
+    NonEmpty
+      ( Definition P.EnumValueInfo,
+        (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)
       )
-    ]
+  )
+msOrderByOperators _tCase =
+  (G._order_by,) $
+    -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
+    NE.fromList
+      [ ( define G._asc "in ascending order, nulls first",
+          (MSSQL.AscOrder, MSSQL.NullsFirst)
+        ),
+        ( define G._asc_nulls_first "in ascending order, nulls first",
+          (MSSQL.AscOrder, MSSQL.NullsFirst)
+        ),
+        ( define G._asc_nulls_last "in ascending order, nulls last",
+          (MSSQL.AscOrder, MSSQL.NullsLast)
+        ),
+        ( define G._desc "in descending order, nulls last",
+          (MSSQL.DescOrder, MSSQL.NullsLast)
+        ),
+        ( define G._desc_nulls_first "in descending order, nulls first",
+          (MSSQL.DescOrder, MSSQL.NullsFirst)
+        ),
+        ( define G._desc_nulls_last "in descending order, nulls last",
+          (MSSQL.DescOrder, MSSQL.NullsLast)
+        )
+      ]
   where
     define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
