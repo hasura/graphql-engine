@@ -85,7 +85,8 @@ resolveSourceConfig' sourceName (DC.ConnSourceConfig config) (DataConnectorKind 
         _scConfig = config,
         _scCapabilities = crCapabilities,
         _scSchema = schemaResponse,
-        _scManager = manager
+        _scManager = manager,
+        _scDataConnectorName = dataConnectorName
       }
 
 validateConfiguration ::

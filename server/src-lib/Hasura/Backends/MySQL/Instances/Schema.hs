@@ -32,7 +32,7 @@ import Hasura.RQL.Types.SchemaCache as RQL
 import Hasura.RQL.Types.Source as RQL
 import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.SQL.Backend
-import Language.GraphQL.Draft.Syntax qualified as G
+import Language.GraphQL.Draft.Syntax qualified as GQL
 
 instance BackendSchema 'MySQL where
   buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
@@ -50,7 +50,7 @@ instance BackendSchema 'MySQL where
   streamSubscriptionExtension = Nothing
   columnParser = columnParser'
   scalarSelectionArgumentsParser = scalarSelectionArgumentsParser'
-  orderByOperators = orderByOperators'
+  orderByOperators _sourceInfo = orderByOperators'
   comparisonExps = comparisonExps'
   countTypeInput = mysqlCountTypeInput
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
@@ -160,9 +160,9 @@ bsParser = encodeUtf8 <$> P.string
 columnParser' ::
   (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'MySQL ->
-  G.Nullability ->
+  GQL.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
-columnParser' columnType (G.Nullability isNullable) =
+columnParser' columnType (GQL.Nullability isNullable) =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
       MySQL.Decimal -> pure $ possiblyNullable scalarType $ MySQL.DecimalValue <$> P.float
@@ -205,8 +205,8 @@ columnParser' columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
-        MySQL.VarcharValue $ G.unName value
+      ( P.Definition value (GQL.Description <$> description) P.EnumValueInfo,
+        MySQL.VarcharValue $ GQL.unName value
       )
 
 scalarSelectionArgumentsParser' ::
@@ -215,29 +215,30 @@ scalarSelectionArgumentsParser' ::
   InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
 scalarSelectionArgumentsParser' _columnType = pure Nothing
 
-orderByOperators' :: NamingCase -> NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL))
+orderByOperators' :: NamingCase -> (GQL.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 orderByOperators' _tCase =
-  -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
-  NE.fromList
-    [ ( define G._asc "in ascending order, nulls first",
-        (MySQL.Asc, MySQL.NullsFirst)
-      ),
-      ( define G._asc_nulls_first "in ascending order, nulls first",
-        (MySQL.Asc, MySQL.NullsFirst)
-      ),
-      ( define G._asc_nulls_last "in ascending order, nulls last",
-        (MySQL.Asc, MySQL.NullsLast)
-      ),
-      ( define G._desc "in descending order, nulls last",
-        (MySQL.Desc, MySQL.NullsLast)
-      ),
-      ( define G._desc_nulls_first "in descending order, nulls first",
-        (MySQL.Desc, MySQL.NullsFirst)
-      ),
-      ( define G._desc_nulls_last "in descending order, nulls last",
-        (MySQL.Desc, MySQL.NullsLast)
-      )
-    ]
+  (G._order_by,) $
+    -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
+    NE.fromList
+      [ ( define G._asc "in ascending order, nulls first",
+          (MySQL.Asc, MySQL.NullsFirst)
+        ),
+        ( define G._asc_nulls_first "in ascending order, nulls first",
+          (MySQL.Asc, MySQL.NullsFirst)
+        ),
+        ( define G._asc_nulls_last "in ascending order, nulls last",
+          (MySQL.Asc, MySQL.NullsLast)
+        ),
+        ( define G._desc "in descending order, nulls last",
+          (MySQL.Desc, MySQL.NullsLast)
+        ),
+        ( define G._desc_nulls_first "in descending order, nulls first",
+          (MySQL.Desc, MySQL.NullsFirst)
+        ),
+        ( define G._desc_nulls_last "in descending order, nulls last",
+          (MySQL.Desc, MySQL.NullsLast)
+        )
+      ]
   where
     define name desc = P.Definition name (Just desc) P.EnumValueInfo
 
@@ -249,12 +250,12 @@ comparisonExps' ::
   m (Parser 'Input n [ComparisonExp 'MySQL])
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
-  typedParser <- columnParser columnType (G.Nullability False)
-  _nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability True)
-  textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (G.Nullability False)
+  typedParser <- columnParser columnType (GQL.Nullability False)
+  _nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability True)
+  textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability False)
   let name = P.getName typedParser <> G.__MySQL_comparison_exp
       desc =
-        G.Description $
+        GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
             <<> ". All fields are combined with logical 'AND'."

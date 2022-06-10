@@ -40,10 +40,11 @@ orderByOperator ::
   forall b n.
   (BackendSchema b, MonadParse n) =>
   NamingCase ->
+  SourceInfo b ->
   Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
-orderByOperator tCase = case tCase of
-  HasuraCase -> orderByOperatorsHasuraCase @b
-  GraphqlCase -> orderByOperatorsGraphqlCase @b
+orderByOperator tCase sourceInfo = case tCase of
+  HasuraCase -> orderByOperatorsHasuraCase @b sourceInfo
+  GraphqlCase -> orderByOperatorsGraphqlCase @b sourceInfo
 
 -- | Corresponds to an object type for an order by.
 --
@@ -84,7 +85,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
             P.fieldOptional
               fieldName
               Nothing
-              (orderByOperator @b tCase)
+              (orderByOperator @b tCase sourceInfo)
               <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
@@ -119,7 +120,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
                 P.fieldOptional
                   fieldName
                   Nothing
-                  (orderByOperator @b tCase)
+                  (orderByOperator @b tCase sourceInfo)
                   <&> fmap (pure . mkOrderByItemG @b (IR.AOCComputedField computedFieldOrderBy)) . join
             ReturnsTable table -> do
               let aggregateFieldName = fieldName <> G.__aggregate
@@ -173,7 +174,7 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
                   P.fieldOptional
                     G._count
                     Nothing
-                    (orderByOperator @b tCase)
+                    (orderByOperator @b tCase sourceInfo)
                     <&> pure . fmap (pure . mkOrderByItemG @b IR.AAOCount) . join,
                 -- operators on numeric columns
                 if null numColumns
@@ -199,7 +200,7 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
       P.fieldOptional
         (ciName columnInfo)
         (ciDescription columnInfo)
-        (orderByOperator @b tCase)
+        (orderByOperator @b tCase sourceInfo)
         <&> fmap (columnInfo,) . join
 
     parseOperator ::
@@ -218,12 +219,14 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
 orderByOperatorsHasuraCase ::
   forall b n.
   (BackendSchema b, MonadParse n) =>
+  SourceInfo b ->
   Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
 orderByOperatorsHasuraCase = orderByOperator' @b HasuraCase
 
 orderByOperatorsGraphqlCase ::
   forall b n.
   (BackendSchema b, MonadParse n) =>
+  SourceInfo b ->
   Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
 orderByOperatorsGraphqlCase = orderByOperator' @b GraphqlCase
 
@@ -231,9 +234,11 @@ orderByOperator' ::
   forall b n.
   (BackendSchema b, MonadParse n) =>
   NamingCase ->
+  SourceInfo b ->
   Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
-orderByOperator' tCase =
-  P.nullable $ P.enum (applyFieldNameCaseCust tCase G._order_by) (Just "column ordering options") $ orderByOperators @b tCase
+orderByOperator' tCase sourceInfo =
+  let (sourcePrefix, orderOperators) = orderByOperators @b sourceInfo tCase
+   in P.nullable $ P.enum (applyFieldNameCaseCust tCase sourcePrefix) (Just "column ordering options") $ orderOperators
 
 mkOrderByItemG :: forall b a. a -> (BasicOrderType b, NullsOrderType b) -> IR.OrderByItemG b a
 mkOrderByItemG column (orderType, nullsOrder) =
