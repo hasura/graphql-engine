@@ -10,7 +10,7 @@ import Headers from '../../../../Common/Headers/Headers';
 import RetryConf from './RetryConfEditor';
 import FrequentlyUsedCrons from './FrequentlyUsedCrons';
 import FormSection from './FormSection';
-import { inputStyles, subHeading } from '../../constants';
+import { heading, inputStyles } from '../../constants';
 
 type Props = ReturnType<typeof useScheduledTrigger>;
 
@@ -101,7 +101,7 @@ const Form: React.FC<Props> = props => {
         />
       </FormSection>
       <CollapsibleToggle
-        title={<h2 className={subHeading}>Advanced</h2>}
+        title={<h2 className={heading}>Advanced</h2>}
         testId="advanced-configuration"
       >
         <FormSection

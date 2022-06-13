@@ -10,7 +10,7 @@ import {
 } from '../../../../Common/utils/reactUtils';
 import { MapStateToProps } from '../../../../../types';
 import { addScheduledTrigger } from '../../ServerIO';
-import { EVENTS_SERVICE_HEADING, CRON_TRIGGER, heading } from '../../constants';
+import { EVENTS_SERVICE_HEADING, CRON_TRIGGER } from '../../constants';
 
 interface Props extends InjectedProps {
   initState?: LocalScheduledTriggerState;
@@ -35,7 +35,9 @@ const Main: React.FC<Props> = props => {
           EVENTS_SERVICE_HEADING
         )}
       />
-      <div className={`${heading} mb-md`}>Create a cron trigger</div>
+      <div className="font-bold mb-xl text-[18px] pb-0">
+        Create a cron trigger
+      </div>
       <CronTriggerFrom state={state} setState={setState} />
       {!readOnlyMode && (
         <Button

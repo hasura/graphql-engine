@@ -57,7 +57,7 @@ export const Operations: React.FC<OperationProps> = ({
               <input
                 onChange={o.onChange}
                 data-test={o.testIdentifier}
-                className="cursor-pointer legacy-input-fix"
+                className="cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-200 border-gray-200 rounded-sm"
                 type="checkbox"
                 name={o.name}
                 checked={o.isChecked}

@@ -359,6 +359,7 @@ const Modify: React.FC<Props> = props => {
             isAllColumnChecked={state.isAllColumnChecked}
             handleColumnRadioButton={setState.toggleAllColumnChecked}
           />
+          <hr className="my-md" />
           <RetryConfEditor
             conf={state.retryConf}
             setRetryConf={setState.retryConf}

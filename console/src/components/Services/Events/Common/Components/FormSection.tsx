@@ -10,7 +10,7 @@ interface Props extends React.ComponentProps<React.FC> {
 const FormSection: React.FC<Props> = ({ children, id, tooltip, heading }) => {
   return (
     <div className="mb-md">
-      <h2 className="text-sm font-bold pb-md mb-xs">
+      <h2 className="text-lg font-bold pb-sm">
         {heading}
         {tooltip && <Tooltip id={id} message={tooltip} className="ml-xs" />}
       </h2>

@@ -89,7 +89,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
         />
       </FormSection>
       <CollapsibleToggle
-        title={<h2 className="text-sm font-bold pb-md mt-0 mb-0">Advanced</h2>}
+        title={<h2 className="text-lg font-bold pb-md mt-0 mb-0">Advanced</h2>}
         testId="event-advanced-configuration"
       >
         <FormSection

@@ -80,7 +80,7 @@ const WebhookEditor = (props: WebhookEditorProps) => {
   return (
     <div className="w-full border-b border-solid border-gray-300 mb-md">
       <div className="mb-md">
-        <h4 className="text-md font-bold mb-md">Webhook (HTTP/S) Handler</h4>
+        <h4 className="text-lg font-bold mb-md">Webhook (HTTP/S) Handler</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

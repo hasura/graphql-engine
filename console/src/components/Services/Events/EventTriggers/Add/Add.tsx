@@ -41,7 +41,7 @@ import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
 import { Header } from '../../../../Common/Headers/Headers';
 import { createEventTrigger } from '../../ServerIO';
-import { EVENTS_SERVICE_HEADING, heading } from '../../constants';
+import { EVENTS_SERVICE_HEADING } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
@@ -370,13 +370,14 @@ const Add: React.FC<Props> = props => {
   return (
     <div className="w-full overflow-y-auto bg-gray-50">
       <div className="max-w-6xl">
-        <div className="pt-lg pb-lg clear-both pl-md">
+        <div className="pt-md pb-md clear-both pl-md">
           <Helmet
             title={`Add Event Trigger | ${EVENTS_SERVICE_HEADING} - Hasura`}
           />
           <div>
-            <h2 className={heading}>Create a new event trigger</h2>
-            <div className="clearfix" />
+            <h2 className="text-subtitle font-bold pb-md mt-0 mb-0">
+              Create a new event trigger
+            </h2>
           </div>
           <br />
           <div className="w-full pl-0">

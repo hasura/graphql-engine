@@ -81,7 +81,7 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
       <div>
         {ops.update ? (
           <>
-            <div className={`w-full p-0 m-sm ${focusYellowRing}`}>
+            <div className={`w-full p-0 mr-md mt-md ${focusYellowRing}`}>
               <ColumnSelectionRadioButton
                 isAllColumnChecked={isAllColumnChecked}
                 handleColumnRadioButton={handleColumnRadioButton}
@@ -90,7 +90,7 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
             </div>
             <>
               {!isAllColumnChecked ? (
-                <div className="w-fill p-0">
+                <div className="w-full p-0">
                   {opCols.map(col => {
                     const toggle = () => {
                       if (!readOnly) {
@@ -106,13 +106,13 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
                     };
                     return (
                       <label
-                        className="m-sm float-left p-0 pointer-cursor"
+                        className="mr-md my-md p-0 pointer-cursor"
                         key={col.name}
                         onChange={toggle}
                       >
                         <input
                           type="checkbox"
-                          className={`!mr-xs cursor-pointer ${focusYellowRing}`}
+                          className={`!mr-xs cursor-pointer ${focusYellowRing} disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-200 border-gray-200 rounded-sm bg-white`}
                           checked={col.enabled}
                           disabled={readOnly}
                           readOnly
@@ -140,9 +140,9 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
   const expanded = () => renderEditor(operations, operationColumns, false);
 
   return (
-    <div className="w-full pb-md">
+    <div className="w-full">
       <div>
-        <h4 className="font-bold text-md mb-md">Trigger Operations</h4>
+        <h4 className="font-bold text-lg mb-md">Trigger Operations</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

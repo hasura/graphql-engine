@@ -52,8 +52,8 @@ const RetryConfEditor = (props: RetryConfEditorProps) => {
   );
 
   return (
-    <div className="mb-lg w-6/12">
-      <h2 className="text-lg font-bold mb-xs flex items-center">
+    <div className="my-lg mt-sm w-6/12">
+      <h2 className="text-lg font-bold mb-xs items-center ">
         Retry Configuration
       </h2>
       <p className="text-sm mb-sm text-gray-600">
