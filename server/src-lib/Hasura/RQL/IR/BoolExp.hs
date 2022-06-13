@@ -67,11 +67,11 @@ import Hasura.Session
 -- implementation of the actual boolean term values. It nonetheless leaks some information:
 -- "exists" is only used in permissions, to add conditions based on another table.
 data GBoolExp (b :: BackendType) a
-  = BoolAnd ![GBoolExp b a]
-  | BoolOr ![GBoolExp b a]
-  | BoolNot !(GBoolExp b a)
-  | BoolExists !(GExists b a)
-  | BoolFld !a
+  = BoolAnd [GBoolExp b a]
+  | BoolOr [GBoolExp b a]
+  | BoolNot (GBoolExp b a)
+  | BoolExists (GExists b a)
+  | BoolFld a
   deriving (Show, Eq, Functor, Foldable, Traversable, Data, Generic)
 
 instance (Backend b, NFData a) => NFData (GBoolExp b a)
@@ -122,8 +122,8 @@ gBoolExpTrue = BoolAnd []
 -- expressions. See our documentation for more information:
 -- https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#using-unrelated-tables-views
 data GExists (b :: BackendType) a = GExists
-  { _geTable :: !(TableName b),
-    _geWhere :: !(GBoolExp b a)
+  { _geTable :: TableName b,
+    _geWhere :: GBoolExp b a
   }
   deriving (Functor, Foldable, Traversable, Generic)
 
@@ -162,8 +162,8 @@ makeLenses ''GExists
 -- | We don't allow conditions across relationships in permissions: the type we use as the terms in
 -- GBoolExp is this one, ColExp, which only contains a FieldName and a JSON Value.
 data ColExp = ColExp
-  { ceCol :: !FieldName,
-    ceVal :: !Value
+  { ceCol :: FieldName,
+    ceVal :: Value
   }
   deriving (Show, Eq, Data, Generic)
 
@@ -190,9 +190,9 @@ makePrisms ''GBoolExp
 -- parsers. For the leaf values of those permissions, we use this type, which references but doesn't
 -- inline the session variables.
 data PartialSQLExp (b :: BackendType)
-  = PSESessVar !(SessionVarType b) !SessionVariable
+  = PSESessVar (SessionVarType b) SessionVariable
   | PSESession
-  | PSESQLExp !(SQLExpression b)
+  | PSESQLExp (SQLExpression b)
   deriving (Generic)
 
 deriving instance (Backend b) => Eq (PartialSQLExp b)
@@ -230,17 +230,17 @@ type CastExp b a = M.HashMap (ScalarType b) [OpExpG b a]
 -- only contains the common core, that we expect to be ultimately entirely supported in most if not
 -- all backends. Backends can extend this with the @BooleanOperators@ type in @Backend@.
 data OpExpG (b :: BackendType) a
-  = ACast !(CastExp b a)
-  | AEQ !Bool !a
-  | ANE !Bool !a
-  | AIN !a
-  | ANIN !a
-  | AGT !a
-  | ALT !a
-  | AGTE !a
-  | ALTE !a
-  | ALIKE !a -- LIKE
-  | ANLIKE !a -- NOT LIKE
+  = ACast (CastExp b a)
+  | AEQ Bool a
+  | ANE Bool a
+  | AIN a
+  | ANIN a
+  | AGT a
+  | ALT a
+  | AGTE a
+  | ALTE a
+  | ALIKE a -- LIKE
+  | ANLIKE a -- NOT LIKE
   | CEQ (RootOrCurrentColumn b)
   | CNE (RootOrCurrentColumn b)
   | CGT (RootOrCurrentColumn b)
@@ -249,7 +249,7 @@ data OpExpG (b :: BackendType) a
   | CLTE (RootOrCurrentColumn b)
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
-  | ABackendSpecific !(BooleanOperators b a)
+  | ABackendSpecific (BooleanOperators b a)
   deriving (Generic)
 
 data RootOrCurrentColumn b = RootOrCurrentColumn RootOrCurrent (Column b)
@@ -332,8 +332,8 @@ opExpDepCol = \case
 -- | This type is used to represent the kinds of boolean expression used for compouted fields
 -- based on the return type of the SQL function
 data ComputedFieldBoolExp (b :: BackendType) a
-  = CFBEScalar ![OpExpG b a] -- SQL function returning a scalar
-  | CFBETable !(TableName b) !(AnnBoolExp b a) -- SQL function returning SET OF table
+  = CFBEScalar [OpExpG b a] -- SQL function returning a scalar
+  | CFBETable (TableName b) (AnnBoolExp b a) -- SQL function returning SET OF table
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (ComputedFieldBoolExp b a)
@@ -361,11 +361,11 @@ instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgument
 -- expression. It is complex to generate schema for `where` clause with functions having
 -- input arguments.
 data AnnComputedFieldBoolExp (b :: BackendType) a = AnnComputedFieldBoolExp
-  { _acfbXFieldInfo :: !(XComputedField b),
-    _acfbName :: !ComputedFieldName,
-    _acfbFunction :: !(FunctionName b),
-    _acfbFunctionArgsExp :: !(FunctionArgsExp b a),
-    _acfbBoolExp :: !(ComputedFieldBoolExp b a)
+  { _acfbXFieldInfo :: XComputedField b,
+    _acfbName :: ComputedFieldName,
+    _acfbFunction :: FunctionName b,
+    _acfbFunctionArgsExp :: FunctionArgsExp b a,
+    _acfbBoolExp :: ComputedFieldBoolExp b a
   }
   deriving (Generic)
 
@@ -392,9 +392,9 @@ instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgument
 --
 -- This type is parametric over the type of leaf values, the values on which we operate.
 data AnnBoolExpFld (b :: BackendType) a
-  = AVColumn !(ColumnInfo b) ![OpExpG b a]
-  | AVRelationship !(RelInfo b) !(AnnBoolExp b a)
-  | AVComputedField !(AnnComputedFieldBoolExp b a)
+  = AVColumn (ColumnInfo b) [OpExpG b a]
+  | AVRelationship (RelInfo b) (AnnBoolExp b a)
+  | AVComputedField (AnnComputedFieldBoolExp b a)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (AnnBoolExpFld b a)
@@ -450,8 +450,8 @@ andAnnBoolExps l r = BoolAnd [l, r]
 
 -- | Operand for STDWithin opoerator
 data DWithinGeomOp a = DWithinGeomOp
-  { dwgeomDistance :: !a,
-    dwgeomFrom :: !a
+  { dwgeomDistance :: a,
+    dwgeomFrom :: a
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
@@ -465,9 +465,9 @@ $(deriveJSON hasuraJSON ''DWithinGeomOp)
 
 -- | Operand for STDWithin opoerator
 data DWithinGeogOp a = DWithinGeogOp
-  { dwgeogDistance :: !a,
-    dwgeogFrom :: !a,
-    dwgeogUseSpheroid :: !a
+  { dwgeogDistance :: a,
+    dwgeogFrom :: a,
+    dwgeogUseSpheroid :: a
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
@@ -481,8 +481,8 @@ $(deriveJSON hasuraJSON ''DWithinGeogOp)
 
 -- | Operand for STIntersect
 data STIntersectsNbandGeommin a = STIntersectsNbandGeommin
-  { singNband :: !a,
-    singGeommin :: !a
+  { singNband :: a,
+    singGeommin :: a
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
@@ -496,8 +496,8 @@ $(deriveJSON hasuraJSON ''STIntersectsNbandGeommin)
 
 -- | Operand for STIntersect
 data STIntersectsGeomminNband a = STIntersectsGeomminNband
-  { signGeommin :: !a,
-    signNband :: !(Maybe a)
+  { signGeommin :: a,
+    signNband :: Maybe a
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
