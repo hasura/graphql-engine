@@ -257,6 +257,50 @@ export const getComputedFieldFunction = (
   );
 };
 
+// Return only the computed fields that do not require extra arguments i.e. only table_row arg and session_arg allowed
+// If only one arg present, check if is table_row arg
+// If two args present, check if one is table_row arg and other is session_arg
+export const getComputedFieldsWithoutArgs = (
+  computedFields: ComputedField[],
+  allFunctions: PGFunction[],
+  tableName: string
+) => {
+  return computedFields.filter(computedField => {
+    const computedFieldFunc = getComputedFieldFunction(
+      computedField,
+      allFunctions
+    );
+
+    const computedFieldInputArgTypes = computedFieldFunc?.input_arg_types;
+    const computedFieldInputArgNames = computedFieldFunc?.input_arg_names;
+
+    if (computedFieldInputArgTypes?.length === 1) {
+      if (computedFieldInputArgTypes[0].name === tableName) {
+        return true;
+      }
+    } else if (
+      computedFieldInputArgTypes?.length === 2 &&
+      computedFieldInputArgNames?.length === 2
+    ) {
+      const sessionArgumentName = computedField?.definition?.session_argument;
+
+      if (
+        computedFieldInputArgTypes[0].name === tableName &&
+        computedFieldInputArgNames[1] === sessionArgumentName
+      ) {
+        return true;
+      } else if (
+        computedFieldInputArgTypes[1].name === tableName &&
+        computedFieldInputArgNames[0] === sessionArgumentName
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+};
+
 const schemaListSql = (
   schemas?: string[]
 ) => `SELECT schema_name FROM information_schema.schemata WHERE

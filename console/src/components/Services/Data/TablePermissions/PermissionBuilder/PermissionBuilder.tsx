@@ -42,6 +42,7 @@ import SelectGroup, { OptGroup, QuotedSelectGroup } from './SelectGroup';
 import {
   getComputedFieldFunction,
   getGroupedTableComputedFields,
+  getComputedFieldsWithoutArgs,
 } from '../../../../../dataSources/services/postgresql';
 import { QualifiedTable } from '../../../../../metadata/types';
 import styles from './PermissionBuilder.scss';
@@ -1074,7 +1075,7 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
 
       let tableColumnNames: string[] = [];
       let tableRelationshipNames: string[] = [];
-      let scalarComputedFields: ComputedField[] = [];
+      let scalarComputedFieldsWithoutArgs: ComputedField[] = [];
       if (tableDef) {
         const tableSchema = findTable(tableSchemas, tableDef);
         if (tableSchema) {
@@ -1085,17 +1086,15 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
             tableSchema.computed_fields,
             allFunctions
           );
-          scalarComputedFields = computedFields.scalar.filter(sc => {
-            const cFn = getComputedFieldFunction(sc, allFunctions)
-              ?.input_arg_types;
-            // Only the computed fields that do not require extra arguments other than the table row
-            // are currenlty supported by the server https://github.com/hasura/graphql-engine/issues/7336
-            return cFn?.length === 1 && cFn[0].name === tableDef.name;
-          });
+          scalarComputedFieldsWithoutArgs = getComputedFieldsWithoutArgs(
+            computedFields.scalar,
+            allFunctions,
+            tableDef.name
+          );
         }
       }
 
-      const computedFieldsOptions = scalarComputedFields.map(
+      const computedFieldsOptions = scalarComputedFieldsWithoutArgs.map(
         f => f.computed_field_name
       );
       const newOperatorOptions = [
