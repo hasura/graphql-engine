@@ -31,7 +31,7 @@ export const CardRadioGroup = <T extends string = string>(
         return (
           <div
             className={clsx(
-              'bg-white shadow-sm rounded p-md border border-gray-300 cursor-pointer',
+              'bg-white shadow-sm rounded p-md border border-gray-300 cursor-pointer flex',
               value === iValue && 'ring-2 ring-yellow-200 border-yellow-400'
             )}
             key={iValue}
@@ -53,7 +53,7 @@ export const CardRadioGroup = <T extends string = string>(
             <div className="ml-sm">
               <label
                 htmlFor={`radio-select-${iValue}`}
-                className="cursor-pointer font-semibold"
+                className="cursor-pointer font-semibold mb-sm"
               >
                 {title}
               </label>

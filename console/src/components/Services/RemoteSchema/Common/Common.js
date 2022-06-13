@@ -130,7 +130,7 @@ class Common extends React.Component {
         </div>
         <label className="ml-0 pl-0 w-80">
           <input
-            className={inputStyles}
+            className={`${inputStyles} disabled:bg-[#EFEFEF]`}
             type="text"
             placeholder="Name of the schema"
             value={name}

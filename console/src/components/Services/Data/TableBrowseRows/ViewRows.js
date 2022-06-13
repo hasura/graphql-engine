@@ -750,7 +750,7 @@ const ViewRows = props => {
           <b className="pr-xs">Selected:</b>
           {selectedRows.length}
           <button
-            className="ml-xs text-md bg-white border rounded-sm border-gray-400 px-1"
+            className="ml-xs text-base bg-white border rounded-sm border-gray-400 px-1"
             title="Delete selected rows"
             onClick={handleDeleteItems}
             data-test="bulk-delete"
