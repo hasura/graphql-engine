@@ -10972,11 +10972,11 @@ module Hasura.RQL.IR.BoolExp
 --   values. It nonetheless leaks some information: "exists" is only used
 --   in permissions, to add conditions based on another table.
 data GBoolExp (b :: BackendType) a
-BoolAnd :: ![GBoolExp b a] -> GBoolExp (b :: BackendType) a
-BoolOr :: ![GBoolExp b a] -> GBoolExp (b :: BackendType) a
-BoolNot :: !GBoolExp b a -> GBoolExp (b :: BackendType) a
-BoolExists :: !GExists b a -> GBoolExp (b :: BackendType) a
-BoolFld :: !a -> GBoolExp (b :: BackendType) a
+BoolAnd :: [GBoolExp b a] -> GBoolExp (b :: BackendType) a
+BoolOr :: [GBoolExp b a] -> GBoolExp (b :: BackendType) a
+BoolNot :: GBoolExp b a -> GBoolExp (b :: BackendType) a
+BoolExists :: GExists b a -> GBoolExp (b :: BackendType) a
+BoolFld :: a -> GBoolExp (b :: BackendType) a
 gBoolExpTrue :: GBoolExp b a
 
 -- | Represents a condition on an aribtrary table. Used as part of our
@@ -10984,9 +10984,9 @@ gBoolExpTrue :: GBoolExp b a
 --   information:
 --   <a>https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#using-unrelated-tables-views</a>
 data GExists (b :: BackendType) a
-GExists :: !TableName b -> !GBoolExp b a -> GExists (b :: BackendType) a
-[_geTable] :: GExists (b :: BackendType) a -> !TableName b
-[_geWhere] :: GExists (b :: BackendType) a -> !GBoolExp b a
+GExists :: TableName b -> GBoolExp b a -> GExists (b :: BackendType) a
+[_geTable] :: GExists (b :: BackendType) a -> TableName b
+[_geWhere] :: GExists (b :: BackendType) a -> GBoolExp b a
 geWhere :: forall b_abpch a_abpci a_absws. Lens (GExists b_abpch a_abpci) (GExists b_abpch a_absws) (GBoolExp b_abpch a_abpci) (GBoolExp b_abpch a_absws)
 geTable :: forall b_abpch a_abpci. Lens' (GExists b_abpch a_abpci) (TableName b_abpch)
 
@@ -10994,9 +10994,9 @@ geTable :: forall b_abpch a_abpci. Lens' (GExists b_abpch a_abpci) (TableName b_
 --   type we use as the terms in GBoolExp is this one, ColExp, which only
 --   contains a FieldName and a JSON Value.
 data ColExp
-ColExp :: !FieldName -> !Value -> ColExp
-[ceCol] :: ColExp -> !FieldName
-[ceVal] :: ColExp -> !Value
+ColExp :: FieldName -> Value -> ColExp
+[ceCol] :: ColExp -> FieldName
+[ceVal] :: ColExp -> Value
 
 -- | This <tt>BoolExp</tt> type is a simple alias for the boolean
 --   expressions used in permissions, that uses <a>ColExp</a> as the term
@@ -11015,9 +11015,9 @@ _BoolAnd :: forall b_abpcj a_abpck. Prism' (GBoolExp b_abpcj a_abpck) [GBoolExp 
 --   use this type, which references but doesn't inline the session
 --   variables.
 data PartialSQLExp (b :: BackendType)
-PSESessVar :: !SessionVarType b -> !SessionVariable -> PartialSQLExp (b :: BackendType)
+PSESessVar :: SessionVarType b -> SessionVariable -> PartialSQLExp (b :: BackendType)
 PSESession :: PartialSQLExp (b :: BackendType)
-PSESQLExp :: !SQLExpression b -> PartialSQLExp (b :: BackendType)
+PSESQLExp :: SQLExpression b -> PartialSQLExp (b :: BackendType)
 isStaticValue :: PartialSQLExp backend -> Bool
 hasStaticExp :: Backend b => OpExpG b (PartialSQLExp b) -> Bool
 
@@ -11030,17 +11030,17 @@ type CastExp b a = HashMap (ScalarType b) [OpExpG b a]
 --   backends. Backends can extend this with the <tt>BooleanOperators</tt>
 --   type in <tt>Backend</tt>.
 data OpExpG (b :: BackendType) a
-ACast :: !CastExp b a -> OpExpG (b :: BackendType) a
-AEQ :: !Bool -> !a -> OpExpG (b :: BackendType) a
-ANE :: !Bool -> !a -> OpExpG (b :: BackendType) a
-AIN :: !a -> OpExpG (b :: BackendType) a
-ANIN :: !a -> OpExpG (b :: BackendType) a
-AGT :: !a -> OpExpG (b :: BackendType) a
-ALT :: !a -> OpExpG (b :: BackendType) a
-AGTE :: !a -> OpExpG (b :: BackendType) a
-ALTE :: !a -> OpExpG (b :: BackendType) a
-ALIKE :: !a -> OpExpG (b :: BackendType) a
-ANLIKE :: !a -> OpExpG (b :: BackendType) a
+ACast :: CastExp b a -> OpExpG (b :: BackendType) a
+AEQ :: Bool -> a -> OpExpG (b :: BackendType) a
+ANE :: Bool -> a -> OpExpG (b :: BackendType) a
+AIN :: a -> OpExpG (b :: BackendType) a
+ANIN :: a -> OpExpG (b :: BackendType) a
+AGT :: a -> OpExpG (b :: BackendType) a
+ALT :: a -> OpExpG (b :: BackendType) a
+AGTE :: a -> OpExpG (b :: BackendType) a
+ALTE :: a -> OpExpG (b :: BackendType) a
+ALIKE :: a -> OpExpG (b :: BackendType) a
+ANLIKE :: a -> OpExpG (b :: BackendType) a
 CEQ :: RootOrCurrentColumn b -> OpExpG (b :: BackendType) a
 CNE :: RootOrCurrentColumn b -> OpExpG (b :: BackendType) a
 CGT :: RootOrCurrentColumn b -> OpExpG (b :: BackendType) a
@@ -11049,7 +11049,7 @@ CGTE :: RootOrCurrentColumn b -> OpExpG (b :: BackendType) a
 CLTE :: RootOrCurrentColumn b -> OpExpG (b :: BackendType) a
 ANISNULL :: OpExpG (b :: BackendType) a
 ANISNOTNULL :: OpExpG (b :: BackendType) a
-ABackendSpecific :: !BooleanOperators b a -> OpExpG (b :: BackendType) a
+ABackendSpecific :: BooleanOperators b a -> OpExpG (b :: BackendType) a
 data RootOrCurrentColumn b
 RootOrCurrentColumn :: RootOrCurrent -> Column b -> RootOrCurrentColumn b
 
@@ -11063,8 +11063,8 @@ opExpDepCol :: OpExpG backend a -> Maybe (RootOrCurrentColumn backend)
 -- | This type is used to represent the kinds of boolean expression used
 --   for compouted fields based on the return type of the SQL function
 data ComputedFieldBoolExp (b :: BackendType) a
-CFBEScalar :: ![OpExpG b a] -> ComputedFieldBoolExp (b :: BackendType) a
-CFBETable :: !TableName b -> !AnnBoolExp b a -> ComputedFieldBoolExp (b :: BackendType) a
+CFBEScalar :: [OpExpG b a] -> ComputedFieldBoolExp (b :: BackendType) a
+CFBETable :: TableName b -> AnnBoolExp b a -> ComputedFieldBoolExp (b :: BackendType) a
 
 -- | Using a computed field in boolean expression. Example: A computed
 --   field "full_name" ("first_name" || "last_name") is defined to the
@@ -11075,12 +11075,12 @@ CFBETable :: !TableName b -> !AnnBoolExp b a -> ComputedFieldBoolExp (b :: Backe
 --   is complex to generate schema for `where` clause with functions having
 --   input arguments.
 data AnnComputedFieldBoolExp (b :: BackendType) a
-AnnComputedFieldBoolExp :: !XComputedField b -> !ComputedFieldName -> !FunctionName b -> !FunctionArgsExp b a -> !ComputedFieldBoolExp b a -> AnnComputedFieldBoolExp (b :: BackendType) a
-[_acfbXFieldInfo] :: AnnComputedFieldBoolExp (b :: BackendType) a -> !XComputedField b
-[_acfbName] :: AnnComputedFieldBoolExp (b :: BackendType) a -> !ComputedFieldName
-[_acfbFunction] :: AnnComputedFieldBoolExp (b :: BackendType) a -> !FunctionName b
-[_acfbFunctionArgsExp] :: AnnComputedFieldBoolExp (b :: BackendType) a -> !FunctionArgsExp b a
-[_acfbBoolExp] :: AnnComputedFieldBoolExp (b :: BackendType) a -> !ComputedFieldBoolExp b a
+AnnComputedFieldBoolExp :: XComputedField b -> ComputedFieldName -> FunctionName b -> FunctionArgsExp b a -> ComputedFieldBoolExp b a -> AnnComputedFieldBoolExp (b :: BackendType) a
+[_acfbXFieldInfo] :: AnnComputedFieldBoolExp (b :: BackendType) a -> XComputedField b
+[_acfbName] :: AnnComputedFieldBoolExp (b :: BackendType) a -> ComputedFieldName
+[_acfbFunction] :: AnnComputedFieldBoolExp (b :: BackendType) a -> FunctionName b
+[_acfbFunctionArgsExp] :: AnnComputedFieldBoolExp (b :: BackendType) a -> FunctionArgsExp b a
+[_acfbBoolExp] :: AnnComputedFieldBoolExp (b :: BackendType) a -> ComputedFieldBoolExp b a
 
 -- | This type is used for boolean terms in GBoolExp in the schema; there
 --   are two kinds boolean terms: - operators on a column of the current
@@ -11090,9 +11090,9 @@ AnnComputedFieldBoolExp :: !XComputedField b -> !ComputedFieldName -> !FunctionN
 --   This type is parametric over the type of leaf values, the values on
 --   which we operate.
 data AnnBoolExpFld (b :: BackendType) a
-AVColumn :: !ColumnInfo b -> ![OpExpG b a] -> AnnBoolExpFld (b :: BackendType) a
-AVRelationship :: !RelInfo b -> !AnnBoolExp b a -> AnnBoolExpFld (b :: BackendType) a
-AVComputedField :: !AnnComputedFieldBoolExp b a -> AnnBoolExpFld (b :: BackendType) a
+AVColumn :: ColumnInfo b -> [OpExpG b a] -> AnnBoolExpFld (b :: BackendType) a
+AVRelationship :: RelInfo b -> AnnBoolExp b a -> AnnBoolExpFld (b :: BackendType) a
+AVComputedField :: AnnComputedFieldBoolExp b a -> AnnBoolExpFld (b :: BackendType) a
 
 -- | A simple alias for the kind of boolean expressions used in the schema,
 --   that ties together <a>GBoolExp</a>, <a>OpExpG</a>, and
@@ -11106,28 +11106,28 @@ andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp bac
 
 -- | Operand for STDWithin opoerator
 data DWithinGeomOp a
-DWithinGeomOp :: !a -> !a -> DWithinGeomOp a
-[dwgeomDistance] :: DWithinGeomOp a -> !a
-[dwgeomFrom] :: DWithinGeomOp a -> !a
+DWithinGeomOp :: a -> a -> DWithinGeomOp a
+[dwgeomDistance] :: DWithinGeomOp a -> a
+[dwgeomFrom] :: DWithinGeomOp a -> a
 
 -- | Operand for STDWithin opoerator
 data DWithinGeogOp a
-DWithinGeogOp :: !a -> !a -> !a -> DWithinGeogOp a
-[dwgeogDistance] :: DWithinGeogOp a -> !a
-[dwgeogFrom] :: DWithinGeogOp a -> !a
-[dwgeogUseSpheroid] :: DWithinGeogOp a -> !a
+DWithinGeogOp :: a -> a -> a -> DWithinGeogOp a
+[dwgeogDistance] :: DWithinGeogOp a -> a
+[dwgeogFrom] :: DWithinGeogOp a -> a
+[dwgeogUseSpheroid] :: DWithinGeogOp a -> a
 
 -- | Operand for STIntersect
 data STIntersectsNbandGeommin a
-STIntersectsNbandGeommin :: !a -> !a -> STIntersectsNbandGeommin a
-[singNband] :: STIntersectsNbandGeommin a -> !a
-[singGeommin] :: STIntersectsNbandGeommin a -> !a
+STIntersectsNbandGeommin :: a -> a -> STIntersectsNbandGeommin a
+[singNband] :: STIntersectsNbandGeommin a -> a
+[singGeommin] :: STIntersectsNbandGeommin a -> a
 
 -- | Operand for STIntersect
 data STIntersectsGeomminNband a
-STIntersectsGeomminNband :: !a -> !Maybe a -> STIntersectsGeomminNband a
-[signGeommin] :: STIntersectsGeomminNband a -> !a
-[signNband] :: STIntersectsGeomminNband a -> !Maybe a
+STIntersectsGeomminNband :: a -> Maybe a -> STIntersectsGeomminNband a
+[signGeommin] :: STIntersectsGeomminNband a -> a
+[signNband] :: STIntersectsGeomminNband a -> Maybe a
 
 -- | This is a simple newtype over AnnBoolExpFld. At time of writing, I do
 --   not know why we want this, and why it exists. It might be a relic of a
