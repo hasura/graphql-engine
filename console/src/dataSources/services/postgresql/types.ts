@@ -18,6 +18,7 @@ export type PGFunction = {
   return_type_name: string;
   function_type: string;
   input_arg_types?: PGInputArgType[];
+  input_arg_names?: string[];
   returns_set: boolean;
 };
 

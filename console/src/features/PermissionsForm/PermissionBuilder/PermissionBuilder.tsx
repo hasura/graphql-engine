@@ -17,6 +17,7 @@ import {
   getTableFromRelationshipChain,
 } from '@/dataSources';
 import {
+  getComputedFieldsWithoutArgs,
   getComputedFieldFunction,
   getGroupedTableComputedFields,
 } from '@/dataSources/services/postgresql';
@@ -1089,13 +1090,11 @@ class PermissionBuilder extends React.Component<PermissionBuilderProps> {
             tableSchema.computed_fields,
             allFunctions
           );
-          scalarComputedFields = computedFields.scalar.filter(sc => {
-            const cFn = getComputedFieldFunction(sc, allFunctions)
-              ?.input_arg_types;
-            // Only the computed fields that do not require extra arguments other than the table row
-            // are currenlty supported by the server https://github.com/hasura/graphql-engine/issues/7336
-            return cFn?.length === 1 && cFn[0].name === tableDef.name;
-          });
+          scalarComputedFields = getComputedFieldsWithoutArgs(
+            computedFields.scalar,
+            allFunctions,
+            tableDef.name
+          );
         }
       }
 

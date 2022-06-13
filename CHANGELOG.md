@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 - console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
+- console: add support for computed fields with session arg in permission builder (fix #8321)
 
 ## v2.8.0-beta.1
 
