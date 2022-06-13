@@ -49,6 +49,7 @@ data Error
   | UnsupportedOpExpG (Ir.OpExpG 'BigQuery Expression)
   | UnsupportedSQLExp Expression
   | UnsupportedDistinctOn
+  | UnexpectedEmptyList
   | InvalidIntegerishSql Expression
   | ConnectionsNotSupported
   | ActionsNotSupported
@@ -75,6 +76,7 @@ instance Show Error where
       UnsupportedOpExpG {} -> "UnsupportedOpExpG"
       UnsupportedSQLExp {} -> "UnsupportedSQLExp"
       UnsupportedDistinctOn {} -> "UnsupportedDistinctOn"
+      UnexpectedEmptyList {} -> "UnexpectedEmptyList"
       InvalidIntegerishSql {} -> "InvalidIntegerishSql"
       ConnectionsNotSupported {} -> "ConnectionsNotSupported"
       ActionsNotSupported {} -> "ActionsNotSupported"
@@ -245,9 +247,7 @@ fromSelectRows parentSelectFromEntity annSelectG = do
       (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
-  selectProjections <-
-    NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
-      `onNothing` refute (pure NoProjectionFields)
+  selectProjections <- selectProjectionsFromFieldSources True fieldSources
   globalTop <- getGlobalTop
   let select =
         Select
@@ -393,17 +393,11 @@ fromSelectAggregate minnerJoinFields annSelectG = do
           fields
       )
       (fromAlias selectFrom)
-  selectProjections <-
-    onNothing
-      ( NE.nonEmpty
-          (concatMap (toList . fieldSourceProjections True) fieldSources)
-      )
-      (refute (pure NoProjectionFields))
+  selectProjections <- selectProjectionsFromFieldSources True fieldSources
   indexAlias <- generateEntityAlias IndexTemplate
   let innerSelectAlias = entityAliasText (fromAlias selectFrom)
       mDistinctFields = fmap (fmap (\(ColumnName name) -> FieldName name innerSelectAlias)) argsDistinct
-      mPartitionFields =
-        fmap (NE.fromList . map fst) mforeignKeyConditions <> mDistinctFields
+      mPartitionFields = (mforeignKeyConditions >>= NE.nonEmpty . map fst) <> mDistinctFields
       innerProjections =
         case mPartitionFields of
           Nothing -> pure StarProjection
@@ -616,7 +610,7 @@ unfurlAnnotatedOrderByElement =
                               selectFinalWantedFields = Nothing,
                               selectGroupBy = mempty,
                               selectTop = NoTop,
-                              selectProjections = NE.fromList [StarProjection],
+                              selectProjections = StarProjection :| [],
                               selectFrom,
                               selectJoins = [],
                               selectWhere = Where ([whereExpression]),
@@ -793,14 +787,13 @@ fromAnnBoolExpFld =
                 selectGroupBy = mempty,
                 selectOrderBy = Nothing,
                 selectProjections =
-                  NE.fromList
-                    [ ExpressionProjection
-                        ( Aliased
-                            { aliasedThing = trueExpression,
-                              aliasedAlias = existsFieldName
-                            }
-                        )
-                    ],
+                  ExpressionProjection
+                    ( Aliased
+                        { aliasedThing = trueExpression,
+                          aliasedAlias = existsFieldName
+                        }
+                    )
+                    :| [],
                 selectFrom,
                 selectJoins = mempty,
                 selectWhere = Where (foreignKeyConditions <> [whereExpression]),
@@ -833,14 +826,13 @@ fromGExists Ir.GExists {_geTable, _geWhere} = do
         selectGroupBy = mempty,
         selectOrderBy = Nothing,
         selectProjections =
-          NE.fromList
-            [ ExpressionProjection
-                ( Aliased
-                    { aliasedThing = trueExpression,
-                      aliasedAlias = existsFieldName
-                    }
-                )
-            ],
+          ExpressionProjection
+            ( Aliased
+                { aliasedThing = trueExpression,
+                  aliasedAlias = existsFieldName
+                }
+            )
+            :| [],
         selectFrom,
         selectJoins = mempty,
         selectWhere = Where [whereExpression],
@@ -943,9 +935,7 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
         traverse
           (fromAnnFieldsG (argsExistingJoins args) stringifyNumbers)
           fields
-      arrayAggProjections <-
-        NE.nonEmpty (concatMap (toList . fieldSourceProjections False) fieldSources)
-          `onNothing` refute (pure NoProjectionFields)
+      arrayAggProjections <- lift (selectProjectionsFromFieldSources False fieldSources)
       globalTop <- lift getGlobalTop
       let arrayAgg =
             Aliased
@@ -1055,13 +1045,13 @@ fromColumn (ColumnName txt) = do
   EntityAlias {entityAliasText} <- ask
   pure (FieldName {fieldName = txt, fieldNameEntity = entityAliasText})
 
-fieldSourceProjections :: Bool -> FieldSource -> NonEmpty Projection
+fieldSourceProjections :: Bool -> FieldSource -> FromIr (NonEmpty Projection)
 fieldSourceProjections keepJoinField =
   \case
     ExpressionFieldSource aliasedExpression ->
-      pure (ExpressionProjection aliasedExpression)
+      pure (ExpressionProjection aliasedExpression :| [])
     JoinFieldSource aliasedJoin ->
-      NE.fromList
+      toNonEmpty
         -- Here we're producing all join fields needed later for
         -- Haskell-native joining.  They will be removed by upstream
         -- code if keepJoinField is True
@@ -1158,8 +1148,9 @@ fieldSourceProjections keepJoinField =
       pure
         ( AggregateProjections
             (Aliased {aliasedThing = aggregates, aliasedAlias = name})
+            :| []
         )
-    ArrayAggFieldSource arrayAgg _ -> pure (ArrayAggProjection arrayAgg)
+    ArrayAggFieldSource arrayAgg _ -> pure (ArrayAggProjection arrayAgg :| [])
   where
     fieldNameText FieldName {fieldName} = fieldName
 
@@ -1193,26 +1184,31 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
     local
       (const entityAlias)
       (traverse (fromAnnFieldsG mempty Rql.LeaveNumbersAlone) fields)
-  selectProjections <-
-    NE.nonEmpty (concatMap (toList . fieldSourceProjections True) fieldSources)
-      `onNothing` refute (pure NoProjectionFields)
+  selectProjections <- lift (selectProjectionsFromFieldSources True fieldSources)
   joinFieldName <- lift (fromRelName _aarRelationshipName)
   joinAlias <-
     lift (generateEntityAlias (ObjectRelationTemplate joinFieldName))
   filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
-  innerJoinFields <- fromMappingFieldNames (fromAlias selectFrom) mapping
-  joinOn <-
-    fromMappingFieldNames joinAlias mapping
-  let joinFieldProjections =
-        map
-          ( \(fieldName', _) ->
-              FieldNameProjection
-                Aliased
-                  { aliasedThing = fieldName',
-                    aliasedAlias = fieldName fieldName'
-                  }
-          )
-          innerJoinFields
+
+  -- @mapping@ here describes the pairs of columns that form foreign key
+  -- relationships between tables. For example, when querying an "article"
+  -- table for article titles and joining on an "authors" table for author
+  -- names, we could end up with something like the following:
+  --
+  -- @
+  -- [ ( ColumnName { columnName = "author_id" }
+  --   , ColumnName { columnName = "id" }
+  --   )
+  -- ]
+  -- @
+  --
+  -- Note that the "local" table is on the left, and the "remote" table is on
+  -- the right.
+
+  joinFields <- fromMappingFieldNames (fromAlias selectFrom) mapping
+  joinOn <- fromMappingFieldNames joinAlias mapping
+  joinFieldProjections <- toNonEmpty (map prepareJoinFieldProjection joinFields)
+
   let selectFinalWantedFields = pure (fieldTextNames fields)
   pure
     Join
@@ -1226,8 +1222,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
                 selectGroupBy = mempty,
                 selectOrderBy = Nothing,
                 selectTop = NoTop,
-                selectProjections =
-                  NE.fromList joinFieldProjections <> selectProjections,
+                selectProjections = joinFieldProjections <> selectProjections,
                 selectFrom,
                 selectJoins = concat (mapMaybe fieldSourceJoins fieldSources),
                 selectWhere = Where [filterExpression],
@@ -1325,25 +1320,16 @@ fromArrayAggregateSelectG annRelationSelectG = do
     lhsEntityAlias <- ask
     lift (fromSelectAggregate (pure (lhsEntityAlias, mapping)) annSelectG)
   alias <- lift (generateEntityAlias (ArrayAggregateTemplate joinFieldName))
+
   joinOn <- fromMappingFieldNames alias mapping
-  innerJoinFields <-
-    fromMappingFieldNames (fromAlias (selectFrom select)) mapping
-  let joinFieldProjections =
-        map
-          ( \(fieldName', _) ->
-              FieldNameProjection
-                Aliased
-                  { aliasedThing = fieldName',
-                    aliasedAlias = fieldName fieldName'
-                  }
-          )
-          innerJoinFields
-  let projections =
-        (selectProjections select <> NE.fromList joinFieldProjections)
+  joinFields <- fromMappingFieldNames (fromAlias (selectFrom select)) mapping
+  joinFieldProjections <- toNonEmpty (map prepareJoinFieldProjection joinFields)
+
+  let projections = selectProjections select <> joinFieldProjections
       joinSelect =
         select
           { selectWhere = selectWhere select,
-            selectGroupBy = map fst innerJoinFields,
+            selectGroupBy = map fst joinFields,
             selectProjections = projections
           }
   pure
@@ -1437,27 +1423,18 @@ fromArrayRelationSelectG annRelationSelectG = do
   alias <- lift (generateEntityAlias (ArrayRelationTemplate joinFieldName))
   indexAlias <- lift (generateEntityAlias IndexTemplate)
   joinOn <- fromMappingFieldNames alias mapping
-  innerJoinFields <-
-    fromMappingFieldNames (fromAlias (pselectFrom pselect)) mapping
-  let select = withExtraPartitionFields pselect $ map fst innerJoinFields
-  let joinFieldProjections =
-        map
-          ( \(fieldName', _) ->
-              FieldNameProjection
-                Aliased
-                  { aliasedThing = fieldName',
-                    aliasedAlias = fieldName fieldName'
-                  }
-          )
-          innerJoinFields
-      joinSelect =
+  joinFields <- fromMappingFieldNames (fromAlias (pselectFrom pselect)) mapping >>= toNonEmpty
+  let select = withExtraPartitionFields pselect $ NE.toList (fmap fst joinFields)
+      joinFieldProjections = fmap prepareJoinFieldProjection joinFields
+
+  let joinSelect =
         Select
           { selectCardinality = One,
             selectAsStruct = NoAsStruct,
             selectFinalWantedFields = selectFinalWantedFields select,
             selectTop = NoTop,
             selectProjections =
-              NE.fromList joinFieldProjections
+              joinFieldProjections
                 <> pure
                   ( ArrayAggProjection
                       Aliased
@@ -1484,7 +1461,7 @@ fromArrayRelationSelectG annRelationSelectG = do
                         Select
                           { selectProjections =
                               selectProjections select
-                                <> NE.fromList joinFieldProjections
+                                <> joinFieldProjections
                                 `appendToNonEmpty` foldMap @Maybe
                                   ( map \OrderBy {orderByFieldName} ->
                                       FieldNameProjection
@@ -1503,8 +1480,7 @@ fromArrayRelationSelectG annRelationSelectG = do
                                             aliasedThing =
                                               RowNumberOverPartitionBy
                                                 -- The row numbers start from 1.
-                                                ( NE.fromList
-                                                    (map fst innerJoinFields)
+                                                ( fmap fst joinFields
                                                 )
                                                 (selectOrderBy select)
                                                 -- Above: Having the order by
@@ -1549,7 +1525,7 @@ fromArrayRelationSelectG annRelationSelectG = do
             selectJoins = mempty,
             selectOffset = Nothing,
             -- This group by corresponds to the field name projections above. E.g. artist_other_id
-            selectGroupBy = map (fst) innerJoinFields
+            selectGroupBy = map fst (NE.toList joinFields)
           }
   pure
     Join
@@ -1640,22 +1616,45 @@ fromMapping localFrom =
     )
     . HM.toList
 
+-- | Given an alias for the remote table, and a map of local-to-remote column
+-- name pairings, produce 'FieldName' pairings (column names paired with their
+-- associated table names).
+--
+-- For example, we might convert the following:
+--
+-- @
+-- [ ( ColumnName { columnName = "author_id" }
+--   , ColumnName { columnName = "id" }
+--   )
+-- ]
+-- @
+--
+-- ... into something like this:
+--
+-- @
+-- ( FieldName
+--     { fieldName = "id"
+--     , fieldNameEntity = "t_author1"
+--     }
+-- , FieldName
+--     { fieldName = "author_id"
+--     , fieldNameEntity = "t_article1"
+--     }
+-- )
+-- @
+--
+-- Note that the columns __flip around__ for the output. The input map is
+-- @(local, remote)@.
 fromMappingFieldNames ::
   EntityAlias ->
   HashMap ColumnName ColumnName ->
   ReaderT EntityAlias FromIr [(FieldName, FieldName)]
-fromMappingFieldNames localFrom =
-  traverse
-    ( \(remoteColumn, localColumn) -> do
-        localFieldName <- local (const localFrom) (fromColumn localColumn)
-        remoteFieldName <- fromColumn remoteColumn
-        pure
-          ( (,)
-              (localFieldName)
-              (remoteFieldName)
-          )
-    )
-    . HM.toList
+fromMappingFieldNames remoteFrom = traverse go . HM.toList
+  where
+    go (localColumn, remoteColumn) = do
+      remoteFieldName <- local (const remoteFrom) (fromColumn remoteColumn)
+      localFieldName <- fromColumn localColumn
+      pure (remoteFieldName, localFieldName)
 
 --------------------------------------------------------------------------------
 -- Basic SQL expression types
@@ -1726,6 +1725,33 @@ fromGBoolExp =
 
 --------------------------------------------------------------------------------
 -- Misc combinators
+
+-- | Attempt to refine a list into a 'NonEmpty'. If the given list is empty,
+-- this will 'refute' the computation with an 'UnexpectedEmptyList' error.
+toNonEmpty :: MonadValidate (NonEmpty Error) m => [x] -> m (NonEmpty x)
+toNonEmpty = \case
+  [] -> refute (UnexpectedEmptyList :| [])
+  x : xs -> pure (x :| xs)
+
+-- | Get the remote field from a pair (see 'fromMappingFieldNames' for more
+-- information) and produce a 'Projection'.
+prepareJoinFieldProjection :: (FieldName, FieldName) -> Projection
+prepareJoinFieldProjection (fieldName', _) =
+  FieldNameProjection
+    Aliased
+      { aliasedThing = fieldName',
+        aliasedAlias = fieldName fieldName'
+      }
+
+selectProjectionsFromFieldSources :: Bool -> [FieldSource] -> FromIr (NonEmpty Projection)
+selectProjectionsFromFieldSources keepJoinField fieldSources = do
+  projections <- tolerate do
+    projections' <- traverse (fieldSourceProjections keepJoinField) fieldSources
+    toNonEmpty projections'
+
+  case projections of
+    Just (x :| xs) -> pure (foldl' (<>) x xs)
+    Nothing -> refute (pure NoProjectionFields)
 
 trueExpression :: Expression
 trueExpression = ValueExpression (BoolValue True)
