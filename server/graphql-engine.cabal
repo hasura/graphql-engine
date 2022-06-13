@@ -1188,9 +1188,10 @@ test-suite tests-dc-api
     , autodocodec-openapi3
     , base
     , bytestring
+    , case-insensitive
     , deepseq
-    , file-embed
     , dc-api
+    , file-embed
     , hashable
     , hspec
     , hspec-core
@@ -1210,6 +1211,9 @@ test-suite tests-dc-api
     , text
     , unordered-containers
     , vector
+    , xml-conduit
+    , xml-lens
+    , zlib
   hs-source-dirs: tests-dc-api
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.

@@ -21,37 +21,37 @@ spec api sourceName config = describe "Basic Queries" $ do
   describe "Column Fields" $ do
     it "can query for a list of artists" $ do
       let query = artistsQuery
-      receivedArtists <- fmap (Data.sortBy "id" . getQueryResponse) $ (api // _query) sourceName config query
+      receivedArtists <- fmap (Data.sortBy "ArtistId" . getQueryResponse) $ (api // _query) sourceName config query
 
       let expectedArtists = Data.artistsAsJson
       receivedArtists `shouldBe` expectedArtists
 
     it "can query for a list of albums with a subset of columns" $ do
-      let fields = KeyMap.fromList [("artist_id", columnField "artist_id"), ("title", columnField "title")]
+      let fields = KeyMap.fromList [("ArtistId", columnField "ArtistId"), ("Title", columnField "Title")]
       let query = albumsQuery {fields}
-      receivedAlbums <- (Data.sortBy "title" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "Title" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let filterToRequiredProperties =
-            KeyMap.filterWithKey (\propName _value -> propName == "artist_id" || propName == "title")
+            KeyMap.filterWithKey (\propName _value -> propName == "ArtistId" || propName == "Title")
 
-      let expectedAlbums = Data.sortBy "title" $ filterToRequiredProperties <$> Data.albumsAsJson
+      let expectedAlbums = Data.sortBy "Title" $ filterToRequiredProperties <$> Data.albumsAsJson
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can project columns into fields with different names" $ do
-      let fields = KeyMap.fromList [("artist_id", columnField "id"), ("artist_name", columnField "name")]
+      let fields = KeyMap.fromList [("Artist_Id", columnField "ArtistId"), ("Artist_Name", columnField "Name")]
       let query = artistsQuery {fields}
-      receivedArtists <- (Data.sortBy "artist_id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedArtists <- (Data.sortBy "ArtistId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let renameProperties =
             KeyMap.mapKeyVal
               ( \case
-                  "id" -> "artist_id"
-                  "name" -> "artist_name"
+                  "ArtistId" -> "Artist_Id"
+                  "Name" -> "Artist_Name"
                   other -> other
               )
               id
 
-      let expectedArtists = Data.sortBy "artist_id" $ renameProperties <$> Data.artistsAsJson
+      let expectedArtists = Data.sortBy "ArtistId" $ renameProperties <$> Data.artistsAsJson
       receivedArtists `shouldBe` expectedArtists
 
   describe "Limit & Offset" $ do
@@ -69,160 +69,160 @@ spec api sourceName config = describe "Basic Queries" $ do
 
   describe "Order By" $ do
     it "can use order by to order results in ascending order" $ do
-      let orderBy = OrderBy (ColumnName "title") Ascending :| []
+      let orderBy = OrderBy (ColumnName "Title") Ascending :| []
       let query = albumsQuery {orderBy = Just orderBy}
       receivedAlbums <- getQueryResponse <$> (api // _query) sourceName config query
 
-      let expectedAlbums = sortOn (^? ix "title") Data.albumsAsJson
+      let expectedAlbums = sortOn (^? ix "Title") Data.albumsAsJson
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can use order by to order results in descending order" $ do
-      let orderBy = OrderBy (ColumnName "title") Descending :| []
+      let orderBy = OrderBy (ColumnName "Title") Descending :| []
       let query = albumsQuery {orderBy = Just orderBy}
       receivedAlbums <- getQueryResponse <$> (api // _query) sourceName config query
 
-      let expectedAlbums = sortOn (Down . (^? ix "title")) Data.albumsAsJson
+      let expectedAlbums = sortOn (Down . (^? ix "Title")) Data.albumsAsJson
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can use multiple order bys to order results" $ do
-      let orderBy = OrderBy (ColumnName "artist_id") Ascending :| [OrderBy (ColumnName "title") Descending]
+      let orderBy = OrderBy (ColumnName "ArtistId") Ascending :| [OrderBy (ColumnName "Title") Descending]
       let query = albumsQuery {orderBy = Just orderBy}
       receivedAlbums <- getQueryResponse <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            sortOn (\album -> (album ^? ix "artist_id", Down (album ^? ix "title"))) Data.albumsAsJson
+            sortOn (\album -> (album ^? ix "ArtistId", Down (album ^? ix "Title"))) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
   describe "Where" $ do
     it "can filter using an equality expression" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 2))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 2))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter ((== Just 2) . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter ((== Just 2) . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter using an inequality expression" $ do
-      let where' = Not (ValueWrapper (ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 2))))))
+      let where' = Not (ValueWrapper (ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 2))))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter ((/= Just 2) . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter ((/= Just 2) . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter using an in expression" $ do
-      let where' = ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (ColumnName "id") (ScalarValue . ValueWrapper <$> [Number 2, Number 3]))
+      let where' = ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (ColumnName "AlbumId") (ScalarValue . ValueWrapper <$> [Number 2, Number 3]))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter (flip elem [Just 2, Just 3] . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter (flip elem [Just 2, Just 3] . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can negate an in expression filter using a not expression" $ do
-      let where' = Not (ValueWrapper (ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (ColumnName "id") (ScalarValue . ValueWrapper <$> [Number 2, Number 3]))))
+      let where' = Not (ValueWrapper (ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (ColumnName "AlbumId") (ScalarValue . ValueWrapper <$> [Number 2, Number 3]))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter (flip notElem [Just 2, Just 3] . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter (flip notElem [Just 2, Just 3] . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can combine filters using an and expression" $ do
-      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "artist_id") (ScalarValue (ValueWrapper (Number 58))))
-      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "title") (ScalarValue (ValueWrapper (String "Stormbringer"))))
+      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "ArtistId") (ScalarValue (ValueWrapper (Number 58))))
+      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "Title") (ScalarValue (ValueWrapper (String "Stormbringer"))))
       let where' = And (ValueWrapper [where1, where2])
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
             filter
               ( \album ->
-                  (album ^? ix "artist_id" . _Number == Just 58) && (album ^? ix "title" . _String == Just "Stormbringer")
+                  (album ^? ix "ArtistId" . _Number == Just 58) && (album ^? ix "Title" . _String == Just "Stormbringer")
               )
               Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can combine filters using an or expression" $ do
-      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 2))))
-      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "id") (ScalarValue (ValueWrapper (Number 3))))
+      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 2))))
+      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 3))))
       let where' = Or (ValueWrapper [where1, where2])
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter (flip elem [Just 2, Just 3] . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter (flip elem [Just 2, Just 3] . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the greater than operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (ColumnName "id") (ScalarValue (ValueWrapper (Number 300))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 300))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter ((> Just 300) . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter ((> Just 300) . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the greater than or equal operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThanOrEqual (ColumnName "id") (ScalarValue (ValueWrapper (Number 300))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThanOrEqual (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 300))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter ((>= Just 300) . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter ((>= Just 300) . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the less than operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThan (ColumnName "id") (ScalarValue (ValueWrapper (Number 100))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThan (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 100))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter ((< Just 100) . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter ((< Just 100) . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter by applying the less than or equal operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThanOrEqual (ColumnName "id") (ScalarValue (ValueWrapper (Number 100))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThanOrEqual (ColumnName "AlbumId") (ScalarValue (ValueWrapper (Number 100))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter ((<= Just 100) . (^? ix "id" . _Number)) Data.albumsAsJson
+            filter ((<= Just 100) . (^? ix "AlbumId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
     it "can filter using a greater than operator with a column comparison" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (ColumnName "id") (AnotherColumn (ValueWrapper (ColumnName "artist_id"))))
+      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (ColumnName "AlbumId") (AnotherColumn (ValueWrapper (ColumnName "ArtistId"))))
       let query = albumsQuery {where_ = Just where'}
-      receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+      receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
 
       let expectedAlbums =
-            filter (\album -> (album ^? ix "id" . _Number) > (album ^? ix "artist_id" . _Number)) Data.albumsAsJson
+            filter (\album -> (album ^? ix "AlbumId" . _Number) > (album ^? ix "ArtistId" . _Number)) Data.albumsAsJson
 
       receivedAlbums `shouldBe` expectedAlbums
 
 artistsQuery :: Query
 artistsQuery =
-  let fields = KeyMap.fromList [("id", columnField "id"), ("name", columnField "name")]
-      tableName = TableName "artists"
+  let fields = KeyMap.fromList [("ArtistId", columnField "ArtistId"), ("Name", columnField "Name")]
+      tableName = TableName "Artist"
    in Query fields tableName Nothing Nothing Nothing Nothing
 
 albumsQuery :: Query
 albumsQuery =
-  let fields = KeyMap.fromList [("id", columnField "id"), ("artist_id", columnField "artist_id"), ("title", columnField "title")]
-      tableName = TableName "albums"
+  let fields = KeyMap.fromList [("AlbumId", columnField "AlbumId"), ("ArtistId", columnField "ArtistId"), ("Title", columnField "Title")]
+      tableName = TableName "Album"
    in Query fields tableName Nothing Nothing Nothing Nothing
 
 columnField :: Text -> Field

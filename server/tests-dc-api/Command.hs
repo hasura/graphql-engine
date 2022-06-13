@@ -119,8 +119,7 @@ testOptionsParser =
           )
       )
     <*> optional
-      ( option
-          auto
+      ( strOption
           ( long "match"
               <> short 'm'
               <> metavar "PATTERN"
