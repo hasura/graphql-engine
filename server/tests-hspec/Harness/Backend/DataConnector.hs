@@ -30,22 +30,42 @@ defaultSourceMetadata =
 name : *source
 kind: *backendType
 tables:
-  - table: "albums"
+  - table: Album
+    configuration:
+      custom_root_fields:
+        select: albums
+        select_by_pk: albums_by_pk
+      column_config:
+        AlbumId:
+          custom_name: id
+        Title:
+          custom_name: title
+        ArtistId:
+          custom_name: artist_id
     object_relationships:
-      - name: "artist"
+      - name: artist
         using:
           manual_configuration:
-            remote_table: "artists"
+            remote_table: Artist
             column_mapping:
-              artist_id: "id"
-  - table: "artists"
+              ArtistId: ArtistId
+  - table: Artist
+    configuration:
+      custom_root_fields:
+        select: artists
+        select_by_pk: artists_by_pk
+      column_config:
+        ArtistId:
+          custom_name: id
+        Name:
+          custom_name: name
     array_relationships:
-      - name: "albums"
+      - name: albums
         using:
           manual_configuration:
-            remote_table: "albums"
+            remote_table: Album
             column_mapping:
-              id: "artist_id"
+              ArtistId: ArtistId
 configuration: {}
 |]
 

@@ -6,7 +6,7 @@ Not all tests will be appropriate for all agents. Agents self-describe their cap
 The executable also has the ability to export the OpenAPI spec of the Data Connector agent API so that customers can use that to ensure their agent complies with the API format.
 
 ## How to Use
-First, start your Data Connector agent and ensure it is populated with the Chinook data set. For example, you could start the Reference Agent by following the instructions in [its README](../../dc-agents/reference/README.md).
+First, start your Data Connector agent and ensure it is populated with the [Chinook data set](https://github.com/lerocha/chinook-database/). For example, you could start the Reference Agent by following the instructions in [its README](../../dc-agents/reference/README.md).
 
 To run the tests against the agent (for example), you must specify the agent's URL on the command line (`-u`), as well as the agent's configuration JSON (`-s`, sent in the `X-Hasura-DataConnector-Config` header):
 

@@ -22,27 +22,27 @@ spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
 spec api sourceName config = describe "Relationship Queries" $ do
   it "perform a many to one query by joining artist to albums" $ do
     let query = albumsWithArtistQuery id
-    receivedAlbums <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+    receivedAlbums <- (Data.sortBy "ArtistId" . getQueryResponse) <$> (api // _query) sourceName config query
 
     let joinInArtist (album :: Object) =
-          let artist = (album ^? ix "artist_id" . _Number) >>= \artistId -> Data.artistsAsJsonById ^? ix artistId
-              artistPropVal = maybe J.Null (Array . Vector.singleton . Object) artist
-           in KeyMap.insert "artist" artistPropVal album
-    let removeArtistId = KeyMap.delete "artist_id"
+          let artist = (album ^? ix "ArtistId" . _Number) >>= \artistId -> Data.artistsAsJsonById ^? ix artistId
+              artistPropVal = maybe J.Null Object artist
+           in KeyMap.insert "Artist" artistPropVal album
+    let removeArtistId = KeyMap.delete "ArtistId"
 
     let expectedAlbums = (removeArtistId . joinInArtist) <$> Data.albumsAsJson
     receivedAlbums `shouldBe` expectedAlbums
 
   it "perform a one to many query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
-    receivedArtists <- (Data.sortBy "id" . getQueryResponse) <$> (api // _query) sourceName config query
+    receivedArtists <- (Data.sortBy "ArtistId" . getQueryResponse) <$> (api // _query) sourceName config query
 
     let joinInAlbums (artist :: Object) =
-          let artistId = artist ^? ix "id" . _Number
-              albumFilter artistId' album = album ^? ix "artist_id" . _Number == Just artistId'
+          let artistId = artist ^? ix "ArtistId" . _Number
+              albumFilter artistId' album = album ^? ix "ArtistId" . _Number == Just artistId'
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') Data.albumsAsJson) artistId
-              albums' = Object . KeyMap.delete "artist_id" <$> albums
-           in KeyMap.insert "albums" (Array . Vector.fromList $ albums') artist
+              albums' = Object . KeyMap.delete "ArtistId" <$> albums
+           in KeyMap.insert "Albums" (Array . Vector.fromList $ albums') artist
 
     let expectedAlbums = joinInAlbums <$> Data.artistsAsJson
     receivedArtists `shouldBe` expectedAlbums
@@ -51,14 +51,14 @@ albumsWithArtistQuery :: (Query -> Query) -> Query
 albumsWithArtistQuery modifySubquery =
   let joinFieldMapping =
         HashMap.fromList
-          [ (PrimaryKey $ ColumnName "artist_id", ForeignKey $ ColumnName "id")
+          [ (PrimaryKey $ ColumnName "ArtistId", ForeignKey $ ColumnName "ArtistId")
           ]
       artistsSubquery = modifySubquery artistsQuery
       fields =
         KeyMap.fromList
-          [ ("id", columnField "id"),
-            ("title", columnField "title"),
-            ("artist", RelationshipField $ RelField joinFieldMapping ObjectRelationship artistsSubquery)
+          [ ("AlbumId", columnField "AlbumId"),
+            ("Title", columnField "Title"),
+            ("Artist", RelationshipField $ RelField joinFieldMapping ObjectRelationship artistsSubquery)
           ]
    in albumsQuery {fields}
 
@@ -66,29 +66,29 @@ artistsWithAlbumsQuery :: (Query -> Query) -> Query
 artistsWithAlbumsQuery modifySubquery =
   let joinFieldMapping =
         HashMap.fromList
-          [ (PrimaryKey $ ColumnName "id", ForeignKey $ ColumnName "artist_id")
+          [ (PrimaryKey $ ColumnName "ArtistId", ForeignKey $ ColumnName "ArtistId")
           ]
-      albumFields = KeyMap.fromList [("id", columnField "id"), ("title", columnField "title")]
-      albumsSort = OrderBy (ColumnName "id") Ascending :| []
+      albumFields = KeyMap.fromList [("AlbumId", columnField "AlbumId"), ("Title", columnField "Title")]
+      albumsSort = OrderBy (ColumnName "AlbumId") Ascending :| []
       albumsSubquery = modifySubquery (albumsQuery {fields = albumFields, orderBy = Just albumsSort})
       fields =
         KeyMap.fromList
-          [ ("id", columnField "id"),
-            ("name", columnField "name"),
-            ("albums", RelationshipField $ RelField joinFieldMapping ArrayRelationship albumsSubquery)
+          [ ("ArtistId", columnField "ArtistId"),
+            ("Name", columnField "Name"),
+            ("Albums", RelationshipField $ RelField joinFieldMapping ArrayRelationship albumsSubquery)
           ]
    in artistsQuery {fields}
 
 artistsQuery :: Query
 artistsQuery =
-  let fields = KeyMap.fromList [("id", columnField "id"), ("name", columnField "name")]
-      tableName = TableName "artists"
+  let fields = KeyMap.fromList [("ArtistId", columnField "ArtistId"), ("Name", columnField "Name")]
+      tableName = TableName "Artist"
    in Query fields tableName Nothing Nothing Nothing Nothing
 
 albumsQuery :: Query
 albumsQuery =
-  let fields = KeyMap.fromList [("id", columnField "id"), ("artist_id", columnField "artist_id"), ("title", columnField "title")]
-      tableName = TableName "albums"
+  let fields = KeyMap.fromList [("AlbumId", columnField "AlbumId"), ("ArtistId", columnField "ArtistId"), ("Title", columnField "Title")]
+      tableName = TableName "Album"
    in Query fields tableName Nothing Nothing Nothing Nothing
 
 columnField :: Text -> Field

@@ -50,9 +50,9 @@ tests opts = describe "Queries" $ do
         )
         [yaml|
           data:
-            albums: 
+            albums:
               - id: 1
-                title: For Those About To Rck We Salute You
+                title: For Those About To Rock We Salute You
         |]
 
     it "works with order_by id" $ \(testEnvironment, _) ->
@@ -71,9 +71,9 @@ query getAlbum {
         )
         [yaml|
 data:
-  albums: 
+  albums:
     - id: 1
-      title: For Those About To Rck We Salute You
+      title: For Those About To Rock We Salute You
     - id: 2
       title: Balls to the Wall
     - id: 3
@@ -96,9 +96,9 @@ query getAlbum {
         )
         [yaml|
 data:
-  albums_by_pk: 
+  albums_by_pk:
     - id: 1
-      title: "For Those About To Rck We Salute You"
+      title: "For Those About To Rock We Salute You"
 |]
 
     it "works with non existent primary key" $ \(testEnvironment, _) ->
@@ -165,7 +165,7 @@ data:
     - name: AC/DC
       id: 1
       albums:
-        - title: For Those About To Rck We Salute You
+        - title: For Those About To Rock We Salute You
         - title: Let There Be Rock
 |]
 
@@ -189,9 +189,9 @@ query getAlbum {
         )
         [yaml|
 data:
-  albums_by_pk: 
+  albums_by_pk:
     - id: 1
-      title: "For Those About To Rck We Salute You"
+      title: "For Those About To Rock We Salute You"
       artist:
         name: "AC/DC"
 |]
@@ -215,7 +215,7 @@ query getAlbum {
 data:
   albums:
   - id: 1
-    title: For Those About To Rck We Salute You
+    title: For Those About To Rock We Salute You
   - id: 3
     title: Restless and Wild
   - id: 5
@@ -240,7 +240,7 @@ query getAlbum {
 data:
   albums:
   - id: 1
-    title: For Those About To Rck We Salute You
+    title: For Those About To Rock We Salute You
   - id: 3
     title: Restless and Wild
 |]
@@ -261,9 +261,9 @@ query getAlbum {
         )
         [yaml|
 data:
-  albums: 
+  albums:
     - id: 1
-      title: For Those About To Rck We Salute You
+      title: For Those About To Rock We Salute You
 |]
 
     it "works with '_neq' predicate" $ \(testEnvironment, _) ->
@@ -282,9 +282,9 @@ query getAlbum {
         )
         [yaml|
 data:
-  albums: 
+  albums:
     - id: 1
-      title: For Those About To Rck We Salute You
+      title: For Those About To Rock We Salute You
     - id: 3
       title: Restless and Wild
 |]
@@ -305,9 +305,9 @@ query getAlbum {
         )
         [yaml|
 data:
-  albums: 
+  albums:
     - id: 1
-      title: For Those About To Rck We Salute You
+      title: For Those About To Rock We Salute You
 |]
 
     it "works with '_lte' predicate" $ \(testEnvironment, _) ->
@@ -326,7 +326,7 @@ query getArtists {
         )
         [yaml|
 data:
-  artists: 
+  artists:
     - id: 1
       name: AC/DC
     - id: 2
@@ -349,7 +349,7 @@ query getArtists {
         )
         [yaml|
 data:
-  artists: 
+  artists:
     - id: 275
       name: Philip Glass Ensemble
 |]
@@ -370,7 +370,7 @@ query getArtists {
         )
         [yaml|
 data:
-  artists: 
+  artists:
     - id: 274
       name: Nash Ensemble
     - id: 275

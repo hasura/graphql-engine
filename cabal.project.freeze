@@ -357,6 +357,9 @@ constraints: any.Cabal ==3.2.1.0,
              any.x509-store ==1.6.9,
              any.x509-system ==1.6.7,
              any.x509-validation ==1.6.12,
+             any.xml-conduit ==1.9.1.1,
+             any.xml-lens ==0.3.1,
+             any.xml-types ==0.3.8,
              any.yaml ==0.11.7.0,
              any.zlib ==0.6.2.3,
-index-state: hackage.haskell.org 2022-06-06T19:18:14Z
+index-state: hackage.haskell.org 2022-06-09T04:14:17Z
