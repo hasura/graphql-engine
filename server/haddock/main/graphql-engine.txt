@@ -25491,6 +25491,7 @@ UnsupportedArraySelect :: ArraySelectG 'BigQuery Void Expression -> Error
 UnsupportedOpExpG :: OpExpG 'BigQuery Expression -> Error
 UnsupportedSQLExp :: Expression -> Error
 UnsupportedDistinctOn :: Error
+UnexpectedEmptyList :: Error
 InvalidIntegerishSql :: Expression -> Error
 ConnectionsNotSupported :: Error
 ActionsNotSupported :: Error
@@ -25668,7 +25669,7 @@ fromAnnColumnField :: StringifyNumbers -> AnnColumnField 'BigQuery Expression ->
 --   field name [table].[foo]. The table name comes from EntityAlias in the
 --   ReaderT.
 fromColumn :: ColumnName -> ReaderT EntityAlias FromIr FieldName
-fieldSourceProjections :: Bool -> FieldSource -> NonEmpty Projection
+fieldSourceProjections :: Bool -> FieldSource -> FromIr (NonEmpty Projection)
 fieldSourceJoins :: FieldSource -> Maybe [Join]
 
 -- | Produce the join for an object relation. We produce a normal select,
@@ -25784,12 +25785,52 @@ fromRelName :: RelName -> FromIr Text
 --   corresponds to the left/right of <tt>select ... join ...</tt>.
 --   Therefore left=remote, right=local in this context.
 fromMapping :: From -> HashMap ColumnName ColumnName -> ReaderT EntityAlias FromIr [Expression]
+
+-- | Given an alias for the remote table, and a map of local-to-remote
+--   column name pairings, produce <a>FieldName</a> pairings (column names
+--   paired with their associated table names).
+--   
+--   For example, we might convert the following:
+--   
+--   <pre>
+--   [ ( ColumnName { columnName = "author_id" }
+--     , ColumnName { columnName = "id" }
+--     )
+--   ]
+--   </pre>
+--   
+--   ... into something like this:
+--   
+--   <pre>
+--   ( FieldName
+--       { fieldName = "id"
+--       , fieldNameEntity = "t_author1"
+--       }
+--   , FieldName
+--       { fieldName = "author_id"
+--       , fieldNameEntity = "t_article1"
+--       }
+--   )
+--   </pre>
+--   
+--   Note that the columns <b>flip around</b> for the output. The input map
+--   is <tt>(local, remote)</tt>.
 fromMappingFieldNames :: EntityAlias -> HashMap ColumnName ColumnName -> ReaderT EntityAlias FromIr [(FieldName, FieldName)]
 fromOpExpG :: Expression -> OpExpG 'BigQuery Expression -> FromIr Expression
 fromBackendSpecificOpExpG :: Expression -> BooleanOperators Expression -> Expression
 nullableBoolEquality :: Expression -> Expression -> Expression
 nullableBoolInequality :: Expression -> Expression -> Expression
 fromGBoolExp :: GBoolExp 'BigQuery Expression -> ReaderT EntityAlias FromIr Expression
+
+-- | Attempt to refine a list into a <a>NonEmpty</a>. If the given list is
+--   empty, this will <a>refute</a> the computation with an
+--   <a>UnexpectedEmptyList</a> error.
+toNonEmpty :: MonadValidate (NonEmpty Error) m => [x] -> m (NonEmpty x)
+
+-- | Get the remote field from a pair (see <a>fromMappingFieldNames</a> for
+--   more information) and produce a <a>Projection</a>.
+prepareJoinFieldProjection :: (FieldName, FieldName) -> Projection
+selectProjectionsFromFieldSources :: Bool -> [FieldSource] -> FromIr (NonEmpty Projection)
 trueExpression :: Expression
 aggFieldName :: Text
 existsFieldName :: Text
