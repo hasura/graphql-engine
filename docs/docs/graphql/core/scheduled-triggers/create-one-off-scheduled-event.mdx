@@ -21,11 +21,18 @@ One-off scheduled events are used to reliably trigger an HTTP webhook to run cus
 
 To add a one-off scheduled event, follow these steps:
 
-## Step 1: Navigate to One-off Scheduled Events
+## Step 1: Define the scheduled event
 
-- Go to the `Events` tab in your Hasura console.
-- Click `One-off Scheduled Events`.
-- Click `Schedule an event`.
+The following fields for required to define a scheduled event:
+
+- **Webhook**: The HTTP endpoint that should be triggered.
+- **Time**: The time to trigger the event.
+- **Payload**: The JSON payload which will be sent to the webhook.
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Navigate to `Events > One-off Scheduled Events > Schedule an event` in your Hasura console.
 
 <Thumbnail
   src="/img/graphql/core/event-triggers/one-off.png"
@@ -33,17 +40,7 @@ To add a one-off scheduled event, follow these steps:
   width="900px"
 />
 
-## Step 2: Define the scheduled event
-
-Define the following values for a scheduled event:
-
-- **Webhook**: Enter the HTTP endpoint that should be triggered.
-- **Time**: Enter the time to trigger the event.
-- **Payload**: The JSON payload which will be sent to the webhook.
-
-<Tabs className="api-tabs">
-<TabItem value="console" label="Console">
-In the form opened by the above step, fill out the following fields:
+In the form opened by the above step, fill out the fields defined above:
 
 <Thumbnail
   src="/img/graphql/core/event-triggers/define-one-off-event.png"
@@ -78,7 +75,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-## Step 3: Define advanced options (Optional)
+## Step 2: Define advanced options (Optional)
 
 If you like, you can also define advanced values:
 

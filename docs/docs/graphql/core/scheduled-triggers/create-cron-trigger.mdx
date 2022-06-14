@@ -21,11 +21,23 @@ Cron triggers are used to reliably trigger HTTP endpoints to run custom business
 
 To add a cron trigger, follow these steps:
 
-## Step 1: Navigate to Cron Triggers
+## Step 1: Define the cron trigger
 
-- Go to the `Events` tab in your Hasura console.
-- Click `Cron Triggers`.
-- Click `Create`.
+The following fields are required to define a cron trigger:
+
+- **Name**: A name for the cron trigger.
+- **Webhook**: The HTTP endpoint that should be triggered.
+- **Cron schedule**: A cron expression defining the schedule for the cron. Cron events are created based on the UTC timezone. You can use tools like [crontab guru](https://crontab.guru/#*_*_*_*_*)
+  to help build a cron expression.
+- **Payload**: The JSON payload which will be sent to the webhook.
+
+For example, we can create a cron trigger called `eod_reports`, to trigger the webhook `https://mywebhook.com/eod` with the cron schedule `0 22 * * 1-5`, which
+means "At 22:00 on every day-of-week from Monday through Friday" (you can check this [here](https://crontab.guru/#0_22_*_*_1-5)).
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Navigate to `Events > Cron Triggers > Create` in your Hasura console.
 
 <Thumbnail
   src="/img/graphql/core/event-triggers/create-cron.png"
@@ -33,27 +45,15 @@ To add a cron trigger, follow these steps:
   width="1000px"
 />
 
-## Step 2: Define the cron trigger
+In the form opened, fill out the fields defined above:
 
-Let's define the cron trigger.
-
-<Tabs className="api-tabs">
-<TabItem value="console" label="Console">
-
-In the form opened by the above step, fill out the following fields:
-
-- **Name**: Create a name for the cron trigger.
-- **Webhook**: Enter the HTTP endpoint that should be triggered.
-- **Cron schedule**: Enter a schedule for the cron. You can use the link next to the field to help [build a cron expression](https://crontab.guru/#*_*_*_*_*), or use the `Frequently used crons` dropdown as a shortcut. Cron events are created based on the UTC timezone.
-- **Payload**: The JSON payload which will be sent to the webhook.
+You can use the link next to the `Cron Schedule` field to help build a cron expression using [crontab guru](https://crontab.guru/#*_*_*_*_*), or use the `Frequently used crons` dropdown as a shortcut.
 
 <Thumbnail
   src="/img/graphql/core/event-triggers/define-cron-trigger.png"
   alt="Defining a cron trigger"
-  width="550px"
+  width="500px"
 />
-
-In this example, we're creating a cron trigger called `eod_reports`, to trigger the webhook `https://mywebhook.com/eod`. The cron schedule is set to `0 22 * * 1-5`, which means "At 22:00 on every day-of-week from Monday through Friday" (you can check this [here](https://crontab.guru/#0_22_*_*_1-5)). 
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -99,7 +99,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-## Step 3: Define advanced options (Optional)
+## Step 2: Define advanced options (Optional)
 
 If you like, you can also define the following values:
 
