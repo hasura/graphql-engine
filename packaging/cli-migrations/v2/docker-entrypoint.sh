@@ -14,9 +14,9 @@ DEFAULT_METADATA_DIR="/hasura-metadata"
 TEMP_PROJECT_DIR="/tmp/hasura-project"
 
 # configure the target database for migrations
-if [ ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR} ]; then
+if [ "${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR}" ]; then
     log "migrations-startup" "database url for migrations is set by $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR"
-    HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=$(printenv $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR)
+    HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=$(printenv "$HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR")
 elif [ -z ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL+x} ]; then
     HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=$HASURA_GRAPHQL_DATABASE_URL
 fi
@@ -38,11 +38,11 @@ fi
 
 # wait for a port to be ready
 wait_for_port() {
-    local PORT=$1
+    PORT=$1
     log "migrations-startup" "waiting $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT for $PORT to be ready"
-    for i in `seq 1 $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT`;
+    for _ in $(seq 1 $HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT);
     do
-        nc -z localhost $PORT > /dev/null 2>&1 && log "migrations-startup" "port $PORT is ready" && return
+        nc -z localhost "$PORT" > /dev/null 2>&1 && log "migrations-startup" "port $PORT is ready" && return
         sleep 1
     done
     log "migrations-startup" "failed waiting for $PORT, try increasing HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT (default: 30)" && exit 1
@@ -51,7 +51,7 @@ wait_for_port() {
 log "migrations-startup" "starting graphql engine temporarily on port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
 
 # start graphql engine with metadata api enabled
-HASURA_GRAPHQL_DATABASE_URL=$HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL graphql-engine \
+HASURA_GRAPHQL_DATABASE_URL=$HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL $HGE_BINARY \
                serve --enabled-apis="metadata" \
                --server-port=${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT}  &
 # store the pid to kill it later
