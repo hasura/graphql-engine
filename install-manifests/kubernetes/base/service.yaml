@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: hasura
+    app.kubernetes.io/component: webserver
+  name: hasura
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app.kubernetes.io/name: hasura
+    app.kubernetes.io/component: webserver
+  type: LoadBalancer

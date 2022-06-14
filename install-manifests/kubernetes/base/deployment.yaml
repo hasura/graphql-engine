@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hasura
+  labels:
+    app.kubernetes.io/name: hasura
+    app.kubernetes.io/component: webserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hasura
+      app.kubernetes.io/component: webserver
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hasura
+        app.kubernetes.io/component: webserver
+    spec:
+      containers:
+      - name: hasura
+        image: hasura/graphql-engine:v2.2.0
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: HASURA_GRAPHQL_DATABASE_URL
+            value: postgres://username:password@hostname:port/dbname
+          ## enable the console served by server
+          - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+            value: "true"
+          ## enable debugging mode. It is recommended to disable this in production
+          - name: HASURA_GRAPHQL_DEV_MODE
+            value: "true"
+        ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
