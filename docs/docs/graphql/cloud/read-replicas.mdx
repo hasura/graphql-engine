@@ -16,6 +16,8 @@ import Thumbnail from "@site/src/components/Thumbnail";
 
 # Read replicas
 
+## Introduction
+
 Hasura Cloud can load balance queries and subscriptions across *read replicas* while sending all mutations and metadata API calls to the primary.
 
 ## Adding read replica URLs
@@ -121,15 +123,26 @@ Additional environment variables for *read replicas* specifically:
 
 `HASURA_GRAPHQL_STRIPES_PER_READ_REPLICA`
 
+**NOTE: Please note that the above environment variables are only available for v1.3 projects and are no longer supported for v2.0 and above projects.**
+
 :::
 
 ### MS SQL Server
 
 <Tabs className="api-tabs">
   <TabItem value="console" label="Console">
-    Support will be added soon
-  </TabItem>
-  <TabItem value="cli" label="CLI">
+
+Head to `Data -> Manage -> <db-name> -> Edit`
+
+<Thumbnail
+  src="/img/graphql/cloud/read-replicas/connect-db-with-replica-mssql.png"
+  alt="Connect database with read replica"
+  width="1000px"
+/> 
+
+</TabItem>
+
+<TabItem value="cli" label="CLI">
 
 You can add *read replicas* for a database by adding their config to the `/metadata/databases/database.yaml` file:
 
@@ -157,8 +170,8 @@ Apply the metadata by running:
 hasura metadata apply
 ```
 
-  </TabItem>
-  <TabItem value="api" label="API">
+</TabItem>
+<TabItem value="api" label="API">
 
 You can add *read replicas* for a database using the [mssql_add_source](/graphql/core/api-reference/metadata-api/source.mdx#mssql-add-source) metadata API.
 
@@ -199,5 +212,5 @@ X-Hasura-Role: admin
 
 ```
 
-  </TabItem>
+</TabItem>
 </Tabs>
