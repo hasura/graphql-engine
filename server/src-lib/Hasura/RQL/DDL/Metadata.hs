@@ -616,7 +616,13 @@ interpolateFromEnv env url =
     Right xs ->
       let lookup' var = maybe (Left var) (Right . T.pack) $ Env.lookupEnv env (T.unpack var)
           result = traverse (fmap indistinct . bitraverse lookup' pure) xs
-          err e = throwError $ err400 NotFound $ "Missing Env Var: " <> e
+          err e =
+            throwError $
+              err400 NotFound $
+                "Missing Env Var: " <> e
+                  <> ". For security reasons when testing request options real environment variable values are not available. Please enter a mock value for "
+                  <> e
+                  <> " in the Sample Env Variables list. See https://hasura.io/docs/latest/graphql/core/actions/rest-connectors/#action-transforms-sample-context"
        in either err (pure . fold) result
 
 -- | Deserialize a JSON or X-WWW-URL-FORMENCODED body from an
