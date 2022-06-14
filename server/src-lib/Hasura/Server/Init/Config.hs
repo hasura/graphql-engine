@@ -33,7 +33,6 @@ module Hasura.Server.Init.Config
     rawConnDetailsToUrlText,
     readAPIs,
     readDefaultNamingCase,
-    readDefaultNamingCaseFromEnv,
     readExperimentalFeatures,
     readHookType,
     readJson,
@@ -49,7 +48,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Char (toLower)
-import Data.Environment (Environment, lookupEnv)
 import Data.HashSet qualified as Set
 import Data.String qualified as DataString
 import Data.Text qualified as T
@@ -383,15 +381,6 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
 
 readDefaultNamingCase :: String -> Either String NamingCase
 readDefaultNamingCase = parseNamingConventionFromText . T.pack
-
-readDefaultNamingCaseFromEnv :: Environment -> Maybe NamingCase
-readDefaultNamingCaseFromEnv env =
-  case lookupEnv env "HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION" of
-    Nothing -> Nothing
-    (Just defaultNC) ->
-      case readDefaultNamingCase defaultNC of
-        Left _ -> Nothing
-        Right nc -> Just nc
 
 readExperimentalFeatures :: String -> Either String [ExperimentalFeature]
 readExperimentalFeatures = mapM readAPI . T.splitOn "," . T.pack
