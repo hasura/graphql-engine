@@ -346,21 +346,21 @@ class ModifyTable extends React.Component {
                   </div>
                 </>
               )}
-              {/* {isFeatureSupported('tables.modify.indexes.view') ? ( */}
-              <>
-                <div className="w-full sm:w-6/12 mb-md">
-                  <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-                    Indexes
-                    <Tooltip message={indexFieldsDescription} />
-                  </h4>
-                  <IndexFields tableSchema={table} />
-                </div>
-              </>
-              {/* ) : null} */}
+              {isFeatureSupported('tables.modify.indexes.view') ? (
+                <>
+                  <div className="w-full sm:w-6/12 mb-md">
+                    <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                      Indexes
+                      <Tooltip message={indexFieldsDescription} />
+                    </h4>
+                    <IndexFields tableSchema={table} />
+                  </div>
+                </>
+              ) : null}
 
-              {/* {table.table_type === 'PARTITIONED TABLE' && ( */}
-              <PartitionInfo table={table} dispatch={dispatch} />
-              {/* )} */}
+              {table.table_type === 'PARTITIONED TABLE' && (
+                <PartitionInfo table={table} dispatch={dispatch} />
+              )}
 
               {isFeatureSupported('tables.modify.triggers') && (
                 <>
