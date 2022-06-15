@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -101,6 +102,16 @@ type Object interface {
 	Filename() string
 	// BaseDirectory will return the parent directory of `Filename()`
 	BaseDirectory() string
+}
+
+var ErrMetadataFileNotFound = fmt.Errorf("metadata file not found")
+
+func ReadMetadataFile(filename string) ([]byte, error) {
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil && errors.Is(err, fs.ErrNotExist) {
+		return nil, ErrMetadataFileNotFound
+	}
+	return bytes, err
 }
 
 type ErrParsingMetadataObject interface {

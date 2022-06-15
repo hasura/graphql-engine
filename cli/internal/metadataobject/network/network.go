@@ -47,7 +47,7 @@ type networkObject struct {
 }
 
 func (o *NetworkObject) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(o.MetadataDir, o.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, o.error(err)
 	}

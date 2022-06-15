@@ -42,7 +42,7 @@ func (f *FunctionConfig) CreateFiles() error {
 }
 
 func (f *FunctionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, f.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(f.MetadataDir, f.Filename()))
 	if err != nil {
 		return nil, f.error(err)
 	}

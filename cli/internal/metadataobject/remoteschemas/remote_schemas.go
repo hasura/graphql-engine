@@ -55,7 +55,7 @@ func (r *RemoteSchemaConfig) CreateFiles() error {
 	return nil
 }
 func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(r.MetadataDir, r.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(r.MetadataDir, r.Filename()))
 	if err != nil {
 		return nil, r.error(err)
 	}
@@ -68,7 +68,7 @@ func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.Err
 }
 
 type remoteSchema struct {
-	Name                yaml.Node    `yaml:"name,omitempty"`
+	Name                interface{}  `yaml:"name,omitempty"`
 	Defintion           yaml.Node    `yaml:"definition,omitempty"`
 	Comment             yaml.Node    `yaml:"comment,omitempty"`
 	Permissions         []permission `yaml:"permissions,omitempty"`
@@ -76,8 +76,8 @@ type remoteSchema struct {
 }
 
 type permission struct {
-	Role       yaml.Node  `yaml:"role,omitempty"`
-	Definition definition `yaml:"definition,omitempty"`
+	Role       interface{} `yaml:"role,omitempty"`
+	Definition definition  `yaml:"definition,omitempty"`
 }
 
 type definition struct {

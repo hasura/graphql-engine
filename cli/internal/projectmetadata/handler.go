@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -115,7 +114,7 @@ func (h *Handler) buildMetadataMap() (map[string]interface{}, error) {
 	for _, object := range h.objects {
 		objectMetadata, err := object.Build()
 		if err != nil {
-			if errors.Is(err, fs.ErrNotExist) {
+			if errors.Is(err, metadataobject.ErrMetadataFileNotFound) {
 				h.logger.Debugf("metadata file for %s was not found, assuming an empty file", object.Key())
 				continue
 			}

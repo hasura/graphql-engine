@@ -43,7 +43,7 @@ func (t *TableConfig) CreateFiles() error {
 }
 
 func (t *TableConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, t.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(t.MetadataDir, t.Filename()))
 	if err != nil {
 		return nil, t.error(err)
 	}

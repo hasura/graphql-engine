@@ -50,7 +50,7 @@ func (a *VersionConfig) CreateFiles() error {
 }
 
 func (a *VersionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, a.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
 		return nil, a.error(err)
 	}
