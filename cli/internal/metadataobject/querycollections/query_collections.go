@@ -49,7 +49,7 @@ func (q *QueryCollectionConfig) CreateFiles() error {
 }
 
 func (q *QueryCollectionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, q.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(q.MetadataDir, q.Filename()))
 	if err != nil {
 		return nil, q.error(err)
 	}

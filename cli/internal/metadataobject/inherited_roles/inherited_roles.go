@@ -1,7 +1,6 @@
 package inheritedroles
 
 import (
-	"io/ioutil"
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
@@ -36,7 +35,7 @@ func (ir *InheritedRolesConfig) CreateFiles() error {
 }
 
 func (ir *InheritedRolesConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(ir.MetadataDir, ir.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(ir.MetadataDir, ir.Filename()))
 	if err != nil {
 		return nil, ir.error(err)
 	}

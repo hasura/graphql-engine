@@ -61,18 +61,38 @@ func (f *fragment) UnmarshalYAML(value *yaml.Node) error {
 	return err
 }
 
-var resolver = func(ctx map[string]string, node *yaml.Node, files *[]string) (*yaml.Node, error) {
-	if node.Kind != yaml.ScalarNode {
-		return nil, fmt.Errorf("found %s on scalar node", baseDirectoryKey)
+type YamlTagResolverError struct {
+	tag      string
+	file     string
+	err      error
+}
+
+func (e *YamlTagResolverError) Error() string {
+	if e.tag == "" {
+		return fmt.Sprintf("yaml tag resolver error: %s", e.err.Error())
 	}
+
+	return fmt.Sprintf(
+		"yaml tag resolver error:\ntag: %s\nfile: %s\nerror: %s",
+		e.tag,
+		e.file,
+		e.err.Error(),
+	)
+}
+
+func (e *YamlTagResolverError) Unwrap() error {
+	return e.err
+}
+
+var resolver = func(ctx map[string]string, node *yaml.Node, files *[]string) (*yaml.Node, error) {
 	baseDir, ok := ctx[baseDirectoryKey]
 	if !ok {
-		return nil, fmt.Errorf("parser error: base directory for !include tag not specified")
+		return nil, &YamlTagResolverError{"", "", fmt.Errorf("parser error: base directory for !include tag not specified")}
 	}
 	fileLocation := filepath.Join(baseDir, node.Value)
 	file, err := ioutil.ReadFile(fileLocation)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", fileLocation, err)
+		return nil, &YamlTagResolverError{node.Tag, fileLocation, err}
 	}
 	if files != nil {
 		*files = append(*files, fileLocation)
@@ -89,12 +109,23 @@ var resolver = func(ctx map[string]string, node *yaml.Node, files *[]string) (*y
 	var f = newFragment(newctx, files)
 	err = yaml.Unmarshal(file, f)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", fileLocation, err)
+		return nil, &YamlTagResolverError{node.Tag, fileLocation, err}
 	}
 	return f.content, nil
 }
 
 func resolveTags(ctx map[string]string, node *yaml.Node, files *[]string) (*yaml.Node, error) {
+	switch node.Kind {
+	case yaml.DocumentNode, yaml.SequenceNode, yaml.MappingNode:
+		var err error
+		for idx := range node.Content {
+			node.Content[idx], err = resolveTags(ctx, node.Content[idx], files)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	switch node.Tag {
 	case includeTag:
 		return resolver(ctx, node, files)
@@ -107,16 +138,6 @@ func resolveTags(ctx map[string]string, node *yaml.Node, files *[]string) (*yaml
 		}
 	}
 
-	switch node.Kind {
-	case yaml.DocumentNode, yaml.SequenceNode, yaml.MappingNode:
-		var err error
-		for idx := range node.Content {
-			node.Content[idx], err = resolveTags(ctx, node.Content[idx], files)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
 	return node, nil
 }
 

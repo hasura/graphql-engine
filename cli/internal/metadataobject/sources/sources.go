@@ -72,7 +72,7 @@ func (t *SourceConfig) CreateFiles() error {
 
 func (t *SourceConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
 	sourceFile := filepath.Join(t.MetadataDir, sourcesDirectory, t.Filename())
-	sourcesBytes, err := ioutil.ReadFile(sourceFile)
+	sourcesBytes, err := metadataobject.ReadMetadataFile(sourceFile)
 	if err != nil {
 		return nil, t.error(err)
 	}

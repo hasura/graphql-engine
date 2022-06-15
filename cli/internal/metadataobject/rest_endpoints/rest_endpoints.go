@@ -45,7 +45,7 @@ func (re *RestEndpointsConfig) CreateFiles() error {
 }
 
 func (re *RestEndpointsConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(re.MetadataDir, re.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(re.MetadataDir, re.Filename()))
 	if err != nil {
 		return nil, re.error(err)
 	}

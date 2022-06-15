@@ -15,6 +15,7 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 - console: add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)
 - console: add support for mssql event triggers
 - cli: fix perfomance regression with large metadata in `metadata apply`
+- cli: fix error reporting in `metadata apply` command (#8280)
 
 ## v2.8.0
 

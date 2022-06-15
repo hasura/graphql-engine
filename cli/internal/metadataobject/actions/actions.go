@@ -461,7 +461,7 @@ func (a *ActionConfig) BaseDirectory() string {
 }
 
 func (a *ActionConfig) GetActionsFileContent() (content types.Common, err error) {
-	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, a.Filename()))
+	commonByt, err := metadataobject.ReadMetadataFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
 		return
 	}
@@ -470,7 +470,7 @@ func (a *ActionConfig) GetActionsFileContent() (content types.Common, err error)
 }
 
 func (a *ActionConfig) GetActionsGraphQLFileContent() (sdl string, err error) {
-	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
+	commonByt, err := metadataobject.ReadMetadataFile(filepath.Join(a.MetadataDir, graphqlFileName))
 	if err != nil {
 		return
 	}

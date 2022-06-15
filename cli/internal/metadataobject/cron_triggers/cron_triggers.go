@@ -46,7 +46,7 @@ func (c *CronTriggers) CreateFiles() error {
 }
 
 func (c *CronTriggers) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
-	data, err := ioutil.ReadFile(filepath.Join(c.MetadataDir, c.Filename()))
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(c.MetadataDir, c.Filename()))
 	if err != nil {
 		return nil, c.error(err)
 	}
