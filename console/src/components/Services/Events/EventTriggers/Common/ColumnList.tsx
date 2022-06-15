@@ -2,6 +2,7 @@ import React from 'react';
 import { QualifiedTable } from '@/metadata/types';
 import { ETOperationColumn } from '../../types';
 import { ColumnSelectionRadioButton } from './ColumnSelectionRadioButton';
+import Button from '../../../../Common/Button';
 
 type ColumnListProps = {
   operationColumns: ETOperationColumn[];
@@ -36,6 +37,26 @@ const ColumnList: React.FC<ColumnListProps> = props => {
     handleOperationsColumnsChange(newCols);
   };
 
+  const handleSelectAllColumns = () => {
+    const newCols = operationColumns.map(o => {
+      return {
+        ...o,
+        enabled: true,
+      };
+    });
+    handleOperationsColumnsChange(newCols);
+  };
+
+  const handleUnselectAllColumns = () => {
+    const newCols = operationColumns.map(o => {
+      return {
+        ...o,
+        enabled: false,
+      };
+    });
+    handleOperationsColumnsChange(newCols);
+  };
+
   return (
     <>
       <ColumnSelectionRadioButton
@@ -47,6 +68,18 @@ const ColumnList: React.FC<ColumnListProps> = props => {
         {!isAllColumnChecked ? (
           <>
             <div>List of columns to select:</div>
+            <div className="flex space-x-2 mt-0.5">
+              <Button onClick={handleSelectAllColumns} color="white" size="sm">
+                Select all
+              </Button>
+              <Button
+                onClick={handleUnselectAllColumns}
+                color="white"
+                size="sm"
+              >
+                Unselect all
+              </Button>
+            </div>
             {operationColumns.map(opCol => (
               <div key={opCol.name} className="p-0 float-left mr-xl">
                 <div className="checkbox">
