@@ -1,0 +1,274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | HashMap to multiple values.</span><span>
+</span><span id="line-2"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.HashMap.Strict.Multi</span><span>
+</span><span id="line-3"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Type</span></span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier">MultiMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Construction and conversions</span></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#singleton"><span class="hs-identifier">singleton</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#fromMap"><span class="hs-identifier">fromMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#toMap"><span class="hs-identifier">toMap</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#fromList"><span class="hs-identifier">fromList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#toList"><span class="hs-identifier">toList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Basic interface</span></span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#lookup"><span class="hs-identifier">lookup</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#insert"><span class="hs-identifier">insert</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#keys"><span class="hs-identifier">keys</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#elems"><span class="hs-identifier">elems</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Hashable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromMaybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lookup</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- | Map from keys to sets of values</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">newtype</span><span> </span><span id="MultiMap"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span></span><span> </span><span id="local-6989586621689045936"><span class="annot"><a href="#local-6989586621689045936"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621689045935"><span class="annot"><a href="#local-6989586621689045935"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MultiMap"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unMultiMap"><span class="annot"><span class="annottext">MultiMap k v -&gt; HashMap k (Set v)
+</span><a href="Data.HashMap.Strict.Multi.html#unMultiMap"><span class="hs-identifier hs-var hs-var">unMultiMap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621689045936"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689045935"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689045865"><span id="local-6989586621689045867"><span class="annot"><span class="annottext">MultiMap k v -&gt; MultiMap k v -&gt; Bool
+(MultiMap k v -&gt; MultiMap k v -&gt; Bool)
+-&gt; (MultiMap k v -&gt; MultiMap k v -&gt; Bool) -&gt; Eq (MultiMap k v)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall k v. (Eq k, Eq v) =&gt; MultiMap k v -&gt; MultiMap k v -&gt; Bool
+/= :: MultiMap k v -&gt; MultiMap k v -&gt; Bool
+$c/= :: forall k v. (Eq k, Eq v) =&gt; MultiMap k v -&gt; MultiMap k v -&gt; Bool
+== :: MultiMap k v -&gt; MultiMap k v -&gt; Bool
+$c== :: forall k v. (Eq k, Eq v) =&gt; MultiMap k v -&gt; MultiMap k v -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689045858"><span id="local-6989586621689045860"><span id="local-6989586621689045862"><span class="annot"><span class="annottext">Int -&gt; MultiMap k v -&gt; ShowS
+[MultiMap k v] -&gt; ShowS
+MultiMap k v -&gt; String
+(Int -&gt; MultiMap k v -&gt; ShowS)
+-&gt; (MultiMap k v -&gt; String)
+-&gt; ([MultiMap k v] -&gt; ShowS)
+-&gt; Show (MultiMap k v)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall k v. (Show k, Show v) =&gt; Int -&gt; MultiMap k v -&gt; ShowS
+forall k v. (Show k, Show v) =&gt; [MultiMap k v] -&gt; ShowS
+forall k v. (Show k, Show v) =&gt; MultiMap k v -&gt; String
+showList :: [MultiMap k v] -&gt; ShowS
+$cshowList :: forall k v. (Show k, Show v) =&gt; [MultiMap k v] -&gt; ShowS
+show :: MultiMap k v -&gt; String
+$cshow :: forall k v. (Show k, Show v) =&gt; MultiMap k v -&gt; String
+showsPrec :: Int -&gt; MultiMap k v -&gt; ShowS
+$cshowsPrec :: forall k v. (Show k, Show v) =&gt; Int -&gt; MultiMap k v -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689045849"><span id="local-6989586621689045851"><span id="local-6989586621689045853"><span id="local-6989586621689045855"><span class="annot"><span class="annottext">[MultiMap k v] -&gt; Encoding
+[MultiMap k v] -&gt; Value
+MultiMap k v -&gt; Encoding
+MultiMap k v -&gt; Value
+(MultiMap k v -&gt; Value)
+-&gt; (MultiMap k v -&gt; Encoding)
+-&gt; ([MultiMap k v] -&gt; Value)
+-&gt; ([MultiMap k v] -&gt; Encoding)
+-&gt; ToJSON (MultiMap k v)
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+forall k v. (ToJSON v, ToJSONKey k) =&gt; [MultiMap k v] -&gt; Encoding
+forall k v. (ToJSON v, ToJSONKey k) =&gt; [MultiMap k v] -&gt; Value
+forall k v. (ToJSON v, ToJSONKey k) =&gt; MultiMap k v -&gt; Encoding
+forall k v. (ToJSON v, ToJSONKey k) =&gt; MultiMap k v -&gt; Value
+toEncodingList :: [MultiMap k v] -&gt; Encoding
+$ctoEncodingList :: forall k v. (ToJSON v, ToJSONKey k) =&gt; [MultiMap k v] -&gt; Encoding
+toJSONList :: [MultiMap k v] -&gt; Value
+$ctoJSONList :: forall k v. (ToJSON v, ToJSONKey k) =&gt; [MultiMap k v] -&gt; Value
+toEncoding :: MultiMap k v -&gt; Encoding
+$ctoEncoding :: forall k v. (ToJSON v, ToJSONKey k) =&gt; MultiMap k v -&gt; Encoding
+toJSON :: MultiMap k v -&gt; Value
+$ctoJSON :: forall k v. (ToJSON v, ToJSONKey k) =&gt; MultiMap k v -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span id="local-6989586621689045846"><span id="local-6989586621689045847"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689045841"><span id="local-6989586621689045843"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689045847"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689045847"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689045846"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045847"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045846"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span id="local-6989586621689045839"><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045839"><span class="hs-identifier hs-var">m0</span></a></span></span><span> </span><span id="local-6989586621689045838"><span class="annot"><span class="annottext">&lt;&gt; :: MultiMap k v -&gt; MultiMap k v -&gt; MultiMap k v
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span id="local-6989586621689045837"><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045837"><span class="hs-identifier hs-var">m1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; MultiMap k v
+forall k v. HashMap k (Set v) -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap k (Set v) -&gt; MultiMap k v)
+-&gt; HashMap k (Set v) -&gt; MultiMap k v
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Set v -&gt; Set v -&gt; Set v)
+-&gt; HashMap k (Set v) -&gt; HashMap k (Set v) -&gt; HashMap k (Set v)
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; HashMap k v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">M.unionWith</span></span><span> </span><span class="annot"><span class="annottext">Set v -&gt; Set v -&gt; Set v
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.union</span></span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045839"><span class="hs-identifier hs-var">m0</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045837"><span class="hs-identifier hs-var">m1</span></a></span></span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span id="local-6989586621689045833"><span id="local-6989586621689045834"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689045827"><span id="local-6989586621689045829"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689045834"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689045834"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689045833"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045834"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045833"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621689045825"><span class="annot"><span class="annottext">mempty :: MultiMap k v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; MultiMap k v
+forall k v. HashMap k (Set v) -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v)
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span></span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- | Construct a 'MmultiMap' with a single key, to which only one</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- value is associated.</span><span>
+</span><span id="line-46"></span><span id="local-6989586621689045823"><span id="local-6989586621689045824"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#singleton"><span class="hs-identifier hs-type">singleton</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689045824"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689045824"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689045823"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045824"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045823"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
+</span><span id="line-47"></span><span id="singleton"><span class="annot"><span class="annottext">singleton :: k -&gt; v -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#singleton"><span class="hs-identifier hs-var hs-var">singleton</span></a></span></span><span> </span><span id="local-6989586621689045822"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689045822"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621689045821"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689045821"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; MultiMap k v
+forall k v. HashMap k (Set v) -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap k (Set v) -&gt; MultiMap k v)
+-&gt; HashMap k (Set v) -&gt; MultiMap k v
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">k -&gt; Set v -&gt; HashMap k (Set v)
+forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">M.singleton</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689045822"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">v -&gt; Set v
+forall a. a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.singleton</span></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689045821"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- | Construct a 'MultiMap' with the supplied mappings.</span><span>
+</span><span id="line-50"></span><span id="local-6989586621689045817"><span id="local-6989586621689045818"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#fromMap"><span class="hs-identifier hs-type">fromMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621689045818"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689045817"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045818"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045817"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
+</span><span id="line-51"></span><span id="fromMap"><span class="annot"><span class="annottext">fromMap :: HashMap k (Set v) -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#fromMap"><span class="hs-identifier hs-var hs-var">fromMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; MultiMap k v
+forall k v. HashMap k (Set v) -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- | Convert a 'MultiMap' to a 'HashMap'.</span><span>
+</span><span id="line-54"></span><span id="local-6989586621689045815"><span id="local-6989586621689045816"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#toMap"><span class="hs-identifier hs-type">toMap</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045816"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045815"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><a href="#local-6989586621689045816"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689045815"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-55"></span><span id="toMap"><span class="annot"><span class="annottext">toMap :: MultiMap k v -&gt; HashMap k (Set v)
+</span><a href="Data.HashMap.Strict.Multi.html#toMap"><span class="hs-identifier hs-var hs-var">toMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MultiMap k v -&gt; HashMap k (Set v)
+forall k v. MultiMap k v -&gt; HashMap k (Set v)
+</span><a href="Data.HashMap.Strict.Multi.html#unMultiMap"><span class="hs-identifier hs-var hs-var">unMultiMap</span></a></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Creates a 'MultiMap' from an association list.</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- If the provided list constains duplicate mappings, the resulting</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- 'MultiMap' will store the set of all mapped values for each</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- duplicate key.</span><span>
+</span><span id="line-62"></span><span id="local-6989586621689045813"><span id="local-6989586621689045814"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#fromList"><span class="hs-identifier hs-type">fromList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689045814"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689045814"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689045813"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689045814"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621689045813"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045814"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045813"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
+</span><span id="line-63"></span><span id="fromList"><span class="annot"><span class="annottext">fromList :: [(k, v)] -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#fromList"><span class="hs-identifier hs-var hs-var">fromList</span></a></span></span><span> </span><span id="local-6989586621689045812"><span class="annot"><span class="annottext">[(k, v)]
+</span><a href="#local-6989586621689045812"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; MultiMap k v
+forall k v. HashMap k (Set v) -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap k (Set v) -&gt; MultiMap k v)
+-&gt; HashMap k (Set v) -&gt; MultiMap k v
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Set v -&gt; Set v -&gt; Set v) -&gt; [(k, Set v)] -&gt; HashMap k (Set v)
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">M.fromListWith</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set v -&gt; Set v -&gt; Set v
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.union</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([(k, Set v)] -&gt; HashMap k (Set v))
+-&gt; [(k, Set v)] -&gt; HashMap k (Set v)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((k, v) -&gt; (k, Set v)) -&gt; [(k, v)] -&gt; [(k, Set v)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(v -&gt; Set v) -&gt; (k, v) -&gt; (k, Set v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; Set v
+forall a. a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.singleton</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(k, v)]
+</span><a href="#local-6989586621689045812"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- | Creates an association list from a 'MultiMap'.</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- Each set of values associated with a given key is transformed back</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- into a list.</span><span>
+</span><span id="line-69"></span><span id="local-6989586621689045809"><span id="local-6989586621689045810"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#toList"><span class="hs-identifier hs-type">toList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045810"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045809"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689045810"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689045809"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-70"></span><span id="toList"><span class="annot"><span class="annottext">toList :: MultiMap k v -&gt; [(k, [v])]
+</span><a href="Data.HashMap.Strict.Multi.html#toList"><span class="hs-identifier hs-var hs-var">toList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span id="local-6989586621689045808"><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045808"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k [v] -&gt; [(k, [v])]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">(HashMap k [v] -&gt; [(k, [v])]) -&gt; HashMap k [v] -&gt; [(k, [v])]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Set v -&gt; [v]) -&gt; HashMap k (Set v) -&gt; HashMap k [v]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set v -&gt; [v]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">S.toList</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045808"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- | Return the value to which the specified key is mapped, or 'Nothing' if</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- this map contains no mapping for the key.</span><span>
+</span><span id="line-76"></span><span id="local-6989586621689045804"><span id="local-6989586621689045805"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#lookup"><span class="hs-identifier hs-type">lookup</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689045805"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689045805"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689045805"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045805"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045804"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689045804"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
+</span><span id="line-77"></span><span id="lookup"><span class="annot"><span class="annottext">lookup :: k -&gt; MultiMap k v -&gt; Set v
+</span><a href="Data.HashMap.Strict.Multi.html#lookup"><span class="hs-identifier hs-var hs-var">lookup</span></a></span></span><span> </span><span id="local-6989586621689045803"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689045803"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span id="local-6989586621689045802"><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045802"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set v -&gt; Maybe (Set v) -&gt; Set v
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Set v
+forall a. Set a
+</span><span class="hs-identifier hs-var">S.empty</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (Set v) -&gt; Set v) -&gt; Maybe (Set v) -&gt; Set v
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">k -&gt; HashMap k (Set v) -&gt; Maybe (Set v)
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689045803"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045802"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- | Associate the specified value with the specified key in this map.</span><span>
+</span><span id="line-80"></span><span class="hs-comment">--</span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- If this map previously contained a mapping for the key, the new value is</span><span>
+</span><span id="line-82"></span><span class="hs-comment">-- inserted in the set, and does not replace the previous mapping.</span><span>
+</span><span id="line-83"></span><span id="local-6989586621689045798"><span id="local-6989586621689045799"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#insert"><span class="hs-identifier hs-type">insert</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689045799"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689045799"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689045798"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689045799"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689045798"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045799"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045798"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045799"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045798"><span class="hs-identifier hs-type">v</span></a></span></span></span><span>
+</span><span id="line-84"></span><span id="insert"><span class="annot"><span class="annottext">insert :: k -&gt; v -&gt; MultiMap k v -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#insert"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621689045797"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689045797"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621689045796"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689045796"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span id="local-6989586621689045795"><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045795"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; MultiMap k v
+forall k v. HashMap k (Set v) -&gt; MultiMap k v
+</span><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-var">MultiMap</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap k (Set v) -&gt; MultiMap k v)
+-&gt; HashMap k (Set v) -&gt; MultiMap k v
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Set v -&gt; Set v -&gt; Set v)
+-&gt; k -&gt; Set v -&gt; HashMap k (Set v) -&gt; HashMap k (Set v)
+forall k v.
+(Eq k, Hashable k) =&gt;
+(v -&gt; v -&gt; v) -&gt; k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">M.insertWith</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set v -&gt; Set v -&gt; Set v
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.union</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689045797"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">v -&gt; Set v
+forall a. a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.singleton</span></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689045796"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v)
+</span><a href="#local-6989586621689045795"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- | Returns a list of this map's keys.</span><span>
+</span><span id="line-87"></span><span id="local-6989586621689045792"><span id="local-6989586621689045793"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#keys"><span class="hs-identifier hs-type">keys</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045793"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045792"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689045793"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-88"></span><span id="keys"><span class="annot"><span class="annottext">keys :: MultiMap k v -&gt; [k]
+</span><a href="Data.HashMap.Strict.Multi.html#keys"><span class="hs-identifier hs-var hs-var">keys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; [k]
+forall k v. HashMap k v -&gt; [k]
+</span><span class="hs-identifier hs-var">M.keys</span></span><span> </span><span class="annot"><span class="annottext">(HashMap k (Set v) -&gt; [k])
+-&gt; (MultiMap k v -&gt; HashMap k (Set v)) -&gt; MultiMap k v -&gt; [k]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MultiMap k v -&gt; HashMap k (Set v)
+forall k v. MultiMap k v -&gt; HashMap k (Set v)
+</span><a href="Data.HashMap.Strict.Multi.html#unMultiMap"><span class="hs-identifier hs-var hs-var">unMultiMap</span></a></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- | Returns a list of this map's set of values.</span><span>
+</span><span id="line-91"></span><span id="local-6989586621689045788"><span id="local-6989586621689045789"><span class="annot"><a href="Data.HashMap.Strict.Multi.html#elems"><span class="hs-identifier hs-type">elems</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045789"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689045788"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689045788"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-92"></span><span id="elems"><span class="annot"><span class="annottext">elems :: MultiMap k v -&gt; [Set v]
+</span><a href="Data.HashMap.Strict.Multi.html#elems"><span class="hs-identifier hs-var hs-var">elems</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap k (Set v) -&gt; [Set v]
+forall k v. HashMap k v -&gt; [v]
+</span><span class="hs-identifier hs-var">M.elems</span></span><span> </span><span class="annot"><span class="annottext">(HashMap k (Set v) -&gt; [Set v])
+-&gt; (MultiMap k v -&gt; HashMap k (Set v)) -&gt; MultiMap k v -&gt; [Set v]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MultiMap k v -&gt; HashMap k (Set v)
+forall k v. MultiMap k v -&gt; HashMap k (Set v)
+</span><a href="Data.HashMap.Strict.Multi.html#unMultiMap"><span class="hs-identifier hs-var hs-var">unMultiMap</span></a></span><span>
+</span><span id="line-93"></span></pre></body></html>
