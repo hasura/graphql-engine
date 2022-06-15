@@ -25572,7 +25572,14 @@ defaultFromIrConfig :: FromIrConfig
 --         `title`,
 --         `content`
 --       FROM
---         `hasura_test`.`fetch_articles`(`id` =&gt; `t_author1`.`id`)
+--         UNNEST(
+--           ARRAY(
+--             SELECT
+--               AS STRUCT *
+--             FROM `hasura_test`.`fetch_articles`(`id` =&gt; `t_author1`.`id`)
+--           )
+--         )
+--         LIMIT 1000
 --     ) AS `articles`
 --   FROM
 --     `hasura_test`.`author` AS `t_author1`
@@ -25701,15 +25708,29 @@ fromArraySelectG :: ArraySelectG 'BigQuery Void Expression -> ReaderT EntityAlia
 --   
 --   <pre>
 --   ARRAY(
---       SELECT
---         AS STRUCT
---         `column_1`,
---         `column_2``,
---         `column_3`
---       FROM
---         `dataset`.`function_name`(`argument_name` =&gt; `parent_entity`.`column`)
---     ) AS `field_name`
+--     SELECT
+--       AS STRUCT
+--       `column_1`,
+--       `column_2`,
+--       `column_3`
+--     FROM
+--       UNNEST(
+--         ARRAY(
+--             SELECT AS STRUCT *
+--             FROM `dataset`.`function_name`(`argument_name` =&gt; `parent_entity`.`column`)
+--         )
+--       )
+--     LIMIT 1000 -- global limit
+--   ) AS `field_name`
 --   </pre>
+--   
+--   Using <tt>LIMIT</tt> right after 'FROM <a>function</a>' expression
+--   raises query exception. To avoid this problem, we are packing and
+--   unpacking the rows returned from the function using <tt>ARRAY</tt> and
+--   <tt>UNNEST</tt>, then applying LIMIT. Somehow this is working with
+--   exact reason being unknown. See
+--   <a>https://github.com/hasura/graphql-engine/issues/8562</a> for more
+--   details.
 fromComputedFieldSelect :: ComputedFieldSelect 'BigQuery Void Expression -> ReaderT EntityAlias FromIr Expression
 
 -- | Produce the join for an array aggregate relation. We produce a normal
