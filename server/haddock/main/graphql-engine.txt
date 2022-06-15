@@ -27491,7 +27491,6 @@ PlanningSt :: !Int -> !PlanVariables -> !PrepArgMap -> PlanningSt
 initPlanningSt :: PlanningSt
 prepareWithPlan :: (MonadState PlanningSt m, MonadError QErr m) => UserInfo -> UnpreparedValue ('Postgres pgKind) -> m SQLExp
 prepareWithoutPlan :: MonadError QErr m => UserInfo -> UnpreparedValue ('Postgres pgKind) -> m SQLExp
-resolveUnpreparedValue :: MonadError QErr m => UserInfo -> UnpreparedValue ('Postgres pgKind) -> m SQLExp
 withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 getVarArgNum :: MonadState PlanningSt m => Name -> m Int
 addPrepArg :: MonadState PlanningSt m => Int -> (PrepArg, PGScalarValue) -> m ()
