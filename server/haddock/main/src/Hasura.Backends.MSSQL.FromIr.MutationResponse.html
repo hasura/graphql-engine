@@ -34,13 +34,13 @@
 </span><span id="line-34"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.html#FromIr"><span class="hs-identifier hs-type">FromIr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span>
 </span><span id="line-35"></span><span id="mkMutationOutputSelect"><span class="annot"><span class="annottext">mkMutationOutputSelect :: StringifyNumbers
 -&gt; Text -&gt; MutationOutputG 'MSSQL Void Expression -&gt; FromIr Select
-</span><a href="Hasura.Backends.MSSQL.FromIr.MutationResponse.html#mkMutationOutputSelect"><span class="hs-identifier hs-var hs-var">mkMutationOutputSelect</span></a></span></span><span> </span><span id="local-6989586621689191043"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689191043"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621689191042"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689191042"><span class="hs-identifier hs-var">withAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MOutMultirowFields"><span class="hs-identifier hs-type">IR.MOutMultirowFields</span></a></span><span> </span><span id="local-6989586621689191040"><span class="annot"><span class="annottext">MutFldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191040"><span class="hs-identifier hs-var">multiRowFields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621689191039"><span class="annot"><span class="annottext">[Projection]
-</span><a href="#local-6989586621689191039"><span class="hs-identifier hs-var">projections</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MutFldsG 'MSSQL Void Expression
+</span><a href="Hasura.Backends.MSSQL.FromIr.MutationResponse.html#mkMutationOutputSelect"><span class="hs-identifier hs-var hs-var">mkMutationOutputSelect</span></a></span></span><span> </span><span id="local-6989586621689197890"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689197890"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621689197889"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197889"><span class="hs-identifier hs-var">withAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MOutMultirowFields"><span class="hs-identifier hs-type">IR.MOutMultirowFields</span></a></span><span> </span><span id="local-6989586621689197887"><span class="annot"><span class="annottext">MutFldsG 'MSSQL Void Expression
+</span><a href="#local-6989586621689197887"><span class="hs-identifier hs-var">multiRowFields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621689197886"><span class="annot"><span class="annottext">[Projection]
+</span><a href="#local-6989586621689197886"><span class="hs-identifier hs-var">projections</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MutFldsG 'MSSQL Void Expression
 -&gt; ((FieldName, MutFldG 'MSSQL Void Expression)
     -&gt; FromIr Projection)
 -&gt; FromIr [Projection]
@@ -48,17 +48,17 @@ forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">MutFldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191040"><span class="hs-identifier hs-var">multiRowFields</span></a></span><span> </span><span class="annot"><span class="annottext">(((FieldName, MutFldG 'MSSQL Void Expression) -&gt; FromIr Projection)
+</span><a href="#local-6989586621689197887"><span class="hs-identifier hs-var">multiRowFields</span></a></span><span> </span><span class="annot"><span class="annottext">(((FieldName, MutFldG 'MSSQL Void Expression) -&gt; FromIr Projection)
  -&gt; FromIr [Projection])
 -&gt; ((FieldName, MutFldG 'MSSQL Void Expression)
     -&gt; FromIr Projection)
 -&gt; FromIr [Projection]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689191037"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689191037"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689191036"><span class="annot"><span class="annottext">MutFldG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191036"><span class="hs-identifier hs-var">field'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-38"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689191035"><span class="annot"><span class="annottext">mkProjection :: Select -&gt; Projection
-</span><a href="#local-6989586621689191035"><span class="hs-identifier hs-var hs-var">mkProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689197884"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689197884"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689197883"><span class="annot"><span class="annottext">MutFldG 'MSSQL Void Expression
+</span><a href="#local-6989586621689197883"><span class="hs-identifier hs-var">field'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-38"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197882"><span class="annot"><span class="annottext">mkProjection :: Select -&gt; Projection
+</span><a href="#local-6989586621689197882"><span class="hs-identifier hs-var hs-var">mkProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExpressionProjection"><span class="hs-identifier hs-var">ExpressionProjection</span></a></span><span> </span><span class="annot"><span class="annottext">(Aliased Expression -&gt; Projection)
 -&gt; (Select -&gt; Aliased Expression) -&gt; Select -&gt; Projection
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -69,38 +69,38 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var hs-var">IR.getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689191037"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Aliased Expression)
+</span><a href="#local-6989586621689197884"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Aliased Expression)
 -&gt; (Select -&gt; Expression) -&gt; Select -&gt; Aliased Expression
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Select -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#SelectExpression"><span class="hs-identifier hs-var">SelectExpression</span></a></span><span>
 </span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">Select -&gt; Projection
-</span><a href="#local-6989586621689191035"><span class="hs-identifier hs-var">mkProjection</span></a></span><span> </span><span class="annot"><span class="annottext">(Select -&gt; Projection) -&gt; FromIr Select -&gt; FromIr Projection
+</span><a href="#local-6989586621689197882"><span class="hs-identifier hs-var">mkProjection</span></a></span><span> </span><span class="annot"><span class="annottext">(Select -&gt; Projection) -&gt; FromIr Select -&gt; FromIr Projection
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MutFldG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191036"><span class="hs-identifier hs-var">field'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689197883"><span class="hs-identifier hs-var">field'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">MutFldG 'MSSQL Void Expression
 </span><a href="Hasura.RQL.IR.Returning.html#MCount"><span class="hs-identifier hs-var">IR.MCount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Select -&gt; FromIr Select
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Select -&gt; FromIr Select) -&gt; Select -&gt; FromIr Select
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689191026"><span class="hs-identifier hs-var">countSelect</span></a></span><span>
-</span><span id="line-41"></span><span>        </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MExp"><span class="hs-identifier hs-type">IR.MExp</span></a></span><span> </span><span id="local-6989586621689191024"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689191024"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Select -&gt; FromIr Select
+</span><a href="#local-6989586621689197873"><span class="hs-identifier hs-var">countSelect</span></a></span><span>
+</span><span id="line-41"></span><span>        </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MExp"><span class="hs-identifier hs-type">IR.MExp</span></a></span><span> </span><span id="local-6989586621689197871"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197871"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Select -&gt; FromIr Select
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Select -&gt; FromIr Select) -&gt; Select -&gt; FromIr Select
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Select
-</span><a href="#local-6989586621689191023"><span class="hs-identifier hs-var">textSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689191024"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-42"></span><span>        </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MRet"><span class="hs-identifier hs-type">IR.MRet</span></a></span><span> </span><span id="local-6989586621689191021"><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191021"><span class="hs-identifier hs-var">returningFields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JsonAggSelect -&gt; AnnFieldsG 'MSSQL Void Expression -&gt; FromIr Select
-</span><a href="#local-6989586621689191020"><span class="hs-identifier hs-var">mkSelect</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
+</span><a href="#local-6989586621689197870"><span class="hs-identifier hs-var">textSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197871"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MRet"><span class="hs-identifier hs-type">IR.MRet</span></a></span><span> </span><span id="local-6989586621689197868"><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
+</span><a href="#local-6989586621689197868"><span class="hs-identifier hs-var">returningFields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JsonAggSelect -&gt; AnnFieldsG 'MSSQL Void Expression -&gt; FromIr Select
+</span><a href="#local-6989586621689197867"><span class="hs-identifier hs-var">mkSelect</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASMultipleRows"><span class="hs-identifier hs-var">IR.JASMultipleRows</span></a></span><span> </span><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191021"><span class="hs-identifier hs-var">returningFields</span></a></span><span>
-</span><span id="line-43"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689191018"><span class="annot"><span class="annottext">forJson :: For
-</span><a href="#local-6989586621689191018"><span class="hs-identifier hs-var hs-var">forJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ForJson -&gt; For
+</span><a href="#local-6989586621689197868"><span class="hs-identifier hs-var">returningFields</span></a></span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197865"><span class="annot"><span class="annottext">forJson :: For
+</span><a href="#local-6989586621689197865"><span class="hs-identifier hs-var hs-var">forJson</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ForJson -&gt; For
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#JsonFor"><span class="hs-identifier hs-var">JsonFor</span></a></span><span> </span><span class="annot"><span class="annottext">(ForJson -&gt; For) -&gt; ForJson -&gt; For
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JsonCardinality -&gt; Root -&gt; ForJson
@@ -111,26 +111,26 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:selectFor:Select :: For
-</span><a href="#local-6989586621689191012"><span class="hs-identifier hs-var">selectFor</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">For
-</span><a href="#local-6989586621689191018"><span class="hs-identifier hs-var">forJson</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
+</span><a href="#local-6989586621689197859"><span class="hs-identifier hs-var">selectFor</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">For
+</span><a href="#local-6989586621689197865"><span class="hs-identifier hs-var">forJson</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectProjections%3ASelect"><span class="hs-identifier hs-var">selectProjections</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Projection]
-</span><a href="#local-6989586621689191039"><span class="hs-identifier hs-var">projections</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MOutSinglerowObject"><span class="hs-identifier hs-type">IR.MOutSinglerowObject</span></a></span><span> </span><span id="local-6989586621689191009"><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191009"><span class="hs-identifier hs-var">singleRowField</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JsonAggSelect -&gt; AnnFieldsG 'MSSQL Void Expression -&gt; FromIr Select
-</span><a href="#local-6989586621689191020"><span class="hs-identifier hs-var">mkSelect</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
+</span><a href="#local-6989586621689197886"><span class="hs-identifier hs-var">projections</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Returning.html#MOutSinglerowObject"><span class="hs-identifier hs-type">IR.MOutSinglerowObject</span></a></span><span> </span><span id="local-6989586621689197856"><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
+</span><a href="#local-6989586621689197856"><span class="hs-identifier hs-var">singleRowField</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JsonAggSelect -&gt; AnnFieldsG 'MSSQL Void Expression -&gt; FromIr Select
+</span><a href="#local-6989586621689197867"><span class="hs-identifier hs-var">mkSelect</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASSingleObject"><span class="hs-identifier hs-var">IR.JASSingleObject</span></a></span><span> </span><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191009"><span class="hs-identifier hs-var">singleRowField</span></a></span><span>
+</span><a href="#local-6989586621689197856"><span class="hs-identifier hs-var">singleRowField</span></a></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><a href="#local-6989586621689191020"><span class="hs-identifier hs-type">mkSelect</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="#local-6989586621689197867"><span class="hs-identifier hs-type">mkSelect</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-48"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#JsonAggSelect"><span class="hs-identifier hs-type">IR.JsonAggSelect</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-49"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">IR.Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnFieldG"><span class="hs-identifier hs-type">IR.AnnFieldG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-50"></span><span>      </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.html#FromIr"><span class="hs-identifier hs-type">FromIr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621689191020"><span class="annot"><span class="annottext">mkSelect :: JsonAggSelect -&gt; AnnFieldsG 'MSSQL Void Expression -&gt; FromIr Select
-</span><a href="#local-6989586621689191020"><span class="hs-identifier hs-var hs-var">mkSelect</span></a></span></span><span> </span><span id="local-6989586621689191007"><span class="annot"><span class="annottext">JsonAggSelect
-</span><a href="#local-6989586621689191007"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span></span><span> </span><span id="local-6989586621689191006"><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191006"><span class="hs-identifier hs-var">annFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-52"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689191005"><span class="annot"><span class="annottext">annSelect :: AnnSelectG 'MSSQL (AnnFieldG 'MSSQL Void) Expression
-</span><a href="#local-6989586621689191005"><span class="hs-identifier hs-var hs-var">annSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621689197867"><span class="annot"><span class="annottext">mkSelect :: JsonAggSelect -&gt; AnnFieldsG 'MSSQL Void Expression -&gt; FromIr Select
+</span><a href="#local-6989586621689197867"><span class="hs-identifier hs-var hs-var">mkSelect</span></a></span></span><span> </span><span id="local-6989586621689197854"><span class="annot"><span class="annottext">JsonAggSelect
+</span><a href="#local-6989586621689197854"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span></span><span> </span><span id="local-6989586621689197853"><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
+</span><a href="#local-6989586621689197853"><span class="hs-identifier hs-var">annFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197852"><span class="annot"><span class="annottext">annSelect :: AnnSelectG 'MSSQL (AnnFieldG 'MSSQL Void) Expression
+</span><a href="#local-6989586621689197852"><span class="hs-identifier hs-var hs-var">annSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
 -&gt; SelectFromG 'MSSQL Expression
 -&gt; TablePermG 'MSSQL Expression
 -&gt; SelectArgsG 'MSSQL Expression
@@ -144,32 +144,32 @@ Fields (f v)
 -&gt; StringifyNumbers
 -&gt; AnnSelectG b f v
 </span><a href="Hasura.RQL.IR.Select.html#AnnSelectG"><span class="hs-identifier hs-var">IR.AnnSelectG</span></a></span><span> </span><span class="annot"><span class="annottext">AnnFieldsG 'MSSQL Void Expression
-</span><a href="#local-6989586621689191006"><span class="hs-identifier hs-var">annFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FIIdentifier -&gt; SelectFromG 'MSSQL Expression
+</span><a href="#local-6989586621689197853"><span class="hs-identifier hs-var">annFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FIIdentifier -&gt; SelectFromG 'MSSQL Expression
 forall (b :: BackendType) v. FIIdentifier -&gt; SelectFromG b v
 </span><a href="Hasura.RQL.IR.Select.html#FromIdentifier"><span class="hs-identifier hs-var">IR.FromIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">(FIIdentifier -&gt; SelectFromG 'MSSQL Expression)
 -&gt; FIIdentifier -&gt; SelectFromG 'MSSQL Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; FIIdentifier
 </span><a href="Hasura.RQL.IR.Select.html#FIIdentifier"><span class="hs-identifier hs-var">IR.FIIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689191042"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TablePermG 'MSSQL Expression
+</span><a href="#local-6989586621689197889"><span class="hs-identifier hs-var">withAlias</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TablePermG 'MSSQL Expression
 forall (backend :: BackendType) v. TablePermG backend v
 </span><a href="Hasura.RQL.IR.Select.html#noTablePermissions"><span class="hs-identifier hs-var">IR.noTablePermissions</span></a></span><span> </span><span class="annot"><span class="annottext">SelectArgsG 'MSSQL Expression
 forall (backend :: BackendType) v. SelectArgsG backend v
 </span><a href="Hasura.RQL.IR.Select.html#noSelectArgs"><span class="hs-identifier hs-var">IR.noSelectArgs</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689191043"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span>
+</span><a href="#local-6989586621689197890"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span>
 </span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">JsonAggSelect
 -&gt; AnnSelectG 'MSSQL (AnnFieldG 'MSSQL Void) Expression
 -&gt; FromIr Select
 </span><a href="Hasura.Backends.MSSQL.FromIr.Query.html#fromSelect"><span class="hs-identifier hs-var">fromSelect</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
-</span><a href="#local-6989586621689191007"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span><span> </span><span class="annot"><span class="annottext">AnnSelectG 'MSSQL (AnnFieldG 'MSSQL Void) Expression
-</span><a href="#local-6989586621689191005"><span class="hs-identifier hs-var">annSelect</span></a></span><span>
+</span><a href="#local-6989586621689197854"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span><span> </span><span class="annot"><span class="annottext">AnnSelectG 'MSSQL (AnnFieldG 'MSSQL Void) Expression
+</span><a href="#local-6989586621689197852"><span class="hs-identifier hs-var">annSelect</span></a></span><span>
 </span><span id="line-54"></span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-comment">-- SELECT COUNT(*) AS &quot;count&quot; FROM [with_alias]</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><a href="#local-6989586621689191026"><span class="hs-identifier hs-type">countSelect</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span>
-</span><span id="line-57"></span><span>    </span><span id="local-6989586621689191026"><span class="annot"><span class="annottext">countSelect :: Select
-</span><a href="#local-6989586621689191026"><span class="hs-identifier hs-var hs-var">countSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-58"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689190999"><span class="annot"><span class="annottext">countProjection :: Projection
-</span><a href="#local-6989586621689190999"><span class="hs-identifier hs-var hs-var">countProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Aliased Aggregate -&gt; Projection
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="#local-6989586621689197873"><span class="hs-identifier hs-type">countSelect</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621689197873"><span class="annot"><span class="annottext">countSelect :: Select
+</span><a href="#local-6989586621689197873"><span class="hs-identifier hs-var hs-var">countSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-58"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197846"><span class="annot"><span class="annottext">countProjection :: Projection
+</span><a href="#local-6989586621689197846"><span class="hs-identifier hs-var hs-var">countProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Aliased Aggregate -&gt; Projection
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#AggregateProjection"><span class="hs-identifier hs-var">AggregateProjection</span></a></span><span> </span><span class="annot"><span class="annottext">(Aliased Aggregate -&gt; Projection)
 -&gt; Aliased Aggregate -&gt; Projection
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -184,7 +184,7 @@ forall name. Countable name
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span>
 </span><span id="line-60"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectProjections%3ASelect"><span class="hs-identifier hs-var">selectProjections</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Projection
-</span><a href="#local-6989586621689190999"><span class="hs-identifier hs-var">countProjection</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689197846"><span class="hs-identifier hs-var">countProjection</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-61"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectFrom:Select :: Maybe From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectFrom%3ASelect"><span class="hs-identifier hs-var">selectFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">From -&gt; Maybe From
 forall a. a -&gt; Maybe a
@@ -192,16 +192,16 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FromIdentifier"><span class="hs-identifier hs-var">TSQL.FromIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689191042"><span class="hs-identifier hs-var">withAlias</span></a></span><span>
+</span><a href="#local-6989586621689197889"><span class="hs-identifier hs-var">withAlias</span></a></span><span>
 </span><span id="line-62"></span><span>            </span><span class="hs-special">}</span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span>    </span><span class="hs-comment">-- SELECT '&lt;text-value&gt;' AS &quot;exp&quot;</span><span>
-</span><span id="line-65"></span><span>    </span><span class="annot"><a href="#local-6989586621689191023"><span class="hs-identifier hs-type">textSelect</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span>
-</span><span id="line-66"></span><span>    </span><span id="local-6989586621689191023"><span class="annot"><span class="annottext">textSelect :: Text -&gt; Select
-</span><a href="#local-6989586621689191023"><span class="hs-identifier hs-var hs-var">textSelect</span></a></span></span><span> </span><span id="local-6989586621689190993"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190993"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-67"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689190992"><span class="annot"><span class="annottext">textProjection :: Projection
-</span><a href="#local-6989586621689190992"><span class="hs-identifier hs-var hs-var">textProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
+</span><span id="line-65"></span><span>    </span><span class="annot"><a href="#local-6989586621689197870"><span class="hs-identifier hs-type">textSelect</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span>
+</span><span id="line-66"></span><span>    </span><span id="local-6989586621689197870"><span class="annot"><span class="annottext">textSelect :: Text -&gt; Select
+</span><a href="#local-6989586621689197870"><span class="hs-identifier hs-var hs-var">textSelect</span></a></span></span><span> </span><span id="local-6989586621689197840"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197840"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197839"><span class="annot"><span class="annottext">textProjection :: Projection
+</span><a href="#local-6989586621689197839"><span class="hs-identifier hs-var hs-var">textProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExpressionProjection"><span class="hs-identifier hs-var">ExpressionProjection</span></a></span><span> </span><span class="annot"><span class="annottext">(Aliased Expression -&gt; Projection)
 -&gt; Aliased Expression -&gt; Projection
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -210,12 +210,12 @@ forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190993"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197840"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;exp&quot;</span></span><span>
 </span><span id="line-68"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectProjections%3ASelect"><span class="hs-identifier hs-var">selectProjections</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Projection
-</span><a href="#local-6989586621689190992"><span class="hs-identifier hs-var">textProjection</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689197839"><span class="hs-identifier hs-var">textProjection</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="hs-comment">-- | Generate a SQL SELECT statement which outputs both mutation response and</span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- check constraint result.</span><span>
@@ -251,12 +251,12 @@ forall a. a -&gt; Text -&gt; Aliased a
 </span><span id="line-101"></span><span class="hs-comment">--  &gt;     (&lt;check_constraint_select&gt;) AS [check_constraint_select]</span><span>
 </span><span id="line-102"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.MutationResponse.html#selectMutationOutputAndCheckCondition"><span class="hs-identifier hs-type">selectMutationOutputAndCheckCondition</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span>
 </span><span id="line-103"></span><span id="selectMutationOutputAndCheckCondition"><span class="annot"><span class="annottext">selectMutationOutputAndCheckCondition :: Text -&gt; Select -&gt; Expression -&gt; Select
-</span><a href="Hasura.Backends.MSSQL.FromIr.MutationResponse.html#selectMutationOutputAndCheckCondition"><span class="hs-identifier hs-var hs-var">selectMutationOutputAndCheckCondition</span></a></span></span><span> </span><span id="local-6989586621689190989"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190989"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621689190988"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689190988"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span></span><span> </span><span id="local-6989586621689190987"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689190987"><span class="hs-identifier hs-var">checkBoolExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-104"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689190986"><span class="annot"><span class="annottext">mutationOutputProjection :: Projection
-</span><a href="#local-6989586621689190986"><span class="hs-identifier hs-var hs-var">mutationOutputProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MSSQL.FromIr.MutationResponse.html#selectMutationOutputAndCheckCondition"><span class="hs-identifier hs-var hs-var">selectMutationOutputAndCheckCondition</span></a></span></span><span> </span><span id="local-6989586621689197836"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197836"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span id="local-6989586621689197835"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621689197835"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span></span><span> </span><span id="local-6989586621689197834"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689197834"><span class="hs-identifier hs-var">checkBoolExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197833"><span class="annot"><span class="annottext">mutationOutputProjection :: Projection
+</span><a href="#local-6989586621689197833"><span class="hs-identifier hs-var hs-var">mutationOutputProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-105"></span><span>        </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExpressionProjection"><span class="hs-identifier hs-var">ExpressionProjection</span></a></span><span> </span><span class="annot"><span class="annottext">(Aliased Expression -&gt; Projection)
 -&gt; Aliased Expression -&gt; Projection
@@ -265,10 +265,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#SelectExpression"><span class="hs-identifier hs-var">SelectExpression</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689190988"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197835"><span class="hs-identifier hs-var">mutationOutputSelect</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;mutation_response&quot;</span></span><span>
-</span><span id="line-106"></span><span>      </span><span id="local-6989586621689190985"><span class="annot"><span class="annottext">checkConstraintProjection :: Projection
-</span><a href="#local-6989586621689190985"><span class="hs-identifier hs-var hs-var">checkConstraintProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>      </span><span id="local-6989586621689197832"><span class="annot"><span class="annottext">checkConstraintProjection :: Projection
+</span><a href="#local-6989586621689197832"><span class="hs-identifier hs-var hs-var">checkConstraintProjection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-107"></span><span>        </span><span class="hs-comment">-- apply ISNULL() to avoid check constraint select statement yielding empty rows</span><span>
 </span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExpressionProjection"><span class="hs-identifier hs-var">ExpressionProjection</span></a></span><span> </span><span class="annot"><span class="annottext">(Aliased Expression -&gt; Projection)
@@ -284,7 +284,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; FunctionApplicationExpression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FunExpISNULL"><span class="hs-identifier hs-var">FunExpISNULL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#SelectExpression"><span class="hs-identifier hs-var">SelectExpression</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689190982"><span class="hs-identifier hs-var">checkConstraintSelect</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><a href="#local-6989586621689197829"><span class="hs-identifier hs-var">checkConstraintSelect</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.IntValue</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
@@ -292,19 +292,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-110"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectProjections%3ASelect"><span class="hs-identifier hs-var">selectProjections</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Projection
-</span><a href="#local-6989586621689190986"><span class="hs-identifier hs-var">mutationOutputProjection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Projection
-</span><a href="#local-6989586621689190985"><span class="hs-identifier hs-var">checkConstraintProjection</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689197833"><span class="hs-identifier hs-var">mutationOutputProjection</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Projection
+</span><a href="#local-6989586621689197832"><span class="hs-identifier hs-var">checkConstraintProjection</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
 </span><span id="line-111"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-112"></span><span>    </span><span id="local-6989586621689190982"><span class="annot"><span class="annottext">checkConstraintSelect :: Select
-</span><a href="#local-6989586621689190982"><span class="hs-identifier hs-var hs-var">checkConstraintSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-113"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689190980"><span class="annot"><span class="annottext">subQueryAlias :: Text
-</span><a href="#local-6989586621689190980"><span class="hs-identifier hs-var hs-var">subQueryAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621689197829"><span class="annot"><span class="annottext">checkConstraintSelect :: Select
+</span><a href="#local-6989586621689197829"><span class="hs-identifier hs-var hs-var">checkConstraintSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197827"><span class="annot"><span class="annottext">subQueryAlias :: Text
+</span><a href="#local-6989586621689197827"><span class="hs-identifier hs-var hs-var">subQueryAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;check_sub_query&quot;</span></span><span>
-</span><span id="line-114"></span><span>          </span><span id="local-6989586621689190979"><span class="annot"><span class="annottext">checkEvaluationFieldName :: Text
-</span><a href="#local-6989586621689190979"><span class="hs-identifier hs-var hs-var">checkEvaluationFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-114"></span><span>          </span><span id="local-6989586621689197826"><span class="annot"><span class="annottext">checkEvaluationFieldName :: Text
+</span><a href="#local-6989586621689197826"><span class="hs-identifier hs-var hs-var">checkEvaluationFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;check_evaluation&quot;</span></span><span>
-</span><span id="line-115"></span><span>          </span><span id="local-6989586621689190978"><span class="annot"><span class="annottext">sumAggregate :: Aggregate
-</span><a href="#local-6989586621689190978"><span class="hs-identifier hs-var hs-var">sumAggregate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-115"></span><span>          </span><span id="local-6989586621689197825"><span class="annot"><span class="annottext">sumAggregate :: Aggregate
+</span><a href="#local-6989586621689197825"><span class="hs-identifier hs-var hs-var">sumAggregate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; [Expression] -&gt; Aggregate
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#OpAggregate"><span class="hs-identifier hs-var">OpAggregate</span></a></span><span>
 </span><span id="line-117"></span><span>              </span><span class="annot"><span class="annottext">Text
@@ -317,34 +317,34 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
 </span><span id="line-120"></span><span>                    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:fieldNameEntity:FieldName :: Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AfieldNameEntity%3AFieldName"><span class="hs-identifier hs-var">fieldNameEntity</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190980"><span class="hs-identifier hs-var">subQueryAlias</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689197827"><span class="hs-identifier hs-var">subQueryAlias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-121"></span><span>                      </span><span class="annot"><span class="annottext">$sel:fieldName:FieldName :: Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AfieldName%3AFieldName"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190979"><span class="hs-identifier hs-var">checkEvaluationFieldName</span></a></span><span>
+</span><a href="#local-6989586621689197826"><span class="hs-identifier hs-var">checkEvaluationFieldName</span></a></span><span>
 </span><span id="line-122"></span><span>                    </span><span class="hs-special">}</span><span>
 </span><span id="line-123"></span><span>              </span><span class="hs-special">]</span><span>
-</span><span id="line-124"></span><span>          </span><span id="local-6989586621689190972"><span class="annot"><span class="annottext">checkSubQuery :: Select
-</span><a href="#local-6989586621689190972"><span class="hs-identifier hs-var hs-var">checkSubQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-125"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689190971"><span class="annot"><span class="annottext">zeroValue :: Expression
-</span><a href="#local-6989586621689190971"><span class="hs-identifier hs-var hs-var">zeroValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><span id="line-124"></span><span>          </span><span id="local-6989586621689197819"><span class="annot"><span class="annottext">checkSubQuery :: Select
+</span><a href="#local-6989586621689197819"><span class="hs-identifier hs-var hs-var">checkSubQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-125"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689197818"><span class="annot"><span class="annottext">zeroValue :: Expression
+</span><a href="#local-6989586621689197818"><span class="hs-identifier hs-var hs-var">zeroValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.IntValue</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-126"></span><span>                </span><span id="local-6989586621689190970"><span class="annot"><span class="annottext">oneValue :: Expression
-</span><a href="#local-6989586621689190970"><span class="hs-identifier hs-var hs-var">oneValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><span id="line-126"></span><span>                </span><span id="local-6989586621689197817"><span class="annot"><span class="annottext">oneValue :: Expression
+</span><a href="#local-6989586621689197817"><span class="hs-identifier hs-var hs-var">oneValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Expression) -&gt; Value -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.IntValue</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
-</span><span id="line-127"></span><span>                </span><span id="local-6989586621689190969"><span class="annot"><span class="annottext">caseExpression :: Expression
-</span><a href="#local-6989586621689190969"><span class="hs-identifier hs-var hs-var">caseExpression</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Expression -&gt; Expression
+</span><span id="line-127"></span><span>                </span><span id="local-6989586621689197816"><span class="annot"><span class="annottext">caseExpression :: Expression
+</span><a href="#local-6989586621689197816"><span class="hs-identifier hs-var hs-var">caseExpression</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Expression -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ConditionalExpression"><span class="hs-identifier hs-var">ConditionalExpression</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689190987"><span class="hs-identifier hs-var">checkBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689190971"><span class="hs-identifier hs-var">zeroValue</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689190970"><span class="hs-identifier hs-var">oneValue</span></a></span><span>
+</span><a href="#local-6989586621689197834"><span class="hs-identifier hs-var">checkBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689197818"><span class="hs-identifier hs-var">zeroValue</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689197817"><span class="hs-identifier hs-var">oneValue</span></a></span><span>
 </span><span id="line-128"></span><span>             </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span>
 </span><span id="line-129"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
@@ -352,8 +352,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExpressionProjection"><span class="hs-identifier hs-var">ExpressionProjection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Expression -&gt; Text -&gt; Aliased Expression
 forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689190969"><span class="hs-identifier hs-var">caseExpression</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190979"><span class="hs-identifier hs-var">checkEvaluationFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689197816"><span class="hs-identifier hs-var">caseExpression</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197826"><span class="hs-identifier hs-var">checkEvaluationFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-130"></span><span>                    </span><span class="annot"><span class="annottext">$sel:selectFrom:Select :: Maybe From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectFrom%3ASelect"><span class="hs-identifier hs-var">selectFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">From -&gt; Maybe From
 forall a. a -&gt; Maybe a
@@ -361,7 +361,7 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FromIdentifier"><span class="hs-identifier hs-var">TSQL.FromIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190989"><span class="hs-identifier hs-var">alias</span></a></span><span>
+</span><a href="#local-6989586621689197836"><span class="hs-identifier hs-var">alias</span></a></span><span>
 </span><span id="line-131"></span><span>                  </span><span class="hs-special">}</span><span>
 </span><span id="line-132"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span>
@@ -370,7 +370,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#AggregateProjection"><span class="hs-identifier hs-var">AggregateProjection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Aggregate -&gt; Text -&gt; Aliased Aggregate
 forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="annot"><span class="annottext">Aggregate
-</span><a href="#local-6989586621689190978"><span class="hs-identifier hs-var">sumAggregate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197825"><span class="hs-identifier hs-var">sumAggregate</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;check&quot;</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-134"></span><span>              </span><span class="annot"><span class="annottext">$sel:selectFrom:Select :: Maybe From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectFrom%3ASelect"><span class="hs-identifier hs-var">selectFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">From -&gt; Maybe From
@@ -381,7 +381,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FromSelect"><span class="hs-identifier hs-var">TSQL.FromSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Text -&gt; Aliased Select
 forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689190972"><span class="hs-identifier hs-var">checkSubQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689190980"><span class="hs-identifier hs-var">subQueryAlias</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689197819"><span class="hs-identifier hs-var">checkSubQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689197827"><span class="hs-identifier hs-var">subQueryAlias</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-135"></span><span>            </span><span class="hs-special">}</span><span>
 </span><span id="line-136"></span></pre></body></html>
