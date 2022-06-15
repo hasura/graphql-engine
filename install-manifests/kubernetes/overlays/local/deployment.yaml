@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hasura
+spec:
+  template:
+    spec:
+      containers:
+      - name: hasura
+        env:
+          - name: HASURA_GRAPHQL_DATABASE_URL
+            value: postgres://postgres:hasura@postgres-0.postgres:5432/hasura
