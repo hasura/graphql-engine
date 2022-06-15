@@ -1,0 +1,132 @@
+---
+sidebar_label: OpenTelemetry
+sidebar_position: 5
+description: OpenTelemetry Integration on Hasura Cloud
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - traces
+  - integration
+  - export traces
+  - opentelemetry
+  - open telemetry
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# OpenTelemetry Integration
+
+## Introduction
+You can export traces of your Hasura Cloud project to the [OpenTelemetry](https://opentelemetry.io/) compliant APM receiver.
+This can be configured on the integrations tab on the project's setting page.
+
+:::info Note
+
+The OpenTelemetry Integration is only available for Hasura Cloud projects on the `Standard` (pay-as-you-go) tier and above.
+
+:::
+
+:::info Note
+
+Currently, the OpenTelemetry Integration exports only traces. The support for metrics and logs will be added once the
+OpenTelemetry spec reaches [stability](https://opentelemetry.io/status/#current-status).
+
+:::
+
+## Configure the OpenTelemetry integration
+
+Navigate to the `Integrations` tab on the project settings page to find the OpenTelemetry integration.
+
+<Thumbnail
+    src="/img/graphql/cloud/metrics/integrate-opentelemetry.png"
+    alt="Select OpenTelemetry Integration"
+    width="1146px"
+/>
+
+The following config parameters are needed to set up the integration with the APM receiver:
+
+1. #### Endpoint
+
+    OpenTelemetry compliant receiver [endpoint](https://opentelemetry.io/docs/reference/specification/protocol/exporter/#configuration-options).
+    The URL scheme (`http`/`https`) determines if SSL(TLS) should be used for the communication. The APM vendor documentation
+    contains the OpenTelemetry Ingestion endpoint information. The appropriate endpoint for the chosen **Connection Type**
+    should be used since the APM tools usually have different endpoints for `HTTP` and `gRPC` protocols.
+
+2. #### Connection Type
+
+    Protocol to be used for the communication with the receiver. OpenTelemetry supports connections over `gRPC` and `HTTP`.
+    The APM vendor documentation contains the protocols it supports for OpenTelemetry ingestion, and `gRPC` can be preferred
+    if it supports both `gRPC` and `HTTP`.
+
+3. #### Batch Size
+
+    Batch size is the maximum number of data points (spans in the context of traces) included in every export request made to the APM tool.
+    The batch size should be an integer between 1 and 512.
+
+4. #### Headers
+
+    Headers are <em>(optionally)</em> added to every request made by the integration to the APM receiver. APM vendors
+    usually provide **Authorization/API keys** (if needed, with the role/permission to ingest OpenTelemetry data) and
+    their documentation contains the format in which they have to be used as a request header. It should be added here
+    as a `key:value` pair.
+
+5. #### Attributes
+
+    Attributes are <em>(optional)</em> custom tags added to the telemetry data. This is usually used to identify sources in a
+    distributed tracing environment and aids granular filtering/analytics.
+
+6. #### Export Telemetry Data
+
+    Selects the telemetry data points to be exported. (Note: Currently only traces are supported).
+
+After adding appropriate values in the OpenTelemetry Integration panel, click <em>Connect Integration</em>.
+
+<Thumbnail
+    src="/img/graphql/cloud/metrics/configure-opentelemetry.png"
+    alt="Configure OpenTelemetry Integration"
+    width="437px"
+/>
+
+## Checking the status of the integration
+
+The green/red dot signifies the status of the integration. The green dot signifies successful exporting of the telemetry
+data to the APM receiver. `Last Exported Traces` is continuously updated, indicating the timestamp of the last telemetry successfully exported.
+The orange dot reading `Not exported yet` means no requests have been made to the GraphQL API after configuring the integration.
+
+<Thumbnail
+    src="/img/graphql/cloud/metrics/configure-opentelemetry-done.png"
+    alt="OpenTelemetry Integration successfully configured"
+    width="1146px"
+/>
+
+In case of error while exporting telemetry data to the APM receiver, the dot becomes red and
+the error messages/instructions are displayed. Click the ``Update Settings`` button to update the config parameters.
+
+<Thumbnail
+    src="/img/graphql/cloud/metrics/configure-opentelemetry-fail.png"
+    alt="Opentelemetry Integration unable to push data"
+    width="1146px"
+/>
+
+## View traces
+
+The APM target for the traces have their own UI to visualise and do further analytics on trace data. Usually, the traces
+with their spans are listed out and selecting a trace shows a flame graph containing a visual representation of where
+the operation spent its execution over time. For example, the below image contains a flame graph in `Jaeger` where
+a query took 5.64 milliseconds in total, of which 2.78 milliseconds was the actual Postgres database processing the query.
+
+<Thumbnail
+    src="/img/graphql/cloud/metrics/jaeger-trace-flame-graph.png"
+    alt="Flame graph for a trace entry in Jaeger"
+    width="1146px"
+/>
+
+## OpenTelemetry collector
+
+OpenTelemetry provides a [collector](https://opentelemetry.io/docs/collector/) to export data to APM tools that do not
+support native OpenTelemetry ingestion. In such cases, this OpenTelemetry integration can be configured to send the
+data to the collector (which should be run in your infrastructure and reachable by the Hasura backend) which is configured
+to send the data to the APM target. The list of [supported exporter targets](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter)
+can be found in the [OpenTelemetry Collector repository](https://github.com/open-telemetry/opentelemetry-collector-contrib).
+
