@@ -1,0 +1,16 @@
+- name: default
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: PG_DATABASE_URL
+      pool_settings:
+        idle_timeout: 180
+        max_connections: 50
+        retries: 1
+  tables:
+  - "!include default/tables/public_message.yaml"
+  - "!include default/tables/public_user.yaml"
+  - "!include default/tables/public_user_online.yaml"
+  - "!include default/tables/public_user_typing.yaml"
+  functions: []
