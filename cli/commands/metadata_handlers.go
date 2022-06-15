@@ -10,7 +10,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
-	goyaml "github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 )
@@ -256,7 +255,7 @@ func apply(o *MetadataApplyOptions, mode cli.MetadataMode) error {
 		return nil
 	}
 	if mode == cli.MetadataModeYAML {
-		localMetadataBytes, err = goyaml.YAMLToJSON(localMetadataBytes)
+		localMetadataBytes, err = metadatautil.YAMLToJSON(localMetadataBytes)
 		if err != nil {
 			return fmt.Errorf("parsing yaml metadata to json: %w", err)
 		}
