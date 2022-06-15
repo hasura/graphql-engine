@@ -14,7 +14,7 @@ where
 import Data.Aeson (ToJSON, ToJSONKey)
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Multi qualified as MM
-import Data.Set.Extended qualified as S
+import Data.Set qualified as S
 import Data.Trie qualified as T
 import Hasura.Prelude
 
@@ -128,8 +128,8 @@ groupAmbiguousPaths (x : xs) =
   where
     added = map (add x) xs
     add (p1, v1) (p2, v2)
-      | S.intersects v1 v2 = (True, (S.union p1 p2, S.union v1 v2))
-      | otherwise = (False, (p2, v2))
+      | S.disjoint v1 v2 = (False, (p2, v2))
+      | otherwise = (True, (S.union p1 p2, S.union v1 v2))
 
 -- | Detect and return all ambiguous paths in the @MultiMapPathTrie@
 -- A path @p@ is ambiguous if @matchPath k p@ can return @MatchAmbiguous@ for some @k@.
