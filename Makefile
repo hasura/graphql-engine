@@ -1,8 +1,10 @@
 # skip contrib with its generated .hs file because it doesn't
 # come with a cabal file, which can trigger a bug in ormolu
 HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot' | grep -v '^contrib/')
-CHANGED_HS_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` \
-	| grep '.*\(hs\|hs-boot\)$$' | grep -v '^contrib/')
+CHANGED_HS_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\(\.hs\|hs-boot\)$$' | grep -v '^contrib/')
+
+SHELL_FILES = $(shell git ls-files '*.sh')
+CHANGED_SHELL_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\.sh$$')
 
 HLINT = hlint
 
@@ -10,6 +12,8 @@ ORMOLU_CHECK_VERSION = 0.3.0.0
 ORMOLU_ARGS = --cabal-default-extensions
 ORMOLU = ormolu
 ORMOLU_VERSION = $(shell $(ORMOLU) --version | awk 'NR==1 { print $$2 }')
+
+SHELLCHECK = shellcheck
 
 # default target
 .PHONY: help
@@ -44,6 +48,14 @@ check-format-hs: check-ormolu-version
 	@echo running ormolu --mode check
 	@$(ORMOLU) $(ORMOLU_ARGS) --mode check $(HS_FILES)
 
+.PHONY: check-format-hs-changed
+## check-format-hs-changed: check Haskell source code formatting using ormolu (changed-files-only)
+check-format-hs-changed: check-ormolu-version
+	@echo running ormolu --mode check
+	@if [ -n "$(CHANGED_HS_FILES)" ]; then \
+		$(ORMOLU) $(ORMOLU_ARGS) --mode check $(CHANGED_HS_FILES); \
+	fi
+
 .PHONY: format
 format: format-hs
 
@@ -52,6 +64,9 @@ format-changed: format-hs-changed
 
 .PHONY: check-format
 check-format: check-format-hs
+
+.PHONY: check-format-changed
+check-format-changed: check-format-hs-changed
 
 .PHONY: lint-hs
 ## lint-hs: lint Haskell code using `hlint`
@@ -67,8 +82,22 @@ lint-hs-changed:
 		$(HLINT) $(CHANGED_HS_FILES); \
 	fi
 
+.PHONY: lint-shell
+## lint-shell: lint shell	scripts using `shellcheck`
+lint-shell:
+	@echo running shellcheck
+	@$(SHELLCHECK) $(SHELL_FILES)
+
+.PHONY: lint-shell-changed
+## lint-shell-changed: lint shell	scripts using `shellcheck` (changed files only)
+lint-shell-changed:
+	@echo running shellcheck
+	@if [ -n "$(CHANGED_SHELL_FILES)" ]; then \
+		$(SHELLCHECK) $(CHANGED_SHELL_FILES); \
+	fi
+
 .PHONY: lint
-lint: lint-hs
+lint: lint-hs lint-shell check-format
 
 .PHONY: lint-changed
-lint-changed: lint-hs-changed
+lint-changed: lint-hs-changed lint-shell-changed check-format-changed
