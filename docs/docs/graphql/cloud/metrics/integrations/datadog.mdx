@@ -35,7 +35,7 @@ Navigate to the integrations tab on project settings page to find Datadog integr
   width="1146px"
 />
 
-Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page by clicking the `Get API Key` link), host, service name and tags to associate with exported logs and metrics.
+Select the Datadog API region and enter the Datadog API key (can be retrieved by navigating to Datadog's settings page by clicking the `Get API Key` link), host, service name and tags to associate with exported logs, metrics and traces.
 
 | Field        | Description                                                                                                                                                                                                                                                                                                                                  |
 |--------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -127,7 +127,7 @@ Select the graphs you want to view from the metrics explorer. Alternatively, sel
 
 ## View traces
 
-Along with the logs and metrics, query tracing is exported to DataDog. From your DataDog metrics page, `APM` > `Traces` will show you a live search of ingested trace data, with each entry of the output table showing the duration of the operation.
+Along with the logs and metrics, query tracing is exported to Datadog. From your Datadog metrics page, `APM` > `Traces` will show you a live search of ingested trace data, with each entry of the output table showing the duration of the operation.
 
 Clicking on an entry from the table will show the details about the trace, including a flame graph, which contains a visual representation of where the operation spent its execution over time. For example, in this case a query took 2.31 milliseconds in total, of which 758 microseconds was the actual Postgres database processing the query.
 
