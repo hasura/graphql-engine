@@ -10,3 +10,12 @@ args:
             c1 int PRIMARY KEY,
             c2 NVARCHAR(MAX)
         );
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+        create table [hge_tests].[User](
+            c1 int PRIMARY KEY,
+            c2 NVARCHAR(MAX)
+        );

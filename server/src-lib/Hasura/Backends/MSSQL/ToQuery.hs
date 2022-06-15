@@ -23,6 +23,7 @@ module Hasura.Backends.MSSQL.ToQuery
     fromInsertValuesIntoTempTable,
     dropTempTableQuery,
     fromRawUnescapedText,
+    fromTableName,
     (<+>),
     Printer (..),
   )

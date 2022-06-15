@@ -172,6 +172,7 @@ is `graphql-default`, the field names generated will be `my_table`, `my_tableByP
 
 ### Bug fixes and improvements
 
+- server: fix create event trigger failure for MSSQL sources on a table with a table name that is a reserved MSSQL keyword.
 - server: errors from `/healthz` endpoint are now logged with more details
 - server: do not expand environment variable references in logs or API responses from remote schemas, actions and event triggers for security reasons
 - server: introduce [backend_only permissions](https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules/#backend-only-permissions) for update and delete mutations (fix #5275)

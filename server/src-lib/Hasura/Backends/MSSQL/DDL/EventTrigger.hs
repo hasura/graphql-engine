@@ -34,6 +34,7 @@ import Database.ODBC.TH qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.DDL.Source.Version
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
+import Hasura.Backends.MSSQL.ToQuery (fromTableName, toQueryFlat)
 import Hasura.Backends.MSSQL.Types (SchemaName (..), TableName (..))
 import Hasura.Backends.MSSQL.Types.Internal (columnNameText, geoTypes)
 import Hasura.Base.Error
@@ -633,11 +634,10 @@ generateColumnTriggerAlias op colPrefixMaybe colInfo =
       -- If no colPrefixMaybe was Nothing then alias will be 'id as payload.data.old.id`
       SQLFragment $ LT.toStrict $ [ST.stext| #{joinPrefixedDbColNameText} as [#{dbColAlias}]|]
 
+-- Converts tables name to the format [SCHEMA].[TABLENAME]
+-- eg: [dbo].[author], [hge].[books]
 qualifyTableName :: TableName -> Text
-qualifyTableName (TableName tableName (SchemaName schemaName)) =
-  if schemaName == "dbo"
-    then tableName
-    else schemaName <> "." <> tableName
+qualifyTableName = toTxt . toQueryFlat . fromTableName
 
 mkInsertTriggerQuery :: TableName -> TriggerName -> [ColumnInfo 'MSSQL] -> LT.Text
 mkInsertTriggerQuery table@(TableName tableName schema@(SchemaName schemaName)) triggerName columns =
