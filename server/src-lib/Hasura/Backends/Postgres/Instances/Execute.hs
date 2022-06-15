@@ -29,7 +29,6 @@ import Hasura.Backends.Postgres.Execute.Prepare
     initPlanningSt,
     prepareWithPlan,
     prepareWithoutPlan,
-    resolveUnpreparedValue,
     withUserVars,
   )
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
@@ -149,7 +148,7 @@ pgDBQueryExplain ::
   QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   m (AB.AnyBackend DBStepInfo)
 pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
-  preparedQuery <- traverse (resolveUnpreparedValue userInfo) rootSelection
+  preparedQuery <- traverse (prepareWithoutPlan userInfo) rootSelection
   let PreparedSql querySQL _ = irToRootFieldPlan mempty preparedQuery
       textSQL = Q.getQueryText querySQL
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
