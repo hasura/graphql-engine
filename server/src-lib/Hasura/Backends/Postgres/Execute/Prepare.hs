@@ -14,7 +14,6 @@ module Hasura.Backends.Postgres.Execute.Prepare
     initPlanningSt,
     prepareWithPlan,
     prepareWithoutPlan,
-    resolveUnpreparedValue,
     withUserVars,
   )
 where
@@ -102,24 +101,6 @@ prepareWithoutPlan userInfo = \case
         <$> onNothing maybeSessionVariableValue
         $ throw400 NotFound $
           "missing session variable: " <>> sessionVariableToText sessVar
-    pure $ withTypeAnn ty sessionVariableValue
-
-resolveUnpreparedValue ::
-  (MonadError QErr m) =>
-  UserInfo ->
-  UnpreparedValue ('Postgres pgKind) ->
-  m S.SQLExp
-resolveUnpreparedValue userInfo = \case
-  UVParameter _ cv -> pure $ toTxtValue cv
-  UVLiteral sqlExp -> pure sqlExp
-  UVSession -> pure $ sessionInfoJsonExp $ _uiSession userInfo
-  UVSessionVar ty sessionVariable -> do
-    let maybeSessionVariableValue =
-          getSessionVariableValue sessionVariable (_uiSession userInfo)
-    sessionVariableValue <-
-      fmap S.SELit
-        <$> onNothing maybeSessionVariableValue
-        $ throw400 UnexpectedPayload $ "missing required session variable for role " <> _uiRole userInfo <<> " : " <> sessionVariableToText sessionVariable
     pure $ withTypeAnn ty sessionVariableValue
 
 withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
