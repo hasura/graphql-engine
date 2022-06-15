@@ -107,7 +107,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
       allRoles = nonTableRoles <> allTableRoles
-      defaultNC = _sccDefaultNamingConvention
+      defaultNC = bool Nothing _sccDefaultNamingConvention $ EFNamingConventions `elem` _sccExperimentalFeatures
 
   roleContexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
