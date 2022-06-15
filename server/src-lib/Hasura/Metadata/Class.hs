@@ -95,7 +95,7 @@ class (MonadError QErr m) => MonadMetadataStorage m where
   setCatalogState :: CatalogStateType -> Value -> m ()
 
   -- get the @db_uuid@ that we store in the database.
-  getDatabaseUid :: m Text
+  getMetadataDbUid :: m MetadataDbId
   checkMetadataStorageHealth :: m ()
 
   -- Scheduled triggers
@@ -143,7 +143,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ReaderT r m) where
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
 
-  getDatabaseUid = lift getDatabaseUid
+  getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = lift . getDeprivedCronTriggerStats
@@ -176,7 +176,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (StateT s m) where
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
 
-  getDatabaseUid = lift getDatabaseUid
+  getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = lift . getDeprivedCronTriggerStats
@@ -209,7 +209,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Tracing.TraceT m) whe
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
 
-  getDatabaseUid = lift getDatabaseUid
+  getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = lift . getDeprivedCronTriggerStats
@@ -242,7 +242,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (ExceptT QErr m) where
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
 
-  getDatabaseUid = lift getDatabaseUid
+  getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = lift . getDeprivedCronTriggerStats
@@ -275,7 +275,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
 
-  getDatabaseUid = lift getDatabaseUid
+  getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = lift . getDeprivedCronTriggerStats
@@ -308,7 +308,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (Q.TxET QErr m) where
   getCatalogState = lift getCatalogState
   setCatalogState a b = lift $ setCatalogState a b
 
-  getDatabaseUid = lift getDatabaseUid
+  getMetadataDbUid = lift getMetadataDbUid
   checkMetadataStorageHealth = lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = lift . getDeprivedCronTriggerStats
@@ -417,7 +417,7 @@ instance
   getCatalogState = hoist lift getCatalogState
   setCatalogState a b = hoist lift $ setCatalogState a b
 
-  getDatabaseUid = hoist lift getDatabaseUid
+  getMetadataDbUid = hoist lift getMetadataDbUid
   checkMetadataStorageHealth = hoist lift checkMetadataStorageHealth
 
   getDeprivedCronTriggerStats = hoist lift . getDeprivedCronTriggerStats

@@ -71,9 +71,9 @@ Following is the precise behaviour -
   they create corresponding database triggers)
 -}
 
-getDbId :: Q.TxE QErr Text
+getDbId :: Q.TxE QErr MetadataDbId
 getDbId =
-  runIdentity . Q.getRow
+  MetadataDbId . runIdentity . Q.getRow
     <$> Q.withQE
       defaultTxErrorHandler
       [Q.sql|

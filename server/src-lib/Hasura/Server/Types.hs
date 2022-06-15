@@ -1,10 +1,15 @@
 module Hasura.Server.Types
   ( ExperimentalFeature (..),
     InstanceId (..),
+    MetadataDbId (..),
+    DbUid (..),
+    mdDbIdToDbUid,
     MaintenanceMode (..),
     EventingMode (..),
     ReadOnlyMode (..),
+    DbVersion (DbVersion),
     PGVersion (PGVersion),
+    pgToDbVersion,
     RequestId (..),
     ServerConfigCtx (..),
     StreamingSubscriptionsCtx (..),
@@ -38,11 +43,25 @@ getRequestId headers = do
       pure (r, mkHeader (txtToBs reqId) : headers)
     Just reqId -> pure (RequestId $ bsToTxt reqId, headers)
 
+-- | A uuid of a source database.
 newtype DbUid = DbUid {getDbUid :: Text}
   deriving (Show, Eq, ToJSON, FromJSON)
 
+newtype DbVersion = DbVersion {unDbVersion :: Text}
+  deriving (Show, Eq, ToJSON)
+
 newtype PGVersion = PGVersion {unPGVersion :: Int}
   deriving (Show, Eq, ToJSON)
+
+pgToDbVersion :: PGVersion -> DbVersion
+pgToDbVersion = DbVersion . tshow . unPGVersion
+
+-- | A uuid of the postgres metadata db.
+newtype MetadataDbId = MetadataDbId {getMetadataDbId :: Text}
+  deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
+
+mdDbIdToDbUid :: MetadataDbId -> DbUid
+mdDbIdToDbUid = DbUid . getMetadataDbId
 
 newtype InstanceId = InstanceId {getInstanceId :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
