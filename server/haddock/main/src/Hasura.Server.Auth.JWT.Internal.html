@@ -28,27 +28,27 @@
 </span><span id="line-28"></span><span class="hs-comment">-- | Helper functions to decode Text to JWK</span><span>
 </span><span id="line-29"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#parseHmacKey"><span class="hs-identifier hs-type">parseHmacKey</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JWK</span></span><span>
 </span><span id="line-30"></span><span id="parseHmacKey"><span class="annot"><span class="annottext">parseHmacKey :: Text -&gt; Int64 -&gt; Either Text JWK
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#parseHmacKey"><span class="hs-identifier hs-var hs-var">parseHmacKey</span></a></span></span><span> </span><span id="local-6989586621689089300"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089300"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span id="local-6989586621689089299"><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689089299"><span class="hs-identifier hs-var">size</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689089298"><span class="annot"><span class="annottext">secret :: ByteString
-</span><a href="#local-6989586621689089298"><span class="hs-identifier hs-var hs-var">secret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTF8 ByteString -&gt; ByteString
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#parseHmacKey"><span class="hs-identifier hs-var hs-var">parseHmacKey</span></a></span></span><span> </span><span id="local-6989586621689083902"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689083902"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span id="local-6989586621689083901"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689083901"><span class="hs-identifier hs-var">size</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689083900"><span class="annot"><span class="annottext">secret :: ByteString
+</span><a href="#local-6989586621689083900"><span class="hs-identifier hs-var hs-var">secret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTF8 ByteString -&gt; ByteString
 forall a. UTF8 a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">unUTF8</span></span><span> </span><span class="annot"><span class="annottext">(UTF8 ByteString -&gt; ByteString) -&gt; UTF8 ByteString -&gt; ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; UTF8 ByteString
 forall a. FromText a =&gt; Text -&gt; a
 </span><span class="hs-identifier hs-var">fromText</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089300"><span class="hs-identifier hs-var">key</span></a></span><span>
-</span><span id="line-32"></span><span>      </span><span id="local-6989586621689089295"><span class="annot"><span class="annottext">err :: a -&gt; String
-</span><a href="#local-6989586621689089295"><span class="hs-identifier hs-var hs-var">err</span></a></span></span><span> </span><span id="local-6989586621689089294"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089294"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689083902"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621689083897"><span class="annot"><span class="annottext">err :: a -&gt; String
+</span><a href="#local-6989586621689083897"><span class="hs-identifier hs-var hs-var">err</span></a></span></span><span> </span><span id="local-6989586621689083896"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689083896"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Key size too small; should be atleast &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089294"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+</span><a href="#local-6989586621689083896"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Integral a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-number">8</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
@@ -57,10 +57,10 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-string">&quot; characters&quot;</span></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int64
 </span><span class="hs-identifier hs-var">BL.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089298"><span class="hs-identifier hs-var">secret</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Bool
+</span><a href="#local-6989586621689083900"><span class="hs-identifier hs-var">secret</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689089299"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Int64
+</span><a href="#local-6989586621689083901"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Int64
 forall a. Integral a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">8</span></span><span>
@@ -74,8 +74,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; String
 forall a. (Show a, Integral a) =&gt; a -&gt; String
-</span><a href="#local-6989586621689089295"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689089299"><span class="hs-identifier hs-var">size</span></a></span><span>
+</span><a href="#local-6989586621689083897"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689083901"><span class="hs-identifier hs-var">size</span></a></span><span>
 </span><span id="line-35"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">JWK -&gt; Either Text JWK
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(JWK -&gt; Either Text JWK) -&gt; JWK -&gt; Either Text JWK
@@ -83,14 +83,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; JWK
 forall s. Cons s s Word8 Word8 =&gt; s -&gt; JWK
 </span><span class="hs-identifier hs-var">fromOctets</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089298"><span class="hs-identifier hs-var">secret</span></a></span><span>
+</span><a href="#local-6989586621689083900"><span class="hs-identifier hs-var">secret</span></a></span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#parseRsaKey"><span class="hs-identifier hs-type">parseRsaKey</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JWK</span></span><span>
 </span><span id="line-38"></span><span id="parseRsaKey"><span class="annot"><span class="annottext">parseRsaKey :: Text -&gt; Either Text JWK
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#parseRsaKey"><span class="hs-identifier hs-var hs-var">parseRsaKey</span></a></span></span><span> </span><span id="local-6989586621689089286"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089286"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-39"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689089285"><span class="annot"><span class="annottext">res :: Either Text JWK
-</span><a href="#local-6989586621689089285"><span class="hs-identifier hs-var hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either Text JWK
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#parseRsaKey"><span class="hs-identifier hs-var hs-var">parseRsaKey</span></a></span></span><span> </span><span id="local-6989586621689083888"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689083888"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689083887"><span class="annot"><span class="annottext">res :: Either Text JWK
+</span><a href="#local-6989586621689083887"><span class="hs-identifier hs-var hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#fromRawPem"><span class="hs-identifier hs-var">fromRawPem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UTF8 ByteString -&gt; ByteString
 forall a. UTF8 a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">unUTF8</span></span><span> </span><span class="annot"><span class="annottext">(UTF8 ByteString -&gt; ByteString) -&gt; UTF8 ByteString -&gt; ByteString
@@ -98,34 +98,34 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; UTF8 ByteString
 forall a. FromText a =&gt; Text -&gt; a
 </span><span class="hs-identifier hs-var">fromText</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089286"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621689089283"><span class="annot"><span class="annottext">err :: a -&gt; a
-</span><a href="#local-6989586621689089283"><span class="hs-identifier hs-var hs-var">err</span></a></span></span><span> </span><span id="local-6989586621689089282"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089282"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689083888"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621689083885"><span class="annot"><span class="annottext">err :: a -&gt; a
+</span><a href="#local-6989586621689083885"><span class="hs-identifier hs-var hs-var">err</span></a></span></span><span> </span><span id="local-6989586621689083884"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689083884"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;Could not decode PEM: &quot;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089282"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689083884"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">Either Text JWK -&gt; (Text -&gt; Either Text JWK) -&gt; Either Text JWK
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either Text JWK
-</span><a href="#local-6989586621689089285"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
+</span><a href="#local-6989586621689083887"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either Text JWK)
 -&gt; (Text -&gt; Text) -&gt; Text -&gt; Either Text JWK
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 forall a. (Semigroup a, IsString a) =&gt; a -&gt; a
-</span><a href="#local-6989586621689089283"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689083885"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#parseEdDSAKey"><span class="hs-identifier hs-type">parseEdDSAKey</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JWK</span></span><span>
 </span><span id="line-44"></span><span id="parseEdDSAKey"><span class="annot"><span class="annottext">parseEdDSAKey :: Text -&gt; Either Text JWK
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#parseEdDSAKey"><span class="hs-identifier hs-var hs-var">parseEdDSAKey</span></a></span></span><span> </span><span id="local-6989586621689089280"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089280"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689089279"><span class="annot"><span class="annottext">res :: Either Text JWK
-</span><a href="#local-6989586621689089279"><span class="hs-identifier hs-var hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either Text JWK
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#parseEdDSAKey"><span class="hs-identifier hs-var hs-var">parseEdDSAKey</span></a></span></span><span> </span><span id="local-6989586621689083882"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689083882"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689083881"><span class="annot"><span class="annottext">res :: Either Text JWK
+</span><a href="#local-6989586621689083881"><span class="hs-identifier hs-var hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#fromRawPem"><span class="hs-identifier hs-var">fromRawPem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UTF8 ByteString -&gt; ByteString
 forall a. UTF8 a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">unUTF8</span></span><span> </span><span class="annot"><span class="annottext">(UTF8 ByteString -&gt; ByteString) -&gt; UTF8 ByteString -&gt; ByteString
@@ -133,71 +133,71 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; UTF8 ByteString
 forall a. FromText a =&gt; Text -&gt; a
 </span><span class="hs-identifier hs-var">fromText</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089280"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-46"></span><span>      </span><span id="local-6989586621689089278"><span class="annot"><span class="annottext">err :: a -&gt; a
-</span><a href="#local-6989586621689089278"><span class="hs-identifier hs-var hs-var">err</span></a></span></span><span> </span><span id="local-6989586621689089277"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089277"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689083882"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>      </span><span id="local-6989586621689083880"><span class="annot"><span class="annottext">err :: a -&gt; a
+</span><a href="#local-6989586621689083880"><span class="hs-identifier hs-var hs-var">err</span></a></span></span><span> </span><span id="local-6989586621689083879"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689083879"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;Could not decode PEM: &quot;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089277"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689083879"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><span class="annottext">Either Text JWK -&gt; (Text -&gt; Either Text JWK) -&gt; Either Text JWK
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either Text JWK
-</span><a href="#local-6989586621689089279"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
+</span><a href="#local-6989586621689083881"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either Text JWK)
 -&gt; (Text -&gt; Text) -&gt; Text -&gt; Either Text JWK
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 forall a. (Semigroup a, IsString a) =&gt; a -&gt; a
-</span><a href="#local-6989586621689089278"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689083880"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-comment">-- | Helper functions to decode PEM bytestring to RSA public key</span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-comment">-- try PKCS first, then x509</span><span>
 </span><span id="line-52"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#fromRawPem"><span class="hs-identifier hs-type">fromRawPem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JWK</span></span><span>
 </span><span id="line-53"></span><span id="fromRawPem"><span class="annot"><span class="annottext">fromRawPem :: ByteString -&gt; Either Text JWK
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#fromRawPem"><span class="hs-identifier hs-var hs-var">fromRawPem</span></a></span></span><span> </span><span id="local-6989586621689089276"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089276"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#fromRawPem"><span class="hs-identifier hs-var hs-var">fromRawPem</span></a></span></span><span> </span><span id="local-6989586621689083878"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689083878"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-comment">-- pubKeyToJwk &lt;=&lt; fromPkcsPem</span><span>
 </span><span id="line-55"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either Text PubKey
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#fromPkcsPem"><span class="hs-identifier hs-var">fromPkcsPem</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089276"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689089274"><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089274"><span class="hs-identifier hs-var">pk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text JWK
+</span><a href="#local-6989586621689083878"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689083876"><span class="annot"><span class="annottext">PubKey
+</span><a href="#local-6989586621689083876"><span class="hs-identifier hs-var">pk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#pubKeyToJwk"><span class="hs-identifier hs-var">pubKeyToJwk</span></a></span><span> </span><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089274"><span class="hs-identifier hs-var">pk</span></a></span><span>
-</span><span id="line-57"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689089272"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089272"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689083876"><span class="hs-identifier hs-var">pk</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689083874"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689083874"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-58"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either Text PubKey
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#fromX509Pem"><span class="hs-identifier hs-var">fromX509Pem</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089276"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-59"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689089270"><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089270"><span class="hs-identifier hs-var">pk1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text JWK
+</span><a href="#local-6989586621689083878"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689083872"><span class="annot"><span class="annottext">PubKey
+</span><a href="#local-6989586621689083872"><span class="hs-identifier hs-var">pk1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#pubKeyToJwk"><span class="hs-identifier hs-var">pubKeyToJwk</span></a></span><span> </span><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089270"><span class="hs-identifier hs-var">pk1</span></a></span><span>
-</span><span id="line-60"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689089269"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089269"><span class="hs-identifier hs-var">e1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
+</span><a href="#local-6989586621689083872"><span class="hs-identifier hs-var">pk1</span></a></span><span>
+</span><span id="line-60"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689083871"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689083871"><span class="hs-identifier hs-var">e1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089272"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689083874"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089269"><span class="hs-identifier hs-var">e1</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689083871"><span class="hs-identifier hs-var">e1</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="hs-comment">-- decode a PKCS1 or PKCS8 PEM to obtain the public key</span><span>
 </span><span id="line-63"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#fromPkcsPem"><span class="hs-identifier hs-type">fromPkcsPem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKey</span></span><span>
 </span><span id="line-64"></span><span id="fromPkcsPem"><span class="annot"><span class="annottext">fromPkcsPem :: ByteString -&gt; Either Text PubKey
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#fromPkcsPem"><span class="hs-identifier hs-var hs-var">fromPkcsPem</span></a></span></span><span> </span><span id="local-6989586621689089268"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089268"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621689089267"><span class="annot"><span class="annottext">[PEM]
-</span><a href="#local-6989586621689089267"><span class="hs-identifier hs-var">pems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String [PEM] -&gt; Either Text [PEM]
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#fromPkcsPem"><span class="hs-identifier hs-var hs-var">fromPkcsPem</span></a></span></span><span> </span><span id="local-6989586621689083870"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689083870"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621689083869"><span class="annot"><span class="annottext">[PEM]
+</span><a href="#local-6989586621689083869"><span class="hs-identifier hs-var">pems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String [PEM] -&gt; Either Text [PEM]
 forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(Either String [PEM] -&gt; Either Text [PEM])
@@ -205,15 +205,15 @@ forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String [PEM]
 </span><span class="hs-identifier hs-var">PEM.pemParseLBS</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089268"><span class="hs-identifier hs-var">bs</span></a></span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621689089265"><span class="annot"><span class="annottext">PEM
-</span><a href="#local-6989586621689089265"><span class="hs-identifier hs-var">pem</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [PEM] -&gt; Either Text PEM
+</span><a href="#local-6989586621689083870"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621689083867"><span class="annot"><span class="annottext">PEM
+</span><a href="#local-6989586621689083867"><span class="hs-identifier hs-var">pem</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [PEM] -&gt; Either Text PEM
 forall a. Text -&gt; [a] -&gt; Either Text a
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#getAtleastOne"><span class="hs-identifier hs-var">getAtleastOne</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;No pem found&quot;</span></span><span> </span><span class="annot"><span class="annottext">[PEM]
-</span><a href="#local-6989586621689089267"><span class="hs-identifier hs-var">pems</span></a></span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621689089263"><span class="annot"><span class="annottext">[ASN1]
-</span><a href="#local-6989586621689089263"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ASN1Error -&gt; Text)
+</span><a href="#local-6989586621689083869"><span class="hs-identifier hs-var">pems</span></a></span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621689083865"><span class="annot"><span class="annottext">[ASN1]
+</span><a href="#local-6989586621689083865"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ASN1Error -&gt; Text)
 -&gt; Either ASN1Error [ASN1] -&gt; Either Text [ASN1]
 forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="annot"><span class="annottext">ASN1Error -&gt; Text
@@ -231,14 +231,14 @@ a -&gt; ByteString -&gt; Either ASN1Error [ASN1]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PEM -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">PEM.pemContent</span></span><span> </span><span class="annot"><span class="annottext">PEM
-</span><a href="#local-6989586621689089265"><span class="hs-identifier hs-var">pem</span></a></span><span>
+</span><a href="#local-6989586621689083867"><span class="hs-identifier hs-var">pem</span></a></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[ASN1]
-</span><a href="#local-6989586621689089263"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689083865"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-69"></span><span>    </span><span class="hs-comment">-- PKCS#1 format</span><span>
 </span><span id="line-70"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Start</span></span><span> </span><span class="annot"><span class="annottext">ASN1ConstructionType
-</span><span class="hs-identifier hs-var">Sequence</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IntVal</span></span><span> </span><span id="local-6989586621689089259"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089259"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IntVal</span></span><span> </span><span id="local-6989586621689089258"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089258"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">End</span></span><span> </span><span class="annot"><span class="annottext">ASN1ConstructionType
+</span><span class="hs-identifier hs-var">Sequence</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IntVal</span></span><span> </span><span id="local-6989586621689083861"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083861"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IntVal</span></span><span> </span><span id="local-6989586621689083860"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083860"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">End</span></span><span> </span><span class="annot"><span class="annottext">ASN1ConstructionType
 </span><span class="hs-identifier hs-var">Sequence</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text PubKey
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -250,15 +250,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer -&gt; Integer -&gt; PublicKey
 </span><span class="hs-identifier hs-var">PublicKey</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Int
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#calculateSize"><span class="hs-identifier hs-var">calculateSize</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089259"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089259"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089258"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689083861"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083861"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083860"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-72"></span><span>    </span><span class="hs-comment">-- try and see if its a PKCS#8 format</span><span>
-</span><span id="line-73"></span><span>    </span><span id="local-6989586621689089254"><span class="annot"><span class="annottext">[ASN1]
-</span><a href="#local-6989586621689089254"><span class="hs-identifier hs-var">asn1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-74"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689089253"><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089253"><span class="hs-identifier hs-var">pub</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689089252"><span class="annot"><span class="annottext">[ASN1]
-</span><a href="#local-6989586621689089252"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text)
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621689083856"><span class="annot"><span class="annottext">[ASN1]
+</span><a href="#local-6989586621689083856"><span class="hs-identifier hs-var">asn1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-74"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621689083855"><span class="annot"><span class="annottext">PubKey
+</span><a href="#local-6989586621689083855"><span class="hs-identifier hs-var">pub</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689083854"><span class="annot"><span class="annottext">[ASN1]
+</span><a href="#local-6989586621689083854"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text)
 -&gt; Either String (PubKey, [ASN1]) -&gt; Either Text (PubKey, [ASN1])
 forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
@@ -268,29 +268,29 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ASN1] -&gt; Either String (PubKey, [ASN1])
 forall a. ASN1Object a =&gt; [ASN1] -&gt; Either String (a, [ASN1])
 </span><span class="hs-identifier hs-var">fromASN1</span></span><span> </span><span class="annot"><span class="annottext">[ASN1]
-</span><a href="#local-6989586621689089254"><span class="hs-identifier hs-var">asn1</span></a></span><span>
+</span><a href="#local-6989586621689083856"><span class="hs-identifier hs-var">asn1</span></a></span><span>
 </span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Either Text () -&gt; Either Text ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ASN1] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[ASN1]
-</span><a href="#local-6989586621689089252"><span class="hs-identifier hs-var">xs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Either Text ()
+</span><a href="#local-6989586621689083854"><span class="hs-identifier hs-var">xs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Either Text ()
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Could not decode public key&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text PubKey
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089253"><span class="hs-identifier hs-var">pub</span></a></span><span>
+</span><a href="#local-6989586621689083855"><span class="hs-identifier hs-var">pub</span></a></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="hs-comment">-- decode a x509 certificate containing the RSA public key or EdDSA (ed25519) public key</span><span>
 </span><span id="line-79"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#fromX509Pem"><span class="hs-identifier hs-type">fromX509Pem</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKey</span></span><span>
 </span><span id="line-80"></span><span id="fromX509Pem"><span class="annot"><span class="annottext">fromX509Pem :: ByteString -&gt; Either Text PubKey
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#fromX509Pem"><span class="hs-identifier hs-var hs-var">fromX509Pem</span></a></span></span><span> </span><span id="local-6989586621689089249"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089249"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#fromX509Pem"><span class="hs-identifier hs-var hs-var">fromX509Pem</span></a></span></span><span> </span><span id="local-6989586621689083851"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689083851"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-81"></span><span>  </span><span class="hs-comment">-- try to parse bytestring to a [PEM]</span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621689089248"><span class="annot"><span class="annottext">[PEM]
-</span><a href="#local-6989586621689089248"><span class="hs-identifier hs-var">pems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String [PEM] -&gt; Either Text [PEM]
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621689083850"><span class="annot"><span class="annottext">[PEM]
+</span><a href="#local-6989586621689083850"><span class="hs-identifier hs-var">pems</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; Either String [PEM] -&gt; Either Text [PEM]
 forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 </span><a href="Hasura.Server.Utils.html#fmapL"><span class="hs-identifier hs-var">fmapL</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(Either String [PEM] -&gt; Either Text [PEM])
@@ -298,17 +298,17 @@ forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String [PEM]
 </span><span class="hs-identifier hs-var">PEM.pemParseLBS</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689089249"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689083851"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-83"></span><span>  </span><span class="hs-comment">-- fail if [PEM] is empty</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621689089247"><span class="annot"><span class="annottext">PEM
-</span><a href="#local-6989586621689089247"><span class="hs-identifier hs-var">pem</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [PEM] -&gt; Either Text PEM
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621689083849"><span class="annot"><span class="annottext">PEM
+</span><a href="#local-6989586621689083849"><span class="hs-identifier hs-var">pem</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [PEM] -&gt; Either Text PEM
 forall a. Text -&gt; [a] -&gt; Either Text a
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#getAtleastOne"><span class="hs-identifier hs-var">getAtleastOne</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;No pem found&quot;</span></span><span> </span><span class="annot"><span class="annottext">[PEM]
-</span><a href="#local-6989586621689089248"><span class="hs-identifier hs-var">pems</span></a></span><span>
+</span><a href="#local-6989586621689083850"><span class="hs-identifier hs-var">pems</span></a></span><span>
 </span><span id="line-85"></span><span>  </span><span class="hs-comment">-- decode the bytestring to a certificate</span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621689089246"><span class="annot"><span class="annottext">SignedCertificate
-</span><a href="#local-6989586621689089246"><span class="hs-identifier hs-var">signedExactCert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621689083848"><span class="annot"><span class="annottext">SignedCertificate
+</span><a href="#local-6989586621689083848"><span class="hs-identifier hs-var">signedExactCert</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">(String -&gt; Text)
 -&gt; Either String SignedCertificate -&gt; Either Text SignedCertificate
 forall a a' b. (a -&gt; a') -&gt; Either a b -&gt; Either a' b
@@ -324,9 +324,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">PEM -&gt; ByteString
 </span><span class="hs-identifier hs-var hs-var">PEM.pemContent</span></span><span> </span><span class="annot"><span class="annottext">PEM
-</span><a href="#local-6989586621689089247"><span class="hs-identifier hs-var">pem</span></a></span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689089244"><span class="annot"><span class="annottext">cert :: Certificate
-</span><a href="#local-6989586621689089244"><span class="hs-identifier hs-var hs-var">cert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Signed Certificate -&gt; Certificate
+</span><a href="#local-6989586621689083849"><span class="hs-identifier hs-var">pem</span></a></span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689083846"><span class="annot"><span class="annottext">cert :: Certificate
+</span><a href="#local-6989586621689083846"><span class="hs-identifier hs-var hs-var">cert</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Signed Certificate -&gt; Certificate
 forall a. (Show a, Eq a, ASN1Object a) =&gt; Signed a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">X509.signedObject</span></span><span> </span><span class="annot"><span class="annottext">(Signed Certificate -&gt; Certificate)
 -&gt; Signed Certificate -&gt; Certificate
@@ -334,29 +334,29 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SignedCertificate -&gt; Signed Certificate
 forall a. (Show a, Eq a, ASN1Object a) =&gt; SignedExact a -&gt; Signed a
 </span><span class="hs-identifier hs-var hs-var">X509.getSigned</span></span><span> </span><span class="annot"><span class="annottext">SignedCertificate
-</span><a href="#local-6989586621689089246"><span class="hs-identifier hs-var">signedExactCert</span></a></span><span>
-</span><span id="line-91"></span><span>      </span><span id="local-6989586621689089241"><span class="annot"><span class="annottext">pubKey :: PubKey
-</span><a href="#local-6989586621689089241"><span class="hs-identifier hs-var hs-var">pubKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Certificate -&gt; PubKey
+</span><a href="#local-6989586621689083848"><span class="hs-identifier hs-var">signedExactCert</span></a></span><span>
+</span><span id="line-91"></span><span>      </span><span id="local-6989586621689083843"><span class="annot"><span class="annottext">pubKey :: PubKey
+</span><a href="#local-6989586621689083843"><span class="hs-identifier hs-var hs-var">pubKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Certificate -&gt; PubKey
 </span><span class="hs-identifier hs-var hs-var">X509.certPubKey</span></span><span> </span><span class="annot"><span class="annottext">Certificate
-</span><a href="#local-6989586621689089244"><span class="hs-identifier hs-var">cert</span></a></span><span>
+</span><a href="#local-6989586621689083846"><span class="hs-identifier hs-var">cert</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089241"><span class="hs-identifier hs-var">pubKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-93"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKeyRSA</span></span><span> </span><span id="local-6989586621689089239"><span class="annot"><span class="annottext">PublicKey
-</span><a href="#local-6989586621689089239"><span class="hs-identifier hs-var">pk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text PubKey
+</span><a href="#local-6989586621689083843"><span class="hs-identifier hs-var">pubKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKeyRSA</span></span><span> </span><span id="local-6989586621689083841"><span class="annot"><span class="annottext">PublicKey
+</span><a href="#local-6989586621689083841"><span class="hs-identifier hs-var">pk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text PubKey
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(PubKey -&gt; Either Text PubKey) -&gt; PubKey -&gt; Either Text PubKey
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PublicKey -&gt; PubKey
 </span><span class="hs-identifier hs-var">X509.PubKeyRSA</span></span><span> </span><span class="annot"><span class="annottext">PublicKey
-</span><a href="#local-6989586621689089239"><span class="hs-identifier hs-var">pk</span></a></span><span>
-</span><span id="line-94"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKeyEd25519</span></span><span> </span><span id="local-6989586621689089237"><span class="annot"><span class="annottext">PublicKey
-</span><a href="#local-6989586621689089237"><span class="hs-identifier hs-var">pk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text PubKey
+</span><a href="#local-6989586621689083841"><span class="hs-identifier hs-var">pk</span></a></span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKeyEd25519</span></span><span> </span><span id="local-6989586621689083839"><span class="annot"><span class="annottext">PublicKey
+</span><a href="#local-6989586621689083839"><span class="hs-identifier hs-var">pk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PubKey -&gt; Either Text PubKey
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(PubKey -&gt; Either Text PubKey) -&gt; PubKey -&gt; Either Text PubKey
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PublicKey -&gt; PubKey
 </span><span class="hs-identifier hs-var">X509.PubKeyEd25519</span></span><span> </span><span class="annot"><span class="annottext">PublicKey
-</span><a href="#local-6989586621689089237"><span class="hs-identifier hs-var">pk</span></a></span><span>
+</span><a href="#local-6989586621689083839"><span class="hs-identifier hs-var">pk</span></a></span><span>
 </span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">PubKey
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text PubKey
 forall a b. a -&gt; Either a b
@@ -365,17 +365,17 @@ forall a b. a -&gt; Either a b
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#pubKeyToJwk"><span class="hs-identifier hs-type">pubKeyToJwk</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKey</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JWK</span></span><span>
 </span><span id="line-98"></span><span id="pubKeyToJwk"><span class="annot"><span class="annottext">pubKeyToJwk :: PubKey -&gt; Either Text JWK
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#pubKeyToJwk"><span class="hs-identifier hs-var hs-var">pubKeyToJwk</span></a></span></span><span> </span><span id="local-6989586621689089236"><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089236"><span class="hs-identifier hs-var">pubKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-99"></span><span>  </span><span id="local-6989586621689089235"><span class="annot"><span class="annottext">JWK
-</span><a href="#local-6989586621689089235"><span class="hs-identifier hs-var">jwk'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either Text JWK
-</span><a href="#local-6989586621689089234"><span class="hs-identifier hs-var">mkJwk</span></a></span><span>
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#pubKeyToJwk"><span class="hs-identifier hs-var hs-var">pubKeyToJwk</span></a></span></span><span> </span><span id="local-6989586621689083838"><span class="annot"><span class="annottext">PubKey
+</span><a href="#local-6989586621689083838"><span class="hs-identifier hs-var">pubKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621689083837"><span class="annot"><span class="annottext">JWK
+</span><a href="#local-6989586621689083837"><span class="hs-identifier hs-var">jwk'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either Text JWK
+</span><a href="#local-6989586621689083836"><span class="hs-identifier hs-var">mkJwk</span></a></span><span>
 </span><span id="line-100"></span><span>  </span><span class="annot"><span class="annottext">JWK -&gt; Either Text JWK
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(JWK -&gt; Either Text JWK) -&gt; JWK -&gt; Either Text JWK
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JWK
-</span><a href="#local-6989586621689089235"><span class="hs-identifier hs-var">jwk'</span></a></span><span> </span><span class="annot"><span class="annottext">JWK -&gt; (JWK -&gt; JWK) -&gt; JWK
+</span><a href="#local-6989586621689083837"><span class="hs-identifier hs-var">jwk'</span></a></span><span> </span><span class="annot"><span class="annottext">JWK -&gt; (JWK -&gt; JWK) -&gt; JWK
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">(Maybe [KeyOp] -&gt; Identity (Maybe [KeyOp])) -&gt; JWK -&gt; Identity JWK
 Lens' JWK (Maybe [KeyOp])
@@ -388,13 +388,13 @@ forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">KeyOp
 </span><span class="hs-identifier hs-var">Verify</span></span><span class="hs-special">]</span><span>
 </span><span id="line-101"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-102"></span><span>    </span><span id="local-6989586621689089234"><span class="annot"><span class="annottext">mkJwk :: Either Text JWK
-</span><a href="#local-6989586621689089234"><span class="hs-identifier hs-var hs-var">mkJwk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PubKey
-</span><a href="#local-6989586621689089236"><span class="hs-identifier hs-var">pubKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-102"></span><span>    </span><span id="local-6989586621689083836"><span class="annot"><span class="annottext">mkJwk :: Either Text JWK
+</span><a href="#local-6989586621689083836"><span class="hs-identifier hs-var hs-var">mkJwk</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PubKey
+</span><a href="#local-6989586621689083838"><span class="hs-identifier hs-var">pubKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-103"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKeyRSA</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">PublicKey</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689089229"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089229"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621689089228"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089228"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689083831"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083831"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621689083830"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083830"><span class="hs-identifier hs-var">e</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">JWK -&gt; Either Text JWK
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(JWK -&gt; Either Text JWK) -&gt; JWK -&gt; Either Text JWK
@@ -404,11 +404,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RSAKeyParameters -&gt; KeyMaterial
 </span><span class="hs-identifier hs-var">RSAKeyMaterial</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; RSAKeyParameters
-</span><a href="#local-6989586621689089225"><span class="hs-identifier hs-var">rsaKeyParams</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089229"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089228"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-105"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKeyEd25519</span></span><span> </span><span id="local-6989586621689089224"><span class="annot"><span class="annottext">PublicKey
-</span><a href="#local-6989586621689089224"><span class="hs-identifier hs-var">pubKeyEd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689083827"><span class="hs-identifier hs-var">rsaKeyParams</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083831"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083830"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">X509.PubKeyEd25519</span></span><span> </span><span id="local-6989586621689083826"><span class="annot"><span class="annottext">PublicKey
+</span><a href="#local-6989586621689083826"><span class="hs-identifier hs-var">pubKeyEd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-106"></span><span>        </span><span class="annot"><span class="annottext">JWK -&gt; Either Text JWK
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(JWK -&gt; Either Text JWK) -&gt; JWK -&gt; Either Text JWK
@@ -419,7 +419,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OKPKeyParameters -&gt; KeyMaterial
 </span><span class="hs-identifier hs-var">OKPKeyMaterial</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PublicKey -&gt; Maybe SecretKey -&gt; OKPKeyParameters
 </span><span class="hs-identifier hs-var">Ed25519Key</span></span><span> </span><span class="annot"><span class="annottext">PublicKey
-</span><a href="#local-6989586621689089224"><span class="hs-identifier hs-var">pubKeyEd</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SecretKey
+</span><a href="#local-6989586621689083826"><span class="hs-identifier hs-var">pubKeyEd</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SecretKey
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span>
 </span><span id="line-107"></span><span>      </span><span class="annot"><span class="annottext">PubKey
@@ -427,66 +427,66 @@ forall a. Maybe a
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;This key type is not supported&quot;</span></span><span>
-</span><span id="line-108"></span><span>    </span><span id="local-6989586621689089225"><span class="annot"><span class="annottext">rsaKeyParams :: Integer -&gt; Integer -&gt; RSAKeyParameters
-</span><a href="#local-6989586621689089225"><span class="hs-identifier hs-var hs-var">rsaKeyParams</span></a></span></span><span> </span><span id="local-6989586621689089221"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089221"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621689089220"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089220"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-108"></span><span>    </span><span id="local-6989586621689083827"><span class="annot"><span class="annottext">rsaKeyParams :: Integer -&gt; Integer -&gt; RSAKeyParameters
+</span><a href="#local-6989586621689083827"><span class="hs-identifier hs-var hs-var">rsaKeyParams</span></a></span></span><span> </span><span id="local-6989586621689083823"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083823"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621689083822"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689083822"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-109"></span><span>      </span><span class="annot"><span class="annottext">Base64Integer
 -&gt; Base64Integer
 -&gt; Maybe RSAPrivateKeyParameters
 -&gt; RSAKeyParameters
 </span><span class="hs-identifier hs-var">RSAKeyParameters</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Base64Integer
 </span><span class="hs-identifier hs-var">Base64Integer</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089221"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Base64Integer
+</span><a href="#local-6989586621689083823"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Base64Integer
 </span><span class="hs-identifier hs-var">Base64Integer</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689089220"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe RSAPrivateKeyParameters
+</span><a href="#local-6989586621689083822"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe RSAPrivateKeyParameters
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-110"></span><span>
-</span><span id="line-111"></span><span id="local-6989586621689089357"><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#getAtleastOne"><span class="hs-identifier hs-type">getAtleastOne</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689089357"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="#local-6989586621689089357"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-111"></span><span id="local-6989586621689083959"><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#getAtleastOne"><span class="hs-identifier hs-type">getAtleastOne</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689083959"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="#local-6989586621689083959"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-112"></span><span id="getAtleastOne"><span class="annot"><span class="annottext">getAtleastOne :: Text -&gt; [a] -&gt; Either Text a
-</span><a href="Hasura.Server.Auth.JWT.Internal.html#getAtleastOne"><span class="hs-identifier hs-var hs-var">getAtleastOne</span></a></span></span><span> </span><span id="local-6989586621689089217"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089217"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text a
+</span><a href="Hasura.Server.Auth.JWT.Internal.html#getAtleastOne"><span class="hs-identifier hs-var hs-var">getAtleastOne</span></a></span></span><span> </span><span id="local-6989586621689083819"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689083819"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text a
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689089217"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621689083819"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-113"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#getAtleastOne"><span class="hs-identifier hs-var">getAtleastOne</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689089216"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089216"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689083818"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689083818"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[a]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Either Text a
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689089216"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689083818"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.Internal.html#calculateSize"><span class="hs-identifier hs-type">calculateSize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
 </span><span id="line-116"></span><span id="calculateSize"><span class="annot"><span class="annottext">calculateSize :: Integer -&gt; Int
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#calculateSize"><span class="hs-identifier hs-var hs-var">calculateSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer -&gt; Int
 forall t t. (Integral t, Num t, Ord t) =&gt; t -&gt; t -&gt; t
-</span><a href="#local-6989586621689089215"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689083817"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
 </span><span id="line-117"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-118"></span><span>    </span><span id="local-6989586621689089215"><span class="annot"><span class="annottext">go :: t -&gt; t -&gt; t
-</span><a href="#local-6989586621689089215"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689089214"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689089214"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621689089213"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689089213"><span class="hs-identifier hs-var">n</span></a></span></span><span>
+</span><span id="line-118"></span><span>    </span><span id="local-6989586621689083817"><span class="annot"><span class="annottext">go :: t -&gt; t -&gt; t
+</span><a href="#local-6989586621689083817"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621689083816"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689083816"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621689083815"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689083815"><span class="hs-identifier hs-var">n</span></a></span></span><span>
 </span><span id="line-119"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">t
 </span><span class="hs-number">2</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a b. (Num a, Integral b) =&gt; a -&gt; b -&gt; a
 </span><span class="hs-operator hs-var">^</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689089214"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
+</span><a href="#local-6989586621689083816"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">t
 </span><span class="hs-number">8</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689089213"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689089214"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621689083815"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689083816"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-120"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
-</span><a href="#local-6989586621689089215"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689089214"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
+</span><a href="#local-6989586621689083817"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689083816"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">t
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689089213"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689083815"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-121"></span></pre></body></html>
