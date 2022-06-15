@@ -30,6 +30,7 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
 ## Required setup for BigQuery tests
 
 Running integration tests against a BigQuery data source is a more involved due to the necessary service account requirements:
+
 ```
 HASURA_BIGQUERY_PROJECT_ID=# the project ID of the service account
 HASURA_BIGQUERY_SERVICE_KEY=# the service account key
@@ -38,24 +39,34 @@ HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL=# eg. "<<SERVICE_ACCOUNT_NAME>>@<<PROJECT_
 ```
 
 Before running the test suite:
-1. Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Store the project ID and account email in `HASURA_BIGQUERY_PROJECT_ID` variable.
-2. [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the contents of file in a `HASURA_BIGQUERY_SERVICE_KEY` variable.
+
+1.  Ensure you have access to a [Google Cloud Console service account](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Store the project ID and account email in `HASURA_BIGQUERY_PROJECT_ID` variable.
+
+2.  [Create and download a new service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Store the contents of file in a `HASURA_BIGQUERY_SERVICE_KEY` variable.
+
     ```bash
     export HASURA_BIGQUERY_SERVICE_KEY=$(cat /path/to/service/account)
     ```
-3. [Login and activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
-4. Verify the service account is accessible via the [BigQuery API](https://cloud.google.com/bigquery/docs/reference/rest):
-    1. Run the following command:
-    ```bash
-    source scripts/verify-bigquery-creds.sh $HASURA_BIGQUERY_PROJECT_ID $HASURA_BIGQUERY_SERVICE_KEY $HASURA_BIGQUERY_SERVICE_ACCOUNT_EMAIL
-    ```
-    If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
-5. Finally, run the BigQuery tests once the `HASURA_BIGQUERY_SERVICE_KEY` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
-  ```
-  cabal run tests-hspec -- -m "BigQuery"
-  ```
 
-*Note to Hasura team: a service account is already setup for internal use, please check the wiki for further details.*
+3.  [Login and activate the service account](https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account), if it is not already activated.
+
+4.  Verify the service account is accessible via the [BigQuery API](https://cloud.google.com/bigquery/docs/reference/rest), by running the following command:
+
+    ```bash
+    ./scripts/verify-bigquery-creds.sh
+    ```
+
+    If the query succeeds, the service account is setup correctly to run tests against BigQuery locally.
+
+5.  If necessary, create a dataset called "hasura" in the [BigQuery workspace](https://console.cloud.google.com/bigquery).
+
+6.  Finally, run the BigQuery tests once the `HASURA_BIGQUERY_SERVICE_KEY` and `HASURA_BIGQUERY_PROJECT_ID` environment variables set. For example:
+
+    ```
+    cabal run tests-hspec -- -m "BigQuery"
+    ```
+
+_Note to Hasura team: a service account is already setup for internal use, please check the wiki for further details._
 
 ## Running the test suite
 
