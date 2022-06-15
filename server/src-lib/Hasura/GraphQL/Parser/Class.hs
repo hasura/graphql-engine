@@ -7,9 +7,7 @@ module Hasura.GraphQL.Parser.Class
   )
 where
 
-import GHC.Stack (HasCallStack)
 import Hasura.GraphQL.Parser.Class.Parse
-import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.Prelude
 import Language.Haskell.TH qualified as TH
 import Type.Reflection (Typeable)
@@ -93,7 +91,7 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
   -- @
   memoizeOn ::
     forall p a b.
-    (HasCallStack, Ord a, Typeable p, Typeable a, Typeable b) =>
+    (Ord a, Typeable p, Typeable a, Typeable b) =>
     -- | A unique name used to identify the function being memoized. There isn’t
     -- really any metaprogramming going on here, we just use a Template Haskell
     -- 'TH.Name' as a convenient source for a static, unique identifier.
@@ -108,8 +106,8 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
 -- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
 -- as the key.
 memoize ::
-  (HasCallStack, MonadSchema n m, Ord a, Typeable a, Typeable b, Typeable k) =>
+  (MonadSchema n m, Ord a, Typeable a, Typeable b, Typeable p) =>
   TH.Name ->
-  (a -> m (Parser k n b)) ->
-  (a -> m (Parser k n b))
+  (a -> m (p n b)) ->
+  (a -> m (p n b))
 memoize name f a = memoizeOn name a (f a)
