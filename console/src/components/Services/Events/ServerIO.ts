@@ -1,4 +1,5 @@
 import { push, replace } from 'react-router-redux';
+import { getDataSources } from '@/metadata/selector';
 import { Thunk } from '../../../types';
 import { makeMigrationCall } from '../Data/DataActions';
 import requestAction from '../../../utils/requestAction';
@@ -22,6 +23,7 @@ import {
   EventTrigger,
   EventKind,
   InvocationLog,
+  DatabaseInfo,
 } from './types';
 import { setCurrentTrigger } from './reducer';
 import { LocalScheduledTriggerState } from './CronTriggers/state';
@@ -42,7 +44,6 @@ import {
 } from '../Common/Notification';
 import { EventTriggerProperty } from './EventTriggers/Modify/utils';
 import { getLogsTableDef } from './utils';
-import { Table } from '../../../dataSources/types';
 import {
   generateCreateEventTriggerQuery,
   getDropEventTriggerQuery,
@@ -62,6 +63,7 @@ import Migration from '../../../utils/migration/Migration';
 import _push from '../Data/push';
 import { RequestTransformState } from '../../Common/ConfigureTransformation/stateDefaults';
 import { getRequestTransformObject } from '../../Common/ConfigureTransformation/utils';
+import { getSourceDriver } from '../Data/utils';
 
 export const addScheduledTrigger = (
   state: LocalScheduledTriggerState,
@@ -298,6 +300,8 @@ export const createEventTrigger = (
   errorCb?: () => null
 ): Thunk => {
   return (dispatch, getState) => {
+    const dataSourcesList = getDataSources(getState());
+    const driver = getSourceDriver(dataSourcesList, state.source);
     const validationError = validateETState(state);
     if (validationError) {
       dispatch(
@@ -314,12 +318,15 @@ export const createEventTrigger = (
       requestTransform
         ? generateCreateEventTriggerQuery(
             state,
-            state.source,
+            { name: state.source, driver },
             false,
             requestTransform
           )
-        : generateCreateEventTriggerQuery(state, state.source),
-      getDropEventTriggerQuery(state.name, state.source)
+        : generateCreateEventTriggerQuery(state, {
+            name: state.source,
+            driver,
+          }),
+      getDropEventTriggerQuery(state.name, { name: state.source, driver })
     );
 
     const requestMsg = 'Creating event trigger...';
@@ -360,38 +367,39 @@ export const modifyEventTrigger = (
   state: LocalEventTriggerState,
   transformState: RequestTransformState,
   trigger: EventTrigger,
+  databaseInfo: DatabaseInfo,
   property?: EventTriggerProperty,
-  table?: Table,
   successCb?: () => void,
   errorCb?: () => void
 ): Thunk => (dispatch, getState) => {
-  const currentSource = getState().tables.currentDataSource;
+  const dataSourcesList = getDataSources(getState());
+  const driver = getSourceDriver(dataSourcesList, state.source);
   const requestTransform = getRequestTransformObject(transformState);
 
   const downQuery = requestTransform
     ? generateCreateEventTriggerQuery(
-        parseServerETDefinition(trigger, table),
-        currentSource,
+        parseServerETDefinition(trigger, databaseInfo),
+        { name: state.source, driver },
         true,
         requestTransform
       )
     : generateCreateEventTriggerQuery(
-        parseServerETDefinition(trigger, table),
-        currentSource,
+        parseServerETDefinition(trigger, databaseInfo),
+        { name: state.source, driver },
         true
       );
 
   // TODO optimise redeclaration of queries
   const upQuery = requestTransform
     ? generateCreateEventTriggerQuery(
-        parseServerETDefinition(trigger, table),
-        currentSource,
+        parseServerETDefinition(trigger, databaseInfo),
+        { name: state.source, driver },
         true,
         requestTransform
       )
     : generateCreateEventTriggerQuery(
-        parseServerETDefinition(trigger, table),
-        currentSource,
+        parseServerETDefinition(trigger, databaseInfo),
+        { name: state.source, driver },
         true
       );
 
@@ -485,7 +493,8 @@ export const deleteEventTrigger = (
   successCb?: () => void,
   errorCb?: () => void
 ): Thunk => (dispatch, getState) => {
-  const source = getState().tables.currentDataSource;
+  const dataSourcesList = getDataSources(getState());
+  const driver = getSourceDriver(dataSourcesList, trigger.source);
 
   const isOk = getConfirmation(
     `This will permanently delete the event trigger and the associated metadata`,
@@ -498,8 +507,14 @@ export const deleteEventTrigger = (
 
   const migration = new Migration();
   migration.add(
-    getDropEventTriggerQuery(trigger.name, source),
-    generateCreateEventTriggerQuery(parseServerETDefinition(trigger), source)
+    getDropEventTriggerQuery(trigger.name, {
+      name: trigger.source,
+      driver,
+    }),
+    generateCreateEventTriggerQuery(parseServerETDefinition(trigger), {
+      name: trigger.source,
+      driver,
+    })
   );
 
   const migrationName = `delete_et_${trigger.name}`;

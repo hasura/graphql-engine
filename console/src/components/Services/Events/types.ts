@@ -104,6 +104,15 @@ export type EventTrigger = {
   request_transform?: RequestTransform;
 };
 
+export type DatabaseInfo = {
+  [schema_name: string]: {
+    [table_name: string]: {
+      columnName: string;
+      columnType: string;
+    }[];
+  };
+};
+
 /*
  * Types related to Scheduled Triggers
  */

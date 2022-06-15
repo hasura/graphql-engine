@@ -8,7 +8,6 @@ type PropsFromState = {
   triggerName: string;
   currentTrigger: EventTrigger;
   readOnlyMode: boolean;
-  currentSource: string;
 };
 
 const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
@@ -27,7 +26,6 @@ const mapStateToProps: MapStateToProps<PropsFromState, RouterTriggerProps> = (
     triggerName,
     currentTrigger,
     readOnlyMode: state.main.readOnlyMode,
-    currentSource: state.tables.currentDataSource,
   };
 };
 

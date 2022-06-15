@@ -64,8 +64,8 @@ const RedeliverEvent: React.FC<Props> = ({
   return (
     <div className="content-fluid">
       <div>
-        <div className="pl-0 w-full pr-0">
-          <div className="pl-0 w-1/2">
+        <div className="flex pl-0 w-full pr-0">
+          <div className="pr-xs w-1/2">
             <div> Request </div>
             <AceEditor
               mode="json"
@@ -80,7 +80,7 @@ const RedeliverEvent: React.FC<Props> = ({
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
             />
           </div>
-          <div className="pr-0 w-1/2">
+          <div className="pl-xs w-1/2">
             <div className="flex">
               <div className="mr-sm">Latest Invocation Response</div>
             </div>
@@ -105,7 +105,6 @@ const RedeliverEvent: React.FC<Props> = ({
             />
           </div>
         </div>
-        clear: both; margin: 0;
         <div className="m-0 clear-both pt-md">
           <div className="m-md">
             <em>Recent Invocations</em>

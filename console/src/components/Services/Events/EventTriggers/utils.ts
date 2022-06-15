@@ -121,13 +121,20 @@ export const etInvocationLogsTable: BaseTable = {
 
 type ColVals = string | number | boolean;
 
+/**
+ * Returns an example value to be used in `Sample Input` section of `Rest connectors`
+ * We don't need strict checking of all types as its used for sample input
+ * @param type Type of the table column, varies with different databases
+ * @param value Name of the table column
+ */
 const getValueFromDataType = (type: string, value: string): ColVals => {
   const maxNum = 20;
-  if (type === 'integer' || type === 'numeric') {
+  const typeStr = type.toLowerCase();
+  if (typeStr === 'integer' || typeStr === 'numeric' || typeStr === 'int') {
     return Math.floor(Math.random() * maxNum);
-  } else if (type === 'boolean') {
+  } else if (typeStr === 'boolean') {
     return true;
-  } else if (type === 'date') {
+  } else if (typeStr.includes('date') || typeStr.includes('timestamp')) {
     return new Date().toISOString();
   }
   return value;

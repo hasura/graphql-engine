@@ -369,10 +369,13 @@ const RelationshipEditor = ({
                   )}
                   {currentDatabaseInfo[refSchema] &&
                     currentDatabaseInfo[refSchema][refTable] &&
-                    currentDatabaseInfo[refSchema][refTable].map(rcOpt => {
+                    currentDatabaseInfo[refSchema][refTable].map(columnInfo => {
                       return (
-                        <option key={rcOpt} value={rcOpt}>
-                          {rcOpt}
+                        <option
+                          key={columnInfo?.columnName}
+                          value={columnInfo?.columnName}
+                        >
+                          {columnInfo?.columnName}
                         </option>
                       );
                     })}

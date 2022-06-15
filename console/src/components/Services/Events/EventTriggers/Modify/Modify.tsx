@@ -37,43 +37,40 @@ import {
   getTransformState,
 } from '@/components/Common/ConfigureTransformation/utils';
 import { Button } from '@/new-components/Button';
+import { getSourceDriver } from '../../../Data/utils';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getEventRequestSampleInput } from '../utils';
 import TableHeader from '../TableCommon/TableHeader';
-import { updateSchemaInfo } from '../../../Data/DataActions';
-import { useEventTriggerModify } from '../state';
+import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
+import { parseServerETDefinition, useEventTriggerModify } from '../state';
 import Info from './Info';
 import WebhookEditor from './WebhookEditor';
 import { OperationEditor } from './OperationEditor';
 import RetryConfEditor from './RetryConfEditor';
 import HeadersEditor from './HeadersEditor';
 import { ReduxState } from '../../../../../types';
-import { RouterTriggerProps } from '../../types';
-import { findETTable } from '../../utils';
+import { DatabaseInfo, RouterTriggerProps } from '../../types';
 import { EventTriggerProperty } from './utils';
 import { modifyEventTrigger, deleteEventTrigger } from '../../ServerIO';
 import { NotFoundError } from '../../../../Error/PageNotFound';
-import { getEventTriggerByName } from '../../../../../metadata/selector';
+import {
+  getDataSources,
+  getEventTriggerByName,
+} from '../../../../../metadata/selector';
 
 interface Props extends InjectedProps {}
 
 const Modify: React.FC<Props> = props => {
-  const {
-    currentTrigger,
-    allSchemas,
-    readOnlyMode,
-    dispatch,
-    currentDataSource,
-  } = props;
+  const { currentTrigger, readOnlyMode, dataSourcesList, dispatch } = props;
   if (!currentTrigger) {
     // throw a 404 exception
     throw new NotFoundError();
   }
 
+  const [databaseInfo, setDatabaseInfo] = React.useState<DatabaseInfo>({});
   const { state, setState } = useEventTriggerModify(
     currentTrigger,
-    allSchemas,
-    currentDataSource
+    databaseInfo
   );
 
   const [transformState, transformDispatch] = useReducer(
@@ -83,11 +80,15 @@ const Modify: React.FC<Props> = props => {
 
   useEffect(() => {
     if (currentTrigger) {
-      dispatch(
-        updateSchemaInfo({
-          schemas: [currentTrigger.schema_name],
-        })
-      );
+      const driver = getSourceDriver(dataSourcesList, currentTrigger.source);
+      if (currentTrigger.source) {
+        dispatch(
+          getDatabaseSchemasInfo(driver, currentTrigger.source) as any
+        ).then((dbInfo: DatabaseInfo) => {
+          setState.bulk(parseServerETDefinition(currentTrigger, dbInfo));
+          setDatabaseInfo(dbInfo);
+        });
+      }
     }
   }, [currentTrigger.name]);
 
@@ -302,8 +303,6 @@ const Modify: React.FC<Props> = props => {
     }
   }, [transformState.requestTransformedBody]);
 
-  const table = findETTable(currentTrigger, allSchemas);
-
   const saveWrapper = (property?: EventTriggerProperty) => (
     successCb?: () => void,
     errorCb?: () => void
@@ -313,8 +312,8 @@ const Modify: React.FC<Props> = props => {
         state,
         transformState,
         currentTrigger,
+        databaseInfo,
         property,
-        table,
         successCb,
         errorCb
       )
@@ -348,9 +347,7 @@ const Modify: React.FC<Props> = props => {
           />
           <OperationEditor
             currentTrigger={currentTrigger}
-            allTableColumns={
-              findETTable(currentTrigger, allSchemas)?.columns || []
-            }
+            databaseInfo={databaseInfo}
             operations={state.operations}
             setOperations={setState.operations}
             operationColumns={state.operationColumns}
@@ -420,12 +417,12 @@ const Modify: React.FC<Props> = props => {
 const mapStateToProps = (state: ReduxState, ownProps: RouterTriggerProps) => {
   const modifyTriggerName = ownProps.params.triggerName;
   const currentTrigger = getEventTriggerByName(state)(modifyTriggerName);
+  const dataSourcesList = getDataSources(state);
 
   return {
     currentTrigger,
-    allSchemas: state.tables.allSchemas,
     readOnlyMode: state.main.readOnlyMode,
-    currentDataSource: state.tables.currentDataSource,
+    dataSourcesList,
   };
 };
 

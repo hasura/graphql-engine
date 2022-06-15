@@ -539,7 +539,7 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
 ) => {
   const url = Endpoints.query;
   const sql = services[sourceType].getDatabaseInfo;
-  const query = getRunSqlQuery(sql, sourceName, false, true);
+  const query = getRunSqlQuery(sql, sourceName, false, true, sourceType);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -556,22 +556,49 @@ export const getDatabaseSchemasInfo = (sourceType = 'postgres', sourceName) => (
         ({ source }) => source === sourceName
       );
       const schemasInfo = {};
+      if (sourceType === 'mssql') {
+        const resultString = result
+          .slice(1)
+          .reduce((acc, str) => acc + str, '');
+        JSON.parse(resultString).forEach(i => {
+          if (
+            !trackedTables.some(
+              t =>
+                t.table.name === i.table_name &&
+                t.table.schema === i.table_schema
+            )
+          ) {
+            return;
+          }
+          schemasInfo[i.table_schema] = {
+            ...schemasInfo?.[i.table_schema],
+            [i.table_name]: schemasInfo?.[i.table_schema]?.[i.table_name]
+              ? [...schemasInfo?.[i.table_schema]?.[i.table_name], i.column]
+              : [i.column],
+          };
+        });
+      }
 
-      JSON.parse(result[1]).forEach(i => {
-        if (
-          !trackedTables.some(
-            t =>
-              t.table.name === i.table_name && t.table.schema === i.table_schema
-          )
-        ) {
-          return;
-        }
-        schemasInfo[i.table_schema] = {
-          ...schemasInfo[i.table_schema],
-          [i.table_name]: i.columns,
-        };
-      });
-
+      if (sourceType === 'postgres') {
+        JSON.parse(result[1]).forEach(i => {
+          if (
+            !trackedTables.some(
+              t =>
+                t.table.name === i.table_name &&
+                t.table.schema === i.table_schema
+            )
+          ) {
+            return;
+          }
+          schemasInfo[i.table_schema] = {
+            ...schemasInfo[i.table_schema],
+            [i.table_name]: i.columns?.map((col, index) => ({
+              columnName: col,
+              columnType: i.column_types?.[index] ?? '',
+            })),
+          };
+        });
+      }
       return schemasInfo;
     },
     error => {

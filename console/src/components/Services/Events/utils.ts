@@ -7,10 +7,9 @@ import {
   ScheduledTrigger,
   EventKind,
 } from './types';
-import { convertDateTimeToLocale } from '../../Common/utils/jsUtils';
+import { convertDateTimeToLocale, isArray } from '../../Common/utils/jsUtils';
 import { Nullable } from '../../Common/utils/tsUtils';
-import { TableColumn, Table } from '../../../dataSources/types';
-import { generateTableDef, findTable } from '../../../dataSources';
+import { generateTableDef } from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 
 export const parseServerWebhook = (
@@ -36,21 +35,19 @@ export const parseEventTriggerOperations = (
 
 export const getETOperationColumns = (
   updateColumns: string[] | '*',
-  columns: TableColumn[]
+  columnInfo: { columnName: string; columnType: string }[]
 ): ETOperationColumn[] => {
-  return columns.map(c => {
-    return {
-      name: c.column_name,
-      enabled:
-        updateColumns === '*' ? true : updateColumns.includes(c.column_name),
-      type: c.data_type,
-    };
-  });
-};
-
-export const findETTable = (et: EventTrigger, allTables: Table[] = []) => {
-  if (!et) return undefined;
-  return findTable(allTables, generateTableDef(et.table_name, et.schema_name));
+  if (columnInfo && isArray(columnInfo)) {
+    return columnInfo?.map(c => {
+      return {
+        name: c.columnName,
+        enabled:
+          updateColumns === '*' ? true : updateColumns.includes(c.columnName),
+        type: c.columnType ?? '',
+      };
+    });
+  }
+  return [];
 };
 
 export const findEventTrigger = (
