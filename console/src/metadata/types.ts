@@ -1041,6 +1041,18 @@ export type ConnectionParams = {
   port: number;
 };
 
+export type GraphQLFieldCustomization = {
+  rootFields?: {
+    namespace?: string;
+    prefix?: string;
+    suffix?: string;
+  };
+  typeNames?: {
+    prefix?: string;
+    suffix?: string;
+  };
+};
+
 export interface SourceConnectionInfo {
   // used for SQL Server
   connection_string?: string | { from_env: string };
@@ -1074,6 +1086,11 @@ export interface HasuraMetadataV2 {
   cron_triggers?: CronTrigger[];
 }
 
+type GraphQLCustomizationMetadata = {
+  root_fields: GraphQLFieldCustomization['rootFields'];
+  type_names: GraphQLFieldCustomization['typeNames'];
+};
+
 export interface MetadataDataSource {
   name: string;
   kind: 'postgres' | 'mysql' | 'mssql' | 'bigquery' | 'citus';
@@ -1097,6 +1114,7 @@ export interface MetadataDataSource {
   }>;
   query_collections?: QueryCollectionEntry[];
   allowlist?: AllowList[];
+  customization?: GraphQLCustomizationMetadata;
 }
 
 export interface InheritedRole {

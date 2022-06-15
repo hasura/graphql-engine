@@ -1,3 +1,4 @@
+import pickBy from 'lodash.pickby';
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
 import { addDataSource, renameDataSource } from '../../../../metadata/actions';
@@ -8,6 +9,7 @@ import {
   SSLModeOptions,
   SSLConfigOptions,
   IsolationLevelOptions,
+  GraphQLFieldCustomization,
 } from '../../../../metadata/types';
 
 export const connectionTypes = {
@@ -42,6 +44,7 @@ export type ConnectDBState = {
   sslConfiguration?: SSLConfigOptions;
   isolationLevel?: IsolationLevelOptions;
   preparedStatements?: boolean;
+  customization?: GraphQLFieldCustomization;
 };
 
 const defaultConnectionParamState = {
@@ -179,6 +182,16 @@ export const connectDataSource = (
       }),
       preparedStatements: currentState.preparedStatements,
       isolationLevel: currentState.isolationLevel,
+      ...(checkEmpty(currentState.customization) && {
+        customization: {
+          ...(checkEmpty(currentState.customization?.rootFields) && {
+            rootFields: currentState.customization?.rootFields,
+          }),
+          ...(checkEmpty(currentState.customization?.typeNames) && {
+            typeNames: currentState.customization?.typeNames,
+          }),
+        },
+      }),
     },
   };
 
@@ -195,6 +208,9 @@ export const connectDataSource = (
   return dispatch(addDataSource(data, cb, replicas));
 };
 
+export const removeEmptyValues = (obj: any) =>
+  pickBy(obj, value => value !== '');
+
 export type ConnectDBActions =
   | {
       type: 'INIT';
@@ -207,6 +223,7 @@ export type ConnectDBActions =
         preparedStatements: boolean;
         isolationLevel: IsolationLevelOptions;
         sslConfiguration?: SSLConfigOptions;
+        customization?: GraphQLFieldCustomization;
       };
     }
   | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
@@ -236,7 +253,12 @@ export type ConnectDBActions =
   | { type: 'UPDATE_SSL_PASSWORD'; data: string }
   | { type: 'UPDATE_PREPARED_STATEMENTS'; data: boolean }
   | { type: 'UPDATE_ISOLATION_LEVEL'; data: IsolationLevelOptions }
-  | { type: 'RESET_INPUT_STATE' };
+  | { type: 'RESET_INPUT_STATE' }
+  | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_NAMESPACE'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_PREFIX'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_SUFFIX'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_TYPE_NAMES_PREFIX'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_TYPE_NAMES_SUFFIX'; data: string };
 
 export const connectDBReducer = (
   state: ConnectDBState,
@@ -258,6 +280,7 @@ export const connectDBReducer = (
         preparedStatements: action.data.preparedStatements,
         isolationLevel: action.data.isolationLevel,
         sslConfiguration: action.data.sslConfiguration,
+        customization: action.data?.customization,
       };
     case 'UPDATE_PARAM_STATE':
       return {
@@ -458,6 +481,71 @@ export const connectDBReducer = (
         databaseURLState: {
           ...state.databaseURLState,
           projectId: action.data,
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_NAMESPACE':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          rootFields: {
+            ...removeEmptyValues({
+              ...(state.customization?.rootFields || {}),
+              namespace: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_PREFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          rootFields: {
+            ...removeEmptyValues({
+              ...(state.customization?.rootFields || {}),
+              prefix: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_SUFFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          rootFields: {
+            ...removeEmptyValues({
+              ...(state.customization?.rootFields || {}),
+              suffix: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_TYPE_NAMES_PREFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          typeNames: {
+            ...removeEmptyValues({
+              ...(state.customization?.typeNames || {}),
+              prefix: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_TYPE_NAMES_SUFFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          typeNames: {
+            ...removeEmptyValues({
+              ...(state.customization?.typeNames || {}),
+              suffix: action.data,
+            }),
+          },
         },
       };
     default:

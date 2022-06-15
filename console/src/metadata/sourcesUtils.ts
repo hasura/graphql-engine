@@ -2,10 +2,43 @@ import { Driver, sourceNames } from '../dataSources';
 import {
   ConnectionParams,
   ConnectionPoolSettings,
+  GraphQLFieldCustomization,
   IsolationLevelOptions,
   SourceConnectionInfo,
   SSLConfigOptions,
 } from './types';
+
+type CustomizationPayloadSlice = {
+  customization: {
+    root_fields?: GraphQLFieldCustomization['rootFields'];
+    type_names?: GraphQLFieldCustomization['typeNames'];
+    naming_convention: 'hasura-default';
+  };
+};
+
+const adaptCustomizations = (
+  customization: GraphQLFieldCustomization | undefined
+): CustomizationPayloadSlice | undefined => {
+  if (!customization) {
+    return;
+  }
+
+  const rootFields = customization?.rootFields
+    ? { root_fields: customization.rootFields }
+    : {};
+
+  const typeNames = customization?.typeNames
+    ? { type_names: customization.typeNames }
+    : {};
+
+  return {
+    customization: {
+      ...rootFields,
+      ...typeNames,
+      naming_convention: 'hasura-default',
+    },
+  };
+};
 
 export const addSource = (
   driver: Driver,
@@ -23,6 +56,7 @@ export const addSource = (
     sslConfiguration?: SSLConfigOptions;
     preparedStatements?: boolean;
     isolationLevel?: IsolationLevelOptions;
+    customization?: GraphQLFieldCustomization;
   },
   // supported only for PG sources at the moment
   replicas?: Omit<
@@ -34,6 +68,8 @@ export const addSource = (
   >[]
 ) => {
   const replace_configuration = payload.replace_configuration ?? false;
+  const adaptedCustomizations = adaptCustomizations(payload?.customization);
+
   if (driver === 'mssql') {
     return {
       type: 'mssql_add_source',
@@ -47,6 +83,7 @@ export const addSource = (
           read_replicas: replicas?.length ? replicas : null,
         },
         replace_configuration,
+        ...adaptedCustomizations,
       },
     };
   }
@@ -67,6 +104,7 @@ export const addSource = (
           datasets: payload.bigQuery.datasets.split(',').map(d => d.trim()),
         },
         replace_configuration,
+        ...adaptedCustomizations,
       },
     };
   }
@@ -88,6 +126,7 @@ export const addSource = (
         read_replicas: replicas?.length ? replicas : null,
       },
       replace_configuration,
+      ...adaptedCustomizations,
     },
   };
 };

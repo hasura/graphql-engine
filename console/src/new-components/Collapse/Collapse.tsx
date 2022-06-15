@@ -65,7 +65,7 @@ const CollapseHeader: React.FC<CollapseHeaderProps> = ({
         <FaChevronRight className={chevronClassName} />
 
         {!!title && (
-          <p>
+          <p className="m-0">
             <strong>{title}</strong>
           </p>
         )}

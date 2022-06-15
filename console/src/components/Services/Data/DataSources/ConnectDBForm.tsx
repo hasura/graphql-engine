@@ -11,6 +11,7 @@ import JSONEditor from '../TablePermissions/JSONEditor';
 import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
 import ConnectionSettingsForm from './ConnectionSettingsForm';
+import { GraphQLFieldCustomizationContainer } from './GraphQLFieldCustomization/GraphQLFieldCustomizationContainer';
 
 export interface ConnectDatabaseFormProps {
   // Connect DB State Props
@@ -412,6 +413,17 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           connectionDBState={connectionDBState}
           connectionDBStateDispatch={connectionDBStateDispatch}
         />
+        {/* 
+          TODO: remove the edit state condition when the BE issue is solved
+          https://github.com/hasura/graphql-engine-mono/issues/4700
+        */}
+        {!isEditState && (
+          <GraphQLFieldCustomizationContainer
+            rootFields={connectionDBState.customization?.rootFields}
+            typeNames={connectionDBState.customization?.typeNames}
+            connectionDBStateDispatch={connectionDBStateDispatch}
+          />
+        )}
       </div>
       <hr className={styles.line_width} />
     </>
