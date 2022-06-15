@@ -138,7 +138,14 @@ defaultFromIrConfig = FromIrConfig {globalSelectLimit = NoTop}
 -- >       `title`,
 -- >       `content`
 -- >     FROM
--- >       `hasura_test`.`fetch_articles`(`id` => `t_author1`.`id`)
+-- >       UNNEST(
+-- >         ARRAY(
+-- >           SELECT
+-- >             AS STRUCT *
+-- >           FROM `hasura_test`.`fetch_articles`(`id` => `t_author1`.`id`)
+-- >         )
+-- >       )
+-- >       LIMIT 1000
 -- >   ) AS `articles`
 -- > FROM
 -- >   `hasura_test`.`author` AS `t_author1`
@@ -1272,14 +1279,25 @@ fromArraySelectG =
 -- | Generate a select field @'Expression' for a computed field
 --
 -- > ARRAY(
--- >     SELECT
--- >       AS STRUCT
--- >       `column_1`,
--- >       `column_2``,
--- >       `column_3`
--- >     FROM
--- >       `dataset`.`function_name`(`argument_name` => `parent_entity`.`column`)
--- >   ) AS `field_name`
+-- >   SELECT
+-- >     AS STRUCT
+-- >     `column_1`,
+-- >     `column_2`,
+-- >     `column_3`
+-- >   FROM
+-- >     UNNEST(
+-- >       ARRAY(
+-- >           SELECT AS STRUCT *
+-- >           FROM `dataset`.`function_name`(`argument_name` => `parent_entity`.`column`)
+-- >       )
+-- >     )
+-- >   LIMIT 1000 -- global limit
+-- > ) AS `field_name`
+--
+-- Using 'LIMIT' right after 'FROM <function>' expression raises query exception.
+-- To avoid this problem, we are packing and unpacking the rows returned from the function
+-- using 'ARRAY' and 'UNNEST', then applying LIMIT. Somehow this is working with exact reason
+-- being unknown. See https://github.com/hasura/graphql-engine/issues/8562 for more details.
 fromComputedFieldSelect ::
   Ir.ComputedFieldSelect 'BigQuery Void Expression ->
   ReaderT EntityAlias FromIr Expression
@@ -1298,12 +1316,36 @@ fromComputedFieldSelect = \case
                   Rql.JASMultipleRows -> Many
                   Rql.JASSingleObject -> One,
               selectAsStruct = AsStruct,
-              -- Using 'LIMIT' after 'FROM <function>' expression in a
-              -- computed field select sub-query causes query exception.
-              -- See https://github.com/hasura/graphql-engine/issues/8562 for more details.
-              selectTop = NoTop
+              selectFrom = wrapUnnest (selectFrom select)
             }
-    pure $ FunctionExpression (FunctionName "ARRAY" Nothing) [SelectExpression selectWithCardinality]
+    pure $ applyArrayOnSelect selectWithCardinality
+  where
+    applyArrayOnSelect :: Select -> Expression
+    applyArrayOnSelect select =
+      FunctionExpression (FunctionName "ARRAY" Nothing) [SelectExpression select]
+
+    wrapUnnest :: From -> From
+    wrapUnnest from =
+      let starSelect =
+            Select
+              { selectTop = NoTop,
+                selectAsStruct = AsStruct,
+                selectProjections = pure StarProjection,
+                selectFrom = from,
+                selectJoins = [],
+                selectWhere = Where [],
+                selectOrderBy = Nothing,
+                selectOffset = Nothing,
+                selectGroupBy = [],
+                selectFinalWantedFields = Nothing,
+                selectCardinality = Many
+              }
+          arraySelect = applyArrayOnSelect starSelect
+       in FromFunction
+            Aliased
+              { aliasedThing = SelectFromFunction (FunctionName "UNNEST" Nothing) [arraySelect],
+                aliasedAlias = entityAliasText (fromAlias from)
+              }
 
 -- | Produce the join for an array aggregate relation. We produce a
 -- normal select, but then include join fields. Then downstream, the

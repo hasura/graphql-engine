@@ -9,6 +9,7 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 
 ### Bug fixes and improvements
 
+- server: support limit in BigQuery computed fields (fix #8562)
 - server: extend telemetry to handle multiple sources
 - console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
 - console: add support for computed fields with session arg in permission builder (fix #8321)
@@ -184,7 +185,7 @@ is `graphql-default`, the field names generated will be `my_table`, `my_tableByP
 
 ## v2.8.0-beta.1
 
-### Disabling query/subscription root fields 
+### Disabling query/subscription root fields
 
 When a table is tracked in graphql-engine, three root fields are generated automatically
 namely `<table>`, `<table>_by_pk` and `<table>_aggregate` in the `query` and the `subscription`
@@ -259,7 +260,7 @@ query {
 ```
 
 
-To configure the naming convention for a source, set the naming convention in source 
+To configure the naming convention for a source, set the naming convention in source
 customisation while adding the source:
 
 ```JSON
@@ -286,7 +287,7 @@ To set the default naming convention globally,
 use the environment variable `HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION`.  Note
 that the global default can be overridden by the source customisation setting mentioned above.
 
-Note: Custom field names and custom table names will override the naming convention 
+Note: Custom field names and custom table names will override the naming convention
 (i.e. if the custom table name is `my_table` and `naming_convention`
 is `graphql-default`, the field names generated will be `my_table`, `my_tableByPk`,
 `my_tableAggregate` and so on).

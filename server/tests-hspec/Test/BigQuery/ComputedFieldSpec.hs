@@ -310,6 +310,45 @@ data:
       author_id: '2'
 |]
 
+  it "Query with computed fields using limit and order_by" $ \testEnv ->
+    shouldReturnYaml
+      opts
+      ( GraphqlEngine.postGraphql
+          testEnv
+          [graphql|
+query {
+  hasura_author(order_by: {id: asc}){
+    id
+    name
+    search_articles_2(args: {search: "%by%"} limit: 1 order_by: {id: asc}){
+      id
+      title
+      content
+      author_id
+    }
+  }
+}
+|]
+      )
+      [yaml|
+data:
+  hasura_author:
+  - id: '1'
+    name: Author 1
+    search_articles_2:
+    - author_id: '1'
+      content: Article 1 by Author 1
+      id: '1'
+      title: Article 1 Title
+  - id: '2'
+    name: Author 2
+    search_articles_2:
+    - author_id: '2'
+      content: Article 2 by Author 2
+      id: '2'
+      title: Article 2 Title
+|]
+
   it "Query with computed fields as user_1 role" $ \testEnv ->
     shouldReturnYaml
       opts
