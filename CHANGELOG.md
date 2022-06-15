@@ -8,6 +8,7 @@
 - console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
 - console: add support for computed fields with session arg in permission builder (fix #8321)
 - console: add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)
+- cli: fix perfomance regression with large metadata in `metadata apply`
 
 ## v2.8.0-beta.1
 

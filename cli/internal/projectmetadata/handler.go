@@ -10,8 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	goyaml "github.com/goccy/go-yaml"
-
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
@@ -322,11 +320,8 @@ func (m Metadata) JSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	jsonbs, err := goyaml.YAMLToJSON(yamlbs)
-	if err != nil {
-		return nil, err
-	}
-	return jsonbs, nil
+
+	return metadatautil.YAMLToJSON(yamlbs)
 }
 
 func (m Metadata) YAML() ([]byte, error) {

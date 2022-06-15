@@ -7,14 +7,12 @@ import (
 	"io"
 	"io/ioutil"
 
-	goyaml "github.com/goccy/go-yaml"
-	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
-
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/commands"
-
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
-	"github.com/hasura/graphql-engine/cli/v2"
 )
 
 type modeHandler interface {
@@ -115,7 +113,7 @@ func (m *metadataModeYAMLHandler) Parse(p *ProjectMetadata) (io.Reader, error) {
 	if err != nil {
 		return nil, fmt.Errorf("reading metadata file: %w", err)
 	}
-	metadataJSON, err := goyaml.YAMLToJSON(metadataYAML)
+	metadataJSON, err := metadatautil.YAMLToJSON(metadataYAML)
 	if err != nil {
 		return nil, fmt.Errorf("parsing local yaml metadata as json: %w", err)
 	}
@@ -135,7 +133,7 @@ func apply(p *ProjectMetadata, mode cli.MetadataMode) (io.Reader, error) {
 		return nil, fmt.Errorf("reading metadata file: %w", err)
 	}
 	if mode == cli.MetadataModeYAML {
-		localMetadataBytes, err = goyaml.YAMLToJSON(localMetadataBytes)
+		localMetadataBytes, err = metadatautil.YAMLToJSON(localMetadataBytes)
 		if err != nil {
 			return nil, fmt.Errorf("parsing yaml metadata to json: %w", err)
 		}
