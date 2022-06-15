@@ -784,6 +784,8 @@ mkWaiApp ::
   WSConnectionInitTimeout ->
   -- | is metadata query logging in http-log enabled
   MetadataQueryLoggingMode ->
+  -- | default naming convention
+  Maybe NamingCase ->
   m HasuraApp
 mkWaiApp
   setupHook
@@ -816,7 +818,8 @@ mkWaiApp
   experimentalFeatures
   enabledLogTypes
   wsConnInitTimeout
-  enableMetadataQueryLogging = do
+  enableMetadataQueryLogging
+  defaultNC = do
     let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -858,7 +861,7 @@ mkWaiApp
               scLoggingSettings = LoggingSettings enabledLogTypes enableMetadataQueryLogging,
               scEventingMode = eventingMode,
               scEnableReadOnlyMode = readOnlyMode,
-              scDefaultNamingConvention = readDefaultNamingCaseFromEnv env
+              scDefaultNamingConvention = defaultNC
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->
