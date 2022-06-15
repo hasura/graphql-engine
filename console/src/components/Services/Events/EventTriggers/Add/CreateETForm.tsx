@@ -7,8 +7,8 @@ import * as tooltip from '../Common/Tooltips';
 import { Operations } from '../Common/Operations';
 import { DataSource } from '../../../../../metadata/types';
 import { getSupportedDrivers } from '../../../../../dataSources';
-import { DatabaseInfo } from './Add';
 import {
+  DatabaseInfo,
   ETOperationColumn,
   EventTriggerOperation,
   RetryConf,
@@ -16,7 +16,7 @@ import {
 import ColumnList from '../Common/ColumnList';
 import FormLabel from './FormLabel';
 import DebouncedDropdownInput from '../Common/DropdownWrapper';
-import { inputStyles, subHeading } from '../../constants';
+import { inputStyles, heading } from '../../constants';
 
 type CreateETFormProps = {
   state: LocalEventTriggerState;
@@ -191,7 +191,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       </div>
       <hr className="my-md" />
       <CollapsibleToggle
-        title={<h4 className={subHeading}>Advanced Settings</h4>}
+        title={<h4 className={heading}>Advanced Settings</h4>}
         testId="advanced-settings"
       >
         <div>
@@ -219,7 +219,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
           </div>
           <hr className="my-md" />
           <div className="mt-md">
-            <h4 className={subHeading}>Retry Logic</h4>
+            <h4 className={heading}>Retry Logic</h4>
             <RetryConfEditor
               retryConf={retryConf}
               setRetryConf={handleRetryConfChange}
@@ -228,7 +228,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
           </div>
           <hr className="my-md" />
           <div className="mt-md">
-            <h4 className={subHeading}>Headers</h4>
+            <h4 className={heading}>Headers</h4>
             <Headers headers={headers} setHeaders={handleHeadersChange} />
           </div>
         </div>

@@ -5,19 +5,19 @@ import {
   EventTriggerOperation,
   ETOperationColumn,
   VoidCallback,
+  DatabaseInfo,
 } from '../../types';
 import {
   parseEventTriggerOperations,
   getETOperationColumns,
 } from '../../utils';
 import { Operations } from '../Common/Operations';
-import { TableColumn } from '../../../../../dataSources/types';
 import { ColumnSelectionRadioButton } from '../Common/ColumnSelectionRadioButton';
 import { focusYellowRing } from '../../constants';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
-  allTableColumns: TableColumn[];
+  databaseInfo: DatabaseInfo;
   operations: Record<EventTriggerOperation, boolean>;
   setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
   operationColumns: ETOperationColumn[];
@@ -29,7 +29,7 @@ type OperationEditorProps = {
 
 export const OperationEditor: React.FC<OperationEditorProps> = props => {
   const {
-    allTableColumns,
+    databaseInfo,
     save,
     currentTrigger,
     operations,
@@ -41,9 +41,12 @@ export const OperationEditor: React.FC<OperationEditorProps> = props => {
   } = props;
   const etDef = currentTrigger.configuration.definition;
   const existingOps = parseEventTriggerOperations(etDef);
+  const columnInfo =
+    databaseInfo?.[currentTrigger.schema_name]?.[currentTrigger.table_name] ??
+    [];
   const existingOpColumns = getETOperationColumns(
     etDef.update ? etDef.update.columns : [],
-    allTableColumns
+    columnInfo
   );
 
   const reset = () => {

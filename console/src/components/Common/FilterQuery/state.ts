@@ -1,5 +1,6 @@
 import React from 'react';
-import { OrderBy, makeOrderBy } from '../utils/v1QueryUtils';
+import { dataSource, currentDriver } from '@/dataSources';
+import { OrderBy, makeOrderBy, getRunSqlQuery } from '../utils/v1QueryUtils';
 import requestAction from '../../../utils/requestAction';
 import { Dispatch } from '../../../types';
 import endpoints from '../../../Endpoints';
@@ -20,10 +21,6 @@ import {
 } from '../../../metadata/queryUtils';
 import { EventKind } from '../../Services/Events/types';
 import { isNotDefined } from '../utils/jsUtils';
-import {
-  getDataTriggerLogsCountQuery,
-  getDataTriggerLogsQuery,
-} from '../../../metadata/metadataTableUtils';
 import { parseEventsSQLResp } from '../../Services/Events/utils';
 
 const defaultFilter = makeValueFilter('', null, '');
@@ -100,13 +97,27 @@ export const useFilterQuery = (
       if (triggerName) {
         query = {
           args: [
-            getDataTriggerLogsCountQuery(triggerName, triggerOp, currentSource),
-            getDataTriggerLogsQuery(
-              triggerOp,
+            getRunSqlQuery(
+              dataSource?.getDataTriggerLogsCountQuery?.(
+                triggerName,
+                triggerOp
+              ) ?? '',
               currentSource ?? 'default',
-              triggerName,
-              limitValue,
-              offsetValue
+              false,
+              false,
+              currentDriver
+            ),
+            getRunSqlQuery(
+              dataSource?.getDataTriggerLogsQuery?.(
+                triggerOp,
+                triggerName,
+                limitValue,
+                offsetValue
+              ) ?? '',
+              currentSource ?? 'default',
+              false,
+              false,
+              currentDriver
             ),
           ],
           source: currentSource ?? 'default',

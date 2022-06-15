@@ -2,12 +2,18 @@
 
 ## Next release
 
+### Event Triggers for MS SQL Server 
+
+(closes https://github.com/hasura/graphql-engine/issues/7228)
+Event Triggers support has been added for MS SQL Server. Now, you can invoke external webhooks on insert/update/delete events on your MS SQL Server tables. See the [docs](https://hasura.io/docs/latest/graphql/core/event-triggers/index/) for more details.
+
 ### Bug fixes and improvements
 
 - server: extend telemetry to handle multiple sources
 - console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
 - console: add support for computed fields with session arg in permission builder (fix #8321)
 - console: add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)
+- console: add support for mssql event triggers
 - cli: fix perfomance regression with large metadata in `metadata apply`
 
 ## v2.8.0

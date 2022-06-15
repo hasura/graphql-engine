@@ -17,3 +17,4 @@ lib/
 !src/lib
 hasura-console-oss-1.0.0.tgz
 storybook-static
+.nvm

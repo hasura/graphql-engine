@@ -438,49 +438,61 @@ export const resetMetadataQuery = {
 
 export const generateCreateEventTriggerQuery = (
   state: LocalEventTriggerState,
-  source: string,
+  source: { name: string; driver: Driver },
   replace = false,
   requestTransform?: RequestTransform
 ) =>
-  getMetadataQuery('create_event_trigger', source, {
-    name: state.name.trim(),
-    table: state.table,
-    webhook:
-      state.webhook.type === 'static' ? state.webhook.value.trim() : null,
-    webhook_from_env:
-      state.webhook.type === 'env' ? state.webhook.value.trim() : null,
-    insert: state.operations.insert
-      ? {
-          columns: '*',
-        }
-      : null,
-    update: state.operations.update
-      ? {
-          columns: state.isAllColumnChecked
-            ? '*'
-            : state.operationColumns.filter(c => !!c.enabled).map(c => c.name),
-        }
-      : null,
-    delete: state.operations.delete
-      ? {
-          columns: '*',
-        }
-      : null,
-    enable_manual: state.operations.enable_manual,
-    retry_conf: state.retryConf,
-    headers: transformHeaders(state.headers),
-    replace,
-    request_transform: requestTransform,
-  });
+  getMetadataQuery(
+    'create_event_trigger',
+    source.name,
+    {
+      name: state.name.trim(),
+      table: state.table,
+      webhook:
+        state.webhook.type === 'static' ? state.webhook.value.trim() : null,
+      webhook_from_env:
+        state.webhook.type === 'env' ? state.webhook.value.trim() : null,
+      insert: state.operations.insert
+        ? {
+            columns: '*',
+          }
+        : null,
+      update: state.operations.update
+        ? {
+            columns: state.isAllColumnChecked
+              ? '*'
+              : state.operationColumns
+                  .filter(c => !!c.enabled)
+                  .map(c => c.name),
+          }
+        : null,
+      delete: state.operations.delete
+        ? {
+            columns: '*',
+          }
+        : null,
+      enable_manual: state.operations.enable_manual,
+      retry_conf: state.retryConf,
+      headers: transformHeaders(state.headers),
+      replace,
+      request_transform: requestTransform,
+    },
+    source.driver
+  );
 
-export const getDropEventTriggerQuery = (name: string, source: string) => ({
-  // Not supported for MySQL
-  type: 'pg_delete_event_trigger',
-  args: {
-    source,
-    name: name.trim(),
-  },
-});
+export const getDropEventTriggerQuery = (
+  name: string,
+  source: { name: string; driver: Driver }
+) =>
+  getMetadataQuery(
+    'delete_event_trigger',
+    source.name,
+    {
+      source: source.name,
+      name: name.trim(),
+    },
+    source.driver
+  );
 
 export const generateCreateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState,

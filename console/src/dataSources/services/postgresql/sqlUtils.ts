@@ -1,4 +1,5 @@
 import { DataSourcesAPI } from '@/dataSources';
+import { TriggerOperation } from '@/components/Common/FilterQuery/state';
 import { FrequentlyUsedColumn, IndexType } from '../../types';
 import { isColTypeString } from '.';
 import { FunctionState } from './types';
@@ -1283,9 +1284,10 @@ export const getEventInvocationInfoByIDSql = (
 
 /**
  * SQL to retrive:
- * { table_name: string, table_schema: string, columns: string[] }[].
+ * { table_name: string, table_schema: string, columns: string[], column_types: string[] }[].
  *
  * `columns` is an array of column names.
+ * `column_types` is an array of column data types.
  */
 export const getDatabaseInfo = `
 SELECT
@@ -1294,7 +1296,8 @@ FROM (
 	SELECT
 		table_name::text,
 		table_schema::text,
-		ARRAY_AGG("column_name"::text) as columns
+		ARRAY_AGG("column_name"::text) as columns,
+    ARRAY_AGG("data_type"::text) as column_types
 	FROM
 		information_schema.columns
 	WHERE
@@ -1336,3 +1339,106 @@ WHERE
 	AND schema_name NOT LIKE 'pg_toast%'
 	AND schema_name NOT LIKE 'pg_temp_%';
 `;
+
+export const getDataTriggerLogsCountQuery = (
+  triggerName: string,
+  triggerOp: TriggerOperation
+): string => {
+  const triggerTypes = {
+    pending: 'pending',
+    processed: 'processed',
+    invocation: 'invocation',
+  };
+  const eventRelTable = `"hdb_catalog"."event_log"`;
+  const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
+
+  let logsCountQuery = `SELECT
+	COUNT(*)
+  FROM ${eventRelTable} data_table
+  WHERE data_table.trigger_name = '${triggerName}' `;
+
+  switch (triggerOp) {
+    case triggerTypes.pending:
+      logsCountQuery += `AND delivered=false AND error=false AND archived=false;`;
+      break;
+
+    case triggerTypes.processed:
+      logsCountQuery += `AND (delivered=true OR error=true) AND archived=false;`;
+      break;
+
+    case triggerTypes.invocation:
+      logsCountQuery = `SELECT
+        COUNT(*)
+        FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
+        ON original_table.event_id = data_table.id
+        WHERE data_table.trigger_name = '${triggerName}' `;
+      break;
+    default:
+      break;
+  }
+  return logsCountQuery;
+};
+
+export const getDataTriggerLogsQuery = (
+  triggerOp: TriggerOperation,
+  triggerName: string,
+  limit?: number,
+  offset?: number
+): string => {
+  const triggerTypes = {
+    pending: 'pending',
+    processed: 'processed',
+    invocation: 'invocation',
+  };
+  const eventRelTable = `"hdb_catalog"."event_log"`;
+  const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
+  let sql = '';
+
+  switch (triggerOp) {
+    case triggerTypes.pending:
+      sql = `SELECT *
+      FROM ${eventRelTable} data_table
+      WHERE data_table.trigger_name = '${triggerName}'  
+      AND delivered=false AND error=false AND archived=false ORDER BY created_at DESC `;
+      break;
+
+    case triggerTypes.processed:
+      sql = `SELECT *
+      FROM ${eventRelTable} data_table 
+      WHERE data_table.trigger_name = '${triggerName}' 
+      AND (delivered=true OR error=true) AND archived=false ORDER BY created_at DESC `;
+      break;
+
+    case triggerTypes.invocation:
+      sql = `SELECT original_table.*, data_table.*
+      FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table ON original_table.event_id = data_table.id
+      WHERE data_table.trigger_name = '${triggerName}' 
+      ORDER BY original_table.created_at DESC NULLS LAST`;
+      break;
+    default:
+      break;
+  }
+
+  if (limit) {
+    sql += ` LIMIT ${limit}`;
+  } else {
+    sql += ` LIMIT 10`;
+  }
+
+  if (offset) {
+    sql += ` OFFSET ${offset};`;
+  } else {
+    sql += ` OFFSET 0;`;
+  }
+  return sql;
+};
+
+export const getDataTriggerInvocations = (eventId: string): string => {
+  const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
+  const sql = `SELECT *
+    FROM ${eventInvTable}
+    WHERE event_id = '${eventId}'
+    ORDER BY created_at DESC NULLS LAST;`;
+
+  return sql;
+};

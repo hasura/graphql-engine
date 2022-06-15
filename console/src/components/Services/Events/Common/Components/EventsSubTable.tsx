@@ -1,6 +1,8 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import ReactTable from 'react-table';
+import { currentDriver, dataSource } from '@/dataSources';
+import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
 import InvocationLogDetails from './InvocationLogDetails';
 import { Event } from '../../types';
 import {
@@ -11,7 +13,6 @@ import { parseEventsSQLResp, sanitiseRow } from '../../utils';
 import { Dispatch, ReduxState } from '../../../../../types';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
-import { getDataTriggerInvocations } from '../../../../../metadata/metadataTableUtils';
 import Spinner from '../../../../Common/Spinner/Spinner';
 
 interface Props extends InjectedReduxProps {
@@ -113,7 +114,13 @@ const EventsSubTable: React.FC<Props> = ({
     }
     if (triggerType === 'data' && props.event.id) {
       const url = Endpoints.query;
-      const payload = getDataTriggerInvocations(props.event.id);
+      const payload = getRunSqlQuery(
+        dataSource.getDataTriggerInvocations?.(props.event.id) ?? '',
+        props.source,
+        undefined,
+        undefined,
+        currentDriver
+      );
       const options = {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -218,6 +225,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
 
 const mapStateToProps = (state: ReduxState) => ({
   headers: state.tables.dataHeaders,
+  source: state.tables.currentDataSource,
 });
 const connector = connect(mapStateToProps, mapDispatchToProps);
 type InjectedReduxProps = ConnectedProps<typeof connector>;

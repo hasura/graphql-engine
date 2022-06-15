@@ -1,6 +1,7 @@
 /* eslint-disable import/no-mutable-exports */
 import { useState, useEffect } from 'react';
 import { DeepRequired } from 'ts-essentials';
+import { TriggerOperation } from '@/components/Common/FilterQuery/state';
 import { Path, get } from '../components/Common/utils/tsUtils';
 import { services } from './services';
 
@@ -410,6 +411,17 @@ export interface DataSourcesAPI {
   generateBulkDeleteRowRequest?: () => GenerateBulkDeleteRowRequest;
   // New Simple Queries to fetch just what we need at a time
   schemaListQuery: string;
+  getDataTriggerLogsCountQuery?: (
+    triggerName: string,
+    triggerOp: TriggerOperation
+  ) => string;
+  getDataTriggerLogsQuery?: (
+    triggerOp: TriggerOperation,
+    triggerName: string,
+    limit?: number,
+    offset?: number
+  ) => string;
+  getDataTriggerInvocations?: (eventId: string) => string;
 }
 
 export let currentDriver: Driver = 'postgres';

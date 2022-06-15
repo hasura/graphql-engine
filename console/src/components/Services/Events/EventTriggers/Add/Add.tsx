@@ -33,10 +33,10 @@ import {
   getValidateTransformOptions,
   parseValidateApiData,
 } from '@/components/Common/ConfigureTransformation/utils';
+import { isEmpty } from '@/components/Common/utils/jsUtils';
 import requestAction from '@/utils/requestAction';
 import Endpoints from '@/Endpoints';
 import { Button } from '@/new-components/Button';
-import { Table } from '@/dataSources/types';
 import { MapStateToProps } from '../../../../../types';
 import { useEventTrigger } from '../state';
 import { Header } from '../../../../Common/Headers/Headers';
@@ -45,29 +45,16 @@ import { EVENTS_SERVICE_HEADING } from '../../constants';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getDataSources } from '../../../../../metadata/selector';
 import { DataSource } from '../../../../../metadata/types';
-import {
-  getDatabaseSchemasInfo,
-  updateSchemaInfo,
-} from '../../../Data/DataActions';
+import { getDatabaseSchemasInfo } from '../../../Data/DataActions';
 import { getSourceDriver } from '../../../Data/utils';
-import {
-  currentDriver,
-  setDriver,
-  isFeatureSupported,
-  findTable,
-  generateTableDef,
-} from '../../../../../dataSources';
 import { getEventRequestSampleInput } from '../utils';
 import CreateETForm from './CreateETForm';
 import {
+  DatabaseInfo,
   ETOperationColumn,
   EventTriggerOperation,
   RetryConf,
 } from '../../types';
-
-export type DatabaseInfo = {
-  [schema_name: string]: { [table_name: string]: string[] };
-};
 
 interface Props extends InjectedProps {}
 
@@ -83,57 +70,33 @@ const Add: React.FC<Props> = props => {
     operations,
     isAllColumnChecked,
   } = state;
-  const {
-    dispatch,
-    readOnlyMode,
-    dataSourcesList,
-    currentDataSource,
-    allSchemas,
-  } = props;
-
-  useEffect(() => {
-    if (table.schema) {
-      dispatch(
-        updateSchemaInfo({
-          schemas: [table.schema],
-        })
-      );
-    }
-  }, [table.schema]);
-
-  useEffect(() => {
-    setState.source(currentDataSource);
-    const driver = getSourceDriver(dataSourcesList, currentDataSource);
-    if (isFeatureSupported('events.triggers.enabled')) {
-      setDriver(driver);
-    }
-  }, [currentDataSource, dataSourcesList]);
+  const { dispatch, readOnlyMode, dataSourcesList } = props;
 
   const [databaseInfo, setDatabaseInfo] = useState<DatabaseInfo>({});
 
   useEffect(() => {
-    dispatch(
-      getDatabaseSchemasInfo(currentDriver, source || currentDataSource) as any
-    ).then(setDatabaseInfo);
-  }, [currentDataSource, source, dispatch]);
+    const driver = getSourceDriver(dataSourcesList, source);
+    setState.operationColumns([]);
+    if (!isEmpty(source)) {
+      dispatch(getDatabaseSchemasInfo(driver, source) as any).then(
+        setDatabaseInfo
+      );
+    }
+  }, [source, dataSourcesList, dispatch]);
 
   useEffect(() => {
     if (source && table.schema && table.name) {
-      const tableDef = findTable(
-        allSchemas,
-        generateTableDef(table.name, table.schema)
-      );
-      if (tableDef?.columns) {
-        setState.operationColumns(
-          tableDef?.columns?.map(c => ({
-            name: c.column_name,
+      setState.operationColumns(
+        databaseInfo?.[table.schema]?.[table.name]?.map(columnInfo => {
+          return {
+            name: columnInfo?.columnName,
             enabled: true,
-            type: c.data_type,
-          }))
-        );
-      }
+            type: columnInfo?.columnType,
+          };
+        }) ?? []
+      );
     }
-  }, [table.name, source, table.schema, databaseInfo, allSchemas]);
+  }, [table.name, table.schema, databaseInfo]);
 
   const [transformState, transformDispatch] = useReducer(
     requestTransformReducer,
@@ -318,10 +281,9 @@ const Add: React.FC<Props> = props => {
 
   const handleDatabaseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const database = e.target.value;
+    setDatabaseInfo({});
+    setState.table();
     setState.source(database);
-    dispatch(getDatabaseSchemasInfo('postgres', database) as any).then(
-      setDatabaseInfo
-    );
   };
 
   const handleSchemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -439,16 +401,12 @@ const Add: React.FC<Props> = props => {
 type PropsFromState = {
   readOnlyMode: boolean;
   dataSourcesList: DataSource[];
-  allSchemas: Table[];
-  currentDataSource: string;
 };
 
 const mapStateToProps: MapStateToProps<PropsFromState> = state => {
   return {
     readOnlyMode: state.main.readOnlyMode,
     dataSourcesList: getDataSources(state),
-    allSchemas: state.tables.allSchemas,
-    currentDataSource: state.tables.currentDataSource,
   };
 };
 

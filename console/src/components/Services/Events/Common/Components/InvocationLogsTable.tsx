@@ -86,7 +86,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
         show={eventId === redeliveredEventId}
         onClose={() => setRedeliveredEventId(null)}
         onCancel={() => setRedeliveredEventId(null)}
-        customClass="w-3/4 mb-0"
+        customClass="min-w-[75%] mb-0"
       >
         <RedeliverEvent
           eventId={redeliveredEventId}

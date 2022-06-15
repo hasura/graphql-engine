@@ -17,14 +17,7 @@ import {
 interface Props extends EventsLogsInjectedProps {}
 
 const InvocationLogs: React.FC<Props> = props => {
-  const {
-    dispatch,
-    triggerName,
-    readOnlyMode,
-    currentSource,
-    currentTrigger,
-  } = props;
-
+  const { dispatch, triggerName, currentTrigger, readOnlyMode } = props;
   const renderRows: FilterRenderProp = (
     rows,
     count,
@@ -45,7 +38,7 @@ const InvocationLogs: React.FC<Props> = props => {
         name: currentTrigger.table_name,
         schema: currentTrigger.schema_name,
       }}
-      tableSource={currentSource}
+      tableSource={currentTrigger.source}
     />
   );
 
@@ -75,7 +68,7 @@ const InvocationLogs: React.FC<Props> = props => {
         triggerName={triggerName}
         triggerOp="invocation"
         triggerType="data"
-        currentSource={currentSource}
+        currentSource={currentTrigger.source}
       />
     </React.Fragment>
   );

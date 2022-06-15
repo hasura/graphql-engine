@@ -151,4 +151,145 @@ describe('postgresql datasource tests', () => {
       }
     });
   });
+
+  describe('getDataTriggerLogsCountQuery', () => {
+    const { getDataTriggerLogsCountQuery } = postgres;
+    if (getDataTriggerLogsCountQuery) {
+      it('should generate SQL query for pending event count ', () => {
+        const pendingCountQuery = getDataTriggerLogsCountQuery(
+          'new_user',
+          'pending'
+        );
+        expect(pendingCountQuery).toContain(
+          'delivered=false AND error=false AND archived=false'
+        );
+        expect(pendingCountQuery).toContain(
+          "data_table.trigger_name = 'new_user'"
+        );
+        expect(pendingCountQuery).toContain('FROM "hdb_catalog"."event_log"');
+        expect(pendingCountQuery).toMatchSnapshot();
+      });
+
+      it('should generate SQL query for processed event count', () => {
+        const processedCountQuery = getDataTriggerLogsCountQuery(
+          'new_user',
+          'processed'
+        );
+        expect(processedCountQuery).toContain(
+          'AND (delivered=true OR error=true) AND archived=false'
+        );
+        expect(processedCountQuery).toContain(
+          "data_table.trigger_name = 'new_user'"
+        );
+        expect(processedCountQuery).toContain('FROM "hdb_catalog"."event_log"');
+
+        expect(processedCountQuery).toMatchSnapshot();
+      });
+
+      it('should generate SQL query for invocation event count', () => {
+        const invocationCountQuery = getDataTriggerLogsCountQuery(
+          'test_event',
+          'invocation'
+        );
+        expect(invocationCountQuery).toContain(
+          "data_table.trigger_name = 'test_event'"
+        );
+        expect(invocationCountQuery).toContain(
+          'FROM "hdb_catalog"."event_invocation_logs"'
+        );
+        expect(invocationCountQuery).toMatchSnapshot();
+      });
+    }
+  });
+
+  describe('getDataTriggerLogsQuery', () => {
+    const { getDataTriggerLogsQuery } = postgres;
+    if (getDataTriggerLogsQuery) {
+      it('should generate SQL query for pending event logs', () => {
+        // pending
+        const pendingLogsQuery = getDataTriggerLogsQuery(
+          'pending',
+          'new_user',
+          10,
+          10
+        );
+        expect(pendingLogsQuery).toContain(
+          'delivered=false AND error=false AND archived=false'
+        );
+        expect(pendingLogsQuery).toContain(
+          "data_table.trigger_name = 'new_user'"
+        );
+        expect(pendingLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
+        expect(pendingLogsQuery).toContain('LIMIT 10');
+        expect(pendingLogsQuery).toContain('OFFSET 10');
+        expect(pendingLogsQuery).toMatchSnapshot();
+      });
+      it('should generate SQL query for processed event logs', () => {
+        // Processed
+        const processedLogsQuery = getDataTriggerLogsQuery(
+          'processed',
+          'test_event',
+          100,
+          0
+        );
+        expect(processedLogsQuery).toContain(
+          'AND (delivered=true OR error=true) AND archived=false'
+        );
+        expect(processedLogsQuery).toContain(
+          "data_table.trigger_name = 'test_event'"
+        );
+        expect(processedLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
+        expect(processedLogsQuery).toContain('LIMIT 100');
+        expect(processedLogsQuery).toContain('OFFSET 0');
+        expect(processedLogsQuery).toMatchSnapshot();
+      });
+      it('should generate SQL query for event invocation logs', () => {
+        // Invocation
+        const invocationLogsQuery = getDataTriggerLogsQuery(
+          'processed',
+          'test_event',
+          100,
+          0
+        );
+        expect(invocationLogsQuery).toContain(
+          'AND (delivered=true OR error=true) AND archived=false'
+        );
+        expect(invocationLogsQuery).toContain(
+          "data_table.trigger_name = 'test_event'"
+        );
+        expect(invocationLogsQuery).toContain('FROM "hdb_catalog"."event_log"');
+        expect(invocationLogsQuery).toContain('LIMIT 100');
+        expect(invocationLogsQuery).toContain('OFFSET 0');
+        expect(invocationLogsQuery).toMatchSnapshot();
+      });
+    }
+  });
+  describe('getDataTriggerInvocations', () => {
+    const { getDataTriggerInvocations } = postgres;
+    if (getDataTriggerInvocations) {
+      it('should generate SQL to fetch invocations for an event', () => {
+        // pending
+        const pendingLogsQuery = getDataTriggerInvocations(
+          '298f6a71-f503-46f1-814c-45daef0afe4d'
+        );
+        expect(pendingLogsQuery).toContain(
+          "event_id = '298f6a71-f503-46f1-814c-45daef0afe4d'"
+        );
+        expect(pendingLogsQuery).toContain('created_at DESC NULLS LAST');
+        expect(pendingLogsQuery).toContain(
+          `FROM "hdb_catalog"."event_invocation_logs"`
+        );
+        expect(pendingLogsQuery).toMatchSnapshot();
+      });
+      it('should generate SQL to fetch invocations for an event with default source', () => {
+        // pending
+        const pendingLogsQuery = getDataTriggerInvocations(
+          '298f6a71-f503-46f1-814c-45daef0afe4d'
+        );
+        expect(pendingLogsQuery).toContain(
+          "event_id = '298f6a71-f503-46f1-814c-45daef0afe4d'"
+        );
+      });
+    }
+  });
 });
