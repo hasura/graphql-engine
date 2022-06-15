@@ -405,7 +405,6 @@ library
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
-                     , Data.Set.Extended
                      , Data.SqlCommenter
                      , Data.TByteString
                      , Data.Text.Casing
