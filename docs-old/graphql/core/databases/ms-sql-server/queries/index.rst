@@ -33,7 +33,6 @@ Auto-generated query field schema
 .. code-block:: graphql
 
     author (
-      distinct_on: [author_select_column]
       where: author_bool_exp
       limit: Int
       offset: Int
