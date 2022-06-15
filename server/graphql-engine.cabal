@@ -617,8 +617,9 @@ library
                      , Hasura.Session
 
                      , Hasura.Server.API.Config
-                     , Hasura.Server.Telemetry
                      , Hasura.Server.Metrics
+                     , Hasura.Server.Telemetry
+                     , Hasura.Server.Telemetry.Types
                      , Hasura.Server.Telemetry.Counters
                      , Hasura.Server.Auth.JWT
                      , Hasura.GC

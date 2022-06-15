@@ -785,7 +785,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
         lift . unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
 
         dbUid <-
-          runMetadataStorageT getDatabaseUid
+          runMetadataStorageT getMetadataDbUid
             >>= (`onLeft` throwErrJExit DatabaseMigrationError)
         pgVersion <-
           liftIO (runExceptT $ Q.runTx _scMetadataDbPool (Q.ReadCommitted, Nothing) $ getPgVersion)
@@ -1151,7 +1151,7 @@ instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT
   getCatalogState = runInSeparateTx getCatalogStateTx
   setCatalogState a b = runInSeparateTx $ setCatalogStateTx a b
 
-  getDatabaseUid = runInSeparateTx getDbId
+  getMetadataDbUid = runInSeparateTx getDbId
   checkMetadataStorageHealth = runInSeparateTx $ checkDbConnection
 
   getDeprivedCronTriggerStats = runInSeparateTx . getDeprivedCronTriggerStatsTx
