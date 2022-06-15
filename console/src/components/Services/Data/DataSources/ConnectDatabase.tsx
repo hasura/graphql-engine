@@ -93,6 +93,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           preparedStatements: connectionInfo?.use_prepared_statements ?? false,
           isolationLevel: connectionInfo?.isolation_level ?? 'read-committed',
           sslConfiguration: connectionInfo?.ssl_configuration,
+          customization: {
+            rootFields: currentSourceInfo?.customization?.root_fields,
+            typeNames: currentSourceInfo?.customization?.type_names,
+          },
         },
       });
 
