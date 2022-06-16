@@ -51,7 +51,7 @@ parseGraphQLQuery ::
     )
 parseGraphQLQuery gqlContext varDefs varValsM directives fields = do
   (resolvedDirectives, resolvedSelSet) <- resolveVariables varDefs (fromMaybe Map.empty varValsM) directives fields
-  parsedQuery <- (gqlQueryParser gqlContext >>> (`onLeft` reportParseErrors)) resolvedSelSet
+  parsedQuery <- liftEither $ gqlQueryParser gqlContext resolvedSelSet
   pure (parsedQuery, resolvedDirectives, resolvedSelSet)
 
 -- | Construct an 'ExecutionPlan' from a 'G.SelectionSet'.
@@ -96,9 +96,8 @@ convertQuerySelSet
 
     -- 2. Parse directives on the query
     dirMap <-
-      liftEither
-        (runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives))
-        `onLeft` reportParseErrors
+      runParse
+        (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 

@@ -5,7 +5,6 @@ module Hasura.GraphQL.Parser.Monad
     Parse,
     runParse,
     ParseError (..),
-    reportParseErrors,
   )
 where
 
@@ -167,12 +166,13 @@ newtype Parse a = Parse
   deriving (Functor, Applicative, Monad)
 
 runParse ::
+  MonadError QErr m =>
   Parse a ->
-  Either ParseError a
-runParse =
-  unParse
-    >>> flip runReaderT []
-    >>> runExcept
+  m a
+runParse parse =
+  onLeft
+    (runExcept <<< flip runReaderT [] <<< unParse $ parse)
+    reportParseErrors
 
 instance MonadParse Parse where
   withPath f x = Parse $ withReaderT f $ unParse x

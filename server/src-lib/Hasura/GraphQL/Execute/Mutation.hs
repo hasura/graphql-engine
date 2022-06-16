@@ -108,13 +108,12 @@ convertMutationSelectionSet
     -- Parse the GraphQL query into the RQL AST
     unpreparedQueries ::
       RootFieldMap (MutationRootField UnpreparedValue) <-
-      (mutationParser >>> (`onLeft` reportParseErrors)) resolvedSelSet
+      liftEither $ mutationParser resolvedSelSet
 
     -- Process directives on the mutation
     _dirMap <-
-      liftEither $
-        runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
-          `onLeft` reportParseErrors
+      runParse
+        (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 
