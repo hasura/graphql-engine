@@ -96,8 +96,9 @@ convertQuerySelSet
 
     -- 2. Parse directives on the query
     dirMap <-
-      (`onLeft` reportParseErrors)
-        =<< runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
+      liftEither
+        (runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives))
+        `onLeft` reportParseErrors
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 

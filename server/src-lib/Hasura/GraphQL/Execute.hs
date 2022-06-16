@@ -395,8 +395,10 @@ getResolvedExecPlan
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-
-            (`onLeft` reportParseErrors)
-              =<< runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
+            liftEither $
+              runParse (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
+                `onLeft` reportParseErrors
+
           -- A subscription should have exactly one root field.
           -- However, for testing purposes, we may allow several root fields; we check for this by
           -- looking for directive "_multiple_top_level_fields" on the subscription. THIS IS NOT A

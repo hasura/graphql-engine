@@ -260,10 +260,10 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
       SourceInfo b ->
       ConcreteSchemaT
         m
-        ( [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))]
+        ( [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
+          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
     buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
       withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
@@ -378,10 +378,10 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
       SourceInfo b ->
       ConcreteSchemaT
         m
-        ( [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))]
+        ( [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
+          [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
+          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
     buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
       withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
@@ -496,11 +496,11 @@ buildAndValidateRemoteSchemas ::
     MonadIO m
   ) =>
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
-  [FieldParser (P.ParseT Identity) (NamespacedField (QueryRootField UnpreparedValue))] ->
-  [FieldParser (P.ParseT Identity) (NamespacedField (MutationRootField UnpreparedValue))] ->
+  [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))] ->
+  [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))] ->
   RoleName ->
   RemoteSchemaPermsCtx ->
-  ConcreteSchemaT m ([RemoteSchemaParser (P.ParseT Identity)], HashSet InconsistentMetadata)
+  ConcreteSchemaT m ([RemoteSchemaParser P.Parse], HashSet InconsistentMetadata)
 buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields role remoteSchemaPermsCtx =
   runWriterT $ foldlM step [] (Map.elems remotes)
   where
@@ -551,7 +551,7 @@ buildRemoteSchemaParser ::
   RemoteSchemaPermsCtx ->
   RoleName ->
   RemoteSchemaCtx ->
-  ConcreteSchemaT m (Maybe (RemoteSchemaParser (P.ParseT Identity)))
+  ConcreteSchemaT m (Maybe (RemoteSchemaParser P.Parse))
 buildRemoteSchemaParser remoteSchemaPermsCtx roleName context = do
   let maybeIntrospection = getIntrospectionResult remoteSchemaPermsCtx roleName context
   for maybeIntrospection \introspection ->
@@ -668,7 +668,7 @@ buildMutationFields scenario sourceInfo tables (takeExposedAs FEAMutation -> fun
     guard $
       -- when function permissions are inferred, we don't expose the
       -- mutation functions for non-admin roles. See Note [Function Permissions]
-      roleName == adminRoleName || roleName `Map.member` (_fiPermissions functionInfo)
+      roleName == adminRoleName || roleName `Map.member` _fiPermissions functionInfo
     lift $ mkRFs MDBR $ buildFunctionMutationFields sourceInfo functionName functionInfo targetTableName
   pure $ concat $ tableMutations <> catMaybes functionMutations
   where
@@ -835,8 +835,8 @@ mkRootFields ::
   SourceConfig b ->
   Maybe QueryTagsConfig ->
   (a -> db b) ->
-  m [(FieldParser n a)] ->
-  m [(FieldParser n (RootField db remote action raw))]
+  m [FieldParser n a] ->
+  m [FieldParser n (RootField db remote action raw)]
 mkRootFields sourceName sourceConfig queryTagsConfig inj =
   fmap
     ( map
@@ -855,12 +855,12 @@ mutationRoot = G._mutation_root
 queryRoot :: G.Name
 queryRoot = G._query_root
 
-finalizeParser :: Parser 'Output (P.ParseT Identity) a -> ParserFn a
-finalizeParser parser = runIdentity . P.runParseT . P.runParser parser
+finalizeParser :: Parser 'Output P.Parse a -> ParserFn a
+finalizeParser parser = P.runParse . P.runParser parser
 
 type ConcreteSchemaT m a =
   P.SchemaT
-    (P.ParseT Identity)
+    P.Parse
     ( ReaderT
         ( SchemaOptions,
           SchemaContext,

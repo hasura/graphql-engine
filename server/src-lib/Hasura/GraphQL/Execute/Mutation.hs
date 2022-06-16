@@ -112,8 +112,9 @@ convertMutationSelectionSet
 
     -- Process directives on the mutation
     _dirMap <-
-      (`onLeft` reportParseErrors)
-        =<< runParseT (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
+      liftEither $
+        runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
+          `onLeft` reportParseErrors
 
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 

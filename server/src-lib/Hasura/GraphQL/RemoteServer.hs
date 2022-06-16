@@ -21,7 +21,7 @@ import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Constants qualified as G
-import Hasura.GraphQL.Parser.Monad (ParseT, runSchemaT)
+import Hasura.GraphQL.Parser.Monad (Parse, runSchemaT)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -80,7 +80,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   void $
     flip runReaderT minimumValidContext $
       runSchemaT $
-        buildRemoteParser @_ @_ @(ParseT Identity)
+        buildRemoteParser @_ @_ @Parse
           _rscIntroOriginal
           _rscRemoteRelationships
           _rscInfo
@@ -256,14 +256,14 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
     validateFieldMappingsAreDistinct :: G.TypeDefinition a b -> m ()
     validateFieldMappingsAreDistinct = \case
       G.TypeDefinitionInterface G.InterfaceTypeDefinition {..} -> do
-        let dups = duplicates $ (customizeFieldName _itdName . G._fldName) <$> _itdFieldsDefinition
+        let dups = duplicates $ customizeFieldName _itdName . G._fldName <$> _itdFieldsDefinition
         unless (Set.null dups) $
           throwRemoteSchema $
             "Field name mappings for interface type " <> _itdName
               <<> " are not distinct; the following fields appear more than once: "
               <> dquoteList dups
       G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> do
-        let dups = duplicates $ (customizeFieldName _otdName . G._fldName) <$> _otdFieldsDefinition
+        let dups = duplicates $ customizeFieldName _otdName . G._fldName <$> _otdFieldsDefinition
         unless (Set.null dups) $
           throwRemoteSchema $
             "Field name mappings for object type " <> _otdName
