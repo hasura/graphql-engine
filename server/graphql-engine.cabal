@@ -46,6 +46,11 @@ flag optimize-hasura
   default: True
   manual: False
 
+flag ghci-load-test-with-lib
+  description: Allow running ghci on src-test but also load all of src-lib
+  default: False
+  manual: True
+
 common common-all
   ghc-options:
     -foptimal-applicative-do
@@ -129,58 +134,7 @@ common common-exe
     -- workaround for limitations in monitoring tools than anything...
     "-with-rtsopts=-N -I0 -T -qn2 -kc8K --disable-delayed-os-memory-return"
 
-library dc-api
-  import: common-all
-  hs-source-dirs:      src-dc-api
-  build-depends:       aeson
-                     , autodocodec
-                     , autodocodec-openapi3
-                     , base
-                     , bytestring
-                     , containers
-                     , deepseq
-                     , file-embed
-                     , hashable
-                     , insert-ordered-containers
-                     , lens
-                     , lens-aeson
-                     , mtl
-                     , openapi3
-                     , scientific
-                     , servant
-                     , servant-client
-                     , servant-client-core
-                     , servant-openapi3
-                     , servant-server
-                     , text
-                     , unordered-containers
-                     , vector
-                     , warp
-  if !flag(profiling)
-    -- ghc-heap-view can't be built with profiling
-    build-depends:     ghc-heap-view
-
-  exposed-modules:     Autodocodec.Extended
-                     , Hasura.Backends.DataConnector.API
-                     , Hasura.Backends.DataConnector.API.V0.API
-                     , Hasura.Backends.DataConnector.API.V0.Capabilities
-                     , Hasura.Backends.DataConnector.API.V0.Column
-                     , Hasura.Backends.DataConnector.API.V0.ConfigSchema
-                     , Hasura.Backends.DataConnector.API.V0.Expression
-                     , Hasura.Backends.DataConnector.API.V0.OrderBy
-                     , Hasura.Backends.DataConnector.API.V0.Query
-                     , Hasura.Backends.DataConnector.API.V0.Scalar.Type
-                     , Hasura.Backends.DataConnector.API.V0.Scalar.Value
-                     , Hasura.Backends.DataConnector.API.V0.Schema
-                     , Hasura.Backends.DataConnector.API.V0.Table
-                     , Hasura.Backends.DataConnector.Agent.Data
-                     , Hasura.Backends.DataConnector.Agent.Query
-                     , Hasura.Backends.DataConnector.Agent.Schema
-                     , Hasura.Backends.DataConnector.Agent.Server
-
-library
-  import: common-all
-  hs-source-dirs:      src-lib
+common lib-depends
   build-depends:       Spock-core
                      , aeson
                      , aeson-casing
@@ -379,11 +333,62 @@ library
                      -- mysql
                      , mysql
                      , mysql-simple
-
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
 
+library dc-api
+  import: common-all
+  hs-source-dirs:      src-dc-api
+  build-depends:       aeson
+                     , autodocodec
+                     , autodocodec-openapi3
+                     , base
+                     , bytestring
+                     , containers
+                     , deepseq
+                     , file-embed
+                     , hashable
+                     , insert-ordered-containers
+                     , lens
+                     , lens-aeson
+                     , mtl
+                     , openapi3
+                     , scientific
+                     , servant
+                     , servant-client
+                     , servant-client-core
+                     , servant-openapi3
+                     , servant-server
+                     , text
+                     , unordered-containers
+                     , vector
+                     , warp
+  if !flag(profiling)
+    -- ghc-heap-view can't be built with profiling
+    build-depends:     ghc-heap-view
+
+  exposed-modules:     Autodocodec.Extended
+                     , Hasura.Backends.DataConnector.API
+                     , Hasura.Backends.DataConnector.API.V0.API
+                     , Hasura.Backends.DataConnector.API.V0.Capabilities
+                     , Hasura.Backends.DataConnector.API.V0.Column
+                     , Hasura.Backends.DataConnector.API.V0.ConfigSchema
+                     , Hasura.Backends.DataConnector.API.V0.Expression
+                     , Hasura.Backends.DataConnector.API.V0.OrderBy
+                     , Hasura.Backends.DataConnector.API.V0.Query
+                     , Hasura.Backends.DataConnector.API.V0.Scalar.Type
+                     , Hasura.Backends.DataConnector.API.V0.Scalar.Value
+                     , Hasura.Backends.DataConnector.API.V0.Schema
+                     , Hasura.Backends.DataConnector.API.V0.Table
+                     , Hasura.Backends.DataConnector.Agent.Data
+                     , Hasura.Backends.DataConnector.Agent.Query
+                     , Hasura.Backends.DataConnector.Agent.Schema
+                     , Hasura.Backends.DataConnector.Agent.Server
+
+library
+  import: common-all, lib-depends
+  hs-source-dirs:      src-lib
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Interpret
                      , Control.Arrow.Trans
@@ -867,8 +872,16 @@ executable graphql-engine
                    , unix
                    , ekg-core
 
+-- Ideally, we would not always import `lib-depends` here, and we would like to:
+--
+--  if flag(ghci-load-test-with-lib)
+--    import: common-all, common-exe, lib-depends
+--  else
+--    import: common-all, common-exe
+--
+-- However, that doesn't work yet. See https://github.com/haskell/cabal/issues/8218
 test-suite graphql-engine-tests
-  import: common-all, common-exe
+  import: common-all, common-exe, lib-depends
   type: exitcode-stdio-1.0
   build-depends:
       aeson
@@ -884,7 +897,6 @@ test-suite graphql-engine-tests
     , ekg-core
     , dc-api
     , free
-    , graphql-engine
     , graphql-parser
     , data-has
     , hedgehog
@@ -932,7 +944,14 @@ test-suite graphql-engine-tests
     -- mssql support
     , odbc
     , resource-pool
+
+  if !flag(ghci-load-test-with-lib)
+    build-depends: graphql-engine
+
   hs-source-dirs: src-test
+  if flag(ghci-load-test-with-lib)
+    hs-source-dirs: src-lib
+
   main-is: Main.hs
   other-modules:
     Control.Concurrent.ExtendedSpec
