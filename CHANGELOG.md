@@ -15,6 +15,7 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 - console: add support for computed fields with session arg in permission builder (fix #8321)
 - console: add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)
 - console: add support for mssql event triggers
+- console: add new table relationships tab to console
 - cli: fix perfomance regression with large metadata in `metadata apply`
 - cli: fix error reporting in `metadata apply` command (#8280)
 - server: query runtime performance optimizations

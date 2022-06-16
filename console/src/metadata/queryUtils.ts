@@ -146,6 +146,35 @@ export const getMetadataQuery = (
   };
 };
 
+export type DataSourceDriver =
+  | 'postgres'
+  | 'mysql'
+  | 'mssql'
+  | 'bigquery'
+  | 'citus';
+
+export const getDataSourcePrefix = (driver: DataSourceDriver) => {
+  let prefix = '';
+  switch (driver) {
+    case 'mysql':
+      prefix = 'mysql_';
+      break;
+    case 'mssql':
+      prefix = 'mssql_';
+      break;
+    case 'bigquery':
+      prefix = 'bigquery_';
+      break;
+    case 'citus':
+      prefix = 'citus_';
+      break;
+    case 'postgres':
+    default:
+      prefix = 'pg_';
+  }
+  return prefix;
+};
+
 export const getCreatePermissionQuery = (
   action: 'update' | 'insert' | 'delete' | 'select',
   tableDef: QualifiedTable,

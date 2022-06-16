@@ -9,17 +9,16 @@ export const availableFeatureFlagIds = {
 };
 
 export const availableFeatureFlags: FeatureFlagDefinition[] = [
-  // TODO: Uncomment this line when the actual UI for DB-to-X is ready
-  // {
-  //   id: relationshipTabTablesId,
-  //   title: 'New Relationship tab UI for tables/views',
-  //   description:
-  //     'Try out the new UI for the Relationship tab of Tables/Views in Data section.',
-  //   section: 'data',
-  //   status: 'alpha',
-  //   defaultValue: false,
-  //   discussionUrl: '',
-  // },
+  {
+    id: relationshipTabTablesId,
+    title: 'New Relationship tab UI for tables/views',
+    description:
+      'Try out the new UI for the Relationship tab of Tables/Views in Data section.',
+    section: 'data',
+    status: 'alpha',
+    defaultValue: false,
+    discussionUrl: '',
+  },
   {
     id: addRemoteSchemaId,
     title: 'New create remote schema page',

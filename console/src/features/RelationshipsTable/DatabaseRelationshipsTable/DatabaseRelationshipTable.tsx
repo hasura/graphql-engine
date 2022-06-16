@@ -76,7 +76,7 @@ const useTableData = (target: DataTarget) => {
       })) || [];
 
     return [...localrelationships, ...dbToRs, ...dbToDb];
-  }, [dbToRsData, dbToDbData, localrelationships, target.database]);
+  }, [dbToRsData, dbToDbData, localrelationships, target]);
 
   const isLoading = dbToRsIsLoading || dbToDbIsLoading || localRelnsIsLoading;
   const isError = dbToRsIsError || dbToDbIsError;
@@ -107,7 +107,7 @@ export const DatabaseRelationshipsTable = ({
       />
     );
 
-  if (isLoading)
+  if (!data && isLoading)
     return <IndicatorCard status="info" headline="Fetching relationships..." />;
 
   if (!data || data?.length === 0)

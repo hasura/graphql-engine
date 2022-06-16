@@ -108,38 +108,7 @@ describe('@features/Datasources/useTableRelationships hook', () => {
     );
 
     await waitFor(() => result.current.isSuccess);
-    expect(result.current.data).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "from": Object {
-            "column": Array [
-              "AlbumId",
-            ],
-            "table": "Track",
-          },
-          "to": Object {
-            "column": Array [
-              "AlbumId",
-            ],
-            "table": "Album",
-          },
-        },
-        Object {
-          "from": Object {
-            "column": Array [
-              "ArtistId",
-            ],
-            "table": "Album",
-          },
-          "to": Object {
-            "column": Array [
-              "ArtistId",
-            ],
-            "table": "Artist",
-          },
-        },
-      ]
-    `);
+    expect(result.current.data).toMatchSnapshot();
   });
 
   it('should return success when all the correct paramters are passed for a mssql table', async () => {
@@ -156,65 +125,6 @@ describe('@features/Datasources/useTableRelationships hook', () => {
     );
 
     await waitFor(() => result.current.isSuccess);
-    expect(result.current.data).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "from": Object {
-            "column": Array [
-              "category_id",
-            ],
-            "table": "products",
-          },
-          "to": Object {
-            "column": Array [
-              "category_id",
-            ],
-            "table": "categories",
-          },
-        },
-        Object {
-          "from": Object {
-            "column": Array [
-              "brand_id",
-            ],
-            "table": "products",
-          },
-          "to": Object {
-            "column": Array [
-              "brand_id",
-            ],
-            "table": "brands",
-          },
-        },
-        Object {
-          "from": Object {
-            "column": Array [
-              "product_id",
-            ],
-            "table": "order_items",
-          },
-          "to": Object {
-            "column": Array [
-              "product_id",
-            ],
-            "table": "products",
-          },
-        },
-        Object {
-          "from": Object {
-            "column": Array [
-              "product_id",
-            ],
-            "table": "stocks",
-          },
-          "to": Object {
-            "column": Array [
-              "product_id",
-            ],
-            "table": "products",
-          },
-        },
-      ]
-    `);
+    expect(result.current.data).toMatchSnapshot();
   });
 });

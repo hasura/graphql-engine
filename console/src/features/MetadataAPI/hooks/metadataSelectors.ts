@@ -95,19 +95,30 @@ export namespace MetadataSelector {
   export const getDbToRemoteSchemaRelationships = (target: DataTarget) => (
     m: MetadataResponse
   ) => {
+    let tableEntry: TableEntry | undefined;
     // FIXME: currently the underlying hooks (useTable) only uses QualifiedTable.
     // Qualified table needs to be replaced with DataTarget everywhere so that we can support all targets
-    if (!('schema' in target)) {
-      throw Error('Big query is not yet supported');
+    if ('dataset' in target) {
+      tableEntry = m.metadata.sources
+        .find(s => s.name === target.database)
+        ?.tables.find(
+          t =>
+            t.table.name === target.table &&
+            'dataset' in t.table &&
+            target.dataset === t.table?.dataset
+        );
+    } else {
+      // find relevant table from metadata
+      tableEntry = m.metadata.sources
+        .find(s => s.name === target.database)
+        ?.tables.find(
+          t =>
+            t.table.name === target.table &&
+            'schema' in t.table &&
+            'schema' in target &&
+            target.schema === t.table.schema
+        );
     }
-
-    // find relevant table from metadata
-    const tableEntry = m.metadata.sources
-      .find(s => s.name === target.database)
-      ?.tables.find(
-        t => t.table.name === target.table && target.schema === t.table.schema
-      );
-
     // ensure relationship is to remote schema not remote db
     return tableEntry?.remote_relationships?.filter(
       relationship => !relationship.definition.to_source
@@ -119,10 +130,17 @@ export namespace MetadataSelector {
     return sources?.tables ?? [];
   };
 
+  // TODO move to DAL
   export const getTable = (dataSource: string, table: QualifiedTable) => (
     m: MetadataResponse
   ) => {
     const tables = getTables(dataSource)(m);
+
+    if ('dataset' in table && table.dataset !== '') {
+      return tables.find(
+        t => t.table.name === table.name && t.table.dataset === table.dataset
+      );
+    }
     return tables.find(
       t => t.table.name === table.name && t.table.schema === table.schema
     );
@@ -180,18 +198,34 @@ export namespace MetadataSelector {
   }: {
     target: DataTarget;
   }) => (m: MetadataResponse) => {
+    let tableEntry: TableEntry | undefined;
     // FIXME: currently the underlying hooks (useTable) only uses QualifiedTable.
     // Qualified table needs to be replaced with DataTarget everywhere so that we can support all targets
-    if (!('schema' in target)) {
-      throw Error('Big query is not yet supported');
+
+    // find relevant table from metadata
+    if ('dataset' in target) {
+      tableEntry = m.metadata.sources
+        .find(s => s.name === target.database)
+        ?.tables.find(
+          t =>
+            t.table.name === target.table &&
+            'dataset' in t.table &&
+            target.dataset === t.table?.dataset
+        );
+    } else {
+      tableEntry = m.metadata.sources
+        .find(s => s.name === target.database)
+        ?.tables.find(
+          t =>
+            t.table.name === target.table &&
+            'schema' in t.table &&
+            'schema' in target &&
+            target.schema === t.table.schema
+        );
     }
 
-    const metadataTable = getTable(target.database, {
-      name: target.table,
-      schema: target.schema,
-    })(m);
     const remote_database_relationships: RemoteRelationship[] = (
-      metadataTable?.remote_relationships ?? []
+      tableEntry?.remote_relationships ?? []
     ).filter(field => 'to_source' in field.definition);
     return remote_database_relationships;
   };

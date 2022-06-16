@@ -33,7 +33,11 @@ import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import styles from '../TableModify/ModifyTable.scss';
 import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
-import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
+import {
+  currentDriver,
+  findAllFromRel,
+  isFeatureSupported,
+} from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
@@ -332,8 +336,11 @@ const Relationships = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const featureFlagsResult = useFeatureFlags();
-  const { data: featureFlagsData } = featureFlagsResult;
+  const {
+    data: featureFlagsData,
+    isLoading: isFeatureFlagsLoading,
+  } = useFeatureFlags();
+  if (isFeatureFlagsLoading) return <div>Loading...</div>;
 
   if (!isFeatureSupported('tables.relationships.enabled')) {
     return (
@@ -361,8 +368,10 @@ const Relationships = ({
   if (newRelationshipsTabIsEnabled) {
     return (
       <DatabaseRelationshipsTab
-        tableSchema={tableSchema}
+        table={tableSchema}
+        driver={currentDriver}
         currentSource={currentSource}
+        migrationMode={migrationMode}
       />
     );
   }
