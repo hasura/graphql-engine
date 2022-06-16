@@ -391,13 +391,12 @@ getResolvedExecPlan
               directives
               inlinedSelSet
           subscriptionParser <- C.gqlSubscriptionParser gCtx `onNothing` throw400 ValidationFailed "no subscriptions exist"
-          unpreparedAST <- (subscriptionParser >>> (`onLeft` reportParseErrors)) normalizedSelectionSet
+          unpreparedAST <- liftEither $ subscriptionParser normalizedSelectionSet
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-
-            liftEither $
-              runParse (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
-                `onLeft` reportParseErrors
+            runParse
+              (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
 
           -- A subscription should have exactly one root field.
           -- However, for testing purposes, we may allow several root fields; we check for this by

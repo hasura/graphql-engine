@@ -23,7 +23,6 @@ import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
 import Hasura.GraphQL.Execute.Resolve qualified as ER
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.Instances ()
@@ -109,7 +108,7 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
           directives
           inlinedSelSet
       subscriptionParser <- C.gqlSubscriptionParser graphQLContext `onNothing` throw400 NotFound "no subscriptions found"
-      unpreparedQueries <- (subscriptionParser >>> (`onLeft` reportParseErrors)) normalizedSelectionSet
+      unpreparedQueries <- liftEither $ subscriptionParser normalizedSelectionSet
       let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
       -- TODO: validate directives here
       -- query-tags are not necessary for EXPLAIN API

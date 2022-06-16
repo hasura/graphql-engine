@@ -9,6 +9,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.TH
+import Hasura.Base.Error
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser
 import Hasura.Prelude
@@ -39,4 +40,4 @@ instance J.ToJSON GQLContext where
 
 type ParserFn a =
   G.SelectionSet G.NoFragments Variable ->
-  Either ParseError a
+  Either QErr a
