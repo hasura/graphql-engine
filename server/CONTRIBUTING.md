@@ -20,6 +20,10 @@ Additionally, you will need a way to run a Postgres database server. The `dev.sh
 - [PostgreSQL](https://www.postgresql.org) >= 9.5
 - [postgis](https://postgis.net)
 
+### Installing tooling with direnv
+
+This project contains scripts for installing project dependencies automatically with [direnv](https://direnv.net/). For more information, see the `.envrc` file in the root.
+
 ### Upgrading npm
 
 If your npm is too old (>= 5.7 required):

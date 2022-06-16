@@ -17,6 +17,7 @@
     brew install libffi
     brew install llvm@11
     brew install microsoft/mssql-release/mssql-tools
+    brew install direnv
     ```
 
      And add them to your environment:
