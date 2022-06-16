@@ -191,6 +191,24 @@ cabal test tests-hspec --test-show-details=direct
 
 For more details please check out the [README](./tests-hspec/README.md).
 
+##### Running unit tests and recompiling
+
+While working on features, you might want to add unit tests and work through
+getting them to pass. This is generally a slow process, but there is a
+workaround to allow loading both the `graphql-engine` library and the unit
+testing library in `ghcid` at the same time:
+
+```sh
+ghcid -a -c "cabal repl graphql-engine-tests -f -O0 -fghci-load-test-with-lib" --test Main.main
+```
+
+This assumes you already have `HASURA_GRAPHQL_DATABASE_URL` and `HASURA_MSSQL_CONN_STR`
+exported as environment variables.
+
+If you just want to run all unit tests, you can add ` --setup ":set args unit"`
+to the command line above. If you want to run specific test(s), you can instead
+do `--setup ":set args unit --match name_of_test(s)"`.
+
 #### Building with profiling
 
 To build with profiling support, you need to both enable profiling via `cabal`
