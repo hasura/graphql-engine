@@ -17,6 +17,7 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 - console: add support for mssql event triggers
 - cli: fix perfomance regression with large metadata in `metadata apply`
 - cli: fix error reporting in `metadata apply` command (#8280)
+- server: query runtime performance optimizations
 
 ## v2.8.0
 
