@@ -2,7 +2,7 @@ This note is in [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-
 It is referenced at:
   - line 83 of [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L83)
   - line 54 of [Hasura.GraphQL.Parser.Internal.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Types.hs#L54)
-  - line 99 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L99)
+  - line 97 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L97)
   - line 427 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L427)
   - line 916 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L916)
   - line 935 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L935)
