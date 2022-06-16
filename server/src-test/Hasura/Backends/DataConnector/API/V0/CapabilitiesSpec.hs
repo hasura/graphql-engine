@@ -15,15 +15,45 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "Capabilities" $ do
-    testToFromJSONToSchema (Capabilities False) [aesonQQ|{"relationships": false}|]
+    testToFromJSONToSchema emptyCapabilities [aesonQQ|{}|]
     jsonOpenApiProperties genCapabilities
   describe "CapabilitiesResponse" $ do
     testToFromJSON
-      (CapabilitiesResponse (Capabilities True) emptyConfigSchemaResponse)
-      [aesonQQ|{"capabilities": {"relationships": true}, "configSchemas": {"configSchema": {}, "otherSchemas": {}}}|]
+      (CapabilitiesResponse (emptyCapabilities {cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse)
+      [aesonQQ|{"capabilities": {"relationships": {}}, "configSchemas": {"configSchema": {}, "otherSchemas": {}}}|]
+
+genQueryCapabilities :: MonadGen m => m QueryCapabilities
+genQueryCapabilities = QueryCapabilities <$> Gen.bool
+
+genMutationCapabilities :: MonadGen m => m MutationCapabilities
+genMutationCapabilities = pure MutationCapabilities {}
+
+genSubscriptionCapabilities :: MonadGen m => m SubscriptionCapabilities
+genSubscriptionCapabilities = pure SubscriptionCapabilities {}
+
+genBooleanOperators :: MonadGen m => m BooleanOperators
+genBooleanOperators = pure BooleanOperators {}
+
+genComparisonOperators :: MonadGen m => m ComparisonOperators
+genComparisonOperators = pure ComparisonOperators {}
+
+genFilteringCapabilities :: MonadGen m => m FilteringCapabilities
+genFilteringCapabilities =
+  FilteringCapabilities
+    <$> genBooleanOperators
+    <*> genComparisonOperators
+
+genRelationshipCapabilities :: MonadGen m => m RelationshipCapabilities
+genRelationshipCapabilities = pure RelationshipCapabilities {}
 
 genCapabilities :: MonadGen m => m Capabilities
-genCapabilities = Capabilities <$> Gen.bool
+genCapabilities =
+  Capabilities
+    <$> Gen.maybe genQueryCapabilities
+    <*> Gen.maybe genMutationCapabilities
+    <*> Gen.maybe genSubscriptionCapabilities
+    <*> Gen.maybe genFilteringCapabilities
+    <*> Gen.maybe genRelationshipCapabilities
 
 emptyConfigSchemaResponse :: ConfigSchemaResponse
 emptyConfigSchemaResponse = ConfigSchemaResponse mempty mempty

@@ -73,7 +73,7 @@ toExplainPlan fieldName query' =
 buildAction :: RQL.SourceName -> DC.SourceConfig -> IR.Q.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
 buildAction sourceName DC.SourceConfig {..} query = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
-  when (DC.queryHasRelations query && not (API.dcRelationships _scCapabilities)) $
+  when (DC.queryHasRelations query && isNothing (API.cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
   API.Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) _scManager _scEndpoint
   case IR.queryToAPI query of

@@ -27,7 +27,14 @@ capabilitiesHandler :: Handler API.CapabilitiesResponse
 capabilitiesHandler =
   pure $
     API.CapabilitiesResponse
-      { crCapabilities = API.Capabilities {API.dcRelationships = True},
+      { crCapabilities =
+          API.Capabilities
+            { API.cQueries = Just API.QueryCapabilities {API.qcSupportsPrimaryKeys = True},
+              API.cMutations = Nothing,
+              API.cSubscriptions = Nothing,
+              API.cFiltering = Nothing,
+              API.cRelationships = Just API.RelationshipCapabilities {}
+            },
         crConfigSchemaResponse =
           API.ConfigSchemaResponse
             { _csrConfigSchema =

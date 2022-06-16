@@ -1,6 +1,7 @@
 module Test.QuerySpec (spec) where
 
 import Control.Monad (when)
+import Data.Maybe (isJust)
 import Hasura.Backends.DataConnector.API (Capabilities (..), Config, Routes (..), SourceName)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client)
@@ -13,5 +14,5 @@ spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Capabilities -
 spec api sourceName config Capabilities {..} = do
   describe "query API" do
     Test.QuerySpec.BasicSpec.spec api sourceName config
-    when (dcRelationships) $
+    when (isJust cRelationships) $
       Test.QuerySpec.RelationshipsSpec.spec api sourceName config
