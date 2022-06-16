@@ -206,9 +206,9 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
   let -- The only directives that we currently expose over introspection are our
       -- statically defined ones.  So, for instance, we don't correctly expose
       -- directives from remote schemas.
-      directives = directivesInfo @(P.ParseT Identity)
+      directives = directivesInfo @P.Parse
       -- The __schema and __type introspection fields
-      introspection = [schema @(P.ParseT Identity), typeIntrospection]
+      introspection = [schema @P.Parse, typeIntrospection]
       {-# INLINE introspection #-}
 
   -- Collect type information of all non-introspection fields

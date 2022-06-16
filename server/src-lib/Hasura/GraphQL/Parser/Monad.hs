@@ -2,13 +2,14 @@
 module Hasura.GraphQL.Parser.Monad
   ( SchemaT,
     runSchemaT,
-    ParseT,
-    runParseT,
+    Parse,
+    runParse,
     ParseError (..),
     reportParseErrors,
   )
 where
 
+import Control.Monad.Except
 import Data.Dependent.Map (DMap)
 import Data.Dependent.Map qualified as DM
 import Data.GADT.Compare.Extended
@@ -160,25 +161,22 @@ newtype instance ParserById m '(p, a) = ParserById (p m a)
 -- -------------------------------------------------------------------------------------------------
 -- query parsing
 
-newtype ParseT m a = ParseT
-  { unParseT :: ReaderT JSONPath (ExceptT ParseError m) a
+newtype Parse a = Parse
+  { unParse :: ReaderT JSONPath (Except ParseError) a
   }
   deriving (Functor, Applicative, Monad)
 
-runParseT ::
-  ParseT m a ->
-  m (Either ParseError a)
-runParseT =
-  unParseT
+runParse ::
+  Parse a ->
+  Either ParseError a
+runParse =
+  unParse
     >>> flip runReaderT []
-    >>> runExceptT
+    >>> runExcept
 
-instance MonadTrans ParseT where
-  lift = ParseT . lift . lift
-
-instance Monad m => MonadParse (ParseT m) where
-  withPath f x = ParseT $ withReaderT f $ unParseT x
-  parseErrorWith code text = ParseT $ do
+instance MonadParse Parse where
+  withPath f x = Parse $ withReaderT f $ unParse x
+  parseErrorWith code text = Parse $ do
     path <- ask
     lift $ throwError $ ParseError {peCode = code, pePath = path, peMessage = text}
 
