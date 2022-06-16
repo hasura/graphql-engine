@@ -15,7 +15,11 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
-import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
+import {
+  currentDriver,
+  findAllFromRel,
+  isFeatureSupported,
+} from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { resetRelationshipForm, resetManualRelationshipForm } from './Actions';
@@ -56,8 +60,12 @@ const RelationshipsView = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const featureFlagsResult = useFeatureFlags();
-  const { data: featureFlagsData } = featureFlagsResult;
+  const {
+    data: featureFlagsData,
+    isLoading: isFeatureFlagsLoading,
+  } = useFeatureFlags();
+  if (isFeatureFlagsLoading) return <div>Loading...</div>;
+
   const newRelationshipsTabIsEnabled =
     featureFlagsData &&
     featureFlagsData?.length > 0 &&
@@ -69,8 +77,10 @@ const RelationshipsView = ({
   if (newRelationshipsTabIsEnabled) {
     return (
       <DatabaseRelationshipsTab
-        tableSchema={tableSchema}
+        table={tableSchema}
+        driver={currentDriver}
         currentSource={currentSource}
+        migrationMode={migrationMode}
       />
     );
   }

@@ -32,9 +32,9 @@ export type DbToRsFormProps = {
    *
    */
   onComplete?: (v: {
-    title: string;
-    message: string;
-    type: 'success' | 'error';
+    title?: string;
+    message?: string;
+    type: 'success' | 'error' | 'cancel';
   }) => void;
 };
 
@@ -66,7 +66,6 @@ export const DbToRsForm = ({
         type: 'error' as 'success' | 'error',
       };
       fireNotification(status);
-      if (onComplete) onComplete(status);
     },
   });
 

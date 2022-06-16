@@ -3,8 +3,10 @@ import { RightContainer } from '@/components/Common/Layout/RightContainer';
 import { Button } from '@/new-components/Button';
 import { fireNotification } from '@/new-components/Notifications';
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
+import { Driver } from '@/dataSources';
 
 import { NormalizedTable } from '@/dataSources/types';
+import { DataSourceDriver, getDataSourcePrefix } from '@/metadata/queryUtils';
 
 import TableHeader from '../../components/Services/Data/TableCommon/TableHeader';
 import { FeatureFlagFloatingButton } from '../FeatureFlags/components/FeatureFlagFloatingButton';
@@ -13,8 +15,14 @@ import {
   OnClickHandlerArgs,
   RowData,
 } from '../RelationshipsTable/DatabaseRelationshipsTable';
-import { allowedMetadataTypes, useMetadataMigration } from '../MetadataAPI';
+import {
+  allowedMetadataTypes,
+  DbToDbRelationship,
+  DbToRemoteSchemaRelationship,
+  useMetadataMigration,
+} from '../MetadataAPI';
 import { DataTarget } from '../Datasources';
+import { Form } from './components/Form/Form';
 
 const createTable = (target?: DataTarget) => {
   if (!target) {
@@ -40,7 +48,7 @@ const createTable = (target?: DataTarget) => {
   };
 };
 
-const useFormState = () => {
+const useFormState = (currentSource: string) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [
     existingRelationship,
@@ -70,9 +78,12 @@ const useFormState = () => {
   };
 
   const onEdit = (row?: RowData) => {
-    console.log(row);
     setExistingRelationship(row);
     setIsOpen(true);
+  };
+  const onCancel = () => {
+    setExistingRelationship(undefined);
+    setIsOpen(false);
   };
 
   const onDelete = (row?: RowData) => {
@@ -84,21 +95,55 @@ const useFormState = () => {
       return;
     }
 
-    if (row && 'relationship' in row && 'target' in row.relationship)
-      mutation.mutate({
+    const sourcePrefix = getDataSourcePrefix(currentSource as DataSourceDriver);
+
+    if (row?.toType === 'remote_schema') {
+      return mutation.mutate({
         query: {
-          type: 'delete_remote_relationship' as allowedMetadataTypes,
+          type: `${sourcePrefix}delete_remote_relationship` as allowedMetadataTypes,
           args: {
-            table: createTable(row?.relationship?.target),
+            name: row?.name,
+            source: currentSource,
+            table: createTable(
+              (row?.relationship as DbToRemoteSchemaRelationship)?.target
+            ),
           },
         },
       });
+    } else if (row?.toType === 'database') {
+      return mutation.mutate({
+        query: {
+          type: `${sourcePrefix}delete_remote_relationship` as allowedMetadataTypes,
+          args: {
+            name: row?.name,
+            source: currentSource,
+            table: createTable(
+              (row?.relationship as DbToDbRelationship)?.target
+            ),
+          },
+        },
+      });
+    } else if (row?.toType === 'table') {
+      return mutation.mutate({
+        query: {
+          type: `${sourcePrefix}drop_relationship` as allowedMetadataTypes,
+          args: {
+            relationship: row?.name,
+            table: row.referenceTable,
+            source: row.reference,
+          },
+        },
+      });
+    }
   };
 
   const onClick = ({ type, row }: OnClickHandlerArgs) => {
     switch (type) {
       case 'add':
         onOpen();
+        break;
+      case 'close':
+        onCancel();
         break;
       case 'edit':
         onEdit(row);
@@ -115,22 +160,37 @@ const useFormState = () => {
 };
 
 export const DatabaseRelationshipsTab = ({
-  tableSchema,
+  table,
   currentSource,
+  migrationMode,
+  driver,
 }: {
-  tableSchema: NormalizedTable;
+  table: NormalizedTable;
   currentSource: string;
+  migrationMode: boolean;
+  driver: Driver;
 }) => {
-  const { isOpen, existingRelationship, onClick } = useFormState();
+  const { isOpen, existingRelationship, onClick } = useFormState(currentSource);
+  const onComplete = ({
+    type,
+  }: {
+    title?: string;
+    message?: string;
+    type: 'success' | 'error' | 'cancel';
+  }) => {
+    if (type === 'success' || type === 'cancel') {
+      onClick({ type: 'close' });
+    }
+  };
 
   return (
     <RightContainer>
       <TableHeader
         dispatch={() => {}}
-        table={tableSchema}
+        table={table}
         source={currentSource}
         tabName="relationships"
-        migrationMode={false}
+        migrationMode={migrationMode}
         readOnlyMode={false}
         count={null}
         isCountEstimated
@@ -139,24 +199,36 @@ export const DatabaseRelationshipsTab = ({
         <h2 className="text-md font-semibold">Data Relationships</h2>
       </div>
       <DatabaseRelationshipsTable
-        target={{
-          database: currentSource,
-          table: tableSchema.table_name,
-          schema: tableSchema.table_schema,
-        }}
+        target={
+          {
+            database: currentSource,
+            table: table.table_name,
+            [driver === 'bigquery' ? 'dataset' : 'schema']: table.table_schema, // TODO find a better way to handle this so that GDC can work
+            kind: driver,
+          } as DataTarget
+        }
         onClick={onClick}
       />
-      <Button mode="primary" onClick={() => onClick({ type: 'add' })}>
-        Add Relationship
-      </Button>
 
-      {/* to be replaced with actual form */}
+      {isOpen ? null : (
+        <Button mode="primary" onClick={() => onClick({ type: 'add' })}>
+          Add Relationship
+        </Button>
+      )}
+      <br />
+      <br />
+
       {isOpen && (
-        <div className="mt-6">
-          Create relationship form here{' '}
-          {existingRelationship &&
-            `with existing relationship ${existingRelationship.name}`}
-        </div>
+        <Form
+          existingRelationship={existingRelationship}
+          sourceTableInfo={{
+            database: currentSource,
+            [driver === 'bigquery' ? 'dataset' : 'schema']: table.table_schema, // TODO find a better way to handle this so that GDC can work
+            table: table.table_name,
+          }}
+          onComplete={onComplete}
+          driver={driver}
+        />
       )}
       <FeatureFlagFloatingButton />
     </RightContainer>

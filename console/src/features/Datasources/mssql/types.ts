@@ -10,4 +10,5 @@ export interface MssqlDataTarget {
   database: string;
   schema: string;
   table: string;
+  kind?: 'mssql';
 }

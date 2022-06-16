@@ -10,4 +10,5 @@ export interface PostgresDataTarget {
   database: string;
   schema: string;
   table: string;
+  kind?: 'postgres';
 }

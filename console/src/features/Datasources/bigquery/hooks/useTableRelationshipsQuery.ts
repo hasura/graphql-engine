@@ -1,5 +1,14 @@
-import { TUseTableRelationshipsQuery } from '../../drivers';
+import { useQuery } from 'react-query';
+import {
+  TableRelationshipsType,
+  TUseTableRelationshipsQuery,
+} from '../../drivers';
 
-export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = () => {
-  throw new Error('Big Query does not support foreign Keys');
+export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
+  target,
+}) => {
+  return useQuery(
+    `BQ useTableRelationshipsQuery - ${JSON.stringify(target)}`,
+    async () => new Promise(res => res([] as TableRelationshipsType[])) // NOTE: BQ has no local relationship support
+  );
 };

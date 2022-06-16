@@ -10,4 +10,5 @@ export interface CitusDataTarget {
   database: string;
   schema: string;
   table: string;
+  kind?: 'citus';
 }

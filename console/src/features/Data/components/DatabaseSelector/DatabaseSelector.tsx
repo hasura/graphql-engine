@@ -131,7 +131,11 @@ export const DatabaseSelector = (props: Props) => {
             setLocalValue(temp);
             updateParent(temp);
           }}
-          placeholder="Select a schema..."
+          placeholder={`Select a ${
+            tree[localValue.database]?.kind === 'bigquery'
+              ? 'dataset'
+              : 'schema'
+          }...`}
           error={maybeError?.schema}
           data-testid={`${name}_schema`}
           icon={<FaFolder />}

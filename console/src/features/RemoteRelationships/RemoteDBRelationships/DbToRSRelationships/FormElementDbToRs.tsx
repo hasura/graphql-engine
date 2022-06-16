@@ -88,12 +88,15 @@ export const FormElementDbToRs = ({
   if (isLoading && !isError) {
     return <IndicatorCard status="info">Loading...</IndicatorCard>;
   }
-  if (isError || !remoteSchemaList) {
+  if (isError) {
     return (
       <IndicatorCard status="negative">
         Error loading remote schemas
       </IndicatorCard>
     );
+  }
+  if (!remoteSchemaList) {
+    return <IndicatorCard status="info">No remote schemas found</IndicatorCard>;
   }
   return (
     <>

@@ -9,4 +9,5 @@ export const isMysqlDataTarget = (
 export interface MysqlDataTarget {
   database: string;
   table: string;
+  kind?: 'mysql';
 }

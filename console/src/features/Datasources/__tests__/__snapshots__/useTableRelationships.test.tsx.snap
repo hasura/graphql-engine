@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@features/Datasources/useTableRelationships hook should return success when all the correct paramters are passed for a mssql table 1`] = `
+Array [
+  Object {
+    "from": Object {
+      "column": Array [
+        "AlbumId",
+      ],
+      "table": "Track",
+    },
+    "to": Object {
+      "column": Array [
+        "AlbumId",
+      ],
+      "table": "Album",
+    },
+  },
+  Object {
+    "from": Object {
+      "column": Array [
+        "ArtistId",
+      ],
+      "table": "Album",
+    },
+    "to": Object {
+      "column": Array [
+        "ArtistId",
+      ],
+      "table": "Artist",
+    },
+  },
+]
+`;
+
+exports[`@features/Datasources/useTableRelationships hook should return success when all the correct paramters are passed for a postgres table 1`] = `
+Array [
+  Object {
+    "from": Object {
+      "column": Array [
+        "AlbumId",
+      ],
+      "table": "Track",
+    },
+    "to": Object {
+      "column": Array [
+        "AlbumId",
+      ],
+      "table": "Album",
+    },
+  },
+  Object {
+    "from": Object {
+      "column": Array [
+        "ArtistId",
+      ],
+      "table": "Album",
+    },
+    "to": Object {
+      "column": Array [
+        "ArtistId",
+      ],
+      "table": "Artist",
+    },
+  },
+]
+`;

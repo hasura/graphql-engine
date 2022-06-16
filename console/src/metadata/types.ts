@@ -39,6 +39,7 @@ export type TableName = string | QualifiedTable;
 export interface QualifiedTable {
   name: string;
   schema: string;
+  dataset?: string;
 }
 
 export interface QualifiedTableBigQuery {

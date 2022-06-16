@@ -102,7 +102,11 @@ export const RemoteDBRelationshipWidget = ({
       definition: {
         to_source: {
           source: values.destination.database,
-          table: remote_table,
+          table: {
+            [getSchemaKey(remote_table as DataTarget)]:
+              (remote_table as any).dataset ?? (remote_table as any).schema,
+            name: remote_table.table,
+          },
           relationship_type: values.relationshipType,
           field_mapping: values.mapping,
         },
@@ -176,7 +180,7 @@ export const RemoteDBRelationshipWidget = ({
               loadingText="Saving relationship"
               data-test="add-local-db-relationship"
             >
-              {existingRelationshipName ? 'Save' : 'Add'} Relationship
+              Save Relationship
             </Button>
           </div>
 

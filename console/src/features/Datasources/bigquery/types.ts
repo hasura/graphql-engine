@@ -9,4 +9,5 @@ export interface BigQueryDataTarget {
   database: string;
   dataset: string;
   table: string;
+  kind?: 'bigquery';
 }

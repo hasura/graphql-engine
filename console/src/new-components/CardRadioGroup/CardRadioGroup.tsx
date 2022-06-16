@@ -31,11 +31,12 @@ export const CardRadioGroup = <T extends string = string>(
         return (
           <div
             className={clsx(
-              'bg-white shadow-sm rounded p-md border border-gray-300 cursor-pointer flex',
+              'bg-white shadow-sm rounded p-md border border-gray-300 flex',
+              disabled ? 'cursor-not-allowed' : 'cursor-pointer',
               value === iValue && 'ring-2 ring-yellow-200 border-yellow-400'
             )}
             key={iValue}
-            onClick={() => onChange(iValue)}
+            onClick={() => !disabled && onChange(iValue)}
           >
             <div>
               <input
@@ -43,7 +44,10 @@ export const CardRadioGroup = <T extends string = string>(
                 type="radio"
                 value={iValue}
                 x-model="relationType"
-                className="cursor-pointer rounded-full border shadow-sm border-gray-300 hover:border-gray-400 focus:ring-yellow-400 !mt-0"
+                className={clsx(
+                  'rounded-full border shadow-sm border-gray-300 hover:border-gray-400 focus:ring-yellow-400',
+                  disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                )}
                 onChange={() => onChange(iValue)}
                 checked={value === iValue}
                 data-test={`radio-select-${iValue}`}
@@ -53,7 +57,10 @@ export const CardRadioGroup = <T extends string = string>(
             <div className="ml-sm">
               <label
                 htmlFor={`radio-select-${iValue}`}
-                className="cursor-pointer font-semibold mb-sm"
+                className={clsx(
+                  'mb-sm font-semibold',
+                  disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                )}
               >
                 {title}
               </label>
@@ -62,6 +69,7 @@ export const CardRadioGroup = <T extends string = string>(
           </div>
         );
       })}
+      <br />
     </div>
   );
 };
