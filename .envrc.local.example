@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# This is an example .envrc.local file you can start with. Uncomment the parts
+# you'd like to use, and copy this to `.envrc.local`
+
+# Enable providing tooling with the Nix package manager
+# use flake
+
+# Enable providing NodeJS versions with `nvm`
+# use_nvm
