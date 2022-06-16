@@ -12,26 +12,26 @@
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html"><span class="hs-identifier">Hasura.RQL.Types.Table</span></a></span><span>
 </span><span id="line-14"></span><span>
-</span><span id="line-15"></span><span id="local-6989586621689155223"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Table.html#mutableView"><span class="hs-identifier hs-type">mutableView</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-16"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689155223"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-15"></span><span id="local-6989586621689154097"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Table.html#mutableView"><span class="hs-identifier hs-type">mutableView</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689154097"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-17"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier hs-type">QualifiedTable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-18"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ViewInfo"><span class="hs-identifier hs-type">ViewInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-19"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ViewInfo"><span class="hs-identifier hs-type">ViewInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-21"></span><span>  </span><span class="annot"><a href="#local-6989586621689155223"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="#local-6989586621689154097"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-22"></span><span id="mutableView"><span class="annot"><span class="annottext">mutableView :: QualifiedTable
 -&gt; (ViewInfo -&gt; Bool) -&gt; Maybe ViewInfo -&gt; Text -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.Types.Table.html#mutableView"><span class="hs-identifier hs-var hs-var">mutableView</span></a></span></span><span> </span><span id="local-6989586621689155220"><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689155220"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621689155219"><span class="annot"><span class="annottext">ViewInfo -&gt; Bool
-</span><a href="#local-6989586621689155219"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689155218"><span class="annot"><span class="annottext">Maybe ViewInfo
-</span><a href="#local-6989586621689155218"><span class="hs-identifier hs-var">mVI</span></a></span></span><span> </span><span id="local-6989586621689155217"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689155217"><span class="hs-identifier hs-var">operation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Types.Table.html#mutableView"><span class="hs-identifier hs-var hs-var">mutableView</span></a></span></span><span> </span><span id="local-6989586621689154094"><span class="annot"><span class="annottext">QualifiedTable
+</span><a href="#local-6989586621689154094"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621689154093"><span class="annot"><span class="annottext">ViewInfo -&gt; Bool
+</span><a href="#local-6989586621689154093"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689154092"><span class="annot"><span class="annottext">Maybe ViewInfo
+</span><a href="#local-6989586621689154092"><span class="hs-identifier hs-var">mVI</span></a></span></span><span> </span><span id="local-6989586621689154091"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689154091"><span class="hs-identifier hs-var">operation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-23"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ViewInfo -&gt; Bool) -&gt; Maybe ViewInfo -&gt; Bool
 </span><a href="Hasura.RQL.Types.Table.html#isMutable"><span class="hs-identifier hs-var">isMutable</span></a></span><span> </span><span class="annot"><span class="annottext">ViewInfo -&gt; Bool
-</span><a href="#local-6989586621689155219"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ViewInfo
-</span><a href="#local-6989586621689155218"><span class="hs-identifier hs-var">mVI</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621689154093"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ViewInfo
+</span><a href="#local-6989586621689154092"><span class="hs-identifier hs-var">mVI</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m ()
@@ -43,11 +43,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;view &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689155220"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689154094"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is not &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689155217"><span class="hs-identifier hs-var">operation</span></a></span><span>
+</span><a href="#local-6989586621689154091"><span class="hs-identifier hs-var">operation</span></a></span><span>
 </span><span id="line-25"></span></pre></body></html>
