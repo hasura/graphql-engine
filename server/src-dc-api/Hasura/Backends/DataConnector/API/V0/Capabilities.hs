@@ -3,7 +3,15 @@
 
 module Hasura.Backends.DataConnector.API.V0.Capabilities
   ( Capabilities (..),
+    QueryCapabilities (..),
+    MutationCapabilities (..),
+    SubscriptionCapabilities (..),
+    FilteringCapabilities (..),
+    BooleanOperators (..),
+    ComparisonOperators (..),
+    RelationshipCapabilities (..),
     CapabilitiesResponse (..),
+    emptyCapabilities,
   )
 where
 
@@ -23,16 +31,96 @@ import Prelude
 -- service. Specifically, the service is capable of serving queries
 -- which involve relationships.
 data Capabilities = Capabilities
-  { dcRelationships :: Bool
+  { cQueries :: Maybe QueryCapabilities,
+    cMutations :: Maybe MutationCapabilities,
+    cSubscriptions :: Maybe SubscriptionCapabilities,
+    cFiltering :: Maybe FilteringCapabilities,
+    cRelationships :: Maybe RelationshipCapabilities
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
+emptyCapabilities :: Capabilities
+emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing
+
 instance HasCodec Capabilities where
   codec =
     object "Capabilities" $
-      Capabilities <$> requiredField "relationships" "Does the agent support relationships?" .= dcRelationships
+      Capabilities
+        <$> optionalField "queries" "The agent's query capabilities" .= cQueries
+        <*> optionalField "mutations" "The agent's mutation capabilities" .= cMutations
+        <*> optionalField "subscriptions" "The agent's subscription capabilities" .= cSubscriptions
+        <*> optionalField "filtering" "The agent's filtering capabilities" .= cFiltering
+        <*> optionalField "relationships" "The agent's relationship capabilities" .= cRelationships
+
+data QueryCapabilities = QueryCapabilities
+  { qcSupportsPrimaryKeys :: Bool
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryCapabilities
+
+instance HasCodec QueryCapabilities where
+  codec =
+    object "QueryCapabilities" $
+      QueryCapabilities
+        <$> requiredField "supportsPrimaryKeys" "Does the agent support querying a table by primary key?" .= qcSupportsPrimaryKeys
+
+data MutationCapabilities = MutationCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec MutationCapabilities
+
+instance HasCodec MutationCapabilities where
+  codec = object "MutationCapabilities" $ pure MutationCapabilities
+
+data SubscriptionCapabilities = SubscriptionCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec SubscriptionCapabilities
+
+instance HasCodec SubscriptionCapabilities where
+  codec = object "SubscriptionCapabilities" $ pure SubscriptionCapabilities
+
+data RelationshipCapabilities = RelationshipCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RelationshipCapabilities
+
+instance HasCodec RelationshipCapabilities where
+  codec = object "RelationshipCapabilities" $ pure RelationshipCapabilities
+
+data FilteringCapabilities = FilteringCapabilities
+  { fcBooleanOperators :: BooleanOperators,
+    fcComparisonOperators :: ComparisonOperators
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec FilteringCapabilities
+
+instance HasCodec FilteringCapabilities where
+  codec =
+    object "FilteringCapabilities" $
+      FilteringCapabilities
+        <$> requiredField "booleanOperators" "The boolean operators supported by the agent" .= fcBooleanOperators
+        <*> requiredField "comparisonOperators" "The comparison operators supported by the agent" .= fcComparisonOperators
+
+data BooleanOperators = BooleanOperators {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec BooleanOperators
+
+instance HasCodec BooleanOperators where
+  codec = object "BooleanOperators" $ pure BooleanOperators
+
+data ComparisonOperators = ComparisonOperators {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonOperators
+
+instance HasCodec ComparisonOperators where
+  codec = object "ComparisonOperators" $ pure ComparisonOperators
 
 data CapabilitiesResponse = CapabilitiesResponse
   { crCapabilities :: Capabilities,
