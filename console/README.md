@@ -59,11 +59,11 @@ In server mode, **migrations** will be disabled and the corresponding functional
 ##### Set up `.env` file
 Environment variables accepted in `server` mode:
 
-- `NODE_ENV`: Console build environment (`development`/`production`) 
+- `NODE_ENV`: Console build environment (`development`/`production`)
 - `PORT`: The port where Hasura console will run locally
 - `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
 - `ASSETS_PATH`: Path to console assets
-- `ASSETS_VERSION`: Version of console assets being served 
+- `ASSETS_VERSION`: Version of console assets being served
 - `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
 - `URL_PREFIX`: Path at which the console is running
 - `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like https://<app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
@@ -103,13 +103,13 @@ IS_ADMIN_SECRET_SET=true
 
 Environment variables accepted in `cli` mode:
 
-- `NODE_ENV`: Console build environment (`development`/`production`) 
+- `NODE_ENV`: Console build environment (`development`/`production`)
 - `PORT`: The port where Hasura console will run locally
 - `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
 - `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
 - `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
 - `ASSETS_PATH`: Path to console assets
-- `ASSETS_VERSION`: Version of console assets being served 
+- `ASSETS_VERSION`: Version of console assets being served
 - `ENABLE_TELEMETRY`: Whether to enable telemetry (`true`/`false`)
 - `URL_PREFIX`: Path at which the console is running
 - `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
@@ -179,16 +179,16 @@ You can disable it if you wish by commenting out the `createLogger` line in `src
 
 ### E2E and Unit Tests
 
-* E2E Tests are written using [Cypress](https://www.cypress.io/) .  
-   - Run tests: `npm run cypress`
+* E2E Tests are written using [Cypress](https://www.cypress.io/) .
+   - Run tests: `npm run cy:open`
    - Write your tests in the `cypress/integration` directory.
 
 * Unit tests are written using [Jest Framework](https://jestjs.io/)
-    - Tests are written inside `__test__` folder of respective services. 
+    - Tests are written inside `__test__` folder of respective services.
     - Unit testing is mostly applied on the utility functions.
     - If you want to run tests, execute `npm run jest` or `npm run jest-watch` (for watch mode)
     - [Snapshot testing](https://jestjs.io/docs/en/snapshot-testing) is also used with unit tests.
-    - when you want to update the snapshot, you can run `npm run jest -- -u` or press `u` if you are in jest-watch mode.  
+    - when you want to update the snapshot, you can run `npm run jest -- -u` or press `u` if you are in jest-watch mode.
 
 ### Linter and formatter
 

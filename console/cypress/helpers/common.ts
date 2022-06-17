@@ -1,4 +1,6 @@
-export const testMode = Cypress.env('TEST_MODE');
+import { getTestMode } from './core/testMode';
+
+export const testMode = getTestMode();
 export const baseUrl = Cypress.config('baseUrl');
 export const migrateUrl = Cypress.env('MIGRATE_URL');
 export const migrateModeUrl = `${migrateUrl}/settings`;
