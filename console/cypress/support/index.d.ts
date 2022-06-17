@@ -14,5 +14,17 @@ declare namespace Cypress {
      * @example cy.getBySelLike('save_me')
      */
     getBySelLike(value: string): Chainable<Element>;
+    /**
+     * Custom command to work around the fact that cy.clear sometimes fails at clearing the
+     * Console's textarea
+     * @example cy.get('textarea').clearConsoleTextarea()
+     */
+    clearConsoleTextarea(): Chainable<Element>;
+    /**
+     * Visit the initial empty page.
+     * Console's textarea
+     * @example cy.visitEmptyPage()
+     */
+    visitEmptyPage(): Chainable<unknown>;
   }
 }

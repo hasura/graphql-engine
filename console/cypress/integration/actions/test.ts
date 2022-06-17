@@ -1,9 +1,6 @@
 import {
-  createMutationAction,
-  modifyMutationAction,
   createQueryAction,
   modifyQueryAction,
-  deleteMutationAction,
   deleteQueryAction,
   createActionTransform,
   modifyActionTransform,
@@ -25,10 +22,18 @@ const setup = () => {
 
 export const runActionsTests = () => {
   describe('Actions', () => {
-    it('Create Mutation Action', createMutationAction);
+    // The test has been moved to mutationAction.e2e.test
+    // it('Create Mutation Action', createMutationAction);
+
+    // The test was commented before moving the other ones to mutationAction.e2e.test
     // it('Verify Mutation Actions on GraphiQL', verifyMutation);
-    it('Modify Mutation Action', modifyMutationAction);
-    it('Delete Mutation Action', deleteMutationAction);
+
+    // The test has been moved to mutationAction.e2e.test
+    // it('Modify Mutation Action', modifyMutationAction);
+
+    // The test has been moved to mutationAction.e2e.test
+    // it('Delete Mutation Action', deleteMutationAction);
+
     it('Create Query Action', createQueryAction);
     // it('Verify Query Actions on GraphiQL', verifyQuery);
     it('Modify Query Action', modifyQueryAction);

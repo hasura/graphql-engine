@@ -1,20 +1,37 @@
+# Sensitive stuff
 .env
+docker-compose.yml
+
+# NPM-related stuff
+node_modules
+npm-debug.log
+.nvm
+
+# Build-related stuff
+static/dist
+hasura-console-oss-1.0.0.tgz
+packages/console-oss/build/
+storybook-static
+lib/
+!src/lib
+
+# Tests-related stuff
 cypress/videos
 cypress/screenshots
 .nyc_output
-node_modules
-static/dist
+coverage
+# is it needed anymore?
+test
+
+# Webpack-related stuff
 webpack-assets.json
 webpack-stats.json
-npm-debug.log
+
+# Text-editors-related stuff
 *.swp
-coverage
 .idea/*
-test
 **/.tern-port
+
+# Hasura stuff
 packages/console-oss/build/
-lib/
-!src/lib
 hasura-console-oss-1.0.0.tgz
-storybook-static
-.nvm

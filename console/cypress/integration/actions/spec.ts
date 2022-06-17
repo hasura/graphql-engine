@@ -21,14 +21,6 @@ import {
 const ACTION_REQUEST_BODY_TRANSFORM_TEXTAREA = 4;
 
 const statements = {
-  createMutationActionText: `type Mutation {
-    login (username: String!, password: String!): LoginResponse
-  }`,
-  createMutationCustomType: `type LoginResponse {
-    accessToken: String!
-  }
-  `,
-  createMutationHandler: 'https://hasura-actions-demo.glitch.me/login',
   createMutationGQLQuery: `mutation getAccessToken ($username: String!, $password: String!) {
     login (username: $username, password: $password) {
       accessToken
@@ -129,31 +121,6 @@ export const routeToGraphiql = () => {
   cy.url({ timeout: AWAIT_LONG }).should('eq', `${baseUrl}/api/api-explorer`);
 };
 
-export const createMutationAction = () => {
-  // Click on create
-  cy.getBySel('data-create-actions').click();
-  cy.intercept('*', req => {
-    // send all other requests to the destination server
-    req.reply();
-  });
-  // Clear default text on
-  clearActionDef();
-  // type statement
-  typeIntoActionDef(statements.createMutationActionText);
-  // clear defaults on action types
-  clearActionTypes();
-  // type the action type text
-  typeIntoActionTypes(statements.createMutationCustomType);
-  // clear handler
-  clearHandler();
-  // type into handler
-  typeIntoHandler(statements.createMutationHandler);
-  cy.getBySel('action-timeout-seconds').clear().type(getTimeoutSeconds());
-  // click to create action
-  clickOnCreateAction();
-  cy.getBySel('action-timeout-seconds').should('have.value', '25');
-};
-
 export const verifyMutation = () => {
   routeToGraphiql();
   // Type the query
@@ -180,44 +147,11 @@ export const verifyMutation = () => {
   cy.get('.cm-string').contains('Ew8jkGCNDGAo7p35RV72e0Lk3RGJoJKB');
 };
 
-export const modifyMutationAction = () => {
-  cy.visit('/actions/manage/login/modify');
-  cy.url({ timeout: AWAIT_LONG }).should(
-    'eq',
-    `${baseUrl}/actions/manage/login/modify`
-  );
-
-  clearHandler();
-  typeIntoHandler(statements.changeHandlerText);
-
-  cy.getBySel('action-timeout-seconds').type('{selectall}', {
-    force: true,
-  });
-  cy.getBySel('action-timeout-seconds').clear().type('50');
-  cy.getBySel('save-modify-action-changes').click();
-  cy.get('.notification', { timeout: AWAIT_LONG })
-    .should('be.visible')
-    .and('contain', 'Action saved successfully');
-  cy.getBySel('action-timeout-seconds').should('have.value', '50');
-
-  // permissions part
-  cy.getBySel('actions-permissions').click();
-
-  cy.getBySel('role-textbox').type('hakuna_matata');
-
-  cy.getBySel('hakuna_matata-Permission').click();
-  cy.getBySel('save-permissions-for-action').click();
-
-  cy.getBySel('actions-modify').click();
-};
-
 const deleteAction = (promptValue: string) => {
   setPromptValue(promptValue);
   cy.getBySel('delete-action').click();
   cy.window().its('prompt').should('be.called');
 };
-
-export const deleteMutationAction = () => deleteAction('login');
 
 export const createQueryAction = () => {
   // Routing to the index page
