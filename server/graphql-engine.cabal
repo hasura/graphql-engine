@@ -991,6 +991,8 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.RQLGenerator.GenSelectArgsG
     Hasura.Backends.Postgres.RQLGenerator.GenSelectFromG
     Hasura.Backends.Postgres.RQLGenerator.GenTablePermG
+    Hasura.Backends.Postgres.SQL.EDSL
+    Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec

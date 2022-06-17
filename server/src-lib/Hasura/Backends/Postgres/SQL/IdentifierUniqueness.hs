@@ -3,9 +3,16 @@
 -- Bypass the Postgres limitation of truncating identifiers to 63 characters long
 -- by prepending unique numbers.
 --
--- See Note [Postgres identifier length limitations]
+-- See Postgres docs:
+-- <https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS>
+--
+-- Also see Note [Postgres identifier length limitations]
+--
+-- This is an internal module for unit testing purposes.
+-- Use 'Hasura.Backends.Postgres.SQL.IdentifierUniqueness' instead.
 module Hasura.Backends.Postgres.SQL.IdentifierUniqueness
-  ( prefixNumToAliases,
+  ( -- * Exported API
+    prefixNumToAliases,
     prefixNumToAliasesSelectWith,
   )
 where
@@ -24,15 +31,16 @@ https://www.postgresql.org/docs/12/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIER
 -- Prefix an Int to all aliases to preserve the uniqueness of identifiers.
 -- See Note [Postgres identifier length limitations].
 prefixNumToAliases :: S.Select -> S.Select
-prefixNumToAliases s =
-  uSelect s `evalState` UniqSt 0 Map.empty
+prefixNumToAliases = runUniq . uSelect
 
-prefixNumToAliasesSelectWith ::
-  S.SelectWithG S.Select -> S.SelectWithG S.Select
-prefixNumToAliasesSelectWith s =
-  uSelectWith s `evalState` UniqSt 0 Map.empty
+prefixNumToAliasesSelectWith :: S.SelectWithG S.Select -> S.SelectWithG S.Select
+prefixNumToAliasesSelectWith = runUniq . uSelectWith
 
-type Rewrite a = State a
+runUniq :: Uniq a -> a
+runUniq = flip evalState emptyUniqSt
+
+emptyUniqSt :: UniqSt
+emptyUniqSt = UniqSt 0 Map.empty
 
 data UniqSt = UniqSt
   { _uqVar :: !Int,
@@ -40,7 +48,7 @@ data UniqSt = UniqSt
   }
   deriving (Show, Eq)
 
-type Uniq = Rewrite UniqSt
+type Uniq = State UniqSt
 
 withNumPfx :: Identifier -> Int -> Identifier
 withNumPfx iden i =
@@ -75,7 +83,7 @@ uSelectWith (S.SelectWith ctes baseSelect) =
     <*> uSelect baseSelect
 
 uSelect :: S.Select -> Uniq S.Select
-uSelect sel = do
+uSelect (S.Select ctes distM extrs fromM whereM grpM havnM ordByM limitM offM) = do
   -- this has to be the first thing to process
   newFromM <- mapM uFromExp fromM
   newCTEs <- for ctes $ \(alias, cte) -> (,) <$> addAlias alias <*> uSelect cte
@@ -102,7 +110,6 @@ uSelect sel = do
       limitM
       offM
   where
-    S.Select ctes distM extrs fromM whereM grpM havnM ordByM limitM offM = sel
     uDistinct = \case
       S.DistinctSimple -> return S.DistinctSimple
       S.DistinctOn l -> S.DistinctOn <$> mapM uSqlExp l

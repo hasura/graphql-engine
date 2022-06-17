@@ -33,6 +33,7 @@ import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoade
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
+import Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec qualified as IdentifierUniqueness
 import Hasura.EventingSpec qualified as EventingSpec
 import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
@@ -116,6 +117,7 @@ unitSpecs = do
   describe "Hasura.Backends.DataConnector.API.V0" DataConnector.API.V0Spec.spec
   describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
   describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
+  describe "Hasura.Backends.Postgres.SQL.Select.IdentifierUniqueness" IdentifierUniqueness.spec
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
