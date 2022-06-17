@@ -33,7 +33,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.HashSet qualified as Set
 import Data.List qualified as L
-import Data.TByteString qualified as TBS
+import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended ((<<>))
@@ -354,7 +354,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           AB.AnyBackend i ->
           (forall b. BackendEventTrigger b => i b -> i b -> m ()) ->
           m ()
-        compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ TBS.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
+        compose sourceName x y f = AB.composeAnyBackend @BackendEventTrigger f x y (logger $ HL.UnstructuredLog HL.LevelInfo $ SB.fromText $ "Event trigger clean up couldn't be done on the source " <> sourceName <<> " because it has changed its type")
 
 -- | Only includes the cron triggers with `included_in_metadata` set to `True`
 processCronTriggersMetadata :: Metadata -> Metadata

@@ -45,8 +45,8 @@ import Data.Aeson.TH qualified as J
 import Data.ByteString.Char8 qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
+import Data.SerializableBlob qualified as SB
 import Data.String
-import Data.TByteString qualified as TBS
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Data.Word (Word16)
@@ -76,10 +76,10 @@ instance J.ToJSON WSId where
 
 -- | Websocket message and other details
 data MessageDetails = MessageDetails
-  { _mdMessage :: !TBS.TByteString,
+  { _mdMessage :: !SB.SerializableBlob,
     _mdMessageSize :: !Int64
   }
-  deriving (Show, Eq)
+  deriving (Show)
 
 $(J.deriveToJSON hasuraJSON ''MessageDetails)
 
@@ -91,9 +91,9 @@ data WSEvent
   | EMessageSent !MessageDetails
   | EJwtExpired
   | ECloseReceived
-  | ECloseSent !TBS.TByteString
+  | ECloseSent !SB.SerializableBlob
   | EClosed
-  deriving (Show, Eq)
+  deriving (Show)
 
 $( J.deriveToJSON
      J.defaultOptions
@@ -127,7 +127,7 @@ data WSLog = WSLog
     _wslEvent :: !WSEvent,
     _wslMetadata :: !(Maybe WSEventInfo)
   }
-  deriving (Show, Eq)
+  deriving (Show)
 
 $( J.deriveToJSON
      J.defaultOptions
@@ -187,7 +187,7 @@ forceConnReconnect wsConn bs = liftIO $ closeConnWithCode wsConn 1012 bs
 closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()
 closeConnWithCode wsConn code bs = do
   (L.unLogger . _wcLogger) wsConn $
-    WSLog (_wcConnId wsConn) (ECloseSent $ TBS.fromLBS bs) Nothing
+    WSLog (_wcConnId wsConn) (ECloseSent $ SB.fromLBS bs) Nothing
   WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
 -- writes to a queue instead of the raw connection
@@ -391,13 +391,13 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
                       -- Regardless this should be safe:
                       handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed) $
                         WS.receiveData conn
-                  let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
+                  let message = MessageDetails (SB.fromLBS msg) (BL.length msg)
                   logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
                   messageHandler wsConn msg subProtocol
 
             let send = forever $ do
                   WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
-                  let message = MessageDetails (TBS.fromLBS msg) (BL.length msg)
+                  let message = MessageDetails (SB.fromLBS msg) (BL.length msg)
                   liftIO $ WS.sendTextData conn msg
                   logWSLog logger $ WSLog wsId (EMessageSent message) wsInfo
 

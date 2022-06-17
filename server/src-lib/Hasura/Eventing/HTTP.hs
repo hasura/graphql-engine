@@ -55,7 +55,7 @@ import Data.CaseInsensitive qualified as CI
 import Data.Either
 import Data.Has
 import Data.Int (Int64)
-import Data.TByteString qualified as TBS
+import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
@@ -84,10 +84,10 @@ data ExtraLogContext = ExtraLogContext
 data HTTPResp (a :: TriggerTypes) = HTTPResp
   { hrsStatus :: !Int,
     hrsHeaders :: ![HeaderConf],
-    hrsBody :: !TBS.TByteString,
+    hrsBody :: !SB.SerializableBlob,
     hrsSize :: !Int64
   }
-  deriving (Show, Eq)
+  deriving (Show)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''HTTPResp)
 
@@ -129,7 +129,7 @@ mkHTTPResp resp =
   HTTPResp
     { hrsStatus = HTTP.statusCode $ HTTP.responseStatus resp,
       hrsHeaders = map decodeHeader $ HTTP.responseHeaders resp,
-      hrsBody = TBS.fromLBS respBody,
+      hrsBody = SB.fromLBS respBody,
       hrsSize = LBS.length respBody
     }
   where
@@ -342,27 +342,24 @@ invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger =
   case respTransform' of
     Nothing -> pure resp
     Just respTransform -> do
-      case TBS.toLBS $ hrsBody resp of
-        -- If we fail to decode the body then carry on without performing a transformation
-        Nothing -> pure resp
-        Just respBody ->
-          let engine = respTransformTemplateEngine respTransform
-              respTransformCtx = buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody
-           in case applyResponseTransform respTransform respTransformCtx of
-                Left err -> do
-                  -- Log The Response Transformation Error
-                  logger' :: Logger Hasura <- asks getter
-                  unLogger logger' $ UnstructuredLog LevelError (TBS.fromLBS $ J.encode err)
-                  -- Throw an exception with the Transformation Error
-                  throwError $ HTTPError reqBody $ HOther $ T.unpack $ TE.decodeUtf8 $ LBS.toStrict $ J.encode $ J.toJSON err
-                Right transformedBody -> pure $ resp {hrsBody = TBS.fromLBS transformedBody}
+      let respBody = SB.toLBS $ hrsBody resp
+          engine = respTransformTemplateEngine respTransform
+          respTransformCtx = buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody
+       in case applyResponseTransform respTransform respTransformCtx of
+            Left err -> do
+              -- Log The Response Transformation Error
+              logger' :: Logger Hasura <- asks getter
+              unLogger logger' $ UnstructuredLog LevelError (SB.fromLBS $ J.encode err)
+              -- Throw an exception with the Transformation Error
+              throwError $ HTTPError reqBody $ HOther $ T.unpack $ TE.decodeUtf8 $ LBS.toStrict $ J.encode $ J.toJSON err
+            Right transformedBody -> pure $ resp {hrsBody = SB.fromLBS transformedBody}
 
-mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response a
+mkResp :: Int -> SB.SerializableBlob -> [HeaderConf] -> Response a
 mkResp status payload headers =
   let wr = WebhookResponse payload headers status
    in ResponseHTTP wr
 
-mkClientErr :: TBS.TByteString -> Response a
+mkClientErr :: SB.SerializableBlob -> Response a
 mkClientErr message =
   let cerr = ClientError message
    in ResponseError cerr
@@ -370,7 +367,7 @@ mkClientErr message =
 mkWebhookReq :: J.Value -> [HeaderConf] -> InvocationVersion -> WebhookRequest
 mkWebhookReq payload headers = WebhookRequest payload headers
 
-mkInvocationResp :: Maybe Int -> TBS.TByteString -> [HeaderConf] -> Response a
+mkInvocationResp :: Maybe Int -> SB.SerializableBlob -> [HeaderConf] -> Response a
 mkInvocationResp statusMaybe responseBody responseHeaders =
   case statusMaybe of
     Nothing -> mkClientErr responseBody

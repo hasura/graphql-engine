@@ -411,7 +411,7 @@ library
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
                      , Data.SqlCommenter
-                     , Data.TByteString
+                     , Data.SerializableBlob
                      , Data.Text.Casing
                      , Data.Text.Extended
                      , Data.Text.NonEmpty

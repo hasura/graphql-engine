@@ -123,8 +123,8 @@ import Data.HashMap.Strict qualified as Map
 import Data.Int (Int64)
 import Data.List (unfoldr)
 import Data.List.NonEmpty qualified as NE
+import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
-import Data.TByteString qualified as TBS
 import Data.Time.Clock
 import Data.URL.Template (printURLTemplate)
 import Database.PG.Query qualified as Q
@@ -400,7 +400,7 @@ processScheduledEvent eventId eventHeaders retryCtx payload webhookUrl type' =
           Left (TransformationError _ e) -> do
             -- Log The Transformation Error
             logger :: L.Logger L.Hasura <- asks getter
-            L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode e)
+            L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode e)
 
             -- Set event state to Error
             setScheduledEventOp eventId (SEOpStatus SESError) type'
@@ -422,14 +422,14 @@ processError eventId retryCtx decodedHeaders type' reqJson err = do
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
-           in mkInvocation eventId statusMaybe decodedHeaders (TBS.fromLBS $ J.encode httpException) [] reqJson
+           in mkInvocation eventId statusMaybe decodedHeaders (SB.fromLBS $ J.encode httpException) [] reqJson
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
           mkInvocation eventId (Just respStatus) decodedHeaders respPayload respHeaders reqJson
         HOther detail -> do
-          let errMsg = (TBS.fromLBS $ J.encode detail)
+          let errMsg = (SB.fromLBS $ J.encode detail)
           mkInvocation eventId (Just 500) decodedHeaders errMsg [] reqJson
   insertScheduledEventInvocation invocation type'
   retryOrMarkError eventId retryCtx err type'
@@ -522,7 +522,7 @@ mkInvocation ::
   ScheduledEventId ->
   Maybe Int ->
   [HeaderConf] ->
-  TBS.TByteString ->
+  SB.SerializableBlob ->
   [HeaderConf] ->
   J.Value ->
   (Invocation 'ScheduledType)

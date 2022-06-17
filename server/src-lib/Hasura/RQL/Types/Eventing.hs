@@ -19,7 +19,7 @@ where
 
 import Data.Aeson
 import Data.Aeson.TH
-import Data.TByteString qualified as TBS
+import Data.SerializableBlob qualified as SB
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Database.PG.Query.PTI qualified as PTI
@@ -43,14 +43,14 @@ data WebhookRequest = WebhookRequest
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookRequest)
 
 data WebhookResponse = WebhookResponse
-  { _wrsBody :: TBS.TByteString,
+  { _wrsBody :: SB.SerializableBlob,
     _wrsHeaders :: [HeaderConf],
     _wrsStatus :: Int
   }
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookResponse)
 
-newtype ClientError = ClientError {_ceMessage :: TBS.TByteString}
+newtype ClientError = ClientError {_ceMessage :: SB.SerializableBlob}
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''ClientError)
 
