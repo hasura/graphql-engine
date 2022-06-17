@@ -19,6 +19,7 @@ import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Test.Hspec (SpecWith, describe, it)
@@ -227,23 +228,24 @@ articlesResolver (Arg objectIds) =
 
 track :: Schema.Table
 track =
-  Schema.Table
-    "track"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "title" Schema.TStr,
-      Schema.columnNull "album_id" Schema.TInt
-    ]
-    ["id"]
-    []
-    [ [Schema.VInt 1, Schema.VStr "track1_album1", Schema.VInt 1],
-      [Schema.VInt 2, Schema.VStr "track2_album1", Schema.VInt 1],
-      [Schema.VInt 3, Schema.VStr "track3_album1", Schema.VInt 1],
-      [Schema.VInt 4, Schema.VStr "track1_album2", Schema.VInt 2],
-      [Schema.VInt 5, Schema.VStr "track2_album2", Schema.VInt 2],
-      [Schema.VInt 6, Schema.VStr "track1_album3", Schema.VInt 3],
-      [Schema.VInt 7, Schema.VStr "track2_album3", Schema.VInt 3],
-      [Schema.VInt 8, Schema.VStr "track_no_album", Schema.VNull]
-    ]
+  (table "track")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "title" Schema.TStr,
+          Schema.columnNull "album_id" Schema.TInt
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [Schema.VInt 1, Schema.VStr "track1_album1", Schema.VInt 1],
+          [Schema.VInt 2, Schema.VStr "track2_album1", Schema.VInt 1],
+          [Schema.VInt 3, Schema.VStr "track3_album1", Schema.VInt 1],
+          [Schema.VInt 4, Schema.VStr "track1_album2", Schema.VInt 2],
+          [Schema.VInt 5, Schema.VStr "track2_album2", Schema.VInt 2],
+          [Schema.VInt 6, Schema.VStr "track1_album3", Schema.VInt 3],
+          [Schema.VInt 7, Schema.VStr "track2_album3", Schema.VInt 3],
+          [Schema.VInt 8, Schema.VStr "track_no_album", Schema.VNull]
+        ]
+    }
 
 rhsPostgresSetup :: TestEnvironment -> IO ()
 rhsPostgresSetup testEnvironment = do

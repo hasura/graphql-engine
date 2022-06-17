@@ -11,6 +11,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, it)
@@ -174,50 +175,52 @@ args:
         (BigQuery.teardown [authorTable, articleTable] (testEnv, ()))
     )
 
-authorTable :: Schema.Table
+authorTable :: Table
 authorTable =
-  Schema.Table
-    "author"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "name" Schema.TStr
-    ]
-    ["id"]
-    []
-    [ [ Schema.VInt 1,
-        Schema.VStr "Author 1"
-      ],
-      [ Schema.VInt 2,
-        Schema.VStr "Author 2"
-      ]
-    ]
+  (table "author")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [ Schema.VInt 1,
+            Schema.VStr "Author 1"
+          ],
+          [ Schema.VInt 2,
+            Schema.VStr "Author 2"
+          ]
+        ]
+    }
 
-articleTable :: Schema.Table
+articleTable :: Table
 articleTable =
-  Schema.Table
-    "article"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "title" Schema.TStr,
-      Schema.column "content" Schema.TStr,
-      Schema.column "author_id" Schema.TInt
-    ]
-    ["id"]
-    []
-    [ [ Schema.VInt 1,
-        Schema.VStr "Article 1 Title",
-        Schema.VStr "Article 1 by Author 1",
-        Schema.VInt 1
-      ],
-      [ Schema.VInt 2,
-        Schema.VStr "Article 2 Title",
-        Schema.VStr "Article 2 by Author 2",
-        Schema.VInt 2
-      ],
-      [ Schema.VInt 3,
-        Schema.VStr "Article 3 Title",
-        Schema.VStr "Article 3 by Author 2, has search keyword",
-        Schema.VInt 2
-      ]
-    ]
+  (table "article")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "title" Schema.TStr,
+          Schema.column "content" Schema.TStr,
+          Schema.column "author_id" Schema.TInt
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [ Schema.VInt 1,
+            Schema.VStr "Article 1 Title",
+            Schema.VStr "Article 1 by Author 1",
+            Schema.VInt 1
+          ],
+          [ Schema.VInt 2,
+            Schema.VStr "Article 2 Title",
+            Schema.VStr "Article 2 by Author 2",
+            Schema.VInt 2
+          ],
+          [ Schema.VInt 3,
+            Schema.VStr "Article 3 Title",
+            Schema.VStr "Article 3 by Author 2, has search keyword",
+            Schema.VInt 2
+          ]
+        ]
+    }
 
 fetch_articles_returns_table :: T.Text
 fetch_articles_returns_table =

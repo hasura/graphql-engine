@@ -10,7 +10,9 @@ import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema
   ( BackendScalarType (..),
+    Table (..),
     defaultBackendScalarType,
+    table,
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -40,24 +42,25 @@ spec =
 schema :: [Schema.Table]
 schema = [author]
 
-author :: Schema.Table
+author :: Table
 author =
-  Schema.Table
-    "author"
-    [ Schema.column
-        "uuid"
-        ( Schema.TCustomType $
-            defaultBackendScalarType
-              { bstMssql = Just "VARCHAR(50)"
-              }
-        ),
-      Schema.column "name" Schema.TStr
-    ]
-    ["uuid"]
-    []
-    [ [Schema.VStr "36a6257b-08bb-45ef-a5cf-c1b7a7997087", Schema.VStr "Author 1"],
-      [Schema.VStr "36a6257b-08bb-45ef-a5cf-c1b7a7", Schema.VStr "Author 2"]
-    ]
+  (table "author")
+    { tableColumns =
+        [ Schema.column
+            "uuid"
+            ( Schema.TCustomType $
+                defaultBackendScalarType
+                  { bstMssql = Just "VARCHAR(50)"
+                  }
+            ),
+          Schema.column "name" Schema.TStr
+        ],
+      tablePrimaryKey = ["uuid"],
+      tableData =
+        [ [Schema.VStr "36a6257b-08bb-45ef-a5cf-c1b7a7997087", Schema.VStr "Author 1"],
+          [Schema.VStr "36a6257b-08bb-45ef-a5cf-c1b7a7", Schema.VStr "Author 2"]
+        ]
+    }
 
 --------------------------------------------------------------------------------
 -- Setup and teardown override

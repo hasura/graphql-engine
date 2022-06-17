@@ -1171,6 +1171,7 @@ test-suite tests-hspec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
     Test.PostgresTypesSpec
+    Test.GatheringUniqueConstraintsSpec
     Test.PrimaryKeySpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec

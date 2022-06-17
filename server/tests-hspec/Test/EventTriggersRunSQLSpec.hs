@@ -12,6 +12,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
 import Harness.Quoter.Yaml
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server (..), TestEnvironment, getServer, stopServer)
 import Harness.Webhook qualified as Webhook
@@ -48,30 +49,24 @@ spec =
 
 authorsTable :: Text -> Schema.Table
 authorsTable tableName =
-  Schema.Table
-    { tableName = tableName,
-      tableColumns =
+  (table tableName)
+    { tableColumns =
         [ Schema.column "id" Schema.TStr,
           Schema.column "name" Schema.TStr,
           Schema.column "created_at" Schema.TUTCTime
         ],
-      tablePrimaryKey = ["id"],
-      tableReferences = [],
-      tableData = []
+      tablePrimaryKey = ["id"]
     }
 
 usersTable :: Schema.Table
 usersTable =
-  Schema.Table
-    { tableName = "users",
-      tableColumns =
+  (table "users")
+    { tableColumns =
         [ Schema.column "id" Schema.TStr,
           Schema.column "name" Schema.TStr,
           Schema.column "created_at" Schema.TUTCTime
         ],
-      tablePrimaryKey = ["id"],
-      tableReferences = [],
-      tableData = []
+      tablePrimaryKey = ["id"]
     }
 
 schema :: Text -> [Schema.Table]

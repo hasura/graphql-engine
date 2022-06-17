@@ -109,6 +109,7 @@ connection_info:
 
 -- | Serialize Table into a T-SQL statement, as needed, and execute it on the Sqlserver backend
 createTable :: Schema.Table -> IO ()
+createTable Schema.Table {tableUniqueConstraints = _ : _} = error "Not Implemented: SqlServer test harness support for Unique constraints"
 createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
   run_ $
     T.unpack $

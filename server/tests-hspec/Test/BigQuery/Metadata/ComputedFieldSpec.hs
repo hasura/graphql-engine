@@ -9,6 +9,7 @@ import Harness.Constants qualified as Constants
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, it)
@@ -48,27 +49,25 @@ bigqueryTeardown (testEnv, ()) = do
 
 authorTable :: Schema.Table
 authorTable =
-  Schema.Table
-    "author"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "name" Schema.TStr
-    ]
-    ["id"]
-    []
-    []
+  (table "author")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr
+        ],
+      tablePrimaryKey = ["id"]
+    }
 
 articleTable :: Schema.Table
 articleTable =
-  Schema.Table
-    "article"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "title" Schema.TStr,
-      Schema.column "content" Schema.TStr,
-      Schema.column "author_id" Schema.TInt
-    ]
-    ["id"]
-    []
-    []
+  (table "article")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "title" Schema.TStr,
+          Schema.column "content" Schema.TStr,
+          Schema.column "author_id" Schema.TInt
+        ],
+      tablePrimaryKey = ["id"]
+    }
 
 fetch_articles_returns_table :: T.Text
 fetch_articles_returns_table =

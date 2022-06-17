@@ -36,6 +36,7 @@ import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
 import Harness.RemoteServer qualified as RemoteServer
 import Harness.Test.Context (Context (..))
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
 import Test.Hspec (SpecWith, describe, it)
@@ -176,35 +177,36 @@ rhsSQLServer =
 -- | LHS
 artist :: Schema.Table
 artist =
-  Schema.Table
-    "artist"
-    [ Schema.columnNull "id" Schema.TInt,
-      Schema.column "name" Schema.TStr
-    ]
-    []
-    []
-    [ [Schema.VInt 1, Schema.VStr "artist1"],
-      [Schema.VInt 2, Schema.VStr "artist2"],
-      [Schema.VInt 3, Schema.VStr "artist3_no_albums"],
-      [Schema.VNull, Schema.VStr "artist4_no_id"]
-    ]
+  (Schema.table "artist")
+    { tableColumns =
+        [ Schema.columnNull "id" Schema.TInt,
+          Schema.column "name" Schema.TStr
+        ],
+      tableData =
+        [ [Schema.VInt 1, Schema.VStr "artist1"],
+          [Schema.VInt 2, Schema.VStr "artist2"],
+          [Schema.VInt 3, Schema.VStr "artist3_no_albums"],
+          [Schema.VNull, Schema.VStr "artist4_no_id"]
+        ]
+    }
 
 -- | RHS
 album :: Schema.Table
 album =
-  Schema.Table
-    "album"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "title" Schema.TStr,
-      Schema.columnNull "artist_id" Schema.TInt
-    ]
-    ["id"]
-    []
-    [ [Schema.VInt 1, Schema.VStr "album1_artist1", Schema.VInt 1],
-      [Schema.VInt 2, Schema.VStr "album2_artist1", Schema.VInt 1],
-      [Schema.VInt 3, Schema.VStr "album3_artist1", Schema.VInt 1],
-      [Schema.VInt 4, Schema.VStr "album4_artist2", Schema.VInt 2]
-    ]
+  (Schema.table "album")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "title" Schema.TStr,
+          Schema.columnNull "artist_id" Schema.TInt
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [Schema.VInt 1, Schema.VStr "album1_artist1", Schema.VInt 1],
+          [Schema.VInt 2, Schema.VStr "album2_artist1", Schema.VInt 1],
+          [Schema.VInt 3, Schema.VStr "album3_artist1", Schema.VInt 1],
+          [Schema.VInt 4, Schema.VStr "album4_artist2", Schema.VInt 2]
+        ]
+    }
 
 --------------------------------------------------------------------------------
 -- LHS Postgres

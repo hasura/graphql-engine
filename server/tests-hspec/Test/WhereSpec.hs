@@ -12,6 +12,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
@@ -73,16 +74,17 @@ schema = [author]
 
 author :: Schema.Table
 author =
-  Schema.Table
-    "author"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "name" Schema.TStr
-    ]
-    ["id"]
-    []
-    [ [Schema.VInt 1, Schema.VStr "Author 1"],
-      [Schema.VInt 2, Schema.VStr "Author 2"]
-    ]
+  (table "author")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [Schema.VInt 1, Schema.VStr "Author 1"],
+          [Schema.VInt 2, Schema.VStr "Author 2"]
+        ]
+    }
 
 --------------------------------------------------------------------------------
 -- Tests
