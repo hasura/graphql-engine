@@ -18,6 +18,7 @@ it for readability.
 - [Run a remote MSSQL instance with dev.sh](#run-a-remote-mssql-instance-with-devsh)
 - [Add a unit test for SQL generation](#add-a-unit-test-for-sql-generation)
 - [Benchmark a query on postgres](#benchmark-a-query-on-postgres)
+- [Automatically run unit tests on change](#automatically-run-unit-tests-on-change)
 
 <!-- markdown-toc end -->
 
@@ -365,3 +366,13 @@ tps = 291.082637 (without initial connection time)
 
 From looking at the transactions rate, we can see that `6624` manage to complete for the first query, but only `5822` transactions coleted for the second query.
 This makes the first query faster by `6624 / 5822 * 100 - 100 = roughly 13%`. For the usecase and data we measured.
+
+# Automatically run unit tests on change
+
+Use [ghcid](https://hackage.haskell.org/package/ghcid)
+
+And run this:
+
+```sh
+ghcid -a -c "cabal repl graphql-engine:graphql-engine-tests -f -O0" --test Main.main --setup ":set args unit --match TheNameOfTestsIWantToRun" --width 100 --height 30
+```
