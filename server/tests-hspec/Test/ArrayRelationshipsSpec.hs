@@ -8,6 +8,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
 import Harness.Quoter.Yaml
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec
@@ -37,59 +38,63 @@ schema = [author, article]
 
 author :: Schema.Table
 author =
-  Schema.Table
-    "author"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "name" Schema.TStr,
-      Schema.column "createdAt" Schema.TUTCTime
-    ]
-    ["id"]
-    []
-    [ [Schema.VInt 1, Schema.VStr "Author 1", Schema.parseUTCTimeOrError "2017-09-21 09:39:44"],
-      [Schema.VInt 2, Schema.VStr "Author 2", Schema.parseUTCTimeOrError "2017-09-21 09:50:44"]
-    ]
+  (table "author")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr,
+          Schema.column "createdAt" Schema.TUTCTime
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [Schema.VInt 1, Schema.VStr "Author 1", Schema.parseUTCTimeOrError "2017-09-21 09:39:44"],
+          [Schema.VInt 2, Schema.VStr "Author 2", Schema.parseUTCTimeOrError "2017-09-21 09:50:44"]
+        ]
+    }
 
 article :: Schema.Table
 article =
-  Schema.Table
-    "article"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "title" Schema.TStr,
-      Schema.column "content" Schema.TStr,
-      Schema.column "is_published" Schema.TBool,
-      Schema.column "published_on" Schema.TUTCTime,
-      Schema.columnNull "author_id" Schema.TInt,
-      Schema.columnNull "co_author_id" Schema.TInt
-    ]
-    ["id"]
-    [ Schema.Reference "author_id" "author" "id",
-      Schema.Reference "co_author_id" "author" "id"
-    ]
-    [ [ Schema.VInt 1,
-        Schema.VStr "Article 1",
-        Schema.VStr "Sample article content 1",
-        Schema.VBool False,
-        Schema.parseUTCTimeOrError "2022-01-01 00:00:00",
-        Schema.VInt 1,
-        Schema.VInt 2
-      ],
-      [ Schema.VInt 2,
-        Schema.VStr "Article 2",
-        Schema.VStr "Sample article content 2",
-        Schema.VBool True,
-        Schema.parseUTCTimeOrError "2022-01-01 00:00:00",
-        Schema.VInt 1,
-        Schema.VInt 2
-      ],
-      [ Schema.VInt 3,
-        Schema.VStr "Article 3",
-        Schema.VStr "Sample article content 3",
-        Schema.VBool True,
-        Schema.parseUTCTimeOrError "2022-01-01 00:00:00",
-        Schema.VInt 2,
-        Schema.VInt 1
-      ]
-    ]
+  (table "article")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "title" Schema.TStr,
+          Schema.column "content" Schema.TStr,
+          Schema.column "is_published" Schema.TBool,
+          Schema.column "published_on" Schema.TUTCTime,
+          Schema.columnNull "author_id" Schema.TInt,
+          Schema.columnNull "co_author_id" Schema.TInt
+        ],
+      tablePrimaryKey = ["id"],
+      tableReferences =
+        [ Schema.Reference "author_id" "author" "id",
+          Schema.Reference "co_author_id" "author" "id"
+        ],
+      tableData =
+        [ [ Schema.VInt 1,
+            Schema.VStr "Article 1",
+            Schema.VStr "Sample article content 1",
+            Schema.VBool False,
+            Schema.parseUTCTimeOrError "2022-01-01 00:00:00",
+            Schema.VInt 1,
+            Schema.VInt 2
+          ],
+          [ Schema.VInt 2,
+            Schema.VStr "Article 2",
+            Schema.VStr "Sample article content 2",
+            Schema.VBool True,
+            Schema.parseUTCTimeOrError "2022-01-01 00:00:00",
+            Schema.VInt 1,
+            Schema.VInt 2
+          ],
+          [ Schema.VInt 3,
+            Schema.VStr "Article 3",
+            Schema.VStr "Sample article content 3",
+            Schema.VBool True,
+            Schema.parseUTCTimeOrError "2022-01-01 00:00:00",
+            Schema.VInt 2,
+            Schema.VInt 1
+          ]
+        ]
+    }
 
 --------------------------------------------------------------------------------
 -- Tests

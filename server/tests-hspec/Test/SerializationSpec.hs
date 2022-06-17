@@ -9,6 +9,7 @@ import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Sql
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
@@ -31,14 +32,7 @@ spec =
     tests
 
 author :: Schema.Table
-author =
-  Schema.Table
-    { tableName = "author",
-      tableColumns = [],
-      tablePrimaryKey = [],
-      tableReferences = [],
-      tableData = []
-    }
+author = table "author"
 
 bigquerySetup :: (TestEnvironment, ()) -> IO ()
 bigquerySetup (testEnvironment, _) = do

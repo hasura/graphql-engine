@@ -22,8 +22,10 @@ import Harness.Test.Schema
     ManualRelationship (..),
     ScalarType (..),
     ScalarValue (..),
+    Table (..),
     defaultBackendScalarType,
     defaultBackendScalarValue,
+    table,
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -102,37 +104,38 @@ authorArticles =
 
 author :: Schema.Table
 author =
-  Schema.Table
-    "author"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "name" Schema.TStr,
-      Schema.column "createdAt" dateTimeType
-    ]
-    ["id"]
-    []
-    [ [ Schema.VInt 1,
-        Schema.VStr "Author 1",
-        Schema.VCustomValue $
-          defaultBackendScalarValue
-            { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
-              bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
-              bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
-              bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44",
-              bsvBigQuery = Schema.quotedValue "2017-09-21T09:39:44"
-            }
-      ],
-      [ Schema.VInt 2,
-        Schema.VStr "Author 2",
-        Schema.VCustomValue $
-          defaultBackendScalarValue
-            { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
-              bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
-              bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
-              bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44",
-              bsvBigQuery = Schema.quotedValue "2017-09-21T09:50:44"
-            }
-      ]
-    ]
+  (table "author")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr,
+          Schema.column "createdAt" dateTimeType
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [ Schema.VInt 1,
+            Schema.VStr "Author 1",
+            Schema.VCustomValue $
+              defaultBackendScalarValue
+                { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
+                  bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
+                  bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
+                  bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44",
+                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:39:44"
+                }
+          ],
+          [ Schema.VInt 2,
+            Schema.VStr "Author 2",
+            Schema.VCustomValue $
+              defaultBackendScalarValue
+                { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
+                  bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
+                  bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
+                  bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44",
+                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:50:44"
+                }
+          ]
+        ]
+    }
   where
     dateTimeType :: ScalarType
     dateTimeType =
@@ -147,23 +150,24 @@ author =
 
 article :: Schema.Table
 article =
-  Schema.Table
-    "article"
-    [ Schema.column "id" Schema.TInt,
-      Schema.columnNull "title" textType,
-      Schema.columnNull "content" textType,
-      Schema.columnNull "is_published" bitType,
-      Schema.columnNull "published_on" timestampType,
-      Schema.columnNull "author_id" intUnsingedType,
-      Schema.columnNull "co_author_id" intUnsingedType
-    ]
-    ["id"]
-    [ Schema.Reference "author_id" "author" "id"
-    ]
-    [ mkArticle 1 "Article 1" "Sample article content 1" 1 False,
-      mkArticle 2 "Article 2" "Sample article content 2" 1 True,
-      mkArticle 3 "Article 3" "Sample article content 3" 2 True
-    ]
+  (table "article")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.columnNull "title" textType,
+          Schema.columnNull "content" textType,
+          Schema.columnNull "is_published" bitType,
+          Schema.columnNull "published_on" timestampType,
+          Schema.columnNull "author_id" intUnsingedType,
+          Schema.columnNull "co_author_id" intUnsingedType
+        ],
+      tablePrimaryKey = ["id"],
+      tableReferences = [Schema.Reference "author_id" "author" "id"],
+      tableData =
+        [ mkArticle 1 "Article 1" "Sample article content 1" 1 False,
+          mkArticle 2 "Article 2" "Sample article content 2" 1 True,
+          mkArticle 3 "Article 3" "Sample article content 3" 2 True
+        ]
+    }
   where
     textType :: ScalarType
     textType =

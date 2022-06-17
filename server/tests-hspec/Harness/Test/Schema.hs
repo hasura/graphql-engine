@@ -8,6 +8,7 @@ module Harness.Test.Schema
     Column (..),
     ScalarType (..),
     ScalarValue (..),
+    UniqueConstraint (..),
     BackendScalarType (..),
     BackendScalarValue (..),
     BackendScalarValueType (..),
@@ -58,14 +59,18 @@ data Table = Table
     tableColumns :: [Column],
     tablePrimaryKey :: [Text],
     tableReferences :: [Reference],
-    tableData :: [[ScalarValue]]
+    tableData :: [[ScalarValue]],
+    tableUniqueConstraints :: [UniqueConstraint]
   }
+  deriving (Show, Eq)
+
+data UniqueConstraint = UniqueConstraintColumns [Text] | UniqueConstraintExpression Text
   deriving (Show, Eq)
 
 -- | Create a table from just a name.
 -- Use record updates to modify the result.
 table :: Text -> Table
-table tableName = Table tableName [] [] [] []
+table tableName = Table tableName [] [] [] [] []
 
 -- | Foreign keys for backends that support it.
 data Reference = Reference

@@ -10,6 +10,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, it)
@@ -69,43 +70,35 @@ schema =
 
 alldefaults :: Schema.Table
 alldefaults =
-  Schema.Table
-    { tableName = "alldefaults",
-      tableColumns =
+  (table "alldefaults")
+    { tableColumns =
         [ Schema.column "id" defaultSerialType,
           Schema.column "dt" defaultDateTimeType
         ],
-      tablePrimaryKey = ["id"],
-      tableReferences = [],
-      tableData = []
+      tablePrimaryKey = ["id"]
     }
 
 somedefaults :: Schema.Table
 somedefaults =
-  Schema.Table
-    { tableName = "somedefaults",
-      tableColumns =
+  (table "somedefaults")
+    { tableColumns =
         [ Schema.column "id" defaultSerialType,
           Schema.column "dt" defaultDateTimeType,
           Schema.column "name" Schema.TStr
         ],
-      tablePrimaryKey = ["name"],
-      tableReferences = [],
-      tableData = []
+      tablePrimaryKey = ["name"]
     }
 
 withrelationship :: Schema.Table
 withrelationship =
-  Schema.Table
-    { tableName = "withrelationship",
-      tableColumns =
+  (table "withrelationship")
+    { tableColumns =
         [ Schema.column "id" defaultSerialType,
           Schema.column "nickname" Schema.TStr,
           Schema.column "time_id" Schema.TInt
         ],
       tablePrimaryKey = ["nickname"],
-      tableReferences = [Schema.Reference "time_id" "alldefaults" "id"],
-      tableData = []
+      tableReferences = [Schema.Reference "time_id" "alldefaults" "id"]
     }
 
 defaultSerialType :: Schema.ScalarType

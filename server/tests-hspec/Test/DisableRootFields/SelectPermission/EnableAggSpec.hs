@@ -14,6 +14,7 @@ import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
@@ -54,14 +55,12 @@ spec = do
 
 schema :: [Schema.Table]
 schema =
-  [ Schema.Table
-      { tableName = "author",
-        tableColumns =
+  [ (table "author")
+      { tableColumns =
           [ Schema.column "id" Schema.TInt,
             Schema.column "name" Schema.TStr
           ],
         tablePrimaryKey = ["id"],
-        tableReferences = [],
         tableData =
           [ [Schema.VInt 1, Schema.VStr "Author 1"],
             [Schema.VInt 2, Schema.VStr "Author 2"]

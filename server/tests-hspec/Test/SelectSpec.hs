@@ -24,8 +24,10 @@ import Harness.Test.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
     ScalarType (..),
+    Table (..),
     defaultBackendScalarType,
     defaultBackendScalarValue,
+    table,
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -79,37 +81,38 @@ schema = [author]
 
 author :: Schema.Table
 author =
-  Schema.Table
-    "author"
-    [ Schema.column "id" Schema.TInt,
-      Schema.column "name" Schema.TStr,
-      Schema.column "createdAt" dateTimeType
-    ]
-    ["id"]
-    []
-    [ [ Schema.VInt 1,
-        Schema.VStr "Author 1",
-        Schema.VCustomValue $
-          defaultBackendScalarValue
-            { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
-              bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
-              bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
-              bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44",
-              bsvBigQuery = Schema.quotedValue "2017-09-21T09:39:44"
-            }
-      ],
-      [ Schema.VInt 2,
-        Schema.VStr "Author 2",
-        Schema.VCustomValue $
-          defaultBackendScalarValue
-            { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
-              bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
-              bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
-              bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44",
-              bsvBigQuery = Schema.quotedValue "2017-09-21T09:50:44"
-            }
-      ]
-    ]
+  (table "author")
+    { tableColumns =
+        [ Schema.column "id" Schema.TInt,
+          Schema.column "name" Schema.TStr,
+          Schema.column "createdAt" dateTimeType
+        ],
+      tablePrimaryKey = ["id"],
+      tableData =
+        [ [ Schema.VInt 1,
+            Schema.VStr "Author 1",
+            Schema.VCustomValue $
+              defaultBackendScalarValue
+                { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
+                  bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
+                  bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
+                  bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44",
+                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:39:44"
+                }
+          ],
+          [ Schema.VInt 2,
+            Schema.VStr "Author 2",
+            Schema.VCustomValue $
+              defaultBackendScalarValue
+                { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
+                  bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
+                  bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
+                  bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44",
+                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:50:44"
+                }
+          ]
+        ]
+    }
   where
     dateTimeType :: ScalarType
     dateTimeType =

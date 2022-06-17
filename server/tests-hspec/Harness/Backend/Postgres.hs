@@ -114,7 +114,7 @@ connection_info:
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
 createTable :: Schema.Table -> IO ()
-createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
+createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableUniqueConstraints} = do
   run_ $
     T.unpack $
       T.unwords
@@ -127,6 +127,14 @@ createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableRe
               <> (mkReference <$> tableReferences),
           ");"
         ]
+
+  for_ tableUniqueConstraints (createUniqueConstraint tableName)
+
+createUniqueConstraint :: Text -> Schema.UniqueConstraint -> IO ()
+createUniqueConstraint tableName (Schema.UniqueConstraintColumns cols) =
+  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "("] ++ [commaSeparated cols] ++ [")"]
+createUniqueConstraint tableName (Schema.UniqueConstraintExpression ex) =
+  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "((", ex, "))"]
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case

@@ -118,6 +118,7 @@ bigQueryError e query =
 
 -- | Serialize Table into a SQL statement, as needed, and execute it on the BigQuery backend
 createTable :: Schema.Table -> IO ()
+createTable Schema.Table {tableUniqueConstraints = _ : _} = error "Not Implemented: BigQuery test harness support for Unique constraints"
 createTable Schema.Table {tableName, tableColumns} = do
   serviceAccount <- getServiceAccount
   projectId <- getProjectId
@@ -269,9 +270,8 @@ args:
 -- building the relationship.
 relationshipToTable :: ManualRelationship -> Schema.Table
 relationshipToTable ManualRelationship {..} =
-  Table
-    { tableName = relSourceTable,
-      tablePrimaryKey = [],
+  (Schema.table relSourceTable)
+    { tablePrimaryKey = [],
       tableColumns = [],
       tableData = [],
       tableReferences =
