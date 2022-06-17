@@ -40,7 +40,7 @@ import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.HashSet qualified as Set
-import Data.TByteString qualified as TBS
+import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Time.Clock qualified as Time
 import Data.Time.Format qualified as Format
@@ -205,17 +205,17 @@ instance J.ToJSON (EngineLogType impl) => J.ToJSON (EngineLog impl) where
 class EnabledLogTypes impl => ToEngineLog a impl where
   toEngineLog :: a -> (LogLevel, EngineLogType impl, J.Value)
 
-data UnstructuredLog = UnstructuredLog {_ulLevel :: !LogLevel, _ulPayload :: !TBS.TByteString}
-  deriving (Show, Eq)
+data UnstructuredLog = UnstructuredLog {_ulLevel :: !LogLevel, _ulPayload :: !SB.SerializableBlob}
+  deriving (Show)
 
 debugT :: Text -> UnstructuredLog
-debugT = UnstructuredLog LevelDebug . TBS.fromText
+debugT = UnstructuredLog LevelDebug . SB.fromText
 
 debugBS :: B.ByteString -> UnstructuredLog
-debugBS = UnstructuredLog LevelDebug . TBS.fromBS
+debugBS = UnstructuredLog LevelDebug . SB.fromBS
 
 debugLBS :: BL.ByteString -> UnstructuredLog
-debugLBS = UnstructuredLog LevelDebug . TBS.fromLBS
+debugLBS = UnstructuredLog LevelDebug . SB.fromLBS
 
 instance ToEngineLog UnstructuredLog Hasura where
   toEngineLog (UnstructuredLog level t) =

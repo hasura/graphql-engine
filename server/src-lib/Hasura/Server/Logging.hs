@@ -39,7 +39,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as Set
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
-import Data.TByteString qualified as TBS
+import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
@@ -589,7 +589,7 @@ logDeprecatedEnvVars logger env sources = do
     unless (null deprecated) $
       unLogger logger $
         UnstructuredLog LevelWarn $
-          TBS.fromText $
+          SB.fromText $
             "The following environment variables are deprecated and moved to metadata: "
               <> toText deprecated
 
@@ -598,6 +598,6 @@ logDeprecatedEnvVars logger env sources = do
   unless (null deprecated) $
     unLogger logger $
       UnstructuredLog LevelWarn $
-        TBS.fromText $
+        SB.fromText $
           "The following environment variables are deprecated: "
             <> toText deprecated

@@ -53,9 +53,9 @@ import Data.Aeson qualified as J
 import Data.Aeson.TH
 import Data.Has
 import Data.HashMap.Strict qualified as M
+import Data.SerializableBlob qualified as SB
 import Data.Set qualified as Set
 import Data.String
-import Data.TByteString qualified as TBS
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -249,7 +249,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
             let tables = M.elems tableCache
                 triggerMap = _tiEventTriggerInfoMap <$> tables
                 eventTriggerCount = sum (M.size <$> triggerMap)
-                triggerNames = concat $ M.keys <$> triggerMap
+                triggerNames = concatMap M.keys triggerMap
 
             -- only process events for this source if at least one event trigger exists
             if eventTriggerCount > 0
@@ -421,7 +421,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
                 Left (HTTPError reqBody err) ->
                   processError @b sourceConfig e retryConf logHeaders reqBody maintenanceModeVersion err >>= flip onLeft logQErr
                 Left (TransformationError _ err) -> do
-                  L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+                  L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                   -- Record an Event Error
                   recordError' @b sourceConfig e Nothing PESetError maintenanceModeVersion >>= flip onLeft logQErr
@@ -478,14 +478,14 @@ processError sourceConfig e retryConf reqHeaders ep maintenanceModeVersion err =
   let invocation = case err of
         HClient httpException ->
           let statusMaybe = getHTTPExceptionStatus httpException
-           in mkInvocation (eId e) ep statusMaybe reqHeaders (TBS.fromLBS (J.encode httpException)) []
+           in mkInvocation (eId e) ep statusMaybe reqHeaders (SB.fromLBS (J.encode httpException)) []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
           mkInvocation (eId e) ep (Just respStatus) reqHeaders respPayload respHeaders
         HOther detail -> do
-          let errMsg = TBS.fromLBS $ J.encode detail
+          let errMsg = SB.fromLBS $ J.encode detail
           mkInvocation (eId e) ep (Just 500) reqHeaders errMsg []
   retryOrError <- retryOrSetError e retryConf err
   recordError @b sourceConfig e invocation retryOrError maintenanceModeVersion
@@ -522,7 +522,7 @@ mkInvocation ::
   J.Value ->
   Maybe Int ->
   [HeaderConf] ->
-  TBS.TByteString ->
+  SB.SerializableBlob ->
   [HeaderConf] ->
   Invocation 'EventType
 mkInvocation eid ep statusMaybe reqHeaders respBody respHeaders =

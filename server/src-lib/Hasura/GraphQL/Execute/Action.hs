@@ -34,8 +34,8 @@ import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
 import Data.Has
 import Data.HashMap.Strict qualified as Map
+import Data.SerializableBlob qualified as SB
 import Data.Set (Set)
-import Data.TByteString qualified as TBS
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -520,7 +520,7 @@ callWebhook
               Left err -> do
                 -- Log The Transformation Error
                 logger :: L.Logger L.Hasura <- asks getter
-                L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+                L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                 -- Throw an exception with the Transformation Error
                 throw500WithDetail "Request Transformation Failed" $ J.toJSON err
@@ -559,7 +559,7 @@ callWebhook
              in applyResponseTransform responseTransform responseTransformCtx `onLeft` \err -> do
                   -- Log The Response Transformation Error
                   logger :: L.Logger L.Hasura <- asks getter
-                  L.unLogger logger $ L.UnstructuredLog L.LevelError (TBS.fromLBS $ J.encode err)
+                  L.unLogger logger $ L.UnstructuredLog L.LevelError (SB.fromLBS $ J.encode err)
 
                   -- Throw an exception with the Transformation Error
                   throw500WithDetail "Response Transformation Failed" $ J.toJSON err
