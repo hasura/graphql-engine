@@ -35,7 +35,7 @@
 </span><span id="line-35"></span><span class="hs-comment">-- datasource with clearer documentation.</span><span>
 </span><span id="line-36"></span><span class="hs-comment">--</span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- e.g. https://www.postgresql.org/docs/13/sql-expressions.html</span><span>
-</span><span id="line-38"></span><span id="local-6989586621689099309"><span id="local-6989586621689099310"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
+</span><span id="line-38"></span><span id="local-6989586621689098899"><span id="local-6989586621689098900"></span></span><span class="hs-keyword">data</span><span> </span><span id="Expression"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Expression"><span class="hs-identifier hs-var">Expression</span></a></span></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | A logical @AND@ fold.</span><span>
 </span><span id="line-40"></span><span>    </span><span class="hs-comment">--</span><span>
 </span><span id="line-41"></span><span>    </span><span class="hs-comment">-- cf. https://www.postgresql.org/docs/13/functions-logical.html</span><span>
@@ -61,7 +61,7 @@
 </span><span id="line-61"></span><span>    </span><span class="hs-comment">-- 'UnaryComparisonOperator'; the result of this application will return &quot;true&quot; or</span><span>
 </span><span id="line-62"></span><span>    </span><span class="hs-comment">-- &quot;false&quot; depending on the 'UnaryComparisonOperator' that's being applied.</span><span>
 </span><span id="line-63"></span><span>    </span><span id="ApplyUnaryComparisonOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyUnaryComparisonOperator"><span class="hs-identifier hs-var">ApplyUnaryComparisonOperator</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#UnaryComparisonOperator"><span class="hs-identifier hs-type">UnaryComparisonOperator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyUnaryComparisonOperator"><span id="%24cApplyBinaryArrayComparisonOperator"><span id="%24cApplyBinaryComparisonOperator"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24tExpression"><span id="local-6989586621689099274"><span id="local-6989586621689099276"><span id="local-6989586621689099278"><span id="local-6989586621689099280"><span id="local-6989586621689099282"><span id="local-6989586621689099284"><span id="local-6989586621689099286"><span id="local-6989586621689099288"><span id="local-6989586621689099290"><span id="local-6989586621689099292"><span id="local-6989586621689099294"><span id="local-6989586621689099296"><span id="local-6989586621689099298"><span id="local-6989586621689099300"><span class="annot"><span class="annottext">Typeable Expression
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cApplyUnaryComparisonOperator"><span id="%24cApplyBinaryArrayComparisonOperator"><span id="%24cApplyBinaryComparisonOperator"><span id="%24cNot"><span id="%24cOr"><span id="%24cAnd"><span id="%24tExpression"><span id="local-6989586621689098864"><span id="local-6989586621689098866"><span id="local-6989586621689098868"><span id="local-6989586621689098870"><span id="local-6989586621689098872"><span id="local-6989586621689098874"><span id="local-6989586621689098876"><span id="local-6989586621689098878"><span id="local-6989586621689098880"><span id="local-6989586621689098882"><span id="local-6989586621689098884"><span id="local-6989586621689098886"><span id="local-6989586621689098888"><span id="local-6989586621689098890"><span class="annot"><span class="annottext">Typeable Expression
 DataType
 Constr
 Typeable Expression
@@ -224,7 +224,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Expression -&gt; c Expression
 $cp1Data :: Typeable Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099262"><span id="local-6989586621689099264"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098852"><span id="local-6989586621689098854"><span class="annot"><span class="annottext">Expression -&gt; Expression -&gt; Bool
 (Expression -&gt; Expression -&gt; Bool)
 -&gt; (Expression -&gt; Expression -&gt; Bool) -&gt; Eq Expression
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -240,7 +240,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Expression x -&gt; Expression
 $cfrom :: forall x. Expression -&gt; Rep Expression x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099243"><span id="local-6989586621689099245"><span id="local-6989586621689099247"><span id="local-6989586621689099249"><span id="local-6989586621689099251"><span id="local-6989586621689099253"><span id="local-6989586621689099255"><span class="annot"><span class="annottext">Eq Expression
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098833"><span id="local-6989586621689098835"><span id="local-6989586621689098837"><span id="local-6989586621689098839"><span id="local-6989586621689098841"><span id="local-6989586621689098843"><span id="local-6989586621689098845"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Expression -&gt; Expression -&gt; Ordering)
 -&gt; (Expression -&gt; Expression -&gt; Bool)
@@ -278,7 +278,7 @@ $c&lt; :: Expression -&gt; Expression -&gt; Bool
 compare :: Expression -&gt; Expression -&gt; Ordering
 $ccompare :: Expression -&gt; Expression -&gt; Ordering
 $cp1Ord :: Eq Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099236"><span id="local-6989586621689099238"><span id="local-6989586621689099240"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098826"><span id="local-6989586621689098828"><span id="local-6989586621689098830"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; ShowS
 [Expression] -&gt; ShowS
 Expression -&gt; String
 (Int -&gt; Expression -&gt; ShowS)
@@ -294,7 +294,7 @@ $cshow :: Expression -&gt; String
 showsPrec :: Int -&gt; Expression -&gt; ShowS
 $cshowsPrec :: Int -&gt; Expression -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689099232"><span class="annot"><span class="annottext">Eq Expression
+</span><span id="line-65"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689098822"><span class="annot"><span class="annottext">Eq Expression
 Eq Expression
 -&gt; (Accesses -&gt; Expression -&gt; Expression -&gt; Bool)
 -&gt; Cacheable Expression
@@ -303,7 +303,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cunchanged :: Accesses -&gt; Expression -&gt; Expression -&gt; Bool
 $cp1Cacheable :: Eq Expression
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099227"><span id="local-6989586621689099229"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098817"><span id="local-6989586621689098819"><span class="annot"><span class="annottext">Value -&gt; Parser [Expression]
 Value -&gt; Parser Expression
 (Value -&gt; Parser Expression)
 -&gt; (Value -&gt; Parser [Expression]) -&gt; FromJSON Expression
@@ -313,7 +313,7 @@ parseJSONList :: Value -&gt; Parser [Expression]
 $cparseJSONList :: Value -&gt; Parser [Expression]
 parseJSON :: Value -&gt; Parser Expression
 $cparseJSON :: Value -&gt; Parser Expression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099222"><span id="local-6989586621689099224"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098812"><span id="local-6989586621689098814"><span class="annot"><span class="annottext">Int -&gt; Expression -&gt; Int
 Expression -&gt; Int
 (Int -&gt; Expression -&gt; Int)
 -&gt; (Expression -&gt; Int) -&gt; Hashable Expression
@@ -322,12 +322,12 @@ hash :: Expression -&gt; Int
 $chash :: Expression -&gt; Int
 hashWithSalt :: Int -&gt; Expression -&gt; Int
 $chashWithSalt :: Int -&gt; Expression -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099219"><span class="annot"><span class="annottext">Expression -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098809"><span class="annot"><span class="annottext">Expression -&gt; ()
 (Expression -&gt; ()) -&gt; NFData Expression
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Expression -&gt; ()
 $crnf :: Expression -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099210"><span id="local-6989586621689099212"><span id="local-6989586621689099214"><span id="local-6989586621689099216"><span class="annot"><span class="annottext">[Expression] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098800"><span id="local-6989586621689098802"><span id="local-6989586621689098804"><span id="local-6989586621689098806"><span class="annot"><span class="annottext">[Expression] -&gt; Value
 [Expression] -&gt; Encoding
 Expression -&gt; Value
 Expression -&gt; Encoding
@@ -353,10 +353,10 @@ $ctoJSON :: Expression -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Expression</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621689099206"><span class="annot"><span class="annottext">from :: Expression -&gt; Expression
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621689098796"><span class="annot"><span class="annottext">from :: Expression -&gt; Expression
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-69"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#And"><span class="hs-identifier hs-type">And</span></a></span><span> </span><span id="local-6989586621689099204"><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099204"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;expressions&quot; [Expression] -&gt; Expression
+</span><span id="line-69"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#And"><span class="hs-identifier hs-type">And</span></a></span><span> </span><span id="local-6989586621689098794"><span class="annot"><span class="annottext">[Expression]
+</span><a href="#local-6989586621689098794"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;expressions&quot; [Expression] -&gt; Expression
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.And</span></a></span><span> </span><span class="annot"><span class="annottext">(ValueWrapper &quot;expressions&quot; [Expression] -&gt; Expression)
 -&gt; ([Expression] -&gt; ValueWrapper &quot;expressions&quot; [Expression])
 -&gt; [Expression]
@@ -371,9 +371,9 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; [Expression] -&gt; [Expression]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099204"><span class="hs-identifier hs-var">exprs</span></a></span><span>
-</span><span id="line-70"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Or"><span class="hs-identifier hs-type">Or</span></a></span><span> </span><span id="local-6989586621689099199"><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099199"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;expressions&quot; [Expression] -&gt; Expression
+</span><a href="#local-6989586621689098794"><span class="hs-identifier hs-var">exprs</span></a></span><span>
+</span><span id="line-70"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Or"><span class="hs-identifier hs-type">Or</span></a></span><span> </span><span id="local-6989586621689098789"><span class="annot"><span class="annottext">[Expression]
+</span><a href="#local-6989586621689098789"><span class="hs-identifier hs-var">exprs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;expressions&quot; [Expression] -&gt; Expression
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Or</span></a></span><span> </span><span class="annot"><span class="annottext">(ValueWrapper &quot;expressions&quot; [Expression] -&gt; Expression)
 -&gt; ([Expression] -&gt; ValueWrapper &quot;expressions&quot; [Expression])
 -&gt; [Expression]
@@ -388,9 +388,9 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; [Expression] -&gt; [Expression]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099199"><span class="hs-identifier hs-var">exprs</span></a></span><span>
-</span><span id="line-71"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Not"><span class="hs-identifier hs-type">Not</span></a></span><span> </span><span id="local-6989586621689099197"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689099197"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;expression&quot; Expression -&gt; Expression
+</span><a href="#local-6989586621689098789"><span class="hs-identifier hs-var">exprs</span></a></span><span>
+</span><span id="line-71"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Not"><span class="hs-identifier hs-type">Not</span></a></span><span> </span><span id="local-6989586621689098787"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689098787"><span class="hs-identifier hs-var">expr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;expression&quot; Expression -&gt; Expression
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Not</span></a></span><span> </span><span class="annot"><span class="annottext">(ValueWrapper &quot;expression&quot; Expression -&gt; Expression)
 -&gt; (Expression -&gt; ValueWrapper &quot;expression&quot; Expression)
 -&gt; Expression
@@ -403,11 +403,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689099197"><span class="hs-identifier hs-var">expr</span></a></span><span>
-</span><span id="line-72"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyBinaryComparisonOperator"><span class="hs-identifier hs-type">ApplyBinaryComparisonOperator</span></a></span><span> </span><span id="local-6989586621689099195"><span class="annot"><span class="annottext">BinaryComparisonOperator
-</span><a href="#local-6989586621689099195"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689099194"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099194"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689099193"><span class="annot"><span class="annottext">ComparisonValue
-</span><a href="#local-6989586621689099193"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689098787"><span class="hs-identifier hs-var">expr</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyBinaryComparisonOperator"><span class="hs-identifier hs-type">ApplyBinaryComparisonOperator</span></a></span><span> </span><span id="local-6989586621689098785"><span class="annot"><span class="annottext">BinaryComparisonOperator
+</span><a href="#local-6989586621689098785"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689098784"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689098784"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689098783"><span class="annot"><span class="annottext">ComparisonValue
+</span><a href="#local-6989586621689098783"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">ValueWrapper3
   &quot;operator&quot;
   BinaryComparisonOperator
@@ -448,16 +448,16 @@ a1 -&gt; a2 -&gt; a3 -&gt; ValueWrapper3 t1 a1 t2 a2 t3 a3
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">ValueWrapper3</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BinaryComparisonOperator -&gt; BinaryComparisonOperator
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
-</span><a href="#local-6989586621689099195"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
+</span><a href="#local-6989586621689098785"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099194"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
+</span><a href="#local-6989586621689098784"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ComparisonValue
-</span><a href="#local-6989586621689099193"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-74"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyUnaryComparisonOperator"><span class="hs-identifier hs-type">ApplyUnaryComparisonOperator</span></a></span><span> </span><span id="local-6989586621689099190"><span class="annot"><span class="annottext">UnaryComparisonOperator
-</span><a href="#local-6989586621689099190"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689099189"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099189"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689098783"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyUnaryComparisonOperator"><span class="hs-identifier hs-type">ApplyUnaryComparisonOperator</span></a></span><span> </span><span id="local-6989586621689098780"><span class="annot"><span class="annottext">UnaryComparisonOperator
+</span><a href="#local-6989586621689098780"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689098779"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689098779"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>      </span><span class="annot"><span class="annottext">ValueWrapper2
   &quot;operator&quot; UnaryComparisonOperator &quot;column&quot; ColumnName
 -&gt; Expression
@@ -477,14 +477,14 @@ a1 -&gt; a2 -&gt; ValueWrapper2 t1 a1 t2 a2
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">ValueWrapper2</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnaryComparisonOperator -&gt; UnaryComparisonOperator
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
-</span><a href="#local-6989586621689099190"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
+</span><a href="#local-6989586621689098780"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099189"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-76"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyBinaryArrayComparisonOperator"><span class="hs-identifier hs-type">ApplyBinaryArrayComparisonOperator</span></a></span><span> </span><span id="local-6989586621689099186"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689099186"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689099185"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099185"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689099184"><span class="annot"><span class="annottext">[ComparisonValue]
-</span><a href="#local-6989586621689099184"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689098779"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyBinaryArrayComparisonOperator"><span class="hs-identifier hs-type">ApplyBinaryArrayComparisonOperator</span></a></span><span> </span><span id="local-6989586621689098776"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
+</span><a href="#local-6989586621689098776"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689098775"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689098775"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689098774"><span class="annot"><span class="annottext">[ComparisonValue]
+</span><a href="#local-6989586621689098774"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">ValueWrapper3
   &quot;operator&quot;
   BinaryArrayComparisonOperator
@@ -525,22 +525,22 @@ a1 -&gt; a2 -&gt; a3 -&gt; ValueWrapper3 t1 a1 t2 a2 t3 a3
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">ValueWrapper3</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator -&gt; BinaryArrayComparisonOperator
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689099186"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
+</span><a href="#local-6989586621689098776"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099185"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
+</span><a href="#local-6989586621689098775"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(ComparisonValue -&gt; ComparisonValue)
 -&gt; [ComparisonValue] -&gt; [ComparisonValue]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[ComparisonValue]
-</span><a href="#local-6989586621689099184"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689098774"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Expression</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>  </span><span id="local-6989586621689099181"><span class="annot"><span class="annottext">from :: Expression -&gt; Expression
-</span><a href="#local-6989586621689099181"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-81"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.And</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689099180"><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099180"><span class="hs-identifier hs-var">exprs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621689098771"><span class="annot"><span class="annottext">from :: Expression -&gt; Expression
+</span><a href="#local-6989586621689098771"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-81"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.And</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689098770"><span class="annot"><span class="annottext">[Expression]
+</span><a href="#local-6989586621689098770"><span class="hs-identifier hs-var">exprs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#And"><span class="hs-identifier hs-var">And</span></a></span><span> </span><span class="annot"><span class="annottext">([Expression] -&gt; Expression) -&gt; [Expression] -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
@@ -548,9 +548,9 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; [Expression] -&gt; [Expression]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099180"><span class="hs-identifier hs-var">exprs</span></a></span><span>
-</span><span id="line-82"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Or</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689099179"><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099179"><span class="hs-identifier hs-var">exprs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
+</span><a href="#local-6989586621689098770"><span class="hs-identifier hs-var">exprs</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Or</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689098769"><span class="annot"><span class="annottext">[Expression]
+</span><a href="#local-6989586621689098769"><span class="hs-identifier hs-var">exprs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Expression
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#Or"><span class="hs-identifier hs-var">Or</span></a></span><span> </span><span class="annot"><span class="annottext">([Expression] -&gt; Expression) -&gt; [Expression] -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
@@ -558,60 +558,60 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; [Expression] -&gt; [Expression]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Expression]
-</span><a href="#local-6989586621689099179"><span class="hs-identifier hs-var">exprs</span></a></span><span>
-</span><span id="line-83"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689099178"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689099178"><span class="hs-identifier hs-var">expr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
+</span><a href="#local-6989586621689098769"><span class="hs-identifier hs-var">exprs</span></a></span><span>
+</span><span id="line-83"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Not</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689098768"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689098768"><span class="hs-identifier hs-var">expr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#Not"><span class="hs-identifier hs-var">Not</span></a></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; Expression -&gt; Expression
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689099178"><span class="hs-identifier hs-var">expr</span></a></span><span>
-</span><span id="line-84"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ApplyBinaryComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper3</span></a></span><span> </span><span id="local-6989586621689099177"><span class="annot"><span class="annottext">BinaryComparisonOperator
-</span><a href="#local-6989586621689099177"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689099176"><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099176"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689099175"><span class="annot"><span class="annottext">ComparisonValue
-</span><a href="#local-6989586621689099175"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689098768"><span class="hs-identifier hs-var">expr</span></a></span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ApplyBinaryComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper3</span></a></span><span> </span><span id="local-6989586621689098767"><span class="annot"><span class="annottext">BinaryComparisonOperator
+</span><a href="#local-6989586621689098767"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689098766"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689098766"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689098765"><span class="annot"><span class="annottext">ComparisonValue
+</span><a href="#local-6989586621689098765"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-85"></span><span>      </span><span class="annot"><span class="annottext">BinaryComparisonOperator -&gt; Name -&gt; ComparisonValue -&gt; Expression
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyBinaryComparisonOperator"><span class="hs-identifier hs-var">ApplyBinaryComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BinaryComparisonOperator -&gt; BinaryComparisonOperator
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
-</span><a href="#local-6989586621689099177"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
+</span><a href="#local-6989586621689098767"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099176"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
+</span><a href="#local-6989586621689098766"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ComparisonValue
-</span><a href="#local-6989586621689099175"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-86"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ApplyBinaryArrayComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper3</span></a></span><span> </span><span id="local-6989586621689099174"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689099174"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689099173"><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099173"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689099172"><span class="annot"><span class="annottext">[ComparisonValue]
-</span><a href="#local-6989586621689099172"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689098765"><span class="hs-identifier hs-var">value</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ApplyBinaryArrayComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper3</span></a></span><span> </span><span id="local-6989586621689098764"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
+</span><a href="#local-6989586621689098764"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689098763"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689098763"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span id="local-6989586621689098762"><span class="annot"><span class="annottext">[ComparisonValue]
+</span><a href="#local-6989586621689098762"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
 -&gt; Name -&gt; [ComparisonValue] -&gt; Expression
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyBinaryArrayComparisonOperator"><span class="hs-identifier hs-var">ApplyBinaryArrayComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator -&gt; BinaryArrayComparisonOperator
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689099174"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
+</span><a href="#local-6989586621689098764"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099173"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
+</span><a href="#local-6989586621689098763"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(ComparisonValue -&gt; ComparisonValue)
 -&gt; [ComparisonValue] -&gt; [ComparisonValue]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[ComparisonValue]
-</span><a href="#local-6989586621689099172"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-88"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ApplyUnaryComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper2</span></a></span><span> </span><span id="local-6989586621689099171"><span class="annot"><span class="annottext">UnaryComparisonOperator
-</span><a href="#local-6989586621689099171"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689099170"><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099170"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689098762"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ApplyUnaryComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper2</span></a></span><span> </span><span id="local-6989586621689098761"><span class="annot"><span class="annottext">UnaryComparisonOperator
+</span><a href="#local-6989586621689098761"><span class="hs-identifier hs-var">op</span></a></span></span><span> </span><span id="local-6989586621689098760"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689098760"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-89"></span><span>      </span><span class="annot"><span class="annottext">UnaryComparisonOperator -&gt; Name -&gt; Expression
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#ApplyUnaryComparisonOperator"><span class="hs-identifier hs-var">ApplyUnaryComparisonOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnaryComparisonOperator -&gt; UnaryComparisonOperator
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
-</span><a href="#local-6989586621689099171"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
+</span><a href="#local-6989586621689098761"><span class="hs-identifier hs-var">op</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099170"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689098760"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>
 </span><span id="line-91"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-92"></span><span>
@@ -624,13 +624,13 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span id="line-99"></span><span class="hs-comment">--</span><span>
 </span><span id="line-100"></span><span class="hs-comment">-- We should define the semantics of these comparisons in a way that is clear</span><span>
 </span><span id="line-101"></span><span class="hs-comment">-- and carefully considered.</span><span>
-</span><span id="line-102"></span><span id="local-6989586621689099168"><span id="local-6989586621689099169"></span></span><span class="hs-keyword">data</span><span> </span><span id="BinaryComparisonOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryComparisonOperator"><span class="hs-identifier hs-var">BinaryComparisonOperator</span></a></span></span><span>
+</span><span id="line-102"></span><span id="local-6989586621689098758"><span id="local-6989586621689098759"></span></span><span class="hs-keyword">data</span><span> </span><span id="BinaryComparisonOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryComparisonOperator"><span class="hs-identifier hs-var">BinaryComparisonOperator</span></a></span></span><span>
 </span><span id="line-103"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="LessThan"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span></span><span>
 </span><span id="line-104"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="LessThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#LessThanOrEqual"><span class="hs-identifier hs-var">LessThanOrEqual</span></a></span></span><span>
 </span><span id="line-105"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThan"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#GreaterThan"><span class="hs-identifier hs-var">GreaterThan</span></a></span></span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GreaterThanOrEqual"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#GreaterThanOrEqual"><span class="hs-identifier hs-var">GreaterThanOrEqual</span></a></span></span><span>
 </span><span id="line-107"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Equal"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#Equal"><span class="hs-identifier hs-var">Equal</span></a></span></span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cEqual"><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tBinaryComparisonOperator"><span id="local-6989586621689099134"><span id="local-6989586621689099136"><span id="local-6989586621689099138"><span id="local-6989586621689099140"><span id="local-6989586621689099142"><span id="local-6989586621689099144"><span id="local-6989586621689099146"><span id="local-6989586621689099148"><span id="local-6989586621689099150"><span id="local-6989586621689099152"><span id="local-6989586621689099154"><span id="local-6989586621689099156"><span id="local-6989586621689099158"><span id="local-6989586621689099160"><span class="annot"><span class="annottext">Typeable BinaryComparisonOperator
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cEqual"><span id="%24cGreaterThanOrEqual"><span id="%24cGreaterThan"><span id="%24cLessThanOrEqual"><span id="%24cLessThan"><span id="%24tBinaryComparisonOperator"><span id="local-6989586621689098724"><span id="local-6989586621689098726"><span id="local-6989586621689098728"><span id="local-6989586621689098730"><span id="local-6989586621689098732"><span id="local-6989586621689098734"><span id="local-6989586621689098736"><span id="local-6989586621689098738"><span id="local-6989586621689098740"><span id="local-6989586621689098742"><span id="local-6989586621689098744"><span id="local-6989586621689098746"><span id="local-6989586621689098748"><span id="local-6989586621689098750"><span class="annot"><span class="annottext">Typeable BinaryComparisonOperator
 DataType
 Constr
 Typeable BinaryComparisonOperator
@@ -854,7 +854,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; BinaryComparisonOperator
 -&gt; c BinaryComparisonOperator
 $cp1Data :: Typeable BinaryComparisonOperator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099124"><span id="local-6989586621689099126"><span class="annot"><span class="annottext">BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098714"><span id="local-6989586621689098716"><span class="annot"><span class="annottext">BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Bool
 (BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Bool)
 -&gt; (BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Bool)
 -&gt; Eq BinaryComparisonOperator
@@ -878,7 +878,7 @@ $cto :: forall x.
 Rep BinaryComparisonOperator x -&gt; BinaryComparisonOperator
 $cfrom :: forall x.
 BinaryComparisonOperator -&gt; Rep BinaryComparisonOperator x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099107"><span id="local-6989586621689099109"><span id="local-6989586621689099111"><span id="local-6989586621689099113"><span id="local-6989586621689099115"><span id="local-6989586621689099117"><span id="local-6989586621689099119"><span class="annot"><span class="annottext">Eq BinaryComparisonOperator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098697"><span id="local-6989586621689098699"><span id="local-6989586621689098701"><span id="local-6989586621689098703"><span id="local-6989586621689098705"><span id="local-6989586621689098707"><span id="local-6989586621689098709"><span class="annot"><span class="annottext">Eq BinaryComparisonOperator
 Eq BinaryComparisonOperator
 -&gt; (BinaryComparisonOperator
     -&gt; BinaryComparisonOperator -&gt; Ordering)
@@ -924,7 +924,7 @@ $c&lt; :: BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Bool
 compare :: BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Ordering
 $ccompare :: BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Ordering
 $cp1Ord :: Eq BinaryComparisonOperator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099101"><span id="local-6989586621689099103"><span id="local-6989586621689099105"><span class="annot"><span class="annottext">Int -&gt; BinaryComparisonOperator -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098691"><span id="local-6989586621689098693"><span id="local-6989586621689098695"><span class="annot"><span class="annottext">Int -&gt; BinaryComparisonOperator -&gt; ShowS
 [BinaryComparisonOperator] -&gt; ShowS
 BinaryComparisonOperator -&gt; String
 (Int -&gt; BinaryComparisonOperator -&gt; ShowS)
@@ -940,7 +940,7 @@ $cshow :: BinaryComparisonOperator -&gt; String
 showsPrec :: Int -&gt; BinaryComparisonOperator -&gt; ShowS
 $cshowsPrec :: Int -&gt; BinaryComparisonOperator -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689099098"><span class="annot"><span class="annottext">Eq BinaryComparisonOperator
+</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689098688"><span class="annot"><span class="annottext">Eq BinaryComparisonOperator
 Eq BinaryComparisonOperator
 -&gt; (Accesses
     -&gt; BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Bool)
@@ -953,7 +953,7 @@ unchanged :: Accesses
 $cunchanged :: Accesses
 -&gt; BinaryComparisonOperator -&gt; BinaryComparisonOperator -&gt; Bool
 $cp1Cacheable :: Eq BinaryComparisonOperator
-</span><a href="#local-6989586621689099098"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099094"><span id="local-6989586621689099096"><span class="annot"><span class="annottext">Value -&gt; Parser [BinaryComparisonOperator]
+</span><a href="#local-6989586621689098688"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098684"><span id="local-6989586621689098686"><span class="annot"><span class="annottext">Value -&gt; Parser [BinaryComparisonOperator]
 Value -&gt; Parser BinaryComparisonOperator
 (Value -&gt; Parser BinaryComparisonOperator)
 -&gt; (Value -&gt; Parser [BinaryComparisonOperator])
@@ -964,7 +964,7 @@ parseJSONList :: Value -&gt; Parser [BinaryComparisonOperator]
 $cparseJSONList :: Value -&gt; Parser [BinaryComparisonOperator]
 parseJSON :: Value -&gt; Parser BinaryComparisonOperator
 $cparseJSON :: Value -&gt; Parser BinaryComparisonOperator
-</span><a href="#local-6989586621689099094"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099090"><span id="local-6989586621689099092"><span class="annot"><span class="annottext">Int -&gt; BinaryComparisonOperator -&gt; Int
+</span><a href="#local-6989586621689098684"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098680"><span id="local-6989586621689098682"><span class="annot"><span class="annottext">Int -&gt; BinaryComparisonOperator -&gt; Int
 BinaryComparisonOperator -&gt; Int
 (Int -&gt; BinaryComparisonOperator -&gt; Int)
 -&gt; (BinaryComparisonOperator -&gt; Int)
@@ -974,12 +974,12 @@ hash :: BinaryComparisonOperator -&gt; Int
 $chash :: BinaryComparisonOperator -&gt; Int
 hashWithSalt :: Int -&gt; BinaryComparisonOperator -&gt; Int
 $chashWithSalt :: Int -&gt; BinaryComparisonOperator -&gt; Int
-</span><a href="#local-6989586621689099090"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099088"><span class="annot"><span class="annottext">BinaryComparisonOperator -&gt; ()
+</span><a href="#local-6989586621689098680"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098678"><span class="annot"><span class="annottext">BinaryComparisonOperator -&gt; ()
 (BinaryComparisonOperator -&gt; ()) -&gt; NFData BinaryComparisonOperator
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: BinaryComparisonOperator -&gt; ()
 $crnf :: BinaryComparisonOperator -&gt; ()
-</span><a href="#local-6989586621689099088"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099080"><span id="local-6989586621689099082"><span id="local-6989586621689099084"><span id="local-6989586621689099086"><span class="annot"><span class="annottext">[BinaryComparisonOperator] -&gt; Value
+</span><a href="#local-6989586621689098678"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098670"><span id="local-6989586621689098672"><span id="local-6989586621689098674"><span id="local-6989586621689098676"><span class="annot"><span class="annottext">[BinaryComparisonOperator] -&gt; Value
 [BinaryComparisonOperator] -&gt; Encoding
 BinaryComparisonOperator -&gt; Value
 BinaryComparisonOperator -&gt; Encoding
@@ -1002,11 +1002,11 @@ toEncoding :: BinaryComparisonOperator -&gt; Encoding
 $ctoEncoding :: BinaryComparisonOperator -&gt; Encoding
 toJSON :: BinaryComparisonOperator -&gt; Value
 $ctoJSON :: BinaryComparisonOperator -&gt; Value
-</span><a href="#local-6989586621689099080"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689098670"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>
 </span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.BinaryComparisonOperator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryComparisonOperator"><span class="hs-identifier hs-type">BinaryComparisonOperator</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-112"></span><span>  </span><span id="local-6989586621689099078"><span class="annot"><span class="annottext">from :: BinaryComparisonOperator -&gt; BinaryComparisonOperator
-</span><a href="#local-6989586621689099078"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621689098668"><span class="annot"><span class="annottext">from :: BinaryComparisonOperator -&gt; BinaryComparisonOperator
+</span><a href="#local-6989586621689098668"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.LessThan</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span><span>
 </span><span id="line-113"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
@@ -1023,8 +1023,8 @@ $ctoJSON :: BinaryComparisonOperator -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#Equal"><span class="hs-identifier hs-var">Equal</span></a></span><span>
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryComparisonOperator"><span class="hs-identifier hs-type">BinaryComparisonOperator</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.BinaryComparisonOperator</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-119"></span><span>  </span><span id="local-6989586621689099071"><span class="annot"><span class="annottext">from :: BinaryComparisonOperator -&gt; BinaryComparisonOperator
-</span><a href="#local-6989586621689099071"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
+</span><span id="line-119"></span><span>  </span><span id="local-6989586621689098661"><span class="annot"><span class="annottext">from :: BinaryComparisonOperator -&gt; BinaryComparisonOperator
+</span><a href="#local-6989586621689098661"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#LessThan"><span class="hs-identifier hs-var">LessThan</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.LessThan</span></a></span><span>
 </span><span id="line-120"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
@@ -1040,9 +1040,9 @@ $ctoJSON :: BinaryComparisonOperator -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#Equal"><span class="hs-identifier hs-var">Equal</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BinaryComparisonOperator
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Equal</span></a></span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span id="local-6989586621689099069"><span id="local-6989586621689099070"></span></span><span class="hs-keyword">data</span><span> </span><span id="UnaryComparisonOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#UnaryComparisonOperator"><span class="hs-identifier hs-var">UnaryComparisonOperator</span></a></span></span><span>
+</span><span id="line-125"></span><span id="local-6989586621689098659"><span id="local-6989586621689098660"></span></span><span class="hs-keyword">data</span><span> </span><span id="UnaryComparisonOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#UnaryComparisonOperator"><span class="hs-identifier hs-var">UnaryComparisonOperator</span></a></span></span><span>
 </span><span id="line-126"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="IsNull"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#IsNull"><span class="hs-identifier hs-var">IsNull</span></a></span></span><span>
-</span><span id="line-127"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cIsNull"><span id="%24tUnaryComparisonOperator"><span id="local-6989586621689099039"><span id="local-6989586621689099041"><span id="local-6989586621689099043"><span id="local-6989586621689099045"><span id="local-6989586621689099047"><span id="local-6989586621689099049"><span id="local-6989586621689099051"><span id="local-6989586621689099053"><span id="local-6989586621689099055"><span id="local-6989586621689099057"><span id="local-6989586621689099059"><span id="local-6989586621689099061"><span id="local-6989586621689099063"><span id="local-6989586621689099065"><span class="annot"><span class="annottext">Typeable UnaryComparisonOperator
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cIsNull"><span id="%24tUnaryComparisonOperator"><span id="local-6989586621689098629"><span id="local-6989586621689098631"><span id="local-6989586621689098633"><span id="local-6989586621689098635"><span id="local-6989586621689098637"><span id="local-6989586621689098639"><span id="local-6989586621689098641"><span id="local-6989586621689098643"><span id="local-6989586621689098645"><span id="local-6989586621689098647"><span id="local-6989586621689098649"><span id="local-6989586621689098651"><span id="local-6989586621689098653"><span id="local-6989586621689098655"><span class="annot"><span class="annottext">Typeable UnaryComparisonOperator
 DataType
 Constr
 Typeable UnaryComparisonOperator
@@ -1258,7 +1258,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; UnaryComparisonOperator
 -&gt; c UnaryComparisonOperator
 $cp1Data :: Typeable UnaryComparisonOperator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099033"><span id="local-6989586621689099035"><span class="annot"><span class="annottext">UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098623"><span id="local-6989586621689098625"><span class="annot"><span class="annottext">UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool
 (UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool)
 -&gt; (UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool)
 -&gt; Eq UnaryComparisonOperator
@@ -1278,7 +1278,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep UnaryComparisonOperator x -&gt; UnaryComparisonOperator
 $cfrom :: forall x. UnaryComparisonOperator -&gt; Rep UnaryComparisonOperator x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099016"><span id="local-6989586621689099018"><span id="local-6989586621689099020"><span id="local-6989586621689099022"><span id="local-6989586621689099024"><span id="local-6989586621689099026"><span id="local-6989586621689099028"><span class="annot"><span class="annottext">Eq UnaryComparisonOperator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098606"><span id="local-6989586621689098608"><span id="local-6989586621689098610"><span id="local-6989586621689098612"><span id="local-6989586621689098614"><span id="local-6989586621689098616"><span id="local-6989586621689098618"><span class="annot"><span class="annottext">Eq UnaryComparisonOperator
 Eq UnaryComparisonOperator
 -&gt; (UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Ordering)
 -&gt; (UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool)
@@ -1323,7 +1323,7 @@ $c&lt; :: UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool
 compare :: UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Ordering
 $ccompare :: UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Ordering
 $cp1Ord :: Eq UnaryComparisonOperator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099010"><span id="local-6989586621689099012"><span id="local-6989586621689099014"><span class="annot"><span class="annottext">Int -&gt; UnaryComparisonOperator -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098600"><span id="local-6989586621689098602"><span id="local-6989586621689098604"><span class="annot"><span class="annottext">Int -&gt; UnaryComparisonOperator -&gt; ShowS
 [UnaryComparisonOperator] -&gt; ShowS
 UnaryComparisonOperator -&gt; String
 (Int -&gt; UnaryComparisonOperator -&gt; ShowS)
@@ -1339,7 +1339,7 @@ $cshow :: UnaryComparisonOperator -&gt; String
 showsPrec :: Int -&gt; UnaryComparisonOperator -&gt; ShowS
 $cshowsPrec :: Int -&gt; UnaryComparisonOperator -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-128"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689099007"><span class="annot"><span class="annottext">Eq UnaryComparisonOperator
+</span><span id="line-128"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689098597"><span class="annot"><span class="annottext">Eq UnaryComparisonOperator
 Eq UnaryComparisonOperator
 -&gt; (Accesses
     -&gt; UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool)
@@ -1352,7 +1352,7 @@ unchanged :: Accesses
 $cunchanged :: Accesses
 -&gt; UnaryComparisonOperator -&gt; UnaryComparisonOperator -&gt; Bool
 $cp1Cacheable :: Eq UnaryComparisonOperator
-</span><a href="#local-6989586621689099007"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099003"><span id="local-6989586621689099005"><span class="annot"><span class="annottext">Value -&gt; Parser [UnaryComparisonOperator]
+</span><a href="#local-6989586621689098597"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098593"><span id="local-6989586621689098595"><span class="annot"><span class="annottext">Value -&gt; Parser [UnaryComparisonOperator]
 Value -&gt; Parser UnaryComparisonOperator
 (Value -&gt; Parser UnaryComparisonOperator)
 -&gt; (Value -&gt; Parser [UnaryComparisonOperator])
@@ -1363,7 +1363,7 @@ parseJSONList :: Value -&gt; Parser [UnaryComparisonOperator]
 $cparseJSONList :: Value -&gt; Parser [UnaryComparisonOperator]
 parseJSON :: Value -&gt; Parser UnaryComparisonOperator
 $cparseJSON :: Value -&gt; Parser UnaryComparisonOperator
-</span><a href="#local-6989586621689099003"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098999"><span id="local-6989586621689099001"><span class="annot"><span class="annottext">Int -&gt; UnaryComparisonOperator -&gt; Int
+</span><a href="#local-6989586621689098593"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098589"><span id="local-6989586621689098591"><span class="annot"><span class="annottext">Int -&gt; UnaryComparisonOperator -&gt; Int
 UnaryComparisonOperator -&gt; Int
 (Int -&gt; UnaryComparisonOperator -&gt; Int)
 -&gt; (UnaryComparisonOperator -&gt; Int)
@@ -1373,12 +1373,12 @@ hash :: UnaryComparisonOperator -&gt; Int
 $chash :: UnaryComparisonOperator -&gt; Int
 hashWithSalt :: Int -&gt; UnaryComparisonOperator -&gt; Int
 $chashWithSalt :: Int -&gt; UnaryComparisonOperator -&gt; Int
-</span><a href="#local-6989586621689098999"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098997"><span class="annot"><span class="annottext">UnaryComparisonOperator -&gt; ()
+</span><a href="#local-6989586621689098589"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098587"><span class="annot"><span class="annottext">UnaryComparisonOperator -&gt; ()
 (UnaryComparisonOperator -&gt; ()) -&gt; NFData UnaryComparisonOperator
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: UnaryComparisonOperator -&gt; ()
 $crnf :: UnaryComparisonOperator -&gt; ()
-</span><a href="#local-6989586621689098997"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098989"><span id="local-6989586621689098991"><span id="local-6989586621689098993"><span id="local-6989586621689098995"><span class="annot"><span class="annottext">[UnaryComparisonOperator] -&gt; Value
+</span><a href="#local-6989586621689098587"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098579"><span id="local-6989586621689098581"><span id="local-6989586621689098583"><span id="local-6989586621689098585"><span class="annot"><span class="annottext">[UnaryComparisonOperator] -&gt; Value
 [UnaryComparisonOperator] -&gt; Encoding
 UnaryComparisonOperator -&gt; Value
 UnaryComparisonOperator -&gt; Encoding
@@ -1401,23 +1401,23 @@ toEncoding :: UnaryComparisonOperator -&gt; Encoding
 $ctoEncoding :: UnaryComparisonOperator -&gt; Encoding
 toJSON :: UnaryComparisonOperator -&gt; Value
 $ctoJSON :: UnaryComparisonOperator -&gt; Value
-</span><a href="#local-6989586621689098989"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689098579"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-129"></span><span>
 </span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.UnaryComparisonOperator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#UnaryComparisonOperator"><span class="hs-identifier hs-type">UnaryComparisonOperator</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-131"></span><span>  </span><span id="local-6989586621689098987"><span class="annot"><span class="annottext">from :: UnaryComparisonOperator -&gt; UnaryComparisonOperator
-</span><a href="#local-6989586621689098987"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621689098577"><span class="annot"><span class="annottext">from :: UnaryComparisonOperator -&gt; UnaryComparisonOperator
+</span><a href="#local-6989586621689098577"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.IsNull</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#IsNull"><span class="hs-identifier hs-var">IsNull</span></a></span><span>
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#UnaryComparisonOperator"><span class="hs-identifier hs-type">UnaryComparisonOperator</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.UnaryComparisonOperator</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-134"></span><span>  </span><span id="local-6989586621689098984"><span class="annot"><span class="annottext">from :: UnaryComparisonOperator -&gt; UnaryComparisonOperator
-</span><a href="#local-6989586621689098984"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
+</span><span id="line-134"></span><span>  </span><span id="local-6989586621689098574"><span class="annot"><span class="annottext">from :: UnaryComparisonOperator -&gt; UnaryComparisonOperator
+</span><a href="#local-6989586621689098574"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#IsNull"><span class="hs-identifier hs-var">IsNull</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UnaryComparisonOperator
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.IsNull</span></a></span><span>
 </span><span id="line-135"></span><span>
-</span><span id="line-136"></span><span id="local-6989586621689098982"><span id="local-6989586621689098983"></span></span><span class="hs-keyword">data</span><span> </span><span id="BinaryArrayComparisonOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryArrayComparisonOperator"><span class="hs-identifier hs-var">BinaryArrayComparisonOperator</span></a></span></span><span>
+</span><span id="line-136"></span><span id="local-6989586621689098572"><span id="local-6989586621689098573"></span></span><span class="hs-keyword">data</span><span> </span><span id="BinaryArrayComparisonOperator"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryArrayComparisonOperator"><span class="hs-identifier hs-var">BinaryArrayComparisonOperator</span></a></span></span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="In"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#In"><span class="hs-identifier hs-var">In</span></a></span></span><span>
-</span><span id="line-138"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cIn"><span id="%24tBinaryArrayComparisonOperator"><span id="local-6989586621689098952"><span id="local-6989586621689098954"><span id="local-6989586621689098956"><span id="local-6989586621689098958"><span id="local-6989586621689098960"><span id="local-6989586621689098962"><span id="local-6989586621689098964"><span id="local-6989586621689098966"><span id="local-6989586621689098968"><span id="local-6989586621689098970"><span id="local-6989586621689098972"><span id="local-6989586621689098974"><span id="local-6989586621689098976"><span id="local-6989586621689098978"><span class="annot"><span class="annottext">Typeable BinaryArrayComparisonOperator
+</span><span id="line-138"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cIn"><span id="%24tBinaryArrayComparisonOperator"><span id="local-6989586621689098542"><span id="local-6989586621689098544"><span id="local-6989586621689098546"><span id="local-6989586621689098548"><span id="local-6989586621689098550"><span id="local-6989586621689098552"><span id="local-6989586621689098554"><span id="local-6989586621689098556"><span id="local-6989586621689098558"><span id="local-6989586621689098560"><span id="local-6989586621689098562"><span id="local-6989586621689098564"><span id="local-6989586621689098566"><span id="local-6989586621689098568"><span class="annot"><span class="annottext">Typeable BinaryArrayComparisonOperator
 DataType
 Constr
 Typeable BinaryArrayComparisonOperator
@@ -1665,7 +1665,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; BinaryArrayComparisonOperator
 -&gt; c BinaryArrayComparisonOperator
 $cp1Data :: Typeable BinaryArrayComparisonOperator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098946"><span id="local-6989586621689098948"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098536"><span id="local-6989586621689098538"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
 -&gt; BinaryArrayComparisonOperator -&gt; Bool
 (BinaryArrayComparisonOperator
  -&gt; BinaryArrayComparisonOperator -&gt; Bool)
@@ -1702,7 +1702,7 @@ Rep BinaryArrayComparisonOperator x
 $cfrom :: forall x.
 BinaryArrayComparisonOperator
 -&gt; Rep BinaryArrayComparisonOperator x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098929"><span id="local-6989586621689098931"><span id="local-6989586621689098933"><span id="local-6989586621689098935"><span id="local-6989586621689098937"><span id="local-6989586621689098939"><span id="local-6989586621689098941"><span class="annot"><span class="annottext">Eq BinaryArrayComparisonOperator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098519"><span id="local-6989586621689098521"><span id="local-6989586621689098523"><span id="local-6989586621689098525"><span id="local-6989586621689098527"><span id="local-6989586621689098529"><span id="local-6989586621689098531"><span class="annot"><span class="annottext">Eq BinaryArrayComparisonOperator
 Eq BinaryArrayComparisonOperator
 -&gt; (BinaryArrayComparisonOperator
     -&gt; BinaryArrayComparisonOperator -&gt; Ordering)
@@ -1764,7 +1764,7 @@ compare :: BinaryArrayComparisonOperator
 $ccompare :: BinaryArrayComparisonOperator
 -&gt; BinaryArrayComparisonOperator -&gt; Ordering
 $cp1Ord :: Eq BinaryArrayComparisonOperator
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098923"><span id="local-6989586621689098925"><span id="local-6989586621689098927"><span class="annot"><span class="annottext">Int -&gt; BinaryArrayComparisonOperator -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098513"><span id="local-6989586621689098515"><span id="local-6989586621689098517"><span class="annot"><span class="annottext">Int -&gt; BinaryArrayComparisonOperator -&gt; ShowS
 [BinaryArrayComparisonOperator] -&gt; ShowS
 BinaryArrayComparisonOperator -&gt; String
 (Int -&gt; BinaryArrayComparisonOperator -&gt; ShowS)
@@ -1780,7 +1780,7 @@ $cshow :: BinaryArrayComparisonOperator -&gt; String
 showsPrec :: Int -&gt; BinaryArrayComparisonOperator -&gt; ShowS
 $cshowsPrec :: Int -&gt; BinaryArrayComparisonOperator -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689098920"><span class="annot"><span class="annottext">Eq BinaryArrayComparisonOperator
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689098510"><span class="annot"><span class="annottext">Eq BinaryArrayComparisonOperator
 Eq BinaryArrayComparisonOperator
 -&gt; (Accesses
     -&gt; BinaryArrayComparisonOperator
@@ -1801,7 +1801,7 @@ $cunchanged :: Accesses
 -&gt; BinaryArrayComparisonOperator
 -&gt; Bool
 $cp1Cacheable :: Eq BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689098920"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098916"><span id="local-6989586621689098918"><span class="annot"><span class="annottext">Value -&gt; Parser [BinaryArrayComparisonOperator]
+</span><a href="#local-6989586621689098510"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098506"><span id="local-6989586621689098508"><span class="annot"><span class="annottext">Value -&gt; Parser [BinaryArrayComparisonOperator]
 Value -&gt; Parser BinaryArrayComparisonOperator
 (Value -&gt; Parser BinaryArrayComparisonOperator)
 -&gt; (Value -&gt; Parser [BinaryArrayComparisonOperator])
@@ -1812,7 +1812,7 @@ parseJSONList :: Value -&gt; Parser [BinaryArrayComparisonOperator]
 $cparseJSONList :: Value -&gt; Parser [BinaryArrayComparisonOperator]
 parseJSON :: Value -&gt; Parser BinaryArrayComparisonOperator
 $cparseJSON :: Value -&gt; Parser BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689098916"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098912"><span id="local-6989586621689098914"><span class="annot"><span class="annottext">Int -&gt; BinaryArrayComparisonOperator -&gt; Int
+</span><a href="#local-6989586621689098506"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098502"><span id="local-6989586621689098504"><span class="annot"><span class="annottext">Int -&gt; BinaryArrayComparisonOperator -&gt; Int
 BinaryArrayComparisonOperator -&gt; Int
 (Int -&gt; BinaryArrayComparisonOperator -&gt; Int)
 -&gt; (BinaryArrayComparisonOperator -&gt; Int)
@@ -1822,13 +1822,13 @@ hash :: BinaryArrayComparisonOperator -&gt; Int
 $chash :: BinaryArrayComparisonOperator -&gt; Int
 hashWithSalt :: Int -&gt; BinaryArrayComparisonOperator -&gt; Int
 $chashWithSalt :: Int -&gt; BinaryArrayComparisonOperator -&gt; Int
-</span><a href="#local-6989586621689098912"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098910"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator -&gt; ()
+</span><a href="#local-6989586621689098502"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098500"><span class="annot"><span class="annottext">BinaryArrayComparisonOperator -&gt; ()
 (BinaryArrayComparisonOperator -&gt; ())
 -&gt; NFData BinaryArrayComparisonOperator
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: BinaryArrayComparisonOperator -&gt; ()
 $crnf :: BinaryArrayComparisonOperator -&gt; ()
-</span><a href="#local-6989586621689098910"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098902"><span id="local-6989586621689098904"><span id="local-6989586621689098906"><span id="local-6989586621689098908"><span class="annot"><span class="annottext">[BinaryArrayComparisonOperator] -&gt; Value
+</span><a href="#local-6989586621689098500"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098492"><span id="local-6989586621689098494"><span id="local-6989586621689098496"><span id="local-6989586621689098498"><span class="annot"><span class="annottext">[BinaryArrayComparisonOperator] -&gt; Value
 [BinaryArrayComparisonOperator] -&gt; Encoding
 BinaryArrayComparisonOperator -&gt; Value
 BinaryArrayComparisonOperator -&gt; Encoding
@@ -1851,24 +1851,24 @@ toEncoding :: BinaryArrayComparisonOperator -&gt; Encoding
 $ctoEncoding :: BinaryArrayComparisonOperator -&gt; Encoding
 toJSON :: BinaryArrayComparisonOperator -&gt; Value
 $ctoJSON :: BinaryArrayComparisonOperator -&gt; Value
-</span><a href="#local-6989586621689098902"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689098492"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.BinaryArrayComparisonOperator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryArrayComparisonOperator"><span class="hs-identifier hs-type">BinaryArrayComparisonOperator</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-142"></span><span>  </span><span id="local-6989586621689098900"><span class="annot"><span class="annottext">from :: BinaryArrayComparisonOperator -&gt; BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689098900"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621689098490"><span class="annot"><span class="annottext">from :: BinaryArrayComparisonOperator -&gt; BinaryArrayComparisonOperator
+</span><a href="#local-6989586621689098490"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.In</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#In"><span class="hs-identifier hs-var">In</span></a></span><span>
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#BinaryArrayComparisonOperator"><span class="hs-identifier hs-type">BinaryArrayComparisonOperator</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.BinaryArrayComparisonOperator</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-145"></span><span>  </span><span id="local-6989586621689098897"><span class="annot"><span class="annottext">from :: BinaryArrayComparisonOperator -&gt; BinaryArrayComparisonOperator
-</span><a href="#local-6989586621689098897"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
+</span><span id="line-145"></span><span>  </span><span id="local-6989586621689098487"><span class="annot"><span class="annottext">from :: BinaryArrayComparisonOperator -&gt; BinaryArrayComparisonOperator
+</span><a href="#local-6989586621689098487"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#In"><span class="hs-identifier hs-var">In</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BinaryArrayComparisonOperator
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.In</span></a></span><span>
 </span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span id="local-6989586621689098895"><span id="local-6989586621689098896"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComparisonValue"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ComparisonValue"><span class="hs-identifier hs-var">ComparisonValue</span></a></span></span><span>
+</span><span id="line-147"></span><span id="local-6989586621689098485"><span id="local-6989586621689098486"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComparisonValue"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ComparisonValue"><span class="hs-identifier hs-var">ComparisonValue</span></a></span></span><span>
 </span><span id="line-148"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AnotherColumn"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#AnotherColumn"><span class="hs-identifier hs-var">AnotherColumn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ScalarValue"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ScalarValue"><span class="hs-identifier hs-var">ScalarValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Scalar.Value.html#Value"><span class="hs-identifier hs-type">IR.S.Value</span></a></span><span>
-</span><span id="line-150"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cScalarValue"><span id="%24cAnotherColumn"><span id="%24tComparisonValue"><span id="local-6989586621689098864"><span id="local-6989586621689098866"><span id="local-6989586621689098868"><span id="local-6989586621689098870"><span id="local-6989586621689098872"><span id="local-6989586621689098874"><span id="local-6989586621689098876"><span id="local-6989586621689098878"><span id="local-6989586621689098880"><span id="local-6989586621689098882"><span id="local-6989586621689098884"><span id="local-6989586621689098886"><span id="local-6989586621689098888"><span id="local-6989586621689098890"><span class="annot"><span class="annottext">Typeable ComparisonValue
+</span><span id="line-150"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cScalarValue"><span id="%24cAnotherColumn"><span id="%24tComparisonValue"><span id="local-6989586621689098454"><span id="local-6989586621689098456"><span id="local-6989586621689098458"><span id="local-6989586621689098460"><span id="local-6989586621689098462"><span id="local-6989586621689098464"><span id="local-6989586621689098466"><span id="local-6989586621689098468"><span id="local-6989586621689098470"><span id="local-6989586621689098472"><span id="local-6989586621689098474"><span id="local-6989586621689098476"><span id="local-6989586621689098478"><span id="local-6989586621689098480"><span class="annot"><span class="annottext">Typeable ComparisonValue
 DataType
 Constr
 Typeable ComparisonValue
@@ -2045,7 +2045,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; ComparisonValue -&gt; c ComparisonValue
 $cp1Data :: Typeable ComparisonValue
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098857"><span id="local-6989586621689098859"><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098447"><span id="local-6989586621689098449"><span class="annot"><span class="annottext">ComparisonValue -&gt; ComparisonValue -&gt; Bool
 (ComparisonValue -&gt; ComparisonValue -&gt; Bool)
 -&gt; (ComparisonValue -&gt; ComparisonValue -&gt; Bool)
 -&gt; Eq ComparisonValue
@@ -2063,7 +2063,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ComparisonValue x -&gt; ComparisonValue
 $cfrom :: forall x. ComparisonValue -&gt; Rep ComparisonValue x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098840"><span id="local-6989586621689098842"><span id="local-6989586621689098844"><span id="local-6989586621689098846"><span id="local-6989586621689098848"><span id="local-6989586621689098850"><span id="local-6989586621689098852"><span class="annot"><span class="annottext">Eq ComparisonValue
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098430"><span id="local-6989586621689098432"><span id="local-6989586621689098434"><span id="local-6989586621689098436"><span id="local-6989586621689098438"><span id="local-6989586621689098440"><span id="local-6989586621689098442"><span class="annot"><span class="annottext">Eq ComparisonValue
 Eq ComparisonValue
 -&gt; (ComparisonValue -&gt; ComparisonValue -&gt; Ordering)
 -&gt; (ComparisonValue -&gt; ComparisonValue -&gt; Bool)
@@ -2101,7 +2101,7 @@ $c&lt; :: ComparisonValue -&gt; ComparisonValue -&gt; Bool
 compare :: ComparisonValue -&gt; ComparisonValue -&gt; Ordering
 $ccompare :: ComparisonValue -&gt; ComparisonValue -&gt; Ordering
 $cp1Ord :: Eq ComparisonValue
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098834"><span id="local-6989586621689098836"><span id="local-6989586621689098838"><span class="annot"><span class="annottext">Int -&gt; ComparisonValue -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098424"><span id="local-6989586621689098426"><span id="local-6989586621689098428"><span class="annot"><span class="annottext">Int -&gt; ComparisonValue -&gt; ShowS
 [ComparisonValue] -&gt; ShowS
 ComparisonValue -&gt; String
 (Int -&gt; ComparisonValue -&gt; ShowS)
@@ -2117,7 +2117,7 @@ $cshow :: ComparisonValue -&gt; String
 showsPrec :: Int -&gt; ComparisonValue -&gt; ShowS
 $cshowsPrec :: Int -&gt; ComparisonValue -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-151"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689098831"><span class="annot"><span class="annottext">Eq ComparisonValue
+</span><span id="line-151"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689098421"><span class="annot"><span class="annottext">Eq ComparisonValue
 Eq ComparisonValue
 -&gt; (Accesses -&gt; ComparisonValue -&gt; ComparisonValue -&gt; Bool)
 -&gt; Cacheable ComparisonValue
@@ -2126,7 +2126,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; ComparisonValue -&gt; ComparisonValue -&gt; Bool
 $cunchanged :: Accesses -&gt; ComparisonValue -&gt; ComparisonValue -&gt; Bool
 $cp1Cacheable :: Eq ComparisonValue
-</span><a href="#local-6989586621689098831"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098827"><span id="local-6989586621689098829"><span class="annot"><span class="annottext">Value -&gt; Parser [ComparisonValue]
+</span><a href="#local-6989586621689098421"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098417"><span id="local-6989586621689098419"><span class="annot"><span class="annottext">Value -&gt; Parser [ComparisonValue]
 Value -&gt; Parser ComparisonValue
 (Value -&gt; Parser ComparisonValue)
 -&gt; (Value -&gt; Parser [ComparisonValue]) -&gt; FromJSON ComparisonValue
@@ -2136,7 +2136,7 @@ parseJSONList :: Value -&gt; Parser [ComparisonValue]
 $cparseJSONList :: Value -&gt; Parser [ComparisonValue]
 parseJSON :: Value -&gt; Parser ComparisonValue
 $cparseJSON :: Value -&gt; Parser ComparisonValue
-</span><a href="#local-6989586621689098827"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098823"><span id="local-6989586621689098825"><span class="annot"><span class="annottext">Int -&gt; ComparisonValue -&gt; Int
+</span><a href="#local-6989586621689098417"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098413"><span id="local-6989586621689098415"><span class="annot"><span class="annottext">Int -&gt; ComparisonValue -&gt; Int
 ComparisonValue -&gt; Int
 (Int -&gt; ComparisonValue -&gt; Int)
 -&gt; (ComparisonValue -&gt; Int) -&gt; Hashable ComparisonValue
@@ -2145,12 +2145,12 @@ hash :: ComparisonValue -&gt; Int
 $chash :: ComparisonValue -&gt; Int
 hashWithSalt :: Int -&gt; ComparisonValue -&gt; Int
 $chashWithSalt :: Int -&gt; ComparisonValue -&gt; Int
-</span><a href="#local-6989586621689098823"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098821"><span class="annot"><span class="annottext">ComparisonValue -&gt; ()
+</span><a href="#local-6989586621689098413"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098411"><span class="annot"><span class="annottext">ComparisonValue -&gt; ()
 (ComparisonValue -&gt; ()) -&gt; NFData ComparisonValue
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ComparisonValue -&gt; ()
 $crnf :: ComparisonValue -&gt; ()
-</span><a href="#local-6989586621689098821"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098813"><span id="local-6989586621689098815"><span id="local-6989586621689098817"><span id="local-6989586621689098819"><span class="annot"><span class="annottext">[ComparisonValue] -&gt; Value
+</span><a href="#local-6989586621689098411"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689098403"><span id="local-6989586621689098405"><span id="local-6989586621689098407"><span id="local-6989586621689098409"><span class="annot"><span class="annottext">[ComparisonValue] -&gt; Value
 [ComparisonValue] -&gt; Encoding
 ComparisonValue -&gt; Value
 ComparisonValue -&gt; Encoding
@@ -2173,12 +2173,12 @@ toEncoding :: ComparisonValue -&gt; Encoding
 $ctoEncoding :: ComparisonValue -&gt; Encoding
 toJSON :: ComparisonValue -&gt; Value
 $ctoJSON :: ComparisonValue -&gt; Value
-</span><a href="#local-6989586621689098813"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689098403"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-152"></span><span>
 </span><span id="line-153"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ComparisonValue"><span class="hs-identifier hs-type">ComparisonValue</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ComparisonValue</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-154"></span><span>  </span><span id="local-6989586621689098811"><span class="annot"><span class="annottext">from :: ComparisonValue -&gt; ComparisonValue
-</span><a href="#local-6989586621689098811"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#AnotherColumn"><span class="hs-identifier hs-type">AnotherColumn</span></a></span><span> </span><span id="local-6989586621689098810"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689098810"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;column&quot; ColumnName -&gt; ComparisonValue
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621689098401"><span class="annot"><span class="annottext">from :: ComparisonValue -&gt; ComparisonValue
+</span><a href="#local-6989586621689098401"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#AnotherColumn"><span class="hs-identifier hs-type">AnotherColumn</span></a></span><span> </span><span id="local-6989586621689098400"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689098400"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;column&quot; ColumnName -&gt; ComparisonValue
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.AnotherColumn</span></a></span><span> </span><span class="annot"><span class="annottext">(ValueWrapper &quot;column&quot; ColumnName -&gt; ComparisonValue)
 -&gt; ValueWrapper &quot;column&quot; ColumnName -&gt; ComparisonValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -2187,9 +2187,9 @@ forall (t :: Symbol) a. a -&gt; ValueWrapper t a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">ValueWrapper</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689098810"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-155"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span id="local-6989586621689098808"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689098808"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;value&quot; Value -&gt; ComparisonValue
+</span><a href="#local-6989586621689098400"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-155"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span id="local-6989586621689098398"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689098398"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;value&quot; Value -&gt; ComparisonValue
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ScalarValue</span></a></span><span> </span><span class="annot"><span class="annottext">(ValueWrapper &quot;value&quot; Value -&gt; ComparisonValue)
 -&gt; (Value -&gt; ValueWrapper &quot;value&quot; Value)
 -&gt; Value
@@ -2202,22 +2202,22 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689098808"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689098398"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-156"></span><span>
 </span><span id="line-157"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ComparisonValue</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Expression.html#ComparisonValue"><span class="hs-identifier hs-type">ComparisonValue</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-158"></span><span>  </span><span id="local-6989586621689098805"><span class="annot"><span class="annottext">from :: ComparisonValue -&gt; ComparisonValue
-</span><a href="#local-6989586621689098805"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.AnotherColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689098804"><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689098804"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ComparisonValue
+</span><span id="line-158"></span><span>  </span><span id="local-6989586621689098395"><span class="annot"><span class="annottext">from :: ComparisonValue -&gt; ComparisonValue
+</span><a href="#local-6989586621689098395"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.AnotherColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689098394"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689098394"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ComparisonValue
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#AnotherColumn"><span class="hs-identifier hs-var">AnotherColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689098804"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-159"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ScalarValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689098803"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689098803"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; ComparisonValue
+</span><a href="#local-6989586621689098394"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ScalarValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">ValueWrapper</span></a></span><span> </span><span id="local-6989586621689098393"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689098393"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value -&gt; ComparisonValue
 </span><a href="Hasura.Backends.DataConnector.IR.Expression.html#ScalarValue"><span class="hs-identifier hs-var">ScalarValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ComparisonValue) -&gt; Value -&gt; ComparisonValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Value
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689098803"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689098393"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-160"></span></pre></body></html>
