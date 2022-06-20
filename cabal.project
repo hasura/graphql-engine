@@ -22,9 +22,6 @@ jobs: $ncpus
 
 packages: server
 
--- https://github.com/andrewthad/haskell-ip/issues/79
-allow-newer: ip:attoparsec
-
 package *
   -- NOTE: this gets applied to both local (hasura) packages and dependencies,
   -- but optimizations for local hasura packages are overridden/controlled

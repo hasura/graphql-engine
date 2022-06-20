@@ -160,7 +160,6 @@ common lib-depends
                      , http-conduit
                      , http-media
                      , http-types
-                     , ip
                      , kan-extensions
                      , kriti-lang
                      , lifted-base
@@ -333,6 +332,8 @@ common lib-depends
                      -- mysql
                      , mysql
                      , mysql-simple
+                      -- dependency of vendored 'ip':
+                     , wide-word
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -849,6 +850,11 @@ library
                      , Network.URI.Extended
                      , Network.Wai.Extended
                      , Network.Wai.Handler.WebSockets.Custom
+
+                     -- Our vendored bits of the 'ip' package, to avoid dependencies and ease 9.2 migration
+                     -- We might see if maintainer is willing to split their package up so we can remove these:
+                     , Net.IPv4
+                     , Net.IPv6
 
 
 executable graphql-engine
