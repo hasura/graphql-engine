@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './AllowedQueries.scss';
 
 const AllowedQueriesNotes: React.FC = () => {
   return (
@@ -17,14 +16,10 @@ const AllowedQueriesNotes: React.FC = () => {
           <i>(Read more)</i>
         </a>
       </div>
-      <div className={styles.add_mar_top}>
+      <div className="mt-md">
         <b>Notes</b>
-        <div className={styles.subsection}>
-          <ul className={`${styles.ul_left_small} ${styles.add_mar_top_small}`}>
-            <li>
-              All allowed operations need to have a unique name for reference
-            </li>
-          </ul>
+        <div className="pl-lg pt-sm">
+          All allowed operations need to have a unique name for reference
         </div>
       </div>
     </div>

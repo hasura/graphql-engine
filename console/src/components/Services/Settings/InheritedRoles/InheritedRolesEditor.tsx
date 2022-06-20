@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import styles from '../../Settings/Settings.scss';
 import Button from '../../../Common/Button';
 import TextInput from '../../../Common/TextInput/TextInput';
 import { InheritedRole } from '../../../../metadata/types';
+import { focusYellowRing, inputStyles } from '../constants';
 
 type Mode = 'create' | 'edit';
 
@@ -127,9 +127,9 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
   return (
     <>
       {!isCollapsed && (
-        <div className={styles.RolesEditor}>
+        <div className="p-md bg-white border border-gray-200">
           <div>
-            <div className={styles.editorHeader}>
+            <div className="flex">
               <Button
                 color="white"
                 size="xs"
@@ -139,7 +139,7 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
               >
                 Cancel
               </Button>
-              <div className={styles.roleNameContainer}>
+              <div className="pl-md">
                 {mode === 'create' ? (
                   <div>
                     <b>Create Role:</b> {inheritedRoleName}{' '}
@@ -152,12 +152,12 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
               </div>
             </div>
             <hr className="my-md" />
-            <div className={styles.filterContainer}>
+            <div>
               <TextInput
                 onChange={filterTextChange}
                 value={filterText}
                 placeholder="Filter Roles..."
-                bsclass="max-width-250"
+                bsclass={`mb-xs ${inputStyles}`}
               />
               <div>
                 <Button color="white" size="xs" onClick={selectAll}>
@@ -178,16 +178,16 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                         option.value.includes(filterText) || !filterText.length
                     )
                     .map((option: Option, index) => (
-                      <div key={index} className={styles.roleOption}>
+                      <div key={index} className="flex items-center">
                         <input
-                          className="legacy-input-fix"
+                          className={`${focusYellowRing} !m-0 !mr-sm`}
                           type="checkbox"
                           checked={option.isChecked}
                           onChange={checkboxValueChange}
                           value={option.value}
                           required
                         />{' '}
-                        {option.value}{' '}
+                        <div>{option.value}</div>
                       </div>
                     ))}
             </div>

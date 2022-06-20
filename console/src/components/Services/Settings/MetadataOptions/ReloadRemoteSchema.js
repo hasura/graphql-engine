@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '../../../Common/Button/Button';
-import metaDataStyles from '../Settings.scss';
 
 import {
   showSuccessNotification,
@@ -42,7 +41,7 @@ class ReloadRemoteSchema extends Component {
     };
     const buttonText = isReloading ? 'Reloading' : 'Reload';
     return (
-      <div className={metaDataStyles.display_inline}>
+      <div className="inline-block">
         <Button
           data-test="data-reload-metadata"
           color="white"

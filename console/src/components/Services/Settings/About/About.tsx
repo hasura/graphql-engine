@@ -5,7 +5,6 @@ import { FaSpinner } from 'react-icons/fa';
 
 import globals from '../../../../Globals';
 
-import styles from '../Settings.scss';
 import { ReduxState, ConnectInjectedProps } from '../../../../types';
 
 type AboutState = {
@@ -29,9 +28,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
       return (
         <div>
           <b>Current server version: </b>
-          <span className={styles.add_mar_left_mid}>
-            {serverVersion || spinner}
-          </span>
+          <span className="ml-sm font-light">{serverVersion || spinner}</span>
         </div>
       );
     };
@@ -40,7 +37,7 @@ class About extends Component<ConnectInjectedProps & StateProps> {
       return (
         <div>
           <b>Console asset version: </b>
-          <span className={styles.add_mar_left_mid}>
+          <span className="ml-sm font-light">
             {consoleAssetVersion || 'NA'}
           </span>
         </div>
@@ -48,16 +45,12 @@ class About extends Component<ConnectInjectedProps & StateProps> {
     };
 
     return (
-      <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
-      >
-        <div className={styles.subHeader}>
+      <div className="clear-both pl-sm pt-md mb-sm">
+        <div className="text-base font-bold">
           <Helmet title="About | Hasura" />
-          <h2 className={styles.headerText}>About</h2>
-          <div className={styles.add_mar_top}>{getServerVersionSection()}</div>
-          <div className={styles.add_mar_top}>
-            {getConsoleAssetVersionSection()}
-          </div>
+          <h2 className="text-xl font-bold">About</h2>
+          <div className="mt-sm">{getServerVersionSection()}</div>
+          <div className="mt-sm">{getConsoleAssetVersionSection()}</div>
         </div>
       </div>
     );

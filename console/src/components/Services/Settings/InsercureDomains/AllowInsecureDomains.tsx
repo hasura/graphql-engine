@@ -7,8 +7,6 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { deleteInsecureDomain } from '../../../../metadata/actions';
 import { DomainList } from '../../../../metadata/types';
 
-import styles from '../InsercureDomains/AllowInsecureDomain.scss';
-
 type AddDomainProps = {
   dispatch: Dispatch;
   insecureDomains: DomainList[];
@@ -27,10 +25,10 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
   };
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.max_width}>
-        <h1 className={styles.header}> Insecure TLS Allow List </h1>
-        <p className={styles.sub_heading}>
+    <div className="p-lg bg-[#f8fafc]">
+      <div className="max-w-[72rem]">
+        <h1 className="text-4xl font-bold my-sm"> Insecure TLS Allow List </h1>
+        <p>
           Allow your HTTPS integrations (Actions, Event Triggers, Cron
           Triggers,etc) to use self-signed certificates. For more information
           refer to{' '}
@@ -43,58 +41,34 @@ const InsecureDomains: React.FC<AddDomainProps> = props => {
           </a>{' '}
           here.
         </p>
-        <div className={styles.table_flex}>
-          <div className={styles.table_border}>
-            <table className={styles.min_width}>
-              <thead className={styles.bg_grey}>
-                <tr>
-                  <th className={`${styles.table_heading} ${styles.padding}`}>
-                    DOMAIN
-                  </th>
-                  <th
-                    className={`${styles.table_heading} ${styles.padding} ${styles.align_text_right}`}
-                  >
-                    MODIFY
-                  </th>
-                </tr>
-              </thead>
+        <div className="mb-md mtsm">
+          <div className="overflow-x-auto rounded-sm border-gray-300 border">
+            <div className="flex flex-col">
+              <div className="bg-[#f2f2f2] flex justify-between p-xs px-sm">
+                <div className="text-base font-bold">DOMAIN</div>
+                <div className="text-base font-bold">MODIFY</div>
+              </div>
               {insecureDomains.length ? (
                 insecureDomains.map(domain => (
-                  <tbody className={`${styles.table_container}`}>
-                    <tr className={styles.upper_border}>
-                      <td className={styles.padding} data-test={domain.host}>
-                        {domain.host}
-                      </td>
-                      <td
-                        className={`${styles.padding} ${styles.align_text_right}`}
-                      >
-                        <button
-                          className={`${styles.red_text} ${styles.text_button}`}
-                          onClick={() => handleDeleteDomain(domain.host)}
-                          data-test={`delete-domain-${domain.host}`}
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
+                  <div className="p-xs px-sm bg-white border-t border-gray-300 flex justify-between">
+                    <div data-test={domain.host}>{domain.host}</div>
+                    <button
+                      className="text-red-700 cursor-pointer"
+                      onClick={() => handleDeleteDomain(domain.host)}
+                      data-test={`delete-domain-${domain.host}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 ))
               ) : (
-                <tbody className={`${styles.table_container}`}>
-                  <tr className={styles.upper_border}>
-                    <td
-                      className={styles.padding}
-                      data-test="label-no-domain-found"
-                    >
-                      No domains added to insecure TLS allow list
-                    </td>
-                    <td
-                      className={`${styles.padding} ${styles.align_text_right}`}
-                    />
-                  </tr>
-                </tbody>
+                <div className="white border-t border-gray-300">
+                  <div className="p-xs" data-test="label-no-domain-found">
+                    No domains added to insecure TLS allow list
+                  </div>
+                </div>
               )}
-            </table>
+            </div>
           </div>
         </div>
       </div>

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import styles from './AllowedQueries.scss';
 import Button from '../../../Common/Button/Button';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -15,6 +14,7 @@ import { AllowedQueriesCollection } from '../../../../metadata/reducer';
 import { Dispatch } from '../../../../types';
 import { getCollectionNames, checkLastQuery } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { inputStyles } from '../constants';
 
 type AllowedQueriesListProps = {
   dispatch: Dispatch;
@@ -64,7 +64,7 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
         return (
           <div>
             <div>
-              <div className={styles.add_mar_bottom_mid}>
+              <div className="mb-md">
                 <b>Query name:</b>
                 <Tooltip
                   message="This is an identifier for the query in the collection. 
@@ -73,14 +73,14 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
               </div>
               <input
                 type="text"
-                className={`form-control input-sm ${styles.inline_block}`}
+                className={`${inputStyles} inline-block`}
                 value={modifiedQuery.name}
                 placeholder="operation_name"
                 onChange={handleNameChange}
               />
             </div>
-            <div className={styles.add_mar_top}>
-              <div className={styles.add_mar_bottom_mid}>
+            <div className="mt-mb">
+              <div className="mb-md">
                 <b>Operation:</b>
               </div>
               <AceEditor
@@ -139,7 +139,7 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
             service="modify-allowed-operation"
             saveFunc={onSubmit}
             removeFunc={onDelete}
-            collapsedClass={styles.display_flex}
+            collapsedClass="flex"
             expandedLabel={expandedLabel}
             collapsedLabel={collapsedLabel}
             expandCallback={editorExpandCallback}
@@ -162,9 +162,9 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
 
   return (
     <div>
-      <h4 className={styles.subheading_text}>
+      <h4 className="text-lg font-bold pb-md">
         Allow List
-        <span className={styles.add_mar_left}>
+        <span className="pl-md">
           <Button
             size="xs"
             onClick={handleDeleteAll}
@@ -175,7 +175,7 @@ const AllowedQueriesList: React.FC<AllowedQueriesListProps> = props => {
         </span>
       </h4>
 
-      <div className={styles.subsection}>{getQueryList()}</div>
+      <div className="pl-md">{getQueryList()}</div>
     </div>
   );
 };

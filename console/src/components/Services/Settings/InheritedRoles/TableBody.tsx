@@ -10,12 +10,12 @@ const TableBody: React.FC<TableBodyProps> = props => {
   const { inheritedRoles } = props;
 
   return (
-    <tbody>
+    <div className="w-full border bg-grey-200">
       {inheritedRoles.map((inheritedRole, i) => (
         <TableRow key={i} inheritedRole={inheritedRole} />
       ))}
       <TableRow key={inheritedRoles.length} />
-    </tbody>
+    </div>
   );
 };
 

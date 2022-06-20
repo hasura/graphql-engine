@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './InheritedRolesStyles.scss';
 
 type TableHeaderProps = {
   headings: string[];
@@ -8,19 +7,21 @@ type TableHeaderProps = {
 const TableHeader: React.FC<TableHeaderProps> = props => {
   const { headings } = props;
   return (
-    <thead>
-      <tr>
+    <div>
+      <div className="flex bg-[#f0f0f0]">
         {headings.map((heading, index) =>
           heading === 'Inherited Role' ? (
-            <th key={index} className={styles.fix_column_width}>
+            <div key={index} className="p-xs w-1/3 border font-bold">
               {heading}
-            </th>
+            </div>
           ) : (
-            <th key={index}>{heading}</th>
+            <div className="p-xs w-1/3 border border-l-0 font-bold" key={index}>
+              {heading}
+            </div>
           )
         )}
-      </tr>
-    </thead>
+      </div>
+    </div>
   );
 };
 

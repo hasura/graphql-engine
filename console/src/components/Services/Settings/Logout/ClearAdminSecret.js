@@ -15,16 +15,14 @@ class ClearAdminSecret extends Component {
   }
 
   render() {
-    const metaDataStyles = require('../Settings.scss');
-
     const { dispatch } = this.props;
     const { isClearing } = this.state;
 
     return (
-      <div className={metaDataStyles.display_inline}>
+      <div className="inline-block">
         <Button
           data-test="data-clear-access-key"
-          className={metaDataStyles.margin_right}
+          className="mr-md"
           color="white"
           size="sm"
           onClick={e => {
