@@ -104,6 +104,9 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       customPagination: true,
       aggregation: false,
+      deleteRow: false,
+      editRow: false,
+      bulkRowSelect: false,
     },
     insert: {
       enabled: false,

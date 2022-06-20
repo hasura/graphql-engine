@@ -310,6 +310,9 @@ export type SupportedFeaturesType = {
       enabled: boolean;
       customPagination?: boolean;
       aggregation: boolean;
+      deleteRow: boolean;
+      editRow: boolean;
+      bulkRowSelect: boolean;
     };
     insert: {
       enabled: boolean;

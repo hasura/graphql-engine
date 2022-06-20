@@ -34,6 +34,9 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       enabled: true,
       aggregation: true,
       customPagination: true,
+      deleteRow: true,
+      editRow: true,
+      bulkRowSelect: true,
     },
     modify: {
       ...(PgSupportedFeatures?.tables?.modify ?? {}),
