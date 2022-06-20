@@ -6,7 +6,6 @@ import {
   rolesSelector,
 } from '../../../../metadata/selector';
 import { Dispatch, ReduxState } from '../../../../types';
-import styles from '../Settings.scss';
 import InheritedRolesTable, {
   InheritedRolesTableProps,
 } from './InheritedRolesTable';
@@ -99,13 +98,11 @@ const InheritedRoles: React.FC<Props> = props => {
   }, [inconsistentInheritedRoles, dispatch]);
 
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
-    >
-      <div className={styles.header}>
+    <div className="clear-both pl-md pt-md mb-md">
+      <div className="flex items-center">
         <Heading fontSize="24px">Inherited Roles</Heading>
       </div>
-      <div className={styles.add_mar_top}>
+      <div className="mt-md">
         Inherited roles will combine the permissions of 2 or more roles.
       </div>
       <ActionContext.Provider

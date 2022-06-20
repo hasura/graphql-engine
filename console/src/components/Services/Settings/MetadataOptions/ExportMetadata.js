@@ -22,8 +22,6 @@ class ExportMetadata extends Component {
   }
 
   render() {
-    const styles = require('../Settings.scss');
-
     const { isExporting } = this.state;
 
     const { dispatch } = this.props;
@@ -59,10 +57,10 @@ class ExportMetadata extends Component {
     };
 
     return (
-      <div className={styles.display_inline}>
+      <div className="inline-block">
         <Button
           data-test="data-export-metadata"
-          className={styles.margin_right}
+          className="mr-md"
           size="sm"
           color="white"
           onClick={handleExport}

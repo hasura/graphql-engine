@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
 import { permissionTypes, getTableNameFromDef } from '../utils';
-import metaDataStyles from '../Settings.scss';
-import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -70,17 +68,14 @@ const MetadataStatus = ({ dispatch, metadata }) => {
 
   const inconsistentObjectsTable = () => {
     return (
-      <table
-        className={`${metaDataStyles.metadataStatusTable} ${metaDataStyles.wd750}`}
-        id="t01"
-      >
+      <table className={`w-1/2 mt-lg`} id="t01">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Description</th>
-            <th>Reason</th>
-            <th>Action</th>
+            <th className="p-xs pr-md border">Name</th>
+            <th className="p-xs pr-md border">Type</th>
+            <th className="p-xs pr-md border">Description</th>
+            <th className="p-xs pr-md border">Reason</th>
+            <th className="p-xs pr-md border">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -140,14 +135,28 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             const message = inconsistentObject.message;
             return (
               <tr key={_i}>
-                <td data-test={`inconsistent_name_${_i}`}>{name}</td>
-                <td data-test={`inconsistent_type_${_i}`}>
+                <td
+                  className="p-xs pr-md border"
+                  data-test={`inconsistent_name_${_i}`}
+                >
+                  {name}
+                </td>
+                <td
+                  className="p-xs pr-md border"
+                  data-test={`inconsistent_type_${_i}`}
+                >
                   {`${inconsistentObject.type} `}
                 </td>
-                <td data-test={`inconsistent_description_${_i}`}>
+                <td
+                  className="p-xs pr-md border"
+                  data-test={`inconsistent_description_${_i}`}
+                >
                   {definition}
                 </td>
-                <td data-test={`inconsistent_reason_${_i}`}>
+                <td
+                  className="p-xs pr-md border"
+                  data-test={`inconsistent_reason_${_i}`}
+                >
                   <div>
                     <b>{inconsistentObject.reason}</b>
                     <br />
@@ -160,7 +169,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
                     ) : null}
                   </div>
                 </td>
-                <td data-test={`inconsistent_action_${_i}`}>
+                <td
+                  className="p-xs pr-md border"
+                  data-test={`inconsistent_action_${_i}`}
+                >
                   {inconsistentObject.type ===
                   'inherited role permission inconsistency' ? (
                     <Button
@@ -200,11 +212,13 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       metadata.inconsistentInheritedRoles.length === 0
     ) {
       return (
-        <div className={styles.add_mar_top}>
-          <div className={metaDataStyles.content_width}>
-            <div className={styles.display_flex}>
-              <CheckIcon className={metaDataStyles.add_mar_right_small} />
-              <h4>GraphQL Engine metadata is consistent with database</h4>
+        <div className="mt-md">
+          <div className="w-8/12">
+            <div className="flex">
+              <CheckIcon className="mr-sm" />
+              <h4 className="text-lg font-bold">
+                GraphQL Engine metadata is consistent with database
+              </h4>
             </div>
           </div>
         </div>
@@ -212,34 +226,35 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     }
 
     return (
-      <div className={styles.add_mar_top}>
-        <div className={metaDataStyles.content_width}>
-          <div className={styles.display_flex}>
-            <CrossIcon className={metaDataStyles.add_mar_right_small} />
-            <h4> GraphQL Engine metadata is inconsistent with database </h4>
+      <div className="mt-md">
+        <div className="w-8/12">
+          <div className="flex">
+            <CrossIcon className="mr-sm" />
+            <h4 className="text-lg font-bold">
+              {' '}
+              GraphQL Engine metadata is inconsistent with database{' '}
+            </h4>
           </div>
-          <div className={styles.add_mar_top}>
-            <div className={styles.add_mar_top_small}>
+          <div className="mt-md">
+            <div className="mt-xs">
               The following objects in your metadata are inconsistent because
               they reference database or remote-schema entities which do not
               seem to exist or are conflicting
             </div>
-            <div className={styles.add_mar_top_small}>
+            <div className="mt-xs">
               The GraphQL API has been generated using only the consistent parts
               of the metadata
             </div>
-            <div className={styles.add_mar_top_small}>
+            <div className="mt-xs">
               The console might also not be able to display these inconsistent
               objects
             </div>
           </div>
         </div>
-        <div className={styles.add}>{inconsistentObjectsTable()}</div>
-        <div
-          className={`${metaDataStyles.wd50percent} ${metaDataStyles.add_mar_top}`}
-        >
+        <div>{inconsistentObjectsTable()}</div>
+        <div className={`w-1/2 mt-md`}>
           To resolve these inconsistencies, you can do one of the following:
-          <ul className={styles.add_mar_top_small}>
+          <ul className="mt-xs">
             <li>
               To delete all the inconsistent objects from the metadata, click
               the "Delete all" button
@@ -251,13 +266,11 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             </li>
           </ul>
         </div>
-        <div
-          className={`${metaDataStyles.display_flex} ${metaDataStyles.add_mar_top_small}`}
-        >
+        <div className={`flex mt-sm`}>
           <Button
             color="red"
             size="sm"
-            className={metaDataStyles.add_mar_right}
+            className="mr-md"
             onClick={verifyAndDropAll}
             disabled={isLoading}
           >
@@ -291,17 +304,21 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       return null;
     }
     return (
-      <div className={`${styles.errorBanner} alert alert-danger`}>
-        <FaExclamationCircle
-          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal}`}
-          aria-hidden="true"
-        />
-        <strong>
-          You have been redirected because your GraphQL Engine metadata is in an
-          inconsistent state
-        </strong>
+      <div
+        className={`w-full p-md bg-red-100 items-center flex justify-between flex-row border border-red-200`}
+      >
+        <div>
+          <FaExclamationCircle
+            className={`font-normal text-red-800 mr-sm`}
+            aria-hidden="true"
+          />
+          <strong className="text-red-800">
+            You have been redirected because your GraphQL Engine metadata is in
+            an inconsistent state
+          </strong>
+        </div>
         <FaTimes
-          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer}`}
+          className={`text-normal font-normal cursor-pointer text-red-800`}
           aria-hidden="true"
           onClick={dismissErrorBanner}
         />
@@ -310,12 +327,10 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   };
 
   return (
-    <div className={styles.add_mar_bottom}>
+    <div className="mb-md">
       {banner()}
-      <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
-      >
-        <h2 className={styles.headerText}>Hasura Metadata Status</h2>
+      <div className="clear-both pl-md mt-md mb-md">
+        <h2 className="text-xl font-bold">Hasura Metadata Status</h2>
         {content()}
       </div>
     </div>

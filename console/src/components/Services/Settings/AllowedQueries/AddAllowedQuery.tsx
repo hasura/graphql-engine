@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 import { isConsoleError } from '@/components/Common/utils/jsUtils';
-import styles from './AllowedQueries.scss';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -12,6 +11,7 @@ import { addAllowedQueries } from '../../../../metadata/actions';
 import { allowedQueriesCollection } from '../../../../metadata/utils';
 import { AllowedQueriesCollection } from '../../../../metadata/reducer';
 import { Dispatch } from '../../../../types';
+import { inputStyles } from '../constants';
 
 const defaultManualQuery: AllowedQueriesCollection = {
   name: '',
@@ -77,7 +77,7 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
   const manualQueryInput = () => (
     <div>
       <div>
-        <div className={styles.add_mar_bottom_mid}>
+        <div className="mb-sm">
           <b>Query name:</b>
           <Tooltip
             message="This is an identifier for the query in the collection. 
@@ -86,15 +86,15 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
         </div>
         <input
           type="text"
-          className={`form-control input-sm ${styles.inline_block}`}
+          className={`${inputStyles} inline-block`}
           placeholder="operation_name"
           value={manualQuery.name}
           onChange={handleNameChange}
         />
       </div>
-      <div className={styles.add_mar_top}>
+      <div className="mt-md">
         <div>
-          <div className={styles.add_mar_bottom_mid}>
+          <div className="mb-sm">
             <b>Operation:</b>
           </div>
           <AceEditor
@@ -121,13 +121,13 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
 
   const fileUploadInput = () => (
     <div>
-      <div className={styles.add_mar_bottom_mid}>
+      <div className="mb-sm">
         <b>Graphql File:</b>
         <Tooltip message=".graphql file with operations" />
       </div>
       <input
         type="file"
-        className={`form-control input-sm ${styles.inline_block}`}
+        className={`${inputStyles} inline-block`}
         onChange={handleFileUpload}
       />
     </div>
@@ -135,10 +135,10 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
 
   return (
     <div>
-      <h4 className={styles.subheading_text}>
+      <h4 className="text-lg font-bold pb-sm">
         Add new operations to allow-list
       </h4>
-      <div className={styles.subsection}>
+      <div className="px-sm">
         <div>
           <ExpandableEditor
             expandButtonText="Add operation manually"
@@ -150,8 +150,8 @@ const AddAllowedQuery: React.FC<AddAllowedQueryProps> = props => {
             saveFunc={handleManualSubmit}
           />
         </div>
-        <div className={styles.add_mar_top}>OR</div>
-        <div className={styles.add_mar_top}>
+        <div className="mt-md">OR</div>
+        <div className="mt-md">
           <ExpandableEditor
             expandButtonText="Upload graphql file"
             editorExpanded={fileUploadInput}

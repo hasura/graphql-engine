@@ -2,19 +2,13 @@ import React from 'react';
 import ClearAdminSecret from './ClearAdminSecret';
 
 const Logout = props => {
-  const styles = require('../Settings.scss');
-
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
-    >
-      <div className={styles.subHeader}>
-        <h2 className={styles.headerText}>Logout (clear admin-secret)</h2>
-      </div>
+    <div className="clear-both pl-md pt-md mb-md">
+      <h2 className="text-xl font-bold mb-sm">Logout (clear admin-secret)</h2>
 
       <div>
-        <div key="access_key_reset_1" className={styles.intro_note}>
-          <div className={styles.content_width}>
+        <div key="access_key_reset_1" className="mb-sm">
+          <div className="w-8/12">
             The console caches the admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) in
             the browser. You can clear this cache to force a prompt for the
             admin-secret when the console is accessed next using this browser.

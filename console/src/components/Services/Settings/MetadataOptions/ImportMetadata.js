@@ -33,8 +33,6 @@ class ImportMetadata extends Component {
   }
 
   render() {
-    const styles = require('../Settings.scss');
-
     const { isImporting } = this.state;
 
     const handleImport = e => {
@@ -44,7 +42,7 @@ class ImportMetadata extends Component {
     };
 
     return (
-      <div className={styles.display_inline}>
+      <div className="inline-block">
         <Button
           data-test="data-import-metadata"
           size="sm"

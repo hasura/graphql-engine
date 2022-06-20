@@ -4,7 +4,6 @@ import AllowedQueriesNotes from './AllowedQueriesNotes';
 import AddAllowedQuery from './AddAllowedQuery';
 import AllowedQueriesList from './AllowedQueriesList';
 
-import styles from './AllowedQueries.scss';
 import { getAllowedQueries } from '../../../../metadata/selector';
 import { Dispatch, ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
@@ -19,12 +18,10 @@ const AllowedQueries: React.FC<Props> = props => {
   const { dispatch, allowedQueries } = props;
 
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
-    >
-      <div className={styles.subHeader}>
-        <h2 className={styles.headerText}>Allow List</h2>
-        <div className={`${styles.add_mar_top} ${styles.wd60}`}>
+    <div className="clear-both pl-md pt-md mb-md">
+      <div>
+        <h2 className="text-xl font-bold">Allow List</h2>
+        <div className="mt-md w-1/2">
           <AllowedQueriesNotes />
           <hr className="my-md" />
           <AddAllowedQuery
