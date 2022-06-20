@@ -51,3 +51,5 @@ const generatedVoyagerConnector = (connect: Connect) => {
 };
 
 export default generatedVoyagerConnector;
+
+//TODO: Wrap Voyager in Error boundary
