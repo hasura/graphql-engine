@@ -143,7 +143,7 @@ LEFT JOIN LATERAL
           'name', class.relname,
           'oid', class.oid :: integer
           ),
-        'columns', columns.info
+        'columns', coalesce(columns.info, '[]')
         )
       ) AS info
     FROM pg_catalog.pg_index index

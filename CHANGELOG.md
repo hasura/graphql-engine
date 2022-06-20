@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+- server: fix bug that had disabled expression-based indexes in Postgress variants
+
 ## v2.8.0
 
 ### Disabling query/subscription root fields 
