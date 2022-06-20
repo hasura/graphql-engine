@@ -409,6 +409,7 @@ const Relationships = ({
   if (objArrRelList.length > 0) {
     addedRelationshipsView = (
       <div className={tableStyles.tableContainer}>
+        {/* TODO: create class for table */}
         <table
           className={`${tableStyles.table} table table-bordered table-striped table-hover`}
         >
@@ -429,6 +430,7 @@ const Relationships = ({
                   relConfig={findAllFromRel(tableSchema, rel.objRel)}
                 />
               ) : (
+                // TODO: create styling for empty td
                 <td />
               );
               const column2 = rel.arrRel ? (
@@ -439,6 +441,7 @@ const Relationships = ({
                   relConfig={findAllFromRel(tableSchema, rel.arrRel)}
                 />
               ) : (
+                // TODO: create styling for empty td
                 <td />
               );
               return (
