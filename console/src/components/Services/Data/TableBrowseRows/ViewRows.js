@@ -57,6 +57,7 @@ import {
   getRelationshipRefTable,
   dataSource,
   getTableCustomColumnName,
+  isFeatureSupported,
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -165,8 +166,15 @@ const ViewRows = props => {
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
             }
-            disabled={_disableBulkSelect}
-            title={_disableBulkSelect ? 'No primary key to identify row' : ''}
+            disabled={
+              _disableBulkSelect ||
+              !isFeatureSupported('tables.browse.bulkRowSelect')
+            }
+            title={
+              _disableBulkSelect
+                ? 'No primary key to identify row'
+                : 'feature not supported'
+            }
             type="checkbox"
             onChange={handleAllCheckboxChange}
             data-test="select-all-rows"
@@ -290,7 +298,8 @@ const ViewRows = props => {
           icon,
           title,
           handleClick,
-          requirePK = false
+          requirePK = false,
+          featureSupported = true
         ) => {
           const disabled = requirePK && !_hasPrimaryKey;
 
@@ -299,15 +308,26 @@ const ViewRows = props => {
             e.stopPropagation();
           };
 
+          const message = () => {
+            if (disabled) {
+              return 'No primary key to identify row';
+            } else if (!featureSupported) {
+              return 'feature not supported';
+            }
+            return title;
+          };
+
           return (
             <Button
               className="mr-1"
               color="white"
               size="xs"
-              onClick={disabled ? disabledOnClick : handleClick}
-              title={disabled ? 'No primary key to identify row' : title}
+              onClick={
+                disabled || !featureSupported ? disabledOnClick : handleClick
+              }
+              title={message()}
               data-test={`row-${type}-button-${rowIndex}`}
-              disabled={disabled}
+              disabled={disabled || !featureSupported}
             >
               {icon}
             </Button>
@@ -363,7 +383,8 @@ const ViewRows = props => {
             editIcon,
             editTitle,
             handleEditClick,
-            true
+            true,
+            isFeatureSupported('tables.browse.editRow')
           );
         };
 
@@ -384,7 +405,8 @@ const ViewRows = props => {
             deleteIcon,
             deleteTitle,
             handleDeleteClick,
-            true
+            true,
+            isFeatureSupported('tables.browse.deleteRow')
           );
         };
 
@@ -503,8 +525,13 @@ const ViewRows = props => {
         <div className="flex w-full justify-center items-center">
           <input
             type="checkbox"
-            disabled={_disableBulkSelect}
-            title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}
+            disabled={
+              _disableBulkSelect ||
+              !isFeatureSupported('tables.browse.bulkRowSelect')
+            }
+            title={
+              _disableBulkSelect ? NO_PRIMARY_KEY_MSG : 'feature not supported'
+            }
             checked={selectedRows.some(selectedRow =>
               compareRows(selectedRow, row, _tableSchema, isView)
             )}
