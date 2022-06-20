@@ -27,7 +27,7 @@ import { showErrorNotification } from './components/Services/Common/Notification
 import { CLI_CONSOLE_MODE } from './constants';
 import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
-import CreateRestView from './components/Services/ApiExplorer/Rest/Create/';
+import CreateRestView from './components/Services/ApiExplorer/Rest/Create';
 import RestListView from './components/Services/ApiExplorer/Rest/List';
 import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
@@ -39,11 +39,12 @@ import {
 import AuthContainer from './components/Services/Auth/AuthContainer';
 import { FeatureFlags } from './features/FeatureFlags';
 
+// TO-DO = define a type and pass props (const routes:React.FC<EnhancedStoreType> = store => {})
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
     const { dispatch } = store;
-
+    console.log(store, 'storetype');
     if (globals.consoleMode === CLI_CONSOLE_MODE) {
       dispatch(loadMigrationStatus()).then(
         () => {
@@ -75,6 +76,8 @@ const routes = store => {
     connect,
     store,
     composeOnEnterHooks,
+
+    // TO-DO = define a type and pass props
     () => {
       return {};
     },
@@ -85,6 +88,7 @@ const routes = store => {
   const requireSource = _dataRouterUtils.requireSource;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
+    // TO-DO = define a type and pass props 
   const remoteSchemaRouter = getRemoteSchemaRouter(
     connect,
     store,
@@ -93,7 +97,7 @@ const routes = store => {
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
 
-  return (
+  // TO-DO = define a type and pass props in the route components
     <Route
       path="/"
       component={App}

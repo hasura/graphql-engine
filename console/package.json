@@ -15,7 +15,7 @@
   "keywords": [],
   "scripts": {
     "start-dev": "node -r dotenv/config ./bin/server.js",
-    "watch-client": "TAILWIND_MODE=watch node -r dotenv/config webpack/webpack-dev-server.js",
+    "watch-client": "node -r dotenv/config webpack/webpack-dev-server.js",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",
     "start-prod": "cross-env NODE_PATH=./src PORT=8080 NODE_ENV=production node ./bin/server.js",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=3072 webpack --progress -p --colors --display-error-details --config webpack/prod.config.js",

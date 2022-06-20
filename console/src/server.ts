@@ -7,9 +7,10 @@ import path from 'path';
 import Html from './helpers/Html';
 import http from 'http';
 
+// TO-DO = define a type
 global.__DISABLE_SSR__ = true;
 
-// Express middleware
+// TO-DO = correct according to the ts // Express middleware
 const app = new Express();
 
 const server = new http.Server(app);
@@ -19,6 +20,7 @@ const server = new http.Server(app);
 // app.use(favicon(path.join(__dirname, '..', 'static', 'favicon_green.png')));
 app.use('/rstatic', Express.static(path.join(__dirname, '..', 'static')));
 
+// TO-DO = define pass and correct
 app.use((req, res) => {
   if (__DEVELOPMENT__) {
     // Do not cache webpack stats: the script file would change since
@@ -36,12 +38,14 @@ app.use((req, res) => {
     );
   }
 
+  // TO-DO = define pass and correct
   if (__DISABLE_SSR__) {
     hydrateOnClient();
     return;
   }
 });
 
+//TO-DO = define pass and correct according to the typescript
 if (config.port) {
   server.listen(config.port, config.host, err => {
     if (err) {
