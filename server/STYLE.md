@@ -9,7 +9,8 @@ existing code.
 
 We use [ormolu](https://github.com/tweag/ormolu) to format our code. The
 top-level `Makefile` has targets `format` and `check-format` that can be
-used for this.
+used for this. These targets will also format Nix files if `nixpkgs-fmt`
+is installed, but this is optional.
 
 #### Line Length
 
@@ -51,7 +52,7 @@ parseArgumentM userRoleM value = case userRoleM of
   Nothing -> ...
 ```
 
-Instead, where possible, prefer names that convey *why* the value is wrapped in
+Instead, where possible, prefer names that convey _why_ the value is wrapped in
 a `Maybe`, or, if `Nothing` is just an ordinary member of the value’s domain,
 don’t include any special indication in the name at all:
 
@@ -294,6 +295,7 @@ newtype AuthenticationToken
   -- ^ Invariant: contains Base64-encoded binary data.
   }
 ```
+
 ```haskell
 -- Good
 import Data.Text.Conversions (Base64)
@@ -303,7 +305,7 @@ newtype AuthenticationToken
   }
 ```
 
-However, *do* use comments on functions and datatypes to clarify information
+However, _do_ use comments on functions and datatypes to clarify information
 that cannot easily be communicated via names or types:
 
 ```haskell
@@ -359,6 +361,7 @@ runSelectQuery tables constraints cache shouldPrepare = do
   prepared <- if shouldPrepare then prepareQueryPlan plan else pure plan
   runQueryPlan prepared
 ```
+
 ```haskell
 runSelectQuery tables constraints cache shouldPrepare =
   constructQuery >>= executeQuery
@@ -425,6 +428,7 @@ f = (g .) . h
 ### Acknowledgement/Credits
 
 Parts of this coding style guide have been adapted from:
+
 - https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md
 - https://kowainik.github.io/posts/2019-02-06-style-guide
 - https://chrisdone.com/posts/german-naming-convention/
