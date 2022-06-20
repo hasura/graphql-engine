@@ -54,7 +54,7 @@ PrimaryWithTest.args = { ...Primary.args };
 PrimaryWithTest.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  const submitButton = await canvas.findByText('Add Relationship');
+  const submitButton = await canvas.findByText('Save Relationship');
 
   userEvent.click(submitButton);
 
