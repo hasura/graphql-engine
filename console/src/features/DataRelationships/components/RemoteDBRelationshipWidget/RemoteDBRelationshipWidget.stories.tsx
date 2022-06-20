@@ -54,7 +54,7 @@ PrimaryWithTest.play = async ({ canvasElement }) => {
   const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
   const canvas = within(canvasElement);
 
-  const submitButton = await canvas.findByText('Add Relationship');
+  const submitButton = await canvas.findByText('Save Relationship');
 
   userEvent.click(submitButton);
 
