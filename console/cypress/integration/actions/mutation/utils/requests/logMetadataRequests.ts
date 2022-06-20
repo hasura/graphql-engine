@@ -27,10 +27,10 @@ export function logMetadataRequests() {
       Cypress.log({ message: '*--- Bulk request*' });
 
       request.args.forEach(arg =>
-        Cypress.log({ message: `*--- ${arg.type}*` })
+        Cypress.log({ message: `*--- Request: ${arg.type}*` })
       );
     } else {
-      Cypress.log({ message: `*--- ${requestBody.type}*` });
+      Cypress.log({ message: `*--- Request: ${requestBody.type}*` });
     }
   });
 }
