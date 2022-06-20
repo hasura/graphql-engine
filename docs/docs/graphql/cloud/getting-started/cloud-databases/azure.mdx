@@ -10,7 +10,7 @@ sidebar_label: Azure Postgres
 sidebar_position: 4
 ---
 
-import Thumbnail from '@site/src/components/Thumbnail';
+import Thumbnail from "@site/src/components/Thumbnail";
 
 # Using Hasura Cloud with an Azure Postgres database
 
@@ -29,9 +29,9 @@ and sign up or log in.
 On the Hasura Cloud dashboard, create a new project:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/create-hasura-cloud-project.png"
-  alt="Create Hasura Cloud project"
-  width="1000px"
+  src='/img/graphql/cloud/cloud-dbs/create-hasura-cloud-project.png'
+  alt='Create Hasura Cloud project'
+  width='1000px'
 />
 
 After the project is initialized successfully, click on `Launch console`
@@ -44,9 +44,9 @@ You will get prompted for a Postgres Database URL. We will create this
 in the next step and then come back here.
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/existing-db-setup.png"
-  alt="Hasura Cloud database setup"
-  width="700px"
+  src='/img/graphql/cloud/cloud-dbs/existing-db-setup.png'
+  alt='Hasura Cloud database setup'
+  width='700px'
 />
 
 ## Step 2: Create a Postgres DB on Azure (skip if you have an existing DB)
@@ -57,32 +57,32 @@ On the Azure portal, type "postgres" in the search window and choose
 `Azure Database for PostgreSQL servers`:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/azure/select-postgres-db.png"
-  alt="Select Postgres database on Azure"
+  src='/img/graphql/cloud/cloud-dbs/azure/select-postgres-db.png'
+  alt='Select Postgres database on Azure'
 />
 
 Click the `+ Add` button to create a new Postgres database:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/azure/add-postgres-db.png"
-  alt="Add Postgres database on Azure"
+  src='/img/graphql/cloud/cloud-dbs/azure/add-postgres-db.png'
+  alt='Add Postgres database on Azure'
 />
 
 Choose the plan that fits your requirements. For this tutorial, we'll
 choose `Single server`:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/azure/pg-single-server.png"
-  alt="Select single server on Azure"
-  width="600px"
+  src='/img/graphql/cloud/cloud-dbs/azure/pg-single-server.png'
+  alt='Select single server on Azure'
+  width='600px'
 />
 
 Configure your database with all required fields:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/azure/configure-db.png"
-  alt="Configure database on Azure"
-  width="600px"
+  src='/img/graphql/cloud/cloud-dbs/azure/configure-db.png'
+  alt='Configure database on Azure'
+  width='600px'
 />
 
 Then click `Review + create`.
@@ -115,15 +115,15 @@ Copy the IP address from the copy icon in the `Hasura Cloud IP` field on
 the project's details view on Hasura Cloud.
 
 <Thumbnail
-  src="/img/graphql/cloud/projects/hasura-cloud-ip.png"
-  alt="Hasura Cloud IP field"
+  src='/img/graphql/cloud/projects/hasura-cloud-ip.png'
+  alt='Hasura Cloud IP field'
 />
 
 Add the Hasura IP address that you copied:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/azure/add-hasura-ip.png"
-  alt="Add Hasura IP on Azure"
+  src='/img/graphql/cloud/cloud-dbs/azure/add-hasura-ip.png'
+  alt='Add Hasura IP on Azure'
 />
 
 Then click `Save` on the top left.
@@ -139,8 +139,8 @@ postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>
 On the database dashboard, click on `Overview`:
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/azure/get-database-connection-string.png"
-  alt="Construct the database connection string for Azure"
+  src='/img/graphql/cloud/cloud-dbs/azure/get-database-connection-string.png'
+  alt='Construct the database connection string for Azure'
 />
 
 - `user-name`: If you have a separate database user, the user name
@@ -161,9 +161,9 @@ Back on Hasura Console, enter the database URL that we retrieved in
 [step 4](#get-db-url-azure):
 
 <Thumbnail
-  src="/img/graphql/cloud/getting-started/connect-db.png"
-  alt="Database setup"
-  width="600px"
+  src='/img/graphql/cloud/cloud-dbs/azure/azure-complete.png'
+  alt='Database setup'
+  width='600px'
 />
 
 Then click `Connect Database`.
@@ -179,8 +179,8 @@ to the databases in place of the raw database URLs.
 Voilà. You are ready to start developing.
 
 <Thumbnail
-  src="/img/graphql/cloud/cloud-dbs/hasura-console.png"
-  alt="Hasura console"
+  src='/img/graphql/cloud/cloud-dbs/hasura-console.png'
+  alt='Hasura console'
 />
 
 ## Next steps
@@ -196,7 +196,7 @@ You can also click the gear icon to manage your Hasura Cloud project.
 [custom domains](/graphql/cloud/projects/domains.mdx#manage-project-domains)).
 
 <Thumbnail
-  src="/img/graphql/cloud/getting-started/project-manage.png"
-  alt="Project actions"
-  width="860px"
+  src='/img/graphql/cloud/getting-started/project-manage.png'
+  alt='Project actions'
+  width='860px'
 />
