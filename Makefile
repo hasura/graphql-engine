@@ -1,3 +1,5 @@
+include Makefile.tests
+
 # skip contrib with its generated .hs file because it doesn't
 # come with a cabal file, which can trigger a bug in ormolu
 HS_FILES = $(shell git ls-files '*.hs' '*.hs-boot' | grep -v '^contrib/')
@@ -127,3 +129,5 @@ lint: lint-hs lint-shell check-format
 
 .PHONY: lint-changed
 lint-changed: lint-hs-changed lint-shell-changed check-format-changed
+
+
