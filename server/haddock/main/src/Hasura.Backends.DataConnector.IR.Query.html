@@ -28,7 +28,7 @@
 </span><span id="line-28"></span><span class="hs-comment">-- | An abstract request to retrieve structured data from some source.</span><span>
 </span><span id="line-29"></span><span class="hs-comment">--</span><span>
 </span><span id="line-30"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-31"></span><span id="local-6989586621689099707"><span id="local-6989586621689099708"></span></span><span class="hs-keyword">data</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span>
+</span><span id="line-31"></span><span id="local-6989586621689123515"><span id="local-6989586621689123516"></span></span><span class="hs-keyword">data</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- NOTE: We should clarify what the 'Text' key is supposed to indicate.</span><span>
 </span><span id="line-33"></span><span>    </span><span id="fields"><span class="annot"><span class="annottext">Query -&gt; HashMap Text Field
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#fields"><span class="hs-identifier hs-var hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Field"><span class="hs-identifier hs-type">Field</span></a></span><span class="hs-special">,</span><span>
@@ -51,7 +51,7 @@
 </span><span id="line-45"></span><span>    </span><span id="cardinality"><span class="annot"><span class="annottext">Query -&gt; Cardinality
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#cardinality"><span class="hs-identifier hs-var hs-var">cardinality</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Cardinality"><span class="hs-identifier hs-type">Cardinality</span></a></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cQuery"><span id="%24tQuery"><span id="local-6989586621689099670"><span id="local-6989586621689099672"><span id="local-6989586621689099674"><span id="local-6989586621689099676"><span id="local-6989586621689099678"><span id="local-6989586621689099680"><span id="local-6989586621689099682"><span id="local-6989586621689099684"><span id="local-6989586621689099686"><span id="local-6989586621689099688"><span id="local-6989586621689099690"><span id="local-6989586621689099692"><span id="local-6989586621689099694"><span id="local-6989586621689099696"><span class="annot"><span class="annottext">Typeable Query
+</span><span id="line-47"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cQuery"><span id="%24tQuery"><span id="local-6989586621689123478"><span id="local-6989586621689123480"><span id="local-6989586621689123482"><span id="local-6989586621689123484"><span id="local-6989586621689123486"><span id="local-6989586621689123488"><span id="local-6989586621689123490"><span id="local-6989586621689123492"><span id="local-6989586621689123494"><span id="local-6989586621689123496"><span id="local-6989586621689123498"><span id="local-6989586621689123500"><span id="local-6989586621689123502"><span id="local-6989586621689123504"><span class="annot"><span class="annottext">Typeable Query
 DataType
 Constr
 Typeable Query
@@ -199,7 +199,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Query -&gt; c Query
 $cp1Data :: Typeable Query
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099663"><span id="local-6989586621689099665"><span class="annot"><span class="annottext">Query -&gt; Query -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123471"><span id="local-6989586621689123473"><span class="annot"><span class="annottext">Query -&gt; Query -&gt; Bool
 (Query -&gt; Query -&gt; Bool) -&gt; (Query -&gt; Query -&gt; Bool) -&gt; Eq Query
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Query -&gt; Query -&gt; Bool
@@ -214,7 +214,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Query x -&gt; Query
 $cfrom :: forall x. Query -&gt; Rep Query x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099644"><span id="local-6989586621689099646"><span id="local-6989586621689099648"><span id="local-6989586621689099650"><span id="local-6989586621689099652"><span id="local-6989586621689099654"><span id="local-6989586621689099656"><span class="annot"><span class="annottext">Eq Query
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123452"><span id="local-6989586621689123454"><span id="local-6989586621689123456"><span id="local-6989586621689123458"><span id="local-6989586621689123460"><span id="local-6989586621689123462"><span id="local-6989586621689123464"><span class="annot"><span class="annottext">Eq Query
 Eq Query
 -&gt; (Query -&gt; Query -&gt; Ordering)
 -&gt; (Query -&gt; Query -&gt; Bool)
@@ -252,7 +252,7 @@ $c&lt; :: Query -&gt; Query -&gt; Bool
 compare :: Query -&gt; Query -&gt; Ordering
 $ccompare :: Query -&gt; Query -&gt; Ordering
 $cp1Ord :: Eq Query
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099637"><span id="local-6989586621689099639"><span id="local-6989586621689099641"><span class="annot"><span class="annottext">Int -&gt; Query -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123445"><span id="local-6989586621689123447"><span id="local-6989586621689123449"><span class="annot"><span class="annottext">Int -&gt; Query -&gt; ShowS
 [Query] -&gt; ShowS
 Query -&gt; String
 (Int -&gt; Query -&gt; ShowS)
@@ -267,8 +267,8 @@ showsPrec :: Int -&gt; Query -&gt; ShowS
 $cshowsPrec :: Int -&gt; Query -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689099629"><span id="local-6989586621689099631"><span id="local-6989586621689099633"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621689099627"><span class="annot"><span class="annottext">toJSON :: Query -&gt; Value
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123437"><span id="local-6989586621689123439"><span id="local-6989586621689123441"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621689123435"><span class="annot"><span class="annottext">toJSON :: Query -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Query -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
@@ -281,10 +281,10 @@ Options -&gt; a -&gt; Value
 </span><span id="line-54"></span><span class="hs-comment">-- | This data structure keeps track of what cardinality of response we should</span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- send back to the client for a given query, which may be different from what</span><span>
 </span><span id="line-56"></span><span class="hs-comment">-- we receive from the backend (which is always possibly-many records).</span><span>
-</span><span id="line-57"></span><span id="local-6989586621689099622"><span id="local-6989586621689099623"></span></span><span class="hs-keyword">data</span><span> </span><span id="Cardinality"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Cardinality"><span class="hs-identifier hs-var">Cardinality</span></a></span></span><span>
+</span><span id="line-57"></span><span id="local-6989586621689123430"><span id="local-6989586621689123431"></span></span><span class="hs-keyword">data</span><span> </span><span id="Cardinality"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Cardinality"><span class="hs-identifier hs-var">Cardinality</span></a></span></span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Many"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Many"><span class="hs-identifier hs-var">Many</span></a></span></span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="OneOrZero"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#OneOrZero"><span class="hs-identifier hs-var">OneOrZero</span></a></span></span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOneOrZero"><span id="%24cMany"><span id="%24tCardinality"><span id="local-6989586621689099591"><span id="local-6989586621689099593"><span id="local-6989586621689099595"><span id="local-6989586621689099597"><span id="local-6989586621689099599"><span id="local-6989586621689099601"><span id="local-6989586621689099603"><span id="local-6989586621689099605"><span id="local-6989586621689099607"><span id="local-6989586621689099609"><span id="local-6989586621689099611"><span id="local-6989586621689099613"><span id="local-6989586621689099615"><span id="local-6989586621689099617"><span class="annot"><span class="annottext">Typeable Cardinality
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cOneOrZero"><span id="%24cMany"><span id="%24tCardinality"><span id="local-6989586621689123399"><span id="local-6989586621689123401"><span id="local-6989586621689123403"><span id="local-6989586621689123405"><span id="local-6989586621689123407"><span id="local-6989586621689123409"><span id="local-6989586621689123411"><span id="local-6989586621689123413"><span id="local-6989586621689123415"><span id="local-6989586621689123417"><span id="local-6989586621689123419"><span id="local-6989586621689123421"><span id="local-6989586621689123423"><span id="local-6989586621689123425"><span class="annot"><span class="annottext">Typeable Cardinality
 DataType
 Constr
 Typeable Cardinality
@@ -446,7 +446,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Cardinality -&gt; c Cardinality
 $cp1Data :: Typeable Cardinality
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099584"><span id="local-6989586621689099586"><span class="annot"><span class="annottext">Cardinality -&gt; Cardinality -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123392"><span id="local-6989586621689123394"><span class="annot"><span class="annottext">Cardinality -&gt; Cardinality -&gt; Bool
 (Cardinality -&gt; Cardinality -&gt; Bool)
 -&gt; (Cardinality -&gt; Cardinality -&gt; Bool) -&gt; Eq Cardinality
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -463,7 +463,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Cardinality x -&gt; Cardinality
 $cfrom :: forall x. Cardinality -&gt; Rep Cardinality x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099567"><span id="local-6989586621689099569"><span id="local-6989586621689099571"><span id="local-6989586621689099573"><span id="local-6989586621689099575"><span id="local-6989586621689099577"><span id="local-6989586621689099579"><span class="annot"><span class="annottext">Eq Cardinality
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123375"><span id="local-6989586621689123377"><span id="local-6989586621689123379"><span id="local-6989586621689123381"><span id="local-6989586621689123383"><span id="local-6989586621689123385"><span id="local-6989586621689123387"><span class="annot"><span class="annottext">Eq Cardinality
 Eq Cardinality
 -&gt; (Cardinality -&gt; Cardinality -&gt; Ordering)
 -&gt; (Cardinality -&gt; Cardinality -&gt; Bool)
@@ -501,7 +501,7 @@ $c&lt; :: Cardinality -&gt; Cardinality -&gt; Bool
 compare :: Cardinality -&gt; Cardinality -&gt; Ordering
 $ccompare :: Cardinality -&gt; Cardinality -&gt; Ordering
 $cp1Ord :: Eq Cardinality
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099561"><span id="local-6989586621689099563"><span id="local-6989586621689099565"><span class="annot"><span class="annottext">Int -&gt; Cardinality -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123369"><span id="local-6989586621689123371"><span id="local-6989586621689123373"><span class="annot"><span class="annottext">Int -&gt; Cardinality -&gt; ShowS
 [Cardinality] -&gt; ShowS
 Cardinality -&gt; String
 (Int -&gt; Cardinality -&gt; ShowS)
@@ -518,9 +518,9 @@ showsPrec :: Int -&gt; Cardinality -&gt; ShowS
 $cshowsPrec :: Int -&gt; Cardinality -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689099554"><span id="local-6989586621689099556"><span id="local-6989586621689099558"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Cardinality"><span class="hs-identifier hs-type">Cardinality</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-63"></span><span>  </span><span id="local-6989586621689099553"><span class="annot"><span class="annottext">toJSON :: Cardinality -&gt; Value
-</span><a href="#local-6989586621689099553"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Cardinality -&gt; Value
+</span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123362"><span id="local-6989586621689123364"><span id="local-6989586621689123366"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Cardinality"><span class="hs-identifier hs-type">Cardinality</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621689123361"><span class="annot"><span class="annottext">toJSON :: Cardinality -&gt; Value
+</span><a href="#local-6989586621689123361"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Cardinality -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -539,11 +539,11 @@ Options -&gt; a -&gt; Value
 </span><span id="line-74"></span><span class="hs-comment">--      '__typename' field, which will appear in the final output and is</span><span>
 </span><span id="line-75"></span><span class="hs-comment">--      provided by HGE and not the Agent.</span><span>
 </span><span id="line-76"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-77"></span><span id="local-6989586621689099551"><span id="local-6989586621689099552"></span></span><span class="hs-keyword">data</span><span> </span><span id="Field"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Field"><span class="hs-identifier hs-var">Field</span></a></span></span><span>
+</span><span id="line-77"></span><span id="local-6989586621689123359"><span id="local-6989586621689123360"></span></span><span class="hs-keyword">data</span><span> </span><span id="Field"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Field"><span class="hs-identifier hs-var">Field</span></a></span></span><span>
 </span><span id="line-78"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-type">ColumnContents</span></a></span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Relationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Relationship"><span class="hs-identifier hs-var">Relationship</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-type">RelationshipContents</span></a></span><span>
 </span><span id="line-80"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Literal"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Literal"><span class="hs-identifier hs-var">Literal</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cLiteral"><span id="%24cRelationship"><span id="%24cColumn"><span id="%24tField"><span id="local-6989586621689099519"><span id="local-6989586621689099521"><span id="local-6989586621689099523"><span id="local-6989586621689099525"><span id="local-6989586621689099527"><span id="local-6989586621689099529"><span id="local-6989586621689099531"><span id="local-6989586621689099533"><span id="local-6989586621689099535"><span id="local-6989586621689099537"><span id="local-6989586621689099539"><span id="local-6989586621689099541"><span id="local-6989586621689099543"><span id="local-6989586621689099545"><span class="annot"><span class="annottext">Typeable Field
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cLiteral"><span id="%24cRelationship"><span id="%24cColumn"><span id="%24tField"><span id="local-6989586621689123327"><span id="local-6989586621689123329"><span id="local-6989586621689123331"><span id="local-6989586621689123333"><span id="local-6989586621689123335"><span id="local-6989586621689123337"><span id="local-6989586621689123339"><span id="local-6989586621689123341"><span id="local-6989586621689123343"><span id="local-6989586621689123345"><span id="local-6989586621689123347"><span id="local-6989586621689123349"><span id="local-6989586621689123351"><span id="local-6989586621689123353"><span class="annot"><span class="annottext">Typeable Field
 DataType
 Constr
 Typeable Field
@@ -693,7 +693,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Field -&gt; c Field
 $cp1Data :: Typeable Field
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099511"><span id="local-6989586621689099513"><span class="annot"><span class="annottext">Field -&gt; Field -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123319"><span id="local-6989586621689123321"><span class="annot"><span class="annottext">Field -&gt; Field -&gt; Bool
 (Field -&gt; Field -&gt; Bool) -&gt; (Field -&gt; Field -&gt; Bool) -&gt; Eq Field
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Field -&gt; Field -&gt; Bool
@@ -708,7 +708,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Field x -&gt; Field
 $cfrom :: forall x. Field -&gt; Rep Field x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099494"><span id="local-6989586621689099496"><span id="local-6989586621689099498"><span id="local-6989586621689099500"><span id="local-6989586621689099502"><span id="local-6989586621689099504"><span id="local-6989586621689099506"><span class="annot"><span class="annottext">Eq Field
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123302"><span id="local-6989586621689123304"><span id="local-6989586621689123306"><span id="local-6989586621689123308"><span id="local-6989586621689123310"><span id="local-6989586621689123312"><span id="local-6989586621689123314"><span class="annot"><span class="annottext">Eq Field
 Eq Field
 -&gt; (Field -&gt; Field -&gt; Ordering)
 -&gt; (Field -&gt; Field -&gt; Bool)
@@ -746,7 +746,7 @@ $c&lt; :: Field -&gt; Field -&gt; Bool
 compare :: Field -&gt; Field -&gt; Ordering
 $ccompare :: Field -&gt; Field -&gt; Ordering
 $cp1Ord :: Eq Field
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099488"><span id="local-6989586621689099490"><span id="local-6989586621689099492"><span class="annot"><span class="annottext">Int -&gt; Field -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123296"><span id="local-6989586621689123298"><span id="local-6989586621689123300"><span class="annot"><span class="annottext">Int -&gt; Field -&gt; ShowS
 [Field] -&gt; ShowS
 Field -&gt; String
 (Int -&gt; Field -&gt; ShowS)
@@ -761,9 +761,9 @@ showsPrec :: Int -&gt; Field -&gt; ShowS
 $cshowsPrec :: Int -&gt; Field -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689099481"><span id="local-6989586621689099483"><span id="local-6989586621689099485"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Field"><span class="hs-identifier hs-type">Field</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-84"></span><span>  </span><span id="local-6989586621689099480"><span class="annot"><span class="annottext">toJSON :: Field -&gt; Value
-</span><a href="#local-6989586621689099480"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Field -&gt; Value
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123289"><span id="local-6989586621689123291"><span id="local-6989586621689123293"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Field"><span class="hs-identifier hs-type">Field</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621689123288"><span class="annot"><span class="annottext">toJSON :: Field -&gt; Value
+</span><a href="#local-6989586621689123288"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; Field -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -775,11 +775,11 @@ Options -&gt; a -&gt; Value
 </span><span id="line-88"></span><span class="hs-comment">-- | TODO</span><span>
 </span><span id="line-89"></span><span class="hs-comment">--</span><span>
 </span><span id="line-90"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-91"></span><span id="local-6989586621689099478"><span id="local-6989586621689099479"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ColumnContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-var">ColumnContents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-var">ColumnContents</span></a></span></span><span>
+</span><span id="line-91"></span><span id="local-6989586621689123286"><span id="local-6989586621689123287"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ColumnContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-var">ColumnContents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-var">ColumnContents</span></a></span></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="column"><span class="annot"><span class="annottext">ColumnContents -&gt; Name
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#column"><span class="hs-identifier hs-var hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
 </span><span id="line-93"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumnContents"><span id="%24tColumnContents"><span id="local-6989586621689099447"><span id="local-6989586621689099449"><span id="local-6989586621689099451"><span id="local-6989586621689099453"><span id="local-6989586621689099455"><span id="local-6989586621689099457"><span id="local-6989586621689099459"><span id="local-6989586621689099461"><span id="local-6989586621689099463"><span id="local-6989586621689099465"><span id="local-6989586621689099467"><span id="local-6989586621689099469"><span id="local-6989586621689099471"><span id="local-6989586621689099473"><span class="annot"><span class="annottext">Typeable ColumnContents
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumnContents"><span id="%24tColumnContents"><span id="local-6989586621689123255"><span id="local-6989586621689123257"><span id="local-6989586621689123259"><span id="local-6989586621689123261"><span id="local-6989586621689123263"><span id="local-6989586621689123265"><span id="local-6989586621689123267"><span id="local-6989586621689123269"><span id="local-6989586621689123271"><span id="local-6989586621689123273"><span id="local-6989586621689123275"><span id="local-6989586621689123277"><span id="local-6989586621689123279"><span id="local-6989586621689123281"><span class="annot"><span class="annottext">Typeable ColumnContents
 DataType
 Constr
 Typeable ColumnContents
@@ -955,7 +955,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; ColumnContents -&gt; c ColumnContents
 $cp1Data :: Typeable ColumnContents
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099441"><span id="local-6989586621689099443"><span class="annot"><span class="annottext">ColumnContents -&gt; ColumnContents -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123249"><span id="local-6989586621689123251"><span class="annot"><span class="annottext">ColumnContents -&gt; ColumnContents -&gt; Bool
 (ColumnContents -&gt; ColumnContents -&gt; Bool)
 -&gt; (ColumnContents -&gt; ColumnContents -&gt; Bool) -&gt; Eq ColumnContents
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -972,7 +972,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ColumnContents x -&gt; ColumnContents
 $cfrom :: forall x. ColumnContents -&gt; Rep ColumnContents x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099424"><span id="local-6989586621689099426"><span id="local-6989586621689099428"><span id="local-6989586621689099430"><span id="local-6989586621689099432"><span id="local-6989586621689099434"><span id="local-6989586621689099436"><span class="annot"><span class="annottext">Eq ColumnContents
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123232"><span id="local-6989586621689123234"><span id="local-6989586621689123236"><span id="local-6989586621689123238"><span id="local-6989586621689123240"><span id="local-6989586621689123242"><span id="local-6989586621689123244"><span class="annot"><span class="annottext">Eq ColumnContents
 Eq ColumnContents
 -&gt; (ColumnContents -&gt; ColumnContents -&gt; Ordering)
 -&gt; (ColumnContents -&gt; ColumnContents -&gt; Bool)
@@ -1010,7 +1010,7 @@ $c&lt; :: ColumnContents -&gt; ColumnContents -&gt; Bool
 compare :: ColumnContents -&gt; ColumnContents -&gt; Ordering
 $ccompare :: ColumnContents -&gt; ColumnContents -&gt; Ordering
 $cp1Ord :: Eq ColumnContents
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099418"><span id="local-6989586621689099420"><span id="local-6989586621689099422"><span class="annot"><span class="annottext">Int -&gt; ColumnContents -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123226"><span id="local-6989586621689123228"><span id="local-6989586621689123230"><span class="annot"><span class="annottext">Int -&gt; ColumnContents -&gt; ShowS
 [ColumnContents] -&gt; ShowS
 ColumnContents -&gt; String
 (Int -&gt; ColumnContents -&gt; ShowS)
@@ -1027,9 +1027,9 @@ showsPrec :: Int -&gt; ColumnContents -&gt; ShowS
 $cshowsPrec :: Int -&gt; ColumnContents -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689099411"><span id="local-6989586621689099413"><span id="local-6989586621689099415"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-type">ColumnContents</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-97"></span><span>  </span><span id="local-6989586621689099410"><span class="annot"><span class="annottext">toJSON :: ColumnContents -&gt; Value
-</span><a href="#local-6989586621689099410"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ColumnContents -&gt; Value
+</span><span id="line-96"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123219"><span id="local-6989586621689123221"><span id="local-6989586621689123223"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-type">ColumnContents</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-97"></span><span>  </span><span id="local-6989586621689123218"><span class="annot"><span class="annottext">toJSON :: ColumnContents -&gt; Value
+</span><a href="#local-6989586621689123218"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ColumnContents -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -1037,9 +1037,9 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-type">ColumnContents</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Field</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621689099407"><span class="annot"><span class="annottext">from :: ColumnContents -&gt; Field
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-type">ColumnContents</span></a></span><span> </span><span id="local-6989586621689099405"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099405"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;column&quot; ColumnName -&gt; Field
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621689123215"><span class="annot"><span class="annottext">from :: ColumnContents -&gt; Field
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnContents"><span class="hs-identifier hs-type">ColumnContents</span></a></span><span> </span><span id="local-6989586621689123213"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689123213"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;column&quot; ColumnName -&gt; Field
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ColumnField</span></a></span><span> </span><span class="annot"><span class="annottext">(ValueWrapper &quot;column&quot; ColumnName -&gt; Field)
 -&gt; ValueWrapper &quot;column&quot; ColumnName -&gt; Field
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1051,7 +1051,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099405"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689123213"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-101"></span><span>
 </span><span id="line-102"></span><span class="hs-comment">-- | A relationship consists of the following components:</span><span>
 </span><span id="line-103"></span><span class="hs-comment">--   - a sub-query, from the perspective that a relationship field will occur</span><span>
@@ -1064,7 +1064,7 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span id="line-110"></span><span class="hs-comment">--     https://www.postgresql.org/docs/13/queries-table-expressions.html#QUERIES-FROM</span><span>
 </span><span id="line-111"></span><span class="hs-comment">--</span><span>
 </span><span id="line-112"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-113"></span><span id="local-6989586621689099402"><span id="local-6989586621689099403"></span></span><span class="hs-keyword">data</span><span> </span><span id="RelationshipContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-var">RelationshipContents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RelationshipContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-var">RelationshipContents</span></a></span></span><span>
+</span><span id="line-113"></span><span id="local-6989586621689123210"><span id="local-6989586621689123211"></span></span><span class="hs-keyword">data</span><span> </span><span id="RelationshipContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-var">RelationshipContents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RelationshipContents"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-var">RelationshipContents</span></a></span></span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="joinCondition"><span class="annot"><span class="annottext">RelationshipContents -&gt; HashMap PrimaryKey ForeignKey
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#joinCondition"><span class="hs-identifier hs-var hs-var">joinCondition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-115"></span><span>    </span><span id="relationType"><span class="annot"><span class="annottext">RelationshipContents -&gt; RelType
@@ -1072,7 +1072,7 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span id="line-116"></span><span>    </span><span id="query"><span class="annot"><span class="annottext">RelationshipContents -&gt; Query
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#query"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-type">Query</span></a></span><span>
 </span><span id="line-117"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-118"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689099394"><span id="local-6989586621689099396"><span class="annot"><span class="annottext">RelationshipContents -&gt; RelationshipContents -&gt; Bool
+</span><span id="line-118"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123202"><span id="local-6989586621689123204"><span class="annot"><span class="annottext">RelationshipContents -&gt; RelationshipContents -&gt; Bool
 (RelationshipContents -&gt; RelationshipContents -&gt; Bool)
 -&gt; (RelationshipContents -&gt; RelationshipContents -&gt; Bool)
 -&gt; Eq RelationshipContents
@@ -1081,7 +1081,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RelationshipContents -&gt; RelationshipContents -&gt; Bool
 == :: RelationshipContents -&gt; RelationshipContents -&gt; Bool
 $c== :: RelationshipContents -&gt; RelationshipContents -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099379"><span id="local-6989586621689099381"><span id="local-6989586621689099383"><span id="local-6989586621689099385"><span id="local-6989586621689099387"><span id="local-6989586621689099389"><span id="local-6989586621689099391"><span class="annot"><span class="annottext">Eq RelationshipContents
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123187"><span id="local-6989586621689123189"><span id="local-6989586621689123191"><span id="local-6989586621689123193"><span id="local-6989586621689123195"><span id="local-6989586621689123197"><span id="local-6989586621689123199"><span class="annot"><span class="annottext">Eq RelationshipContents
 Eq RelationshipContents
 -&gt; (RelationshipContents -&gt; RelationshipContents -&gt; Ordering)
 -&gt; (RelationshipContents -&gt; RelationshipContents -&gt; Bool)
@@ -1126,7 +1126,7 @@ $c&lt; :: RelationshipContents -&gt; RelationshipContents -&gt; Bool
 compare :: RelationshipContents -&gt; RelationshipContents -&gt; Ordering
 $ccompare :: RelationshipContents -&gt; RelationshipContents -&gt; Ordering
 $cp1Ord :: Eq RelationshipContents
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099373"><span id="local-6989586621689099375"><span id="local-6989586621689099377"><span class="annot"><span class="annottext">Int -&gt; RelationshipContents -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123181"><span id="local-6989586621689123183"><span id="local-6989586621689123185"><span class="annot"><span class="annottext">Int -&gt; RelationshipContents -&gt; ShowS
 [RelationshipContents] -&gt; ShowS
 RelationshipContents -&gt; String
 (Int -&gt; RelationshipContents -&gt; ShowS)
@@ -1150,7 +1150,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RelationshipContents x -&gt; RelationshipContents
 $cfrom :: forall x. RelationshipContents -&gt; Rep RelationshipContents x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cRelationshipContents"><span id="%24tRelationshipContents"><span id="local-6989586621689099342"><span id="local-6989586621689099344"><span id="local-6989586621689099346"><span id="local-6989586621689099348"><span id="local-6989586621689099350"><span id="local-6989586621689099352"><span id="local-6989586621689099354"><span id="local-6989586621689099356"><span id="local-6989586621689099358"><span id="local-6989586621689099360"><span id="local-6989586621689099362"><span id="local-6989586621689099364"><span id="local-6989586621689099366"><span id="local-6989586621689099368"><span class="annot"><span class="annottext">Typeable RelationshipContents
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cRelationshipContents"><span id="%24tRelationshipContents"><span id="local-6989586621689123150"><span id="local-6989586621689123152"><span id="local-6989586621689123154"><span id="local-6989586621689123156"><span id="local-6989586621689123158"><span id="local-6989586621689123160"><span id="local-6989586621689123162"><span id="local-6989586621689123164"><span id="local-6989586621689123166"><span id="local-6989586621689123168"><span id="local-6989586621689123170"><span id="local-6989586621689123172"><span id="local-6989586621689123174"><span id="local-6989586621689123176"><span class="annot"><span class="annottext">Typeable RelationshipContents
 DataType
 Constr
 Typeable RelationshipContents
@@ -1343,9 +1343,9 @@ $cgfoldl :: forall (c :: * -&gt; *).
 $cp1Data :: Typeable RelationshipContents
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>
-</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689099333"><span id="local-6989586621689099335"><span id="local-6989586621689099337"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-type">RelationshipContents</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-121"></span><span>  </span><span id="local-6989586621689099332"><span class="annot"><span class="annottext">toJSON :: RelationshipContents -&gt; Value
-</span><a href="#local-6989586621689099332"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RelationshipContents -&gt; Value
+</span><span id="line-120"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123141"><span id="local-6989586621689123143"><span id="local-6989586621689123145"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-type">RelationshipContents</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621689123140"><span class="annot"><span class="annottext">toJSON :: RelationshipContents -&gt; Value
+</span><a href="#local-6989586621689123140"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RelationshipContents -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -1353,8 +1353,8 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-122"></span><span>
 </span><span id="line-123"></span><span class="hs-comment">-- | Relationships can either be Object (One-To-One) or Array (One-To-Many) type.</span><span>
-</span><span id="line-124"></span><span id="local-6989586621689099330"><span id="local-6989586621689099331"></span></span><span class="hs-keyword">data</span><span> </span><span id="RelType"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelType"><span class="hs-identifier hs-var">RelType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ObjectRelationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ObjectRelationship"><span class="hs-identifier hs-var">ObjectRelationship</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ArrayRelationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ArrayRelationship"><span class="hs-identifier hs-var">ArrayRelationship</span></a></span></span><span>
-</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689099324"><span id="local-6989586621689099326"><span class="annot"><span class="annottext">RelType -&gt; RelType -&gt; Bool
+</span><span id="line-124"></span><span id="local-6989586621689123138"><span id="local-6989586621689123139"></span></span><span class="hs-keyword">data</span><span> </span><span id="RelType"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelType"><span class="hs-identifier hs-var">RelType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ObjectRelationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ObjectRelationship"><span class="hs-identifier hs-var">ObjectRelationship</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ArrayRelationship"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ArrayRelationship"><span class="hs-identifier hs-var">ArrayRelationship</span></a></span></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123132"><span id="local-6989586621689123134"><span class="annot"><span class="annottext">RelType -&gt; RelType -&gt; Bool
 (RelType -&gt; RelType -&gt; Bool)
 -&gt; (RelType -&gt; RelType -&gt; Bool) -&gt; Eq RelType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1362,7 +1362,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RelType -&gt; RelType -&gt; Bool
 == :: RelType -&gt; RelType -&gt; Bool
 $c== :: RelType -&gt; RelType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099309"><span id="local-6989586621689099311"><span id="local-6989586621689099313"><span id="local-6989586621689099315"><span id="local-6989586621689099317"><span id="local-6989586621689099319"><span id="local-6989586621689099321"><span class="annot"><span class="annottext">Eq RelType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123117"><span id="local-6989586621689123119"><span id="local-6989586621689123121"><span id="local-6989586621689123123"><span id="local-6989586621689123125"><span id="local-6989586621689123127"><span id="local-6989586621689123129"><span class="annot"><span class="annottext">Eq RelType
 Eq RelType
 -&gt; (RelType -&gt; RelType -&gt; Ordering)
 -&gt; (RelType -&gt; RelType -&gt; Bool)
@@ -1400,7 +1400,7 @@ $c&lt; :: RelType -&gt; RelType -&gt; Bool
 compare :: RelType -&gt; RelType -&gt; Ordering
 $ccompare :: RelType -&gt; RelType -&gt; Ordering
 $cp1Ord :: Eq RelType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099303"><span id="local-6989586621689099305"><span id="local-6989586621689099307"><span class="annot"><span class="annottext">Int -&gt; RelType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123111"><span id="local-6989586621689123113"><span id="local-6989586621689123115"><span class="annot"><span class="annottext">Int -&gt; RelType -&gt; ShowS
 [RelType] -&gt; ShowS
 RelType -&gt; String
 (Int -&gt; RelType -&gt; ShowS)
@@ -1421,7 +1421,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RelType x -&gt; RelType
 $cfrom :: forall x. RelType -&gt; Rep RelType x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cArrayRelationship"><span id="%24cObjectRelationship"><span id="%24tRelType"><span id="local-6989586621689099272"><span id="local-6989586621689099274"><span id="local-6989586621689099276"><span id="local-6989586621689099278"><span id="local-6989586621689099280"><span id="local-6989586621689099282"><span id="local-6989586621689099284"><span id="local-6989586621689099286"><span id="local-6989586621689099288"><span id="local-6989586621689099290"><span id="local-6989586621689099292"><span id="local-6989586621689099294"><span id="local-6989586621689099296"><span id="local-6989586621689099298"><span class="annot"><span class="annottext">Typeable RelType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cArrayRelationship"><span id="%24cObjectRelationship"><span id="%24tRelType"><span id="local-6989586621689123080"><span id="local-6989586621689123082"><span id="local-6989586621689123084"><span id="local-6989586621689123086"><span id="local-6989586621689123088"><span id="local-6989586621689123090"><span id="local-6989586621689123092"><span id="local-6989586621689123094"><span id="local-6989586621689123096"><span id="local-6989586621689123098"><span id="local-6989586621689123100"><span id="local-6989586621689123102"><span id="local-6989586621689123104"><span id="local-6989586621689123106"><span class="annot"><span class="annottext">Typeable RelType
 DataType
 Constr
 Typeable RelType
@@ -1580,9 +1580,9 @@ $cgfoldl :: forall (c :: * -&gt; *).
 $cp1Data :: Typeable RelType
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span>
-</span><span id="line-127"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689099262"><span id="local-6989586621689099264"><span id="local-6989586621689099266"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelType"><span class="hs-identifier hs-type">RelType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621689099261"><span class="annot"><span class="annottext">toJSON :: RelType -&gt; Value
-</span><a href="#local-6989586621689099261"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RelType -&gt; Value
+</span><span id="line-127"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123070"><span id="local-6989586621689123072"><span id="local-6989586621689123074"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelType"><span class="hs-identifier hs-type">RelType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621689123069"><span class="annot"><span class="annottext">toJSON :: RelType -&gt; Value
+</span><a href="#local-6989586621689123069"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; RelType -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
@@ -1590,8 +1590,8 @@ Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.defaultOptions</span></span><span>
 </span><span id="line-129"></span><span>
 </span><span id="line-130"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelType"><span class="hs-identifier hs-type">RelType</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-131"></span><span>  </span><span id="local-6989586621689099259"><span class="annot"><span class="annottext">from :: RelType -&gt; RelType
-</span><a href="#local-6989586621689099259"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-131"></span><span>  </span><span id="local-6989586621689123067"><span class="annot"><span class="annottext">from :: RelType -&gt; RelType
+</span><a href="#local-6989586621689123067"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-132"></span><span>    </span><span class="annot"><span class="annottext">RelType
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#ObjectRelationship"><span class="hs-identifier hs-var">ObjectRelationship</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RelType
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ObjectRelationship</span></a></span><span>
@@ -1604,8 +1604,8 @@ Options -&gt; a -&gt; Value
 </span><span id="line-137"></span><span class="hs-comment">-- | TODO</span><span>
 </span><span id="line-138"></span><span class="hs-comment">--</span><span>
 </span><span id="line-139"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-140"></span><span id="local-6989586621689099255"><span id="local-6989586621689099256"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PrimaryKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PrimaryKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
-</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cPrimaryKey"><span id="%24tPrimaryKey"><span id="local-6989586621689099225"><span id="local-6989586621689099227"><span id="local-6989586621689099229"><span id="local-6989586621689099231"><span id="local-6989586621689099233"><span id="local-6989586621689099235"><span id="local-6989586621689099237"><span id="local-6989586621689099239"><span id="local-6989586621689099241"><span id="local-6989586621689099243"><span id="local-6989586621689099245"><span id="local-6989586621689099247"><span id="local-6989586621689099249"><span id="local-6989586621689099251"><span class="annot"><span class="annottext">Typeable PrimaryKey
+</span><span id="line-140"></span><span id="local-6989586621689123063"><span id="local-6989586621689123064"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PrimaryKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PrimaryKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cPrimaryKey"><span id="%24tPrimaryKey"><span id="local-6989586621689123033"><span id="local-6989586621689123035"><span id="local-6989586621689123037"><span id="local-6989586621689123039"><span id="local-6989586621689123041"><span id="local-6989586621689123043"><span id="local-6989586621689123045"><span id="local-6989586621689123047"><span id="local-6989586621689123049"><span id="local-6989586621689123051"><span id="local-6989586621689123053"><span id="local-6989586621689123055"><span id="local-6989586621689123057"><span id="local-6989586621689123059"><span class="annot"><span class="annottext">Typeable PrimaryKey
 DataType
 Constr
 Typeable PrimaryKey
@@ -1772,7 +1772,7 @@ forall a.
 $cto :: forall x. Rep PrimaryKey x -&gt; PrimaryKey
 $cfrom :: forall x. PrimaryKey -&gt; Rep PrimaryKey x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-142"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689099217"><span id="local-6989586621689099219"><span class="annot"><span class="annottext">PrimaryKey -&gt; PrimaryKey -&gt; Bool
+</span><span id="line-142"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123025"><span id="local-6989586621689123027"><span class="annot"><span class="annottext">PrimaryKey -&gt; PrimaryKey -&gt; Bool
 (PrimaryKey -&gt; PrimaryKey -&gt; Bool)
 -&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Bool) -&gt; Eq PrimaryKey
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1780,7 +1780,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
 == :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
 $c== :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099213"><span id="local-6989586621689099215"><span class="annot"><span class="annottext">Int -&gt; PrimaryKey -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123021"><span id="local-6989586621689123023"><span class="annot"><span class="annottext">Int -&gt; PrimaryKey -&gt; Int
 PrimaryKey -&gt; Int
 (Int -&gt; PrimaryKey -&gt; Int)
 -&gt; (PrimaryKey -&gt; Int) -&gt; Hashable PrimaryKey
@@ -1789,7 +1789,7 @@ hash :: PrimaryKey -&gt; Int
 $chash :: PrimaryKey -&gt; Int
 hashWithSalt :: Int -&gt; PrimaryKey -&gt; Int
 $chashWithSalt :: Int -&gt; PrimaryKey -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099197"><span id="local-6989586621689099199"><span id="local-6989586621689099201"><span id="local-6989586621689099203"><span id="local-6989586621689099205"><span id="local-6989586621689099207"><span id="local-6989586621689099209"><span class="annot"><span class="annottext">Eq PrimaryKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123005"><span id="local-6989586621689123007"><span id="local-6989586621689123009"><span id="local-6989586621689123011"><span id="local-6989586621689123013"><span id="local-6989586621689123015"><span id="local-6989586621689123017"><span class="annot"><span class="annottext">Eq PrimaryKey
 Eq PrimaryKey
 -&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Ordering)
 -&gt; (PrimaryKey -&gt; PrimaryKey -&gt; Bool)
@@ -1827,7 +1827,7 @@ $c&lt; :: PrimaryKey -&gt; PrimaryKey -&gt; Bool
 compare :: PrimaryKey -&gt; PrimaryKey -&gt; Ordering
 $ccompare :: PrimaryKey -&gt; PrimaryKey -&gt; Ordering
 $cp1Ord :: Eq PrimaryKey
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099191"><span id="local-6989586621689099193"><span id="local-6989586621689099195"><span class="annot"><span class="annottext">Int -&gt; PrimaryKey -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122999"><span id="local-6989586621689123001"><span id="local-6989586621689123003"><span class="annot"><span class="annottext">Int -&gt; PrimaryKey -&gt; ShowS
 [PrimaryKey] -&gt; ShowS
 PrimaryKey -&gt; String
 (Int -&gt; PrimaryKey -&gt; ShowS)
@@ -1842,7 +1842,7 @@ show :: PrimaryKey -&gt; String
 $cshow :: PrimaryKey -&gt; String
 showsPrec :: Int -&gt; PrimaryKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; PrimaryKey -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099183"><span id="local-6989586621689099185"><span id="local-6989586621689099187"><span id="local-6989586621689099189"><span class="annot"><span class="annottext">[PrimaryKey] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122991"><span id="local-6989586621689122993"><span id="local-6989586621689122995"><span id="local-6989586621689122997"><span class="annot"><span class="annottext">[PrimaryKey] -&gt; Value
 [PrimaryKey] -&gt; Encoding
 PrimaryKey -&gt; Value
 PrimaryKey -&gt; Encoding
@@ -1865,7 +1865,7 @@ toEncoding :: PrimaryKey -&gt; Encoding
 $ctoEncoding :: PrimaryKey -&gt; Encoding
 toJSON :: PrimaryKey -&gt; Value
 $ctoJSON :: PrimaryKey -&gt; Value
-</span><a href="#local-6989586621689099183"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099179"><span id="local-6989586621689099181"><span class="annot"><span class="annottext">ToJSONKeyFunction [PrimaryKey]
+</span><a href="#local-6989586621689122991"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122987"><span id="local-6989586621689122989"><span class="annot"><span class="annottext">ToJSONKeyFunction [PrimaryKey]
 ToJSONKeyFunction PrimaryKey
 ToJSONKeyFunction PrimaryKey
 -&gt; ToJSONKeyFunction [PrimaryKey] -&gt; ToJSONKey PrimaryKey
@@ -1878,30 +1878,30 @@ $ctoJSONKey :: ToJSONKeyFunction PrimaryKey
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.PrimaryKey</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-145"></span><span>  </span><span id="local-6989586621689099176"><span class="annot"><span class="annottext">from :: PrimaryKey -&gt; PrimaryKey
-</span><a href="#local-6989586621689099176"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.PrimaryKey</span></a></span><span> </span><span id="local-6989586621689099174"><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099174"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; PrimaryKey
+</span><span id="line-145"></span><span>  </span><span id="local-6989586621689122984"><span class="annot"><span class="annottext">from :: PrimaryKey -&gt; PrimaryKey
+</span><a href="#local-6989586621689122984"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.PrimaryKey</span></a></span><span> </span><span id="local-6989586621689122982"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689122982"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; PrimaryKey
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099174"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689122982"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.PrimaryKey</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-148"></span><span>  </span><span id="local-6989586621689099172"><span class="annot"><span class="annottext">from :: PrimaryKey -&gt; PrimaryKey
-</span><a href="#local-6989586621689099172"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span id="local-6989586621689099171"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099171"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; PrimaryKey
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621689122980"><span class="annot"><span class="annottext">from :: PrimaryKey -&gt; PrimaryKey
+</span><a href="#local-6989586621689122980"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span id="local-6989586621689122979"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689122979"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; PrimaryKey
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.PrimaryKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099171"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689122979"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>
 </span><span id="line-150"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-151"></span><span>
 </span><span id="line-152"></span><span class="hs-comment">-- | TODO</span><span>
 </span><span id="line-153"></span><span class="hs-comment">--</span><span>
 </span><span id="line-154"></span><span class="hs-comment">-- NOTE: The 'ToJSON' instance is only intended for logging purposes.</span><span>
-</span><span id="line-155"></span><span id="local-6989586621689099169"><span id="local-6989586621689099170"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ForeignKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-var">ForeignKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ForeignKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-var">ForeignKey</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
-</span><span id="line-156"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cForeignKey"><span id="%24tForeignKey"><span id="local-6989586621689099139"><span id="local-6989586621689099141"><span id="local-6989586621689099143"><span id="local-6989586621689099145"><span id="local-6989586621689099147"><span id="local-6989586621689099149"><span id="local-6989586621689099151"><span id="local-6989586621689099153"><span id="local-6989586621689099155"><span id="local-6989586621689099157"><span id="local-6989586621689099159"><span id="local-6989586621689099161"><span id="local-6989586621689099163"><span id="local-6989586621689099165"><span class="annot"><span class="annottext">Typeable ForeignKey
+</span><span id="line-155"></span><span id="local-6989586621689122977"><span id="local-6989586621689122978"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ForeignKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-var">ForeignKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ForeignKey"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-var">ForeignKey</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
+</span><span id="line-156"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cForeignKey"><span id="%24tForeignKey"><span id="local-6989586621689122947"><span id="local-6989586621689122949"><span id="local-6989586621689122951"><span id="local-6989586621689122953"><span id="local-6989586621689122955"><span id="local-6989586621689122957"><span id="local-6989586621689122959"><span id="local-6989586621689122961"><span id="local-6989586621689122963"><span id="local-6989586621689122965"><span id="local-6989586621689122967"><span id="local-6989586621689122969"><span id="local-6989586621689122971"><span id="local-6989586621689122973"><span class="annot"><span class="annottext">Typeable ForeignKey
 DataType
 Constr
 Typeable ForeignKey
@@ -2068,7 +2068,7 @@ forall a.
 $cto :: forall x. Rep ForeignKey x -&gt; ForeignKey
 $cfrom :: forall x. ForeignKey -&gt; Rep ForeignKey x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-157"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689099131"><span id="local-6989586621689099133"><span class="annot"><span class="annottext">ForeignKey -&gt; ForeignKey -&gt; Bool
+</span><span id="line-157"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689122939"><span id="local-6989586621689122941"><span class="annot"><span class="annottext">ForeignKey -&gt; ForeignKey -&gt; Bool
 (ForeignKey -&gt; ForeignKey -&gt; Bool)
 -&gt; (ForeignKey -&gt; ForeignKey -&gt; Bool) -&gt; Eq ForeignKey
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -2076,7 +2076,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ForeignKey -&gt; ForeignKey -&gt; Bool
 == :: ForeignKey -&gt; ForeignKey -&gt; Bool
 $c== :: ForeignKey -&gt; ForeignKey -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099127"><span id="local-6989586621689099129"><span class="annot"><span class="annottext">Int -&gt; ForeignKey -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122935"><span id="local-6989586621689122937"><span class="annot"><span class="annottext">Int -&gt; ForeignKey -&gt; Int
 ForeignKey -&gt; Int
 (Int -&gt; ForeignKey -&gt; Int)
 -&gt; (ForeignKey -&gt; Int) -&gt; Hashable ForeignKey
@@ -2085,7 +2085,7 @@ hash :: ForeignKey -&gt; Int
 $chash :: ForeignKey -&gt; Int
 hashWithSalt :: Int -&gt; ForeignKey -&gt; Int
 $chashWithSalt :: Int -&gt; ForeignKey -&gt; Int
-</span><a href="#local-6989586621689099127"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099112"><span id="local-6989586621689099114"><span id="local-6989586621689099116"><span id="local-6989586621689099118"><span id="local-6989586621689099120"><span id="local-6989586621689099122"><span id="local-6989586621689099124"><span class="annot"><span class="annottext">Eq ForeignKey
+</span><a href="#local-6989586621689122935"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122920"><span id="local-6989586621689122922"><span id="local-6989586621689122924"><span id="local-6989586621689122926"><span id="local-6989586621689122928"><span id="local-6989586621689122930"><span id="local-6989586621689122932"><span class="annot"><span class="annottext">Eq ForeignKey
 Eq ForeignKey
 -&gt; (ForeignKey -&gt; ForeignKey -&gt; Ordering)
 -&gt; (ForeignKey -&gt; ForeignKey -&gt; Bool)
@@ -2123,7 +2123,7 @@ $c&lt; :: ForeignKey -&gt; ForeignKey -&gt; Bool
 compare :: ForeignKey -&gt; ForeignKey -&gt; Ordering
 $ccompare :: ForeignKey -&gt; ForeignKey -&gt; Ordering
 $cp1Ord :: Eq ForeignKey
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099106"><span id="local-6989586621689099108"><span id="local-6989586621689099110"><span class="annot"><span class="annottext">Int -&gt; ForeignKey -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122914"><span id="local-6989586621689122916"><span id="local-6989586621689122918"><span class="annot"><span class="annottext">Int -&gt; ForeignKey -&gt; ShowS
 [ForeignKey] -&gt; ShowS
 ForeignKey -&gt; String
 (Int -&gt; ForeignKey -&gt; ShowS)
@@ -2138,7 +2138,7 @@ show :: ForeignKey -&gt; String
 $cshow :: ForeignKey -&gt; String
 showsPrec :: Int -&gt; ForeignKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; ForeignKey -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099098"><span id="local-6989586621689099100"><span id="local-6989586621689099102"><span id="local-6989586621689099104"><span class="annot"><span class="annottext">[ForeignKey] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122906"><span id="local-6989586621689122908"><span id="local-6989586621689122910"><span id="local-6989586621689122912"><span class="annot"><span class="annottext">[ForeignKey] -&gt; Value
 [ForeignKey] -&gt; Encoding
 ForeignKey -&gt; Value
 ForeignKey -&gt; Encoding
@@ -2161,7 +2161,7 @@ toEncoding :: ForeignKey -&gt; Encoding
 $ctoEncoding :: ForeignKey -&gt; Encoding
 toJSON :: ForeignKey -&gt; Value
 $ctoJSON :: ForeignKey -&gt; Value
-</span><a href="#local-6989586621689099098"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689099094"><span id="local-6989586621689099096"><span class="annot"><span class="annottext">ToJSONKeyFunction [ForeignKey]
+</span><a href="#local-6989586621689122906"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122902"><span id="local-6989586621689122904"><span class="annot"><span class="annottext">ToJSONKeyFunction [ForeignKey]
 ToJSONKeyFunction ForeignKey
 ToJSONKeyFunction ForeignKey
 -&gt; ToJSONKeyFunction [ForeignKey] -&gt; ToJSONKey ForeignKey
@@ -2171,23 +2171,23 @@ toJSONKeyList :: ToJSONKeyFunction [ForeignKey]
 $ctoJSONKeyList :: ToJSONKeyFunction [ForeignKey]
 toJSONKey :: ToJSONKeyFunction ForeignKey
 $ctoJSONKey :: ToJSONKeyFunction ForeignKey
-</span><a href="#local-6989586621689099094"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689122902"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-158"></span><span>
 </span><span id="line-159"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ForeignKey</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-160"></span><span>  </span><span id="local-6989586621689099092"><span class="annot"><span class="annottext">from :: ForeignKey -&gt; ForeignKey
-</span><a href="#local-6989586621689099092"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ForeignKey</span></a></span><span> </span><span id="local-6989586621689099090"><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099090"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ForeignKey
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621689122900"><span class="annot"><span class="annottext">from :: ForeignKey -&gt; ForeignKey
+</span><a href="#local-6989586621689122900"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ForeignKey</span></a></span><span> </span><span id="local-6989586621689122898"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689122898"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ForeignKey
 </span><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-var">ForeignKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName -&gt; Name
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
-</span><a href="#local-6989586621689099090"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689122898"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-161"></span><span>
 </span><span id="line-162"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ForeignKey</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-163"></span><span>  </span><span id="local-6989586621689099088"><span class="annot"><span class="annottext">from :: ForeignKey -&gt; ForeignKey
-</span><a href="#local-6989586621689099088"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span id="local-6989586621689099087"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099087"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; ForeignKey
+</span><span id="line-163"></span><span>  </span><span id="local-6989586621689122896"><span class="annot"><span class="annottext">from :: ForeignKey -&gt; ForeignKey
+</span><a href="#local-6989586621689122896"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span id="local-6989586621689122895"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689122895"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; ForeignKey
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ForeignKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689099087"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689122895"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-164"></span></pre></body></html>
