@@ -47,7 +47,6 @@ columnConfigSpec = describe "ColumnConfig" $ do
     prop "Right identity" $ \(x :: ColumnConfig) -> x <> mempty `shouldBe` x
     prop "Left identity" $ \(x :: ColumnConfig) -> mempty <> x `shouldBe` x
     prop "Associativity" $ \(x :: ColumnConfig) (y :: ColumnConfig) (z :: ColumnConfig) -> x <> (y <> z) `shouldBe` (x <> y) <> z
-    prop "Concatenation" $ \(xs :: [ColumnConfig]) -> mconcat xs `shouldBe` foldr (<>) mempty xs
 
 tableConfigSpec :: Spec
 tableConfigSpec = describe "TableConfig" $ do

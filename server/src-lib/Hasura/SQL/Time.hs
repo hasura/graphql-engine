@@ -20,9 +20,9 @@ utc = Local.TimeZone 0 False ""
 
 zonedTimeOfDay :: Text -> Aeson.Parser ZonedTimeOfDay
 zonedTimeOfDay t =
-  case A.parseOnly (p <* endOfInput) t of
-    Left err -> fail $ "could not parse timetz: " ++ err
-    Right r -> return r
+  onLeft
+    (A.parseOnly (p <* endOfInput) t)
+    (\err -> fail $ "could not parse timetz: " ++ err)
   where
     p = ZonedTimeOfDay <$> timeOfDay <*> (fromMaybe utc <$> timeZone)
 

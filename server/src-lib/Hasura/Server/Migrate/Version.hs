@@ -11,7 +11,6 @@ module Hasura.Server.Migrate.Version
 where
 
 import Data.FileEmbed (embedStringFile, makeRelativeToProject)
-import Data.Text qualified as T
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax qualified as TH
 
@@ -26,4 +25,4 @@ latestCatalogVersion =
    )
 
 latestCatalogVersionString :: Text
-latestCatalogVersionString = T.pack $ show latestCatalogVersion
+latestCatalogVersionString = tshow latestCatalogVersion

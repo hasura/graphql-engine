@@ -84,6 +84,7 @@
 - ignore: {name: Redundant multi-way if}
 - ignore: {name: Use newtype instead of data}
 - ignore: {name: Use bimap}
+- ignore: {name: Use fromRight}
 - ignore: {name: Use $>}
 - ignore: {name: Use <$>}
 - ignore: {name: "Use ?~"}

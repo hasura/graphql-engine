@@ -456,9 +456,7 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
           orderByFunction = case ta_order_by of
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
-          limitFunction = case ta_limit of
-            Nothing -> Prelude.id
-            Just limitArg -> take limitArg
+          limitFunction = maybe Prelude.id take ta_limit
       pure $
         tracks
           & filter filterFunction

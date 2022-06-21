@@ -85,7 +85,7 @@ serializeHTTPExceptionMessage (HttpException (HTTP.HttpExceptionRequest _ httpEx
     HTTP.InternalException err -> case fromException err of
       Just (Restricted.ConnectionRestricted _ _) -> "Blocked connection to private IP address"
       Nothing -> "Internal Exception"
-    HTTP.ProxyConnectException _ _ _ -> "Proxy connection exception"
+    HTTP.ProxyConnectException {} -> "Proxy connection exception"
     HTTP.NoResponseDataReceived -> "No response data received"
     HTTP.TlsNotSupported -> "TLS not supported"
     HTTP.InvalidDestinationHost _ -> "Invalid destination host"
