@@ -11,28 +11,24 @@
 </span><span id="line-11"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-12"></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.FileEmbed</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">embedStringFile</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">makeRelativeToProject</span></span><span class="hs-special">)</span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
-</span><span id="line-17"></span><span>
-</span><span id="line-18"></span><span class="hs-comment">-- | The current catalog schema version. We store this in a file</span><span>
-</span><span id="line-19"></span><span class="hs-comment">-- because we want to append the current verson to the catalog_versions file</span><span>
-</span><span id="line-20"></span><span class="hs-comment">-- when tagging a new release, in @tag-release.sh@.</span><span>
-</span><span id="line-21"></span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersion"><span class="hs-identifier hs-type">latestCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
-</span><span id="line-22"></span><span id="latestCatalogVersion"><span class="annot"><span class="annottext">latestCatalogVersion :: Integer
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- | The current catalog schema version. We store this in a file</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- because we want to append the current verson to the catalog_versions file</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- when tagging a new release, in @tag-release.sh@.</span><span>
+</span><span id="line-20"></span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersion"><span class="hs-identifier hs-type">latestCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-21"></span><span id="latestCatalogVersion"><span class="annot"><span class="annottext">latestCatalogVersion :: Integer
 </span><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersion"><span class="hs-identifier hs-var hs-var">latestCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-special">$(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-24"></span><span>       </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">s</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/catalog_version.txt&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">embedStringFile</span><span class="hs-special">)</span><span>
-</span><span id="line-25"></span><span>       </span><span class="hs-identifier">TH.lift</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">read</span><span> </span><span class="hs-identifier">s</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier">Integer</span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span>   </span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersionString"><span class="hs-identifier hs-type">latestCatalogVersionString</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-29"></span><span id="latestCatalogVersionString"><span class="annot"><span class="annottext">latestCatalogVersionString :: Text
-</span><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersionString"><span class="hs-identifier hs-var hs-var">latestCatalogVersionString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
-</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; String
-forall a. Show a =&gt; a -&gt; String
-</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><span id="line-22"></span><span>  </span><span class="hs-special">$(</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-23"></span><span>       </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">s</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/catalog_version.txt&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">embedStringFile</span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>       </span><span class="hs-identifier">TH.lift</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">read</span><span> </span><span class="hs-identifier">s</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier">Integer</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>   </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersionString"><span class="hs-identifier hs-type">latestCatalogVersionString</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-28"></span><span id="latestCatalogVersionString"><span class="annot"><span class="annottext">latestCatalogVersionString :: Text
+</span><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersionString"><span class="hs-identifier hs-var hs-var">latestCatalogVersionString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Text
+forall a. Show a =&gt; a -&gt; Text
+</span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
 </span><a href="Hasura.Server.Migrate.Version.html#latestCatalogVersion"><span class="hs-identifier hs-var">latestCatalogVersion</span></a></span><span>
-</span><span id="line-30"></span></pre></body></html>
+</span><span id="line-29"></span></pre></body></html>

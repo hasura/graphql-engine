@@ -20,19 +20,19 @@
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.Build</span></a></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html"><span class="hs-identifier">Hasura.RQL.Types.Table</span></a></span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">data</span><span> </span><span id="RenameRel"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-var">RenameRel</span></a></span></span><span> </span><span id="local-6989586621689244302"><span class="annot"><a href="#local-6989586621689244302"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RenameRel"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-var">RenameRel</span></a></span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">data</span><span> </span><span id="RenameRel"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-var">RenameRel</span></a></span></span><span> </span><span id="local-6989586621689244091"><span class="annot"><a href="#local-6989586621689244091"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RenameRel"><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-var">RenameRel</span></a></span></span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rrSource"><span class="annot"><span class="annottext">RenameRel b -&gt; SourceName
 </span><a href="Hasura.RQL.DDL.Relationship.Rename.html#_rrSource"><span class="hs-identifier hs-var hs-var">_rrSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-25"></span><span>    </span><span id="_rrTable"><span class="annot"><span class="annottext">RenameRel b -&gt; TableName b
-</span><a href="Hasura.RQL.DDL.Relationship.Rename.html#_rrTable"><span class="hs-identifier hs-var hs-var">_rrTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244302"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.DDL.Relationship.Rename.html#_rrTable"><span class="hs-identifier hs-var hs-var">_rrTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244091"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-26"></span><span>    </span><span id="_rrName"><span class="annot"><span class="annottext">RenameRel b -&gt; RelName
 </span><a href="Hasura.RQL.DDL.Relationship.Rename.html#_rrName"><span class="hs-identifier hs-var hs-var">_rrName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>    </span><span id="_rrNewName"><span class="annot"><span class="annottext">RenameRel b -&gt; RelName
 </span><a href="Hasura.RQL.DDL.Relationship.Rename.html#_rrNewName"><span class="hs-identifier hs-var hs-var">_rrNewName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span id="local-6989586621689244228"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689244225"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244228"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-type">RenameRel</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244228"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621689244223"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (RenameRel b)
+</span><span id="line-30"></span><span id="local-6989586621689244017"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689244014"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244017"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-type">RenameRel</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244017"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621689244012"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (RenameRel b)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser (RenameRel b))
 -&gt; Value
@@ -44,8 +44,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser (RenameRel b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689244220"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689244220"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689244009"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689244009"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">SourceName -&gt; TableName b -&gt; RelName -&gt; RelName -&gt; RenameRel b
 forall (b :: BackendType).
 SourceName -&gt; TableName b -&gt; RelName -&gt; RelName -&gt; RenameRel b
@@ -55,7 +55,7 @@ SourceName -&gt; TableName b -&gt; RelName -&gt; RelName -&gt; RenameRel b
 -&gt; Parser (TableName b -&gt; RelName -&gt; RelName -&gt; RenameRel b)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689244220"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SourceName)
+</span><a href="#local-6989586621689244009"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe SourceName)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe SourceName) -&gt; SourceName -&gt; Parser SourceName
@@ -67,7 +67,7 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser (RelName -&gt; RelName -&gt; RenameRel b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689244220"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (TableName b)
+</span><a href="#local-6989586621689244009"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (TableName b)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
@@ -75,7 +75,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 -&gt; Parser RelName -&gt; Parser (RelName -&gt; RenameRel b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689244220"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RelName
+</span><a href="#local-6989586621689244009"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RelName
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
@@ -83,52 +83,52 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 -&gt; Parser RelName -&gt; Parser (RenameRel b)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689244220"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RelName
+</span><a href="#local-6989586621689244009"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser RelName
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;new_name&quot;</span></span></span><span>
 </span><span id="line-37"></span><span>
 </span><span id="line-38"></span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#renameRelP2"><span class="hs-identifier hs-type">renameRelP2</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-39"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689244242"><span class="annot"><a href="#local-6989586621689244242"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689244243"><span class="annot"><a href="#local-6989586621689244243"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244243"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244243"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244242"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689244031"><span class="annot"><a href="#local-6989586621689244031"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689244032"><span class="annot"><a href="#local-6989586621689244032"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244032"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#CacheRM"><span class="hs-identifier hs-type">CacheRM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244032"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244031"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244242"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244031"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-43"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-44"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244242"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-45"></span><span>  </span><span class="annot"><a href="#local-6989586621689244243"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244031"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="#local-6989586621689244032"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
 </span><span id="line-46"></span><span id="renameRelP2"><span class="annot"><span class="annottext">renameRelP2 :: SourceName
 -&gt; TableName b -&gt; RelName -&gt; RelInfo b -&gt; m MetadataModifier
-</span><a href="Hasura.RQL.DDL.Relationship.Rename.html#renameRelP2"><span class="hs-identifier hs-var hs-var">renameRelP2</span></a></span></span><span> </span><span id="local-6989586621689244213"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689244213"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621689244212"><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689244212"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621689244211"><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244211"><span class="hs-identifier hs-var">newRN</span></a></span></span><span> </span><span id="local-6989586621689244210"><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621689244210"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m MetadataModifier -&gt; m MetadataModifier
+</span><a href="Hasura.RQL.DDL.Relationship.Rename.html#renameRelP2"><span class="hs-identifier hs-var hs-var">renameRelP2</span></a></span></span><span> </span><span id="local-6989586621689244002"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689244002"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621689244001"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689244001"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621689244000"><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689244000"><span class="hs-identifier hs-var">newRN</span></a></span></span><span> </span><span id="local-6989586621689243999"><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621689243999"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m MetadataModifier -&gt; m MetadataModifier
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">(m MetadataModifier -&gt; m MetadataModifier)
 -&gt; m MetadataModifier -&gt; m MetadataModifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621689244208"><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689244208"><span class="hs-identifier hs-var">tabInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621689243997"><span class="annot"><span class="annottext">TableCoreInfo b
+</span><a href="#local-6989586621689243997"><span class="hs-identifier hs-var">tabInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
 forall (b :: BackendType) (m :: * -&gt; *).
 (QErrM m, CacheRM m, Backend b) =&gt;
 SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
-</span><a href="Hasura.RQL.Types.SchemaCache.html#askTableCoreInfo"><span class="hs-identifier hs-var">askTableCoreInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689244242"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689244213"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689244212"><span class="hs-identifier hs-var">qt</span></a></span><span>
+</span><a href="Hasura.RQL.Types.SchemaCache.html#askTableCoreInfo"><span class="hs-identifier hs-var">askTableCoreInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689244031"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689244002"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689244001"><span class="hs-identifier hs-var">qt</span></a></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-comment">-- check for conflicts in fieldInfoMap</span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; HashMap FieldName (FieldInfo b) -&gt; Maybe (FieldInfo b)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#fromRel"><span class="hs-identifier hs-var">fromRel</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244211"><span class="hs-identifier hs-var">newRN</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(HashMap FieldName (FieldInfo b) -&gt; Maybe (FieldInfo b))
+</span><a href="#local-6989586621689244000"><span class="hs-identifier hs-var">newRN</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(HashMap FieldName (FieldInfo b) -&gt; Maybe (FieldInfo b))
 -&gt; HashMap FieldName (FieldInfo b) -&gt; Maybe (FieldInfo b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; HashMap FieldName (FieldInfo b)
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 </span><a href="Hasura.RQL.Types.Table.html#_tciFieldInfoMap"><span class="hs-identifier hs-var hs-var">_tciFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689244208"><span class="hs-identifier hs-var">tabInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689243997"><span class="hs-identifier hs-var">tabInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">Maybe (FieldInfo b)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -145,21 +145,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;cannot rename relationship &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244201"><span class="hs-identifier hs-var">oldRN</span></a></span><span>
+</span><a href="#local-6989586621689243990"><span class="hs-identifier hs-var">oldRN</span></a></span><span>
 </span><span id="line-54"></span><span>          </span><span class="annot"><span class="annottext">RelName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; to &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244211"><span class="hs-identifier hs-var">newRN</span></a></span><span>
+</span><a href="#local-6989586621689244000"><span class="hs-identifier hs-var">newRN</span></a></span><span>
 </span><span id="line-55"></span><span>          </span><span class="annot"><span class="annottext">RelName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; in table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689244212"><span class="hs-identifier hs-var">qt</span></a></span><span>
+</span><a href="#local-6989586621689244001"><span class="hs-identifier hs-var">qt</span></a></span><span>
 </span><span id="line-56"></span><span>          </span><span class="annot"><span class="annottext">TableName b -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -180,42 +180,42 @@ forall (b :: BackendType) (m :: * -&gt; *).
 (MonadError QErr m, CacheRM m, MonadWriter MetadataModifier m,
  BackendMetadata b) =&gt;
 SourceName -&gt; TableName b -&gt; RelName -&gt; RelType -&gt; RelName -&gt; m ()
-</span><a href="Hasura.RQL.DDL.Schema.Rename.html#renameRelationshipInMetadata"><span class="hs-identifier hs-var">renameRelationshipInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689244242"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689244213"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689244212"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244201"><span class="hs-identifier hs-var">oldRN</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelInfo b -&gt; RelType
+</span><a href="Hasura.RQL.DDL.Schema.Rename.html#renameRelationshipInMetadata"><span class="hs-identifier hs-var">renameRelationshipInMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689244031"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689244002"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689244001"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689243990"><span class="hs-identifier hs-var">oldRN</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelInfo b -&gt; RelType
 forall (b :: BackendType). RelInfo b -&gt; RelType
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riType"><span class="hs-identifier hs-var hs-var">riType</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621689244210"><span class="hs-identifier hs-var">relInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244211"><span class="hs-identifier hs-var">newRN</span></a></span><span>
+</span><a href="#local-6989586621689243999"><span class="hs-identifier hs-var">relInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689244000"><span class="hs-identifier hs-var">newRN</span></a></span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-60"></span><span>    </span><span id="local-6989586621689244201"><span class="annot"><span class="annottext">oldRN :: RelName
-</span><a href="#local-6989586621689244201"><span class="hs-identifier hs-var hs-var">oldRN</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; RelName
+</span><span id="line-60"></span><span>    </span><span id="local-6989586621689243990"><span class="annot"><span class="annottext">oldRN :: RelName
+</span><a href="#local-6989586621689243990"><span class="hs-identifier hs-var hs-var">oldRN</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; RelName
 forall (b :: BackendType). RelInfo b -&gt; RelName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riName"><span class="hs-identifier hs-var hs-var">riName</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621689244210"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
+</span><a href="#local-6989586621689243999"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#runRenameRel"><span class="hs-identifier hs-type">runRenameRel</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689244196"><span class="annot"><a href="#local-6989586621689244196"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689244195"><span class="annot"><a href="#local-6989586621689244195"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244195"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244195"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244195"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244196"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-type">RenameRel</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689244196"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-66"></span><span>  </span><span class="annot"><a href="#local-6989586621689244195"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689243985"><span class="annot"><a href="#local-6989586621689243985"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689243984"><span class="annot"><a href="#local-6989586621689243984"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689243984"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689243984"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689243984"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689243985"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-type">RenameRel</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689243985"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="#local-6989586621689243984"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-67"></span><span id="runRenameRel"><span class="annot"><span class="annottext">runRenameRel :: RenameRel b -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Relationship.Rename.html#runRenameRel"><span class="hs-identifier hs-var hs-var">runRenameRel</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-type">RenameRel</span></a></span><span> </span><span id="local-6989586621689244194"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689244194"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621689244193"><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689244193"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621689244192"><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244192"><span class="hs-identifier hs-var">rn</span></a></span></span><span> </span><span id="local-6989586621689244191"><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244191"><span class="hs-identifier hs-var">newRN</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621689244190"><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689244190"><span class="hs-identifier hs-var">tabInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
+</span><a href="Hasura.RQL.DDL.Relationship.Rename.html#runRenameRel"><span class="hs-identifier hs-var hs-var">runRenameRel</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Relationship.Rename.html#RenameRel"><span class="hs-identifier hs-type">RenameRel</span></a></span><span> </span><span id="local-6989586621689243983"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689243983"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621689243982"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689243982"><span class="hs-identifier hs-var">qt</span></a></span></span><span> </span><span id="local-6989586621689243981"><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689243981"><span class="hs-identifier hs-var">rn</span></a></span></span><span> </span><span id="local-6989586621689243980"><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689243980"><span class="hs-identifier hs-var">newRN</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621689243979"><span class="annot"><span class="annottext">TableCoreInfo b
+</span><a href="#local-6989586621689243979"><span class="hs-identifier hs-var">tabInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
 forall (b :: BackendType) (m :: * -&gt; *).
 (QErrM m, CacheRM m, Backend b) =&gt;
 SourceName -&gt; TableName b -&gt; m (TableCoreInfo b)
-</span><a href="Hasura.RQL.Types.SchemaCache.html#askTableCoreInfo"><span class="hs-identifier hs-var">askTableCoreInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689244196"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689244194"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689244193"><span class="hs-identifier hs-var">qt</span></a></span><span>
-</span><span id="line-69"></span><span>  </span><span id="local-6989586621689244189"><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621689244189"><span class="hs-identifier hs-var">ri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b) -&gt; RelName -&gt; Text -&gt; m (RelInfo b)
+</span><a href="Hasura.RQL.Types.SchemaCache.html#askTableCoreInfo"><span class="hs-identifier hs-var">askTableCoreInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689243985"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689243983"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689243982"><span class="hs-identifier hs-var">qt</span></a></span><span>
+</span><span id="line-69"></span><span>  </span><span id="local-6989586621689243978"><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621689243978"><span class="hs-identifier hs-var">ri</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b) -&gt; RelName -&gt; Text -&gt; m (RelInfo b)
 forall (m :: * -&gt; *) (backend :: BackendType).
 MonadError QErr m =&gt;
 FieldInfoMap (FieldInfo backend)
@@ -224,8 +224,8 @@ FieldInfoMap (FieldInfo backend)
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 </span><a href="Hasura.RQL.Types.Table.html#_tciFieldInfoMap"><span class="hs-identifier hs-var hs-var">_tciFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689244190"><span class="hs-identifier hs-var">tabInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244192"><span class="hs-identifier hs-var">rn</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689243979"><span class="hs-identifier hs-var">tabInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689243981"><span class="hs-identifier hs-var">rn</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&quot;</span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
 forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
@@ -239,10 +239,10 @@ forall (b :: BackendType) (m :: * -&gt; *).
 SourceName
 -&gt; TableName b -&gt; RelName -&gt; RelInfo b -&gt; m MetadataModifier
 </span><a href="Hasura.RQL.DDL.Relationship.Rename.html#renameRelP2"><span class="hs-identifier hs-var">renameRelP2</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689244194"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689244193"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
-</span><a href="#local-6989586621689244191"><span class="hs-identifier hs-var">newRN</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621689244189"><span class="hs-identifier hs-var">ri</span></a></span><span> </span><span class="annot"><span class="annottext">m MetadataModifier -&gt; (MetadataModifier -&gt; m ()) -&gt; m ()
+</span><a href="#local-6989586621689243983"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689243982"><span class="hs-identifier hs-var">qt</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
+</span><a href="#local-6989586621689243980"><span class="hs-identifier hs-var">newRN</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621689243978"><span class="hs-identifier hs-var">ri</span></a></span><span> </span><span class="annot"><span class="annottext">m MetadataModifier -&gt; (MetadataModifier -&gt; m ()) -&gt; m ()
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
