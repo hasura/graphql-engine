@@ -147,7 +147,7 @@ processSelectParams
         case (inpLimitM, permLimit) of
           (inpLim, Nothing) -> inpLim
           (Nothing, permLim) -> permLim
-          (Just inp, Just perm) -> Just if inp < perm then inp else perm
+          (Just inp, Just perm) -> Just (min inp perm)
 
       -- You should be able to retrieve this information
       -- from the FromItem generated with selectFromToFromItem

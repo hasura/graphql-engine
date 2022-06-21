@@ -81,7 +81,8 @@ getUserInfoWithExpTimeTests = describe "getUserInfo" $ do
       getUserInfoWithExpTime o claims authMode = gqlUserInfoWithExpTime o claims authMode Nothing
 
   let setupAuthMode'E a b c d =
-        either (const $ error "fixme") id <$> setupAuthMode' a b c d
+        either (const $ error "fixme") id
+          <$> setupAuthMode' a b c d
 
   let ourUnauthRole = mkRoleNameE "an0nymous"
 

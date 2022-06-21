@@ -175,7 +175,7 @@ data JWTCustomClaimsMapValueG v
 instance (J.FromJSON v) => J.FromJSON (JWTCustomClaimsMapValueG v) where
   parseJSON (J.Object obj) = do
     path <- obj J..: "path" >>= (either fail pure . parseJSONPath)
-    defaultVal <- obj J..:? "default" >>= traverse pure
+    defaultVal <- obj J..:? "default" >>= pure
     pure $ JWTCustomClaimsMapJSONPath path defaultVal
   parseJSON v = JWTCustomClaimsMapStatic <$> J.parseJSON v
 

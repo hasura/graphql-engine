@@ -192,7 +192,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
           if all (isJust . getColumnOrderBy . obiColumn) restOrderBys
             then -- Collect column order by expressions from the rest.
 
-              let restColumnOrderBys = mapMaybe (sequenceA . (getColumnOrderBy <$>)) restOrderBys
+              let restColumnOrderBys = mapMaybe (traverse getColumnOrderBy) restOrderBys
                   firstColumnOrderBy = firstOrderBy {obiColumn = columnInfo}
                in sortAtNodeAndBase $ firstColumnOrderBy NE.:| restColumnOrderBys
             else -- Else rest order by expressions contain atleast one non-column order by.

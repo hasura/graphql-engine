@@ -16,6 +16,7 @@ import Control.Exception
 import Data.Default
 import Data.Maybe
 import Data.Typeable
+import Hasura.Prelude (onNothing)
 import Network.BSD (getProtocolNumber)
 import Network.Connection qualified as NC
 import Network.HTTP.Client qualified as HTTP
@@ -118,7 +119,7 @@ getConnection ::
   Maybe NC.ConnectionContext ->
   IO (Maybe HostAddress -> String -> Int -> IO HTTP.Connection)
 getConnection restriction tls mcontext = do
-  context <- maybe NC.initConnectionContext return mcontext
+  context <- onNothing mcontext NC.initConnectionContext
   return $ \_hostAddress hostName port ->
     bracketOnError
       (go context hostName port)

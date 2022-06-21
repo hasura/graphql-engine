@@ -43,7 +43,7 @@ shutdownLatchSpec = do
       pollThrow async
         `shouldReturn` Nothing
       shutdownGracefully latch
-      (timeout 1_000_000 $ Async.wait async)
+      timeout 1_000_000 (Async.wait async)
         `shouldReturn` Just "shut down"
 
   it "allows multiple threads to wait for shutdown" $ do

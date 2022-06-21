@@ -1,6 +1,9 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 
+-- we can't use onNothing without creating a dependency cycle
+{- HLINT ignore "Use onNothing" -}
+
 module Data.Sequence.NonEmpty
   ( NESeq,
     pattern (:<||),
