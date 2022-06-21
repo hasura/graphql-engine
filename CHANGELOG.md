@@ -4,7 +4,29 @@
 
 ### Bug fixes and improvements
 
-- server: fix bug that had disabled expression-based indexes in Postgress variants
+## v2.9.0-beta.1
+
+### Event Triggers for MS SQL Server
+
+(closes https://github.com/hasura/graphql-engine/issues/7228)
+Event Triggers support has been added for MS SQL Server. Now, you can invoke external webhooks on insert/update/delete events on your MS SQL Server tables. See the [docs](https://hasura.io/docs/latest/graphql/core/event-triggers/index/) for more details.
+
+### Bug fixes and improvements
+
+- server: support limit in BigQuery computed fields (fix #8562)
+- server: improve GraphQL query parsing time and per-query memory allocation
+- console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
+- console: add support for computed fields with session arg in permission builder (fix #8321)
+- console: add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)
+- console: introduce new table relationships UI in alpha
+- cli: fix performance regression with large metadata in `metadata apply`
+- cli: fix error reporting in `metadata apply` command (#8280)
+
+## v2.8.1
+
+### Bug fixes and improvements
+
+- server: fix bug that had disabled expression-based indexes in Postgres variants (fix #8601)
 
 ## v2.8.0
 
