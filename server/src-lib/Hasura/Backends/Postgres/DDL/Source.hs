@@ -29,8 +29,9 @@ import Data.Aeson (ToJSON, toJSON)
 import Data.Aeson.TH
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.HashSet qualified as Set
 import Data.List.Extended qualified as LE
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Clock (UTCTime, getCurrentTime)
@@ -155,8 +156,12 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
             <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
     functionsMeta <- fetchFunctionMetadata allFunctions
     pgScalars <- fetchPgScalars
-    pure (tablesMeta, functionsMeta, pgScalars)
-  pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta (ScalarSet pgScalars)
+    let scalarsMap = Map.fromList do
+          scalar <- Set.toList pgScalars
+          name <- afold @(Either QErr) $ mkScalarTypeName scalar
+          pure (name, scalar)
+    pure (tablesMeta, functionsMeta, scalarsMap)
+  pure $ ResolvedSource sourceConfig sourceCustomization tablesMeta functionsMeta (ScalarMap pgScalars)
   where
     -- A helper function to list all functions underpinning computed fields from a table metadata
     getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind) -> [FunctionName ('Postgres pgKind)]

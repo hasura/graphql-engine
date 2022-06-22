@@ -20,7 +20,7 @@ module Hasura.RQL.Types.Source
 
     -- * Schema cache
     ResolvedSource (..),
-    ScalarSet (..),
+    ScalarMap (..),
 
     -- * Source resolver
     SourceResolver,
@@ -47,6 +47,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 
 --------------------------------------------------------------------------------
 -- Metadata
@@ -104,7 +105,7 @@ data ResolvedSource b = ResolvedSource
     _rsCustomization :: SourceTypeCustomization,
     _rsTables :: DBTablesMetadata b,
     _rsFunctions :: DBFunctionsMetadata b,
-    _rsScalars :: ScalarSet b
+    _rsScalars :: ScalarMap b
   }
 
 instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
@@ -116,18 +117,15 @@ instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
             "info" .= ("Successfully resolved source" :: Text)
           ]
 
--- | A set of scalar types for a given backend.
---
--- 'ScalarType' is a type family, and as such cannot be used in an
--- `AnyBackend`. This lighttweight newtype wrapper allows us to do so.
-data ScalarSet b where
-  ScalarSet :: Backend b => HashSet (ScalarType b) -> ScalarSet b
+-- | A map from GraphQL name to equivalent scalar type for a given backend.
+data ScalarMap b where
+  ScalarMap :: Backend b => HashMap G.Name (ScalarType b) -> ScalarMap b
 
-instance Backend b => Semigroup (ScalarSet b) where
-  ScalarSet s1 <> ScalarSet s2 = ScalarSet $ s1 <> s2
+instance Backend b => Semigroup (ScalarMap b) where
+  ScalarMap s1 <> ScalarMap s2 = ScalarMap $ s1 <> s2
 
-instance Backend b => Monoid (ScalarSet b) where
-  mempty = ScalarSet mempty
+instance Backend b => Monoid (ScalarMap b) where
+  mempty = ScalarMap mempty
 
 --------------------------------------------------------------------------------
 -- Source resolver

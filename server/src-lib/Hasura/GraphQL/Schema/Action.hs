@@ -54,14 +54,13 @@ import Language.GraphQL.Draft.Syntax qualified as G
 --   the field name and input arguments and a selectionset. The
 --   input argument and selectionset types are defined by the user.
 --
---
 -- > action_name(action_input_arguments) {
 -- >   col1: col1_type
 -- >   col2: col2_type
 -- > }
 actionExecute ::
   forall r m n.
-  MonadBuildSchema ('Postgres 'Vanilla) r m n =>
+  MonadBuildSchemaBase r m n =>
   AnnotatedCustomTypes ->
   ActionInfo ->
   m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
@@ -187,6 +186,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       pure $ P.selection fieldName description actionIdInputField selectionSet <&> (,[])
 
   stringifyNum <- retrieve soStringifyNum
+  definitionsList <- lift $ mkDefinitionList outputObject
   pure $
     parserOutput
       <&> \(idArg, fields) ->
@@ -195,7 +195,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
             _aaaqActionId = idArg,
             _aaaqOutputType = _adOutputType definition,
             _aaaqFields = fields,
-            _aaaqDefinitionList = mkDefinitionList outputObject,
+            _aaaqDefinitionList = definitionsList,
             _aaaqStringifyNum = stringifyNum,
             _aaaqForwardClientHeaders = forwardClientHeaders,
             _aaaqSource = IR.getActionSourceInfo outputObject
@@ -205,9 +205,41 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
     idFieldName = G._id
     idFieldDescription = "the unique id of an action"
 
+    mkDefinitionList :: AnnotatedOutputType -> m [(PGCol, ScalarType ('Postgres 'Vanilla))]
+    mkDefinitionList = \case
+      AOTScalar _ -> pure []
+      AOTObject AnnotatedObjectType {..} -> do
+        let ObjectTypeDefinition {..} = _aotDefinition
+            fieldReferences = Map.unions $ map _trFieldMapping _otdRelationships
+        for (toList _otdFields) \ObjectFieldDefinition {..} ->
+          (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,)
+            <$> case Map.lookup _ofdName fieldReferences of
+              Nothing -> fieldTypeToScalarType $ snd _ofdType
+              Just columnInfo -> pure $ unsafePGColumnToBackend $ ciType columnInfo
+
+    -- warning: we don't support other backends than Postgres for async queries;
+    -- here, we fail if we encounter a non-Postgres scalar type
+    fieldTypeToScalarType :: AnnotatedObjectFieldType -> m PGScalarType
+    fieldTypeToScalarType = \case
+      AOFTEnum _ -> pure PGText
+      AOFTObject _ -> pure PGJSON
+      AOFTScalar annotatedScalar -> case annotatedScalar of
+        ASTReusedScalar _ scalar ->
+          case AB.unpackAnyBackend @('Postgres 'Vanilla) scalar of
+            Just pgScalar -> pure $ unwrapScalar pgScalar
+            Nothing -> throw500 "encountered non-Postgres scalar in async query actions"
+        ASTCustom ScalarTypeDefinition {..} ->
+          pure $
+            if
+                | _stdName == idScalar -> PGText
+                | _stdName == intScalar -> PGInteger
+                | _stdName == floatScalar -> PGFloat
+                | _stdName == stringScalar -> PGText
+                | _stdName == boolScalar -> PGBoolean
+                | otherwise -> PGJSON
+
 -- | Async action's unique id
-actionIdParser ::
-  MonadParse n => Parser 'Both n ActionId
+actionIdParser :: MonadParse n => Parser 'Both n ActionId
 actionIdParser = ActionId <$> P.uuid
 
 actionOutputFields ::
@@ -301,19 +333,6 @@ actionOutputFields outputType annotatedObject objectTypes = do
       remoteRelationshipFieldParsers <- MaybeT $ remoteRelationshipField remoteFieldInfo
       pure $ remoteRelationshipFieldParsers <&> fmap (IR.ACFRemote . IR.ActionRemoteRelationshipSelect lhsJoinFields)
 
-mkDefinitionList :: AnnotatedOutputType -> [(PGCol, ScalarType ('Postgres 'Vanilla))]
-mkDefinitionList (AOTScalar _) = []
-mkDefinitionList (AOTObject AnnotatedObjectType {..}) =
-  flip map (toList _otdFields) $ \ObjectFieldDefinition {..} ->
-    (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,) $
-      case Map.lookup _ofdName fieldReferences of
-        Nothing -> fieldTypeToScalarType $ snd _ofdType
-        Just columnInfo -> unsafePGColumnToBackend $ ciType columnInfo
-  where
-    ObjectTypeDefinition {..} = _aotDefinition
-    fieldReferences =
-      Map.unions $ map _trFieldMapping _otdRelationships
-
 actionInputArguments ::
   forall r m n.
   MonadBuildSchemaBase r m n =>
@@ -399,17 +418,25 @@ customScalarParser = \case
         | _stdName == stringScalar -> J.toJSON <$> P.string
         | _stdName == boolScalar -> J.toJSON <$> P.boolean
         | otherwise -> P.jsonScalar _stdName _stdDescription
-  ASTReusedScalar name pgScalarType ->
-    -- TODO: use column parser here instead
+  ASTReusedScalar name backendScalarType ->
     let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
+        backendScalarValidator =
+          AB.dispatchAnyBackend @Backend backendScalarType \(scalarType :: ScalarWrapper b) jsonInput -> do
+            -- We attempt to parse the value from JSON to validate it, but still
+            -- output it as JSON. On one hand this allows us to detect issues
+            -- ahead of time: if the value is not formatted correctly, we don't
+            -- send the action at all; on the other, it means we are at risk of
+            -- rejecting valid queries if our parser is more strict than the one
+            -- of the remote server. We do not parse scalars for remote servers
+            -- for that reason; we might want to reconsider this validation as
+            -- well.
+            void $
+              parseScalarValue @b (unwrapScalar scalarType) jsonInput
+                `onLeft` \e -> parseErrorWith ParseFailed $ qeError e
+            pure jsonInput
      in P.Parser
           { pType = schemaType,
-            pParser =
-              P.valueToJSON (P.toGraphQLType schemaType)
-                >=> either
-                  (parseErrorWith ParseFailed . qeError)
-                  (pure . scalarValueToJSON @('Postgres 'Vanilla))
-                  . parseScalarValue @('Postgres 'Vanilla) pgScalarType
+            pParser = P.valueToJSON (P.toGraphQLType schemaType) >=> backendScalarValidator
           }
 
 customEnumParser ::

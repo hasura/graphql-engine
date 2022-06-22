@@ -1152,7 +1152,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         Inc.ArrowCache m arr,
         ArrowWriter (Seq CollectedInfo) arr
       ) =>
-      ( (AnnotatedCustomTypes, BackendMap ScalarSet, OrderedRoles),
+      ( (AnnotatedCustomTypes, BackendMap ScalarMap, OrderedRoles),
         [ActionMetadata]
       )
         `arr` HashMap ActionName ActionInfo
