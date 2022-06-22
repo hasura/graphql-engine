@@ -34,6 +34,7 @@ data RQLMetadataV1
     RMAddSource !(AnyBackend AddSource)
   | RMDropSource DropSource
   | RMRenameSource !RenameSource
+  | RMUpdateSource !(AnyBackend UpdateSource)
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMUntrackTable !(AnyBackend UntrackTable)

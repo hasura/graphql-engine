@@ -103,7 +103,8 @@ sourceCommands,
 sourceCommands =
   [ commandParserWithBackendKind "add_source" $ RMAddSource . mkAnyBackend @b,
     commandParser "drop_source" $ RMDropSource,
-    commandParser "set_table_customization" $ RMSetTableCustomization . mkAnyBackend @b
+    commandParser "set_table_customization" $ RMSetTableCustomization . mkAnyBackend @b,
+    commandParserWithBackendKind "update_source" $ RMUpdateSource . mkAnyBackend @b
   ]
 tableCommands =
   [ commandParser "track_table" $ RMTrackTable . mkAnyBackend @b,
