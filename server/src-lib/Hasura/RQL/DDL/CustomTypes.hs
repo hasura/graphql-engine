@@ -2,7 +2,7 @@ module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes,
     clearCustomTypesInMetadata,
     resolveCustomTypes,
-    lookupPGScalar,
+    lookupBackendScalar,
   )
 where
 
@@ -12,6 +12,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.List.Extended
 import Data.List.Extended qualified as L
+import Data.Monoid
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types
@@ -27,6 +28,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
@@ -58,7 +60,7 @@ resolveCustomTypes ::
   MonadError QErr m =>
   SourceCache ->
   CustomTypes ->
-  BackendMap ScalarSet ->
+  BackendMap ScalarMap ->
   m AnnotatedCustomTypes
 resolveCustomTypes sources customTypes allScalars =
   runValidate (validateCustomTypeDefinitions sources customTypes allScalars)
@@ -112,7 +114,7 @@ validateCustomTypeDefinitions ::
   SourceCache ->
   CustomTypes ->
   -- | A map that, to each backend, associates the set of all its scalars.
-  BackendMap ScalarSet ->
+  BackendMap ScalarMap ->
   m AnnotatedCustomTypes
 validateCustomTypeDefinitions sources customTypes allScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
@@ -197,7 +199,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
         let fieldBaseType = G.getBaseType $ unGraphQLType $ _iofdType inputObjectField
         if
             | Set.member fieldBaseType inputTypes -> pure ()
-            | Just scalarInfo <- lookupPGScalar allScalars fieldBaseType (ASTReusedScalar fieldBaseType) ->
+            | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
               tell $ Map.singleton fieldBaseType scalarInfo
             | otherwise ->
               refute $
@@ -240,8 +242,8 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                   pure $ AOFTEnum enumDef
                 | Map.member fieldBaseType objectTypes ->
                   pure $ AOFTObject fieldBaseType
-                | Just scalarInfo <- lookupPGScalar allScalars fieldBaseType (AOFTScalar . ASTReusedScalar fieldBaseType) ->
-                  pure scalarInfo
+                | Just scalarInfo <- lookupBackendScalar allScalars fieldBaseType ->
+                  pure $ AOFTScalar scalarInfo
                 | otherwise ->
                   refute $
                     pure $
@@ -311,19 +313,18 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
             annotatedRelationships
 
 -- see Note [Postgres scalars in custom types]
-lookupPGScalar ::
-  BackendMap ScalarSet ->
+lookupBackendScalar ::
+  BackendMap ScalarMap ->
   G.Name ->
-  (PGScalarType -> a) ->
-  Maybe a
-lookupPGScalar allScalars baseType callback = afold $ do
-  ScalarSet scalars <- BackendMap.lookup @('Postgres 'Vanilla) allScalars
-  let scalarsMap = Map.fromList $ do
-        scalar <- Set.toList scalars
-        scalarName <- afold $ scalarTypeGraphQLName @('Postgres 'Vanilla) scalar
-        pure (scalarName, scalar)
-  match <- afold $ Map.lookup baseType scalarsMap
-  pure $ callback match
+  Maybe AnnotatedScalarType
+lookupBackendScalar allScalars baseType =
+  -- FIXME: this ignores name collisions across backends!
+  getFirst $ foldMap (First . go) $ BackendMap.elems allScalars
+  where
+    go backendScalars =
+      ASTReusedScalar baseType
+        <$> AB.traverseBackend @Backend backendScalars \(ScalarMap scalarMap :: ScalarMap b) ->
+          ScalarWrapper <$> Map.lookup baseType scalarMap
 
 data CustomTypeValidationError
   = -- | type names have to be unique across all types

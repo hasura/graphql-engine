@@ -41,12 +41,12 @@ module Hasura.RQL.Types.CustomTypes
     AnnotatedObjectType (..),
     AnnotatedObjectFieldType (..),
     AnnotatedScalarType (..),
-    fieldTypeToScalarType,
+    ScalarWrapper (..),
   )
 where
 
 import Control.Lens.TH (makeLenses)
-import Data.Aeson ((.!=), (.:), (.:?))
+import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
 import Data.Text qualified as T
@@ -59,6 +59,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Parser qualified as GParse
 import Language.GraphQL.Draft.Printer qualified as GPrint
@@ -308,8 +309,21 @@ data AnnotatedInputType
 
 data AnnotatedScalarType
   = ASTCustom ScalarTypeDefinition
-  | ASTReusedScalar G.Name (ScalarType ('Postgres 'Vanilla))
+  | ASTReusedScalar G.Name (AnyBackend ScalarWrapper)
   deriving (Eq, Generic)
+
+instance J.ToJSON AnnotatedScalarType where
+  toJSON = \case
+    ASTCustom std ->
+      J.object ["tag" .= J.String "ASTCustom", "contents" .= J.toJSON std]
+    -- warning: can't be parsed back, as it does not include the
+    -- backend-specific scalar information.
+    ASTReusedScalar name _scalar ->
+      J.object ["tag" .= J.String "ASTReusedScalar", "contents" .= J.toJSON name]
+
+newtype ScalarWrapper b = ScalarWrapper {unwrapScalar :: (ScalarType b)}
+
+deriving instance (Backend b) => Eq (ScalarWrapper b)
 
 data AnnotatedOutputType
   = AOTObject AnnotatedObjectType
@@ -329,24 +343,6 @@ data AnnotatedObjectFieldType
   | AOFTObject !G.Name
   deriving (Generic)
 
--- FIXME: why is this required, and why is it here?
-fieldTypeToScalarType :: AnnotatedObjectFieldType -> PGScalarType
-fieldTypeToScalarType = \case
-  AOFTEnum _ -> PGText
-  AOFTScalar annotatedScalar -> annotatedScalarToPgScalar annotatedScalar
-  AOFTObject _ -> PGJSON
-  where
-    annotatedScalarToPgScalar = \case
-      ASTReusedScalar _ scalarType -> scalarType
-      ASTCustom ScalarTypeDefinition {..} ->
-        if
-            | _stdName == idScalar -> PGText
-            | _stdName == intScalar -> PGInteger
-            | _stdName == floatScalar -> PGFloat
-            | _stdName == stringScalar -> PGText
-            | _stdName == boolScalar -> PGBoolean
-            | otherwise -> PGJSON
-
 -------------------------------------------------------------------------------
 -- Template haskell derivation
 
@@ -361,7 +357,6 @@ $(J.deriveToJSON hasuraJSON ''CustomTypes)
 $(J.deriveToJSON hasuraJSON ''ObjectTypeDefinition)
 $(J.deriveToJSON hasuraJSON ''TypeRelationship)
 $(J.deriveToJSON hasuraJSON ''AnnotatedInputType)
-$(J.deriveToJSON hasuraJSON ''AnnotatedScalarType)
 $(J.deriveToJSON hasuraJSON ''AnnotatedOutputType)
 $(J.deriveToJSON hasuraJSON ''AnnotatedObjectType)
 $(J.deriveToJSON hasuraJSON ''AnnotatedObjectFieldType)
