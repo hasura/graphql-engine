@@ -175,6 +175,132 @@ class TestMetadata:
     def test_pg_add_source(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/pg_add_source.yaml')
 
+    def test_pg_add_source_with_replace_config(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_add_source",
+              "args": {
+                "name": "pg1",
+                "configuration": {
+                  "connection_info": {
+                    "database_url": {
+                      "from_env": "HASURA_GRAPHQL_PG_SOURCE_URL_1"
+                    }
+                  }
+                }
+              }
+            })
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_add_source",
+              "args": {
+                "name": "pg1",
+                "configuration": {
+                  "connection_info": {
+                    "database_url": {
+                      "from_env": "HASURA_GRAPHQL_PG_SOURCE_URL_1"
+                    }
+                  }
+                },
+                "customization": {
+                  "root_fields": {
+                    "namespace": "some_namespace"
+                  }
+                },
+                "replace_configuration": True
+              }
+            })
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        assert resp["sources"][1]["customization"]["root_fields"]["namespace"] == "some_namespace"
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_drop_source",
+              "args": {
+                "name": "pg1"
+              }
+            })
+        assert st_code == 200, resp
+
+    def test_pg_update_unknown_source(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_update_source",
+              "args": {
+                "name": "pg-not-previously-added",
+                "configuration": {
+                  "connection_info": {
+                    "database_url": {
+                      "from_env": "HASURA_GRAPHQL_PG_SOURCE_URL_1"
+                    }
+                  }
+                }
+              }
+            })
+        assert st_code == 400, resp
+        assert resp["error"] == "source with name \"pg-not-previously-added\" does not exist"
+
+    def test_pg_update_source(self, hge_ctx):
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_add_source",
+              "args": {
+                "name": "pg1",
+                "configuration": {
+                  "connection_info": {
+                    "database_url": {
+                      "from_env": "HASURA_GRAPHQL_PG_SOURCE_URL_1"
+                    },
+                    "pool_settings": {
+                      "max_connections": 10
+                    }
+                  }
+                }
+              }
+            })
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_update_source",
+              "args": {
+                "name": "pg1",
+                "customization": {
+                  "root_fields": {
+                    "namespace": "some_namespace"
+                  }
+                }
+              }
+            })
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        assert resp["sources"][1]["customization"]["root_fields"]["namespace"] == "some_namespace"
+        assert resp["sources"][1]["configuration"]["connection_info"]["pool_settings"]["max_connections"] == 10
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_update_source",
+              "args": {
+                "name": "pg1",
+                "configuration": {
+                  "connection_info": {
+                    "database_url": {
+                      "from_env": "HASURA_GRAPHQL_PG_SOURCE_URL_1"
+                    },
+                    "pool_settings": {
+                      "max_connections": 50
+                    }
+                  }
+                }
+              }
+            })
+        assert st_code == 200, resp
+        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
+        assert st_code == 200, resp
+        assert resp["sources"][1]["customization"]["root_fields"]["namespace"] == "some_namespace"
+        assert resp["sources"][1]["configuration"]["connection_info"]["pool_settings"]["max_connections"] == 50
+        st_code, resp = hge_ctx.v1metadataq({
+              "type": "pg_drop_source",
+              "args": {
+                "name": "pg1"
+              }
+            })
+        assert st_code == 200, resp
+
     @pytest.mark.skipif(
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') != 'postgresql://gql_test@localhost:5432/pg_source_1',
         reason="This test relies on hardcoded connection parameters that match Circle's setup.")

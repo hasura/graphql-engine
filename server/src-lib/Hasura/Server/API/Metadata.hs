@@ -78,6 +78,7 @@ data RQLMetadataV1
     RMAddSource !(AnyBackend AddSource)
   | RMDropSource DropSource
   | RMRenameSource !RenameSource
+  | RMUpdateSource !(AnyBackend UpdateSource)
   | -- Tables
     RMTrackTable !(AnyBackend TrackTableV2)
   | RMUntrackTable !(AnyBackend UntrackTable)
@@ -430,6 +431,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMAddSource q -> dispatchMetadata runAddSource q
   RMDropSource q -> runDropSource q
   RMRenameSource q -> runRenameSource q
+  RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
   RMUntrackTable q -> dispatchMetadata runUntrackTableQ q
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q

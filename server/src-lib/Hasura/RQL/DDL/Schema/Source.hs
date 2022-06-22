@@ -4,11 +4,13 @@ module Hasura.RQL.DDL.Schema.Source
   ( AddSource,
     DropSource (..),
     RenameSource,
+    UpdateSource,
     runAddSource,
     runDropSource,
     runRenameSource,
     dropSource,
     runPostDropSourceHook,
+    runUpdateSource,
   )
 where
 
@@ -73,7 +75,11 @@ runAddSource (AddSource name backendKind sourceConfig replaceConfiguration sourc
       <$> if HM.member name sources
         then
           if replaceConfiguration
-            then pure $ metaSources . ix name . toSourceMetadata @b . smConfiguration .~ sourceConfig
+            then do
+              let sMetadata = metaSources . ix name . toSourceMetadata @b
+                  updateConfig = sMetadata . smConfiguration .~ sourceConfig
+                  updateCustomization = sMetadata . smCustomization .~ sourceCustomization
+              pure $ updateConfig . updateCustomization
             else throw400 AlreadyExists $ "source with name " <> name <<> " already exists"
         else do
           let sourceMetadata = mkSourceMetadata @b name backendKind sourceConfig sourceCustomization
@@ -231,3 +237,41 @@ runPostDropSourceHook sourceName sourceInfo = do
             "Error executing cleanup actions after removing source '" <> toTxt sourceName
               <> "'. Consider cleaning up tables in hdb_catalog schema manually."
        in L.unLogger logger $ MetadataLog L.LevelWarn msg (J.toJSON err)
+
+--------------------------------------------------------------------------------
+-- update source
+
+data UpdateSource b = UpdateSource
+  { _usName :: !SourceName,
+    _usConfiguration :: !(Maybe (SourceConnConfiguration b)),
+    _usCustomization :: !(Maybe SourceCustomization)
+  }
+
+instance (Backend b) => FromJSONWithContext (BackendSourceKind b) (UpdateSource b) where
+  parseJSONWithContext _ = withObject "UpdateSource" $ \o ->
+    UpdateSource
+      <$> o .: "name"
+      <*> o .:? "configuration"
+      <*> o .:? "customization"
+
+runUpdateSource ::
+  forall m b.
+  (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
+  UpdateSource b ->
+  m EncJSON
+runUpdateSource (UpdateSource name sourceConfig sourceCustomization) = do
+  sources <- scSources <$> askSchemaCache
+
+  metadataModifier <-
+    MetadataModifier
+      <$> if HM.member name sources
+        then do
+          let sMetadata = metaSources . ix name . toSourceMetadata @b
+              updateConfig = maybe id (\scc -> sMetadata . smConfiguration .~ scc) sourceConfig
+              updateCustomization = maybe id (\scc -> sMetadata . smCustomization .~ scc) sourceCustomization
+          pure $ updateConfig . updateCustomization
+        else do
+          throw400 NotExists $ "source with name " <> name <<> " does not exist"
+
+  buildSchemaCacheFor (MOSource name) metadataModifier
+  pure successMsg
