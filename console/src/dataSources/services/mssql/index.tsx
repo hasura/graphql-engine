@@ -292,7 +292,7 @@ WHERE
     'guest', 'INFORMATION_SCHEMA', 'sys',
     'db_owner', 'db_securityadmin', 'db_accessadmin',
     'db_backupoperator', 'db_ddladmin', 'db_datawriter',
-    'db_datareader', 'db_denydatawriter', 'db_denydatareader'
+    'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
   )
 ORDER BY
   s.name
@@ -932,7 +932,7 @@ WHERE
       'guest', 'INFORMATION_SCHEMA', 'sys',
       'db_owner', 'db_securityadmin', 'db_accessadmin',
       'db_backupoperator', 'db_ddladmin', 'db_datawriter',
-      'db_datareader', 'db_denydatawriter', 'db_denydatareader'
+      'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
     )
 ORDER BY
   table_schema,
@@ -977,7 +977,7 @@ WHERE
       'guest', 'INFORMATION_SCHEMA', 'sys',
       'db_owner', 'db_securityadmin', 'db_accessadmin',
       'db_backupoperator', 'db_ddladmin', 'db_datawriter',
-      'db_datareader', 'db_denydatawriter', 'db_denydatareader'
+      'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
     )
   ORDER BY
     s.name
