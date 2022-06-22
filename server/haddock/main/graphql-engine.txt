@@ -29123,8 +29123,15 @@ runDropSource :: forall m r. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBas
 dropSourceMetadataModifier :: SourceName -> MetadataModifier
 dropSource :: forall m r b. (MonadError QErr m, CacheRWM m, MonadIO m, MonadBaseControl IO m, MetadataM m, MonadReader r m, Has (Logger Hasura) r, BackendMetadata b) => SchemaCache -> DropSource -> SourceInfo b -> m ()
 runPostDropSourceHook :: forall m r b. (MonadError QErr m, MonadIO m, MonadBaseControl IO m, MonadReader r m, Has (Logger Hasura) r, BackendMetadata b) => SourceName -> SourceInfo b -> m ()
+data UpdateSource b
+UpdateSource :: !SourceName -> !Maybe (SourceConnConfiguration b) -> !Maybe SourceCustomization -> UpdateSource b
+[_usName] :: UpdateSource b -> !SourceName
+[_usConfiguration] :: UpdateSource b -> !Maybe (SourceConnConfiguration b)
+[_usCustomization] :: UpdateSource b -> !Maybe SourceCustomization
+runUpdateSource :: forall m b. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => UpdateSource b -> m EncJSON
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Source.DropSource
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Source.DropSource
+instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.SQL.Backend.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.UpdateSource b)
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.DropSource
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.DDL.Schema.Source.RenameSource
 instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Extended.FromJSONWithContext (Hasura.SQL.Backend.BackendSourceKind b) (Hasura.RQL.DDL.Schema.Source.AddSource b)
@@ -29341,6 +29348,7 @@ data RQLMetadataV1
 RMAddSource :: !AnyBackend AddSource -> RQLMetadataV1
 RMDropSource :: DropSource -> RQLMetadataV1
 RMRenameSource :: !RenameSource -> RQLMetadataV1
+RMUpdateSource :: !AnyBackend UpdateSource -> RQLMetadataV1
 RMTrackTable :: !AnyBackend TrackTableV2 -> RQLMetadataV1
 RMUntrackTable :: !AnyBackend UntrackTable -> RQLMetadataV1
 RMSetTableCustomization :: !AnyBackend SetTableCustomization -> RQLMetadataV1
