@@ -1,6 +1,5 @@
 import React, { InputHTMLAttributes } from 'react';
-import styles from '../../Common/Common.scss';
-import Tooltip from '../Tooltip/Tooltip';
+import { ToolTip } from '@/new-components/Tooltip';
 
 interface LabeledInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -11,13 +10,17 @@ interface LabeledInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const LabeledInput: React.FC<LabeledInputProps> = props => (
   <>
-    <label className={props.boldlabel ? '' : styles.connect_db_input_label}>
+    <label
+      className={`flex items-center gap-1 ${
+        props.boldlabel ? '' : 'inline-block pb-2.5 font-bold'
+      }`}
+    >
       {props?.boldlabel ? <b>{props.label}</b> : props.label}
-      {props.tooltipText && <Tooltip message={props.tooltipText} />}
+      {props.tooltipText && <ToolTip message={props.tooltipText} />}
     </label>
     <input
       type={props?.type ?? 'text'}
-      className={`form-control ${styles.connect_db_input_pad}`}
+      className="form-control font-normal mb-4"
       {...props}
     />
   </>

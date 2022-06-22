@@ -1,9 +1,9 @@
 import React, { ChangeEvent, Dispatch } from 'react';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
+import { ToolTip } from '@/new-components/Tooltip';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
 
 import styles from './DataSources.scss';
@@ -156,10 +156,10 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           </>
         ) : null}
         <p
-          className={`${styles.remove_pad_bottom} mb-md ${styles.connect_db_header}`}
+          className={`${styles.remove_pad_bottom} mb-md flex items-center gap-1 ${styles.connect_db_header}`}
         >
           {title ?? defaultTitle}
-          <Tooltip message="Environment variable recommended" />
+          <ToolTip message="Environment variable recommended" />
           <a
             href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database"
             target="_blank"
@@ -277,9 +277,11 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               />
             ) : (
               <div className={styles.add_mar_bottom_mid}>
-                <div className={styles.add_mar_bottom_mid}>
+                <div
+                  className={`${styles.add_mar_bottom_mid} flex items-center gap-1`}
+                >
                   <b>Service Account Key:</b>
-                  <Tooltip message="Service account key for BigQuery data source" />
+                  <ToolTip message="Service account key for BigQuery data source" />
                 </div>
                 <JSONEditor
                   minLines={5}
