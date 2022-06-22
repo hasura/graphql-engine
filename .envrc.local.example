@@ -8,3 +8,6 @@
 
 # Enable providing NodeJS versions with `nvm`
 # use_nvm
+
+# Enable providing GHC versions with `ghcup`
+# use_ghcup
