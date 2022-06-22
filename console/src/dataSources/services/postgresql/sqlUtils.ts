@@ -1301,7 +1301,7 @@ FROM (
 	FROM
 		information_schema.columns
 	WHERE
-		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
+		table_schema NOT in('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')
 		AND table_schema NOT LIKE 'pg_toast%'
 		AND table_schema NOT LIKE 'pg_temp_%'
 	GROUP BY
@@ -1335,7 +1335,7 @@ export const schemaListQuery = `
 -- test_id = schema_list
 SELECT schema_name FROM information_schema.schemata
 WHERE
-	schema_name NOT in('information_schema', 'pg_catalog', 'hdb_catalog')
+	schema_name NOT in('information_schema', 'pg_catalog', 'hdb_catalog', '_timescaledb_internal')
 	AND schema_name NOT LIKE 'pg_toast%'
 	AND schema_name NOT LIKE 'pg_temp_%';
 `;
