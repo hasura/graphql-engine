@@ -1,7 +1,7 @@
 import React from 'react';
 import { RightContainer } from '@/components/Common/Layout/RightContainer';
 import { Button } from '@/new-components/Button';
-import { fireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '@/new-components/Notifications';
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
 import { Driver } from '@/dataSources';
 
@@ -55,6 +55,7 @@ const useFormState = (currentSource: string) => {
     setExistingRelationship,
   ] = React.useState<RowData>();
 
+  const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
     onSuccess: () => {
       fireNotification({

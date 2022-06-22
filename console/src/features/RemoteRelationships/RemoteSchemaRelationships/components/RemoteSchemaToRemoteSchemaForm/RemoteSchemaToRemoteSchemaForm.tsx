@@ -8,7 +8,7 @@ import {
   useMetadataMigration,
 } from '@/features/MetadataAPI';
 
-import { fireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '@/new-components/Notifications';
 import { useFormContext } from 'react-hook-form';
 import {
   RemoteRelOption,
@@ -74,6 +74,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
     closeHandler,
     relModeHandler,
   } = props;
+  const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
     onSuccess: () => {
       fireNotification({

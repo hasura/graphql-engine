@@ -6,7 +6,7 @@ import {
   useMetadataMigration,
 } from '@/features/MetadataAPI';
 
-import { fireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '@/new-components/Notifications';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Button } from '@/new-components/Button';
 import { FormElements } from './FormElements';
@@ -70,6 +70,7 @@ export const RemoteSchemaToDbForm = ({
   onSuccess,
   relModeHandler,
 }: RemoteSchemaToDbFormProps) => {
+  const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
     onSuccess: () => {
       fireNotification({
