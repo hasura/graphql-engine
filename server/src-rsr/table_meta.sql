@@ -37,3 +37,5 @@ WHERE
   AND t.table_schema <> 'information_schema'
   AND t.table_schema <> 'hdb_catalog'
   AND t.table_schema <> 'hdb_views'
+  AND t.table_schema <> '_timescaledb_internal'
+

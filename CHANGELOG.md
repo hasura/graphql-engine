@@ -4,6 +4,8 @@
 
 ### Bug fixes and improvements
 
+console: Hide TimescaleDB internal schema from data tab
+
 ## v2.9.0-beta.1
 
 ### Event Triggers for MS SQL Server
@@ -460,6 +462,7 @@ Response 2:
 - server: allow casting most postgres scalar types to strings in comparison expressions (fix #8524)
 - console: add remote database relationships for views
 - console: bug fixes for RS-to-RS relationships
+- console: exclude `_timescaledb_internal` from db introspection sql, for performance reasons ()
 - console: allow users to remove prefix / suffix / root field namespace from a remote schema
 - console: new "add remote schema" page (with GQL customization)
 - console: fix console crash on adding pg sources with connection params through api

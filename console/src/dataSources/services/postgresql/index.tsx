@@ -307,7 +307,7 @@ export const getComputedFieldsWithoutArgs = (
 const schemaListSql = (
   schemas?: string[]
 ) => `SELECT schema_name FROM information_schema.schemata WHERE
-schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views') AND schema_name NOT LIKE 'pg\\_%'
+schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views', '_timescaledb_internal') AND schema_name NOT LIKE 'pg\\_%'
 ${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 

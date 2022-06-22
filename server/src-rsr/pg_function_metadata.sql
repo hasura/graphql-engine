@@ -131,7 +131,7 @@ FROM (
                           , 'hmac'
                           )
         AND "function".function_schema NOT LIKE 'pg\_%'
-        AND "function".function_schema NOT IN ('information_schema', 'hdb_catalog')
+        AND "function".function_schema NOT IN ('information_schema', 'hdb_catalog', '_timescaledb_internal')
         AND (NOT EXISTS (
                 SELECT
                   1
