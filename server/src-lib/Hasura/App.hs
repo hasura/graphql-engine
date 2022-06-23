@@ -222,7 +222,7 @@ parseArgs = do
       info
         (helper <*> hgeOpts)
         ( fullDesc
-            <> header "Hasura GraphQL Engine: Realtime GraphQL API over Postgres with access control"
+            <> header "Hasura GraphQL Engine: Blazing fast, instant realtime GraphQL APIs on your DB with fine grained access control, also trigger webhooks on database events."
             <> footerDoc (Just mainCmdFooter)
         )
     hgeOpts =
