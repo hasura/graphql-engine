@@ -128,9 +128,16 @@ const config = {
         // searchParameters: {},
       },
       // announcementBar: {
-      //   id: 'announcementBar-2', // Increment on change
+      //   id: 'announcementBar-3', // Increment on change
       //   content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/docusaurus" >Twitter</a> ${TwitterSvg}`,
       // },
+      announcementBar: {
+        id: 'announcement-bar-3',
+        content:
+          '<a target="_blank" rel="noopener noreferrer" href="https://hasura.io/events/hasura-con-2022/">Join us for our annual Hasura user conference, HasuraCon’22</a>',
+        backgroundColor: "#000",
+        textColor: '#fff',
+      },
       navbar: {
         hideOnScroll: false,
         title: '',
