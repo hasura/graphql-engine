@@ -16,7 +16,8 @@ import Control.Monad.Writer (Writer, runWriter)
 import Data.HashMap.Strict qualified as Map
 import Data.Sequence ((|>))
 import Data.Text qualified as T
-import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Name qualified as GName
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -327,24 +328,24 @@ render (AnalysisError path diagnosis) =
 -- Special type names
 
 queryRootName :: G.Name
-queryRootName = G._query_root
+queryRootName = Name._query_root
 
 mutationRootName :: G.Name
-mutationRootName = G._mutation_root
+mutationRootName = Name._mutation_root
 
 subscriptionRootName :: G.Name
-subscriptionRootName = G._subscription_root
+subscriptionRootName = Name._subscription_root
 
 -- Reserved fields
 
 typenameField :: G.FieldDefinition G.InputValueDefinition
-typenameField = mkReservedField G.___typename G._String
+typenameField = mkReservedField GName.___typename GName._String
 
 schemaField :: G.FieldDefinition G.InputValueDefinition
-schemaField = mkReservedField G.___schema G.___Schema
+schemaField = mkReservedField GName.___schema GName.___Schema
 
 typeField :: G.FieldDefinition G.InputValueDefinition
-typeField = mkReservedField G.___type G.___Type
+typeField = mkReservedField GName.___type GName.___Type
 
 mkReservedField :: G.Name -> G.Name -> G.FieldDefinition G.InputValueDefinition
 mkReservedField fieldName typeName =

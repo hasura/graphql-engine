@@ -31,10 +31,10 @@ import Hasura.GraphQL.Namespace
     RootFieldMap,
     mkUnNamespacedRootFieldAlias,
   )
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.Backend
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend
@@ -173,7 +173,7 @@ runPGMutationTransaction ::
   RootFieldMap (DBStepInfo ('Postgres pgKind)) ->
   m (DiffTime, RootFieldMap EncJSON)
 runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
-  logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias G._transaction) Nothing reqId
+  logQueryLog logger $ mkQueryLog query (mkUnNamespacedRootFieldAlias Name._transaction) Nothing reqId
   ctx <- Tracing.currentContext
   withElapsedTime $ do
     Tracing.interpTraceT

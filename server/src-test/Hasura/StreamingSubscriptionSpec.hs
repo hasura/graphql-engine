@@ -26,10 +26,10 @@ import Hasura.GraphQL.Execute.Subscription.Poll.StreamingQuery (pollStreamingQue
 import Hasura.GraphQL.Execute.Subscription.State
 import Hasura.GraphQL.Execute.Subscription.TMap qualified as TMap
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.WebSocket.Protocol (unsafeMkOperationId)
 import Hasura.GraphQL.Transport.WebSocket.Server qualified as WS
 import Hasura.Logging
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -38,7 +38,7 @@ import Hasura.Server.Init (considerEnv, databaseUrlEnv, runWithEnv)
 import Hasura.Server.Metrics (createServerMetrics)
 import Hasura.Server.Types (RequestId (..))
 import Hasura.Session (RoleName, mkRoleName)
-import Language.GraphQL.Draft.Syntax qualified as G
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import ListT qualified
 import StmContainers.Map qualified as STMMap
 import System.Environment (getEnvironment)
@@ -153,7 +153,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           paramQueryHash
           (MultiplexedQuery multiplexedQuery)
           cohortMap
-          (G.unsafeMkName "randomRootField")
+          [G.name|randomRootField|]
           (const $ pure ())
           testSyncAction
 
@@ -179,7 +179,7 @@ streamingSubscriptionPollingSpec srcConfig = do
     (subscriberId1, subscriberId2) <- runIO $ (,) <$> newSubscriberId <*> newSubscriberId
     let subscriber1 = mkSubscriber subscriberId1
         subscriber2 = mkSubscriber subscriberId2
-    let initialCursorValue = Map.singleton G._id (TELit "1")
+    let initialCursorValue = Map.singleton Name._id (TELit "1")
     cohort1 <- runIO $
       liftIO $
         STM.atomically $ do
@@ -197,7 +197,7 @@ streamingSubscriptionPollingSpec srcConfig = do
           addSubscriberToCohort subscriber2 cohort2'
           pure cohort2'
 
-    let mkCohortKey n = cohortKey1 & cvCursorVariables . unValidatedVariables . ix (G.unsafeMkName "id") .~ TELit n
+    let mkCohortKey n = cohortKey1 & cvCursorVariables . unValidatedVariables . ix [G.name|id|] .~ TELit n
         cohortKey2 = mkCohortKey "2"
         cohortKey3 = mkCohortKey "3"
 
@@ -370,7 +370,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               dummyParamQueryHash
               Nothing
               reqId
-              (G.unsafeMkName "numbers_stream")
+              [G.name|"numbers_stream"|]
               subscriptionQueryPlan
               (const (pure ()))
 

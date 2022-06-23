@@ -15,10 +15,10 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy qualified as IR
 import Hasura.RQL.IR.Select qualified as IR
@@ -65,7 +65,7 @@ orderByExp ::
 orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tableInfoName tableInfo) $ do
   tableGQLName <- getTableGQLName tableInfo
   tCase <- asks getter
-  name <- P.mkTypename $ tableGQLName <> G.__order_by
+  name <- P.mkTypename $ tableGQLName <> Name.__order_by
   let description =
         G.Description $
           "Ordering options when selecting data from " <> tableInfoName tableInfo <<> "."
@@ -99,7 +99,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
                 otherTableOrderBy <- join <$> P.fieldOptional fieldName Nothing (P.nullable otherTableParser)
                 pure $ fmap (map $ fmap $ IR.AOCObjectRelation relationshipInfo newPerms) otherTableOrderBy
             ArrRel -> do
-              let aggregateFieldName = fieldName <> G.__aggregate
+              let aggregateFieldName = fieldName <> Name.__aggregate
               aggregationParser <- lift $ orderByAggregation sourceInfo remoteTableInfo
               pure $ do
                 aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
@@ -123,7 +123,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
                   (orderByOperator @b tCase sourceInfo)
                   <&> fmap (pure . mkOrderByItemG @b (IR.AOCComputedField computedFieldOrderBy)) . join
             ReturnsTable table -> do
-              let aggregateFieldName = fieldName <> G.__aggregate
+              let aggregateFieldName = fieldName <> Name.__aggregate
               tableInfo' <- askTableInfo sourceInfo table
               perms <- MaybeT $ tableSelectPermissions tableInfo'
               let newPerms = fmap partialSQLExpToUnpreparedValue <$> spiFilter perms
@@ -172,7 +172,7 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
               [ -- count
                 Just $
                   P.fieldOptional
-                    G._count
+                    Name._count
                     Nothing
                     (orderByOperator @b tCase sourceInfo)
                     <&> pure . fmap (pure . mkOrderByItemG @b IR.AAOCount) . join,
@@ -189,7 +189,7 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
                     for comparisonAggOperators \operator ->
                       parseOperator mkTypename operator tableGQLName compFields
               ]
-  objectName <- P.mkTypename $ tableGQLName <> G.__aggregate_order_by
+  objectName <- P.mkTypename $ tableGQLName <> Name.__aggregate_order_by
   let description = G.Description $ "order by aggregate values of table " <>> tableName
   pure $ P.object objectName (Just description) aggFields
   where
@@ -211,7 +211,7 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
       InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
     parseOperator mkTypename operator tableGQLName columns =
       let opText = G.unName operator
-          objectName = P.runMkTypename mkTypename $ tableGQLName <> G.__ <> operator <> G.__order_by
+          objectName = P.runMkTypename mkTypename $ tableGQLName <> Name.__ <> operator <> Name.__order_by
           objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> tableName
        in P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
             `mapField` map (\(col, info) -> mkOrderByItemG (IR.AAOOp opText col) info)

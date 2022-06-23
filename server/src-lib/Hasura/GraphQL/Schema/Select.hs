@@ -52,13 +52,13 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.OrderBy
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
@@ -264,15 +264,15 @@ selectTableAggregate sourceInfo tableInfo fieldName description = runMaybeT $ do
     tableGQLName <- getTableGQLName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- P.mkTypename $ tableGQLName <> G.__aggregate
+    selectionName <- P.mkTypename $ tableGQLName <> Name.__aggregate
     let aggregationParser =
           P.nonNullableParser $
             parsedSelectionsToFields IR.TAFExp
               <$> P.selectionSet
                 selectionName
                 (Just $ G.Description $ "aggregated selection of " <>> tableName)
-                [ IR.TAFNodes xNodesAgg <$> P.subselection_ G._nodes Nothing nodesParser,
-                  IR.TAFAgg <$> P.subselection_ G._aggregate Nothing aggregateParser
+                [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
+                  IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
                 ]
     pure $
       P.subselection fieldName description tableArgsParser aggregationParser
@@ -388,7 +388,7 @@ tableSelectionSet sourceInfo tableInfo = runMaybeT do
       -- A relay table
       (RelaySchema nodeBuilder, Just pkeyColumns, Just xRelayInfo) -> do
         let nodeIdFieldParser =
-              P.selection_ G._id Nothing P.identifier $> IR.AFNodeId xRelayInfo sourceName tableName pkeyColumns
+              P.selection_ Name._id Nothing P.identifier $> IR.AFNodeId xRelayInfo sourceName tableName pkeyColumns
             allFieldParsers = fieldParsers <> [nodeIdFieldParser]
         nodeInterface <- runNodeBuilder nodeBuilder
         pure $
@@ -448,16 +448,16 @@ tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
   _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   edgesParser <- MaybeT $ tableEdgesSelectionSet tableGQLName
   lift $ memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
-    connectionTypeName <- P.mkTypename $ tableGQLName <> G._Connection
+    connectionTypeName <- P.mkTypename $ tableGQLName <> Name._Connection
     let pageInfo =
           P.subselection_
-            G._pageInfo
+            Name._pageInfo
             Nothing
             pageInfoSelectionSet
             <&> IR.ConnectionPageInfo
         edges =
           P.subselection_
-            G._edges
+            Name._edges
             Nothing
             edgesParser
             <&> IR.ConnectionEdges
@@ -473,25 +473,25 @@ tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
     pageInfoSelectionSet =
       let startCursorField =
             P.selection_
-              G._startCursor
+              Name._startCursor
               Nothing
               P.string
               $> IR.PageInfoStartCursor
           endCursorField =
             P.selection_
-              G._endCursor
+              Name._endCursor
               Nothing
               P.string
               $> IR.PageInfoEndCursor
           hasNextPageField =
             P.selection_
-              G._hasNextPage
+              Name._hasNextPage
               Nothing
               P.boolean
               $> IR.PageInfoHasNextPage
           hasPreviousPageField =
             P.selection_
-              G._hasPreviousPage
+              Name._hasPreviousPage
               Nothing
               P.boolean
               $> IR.PageInfoHasPreviousPage
@@ -502,23 +502,23 @@ tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
               hasPreviousPageField
             ]
        in P.nonNullableParser $
-            P.selectionSet G._PageInfo Nothing allFields
+            P.selectionSet Name._PageInfo Nothing allFields
               <&> parsedSelectionsToFields IR.PageInfoTypename
 
     tableEdgesSelectionSet ::
       G.Name -> m (Maybe (Parser 'Output n (EdgeFields b)))
     tableEdgesSelectionSet tableGQLName = runMaybeT do
       edgeNodeParser <- MaybeT $ fmap P.nonNullableParser <$> tableSelectionSet sourceInfo tableInfo
-      edgesType <- lift $ P.mkTypename $ tableGQLName <> G._Edge
+      edgesType <- lift $ P.mkTypename $ tableGQLName <> Name._Edge
       let cursor =
             P.selection_
-              G._cursor
+              Name._cursor
               Nothing
               P.string
               $> IR.EdgeCursor
           edgeNode =
             P.subselection_
-              G._node
+              Name._node
               Nothing
               edgeNodeParser
               <&> IR.EdgeNode
@@ -587,7 +587,7 @@ selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT 
     tableArgsParser <- tableArguments sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLAggregateName _fiGQLArgsName
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- P.mkTypename =<< pure (tableGQLName <> G.__aggregate)
+    selectionName <- P.mkTypename =<< pure (tableGQLName <> Name.__aggregate)
     aggregateFieldName <- mkRootFieldName _fiGQLAggregateName
     let argsParser = liftA2 (,) functionArgsParser tableArgsParser
         aggregationParser =
@@ -596,8 +596,8 @@ selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT 
               P.selectionSet
                 selectionName
                 Nothing
-                [ IR.TAFNodes xNodesAgg <$> P.subselection_ G._nodes Nothing nodesParser,
-                  IR.TAFAgg <$> P.subselection_ G._aggregate Nothing aggregateParser
+                [ IR.TAFNodes xNodesAgg <$> P.subselection_ Name._nodes Nothing nodesParser,
+                  IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
                 ]
     pure $
       P.subselection aggregateFieldName description argsParser aggregationParser
@@ -629,7 +629,7 @@ selectFunctionConnection sourceInfo fi@FunctionInfo {..} description pkeyColumns
   tableInfo <- lift $ askTableInfo sourceInfo _fiReturnType
   selectionSetParser <- MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
   lift do
-    fieldName <- mkRootFieldName $ _fiGQLName <> G.__connection
+    fieldName <- mkRootFieldName $ _fiGQLName <> Name.__connection
     stringifyNum <- retrieve soStringifyNum
     tableConnectionArgsParser <- tableConnectionArgs pkeyColumns sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLName _fiGQLArgsName
@@ -725,7 +725,7 @@ tableWhereArg sourceInfo tableInfo = do
       P.fieldOptional whereName whereDesc $
         P.nullable boolExpParser
   where
-    whereName = G._where
+    whereName = Name._where
     whereDesc = Just $ G.Description "filter the rows returned"
 
 -- | Argument to sort rows returned from table selection
@@ -739,7 +739,7 @@ tableOrderByArg ::
 tableOrderByArg sourceInfo tableInfo = do
   tCase <- asks getter
   orderByParser <- orderByExp sourceInfo tableInfo
-  let orderByName = applyFieldNameCaseCust tCase G._order_by
+  let orderByName = applyFieldNameCaseCust tCase Name._order_by
       orderByDesc = Just $ G.Description "sort the rows by one or more columns"
   pure $ do
     maybeOrderByExps <-
@@ -758,7 +758,7 @@ tableDistinctArg ::
 tableDistinctArg sourceInfo tableInfo = do
   tCase <- asks getter
   columnsEnum <- tableSelectColumnsEnum sourceInfo tableInfo
-  let distinctOnName = applyFieldNameCaseCust tCase G._distinct_on
+  let distinctOnName = applyFieldNameCaseCust tCase Name._distinct_on
       distinctOnDesc = Just $ G.Description "distinct select on columns"
   pure do
     maybeDistinctOnColumns <-
@@ -779,7 +779,7 @@ tableLimitArg =
     P.fieldOptional limitName limitDesc $
       P.nullable P.nonNegativeInt
   where
-    limitName = G._limit
+    limitName = Name._limit
     limitDesc = Just $ G.Description "limit the number of rows returned"
 
 -- | Argument to skip some rows, in conjunction with order_by
@@ -793,7 +793,7 @@ tableOffsetArg =
     P.fieldOptional offsetName offsetDesc $
       P.nullable P.bigInt
   where
-    offsetName = G._offset
+    offsetName = Name._offset
     offsetDesc = Just $ G.Description "skip the first n rows. Use only with order_by"
 
 -- | Arguments for a table connection selection
@@ -823,10 +823,10 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
   whereParser <- tableWhereArg sourceInfo tableInfo
   orderByParser <- fmap (fmap appendPrimaryKeyOrderBy) <$> tableOrderByArg sourceInfo tableInfo
   distinctParser <- tableDistinctArg sourceInfo tableInfo
-  let maybeFirst = fmap join $ P.fieldOptional G._first Nothing $ P.nullable P.nonNegativeInt
-      maybeLast = fmap join $ P.fieldOptional G._last Nothing $ P.nullable P.nonNegativeInt
-      maybeAfter = fmap join $ P.fieldOptional G._after Nothing $ P.nullable base64Text
-      maybeBefore = fmap join $ P.fieldOptional G._before Nothing $ P.nullable base64Text
+  let maybeFirst = fmap join $ P.fieldOptional Name._first Nothing $ P.nullable P.nonNegativeInt
+      maybeLast = fmap join $ P.fieldOptional Name._last Nothing $ P.nullable P.nonNegativeInt
+      maybeAfter = fmap join $ P.fieldOptional Name._after Nothing $ P.nullable base64Text
+      maybeBefore = fmap join $ P.fieldOptional Name._before Nothing $ P.nullable base64Text
       firstAndLast = (,) <$> maybeFirst <*> maybeLast
       afterBeforeAndOrderBy = (,,) <$> maybeAfter <*> maybeBefore <*> orderByParser
 
@@ -965,7 +965,7 @@ tableAggregationFields sourceInfo tableInfo =
     let numericColumns = onlyNumCols allColumns
         comparableColumns = onlyComparableCols allColumns
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
-    selectName <- P.mkTypename $ tableGQLName <> G.__aggregate_fields
+    selectName <- P.mkTypename $ tableGQLName <> Name.__aggregate_fields
     count <- countField
     mkTypename <- asks getter
     numericAndComparable <-
@@ -997,7 +997,7 @@ tableAggregationFields sourceInfo tableInfo =
   where
     mkNumericAggFields :: G.Name -> [ColumnInfo b] -> m [FieldParser n (IR.ColFld b)]
     mkNumericAggFields name
-      | name == G._sum = traverse mkColumnAggField
+      | name == Name._sum = traverse mkColumnAggField
       | otherwise = traverse \columnInfo ->
         pure $
           P.selection_
@@ -1019,7 +1019,7 @@ tableAggregationFields sourceInfo tableInfo =
     countField :: m (FieldParser n (IR.AggregateField b))
     countField = do
       columnsEnum <- tableSelectColumnsEnum sourceInfo tableInfo
-      let distinctName = G._distinct
+      let distinctName = Name._distinct
           args = do
             distinct <- P.fieldOptional distinctName Nothing P.boolean
             mkCountType <- countTypeInput @b columnsEnum
@@ -1030,7 +1030,7 @@ tableAggregationFields sourceInfo tableInfo =
                   (bool IR.SelectCountNonDistinct IR.SelectCountDistinct)
                   distinct
 
-      pure $ IR.AFCount <$> P.selection G._count Nothing args P.int
+      pure $ IR.AFCount <$> P.selection Name._count Nothing args P.int
 
     parseAggOperator ::
       P.MkTypename ->
@@ -1041,7 +1041,7 @@ tableAggregationFields sourceInfo tableInfo =
       FieldParser n (IR.AggregateField b)
     parseAggOperator mkTypename operator fieldName tableGQLName columns =
       let opText = G.unName operator
-          setName = P.runMkTypename mkTypename $ tableGQLName <> G.__ <> operator <> G.__fields
+          setName = P.runMkTypename mkTypename $ tableGQLName <> Name.__ <> operator <> Name.__fields
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns
@@ -1068,7 +1068,7 @@ fieldSelection sourceInfo table tableInfo = \case
       -- If the field name is 'id' and we're building a schema for the Relay
       -- API, Node's id field will take precedence; consequently we simply
       -- ignore the original.
-      guard $ isHasuraSchema schemaKind || fieldName /= G._id
+      guard $ isHasuraSchema schemaKind || fieldName /= Name._id
       let columnName = ciColumn columnInfo
       selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
       guard $ columnName `Map.member` spiCols selectPermissions
@@ -1309,7 +1309,7 @@ relationshipField sourceInfo table ri = runMaybeT do
                 IR.ASSimple $
                   IR.AnnRelationSelectG (riName ri) (riMapping ri) $
                     deduplicatePermissions' selectExp
-          relAggFieldName = applyFieldNameCaseCust tCase $ relFieldName <> G.__aggregate
+          relAggFieldName = applyFieldNameCaseCust tCase $ relFieldName <> Name.__aggregate
           relAggDesc = Just $ G.Description "An aggregate relationship"
       remoteAggField <- lift $ selectTableAggregate sourceInfo otherTableInfo relAggFieldName relAggDesc
       remoteConnectionField <- runMaybeT $ do
@@ -1320,7 +1320,7 @@ relationshipField sourceInfo table ri = runMaybeT do
           MaybeT $
             (^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns)
               <$> pure otherTableInfo
-        let relConnectionName = relFieldName <> G.__connection
+        let relConnectionName = relFieldName <> Name.__connection
             relConnectionDesc = Just $ G.Description "An array relationship connection"
         MaybeT $ lift $ selectTableConnection sourceInfo otherTableInfo relConnectionName relConnectionDesc pkeyColumns
       pure $
@@ -1474,10 +1474,10 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
                 tableInfo <- askTableInfo sourceInfo tableName
                 computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
                 tableGQLName <- getTableGQLName @('Postgres pgKind) tableInfo
-                pure $ computedFieldGQLName <> G.__ <> tableGQLName <> G.__args
+                pure $ computedFieldGQLName <> Name.__ <> tableGQLName <> Name.__args
               FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
                 pure cfnArgsName
-        let fieldName = G._args
+        let fieldName = Name._args
             fieldDesc =
               case functionTrackedAs of
                 FTAComputedField computedFieldName _sourceName tableName ->

@@ -36,7 +36,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common (textToName)
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
@@ -155,25 +155,25 @@ checkConflictingNode sc tnGQL = do
         [ G.SelectionField $
             G.Field
               Nothing
-              G.___schema
+              GName.___schema
               mempty
               []
               [ G.SelectionField $
                   G.Field
                     Nothing
-                    G._queryType
+                    GName._queryType
                     mempty
                     []
                     [ G.SelectionField $
                         G.Field
                           Nothing
-                          G._fields
+                          GName._fields
                           mempty
                           []
                           [ G.SelectionField $
                               G.Field
                                 Nothing
-                                G._name
+                                GName._name
                                 mempty
                                 []
                                 []
@@ -184,7 +184,7 @@ checkConflictingNode sc tnGQL = do
   case queryParser introspectionQuery of
     Left _ -> pure ()
     Right results -> do
-      case OMap.lookup (mkUnNamespacedRootFieldAlias G.___schema) results of
+      case OMap.lookup (mkUnNamespacedRootFieldAlias GName.___schema) results of
         Just (RFRaw (JO.Object schema)) -> do
           let names = do
                 JO.Object queryType <- JO.lookup "queryType" schema

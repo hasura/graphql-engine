@@ -21,9 +21,9 @@ import Data.Type.Equality
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser as P
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
@@ -60,7 +60,7 @@ makeResultCustomizer ::
   RemoteSchemaCustomizer -> IR.GraphQLField (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable -> ResultCustomizer
 makeResultCustomizer remoteSchemaCustomizer IR.GraphQLField {..} =
   modifyFieldByName _fAlias $
-    if _fName == G.___typename
+    if _fName == GName.___typename
       then customizeTypeNameString (_rscCustomizeTypeName remoteSchemaCustomizer)
       else resultCustomizerFromSelection _fSelectionSet
   where
@@ -95,8 +95,8 @@ buildRawRemoteParser ::
     )
 buildRawRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscriptionRoot) remoteRelationships info = do
   queryT <- makeParsers queryRoot
-  mutationT <- makeNonQueryRootFieldParser mutationRoot G._Mutation
-  subscriptionT <- makeNonQueryRootFieldParser subscriptionRoot G._Subscription
+  mutationT <- makeNonQueryRootFieldParser mutationRoot GName._Mutation
+  subscriptionT <- makeNonQueryRootFieldParser subscriptionRoot GName._Subscription
   return (queryT, mutationT, subscriptionT)
   where
     makeFieldParser :: G.Name -> G.FieldDefinition RemoteSchemaInputValueDefinition -> m (P.FieldParser n (IR.RemoteSchemaRootField (IR.RemoteRelationshipField IR.UnpreparedValue) RemoteSchemaVariable))
@@ -593,7 +593,7 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
         <&> OMap.mapWithKey \alias ->
           handleTypename $
             const $
-              IR.FieldGraphQL $ IR.mkGraphQLField (Just alias) G.___typename mempty mempty IR.SelectionSetNone
+              IR.FieldGraphQL $ IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
   where
     getInterface :: G.Name -> m (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
     getInterface interfaceName =
@@ -975,7 +975,7 @@ customizeRemoteNamespace remoteSchemaInfo@RemoteSchemaInfo {..} rootTypeName fie
       handleTypename . const $
         -- In P.selectionSet we lose the resultCustomizer from __typename fields so we need to put it back
         let resultCustomizer = modifyFieldByName alias $ customizeTypeNameString $ _rscCustomizeTypeName rsCustomizer
-         in IR.RemoteSchemaRootField remoteSchemaInfo resultCustomizer $ IR.mkGraphQLField (Just alias) G.___typename mempty mempty IR.SelectionSetNone
+         in IR.RemoteSchemaRootField remoteSchemaInfo resultCustomizer $ IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
     mkNamespaceTypename = MkTypename $ const $ runMkTypename (remoteSchemaCustomizeTypeName rsCustomizer) rootTypeName
 
 {-

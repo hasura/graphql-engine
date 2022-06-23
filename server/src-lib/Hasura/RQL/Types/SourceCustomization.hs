@@ -52,9 +52,9 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier (..))
 import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Schema
 import Hasura.Incremental.Internal.Dependency (Cacheable)
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
 import Hasura.RQL.Types.Instances ()
@@ -284,31 +284,31 @@ mkSelectField :: GQLNameIdentifier -> GQLNameIdentifier
 mkSelectField = id
 
 mkSelectAggregateField :: GQLNameIdentifier -> GQLNameIdentifier
-mkSelectAggregateField name = name <> C.fromName G._aggregate
+mkSelectAggregateField name = name <> C.fromName Name._aggregate
 
 mkSelectByPkField :: GQLNameIdentifier -> GQLNameIdentifier
 mkSelectByPkField name = name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
 
 mkInsertField :: GQLNameIdentifier -> GQLNameIdentifier
-mkInsertField name = C.fromName G._insert <> name
+mkInsertField name = C.fromName Name._insert <> name
 
 mkInsertOneField :: GQLNameIdentifier -> GQLNameIdentifier
-mkInsertOneField name = C.fromName G._insert <> name <> C.fromName G._one
+mkInsertOneField name = C.fromName Name._insert <> name <> C.fromName Name._one
 
 mkUpdateField :: GQLNameIdentifier -> GQLNameIdentifier
-mkUpdateField name = C.fromName G._update <> name
+mkUpdateField name = C.fromName Name._update <> name
 
 mkUpdateByPkField :: GQLNameIdentifier -> GQLNameIdentifier
-mkUpdateByPkField name = C.fromName G._update <> name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
+mkUpdateByPkField name = C.fromName Name._update <> name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
 
 mkDeleteField :: GQLNameIdentifier -> GQLNameIdentifier
-mkDeleteField name = C.fromName G._delete <> name
+mkDeleteField name = C.fromName Name._delete <> name
 
 mkDeleteByPkField :: GQLNameIdentifier -> GQLNameIdentifier
-mkDeleteByPkField name = C.fromName G._delete <> name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
+mkDeleteByPkField name = C.fromName Name._delete <> name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
 
 mkRelayConnectionField :: GQLNameIdentifier -> GQLNameIdentifier
-mkRelayConnectionField name = name <> C.fromName G._connection
+mkRelayConnectionField name = name <> C.fromName Name._connection
 
 mkSelectStreamField :: GQLNameIdentifier -> GQLNameIdentifier
-mkSelectStreamField name = name <> C.fromName G._stream
+mkSelectStreamField name = name <> C.fromName Name._stream

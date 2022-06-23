@@ -18,9 +18,9 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser (FieldParser, Kind (..), Parser, Schema (..))
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Prelude
 import Language.GraphQL.Draft.Printer qualified as GP
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -131,7 +131,7 @@ like so (again, heavily simplified):
 ```
     types :: FieldParser n J.Value
     types = do
-      printer <- P.subselection_ G._types Nothing typeField
+      printer <- P.subselection_ GName._types Nothing typeField
       return $ J.Array $ map printer $ allSchemaTypes
 ```
 
@@ -264,8 +264,8 @@ typeIntrospection ::
 {-# INLINE typeIntrospection #-}
 typeIntrospection = do
   let nameArg :: P.InputFieldsParser n Text
-      nameArg = P.field G._name Nothing P.string
-  ~(nameText, printer) <- P.subselection G.___type Nothing nameArg typeField
+      nameArg = P.field GName._name Nothing P.string
+  ~(nameText, printer) <- P.subselection GName.___type Nothing nameArg typeField
   -- We pass around the GraphQL schema information under the name `partialSchema`,
   -- because the GraphQL spec forces us to expose a hybrid between the
   -- specification of valid queries (including introspection) and an
@@ -281,7 +281,7 @@ schema ::
   MonadParse n =>
   FieldParser n (Schema -> J.Value)
 {-# INLINE schema #-}
-schema = P.subselection_ G.___schema Nothing schemaSet
+schema = P.subselection_ GName.___schema Nothing schemaSet
 
 {-
 type __Type {
@@ -318,11 +318,11 @@ typeField ::
 typeField =
   let includeDeprecated :: P.InputFieldsParser n Bool
       includeDeprecated =
-        P.fieldWithDefault G._includeDeprecated Nothing (G.VBoolean False) (P.nullable P.boolean)
+        P.fieldWithDefault GName._includeDeprecated Nothing (G.VBoolean False) (P.nullable P.boolean)
           <&> fromMaybe False
       kind :: FieldParser n (SomeType -> J.Value)
       kind =
-        P.selection_ G._kind Nothing typeKind
+        P.selection_ GName._kind Nothing typeKind
           $> \case
             SomeType tp ->
               case tp of
@@ -346,7 +346,7 @@ typeField =
                   J.String "UNION"
       name :: FieldParser n (SomeType -> J.Value)
       name =
-        P.selection_ G._name Nothing P.string
+        P.selection_ GName._name Nothing P.string
           $> \case
             SomeType tp ->
               case tp of
@@ -355,7 +355,7 @@ typeField =
                 _ -> J.Null
       description :: FieldParser n (SomeType -> J.Value)
       description =
-        P.selection_ G._description Nothing P.string
+        P.selection_ GName._description Nothing P.string
           $> \case
             SomeType (P.TNamed _ (P.Definition _ (Just desc) _)) ->
               J.String (G.unDescription desc)
@@ -363,7 +363,7 @@ typeField =
       fields :: FieldParser n (SomeType -> J.Value)
       fields = do
         -- TODO handle the value of includeDeprecated
-        ~(_includeDeprecated, printer) <- P.subselection G._fields Nothing includeDeprecated fieldField
+        ~(_includeDeprecated, printer) <- P.subselection GName._fields Nothing includeDeprecated fieldField
         return $
           \case
             SomeType tp ->
@@ -375,7 +375,7 @@ typeField =
                 _ -> J.Null
       interfaces :: FieldParser n (SomeType -> J.Value)
       interfaces = do
-        printer <- P.subselection_ G._interfaces Nothing typeField
+        printer <- P.subselection_ GName._interfaces Nothing typeField
         return $
           \case
             SomeType tp ->
@@ -385,7 +385,7 @@ typeField =
                 _ -> J.Null
       possibleTypes :: FieldParser n (SomeType -> J.Value)
       possibleTypes = do
-        printer <- P.subselection_ G._possibleTypes Nothing typeField
+        printer <- P.subselection_ GName._possibleTypes Nothing typeField
         return $
           \case
             SomeType tp ->
@@ -398,7 +398,7 @@ typeField =
       enumValues :: FieldParser n (SomeType -> J.Value)
       enumValues = do
         -- TODO handle the value of includeDeprecated
-        ~(_includeDeprecated, printer) <- P.subselection G._enumValues Nothing includeDeprecated enumValue
+        ~(_includeDeprecated, printer) <- P.subselection GName._enumValues Nothing includeDeprecated enumValue
         return $
           \case
             SomeType tp ->
@@ -408,7 +408,7 @@ typeField =
                 _ -> J.Null
       inputFields :: FieldParser n (SomeType -> J.Value)
       inputFields = do
-        printer <- P.subselection_ G._inputFields Nothing inputValue
+        printer <- P.subselection_ GName._inputFields Nothing inputValue
         return $
           \case
             SomeType tp ->
@@ -419,7 +419,7 @@ typeField =
       -- ofType peels modalities off of types
       ofType :: FieldParser n (SomeType -> J.Value)
       ofType = do
-        printer <- P.subselection_ G._ofType Nothing typeField
+        printer <- P.subselection_ GName._ofType Nothing typeField
         return $ \case
           -- kind = "NON_NULL": !a -> a
           SomeType (P.TNamed P.NonNullable x) ->
@@ -433,7 +433,7 @@ typeField =
           _ -> J.Null
    in applyPrinter
         <$> P.selectionSet
-          G.___Type
+          GName.___Type
           Nothing
           [ kind,
             name,
@@ -461,26 +461,26 @@ inputValue ::
 inputValue =
   let name :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       name =
-        P.selection_ G._name Nothing P.string
+        P.selection_ GName._name Nothing P.string
           $> nameAsJSON . P.dName
       description :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       description =
-        P.selection_ G._description Nothing P.string
+        P.selection_ GName._description Nothing P.string
           $> maybe J.Null (J.String . G.unDescription) . P.dDescription
       typeF :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       typeF = do
-        printer <- P.subselection_ G._type Nothing typeField
+        printer <- P.subselection_ GName._type Nothing typeField
         return $ \defInfo -> case P.dInfo defInfo of
           P.InputFieldInfo tp _ -> printer $ SomeType tp
       defaultValue :: FieldParser n (P.Definition P.InputFieldInfo -> J.Value)
       defaultValue =
-        P.selection_ G._defaultValue Nothing P.string
+        P.selection_ GName._defaultValue Nothing P.string
           $> \defInfo -> case P.dInfo defInfo of
             P.InputFieldInfo _ (Just val) -> J.String $ T.run $ GP.value val
             _ -> J.Null
    in applyPrinter
         <$> P.selectionSet
-          G.___InputValue
+          GName.___InputValue
           Nothing
           [ name,
             description,
@@ -503,24 +503,24 @@ enumValue ::
 enumValue =
   let name :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
       name =
-        P.selection_ G._name Nothing P.string
+        P.selection_ GName._name Nothing P.string
           $> nameAsJSON . P.dName
       description :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
       description =
-        P.selection_ G._description Nothing P.string
+        P.selection_ GName._description Nothing P.string
           $> maybe J.Null (J.String . G.unDescription) . P.dDescription
       -- TODO We don't seem to support enum value deprecation
       isDeprecated :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
       isDeprecated =
-        P.selection_ G._isDeprecated Nothing P.string
+        P.selection_ GName._isDeprecated Nothing P.string
           $> const (J.Bool False)
       deprecationReason :: FieldParser n (P.Definition P.EnumValueInfo -> J.Value)
       deprecationReason =
-        P.selection_ G._deprecationReason Nothing P.string
+        P.selection_ GName._deprecationReason Nothing P.string
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          G.___EnumValue
+          GName.___EnumValue
           Nothing
           [ name,
             description,
@@ -546,17 +546,17 @@ typeKind ::
   Parser 'Both n ()
 typeKind =
   P.enum
-    G.___TypeKind
+    GName.___TypeKind
     Nothing
     ( NE.fromList
-        [ mkDefinition G._ENUM,
-          mkDefinition G._INPUT_OBJECT,
-          mkDefinition G._INTERFACE,
-          mkDefinition G._LIST,
-          mkDefinition G._NON_NULL,
-          mkDefinition G._OBJECT,
-          mkDefinition G._SCALAR,
-          mkDefinition G._UNION
+        [ mkDefinition GName._ENUM,
+          mkDefinition GName._INPUT_OBJECT,
+          mkDefinition GName._INTERFACE,
+          mkDefinition GName._LIST,
+          mkDefinition GName._NON_NULL,
+          mkDefinition GName._OBJECT,
+          mkDefinition GName._SCALAR,
+          mkDefinition GName._UNION
         ]
     )
   where
@@ -579,34 +579,34 @@ fieldField ::
 fieldField =
   let name :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       name =
-        P.selection_ G._name Nothing P.string
+        P.selection_ GName._name Nothing P.string
           $> nameAsJSON . P.dName
       description :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       description =
-        P.selection_ G._description Nothing P.string $> \defInfo ->
+        P.selection_ GName._description Nothing P.string $> \defInfo ->
           case P.dDescription defInfo of
             Nothing -> J.Null
             Just desc -> J.String (G.unDescription desc)
       args :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       args = do
-        printer <- P.subselection_ G._args Nothing inputValue
+        printer <- P.subselection_ GName._args Nothing inputValue
         return $ J.Array . V.fromList . map printer . sortOn P.dName . P.fArguments . P.dInfo
       typeF :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       typeF = do
-        printer <- P.subselection_ G._type Nothing typeField
+        printer <- P.subselection_ GName._type Nothing typeField
         return $ printer . (\case P.FieldInfo _ tp -> SomeType tp) . P.dInfo
       -- TODO We don't seem to track deprecation info
       isDeprecated :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       isDeprecated =
-        P.selection_ G._isDeprecated Nothing P.string
+        P.selection_ GName._isDeprecated Nothing P.string
           $> const (J.Bool False)
       deprecationReason :: FieldParser n (P.Definition P.FieldInfo -> J.Value)
       deprecationReason =
-        P.selection_ G._deprecationReason Nothing P.string
+        P.selection_ GName._deprecationReason Nothing P.string
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          G.___Field
+          GName.___Field
           Nothing
           [ name,
             description,
@@ -633,27 +633,27 @@ directiveSet ::
 directiveSet =
   let name :: FieldParser n (P.DirectiveInfo -> J.Value)
       name =
-        P.selection_ G._name Nothing P.string
+        P.selection_ GName._name Nothing P.string
           $> (J.toOrdered . P.diName)
       description :: FieldParser n (P.DirectiveInfo -> J.Value)
       description =
-        P.selection_ G._description Nothing P.string
+        P.selection_ GName._description Nothing P.string
           $> (J.toOrdered . P.diDescription)
       locations :: FieldParser n (P.DirectiveInfo -> J.Value)
       locations =
-        P.selection_ G._locations Nothing P.string
+        P.selection_ GName._locations Nothing P.string
           $> (J.toOrdered . map showDirLoc . P.diLocations)
       args :: FieldParser n (P.DirectiveInfo -> J.Value)
       args = do
-        printer <- P.subselection_ G._args Nothing inputValue
+        printer <- P.subselection_ GName._args Nothing inputValue
         pure $ J.array . map printer . P.diArguments
       isRepeatable :: FieldParser n (P.DirectiveInfo -> J.Value)
       isRepeatable =
-        P.selection_ G._isRepeatable Nothing P.string
+        P.selection_ GName._isRepeatable Nothing P.string
           $> const J.Null
    in applyPrinter
         <$> P.selectionSet
-          G.___Directive
+          GName.___Directive
           Nothing
           [ name,
             description,
@@ -685,13 +685,13 @@ schemaSet ::
 schemaSet =
   let description :: FieldParser n (Schema -> J.Value)
       description =
-        P.selection_ G._description Nothing P.string
+        P.selection_ GName._description Nothing P.string
           $> \partialSchema -> case sDescription partialSchema of
             Nothing -> J.Null
             Just s -> J.String $ G.unDescription s
       types :: FieldParser n (Schema -> J.Value)
       types = do
-        printer <- P.subselection_ G._types Nothing typeField
+        printer <- P.subselection_ GName._types Nothing typeField
         return $
           \partialSchema ->
             J.Array $
@@ -704,27 +704,27 @@ schemaSet =
             SomeType $ P.TNamed P.Nullable def
       queryType :: FieldParser n (Schema -> J.Value)
       queryType = do
-        printer <- P.subselection_ G._queryType Nothing typeField
+        printer <- P.subselection_ GName._queryType Nothing typeField
         return $ \partialSchema -> printer $ SomeType $ sQueryType partialSchema
       mutationType :: FieldParser n (Schema -> J.Value)
       mutationType = do
-        printer <- P.subselection_ G._mutationType Nothing typeField
+        printer <- P.subselection_ GName._mutationType Nothing typeField
         return $ \partialSchema -> case sMutationType partialSchema of
           Nothing -> J.Null
           Just tp -> printer $ SomeType tp
       subscriptionType :: FieldParser n (Schema -> J.Value)
       subscriptionType = do
-        printer <- P.subselection_ G._subscriptionType Nothing typeField
+        printer <- P.subselection_ GName._subscriptionType Nothing typeField
         return $ \partialSchema -> case sSubscriptionType partialSchema of
           Nothing -> J.Null
           Just tp -> printer $ SomeType tp
       directives :: FieldParser n (Schema -> J.Value)
       directives = do
-        printer <- P.subselection_ G._directives Nothing directiveSet
+        printer <- P.subselection_ GName._directives Nothing directiveSet
         return $ \partialSchema -> J.array $ map printer $ sDirectives partialSchema
    in applyPrinter
         <$> P.selectionSet
-          G.___Schema
+          GName.___Schema
           Nothing
           [ description,
             types,

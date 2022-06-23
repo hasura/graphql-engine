@@ -17,12 +17,12 @@ import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), ComparisonExp, MonadBuildSchema)
 import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
 import Hasura.GraphQL.Schema.Select qualified as GS.S
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.Select (SelectArgsG (..))
 import Hasura.RQL.IR.Value qualified as IR
@@ -108,7 +108,7 @@ columnParser' columnType (GQL.Nullability isNullable) = do
 orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector)))
 orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
   let dcName = Adapter._scDataConnectorName _siConfiguration
-      orderBy = fromMaybe G._order_by $ GQL.mkName $ NET.unNonEmptyText (Adapter.unDataConnectorName dcName) <> "_order_by"
+      orderBy = fromMaybe Name._order_by $ GQL.mkName $ NET.unNonEmptyText (Adapter.unDataConnectorName dcName) <> "_order_by"
    in (orderBy,) $
         -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
         NE.fromList

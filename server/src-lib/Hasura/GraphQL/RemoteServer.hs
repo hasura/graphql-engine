@@ -20,8 +20,8 @@ import Data.List.Extended (duplicates)
 import Data.Text qualified as T
 import Data.Text.Extended (dquoteList, (<<>))
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Monad (Parse, runSchemaT)
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -102,8 +102,8 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
     addDefaultRoots :: IntrospectionResult -> IntrospectionResult
     addDefaultRoots IntrospectionResult {..} =
       IntrospectionResult
-        { irMutationRoot = getRootTypeName G._Mutation irMutationRoot,
-          irSubscriptionRoot = getRootTypeName G._Subscription irSubscriptionRoot,
+        { irMutationRoot = getRootTypeName GName._Mutation irMutationRoot,
+          irSubscriptionRoot = getRootTypeName GName._Subscription irSubscriptionRoot,
           ..
         }
       where

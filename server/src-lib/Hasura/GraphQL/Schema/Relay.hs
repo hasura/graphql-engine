@@ -23,7 +23,6 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser (Kind (..), Parser)
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -31,6 +30,7 @@ import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Node
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
@@ -54,7 +54,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 nodeInterface :: SourceCache -> NodeInterfaceParserBuilder
 nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterface () do
   let idDescription = G.Description "A globally unique identifier"
-      idField = P.selection_ G._id (Just idDescription) P.identifier
+      idField = P.selection_ Name._id (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
   tCase <- asks getter
   tables :: [Parser 'Output n (SourceName, AB.AnyBackend TableMap)] <-
@@ -79,7 +79,7 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
   pure $
     Map.fromListWith fuseAnyMaps
       <$> P.selectionSetInterface
-        G._Node
+        Name._Node
         (Just nodeInterfaceDescription)
         [idField]
         tables
@@ -106,14 +106,14 @@ nodeField ::
   m (P.FieldParser n (IR.QueryRootField IR.UnpreparedValue))
 nodeField sourceCache = do
   let idDescription = G.Description "A globally unique id"
-      idArgument = P.field G._id (Just idDescription) P.identifier
+      idArgument = P.field Name._id (Just idDescription) P.identifier
   stringifyNum <- retrieve soStringifyNum
   nodeObject <-
     retrieve scSchemaKind >>= \case
       HasuraSchema -> throw500 "internal error: the node field should only be built for the Relay schema"
       RelaySchema nodeBuilder -> runNodeBuilder nodeBuilder
   pure $
-    P.subselection G._node Nothing idArgument nodeObject `P.bindField` \(ident, parseds) -> do
+    P.subselection Name._node Nothing idArgument nodeObject `P.bindField` \(ident, parseds) -> do
       nodeId <- parseNodeId ident
       case nodeId of
         NodeIdV1 (V1NodeId tableName pKeys) -> do

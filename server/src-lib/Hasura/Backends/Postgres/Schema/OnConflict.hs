@@ -25,11 +25,11 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
 import Hasura.RQL.IR.Insert qualified as IR
@@ -65,7 +65,7 @@ onConflictFieldParser sourceInfo tableInfo = do
   let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
       maybeConflictObject = conflictObjectParser sourceInfo tableInfo (_permUpd permissions) <$> maybeConstraints
   case maybeConflictObject of
-    Just conflictObject -> conflictObject <&> P.fieldOptional (applyFieldNameCaseCust tCase G._on_conflict) (Just "upsert condition")
+    Just conflictObject -> conflictObject <&> P.fieldOptional (applyFieldNameCaseCust tCase Name._on_conflict) (Just "upsert condition")
     Nothing -> return $ pure Nothing
 
 -- | Create a parser for the @_on_conflict@ object of the given table.
@@ -82,7 +82,7 @@ conflictObjectParser sourceInfo tableInfo maybeUpdatePerms constraints = do
   constraintParser <- conflictConstraint constraints sourceInfo tableInfo
   whereExpParser <- boolExp sourceInfo tableInfo
   tableGQLName <- getTableGQLName tableInfo
-  objectName <- P.mkTypename $ tableGQLName <> G.__on_conflict
+  objectName <- P.mkTypename $ tableGQLName <> Name.__on_conflict
 
   let objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
       (presetColumns, updateFilter) = fromMaybe (HM.empty, IR.gBoolExpTrue) $ do
@@ -94,10 +94,10 @@ conflictObjectParser sourceInfo tableInfo maybeUpdatePerms constraints = do
 
   pure $
     P.object objectName (Just objectDesc) $ do
-      constraintField <- P.field G._constraint Nothing constraintParser
-      let updateColumnsField = P.fieldWithDefault G._update_columns Nothing (G.VList []) (P.list updateColumnsEnum)
+      constraintField <- P.field Name._constraint Nothing constraintParser
+      let updateColumnsField = P.fieldWithDefault Name._update_columns Nothing (G.VList []) (P.list updateColumnsEnum)
 
-      whereExp <- P.fieldOptional G._where Nothing whereExpParser
+      whereExp <- P.fieldOptional Name._where Nothing whereExpParser
 
       updateColumns <-
         updateColumnsField `P.bindFields` \updateColumnsMaybe ->
@@ -148,7 +148,7 @@ conflictConstraint constraints sourceInfo tableInfo =
               P.EnumValueInfo,
             c
           )
-    enumName <- P.mkTypename $ tableGQLName <> G.__constraint
+    enumName <- P.mkTypename $ tableGQLName <> Name.__constraint
     let enumDesc = G.Description $ "unique or primary key constraints on table " <>> tableName
     pure $ P.enum enumName (Just enumDesc) constraintEnumValues
   where

@@ -16,12 +16,12 @@ import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Select qualified as IR
@@ -217,25 +217,25 @@ scalarSelectionArgumentsParser' _columnType = pure Nothing
 
 orderByOperators' :: NamingCase -> (GQL.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 orderByOperators' _tCase =
-  (G._order_by,) $
+  (Name._order_by,) $
     -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
     NE.fromList
-      [ ( define G._asc "in ascending order, nulls first",
+      [ ( define Name._asc "in ascending order, nulls first",
           (MySQL.Asc, MySQL.NullsFirst)
         ),
-        ( define G._asc_nulls_first "in ascending order, nulls first",
+        ( define Name._asc_nulls_first "in ascending order, nulls first",
           (MySQL.Asc, MySQL.NullsFirst)
         ),
-        ( define G._asc_nulls_last "in ascending order, nulls last",
+        ( define Name._asc_nulls_last "in ascending order, nulls last",
           (MySQL.Asc, MySQL.NullsLast)
         ),
-        ( define G._desc "in descending order, nulls last",
+        ( define Name._desc "in descending order, nulls last",
           (MySQL.Desc, MySQL.NullsLast)
         ),
-        ( define G._desc_nulls_first "in descending order, nulls first",
+        ( define Name._desc_nulls_first "in descending order, nulls first",
           (MySQL.Desc, MySQL.NullsFirst)
         ),
-        ( define G._desc_nulls_last "in descending order, nulls last",
+        ( define Name._desc_nulls_last "in descending order, nulls last",
           (MySQL.Desc, MySQL.NullsLast)
         )
       ]
@@ -253,7 +253,7 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
   typedParser <- columnParser columnType (GQL.Nullability False)
   _nullableTextParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability True)
   textParser <- columnParser (ColumnScalar @'MySQL MySQL.VarChar) (GQL.Nullability False)
-  let name = P.getName typedParser <> G.__MySQL_comparison_exp
+  let name = P.getName typedParser <> Name.__MySQL_comparison_exp
       desc =
         GQL.Description $
           "Boolean expression to compare columns of type "
@@ -265,13 +265,13 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
     P.object name (Just desc) $
       catMaybes
         <$> sequenceA
-          [ P.fieldOptional G.__is_null Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean),
-            P.fieldOptional G.__eq Nothing (AEQ True . mkParameter <$> typedParser),
-            P.fieldOptional G.__neq Nothing (ANE True . mkParameter <$> typedParser),
-            P.fieldOptional G.__gt Nothing (AGT . mkParameter <$> typedParser),
-            P.fieldOptional G.__lt Nothing (ALT . mkParameter <$> typedParser),
-            P.fieldOptional G.__gte Nothing (AGTE . mkParameter <$> typedParser),
-            P.fieldOptional G.__lte Nothing (ALTE . mkParameter <$> typedParser)
+          [ P.fieldOptional Name.__is_null Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean),
+            P.fieldOptional Name.__eq Nothing (AEQ True . mkParameter <$> typedParser),
+            P.fieldOptional Name.__neq Nothing (ANE True . mkParameter <$> typedParser),
+            P.fieldOptional Name.__gt Nothing (AGT . mkParameter <$> typedParser),
+            P.fieldOptional Name.__lt Nothing (ALT . mkParameter <$> typedParser),
+            P.fieldOptional Name.__gte Nothing (AGTE . mkParameter <$> typedParser),
+            P.fieldOptional Name.__lte Nothing (ALTE . mkParameter <$> typedParser)
           ]
 
 {-
@@ -287,7 +287,7 @@ mysqlCountTypeInput ::
   InputFieldsParser n (IR.CountDistinct -> CountType 'MySQL)
 mysqlCountTypeInput = \case
   Just columnEnum -> do
-    columns <- P.fieldOptional G._columns Nothing $ P.list columnEnum
+    columns <- P.fieldOptional Name._columns Nothing $ P.list columnEnum
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where

@@ -19,10 +19,10 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Value
@@ -53,7 +53,7 @@ boolExp ::
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
-  name <- P.mkTypename $ tableGQLName <> G.__bool_exp
+  name <- P.mkTypename $ tableGQLName <> Name.__bool_exp
   let description =
         G.Description $
           "Boolean expression to filter rows from the table " <> tableName
@@ -65,9 +65,9 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
   let specialFieldParsers =
-        [ P.fieldOptional G.__or Nothing (BoolOr <$> P.list recur),
-          P.fieldOptional G.__and Nothing (BoolAnd <$> P.list recur),
-          P.fieldOptional G.__not Nothing (BoolNot <$> recur)
+        [ P.fieldOptional Name.__or Nothing (BoolOr <$> P.list recur),
+          P.fieldOptional Name.__and Nothing (BoolAnd <$> P.list recur),
+          P.fieldOptional Name.__not Nothing (BoolNot <$> recur)
         ]
 
   pure $
@@ -211,10 +211,10 @@ equalityOperators ::
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 equalityOperators tCase collapseIfNull valueParser valueListParser =
   [ mkBoolOperator tCase collapseIfNull (C.fromTuple $$(G.litGQLIdentifier ["_is", "null"])) Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
-    mkBoolOperator tCase collapseIfNull (C.fromName G.__eq) Nothing $ AEQ True <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName G.__neq) Nothing $ ANE True <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName G.__in) Nothing $ AIN <$> valueListParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName G.__nin) Nothing $ ANIN <$> valueListParser
+    mkBoolOperator tCase collapseIfNull (C.fromName Name.__eq) Nothing $ AEQ True <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromName Name.__neq) Nothing $ ANE True <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromName Name.__in) Nothing $ AIN <$> valueListParser,
+    mkBoolOperator tCase collapseIfNull (C.fromName Name.__nin) Nothing $ ANIN <$> valueListParser
   ]
 
 comparisonOperators ::
@@ -226,8 +226,8 @@ comparisonOperators ::
   Parser k n (UnpreparedValue b) ->
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
 comparisonOperators tCase collapseIfNull valueParser =
-  [ mkBoolOperator tCase collapseIfNull (C.fromName G.__gt) Nothing $ AGT <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName G.__lt) Nothing $ ALT <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName G.__gte) Nothing $ AGTE <$> valueParser,
-    mkBoolOperator tCase collapseIfNull (C.fromName G.__lte) Nothing $ ALTE <$> valueParser
+  [ mkBoolOperator tCase collapseIfNull (C.fromName Name.__gt) Nothing $ AGT <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromName Name.__lt) Nothing $ ALT <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromName Name.__gte) Nothing $ AGTE <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromName Name.__lte) Nothing $ ALTE <$> valueParser
   ]

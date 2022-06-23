@@ -11,11 +11,11 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Hasura.Backends.BigQuery.Name
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
@@ -24,6 +24,7 @@ import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as IR
@@ -162,7 +163,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
     ColumnScalar scalarType -> case scalarType of
       -- bytestrings
       -- we only accept string literals
-      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> stringBased G._Bytes
+      BigQuery.BytesScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> stringBased _Bytes
       -- text
       BigQuery.StringScalarType -> pure $ possiblyNullable scalarType $ BigQuery.StringValue <$> P.string
       -- floating point values
@@ -176,13 +177,13 @@ bqColumnParser columnType (G.Nullability isNullable) =
       BigQuery.BigDecimalScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BigDecimalValue . BigQuery.BigDecimal . BigQuery.scientificToText <$> P.scientific
       -- boolean type
       BigQuery.BoolScalarType -> pure $ possiblyNullable scalarType $ BigQuery.BoolValue <$> P.boolean
-      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> stringBased G._Date
-      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> stringBased G._Time
-      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased G._Datetime
+      BigQuery.DateScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DateValue . BigQuery.Date <$> stringBased _Date
+      BigQuery.TimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.TimeValue . BigQuery.Time <$> stringBased _Time
+      BigQuery.DatetimeScalarType -> pure $ possiblyNullable scalarType $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased _Datetime
       BigQuery.GeographyScalarType ->
-        pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON G._Geography
+        pure $ possiblyNullable scalarType $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON _Geography
       BigQuery.TimestampScalarType ->
-        pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased G._Timestamp
+        pure $ possiblyNullable scalarType $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
       ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (Map.toList enumValues) of
@@ -226,25 +227,25 @@ bqOrderByOperators ::
       )
   )
 bqOrderByOperators _tCase =
-  (G._order_by,) $
+  (Name._order_by,) $
     -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
     NE.fromList
-      [ ( define G._asc "in ascending order, nulls first",
+      [ ( define Name._asc "in ascending order, nulls first",
           (BigQuery.AscOrder, BigQuery.NullsFirst)
         ),
-        ( define G._asc_nulls_first "in ascending order, nulls first",
+        ( define Name._asc_nulls_first "in ascending order, nulls first",
           (BigQuery.AscOrder, BigQuery.NullsFirst)
         ),
-        ( define G._asc_nulls_last "in ascending order, nulls last",
+        ( define Name._asc_nulls_last "in ascending order, nulls last",
           (BigQuery.AscOrder, BigQuery.NullsLast)
         ),
-        ( define G._desc "in descending order, nulls last",
+        ( define Name._desc "in descending order, nulls last",
           (BigQuery.DescOrder, BigQuery.NullsLast)
         ),
-        ( define G._desc_nulls_first "in descending order, nulls first",
+        ( define Name._desc_nulls_first "in descending order, nulls first",
           (BigQuery.DescOrder, BigQuery.NullsFirst)
         ),
-        ( define G._desc_nulls_last "in descending order, nulls last",
+        ( define Name._desc_nulls_last "in descending order, nulls last",
           (BigQuery.DescOrder, BigQuery.NullsLast)
         )
       ]
@@ -264,7 +265,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
   typedParser <- columnParser columnType (G.Nullability False)
   _nullableTextParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability True)
   -- textParser <- columnParser (ColumnScalar @'BigQuery BigQuery.StringScalarType) (G.Nullability False)
-  let name = P.getName typedParser <> G.__BigQuery_comparison_exp
+  let name = P.getName typedParser <> Name.__BigQuery_comparison_exp
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -298,13 +299,13 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__like)
+                       (C.fromName Name.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__nlike)
+                       (C.fromName Name.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . IR.mkParameter <$> typedParser)
                    ],
@@ -313,13 +314,13 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__like)
+                       (C.fromName Name.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__nlike)
+                       (C.fromName Name.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . IR.mkParameter <$> typedParser)
                    ],
@@ -370,7 +371,7 @@ bqCountTypeInput ::
   InputFieldsParser n (IR.CountDistinct -> CountType 'BigQuery)
 bqCountTypeInput = \case
   Just columnEnum -> do
-    columns <- P.fieldOptional G._columns Nothing $ P.list columnEnum
+    columns <- P.fieldOptional Name._columns Nothing $ P.list columnEnum
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where
@@ -391,10 +392,10 @@ geographyWithinDistanceInput = do
   booleanParser <- columnParser (ColumnScalar BigQuery.BoolScalarType) (G.Nullability True)
   floatParser <- columnParser (ColumnScalar BigQuery.FloatScalarType) (G.Nullability False)
   pure $
-    P.object G._st_dwithin_input Nothing $
-      DWithinGeogOp <$> (IR.mkParameter <$> P.field G._distance Nothing floatParser)
-        <*> (IR.mkParameter <$> P.field G._from Nothing geographyParser)
-        <*> (IR.mkParameter <$> P.fieldWithDefault G._use_spheroid Nothing (G.VBoolean False) booleanParser)
+    P.object Name._st_dwithin_input Nothing $
+      DWithinGeogOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+        <*> (IR.mkParameter <$> P.field Name._from Nothing geographyParser)
+        <*> (IR.mkParameter <$> P.fieldWithDefault Name._use_spheroid Nothing (G.VBoolean False) booleanParser)
 
 -- | Computed field parser.
 bqComputedField ::
@@ -435,7 +436,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       objectTypeName <-
         P.mkTypename =<< do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
-          pure $ computedFieldGQLName <> G.__ <> G.__fields
+          pure $ computedFieldGQLName <> Name.__ <> Name.__fields
       selectionSetParser <- do
         fieldParsers <- lift $ for returnFields selectArbitraryField
         let description = G.Description $ "column fields returning by " <>> _cfiName
@@ -471,7 +472,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       ComputedFieldFunction 'BigQuery ->
       m (InputFieldsParser n (FunctionArgsExp 'BigQuery (IR.UnpreparedValue 'BigQuery)))
     computedFieldFunctionArgs ComputedFieldFunction {..} = do
-      let fieldName = G._args
+      let fieldName = Name._args
           fieldDesc =
             G.Description $
               "input parameters for computed field "
@@ -481,7 +482,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
         P.mkTypename =<< do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
           tableGQLName <- getTableGQLName @'BigQuery tableInfo
-          pure $ computedFieldGQLName <> G.__ <> tableGQLName <> G.__args
+          pure $ computedFieldGQLName <> Name.__ <> tableGQLName <> Name.__args
 
       let userInputArgs = filter (not . flip Map.member _cffComputedFieldImplicitArgs . BigQuery._faName) (toList _cffInputArgs)
 

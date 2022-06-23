@@ -23,12 +23,12 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Delete qualified as IR
@@ -90,7 +90,7 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
   where
     mkObjectsArg objectParser =
       P.field
-        G._objects
+        Name._objects
         (Just "the rows to be inserted")
         (P.list objectParser)
 
@@ -135,7 +135,7 @@ insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName d
   where
     mkObjectArg objectParser =
       P.field
-        G._object
+        Name._object
         (Just "the row to be inserted")
         objectParser
 
@@ -166,7 +166,7 @@ tableFieldsInput sourceInfo tableInfo =
   memoizeOn 'tableFieldsInput (_siName sourceInfo, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectFields <- traverse mkFieldParser (Map.elems allFields)
-    objectName <- P.mkTypename $ tableGQLName <> G.__insert_input
+    objectName <- P.mkTypename $ tableGQLName <> Name.__insert_input
     let objectDesc = G.Description $ "input type for inserting data into table " <>> tableName
     pure $ P.object objectName (Just objectDesc) $ coalesceFields objectFields
   where
@@ -259,8 +259,8 @@ objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ d
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
-    inputName <- P.mkTypename $ tableGQLName <> G.__obj_rel_insert_input
-    let objectName = G._data
+    inputName <- P.mkTypename $ tableGQLName <> Name.__obj_rel_insert_input
+    let objectName = Name._data
         inputDesc = G.Description $ "input type for inserting object relation for remote table " <>> tableName
         inputParser = do
           backendInsert <- backendInsertParser
@@ -292,8 +292,8 @@ arrayRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
-    inputName <- P.mkTypename $ tableGQLName <> G.__arr_rel_insert_input
-    let objectsName = G._data
+    inputName <- P.mkTypename $ tableGQLName <> Name.__arr_rel_insert_input
+    let objectsName = Name._data
         inputDesc = G.Description $ "input type for inserting array relation for remote table " <>> tableName
         inputParser = do
           backendInsert <- backendInsertParser
@@ -354,7 +354,7 @@ deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT 
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && dpiBackendOnly deletePerms
   lift do
-    let whereName = G._where
+    let whereName = Name._where
         whereDesc = "filter the rows which have to be deleted"
     whereArg <- P.field whereName (Just whereDesc) <$> boolExp sourceInfo tableInfo
     selection <- mutationSelectionSet sourceInfo tableInfo
@@ -426,11 +426,11 @@ mutationSelectionSet sourceInfo tableInfo =
     returning <- runMaybeT do
       _permissions <- MaybeT $ tableSelectPermissions tableInfo
       tableSet <- MaybeT $ tableSelectionList sourceInfo tableInfo
-      let returningName = G._returning
+      let returningName = Name._returning
           returningDesc = "data from the rows affected by the mutation"
       pure $ IR.MRet <$> P.subselection_ returningName (Just returningDesc) tableSet
-    selectionName <- P.mkTypename $ tableGQLName <> G.__mutation_response
-    let affectedRowsName = G._affected_rows
+    selectionName <- P.mkTypename $ tableGQLName <> Name.__mutation_response
+    let affectedRowsName = Name._affected_rows
         affectedRowsDesc = "number of rows affected by the mutation"
         selectionDesc = G.Description $ "response of any mutation on the table " <>> tableName
 

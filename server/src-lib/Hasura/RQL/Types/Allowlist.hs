@@ -25,7 +25,7 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.HashMap.Strict.InsOrd.Extended qualified as OM
 import Data.HashSet qualified as S
 import Data.Text.Extended ((<<>))
-import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Prelude
 import Hasura.RQL.Types.QueryCollection
 import Hasura.Session (RoleName)
@@ -151,7 +151,7 @@ normalizeQuery =
     filterSel :: G.Selection frag var' -> Maybe (G.Selection frag var')
     filterSel s = case s of
       G.SelectionField f ->
-        if G._fName f == G.___typename
+        if G._fName f == GName.___typename
           then Nothing
           else
             let newSelset = filterSelSet $ G._fSelectionSet f

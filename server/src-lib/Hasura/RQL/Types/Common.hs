@@ -68,7 +68,7 @@ import Data.URL.Template
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
@@ -485,11 +485,11 @@ getEnv env k = do
 
 -- default scalar names
 intScalar, floatScalar, stringScalar, boolScalar, idScalar :: G.Name
-intScalar = G._Int
-floatScalar = G._Float
-stringScalar = G._String
-boolScalar = G._Boolean
-idScalar = G._ID
+intScalar = GName._Int
+floatScalar = GName._Float
+stringScalar = GName._String
+boolScalar = GName._Boolean
+idScalar = GName._ID
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig
