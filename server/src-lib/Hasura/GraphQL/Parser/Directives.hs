@@ -36,7 +36,7 @@ import Data.Parser.JSONPath
 import Data.Text.Extended
 import Data.Typeable (eqT)
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.DirectiveName qualified as Name
 import Hasura.GraphQL.Parser.Internal.Input
 import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
@@ -156,7 +156,7 @@ withDirective dmap key callback = callback $ runIdentity <$> DM.lookup key dmap
 cachedDirective :: forall m. MonadParse m => Directive m
 cachedDirective =
   mkDirective
-    G._cached
+    Name._cached
     (Just "whether this query should be cached (Hasura Cloud only)")
     True
     [G.DLExecutable G.EDLQUERY]
@@ -164,37 +164,37 @@ cachedDirective =
   where
     -- Optionally set the cache entry time to live
     ttlArgument :: InputFieldsParser m Int
-    ttlArgument = fieldWithDefault G._ttl (Just "measured in seconds") (G.VInt 60) $ fromIntegral <$> int
+    ttlArgument = fieldWithDefault Name._ttl (Just "measured in seconds") (G.VInt 60) $ fromIntegral <$> int
 
     -- Optionally Force a refresh of the cache entry
     forcedArgument :: InputFieldsParser m Bool
-    forcedArgument = fieldWithDefault G._refresh (Just "refresh the cache entry") (G.VBoolean False) boolean
+    forcedArgument = fieldWithDefault Name._refresh (Just "refresh the cache entry") (G.VBoolean False) boolean
 
 data CachedDirective = CachedDirective {cdTtl :: Int, cdRefresh :: Bool}
 
 cached :: DirectiveKey CachedDirective
-cached = DirectiveKey G._cached
+cached = DirectiveKey Name._cached
 
 -- Subscription tests custom directive.
 
 multipleRootFieldsDirective :: forall m. MonadParse m => Directive m
 multipleRootFieldsDirective =
   mkDirective
-    G.__multiple_top_level_fields
+    Name.__multiple_top_level_fields
     (Just "INTERNAL TESTING TOOL DO NOT USE")
     False -- not advertised in the schema
     [G.DLExecutable G.EDLSUBSCRIPTION]
     (pure ())
 
 multipleRootFields :: DirectiveKey ()
-multipleRootFields = DirectiveKey G.__multiple_top_level_fields
+multipleRootFields = DirectiveKey Name.__multiple_top_level_fields
 
 -- Built-in inclusion directives
 
 skipDirective :: MonadParse m => Directive m
 skipDirective =
   mkDirective
-    G._skip
+    Name._skip
     (Just "whether this query should be skipped")
     True
     [ G.DLExecutable G.EDLFIELD,
@@ -206,7 +206,7 @@ skipDirective =
 includeDirective :: MonadParse m => Directive m
 includeDirective =
   mkDirective
-    G._include
+    Name._include
     (Just "whether this query should be included")
     True
     [ G.DLExecutable G.EDLFIELD,
@@ -216,13 +216,13 @@ includeDirective =
     ifArgument
 
 skip :: DirectiveKey Bool
-skip = DirectiveKey G._skip
+skip = DirectiveKey Name._skip
 
 include :: DirectiveKey Bool
-include = DirectiveKey G._include
+include = DirectiveKey Name._include
 
 ifArgument :: MonadParse m => InputFieldsParser m Bool
-ifArgument = field G._if Nothing boolean
+ifArgument = field Name._if Nothing boolean
 
 -- Parser type for directives.
 

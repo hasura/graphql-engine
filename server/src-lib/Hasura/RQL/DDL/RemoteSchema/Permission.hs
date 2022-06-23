@@ -45,7 +45,8 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Name qualified as GName
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Instances ()
@@ -503,10 +504,10 @@ parsePresetDirective gType parentArgName (G.Directive _name args) = do
       | Map.null args -> refute $ pure $ NoPresetArgumentFound
       | otherwise -> do
         val <-
-          onNothing (Map.lookup G._value args) $
+          onNothing (Map.lookup Name._value args) $
             refute $ pure $ InvalidPresetArgument parentArgName
         isStatic <-
-          case (Map.lookup G._static args) of
+          case (Map.lookup Name._static args) of
             Nothing -> pure False
             (Just (G.VBoolean b)) -> pure b
             _ -> refute $ pure $ InvalidStaticValue
@@ -572,7 +573,7 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
   where
     upstreamDirectivesMap = mapFromL G._dName upstreamDirectives
 
-    presetFilterFn = (== G._preset) . G._dName
+    presetFilterFn = (== Name._preset) . G._dName
 
     presetDirectives = filter presetFilterFn providedDirectives
 
@@ -913,7 +914,7 @@ getSchemaDocIntrospection providedTypeDefns (queryRoot, mutationRoot, subscripti
           G.TypeDefinitionUnion union' -> pure $ G.TypeDefinitionUnion union'
           G.TypeDefinitionInputObject inpObj -> pure $ G.TypeDefinitionInputObject inpObj
       remoteSchemaIntrospection = RemoteSchemaIntrospection $ Map.fromListOn getTypeName modifiedTypeDefns
-   in IntrospectionResult remoteSchemaIntrospection (fromMaybe G._Query queryRoot) mutationRoot subscriptionRoot
+   in IntrospectionResult remoteSchemaIntrospection (fromMaybe GName._Query queryRoot) mutationRoot subscriptionRoot
 
 -- | validateRemoteSchema accepts two arguments, the `SchemaDocument` of
 --   the role-based schema, that is provided by the user and the `SchemaIntrospection`

@@ -11,7 +11,6 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
@@ -19,6 +18,7 @@ import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Remote
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
 import Hasura.RQL.IR qualified as IR
@@ -198,7 +198,7 @@ remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
                     IR.SourceRelationshipObject $
                       IR.AnnObjectSelectG fields _rsfiTable $ IR._tpFilter $ tablePermissionsInfo tablePerms
           ArrRel -> do
-            let aggFieldName = fieldName <> G.__aggregate
+            let aggFieldName = fieldName <> Name.__aggregate
             selectionSetParser <- selectTable sourceInfo tableInfo fieldName Nothing
             aggSelectionSetParser <- selectTableAggregate sourceInfo tableInfo aggFieldName Nothing
             pure $

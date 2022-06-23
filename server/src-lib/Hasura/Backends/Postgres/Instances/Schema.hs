@@ -32,8 +32,6 @@ import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Constants qualified as G
-import Hasura.GraphQL.Parser.Constants qualified as GQL
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
@@ -48,6 +46,7 @@ import Hasura.GraphQL.Schema.Mutation qualified as GSB
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Update qualified as SU
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
@@ -290,7 +289,7 @@ pgScalarSelectionArgumentsParser columnType
     P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
   | otherwise = pure Nothing
   where
-    fieldName = G._path
+    fieldName = Name._path
     description = Just "JSON select path"
     toColExp textValue = case parseJSONPath textValue of
       Left err -> parseError $ T.pack $ "parse json path error: " ++ err
@@ -313,24 +312,24 @@ orderByOperators ::
   NamingCase ->
   (G.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
 orderByOperators tCase =
-  (GQL._order_by,) $
+  (Name._order_by,) $
     NE.fromList
-      [ ( define (applyFieldNameCaseCust tCase G._asc) "in ascending order, nulls last",
+      [ ( define (applyFieldNameCaseCust tCase Name._asc) "in ascending order, nulls last",
           (PG.OTAsc, PG.NLast)
         ),
-        ( define (applyFieldNameCaseCust tCase G._asc_nulls_first) "in ascending order, nulls first",
+        ( define (applyFieldNameCaseCust tCase Name._asc_nulls_first) "in ascending order, nulls first",
           (PG.OTAsc, PG.NFirst)
         ),
-        ( define (applyFieldNameCaseCust tCase G._asc_nulls_last) "in ascending order, nulls last",
+        ( define (applyFieldNameCaseCust tCase Name._asc_nulls_last) "in ascending order, nulls last",
           (PG.OTAsc, PG.NLast)
         ),
-        ( define (applyFieldNameCaseCust tCase G._desc) "in descending order, nulls first",
+        ( define (applyFieldNameCaseCust tCase Name._desc) "in descending order, nulls first",
           (PG.OTDesc, PG.NFirst)
         ),
-        ( define (applyFieldNameCaseCust tCase G._desc_nulls_first) "in descending order, nulls first",
+        ( define (applyFieldNameCaseCust tCase Name._desc_nulls_first) "in descending order, nulls first",
           (PG.OTDesc, PG.NFirst)
         ),
-        ( define (applyFieldNameCaseCust tCase G._desc_nulls_last) "in descending order, nulls last",
+        ( define (applyFieldNameCaseCust tCase Name._desc_nulls_last) "in descending order, nulls last",
           (PG.OTDesc, PG.NLast)
         )
       ]
@@ -367,7 +366,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
   ltxtqueryParser <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
   maybeCastParser <- castExp columnType
   tCase <- asks getter
-  let name = applyTypeNameCaseCust tCase $ P.getName typedParser <> G.__comparison_exp
+  let name = applyTypeNameCaseCust tCase $ P.getName typedParser <> Name.__comparison_exp
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -382,7 +381,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
         sequenceA $
           concat
             [ flip (maybe []) maybeCastParser $ \castParser ->
-                [ P.fieldOptional G.__cast Nothing (ACast <$> castParser)
+                [ P.fieldOptional Name.__cast Nothing (ACast <$> castParser)
                 ],
               -- Common ops for all types
               equalityOperators
@@ -422,61 +421,61 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__like)
+                       (C.fromName Name.__like)
                        (Just "does the column match the given pattern")
                        (ALIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__nlike)
+                       (C.fromName Name.__nlike)
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__ilike)
+                       (C.fromName Name.__ilike)
                        (Just "does the column match the given case-insensitive pattern")
                        (ABackendSpecific . AILIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__nilike)
+                       (C.fromName Name.__nilike)
                        (Just "does the column NOT match the given case-insensitive pattern")
                        (ABackendSpecific . ANILIKE . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__similar)
+                       (C.fromName Name.__similar)
                        (Just "does the column match the given SQL regular expression")
                        (ABackendSpecific . ASIMILAR . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__nsimilar)
+                       (C.fromName Name.__nsimilar)
                        (Just "does the column NOT match the given SQL regular expression")
                        (ABackendSpecific . ANSIMILAR . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__regex)
+                       (C.fromName Name.__regex)
                        (Just "does the column match the given POSIX regular expression, case sensitive")
                        (ABackendSpecific . AREGEX . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__iregex)
+                       (C.fromName Name.__iregex)
                        (Just "does the column match the given POSIX regular expression, case insensitive")
                        (ABackendSpecific . AIREGEX . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__nregex)
+                       (C.fromName Name.__nregex)
                        (Just "does the column NOT match the given POSIX regular expression, case sensitive")
                        (ABackendSpecific . ANREGEX . IR.mkParameter <$> typedParser),
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__niregex)
+                       (C.fromName Name.__niregex)
                        (Just "does the column NOT match the given POSIX regular expression, case insensitive")
                        (ABackendSpecific . ANIREGEX . IR.mkParameter <$> typedParser)
                    ],
@@ -485,7 +484,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__contains)
+                       (C.fromName Name.__contains)
                        (Just "does the column contain the given json value at the top level")
                        (ABackendSpecific . AContains . IR.mkParameter <$> typedParser),
                      mkBoolOperator
@@ -596,7 +595,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
                 *> [ mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__ancestor)
+                       (C.fromName Name.__ancestor)
                        (Just "is the left argument an ancestor of right (or equal)?")
                        (ABackendSpecific . AAncestor . IR.mkParameter <$> typedParser),
                      mkBoolOperator
@@ -608,7 +607,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__descendant)
+                       (C.fromName Name.__descendant)
                        (Just "is the left argument a descendant of right (or equal)?")
                        (ABackendSpecific . ADescendant . IR.mkParameter <$> typedParser),
                      mkBoolOperator
@@ -620,7 +619,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
                      mkBoolOperator
                        tCase
                        collapseIfNull
-                       (C.fromName G.__matches)
+                       (C.fromName Name.__matches)
                        (Just "does `ltree` match `lquery`?")
                        (ABackendSpecific . AMatches . IR.mkParameter <$> lqueryParser),
                      mkBoolOperator
@@ -669,7 +668,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
             _ -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do
-        sourceName <- mkScalarTypeName sourceScalar <&> (<> G.__cast_exp)
+        sourceName <- mkScalarTypeName sourceScalar <&> (<> Name.__cast_exp)
         targetName <- mkScalarTypeName targetScalar
         targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar,) <$> targetOpExps
@@ -690,10 +689,10 @@ geographyWithinDistanceInput = do
   booleanParser <- columnParser (ColumnScalar PGBoolean) (G.Nullability True)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object G._st_d_within_geography_input Nothing $
-      DWithinGeogOp <$> (IR.mkParameter <$> P.field G._distance Nothing floatParser)
-        <*> (IR.mkParameter <$> P.field G._from Nothing geographyParser)
-        <*> (IR.mkParameter <$> P.fieldWithDefault G._use_spheroid Nothing (G.VBoolean True) booleanParser)
+    P.object Name._st_d_within_geography_input Nothing $
+      DWithinGeogOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+        <*> (IR.mkParameter <$> P.field Name._from Nothing geographyParser)
+        <*> (IR.mkParameter <$> P.fieldWithDefault Name._use_spheroid Nothing (G.VBoolean True) booleanParser)
 
 geometryWithinDistanceInput ::
   forall pgKind m n r.
@@ -703,9 +702,9 @@ geometryWithinDistanceInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
-    P.object G._st_d_within_input Nothing $
-      DWithinGeomOp <$> (IR.mkParameter <$> P.field G._distance Nothing floatParser)
-        <*> (IR.mkParameter <$> P.field G._from Nothing geometryParser)
+    P.object Name._st_d_within_input Nothing $
+      DWithinGeomOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+        <*> (IR.mkParameter <$> P.field Name._from Nothing geometryParser)
 
 intersectsNbandGeomInput ::
   forall pgKind m n r.
@@ -715,9 +714,9 @@ intersectsNbandGeomInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object G._st_intersects_nband_geom_input Nothing $
-      STIntersectsNbandGeommin <$> (IR.mkParameter <$> P.field G._nband Nothing integerParser)
-        <*> (IR.mkParameter <$> P.field G._geommin Nothing geometryParser)
+    P.object Name._st_intersects_nband_geom_input Nothing $
+      STIntersectsNbandGeommin <$> (IR.mkParameter <$> P.field Name._nband Nothing integerParser)
+        <*> (IR.mkParameter <$> P.field Name._geommin Nothing geometryParser)
 
 intersectsGeomNbandInput ::
   forall pgKind m n r.
@@ -727,10 +726,10 @@ intersectsGeomNbandInput = do
   geometryParser <- columnParser (ColumnScalar PGGeometry) (G.Nullability False)
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
-    P.object G._st_intersects_geom_nband_input Nothing $
+    P.object Name._st_intersects_geom_nband_input Nothing $
       STIntersectsGeomminNband
-        <$> (IR.mkParameter <$> P.field G._geommin Nothing geometryParser)
-        <*> (fmap IR.mkParameter <$> P.fieldOptional G._nband Nothing integerParser)
+        <$> (IR.mkParameter <$> P.field Name._geommin Nothing geometryParser)
+        <*> (fmap IR.mkParameter <$> P.fieldOptional Name._nband Nothing integerParser)
 
 countTypeInput ::
   MonadParse n =>
@@ -738,7 +737,7 @@ countTypeInput ::
   InputFieldsParser n (IR.CountDistinct -> CountType ('Postgres pgKind))
 countTypeInput = \case
   Just columnEnum -> do
-    columns <- P.fieldOptional G._columns Nothing (P.list columnEnum)
+    columns <- P.fieldOptional Name._columns Nothing (P.list columnEnum)
     pure $ flip mkCountType columns
   Nothing -> pure $ flip mkCountType Nothing
   where
@@ -776,7 +775,7 @@ prependOp = SU.UpdateOperator {..}
 
       SU.updateOperator
         tableGQLName
-        G.__prepend
+        Name.__prepend
         typedParser
         columns
         desc
@@ -810,7 +809,7 @@ appendOp = SU.UpdateOperator {..}
           desc = "append existing jsonb value of filtered columns with new jsonb value"
       SU.updateOperator
         tableGQLName
-        G.__append
+        Name.__append
         typedParser
         columns
         desc
@@ -841,7 +840,7 @@ deleteKeyOp = SU.UpdateOperator {..}
 
       SU.updateOperator
         tableGQLName
-        G.__delete_key
+        Name.__delete_key
         nullableTextParser
         columns
         desc
@@ -874,7 +873,7 @@ deleteElemOp = SU.UpdateOperator {..}
 
       SU.updateOperator
         tableGQLName
-        G.__delete_elem
+        Name.__delete_elem
         nonNullableIntParser
         columns
         desc
@@ -905,7 +904,7 @@ deleteAtPathOp = SU.UpdateOperator {..}
 
       SU.updateOperator
         tableGQLName
-        G.__delete_at_path
+        Name.__delete_at_path
         nonNullableTextListParser
         columns
         desc

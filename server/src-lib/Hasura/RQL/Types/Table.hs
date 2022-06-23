@@ -104,8 +104,8 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG (PGDescription)
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Incremental (Cacheable)
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -288,7 +288,7 @@ fieldInfoGraphQLNames info = case info of
     name <- fieldInfoGraphQLName info
     pure $ case riType relationshipInfo of
       ObjRel -> [name]
-      ArrRel -> [name, name <> G.__aggregate]
+      ArrRel -> [name, name <> Name.__aggregate]
   FIComputedField _ -> maybeToList $ fieldInfoGraphQLName info
   FIRemoteRelationship _ -> maybeToList $ fieldInfoGraphQLName info
 

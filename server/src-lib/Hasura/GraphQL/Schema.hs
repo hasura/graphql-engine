@@ -26,7 +26,6 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Parser.Schema.Convert (convertToSchemaIntrospection)
 import Hasura.GraphQL.Schema.Backend
@@ -38,6 +37,7 @@ import Hasura.GraphQL.Schema.Relay
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Action
@@ -275,19 +275,19 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         (,,,)
           <$> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__query))
+            (mkTypename <> P.MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
+            (mkTypename <> P.MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__mutation_backend))
+            (mkTypename <> P.MkTypename (<> Name.__mutation_backend))
             (buildMutationFields Backend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__subscription))
+            (mkTypename <> P.MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
       where
         sourceCustomization =
@@ -394,19 +394,19 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
         (,,,)
           <$> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__query))
+            (mkTypename <> P.MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__mutation_frontend))
+            (mkTypename <> P.MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__mutation_backend))
+            (mkTypename <> P.MkTypename (<> Name.__mutation_backend))
             (buildMutationFields Backend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> G.__subscription))
+            (mkTypename <> P.MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
       where
         sourceCustomization =
@@ -728,7 +728,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
       -- provide any query. In such a case, to meet both of those, we introduce a placeholder query
       -- in the schema.
       placeholderText = "There are no queries available to the current role. Either there are no sources or remote schemas configured, or the current role doesn't have the required permissions."
-      placeholderField = NotNamespaced (RFRaw $ JO.String placeholderText) <$ P.selection_ G._no_queries_available (Just $ G.Description placeholderText) P.string
+      placeholderField = NotNamespaced (RFRaw $ JO.String placeholderText) <$ P.selection_ Name._no_queries_available (Just $ G.Description placeholderText) P.string
       fixedQueryFP = if null basicQueryFP then [placeholderField] else basicQueryFP
   basicQueryP <- queryRootFromFields fixedQueryFP
   let buildIntrospectionResponse printResponseFromSchema = do
@@ -847,13 +847,13 @@ takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b
 takeExposedAs x = Map.filter ((== x) . _fiExposedAs)
 
 subscriptionRoot :: G.Name
-subscriptionRoot = G._subscription_root
+subscriptionRoot = Name._subscription_root
 
 mutationRoot :: G.Name
-mutationRoot = G._mutation_root
+mutationRoot = Name._mutation_root
 
 queryRoot :: G.Name
-queryRoot = G._query_root
+queryRoot = Name._query_root
 
 finalizeParser :: Parser 'Output P.Parse a -> ParserFn a
 finalizeParser parser = P.runParse . P.runParser parser

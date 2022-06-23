@@ -15,7 +15,8 @@ import Data.HashMap.Strict.NonEmpty (NEHashMap)
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.Text qualified as T
 import Hasura.GraphQL.Execute.RemoteJoin.Types
-import Hasura.GraphQL.Parser.Constants qualified as G
+import Hasura.GraphQL.Parser.Name qualified as GName
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
@@ -520,7 +521,7 @@ transformObjectSelectionSet typename selectionSet = do
                 ( mkPlaceholderField alias,
                   Just $ createRemoteJoin joinColumnAliases _srrsRelationship
                 )
-  let internalTypeAlias = G.___hasura_internal_typename
+  let internalTypeAlias = Name.___hasura_internal_typename
       remoteJoins = OMap.mapMaybe snd annotatedFields
       additionalFields =
         if
@@ -532,7 +533,7 @@ transformObjectSelectionSet typename selectionSet = do
               OMap.singleton internalTypeAlias $
                 mkGraphQLField
                   (Just internalTypeAlias)
-                  G.___typename
+                  GName.___typename
                   mempty
                   mempty
                   SelectionSetNone
@@ -554,7 +555,7 @@ transformObjectSelectionSet typename selectionSet = do
     allAliases = map (nameToField . fst) $ OMap.toList selectionSet
 
     mkPlaceholderField alias =
-      mkGraphQLField (Just alias) G.___typename mempty mempty SelectionSetNone
+      mkGraphQLField (Just alias) GName.___typename mempty mempty SelectionSetNone
 
     -- A map of graphql scalar fields (without any arguments) to their aliases
     -- in the selection set. We do not yet support lhs join fields which take

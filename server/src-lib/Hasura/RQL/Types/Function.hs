@@ -53,8 +53,8 @@ import Data.List.Extended as LE
 import Data.Sequence qualified as Seq
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.Incremental (Cacheable)
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -220,7 +220,7 @@ getFunctionArgsGQLName
   funcGivenName
   FunctionConfig {..}
   setCase =
-    setCase $ fromMaybe funcGivenName _fcCustomName <> G.__args
+    setCase $ fromMaybe funcGivenName _fcCustomName <> Name.__args
 
 -- | Apply function name customization to the basic function variation, as
 -- detailed in 'rfcs/function-root-field-customisation.md'.
@@ -260,9 +260,9 @@ getFunctionAggregateGQLName
   setCase =
     choice
       [ _fcrfFunctionAggregate,
-        _fcCustomName <&> (<> G.__aggregate)
+        _fcCustomName <&> (<> Name.__aggregate)
       ]
-      & fromMaybe (setCase $ funcGivenName <> G.__aggregate)
+      & fromMaybe (setCase $ funcGivenName <> Name.__aggregate)
 
 getInputArgs :: FunctionInfo b -> Seq.Seq (FunctionArgument b)
 getInputArgs =

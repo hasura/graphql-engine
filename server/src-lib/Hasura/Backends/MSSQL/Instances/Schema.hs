@@ -20,7 +20,6 @@ import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (.
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
@@ -29,6 +28,7 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Update qualified as SU
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
@@ -308,25 +308,25 @@ msOrderByOperators ::
       )
   )
 msOrderByOperators _tCase =
-  (G._order_by,) $
+  (Name._order_by,) $
     -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
     NE.fromList
-      [ ( define G._asc "in ascending order, nulls first",
+      [ ( define Name._asc "in ascending order, nulls first",
           (MSSQL.AscOrder, MSSQL.NullsFirst)
         ),
-        ( define G._asc_nulls_first "in ascending order, nulls first",
+        ( define Name._asc_nulls_first "in ascending order, nulls first",
           (MSSQL.AscOrder, MSSQL.NullsFirst)
         ),
-        ( define G._asc_nulls_last "in ascending order, nulls last",
+        ( define Name._asc_nulls_last "in ascending order, nulls last",
           (MSSQL.AscOrder, MSSQL.NullsLast)
         ),
-        ( define G._desc "in descending order, nulls last",
+        ( define Name._desc "in descending order, nulls last",
           (MSSQL.DescOrder, MSSQL.NullsLast)
         ),
-        ( define G._desc_nulls_first "in descending order, nulls first",
+        ( define Name._desc_nulls_first "in descending order, nulls first",
           (MSSQL.DescOrder, MSSQL.NullsFirst)
         ),
-        ( define G._desc_nulls_last "in descending order, nulls last",
+        ( define Name._desc_nulls_last "in descending order, nulls last",
           (MSSQL.DescOrder, MSSQL.NullsLast)
         )
       ]
@@ -357,7 +357,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
       _textListParser = fmap openValueOrigin <$> P.list textParser
 
   -- field info
-  let name = P.getName typedParser <> G.__MSSQL_comparison_exp
+  let name = P.getName typedParser <> Name.__MSSQL_comparison_exp
       desc =
         G.Description $
           "Boolean expression to compare columns of type "
@@ -385,45 +385,45 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
               -- Ops for String like types
               guard (isScalarColumnWhere (`elem` MSSQL.stringTypes) columnType)
                 *> [ P.fieldOptional
-                       G.__like
+                       Name.__like
                        (Just "does the column match the given pattern")
                        (ALIKE . mkParameter <$> typedParser),
                      P.fieldOptional
-                       G.__nlike
+                       Name.__nlike
                        (Just "does the column NOT match the given pattern")
                        (ANLIKE . mkParameter <$> typedParser)
                    ],
               -- Ops for Geometry/Geography types
               guard (isScalarColumnWhere (`elem` MSSQL.geoTypes) columnType)
                 *> [ P.fieldOptional
-                       G.__st_contains
+                       Name.__st_contains
                        (Just "does the column contain the given value")
                        (ABackendSpecific . MSSQL.ASTContains . mkParameter <$> typedParser),
                      P.fieldOptional
-                       G.__st_equals
+                       Name.__st_equals
                        (Just "is the column equal to given value (directionality is ignored)")
                        (ABackendSpecific . MSSQL.ASTEquals . mkParameter <$> typedParser),
                      P.fieldOptional
-                       G.__st_intersects
+                       Name.__st_intersects
                        (Just "does the column spatially intersect the given value")
                        (ABackendSpecific . MSSQL.ASTIntersects . mkParameter <$> typedParser),
                      P.fieldOptional
-                       G.__st_overlaps
+                       Name.__st_overlaps
                        (Just "does the column 'spatially overlap' (intersect but not completely contain) the given value")
                        (ABackendSpecific . MSSQL.ASTOverlaps . mkParameter <$> typedParser),
                      P.fieldOptional
-                       G.__st_within
+                       Name.__st_within
                        (Just "is the column contained in the given value")
                        (ABackendSpecific . MSSQL.ASTWithin . mkParameter <$> typedParser)
                    ],
               -- Ops for Geometry types
               guard (isScalarColumnWhere (MSSQL.GeometryType ==) columnType)
                 *> [ P.fieldOptional
-                       G.__st_crosses
+                       Name.__st_crosses
                        (Just "does the column cross the given geometry value")
                        (ABackendSpecific . MSSQL.ASTCrosses . mkParameter <$> typedParser),
                      P.fieldOptional
-                       G.__st_touches
+                       Name.__st_touches
                        (Just "does the column have at least one point in common with the given geometry value")
                        (ABackendSpecific . MSSQL.ASTTouches . mkParameter <$> typedParser)
                    ]
@@ -439,7 +439,7 @@ msCountTypeInput ::
   InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL)
 msCountTypeInput = \case
   Just columnEnum -> do
-    column <- P.fieldOptional G._column Nothing columnEnum
+    column <- P.fieldOptional Name._column Nothing columnEnum
     pure $ flip mkCountType column
   Nothing -> pure $ flip mkCountType Nothing
   where

@@ -26,10 +26,10 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
@@ -156,19 +156,19 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
         let idField = P.selection_ idFieldName (Just idFieldDescription) actionIdParser $> IR.AsyncId
             createdAtField =
               P.selection_
-                G._created_at
+                Name._created_at
                 (Just "the time at which this action was created")
                 createdAtFieldParser
                 $> IR.AsyncCreatedAt
             errorsField =
               P.selection_
-                G._errors
+                Name._errors
                 (Just "errors related to the invocation")
                 errorsFieldParser
                 $> IR.AsyncErrors
             outputField =
               P.subselection_
-                G._output
+                Name._output
                 (Just "the output fields of this action")
                 actionOutputParser
                 <&> IR.AsyncOutput
@@ -202,7 +202,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
           }
   where
     ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
-    idFieldName = G._id
+    idFieldName = Name._id
     idFieldDescription = "the unique id of an action"
 
     mkDefinitionList :: AnnotatedOutputType -> m [(PGCol, ScalarType ('Postgres 'Vanilla))]

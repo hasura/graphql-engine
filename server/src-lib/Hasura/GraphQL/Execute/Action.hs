@@ -52,11 +52,11 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Common
 import Hasura.GraphQL.Execute.Action.Types as Types
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
@@ -349,7 +349,7 @@ resolveAsyncActionQuery userInfo annAction =
       let actionIdColumnInfo =
             ColumnInfo
               { ciColumn = unsafePGCol "id",
-                ciName = G._id,
+                ciName = Name._id,
                 ciPosition = 0,
                 ciType = ColumnScalar PGUUID,
                 ciIsNullable = False,

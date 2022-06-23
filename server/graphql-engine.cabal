@@ -434,6 +434,7 @@ library
                      , Hasura.Backends.BigQuery.Instances.Types
                      , Hasura.Backends.BigQuery.Instances.Metadata
                      , Hasura.Backends.BigQuery.Meta
+                     , Hasura.Backends.BigQuery.Name
                      , Hasura.Backends.BigQuery.Plan
                      , Hasura.Backends.BigQuery.Source
                      , Hasura.Backends.BigQuery.ToQuery
@@ -582,25 +583,26 @@ library
                      , Hasura.Logging
                      , Hasura.HTTP
                      , Hasura.Incremental
-                     , Hasura.Server.App
-                     , Hasura.Server.Auth
-                     , Hasura.Server.Init
-                     , Hasura.Server.Init.Config
                      , Hasura.Server.API.Backend
                      , Hasura.Server.API.Instances
                      , Hasura.Server.API.Metadata
+                     , Hasura.Server.API.PGDump
                      , Hasura.Server.API.Query
                      , Hasura.Server.API.V2Query
-                     , Hasura.Server.Utils
-                     , Hasura.Server.Version
+                     , Hasura.Server.App
+                     , Hasura.Server.Auth
+                     , Hasura.Server.Compression
+                     , Hasura.Server.Init
+                     , Hasura.Server.Init.Config
                      , Hasura.Server.Limits
                      , Hasura.Server.Logging
                      , Hasura.Server.Migrate
-                     , Hasura.Server.Compression
-                     , Hasura.Server.Types
-                     , Hasura.Server.API.PGDump
-                     , Hasura.Server.Rest
+                     , Hasura.Server.Name
                      , Hasura.Server.OpenAPI
+                     , Hasura.Server.Rest
+                     , Hasura.Server.Types
+                     , Hasura.Server.Utils
+                     , Hasura.Server.Version
                      , Hasura.Prelude
 
                      , Hasura.EncJSON
@@ -772,7 +774,7 @@ library
                      , Hasura.GraphQL.Parser.Class
                      , Hasura.GraphQL.Parser.Class.Parse
                      , Hasura.GraphQL.Parser.Collect
-                     , Hasura.GraphQL.Parser.Constants
+                     , Hasura.GraphQL.Parser.DirectiveName
                      , Hasura.GraphQL.Parser.Directives
                      , Hasura.GraphQL.Parser.Internal.Convert
                      , Hasura.GraphQL.Parser.Internal.Input
@@ -781,6 +783,9 @@ library
                      , Hasura.GraphQL.Parser.Internal.TypeChecking
                      , Hasura.GraphQL.Parser.Internal.Types
                      , Hasura.GraphQL.Parser.Monad
+                     , Hasura.GraphQL.Parser.Name
+                     , Hasura.GraphQL.Parser.Name.Introspection
+                     , Hasura.GraphQL.Parser.Name.TypeSystem
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Parser.Schema.Convert
                      , Hasura.GraphQL.RemoteServer
@@ -818,6 +823,7 @@ library
                      , Hasura.Eventing.HTTP
                      , Hasura.Eventing.ScheduledTrigger
                      , Hasura.Eventing.ScheduledTrigger.Types
+                     , Hasura.Name
                      , Data.GADT.Compare.Extended
                      , Hasura.SQL.AnyBackend
                      , Hasura.SQL.Backend

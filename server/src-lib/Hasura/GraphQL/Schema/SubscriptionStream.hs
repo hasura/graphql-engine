@@ -18,11 +18,11 @@ import Hasura.GraphQL.Parser
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Constants qualified as G
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Select (tablePermissionsInfo, tableSelectionList, tableWhereArg)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns, tableSelectPermissions)
+import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
@@ -44,7 +44,7 @@ cursorBatchSizeArg tCase =
   fromIntegral
     <$> P.field batchSizeName batchSizeDesc P.nonNegativeInt
   where
-    batchSizeName = applyFieldNameCaseCust tCase G._batch_size
+    batchSizeName = applyFieldNameCaseCust tCase Name._batch_size
     batchSizeDesc = Just $ G.Description "maximum number of rows returned in a single batch"
 
 -- | Cursor ordering enum fields
@@ -59,7 +59,7 @@ cursorOrderingArgParser ::
   m (Parser 'Both n CursorOrdering)
 cursorOrderingArgParser = do
   tCase <- asks getter
-  enumName <- P.mkTypename $ applyTypeNameCaseCust tCase G._cursor_ordering
+  enumName <- P.mkTypename $ applyTypeNameCaseCust tCase Name._cursor_ordering
   let description =
         Just $
           G.Description $
@@ -70,7 +70,7 @@ cursorOrderingArgParser = do
         [ ( define enumNameVal,
             snd enumNameVal
           )
-          | enumNameVal <- [(G._ASC, COAscending), (G._DESC, CODescending)]
+          | enumNameVal <- [(Name._ASC, COAscending), (Name._DESC, CODescending)]
         ]
   where
     define (name, val) =
@@ -86,7 +86,7 @@ cursorOrderingArg ::
 cursorOrderingArg = do
   cursorOrderingParser' <- cursorOrderingArgParser
   pure do
-    P.fieldOptional G._ordering (Just $ G.Description "cursor ordering") cursorOrderingParser'
+    P.fieldOptional Name._ordering (Just $ G.Description "cursor ordering") cursorOrderingParser'
 
 -- | Input fields parser to parse the value of a table's column
 -- > column_name: column_type
@@ -123,7 +123,7 @@ streamColumnValueParser sourceInfo tableGQLName colInfos =
   memoizeOn 'streamColumnValueParser (_siName sourceInfo, tableGQLName) $ do
     tCase <- asks getter
     columnVals <- sequenceA <$> traverse streamColumnParserArg colInfos
-    objName <- P.mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase G.__stream_cursor_value_input
+    objName <- P.mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_value_input
     pure do
       let description = G.Description $ "Initial value of the column from where the streaming should start"
       P.object objName (Just description) columnVals <&> catMaybes
@@ -147,7 +147,7 @@ streamColumnValueParserArg sourceInfo tableGQLName colInfos = do
   tCase <- asks getter
   columnValueParser <- streamColumnValueParser sourceInfo tableGQLName colInfos
   pure do
-    P.field (applyFieldNameCaseCust tCase G._initial_value) (Just $ G.Description "Stream column input with initial value") columnValueParser
+    P.field (applyFieldNameCaseCust tCase Name._initial_value) (Just $ G.Description "Stream column input with initial value") columnValueParser
 
 -- | Argument to accept the cursor data. At the time of writing this, only a single
 --   column cursor is supported and if multiple column cursors are provided,
@@ -185,7 +185,7 @@ tableStreamCursorExp sourceInfo tableInfo =
     tCase <- asks getter
     tableGQLName <- getTableGQLName tableInfo
     columnInfos <- tableSelectColumns sourceInfo tableInfo
-    objName <- P.mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase G.__stream_cursor_input
+    objName <- P.mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_input
     let description =
           G.Description $ "Streaming cursor of the table " <>> tableGQLName
     columnParsers <- tableStreamColumnArg sourceInfo tableGQLName columnInfos
@@ -206,7 +206,7 @@ tableStreamCursorArg sourceInfo tableInfo = do
       P.field cursorName cursorDesc $ P.list $ P.nullable cursorParser
     pure $ concat $ catMaybes cursorArgs
   where
-    cursorName = G._cursor
+    cursorName = Name._cursor
     cursorDesc = Just $ G.Description "cursor to stream the results returned by the query"
 
 -- | Arguments to the streaming subscription field.
