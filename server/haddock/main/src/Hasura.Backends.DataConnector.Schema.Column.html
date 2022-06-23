@@ -22,7 +22,7 @@
 </span><span id="line-22"></span><span class="hs-comment">--</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- XXX: Instead of an @isNullable@ flag, should we instead add a @Nullable@</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- data constructor to 'Scalar.Type'?</span><span>
-</span><span id="line-25"></span><span id="local-6989586621689116503"><span id="local-6989586621689116504"></span></span><span class="hs-keyword">data</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span>
+</span><span id="line-25"></span><span id="local-6989586621689116511"><span id="local-6989586621689116512"></span></span><span class="hs-keyword">data</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.DataConnector.Schema.Column.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="name"><span class="annot"><span class="annottext">Column -&gt; Name
 </span><a href="Hasura.Backends.DataConnector.Schema.Column.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">Column.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>    </span><span id="type_"><span class="annot"><span class="annottext">Column -&gt; Type
@@ -32,7 +32,7 @@
 </span><span id="line-29"></span><span>    </span><span id="description"><span class="annot"><span class="annottext">Column -&gt; Maybe Text
 </span><a href="Hasura.Backends.DataConnector.Schema.Column.html#description"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumn"><span id="%24tColumn"><span id="local-6989586621689116469"><span id="local-6989586621689116471"><span id="local-6989586621689116473"><span id="local-6989586621689116475"><span id="local-6989586621689116477"><span id="local-6989586621689116479"><span id="local-6989586621689116481"><span id="local-6989586621689116483"><span id="local-6989586621689116485"><span id="local-6989586621689116487"><span id="local-6989586621689116489"><span id="local-6989586621689116491"><span id="local-6989586621689116493"><span id="local-6989586621689116495"><span class="annot"><span class="annottext">Typeable Column
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumn"><span id="%24tColumn"><span id="local-6989586621689116477"><span id="local-6989586621689116479"><span id="local-6989586621689116481"><span id="local-6989586621689116483"><span id="local-6989586621689116485"><span id="local-6989586621689116487"><span id="local-6989586621689116489"><span id="local-6989586621689116491"><span id="local-6989586621689116493"><span id="local-6989586621689116495"><span id="local-6989586621689116497"><span id="local-6989586621689116499"><span id="local-6989586621689116501"><span id="local-6989586621689116503"><span class="annot"><span class="annottext">Typeable Column
 DataType
 Constr
 Typeable Column
@@ -182,7 +182,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Column -&gt; c Column
 $cp1Data :: Typeable Column
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689116462"><span id="local-6989586621689116464"><span class="annot"><span class="annottext">Column -&gt; Column -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689116470"><span id="local-6989586621689116472"><span class="annot"><span class="annottext">Column -&gt; Column -&gt; Bool
 (Column -&gt; Column -&gt; Bool)
 -&gt; (Column -&gt; Column -&gt; Bool) -&gt; Eq Column
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -198,7 +198,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Column x -&gt; Column
 $cfrom :: forall x. Column -&gt; Rep Column x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689116443"><span id="local-6989586621689116445"><span id="local-6989586621689116447"><span id="local-6989586621689116449"><span id="local-6989586621689116451"><span id="local-6989586621689116453"><span id="local-6989586621689116455"><span class="annot"><span class="annottext">Eq Column
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689116451"><span id="local-6989586621689116453"><span id="local-6989586621689116455"><span id="local-6989586621689116457"><span id="local-6989586621689116459"><span id="local-6989586621689116461"><span id="local-6989586621689116463"><span class="annot"><span class="annottext">Eq Column
 Eq Column
 -&gt; (Column -&gt; Column -&gt; Ordering)
 -&gt; (Column -&gt; Column -&gt; Bool)
@@ -236,7 +236,7 @@ $c&lt; :: Column -&gt; Column -&gt; Bool
 compare :: Column -&gt; Column -&gt; Ordering
 $ccompare :: Column -&gt; Column -&gt; Ordering
 $cp1Ord :: Eq Column
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689116436"><span id="local-6989586621689116438"><span id="local-6989586621689116440"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689116444"><span id="local-6989586621689116446"><span id="local-6989586621689116448"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; ShowS
 [Column] -&gt; ShowS
 Column -&gt; String
 (Int -&gt; Column -&gt; ShowS)
