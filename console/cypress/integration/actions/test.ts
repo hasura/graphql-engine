@@ -1,7 +1,4 @@
 import {
-  createQueryAction,
-  modifyQueryAction,
-  deleteQueryAction,
   createActionTransform,
   modifyActionTransform,
   deleteActionTransform,
@@ -20,6 +17,8 @@ const setup = () => {
   });
 };
 
+// TODO: what about the codegen part? Why is it not tested?
+
 export const runActionsTests = () => {
   describe('Actions', () => {
     // The test has been moved to mutationAction.e2e.test
@@ -34,10 +33,18 @@ export const runActionsTests = () => {
     // The test has been moved to mutationAction.e2e.test
     // it('Delete Mutation Action', deleteMutationAction);
 
-    it('Create Query Action', createQueryAction);
+    // The test has been moved to queryAction.e2e.test.e2e.test
+    // it('Create Query Action', createQueryAction);
+
+    // The test was commented before moving the other ones to queryAction.e2e.test
     // it('Verify Query Actions on GraphiQL', verifyQuery);
-    it('Modify Query Action', modifyQueryAction);
-    it('Delete Query Action', deleteQueryAction);
+
+    // The test has been moved to queryAction.e2e.test.e2e.test
+    // it('Modify Query Action', modifyQueryAction);
+
+    // The test has been moved to queryAction.e2e.test.e2e.test
+    // it('Delete Query Action', deleteQueryAction);
+
     it('Create Action With Transform', createActionTransform);
     it('Update Action With Transform', modifyActionTransform);
     it('Delete Action With Transform', deleteActionTransform);

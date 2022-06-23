@@ -1,14 +1,14 @@
 import { testMode } from '../../../helpers/common';
 
 import { logMetadataRequests } from './utils/requests/logMetadataRequests';
-import { loginActionMustNotExist } from './utils/testState/loginActionMustNotExist';
+import { addNumbersActionMustNotExist } from './utils/testState/addNumbersActionMustNotExist';
 
 // NOTE: This test suite does not include cases for relationships, headers and the codegen part
 
 if (testMode !== 'cli') {
-  describe('Mutation Actions', () => {
+  describe('Query Actions', () => {
     before(() => {
-      loginActionMustNotExist();
+      addNumbersActionMustNotExist();
       logMetadataRequests();
 
       cy.visit('/actions/manage/actions');
@@ -22,14 +22,14 @@ if (testMode !== 'cli') {
       cy.visitEmptyPage();
 
       // Delete the created action, if any
-      loginActionMustNotExist();
+      addNumbersActionMustNotExist();
     });
 
-    it('When the users create, edit, and delete a Mutation Action, everything should work', () => {
+    it('When the users create, edit, and delete a Query Action, everything should work', () => {
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
-      cy.log('**--- Step 1: Mutation Action creation**');
+      cy.log('**--- Step 1: Query Action creation**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
@@ -38,6 +38,7 @@ if (testMode !== 'cli') {
       cy.log('**--- Click on the Create button of the Actions panel**');
       cy.getBySel('data-create-actions').click();
 
+      // --------------------
       // Assign an alias to the most unclear selectors for future references
       cy.get('textarea').eq(0).as('actionDefinitionTextarea');
       cy.get('textarea').eq(1).as('typeConfigurationTextarea');
@@ -45,37 +46,32 @@ if (testMode !== 'cli') {
       // --------------------
       cy.log('**--- Type in the Action Definition textarea**');
       cy.get('@actionDefinitionTextarea').clearConsoleTextarea().type(
-        `type Mutation {
-              login (username: String!, password: String!): LoginResponse
-            }`,
+        `type Query {
+          addNumbers (numbers: [Int]): AddResult
+        }`,
         { force: true, delay: 0 }
       );
 
       // --------------------
       cy.log('**--- Type in the Type Configuration textarea**');
       cy.get('@typeConfigurationTextarea').clearConsoleTextarea().type(
-        `type LoginResponse {
-            accessToken: String!
-          }`,
+        `type AddResult {
+          sum: Int
+        }`,
         { force: true, delay: 0 }
       );
 
+      // --------------------
       cy.log('**--- Type in the Webhook Handler field**');
       cy.getBySel('action-create-handler-input')
         .clearConsoleTextarea()
-        .type('https://hasura-actions-demo.glitch.me/login', {
+        .type('https://hasura-actions-demo.glitch.me/addNumbers', {
           delay: 0,
           parseSpecialCharSequences: false,
         });
 
       // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
       // sure the Console locally works as the one in CI. The request was `test_webhook_transform`
-
-      // --------------------
-      // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-      // the payload (see the next cy.intercept) means asserting on it too
-      cy.log('**--- Type in the Custom Timeout field**');
-      cy.getBySel('action-timeout-seconds').clear().type('25');
 
       // --------------------
       cy.log('**--- Click the Create button**');
@@ -99,16 +95,30 @@ if (testMode !== 'cli') {
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
-      cy.log('**--- Step 2: Permission add**');
+      cy.log('**--- Step 2: Permission add and Handler change**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
 
       // --------------------
+
       cy.log('**--- Go the the action page**');
       cy.getBySel('actions-table-links').within(() => {
-        cy.getBySel('login').click();
+        cy.getBySel('addNumbers').click();
       });
+
+      // --------------------
+      cy.log('**--- Type in the Webhook Handler field**');
+      cy.getBySel('action-create-handler-input')
+        .clearConsoleTextarea()
+        .type('http://host.docker.internal:3000', {
+          delay: 0,
+          // parseSpecialCharSequences: false,
+        });
+
+      // --------------------
+      cy.log('**--- Click on the Save button**');
+      cy.getBySel('save-modify-action-changes').click();
 
       // --------------------
       cy.log('**--- Click the Permissions tab**');
@@ -123,7 +133,6 @@ if (testMode !== 'cli') {
       cy.log('**--- Click Save Permissions**');
       cy.getBySel('save-permissions-for-action').click();
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
       // sure the Console locally works as the one in CI. The request was `create_action_permission`
 
       // --------------------
@@ -141,7 +150,7 @@ if (testMode !== 'cli') {
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
-      cy.log('**--- Step 3: Mutation Action delete**');
+      cy.log('**--- Step 3: Query Action delete**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
       cy.log('**------------------------------**');
@@ -149,19 +158,15 @@ if (testMode !== 'cli') {
       // --------------------
       cy.log('**--- Go the the action page**');
       cy.getBySel('actions-table-links').within(() => {
-        cy.getBySel('login').click();
+        cy.getBySel('addNumbers').click();
       });
 
       // --------------------
       cy.log('**--- Set the prompt value**');
-      cy.window().then(win => cy.stub(win, 'prompt').returns('login'));
+      cy.window().then(win => cy.stub(win, 'prompt').returns('addNumbers'));
 
       cy.log('**--- Click the Delete button**');
       cy.getBySel('delete-action').click();
-
-      // --------------------
-      cy.log('**--- Check the prompt has been called**');
-      cy.window().its('prompt').should('be.called');
 
       // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
       // sure the Console locally works as the one in CI. The request was `drop_action`
