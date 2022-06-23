@@ -135,7 +135,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
           },
         SchemaContext
           HasuraSchema
-          mempty
           ignoreRemoteRelationship
       )
 

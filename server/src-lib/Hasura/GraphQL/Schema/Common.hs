@@ -95,8 +95,6 @@ data SchemaOptions = SchemaOptions
 data SchemaContext = SchemaContext
   { -- | the kind of schema being built
     scSchemaKind :: SchemaKind,
-    -- | the set of all sources (TODO: remove this?)
-    scSourceCache :: SourceCache,
     -- | how to process remote relationships
     scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder
   }
