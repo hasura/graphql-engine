@@ -27,6 +27,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -121,7 +122,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
   traverse_ validateEnum enumDefinitions
   reusedScalars <- execWriterT $ traverse_ validateInputObject inputObjectDefinitions
   annotatedObjects <-
-    mapFromL (unObjectTypeName . _otdName . _aotDefinition)
+    mapFromL (unObjectTypeName . _aotName)
       <$> traverse validateObject objectDefinitions
   let scalarTypeMap =
         Map.map NOCTScalar $
@@ -131,7 +132,6 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
       nonObjectTypeMap = scalarTypeMap <> enumTypeMap <> inputObjectTypeMap
   pure $ AnnotatedCustomTypes nonObjectTypeMap annotatedObjects
   where
-    sourceTables = Map.mapMaybe unsafeSourceTables sources
     inputObjectDefinitions = _ctInputObjects customTypes
     objectDefinitions = _ctObjects customTypes
     scalarDefinitions = _ctScalars customTypes
@@ -210,12 +210,12 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                     fieldBaseType
 
     validateObject ::
-      ObjectType -> m AnnotatedObjectType
+      ObjectTypeDefinition -> m AnnotatedObjectType
     validateObject ObjectTypeDefinition {..} = do
       let fieldNames =
             map (unObjectFieldName . _ofdName) $
               toList _otdFields
-          relNames = map (unRelationshipName . _trName) _otdRelationships
+          relNames = map (unRelationshipName . _trdName) _otdRelationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
 
       -- check for duplicate field names
@@ -257,21 +257,31 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
             Map.fromList $
               map (_ofdName &&& (fst . _ofdType)) $ toList fields
 
-      when (Set.size (Set.fromList $ _trSource <$> _otdRelationships) > 1) $
+      when (Set.size (Set.fromList $ _trdSource <$> _otdRelationships) > 1) $
         refute $ pure $ ObjectRelationshipMultiSources _otdName
-      annotatedRelationships <- for _otdRelationships $ \TypeRelationship {..} -> do
-        --check that the table exists
-        remoteTableInfo <-
-          onNothing (Map.lookup _trSource sourceTables >>= Map.lookup _trRemoteTable) $
+      annotatedRelationships <- for _otdRelationships $ \TypeRelationshipDefinition {..} -> do
+        -- get the source info
+        SourceInfo {..} <-
+          onNothing (unsafeSourceInfo =<< Map.lookup _trdSource sources) $
             refute $
               pure $
                 ObjectRelationshipTableDoesNotExist
                   _otdName
-                  _trName
-                  _trRemoteTable
+                  _trdName
+                  _trdRemoteTable
+
+        -- check that the table exists
+        remoteTableInfo <-
+          onNothing (Map.lookup _trdRemoteTable _siTables) $
+            refute $
+              pure $
+                ObjectRelationshipTableDoesNotExist
+                  _otdName
+                  _trdName
+                  _trdRemoteTable
 
         -- check that the column mapping is sane
-        annotatedFieldMapping <- flip Map.traverseWithKey _trFieldMapping $
+        annotatedFieldMapping <- flip Map.traverseWithKey _trdFieldMapping $
           \fieldName columnName -> do
             case Map.lookup fieldName fieldsMap of
               Nothing ->
@@ -279,7 +289,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                   pure $
                     ObjectRelationshipFieldDoesNotExist
                       _otdName
-                      _trName
+                      _trdName
                       fieldName
               Just fieldType ->
                 -- the field should be a non-list type scalar
@@ -288,29 +298,31 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
                     pure $
                       ObjectRelationshipFieldListType
                         _otdName
-                        _trName
+                        _trdName
                         fieldName
 
             -- the column should be a column of the table
             onNothing (getColumnInfoM remoteTableInfo (fromCol @('Postgres 'Vanilla) columnName)) $
               refute $
                 pure $
-                  ObjectRelationshipColumnDoesNotExist _otdName _trName _trRemoteTable columnName
+                  ObjectRelationshipColumnDoesNotExist _otdName _trdName _trdRemoteTable columnName
 
-        pure $ TypeRelationship _trName _trType _trSource remoteTableInfo annotatedFieldMapping
-
-      let sourceConfig = do
-            source <- afold $ _trSource <$> _otdRelationships
-            sourceInfo <- Map.lookup source sources
-            (source,) <$> unsafeSourceConfiguration @('Postgres 'Vanilla) sourceInfo
+        pure $
+          AnnotatedTypeRelationship
+            _trdName
+            _trdType
+            _siName
+            _siConfiguration
+            (getSourceTypeCustomization _siCustomization)
+            remoteTableInfo
+            annotatedFieldMapping
 
       pure $
-        flip AnnotatedObjectType sourceConfig $
-          ObjectTypeDefinition
-            _otdName
-            _otdDescription
-            fields
-            annotatedRelationships
+        AnnotatedObjectType
+          _otdName
+          _otdDescription
+          fields
+          annotatedRelationships
 
 -- see Note [Postgres scalars in custom types]
 lookupBackendScalar ::

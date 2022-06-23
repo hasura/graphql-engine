@@ -166,22 +166,22 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
                     AOFTEnum _ -> False
                     AOFTObject _ -> True
               )
-              (_otdFields $ _aotDefinition aot')
+              (_aotFields aot')
           AOTScalar _ -> ([], [])
         scalarOrEnumFieldNames = fmap (\ObjectFieldDefinition {..} -> unObjectFieldName _ofdName) scalarOrEnumFields
         validateSyncAction = case aot of
           AOTObject aot' -> do
             let relationshipsWithNonTopLevelFields =
                   filter
-                    ( \TypeRelationship {..} ->
-                        let objsInRel = unObjectFieldName <$> Map.keys _trFieldMapping
+                    ( \AnnotatedTypeRelationship {..} ->
+                        let objsInRel = unObjectFieldName <$> Map.keys _atrFieldMapping
                          in not $ all (`elem` scalarOrEnumFieldNames) objsInRel
                     )
-                    (_otdRelationships $ _aotDefinition aot')
+                    (_aotRelationships aot')
             unless (null relationshipsWithNonTopLevelFields) $
               throw400 ConstraintError $
                 "Relationships cannot be defined with nested object fields : "
-                  <> commaSeparated (dquote . _trName <$> relationshipsWithNonTopLevelFields)
+                  <> commaSeparated (dquote . _atrName <$> relationshipsWithNonTopLevelFields)
           AOTScalar _ -> pure ()
     case _adType of
       ActionQuery -> validateSyncAction
@@ -189,7 +189,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
       ActionMutation ActionAsynchronous -> case aot of
         AOTScalar _ -> pure ()
         AOTObject aot' ->
-          unless (null (_otdRelationships $ _aotDefinition aot') || null nestedObjects) $
+          unless (null (_aotRelationships aot') || null nestedObjects) $
             throw400 ConstraintError $ "Async action relations cannot be used with object fields : " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
     pure aot
   resolvedWebhook <- resolveWebhook env _adHandler

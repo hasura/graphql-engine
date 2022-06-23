@@ -32,11 +32,6 @@ module Hasura.RQL.Types.SchemaCache
     TableCache,
     ActionCache,
     InheritedRolesCache,
-    TypeRelationship (..),
-    trName,
-    trType,
-    trRemoteTable,
-    trFieldMapping,
     TableCoreInfoG (..),
     TableCoreInfo,
     tciName,
@@ -150,7 +145,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
-import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Function
