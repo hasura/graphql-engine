@@ -38,7 +38,6 @@ module Hasura.RQL.IR.Action
     aaaqForwardClientHeaders,
     aaaqSource,
     ActionSourceInfo (..),
-    getActionSourceInfo,
     ActionOutputFields,
     getActionOutputFields,
   )
@@ -60,7 +59,6 @@ import Hasura.RQL.Types.CustomTypes
     GraphQLType (..),
     ObjectFieldDefinition (..),
     ObjectFieldName (..),
-    ObjectTypeDefinition (..),
   )
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -122,7 +120,9 @@ type ActionOutputFields = Map.HashMap G.Name G.GType
 
 getActionOutputFields :: AnnotatedOutputType -> ActionOutputFields
 getActionOutputFields inp = case inp of
-  AOTObject aot -> Map.fromList . map ((unObjectFieldName . _ofdName) &&& (fst . _ofdType)) . toList . _otdFields . _aotDefinition $ aot
+  AOTObject aot -> Map.fromList do
+    ObjectFieldDefinition {..} <- toList $ _aotFields aot
+    pure (unObjectFieldName _ofdName, fst _ofdType)
   AOTScalar _ -> Map.empty
 
 data AnnActionMutationAsync = AnnActionMutationAsync
@@ -159,11 +159,7 @@ data ActionSourceInfo b
   = -- | No relationships defined on the action output object
     ASINoSource
   | -- | All relationships refer to tables in one source
-    ASISource !SourceName !(SourceConfig b)
-
-getActionSourceInfo :: AnnotatedOutputType -> ActionSourceInfo ('Postgres 'Vanilla)
-getActionSourceInfo (AOTObject aot) = maybe ASINoSource (uncurry ASISource) . _aotSource $ aot
-getActionSourceInfo (AOTScalar _) = ASINoSource
+    ASISource SourceName (SourceConfig b)
 
 $(makeLenses ''AnnActionAsyncQuery)
 $(makeLenses ''AnnActionExecution)

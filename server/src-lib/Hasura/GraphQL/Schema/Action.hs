@@ -40,9 +40,6 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -198,20 +195,26 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
             _aaaqDefinitionList = definitionsList,
             _aaaqStringifyNum = stringifyNum,
             _aaaqForwardClientHeaders = forwardClientHeaders,
-            _aaaqSource = IR.getActionSourceInfo outputObject
+            _aaaqSource = getActionSourceInfo outputObject
           }
   where
     ActionInfo actionName (outputType, outputObject) definition permissions forwardClientHeaders comment = actionInfo
     idFieldName = Name._id
     idFieldDescription = "the unique id of an action"
 
+    getActionSourceInfo :: AnnotatedOutputType -> IR.ActionSourceInfo ('Postgres 'Vanilla)
+    getActionSourceInfo = \case
+      AOTObject aot -> fromMaybe IR.ASINoSource $ listToMaybe do
+        AnnotatedTypeRelationship {..} <- _aotRelationships aot
+        pure $ IR.ASISource _atrSource _atrSourceConfig
+      AOTScalar _ -> IR.ASINoSource
+
     mkDefinitionList :: AnnotatedOutputType -> m [(PGCol, ScalarType ('Postgres 'Vanilla))]
     mkDefinitionList = \case
       AOTScalar _ -> pure []
       AOTObject AnnotatedObjectType {..} -> do
-        let ObjectTypeDefinition {..} = _aotDefinition
-            fieldReferences = Map.unions $ map _trFieldMapping _otdRelationships
-        for (toList _otdFields) \ObjectFieldDefinition {..} ->
+        let fieldReferences = Map.unions $ map _atrFieldMapping _aotRelationships
+        for (toList _aotFields) \ObjectFieldDefinition {..} ->
           (unsafePGCol . G.unName . unObjectFieldName $ _ofdName,)
             <$> case Map.lookup _ofdName fieldReferences of
               Nothing -> fieldTypeToScalarType $ snd _ofdType
@@ -250,14 +253,13 @@ actionOutputFields ::
   HashMap G.Name AnnotatedObjectType ->
   m (Parser 'Output n (AnnotatedActionFields))
 actionOutputFields outputType annotatedObject objectTypes = do
-  let outputObject = _aotDefinition annotatedObject
-  scalarOrEnumOrObjectFields <- forM (toList $ _otdFields outputObject) outputFieldParser
-  relationshipFields <- traverse relationshipFieldParser $ _otdRelationships outputObject
-  outputTypeName <- P.mkTypename $ unObjectTypeName $ _otdName outputObject
+  scalarOrEnumOrObjectFields <- forM (toList $ _aotFields annotatedObject) outputFieldParser
+  relationshipFields <- traverse relationshipFieldParser $ _aotRelationships annotatedObject
+  outputTypeName <- P.mkTypename $ unObjectTypeName $ _aotName annotatedObject
   let allFieldParsers =
         scalarOrEnumOrObjectFields
           <> concat (catMaybes relationshipFields)
-      outputTypeDescription = _otdDescription outputObject
+      outputTypeDescription = _aotDescription annotatedObject
   pure $
     outputParserModifier outputType $
       P.selectionSet outputTypeName outputTypeDescription allFieldParsers
@@ -273,7 +275,7 @@ actionOutputFields outputType annotatedObject objectTypes = do
     outputFieldParser ::
       ObjectFieldDefinition (G.GType, AnnotatedObjectFieldType) ->
       m (FieldParser n (AnnotatedActionField))
-    outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) = memoizeOn 'actionOutputFields (_otdName $ _aotDefinition annotatedObject, name) do
+    outputFieldParser (ObjectFieldDefinition name _ description (gType, objectFieldType)) = memoizeOn 'actionOutputFields (_aotName annotatedObject, name) do
       case objectFieldType of
         AOFTScalar def ->
           wrapScalar $ customScalarParser def
@@ -291,12 +293,10 @@ actionOutputFields outputType annotatedObject objectTypes = do
               $> IR.ACFScalar fieldName
 
     relationshipFieldParser ::
-      TypeRelationship (TableInfo ('Postgres 'Vanilla)) (ColumnInfo ('Postgres 'Vanilla)) ->
+      AnnotatedTypeRelationship ->
       m (Maybe [FieldParser n (AnnotatedActionField)])
-    relationshipFieldParser (TypeRelationship relationshipName relType sourceName tableInfo fieldMapping) = runMaybeT do
-      sourceCache <- lift $ retrieve scSourceCache
-      sourceInfo <- hoistMaybe $ unsafeSourceInfo @('Postgres 'Vanilla) =<< Map.lookup sourceName sourceCache
-      relName <- hoistMaybe $ RelName <$> mkNonEmptyText (toTxt relationshipName)
+    relationshipFieldParser (AnnotatedTypeRelationship {..}) = runMaybeT do
+      relName <- hoistMaybe $ RelName <$> mkNonEmptyText (toTxt _atrName)
 
       --  `lhsJoinFields` is a map of `x: y`
       --  where 'x' is the 'reference name' of a join field, i.e, how a join
@@ -304,9 +304,9 @@ actionOutputFields outputType annotatedObject objectTypes = do
       --  while 'y' is the join field.
       --  In case of custom types, they are pretty much the same.
       --  In case of databases, 'y' could be a computed field with session variables etc.
-      let lhsJoinFields = Map.fromList [(FieldName $ G.unName k, k) | ObjectFieldName k <- Map.keys fieldMapping]
+      let lhsJoinFields = Map.fromList [(FieldName $ G.unName k, k) | ObjectFieldName k <- Map.keys _atrFieldMapping]
           joinMapping = Map.fromList $ do
-            (k, v) <- Map.toList fieldMapping
+            (k, v) <- Map.toList _atrFieldMapping
             let scalarType = case ciType v of
                   ColumnScalar scalar -> scalar
                   -- We don't currently allow enum types as fields of custom types so they should not appear here.
@@ -321,11 +321,11 @@ actionOutputFields outputType annotatedObject objectTypes = do
                     AB.mkAnyBackend @('Postgres 'Vanilla) $
                       RemoteSourceFieldInfo
                         { _rsfiName = relName,
-                          _rsfiType = relType,
-                          _rsfiSource = sourceName,
-                          _rsfiSourceConfig = _siConfiguration sourceInfo,
-                          _rsfiSourceCustomization = getSourceTypeCustomization $ _siCustomization sourceInfo,
-                          _rsfiTable = tableInfoName tableInfo,
+                          _rsfiType = _atrType,
+                          _rsfiSource = _atrSource,
+                          _rsfiSourceConfig = _atrSourceConfig,
+                          _rsfiSourceCustomization = _atrSourceCustomization,
+                          _rsfiTable = tableInfoName _atrTableInfo,
                           _rsfiMapping = joinMapping
                         }
               }

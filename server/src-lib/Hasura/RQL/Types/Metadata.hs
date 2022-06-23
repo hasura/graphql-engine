@@ -1235,7 +1235,7 @@ metadataToOrdJSON
                   ]
                     <> catMaybes [maybeDescriptionToMaybeOrdPair fieldDescM]
 
-          objectTypeToOrdJSON :: ObjectType -> AO.Value
+          objectTypeToOrdJSON :: ObjectTypeDefinition -> AO.Value
           objectTypeToOrdJSON (ObjectTypeDefinition tyName descM fields rels) =
             AO.object $
               [ ("name", AO.toOrdered tyName),
