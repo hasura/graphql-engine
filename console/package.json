@@ -30,6 +30,7 @@
     "test": "cypress run --spec 'cypress/integration/**/**/test.ts' --key $CYPRESS_KEY --parallel --record",
     "--- CYPRESS ------------------------------------------------": "",
     "cy:open": "cypress open --config-file cypress-local.json",
+    "cy:run": "cypress run --config-file cypress-local.json",
     "cy:run:ci": "cypress run --key $CYPRESS_KEY --ci-build-id $BUILDKITE_BUILD_ID --parallel --record",
     "--- JEST ------------------------------------------------": "",
     "jest": "jest --setupFiles dotenv/config",
