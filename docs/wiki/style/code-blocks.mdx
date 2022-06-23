@@ -1,0 +1,54 @@
+---
+title: Code Blocks
+description: Style for code blocks in documentation
+keywords:
+  - hasura
+  - style
+  - code blocks
+slug: code-blocks
+---
+
+# Code Blocks
+
+* All code blocks should be indented 2 spaces by default.
+* Order fields for greater understanding.
+* Remove parts of code if necessary in order to provide the greatest clarity to the user.
+* Use only mandatory fields to keep examples concise.
+* Use MDX [code block highlighting](https://docusaurus.io/docs/markdown-features/code-blocks#line-highlighting) to
+  draw the user's attention to which lines the user should focus on.
+* Show incorrect methods and common errors to improve the user's understanding but make sure they are very well
+  highlighted as incorrect.
+* Use single quotes instead of double quotes except where necessary eg: JSON
+* Arrays in code should be split onto multiple lines, unless there is only one member of the array.
+* When specifying code for the Hasura API, you can use either `curl` or an `http` block depending on whichever is
+  clearer for the user.
+
+### HTTP
+
+* All HTTP headers must begin with `First-Letter-Capitalized-Like-This`.
+* HTTP blocks should run without changes if they are pasted into Postman, for example.
+
+### Javascript
+
+* Use semicolons `;` at the end of statements.
+* Use single quotes instead of double quotes.
+
+### JSON
+
+* Indent 2 spaces.
+* Do not include comments in JSON
+
+### Shell
+
+* Specify `bash` as code type for shell commands.
+* Try to break separate commands into separate code blocks or else chain commands with `&&` or break into multi-line
+  with `\`.
+* Shell commands can include comments _before_ the command prefixed with `#`.
+* If you would like to include output of the command, add it in a new block with `text` type.
+
+### YAML
+
+* YAML should always be indented by 2 spaces as per the spec.
+* Include only the relevant part of the code if it provides more clarity to the user. Indicate ommitted lines with
+`...`
+

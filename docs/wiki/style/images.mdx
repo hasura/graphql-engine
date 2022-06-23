@@ -1,0 +1,61 @@
+---
+title: Images
+description: Style for images and screenshots in documentation
+keywords:
+  - hasura
+  - style
+  - images
+slug: images
+---
+
+# Images and Screenshots
+
+A picture says a thousand words. Try to use images and diagrams wherever you can if it will provide more clarity to the
+user.
+
+### Scale
+
+- Screenshots should be captured at a browser viewport width of `1200px`. This helps keep scaling consistent.
+- You can use this
+  [Chrome extension](https://chrome.google.com/webstore/detail/window-resizer/kkelicaakdanhinjdeammmilcgefonfh?hl=en)
+  to quickly set your browser viewport to `1200px`
+- Don't zoom in or out.
+- When placed in situ in the documentation, the text in the image of a screenshot should closely match the text size of
+  the page itself.
+
+### Cropping
+
+- Leave `20px` blank margins in-image around all four sides for breathability of the image.
+- Crop only the logical contextual area for the feature that you are referencing. For example:
+  - **don't** crop the whole screen UI if you are calling attention to only one small component on the page.
+  - **do** crop the whole screen UI if it is contextual to what you are referencing.
+- Make sure if you are cropping a smaller area or component that the user understands where to find it and its place in
+  context within their workflow.
+
+### File Type
+
+- Use PNGs.
+- PNGs will automatically be optimized when added to the pull request
+
+### File Name
+
+- Include the Hasura feature and version number in the screenshot name to make it easier to check when screenshots are
+  outdated.
+- Name the file with this structure:
+  `{{action-depicted}}_{{image-step-or-variation-number-if-needed}}_{{hasura-feature-depicted}}_{{hasura-feature-version}}.png`
+- eg: `connect-database-google-cloud_step-2_console_2-7-1.png`
+
+### Callouts, Arrows and Other Screenshot Markup
+
+- Use hex color <pre style={{ background: `#FC336D` }}>#FC336D</pre> for all image markup.
+- Use rounded corners on callout blocks.
+- Arrows should be placed at 90° angles, not at arbitrary angles.
+- Don't make arrows unnecessarily long or short.
+- Use step numbering of a number in a circle. Start count from 1, not array 0 notation.
+- Use the [Skitch markup app](https://evernote.com/products/skitch) if possible.
+
+### Versioning
+
+- Always add an `:::info Note` admonitions for new features detailing the version at which the feature is supported
+  from.
+- Make sure prior versions of documentation are properly kept.
