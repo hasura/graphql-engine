@@ -1253,7 +1253,7 @@ parseGraphqlAsyncActionsFetchInterval =
       (eitherReader readEither)
       ( long "async-actions-fetch-interval"
           <> metavar (fst asyncActionsFetchIntervalEnv)
-          <> help (snd eventsFetchIntervalEnv)
+          <> help (snd asyncActionsFetchIntervalEnv)
       )
 
 parseEnableRemoteSchemaPerms :: Parser Bool
