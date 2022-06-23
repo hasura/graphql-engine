@@ -10,6 +10,7 @@ import {
   SSLConfigOptions,
   IsolationLevelOptions,
   GraphQLFieldCustomization,
+  namingConventionOptions,
 } from '../../../../metadata/types';
 
 export const connectionTypes = {
@@ -71,6 +72,9 @@ export const defaultState: ConnectDBState = {
   },
   preparedStatements: false,
   isolationLevel: 'read-committed',
+  customization: {
+    namingConvention: 'hasura-default',
+  },
 };
 
 type DefaultStateProps = {
@@ -156,7 +160,6 @@ export const connectDataSource = (
       ...currentState.connectionParamState,
     });
   }
-
   const data = {
     driver: currentState.dbType,
     payload: {
@@ -190,6 +193,7 @@ export const connectDataSource = (
           ...(checkEmpty(currentState.customization?.typeNames) && {
             typeNames: currentState.customization?.typeNames,
           }),
+          namingConvention: currentState.customization?.namingConvention,
         },
       }),
     },
@@ -254,6 +258,10 @@ export type ConnectDBActions =
   | { type: 'UPDATE_PREPARED_STATEMENTS'; data: boolean }
   | { type: 'UPDATE_ISOLATION_LEVEL'; data: IsolationLevelOptions }
   | { type: 'RESET_INPUT_STATE' }
+  | {
+      type: 'UPDATE_CUSTOMIZATION_NAMING_CONVENTION';
+      data: namingConventionOptions;
+    }
   | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_NAMESPACE'; data: string }
   | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_PREFIX'; data: string }
   | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_SUFFIX'; data: string }
@@ -481,6 +489,14 @@ export const connectDBReducer = (
         databaseURLState: {
           ...state.databaseURLState,
           projectId: action.data,
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_NAMING_CONVENTION':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          namingConvention: action.data,
         },
       };
     case 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_NAMESPACE':

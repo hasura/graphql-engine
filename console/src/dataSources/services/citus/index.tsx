@@ -22,6 +22,10 @@ import {
 
 export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   ...PgSupportedFeatures,
+  connectDbForm: {
+    ...PgSupportedFeatures?.connectDbForm,
+    namingConvention: false,
+  },
   driver: {
     name: 'citus',
     fetchVersion: {

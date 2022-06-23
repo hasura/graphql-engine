@@ -1,5 +1,8 @@
+import { getSupportedDrivers } from '@/dataSources';
+import { namingConventionOptions } from '@/metadata/types';
 import { Collapse } from '@/new-components/Collapse';
 import React from 'react';
+import { ConnectDBState } from '../state';
 
 type FormRowProps = {
   name: string;
@@ -62,7 +65,8 @@ export type CustomizationFieldName =
   | 'rootFields.prefix'
   | 'rootFields.suffix'
   | 'typeNames.prefix'
-  | 'typeNames.suffix';
+  | 'typeNames.suffix'
+  | 'namingConvention';
 
 export type GraphQLFieldCustomizationProps = {
   rootFields?: {
@@ -74,13 +78,17 @@ export type GraphQLFieldCustomizationProps = {
     prefix?: string;
     suffix?: string;
   };
+  namingConvention?: namingConventionOptions;
   onChange: (fieldName: CustomizationFieldName, fieldValue: string) => void;
+  connectionDBState?: ConnectDBState;
 };
 
 export const GraphQLFieldCustomization: React.FC<GraphQLFieldCustomizationProps> = ({
   rootFields,
   typeNames,
+  namingConvention,
   onChange,
+  connectionDBState,
 }) => {
   return (
     <div>
@@ -94,6 +102,34 @@ export const GraphQLFieldCustomization: React.FC<GraphQLFieldCustomizationProps>
                 tooltip="Set a namespace or add a prefix / suffix to the root fields and types for the database's objects in the GraphQL API"
               >
                 <Collapse.Content>
+                  {connectionDBState?.dbType &&
+                    getSupportedDrivers(
+                      'connectDbForm.namingConvention'
+                    ).includes(connectionDBState?.dbType) && (
+                      <div className="grid gap-0 grid-cols-2 grid-rows">
+                        <label className="p-sm text-gray-600 font-semibold py-xs w-1/3">
+                          Naming Convention
+                        </label>
+                        <span className="px-sm py-xs">
+                          <select
+                            className="form-control font-normal cursor-pointer"
+                            onChange={e => {
+                              if (namingConvention) {
+                                onChange('namingConvention', e.target.value);
+                              }
+                            }}
+                            value={namingConvention}
+                          >
+                            <option value="hasura-default">
+                              hasura-default
+                            </option>
+                            <option value="graphql-default">
+                              graphql-default
+                            </option>
+                          </select>
+                        </span>
+                      </div>
+                    )}
                   <div>
                     <div className="p-sm text-gray-600 font-semibold">
                       Root Fields

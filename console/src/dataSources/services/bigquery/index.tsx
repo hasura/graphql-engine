@@ -216,6 +216,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     pool_timeout: false,
     connection_lifetime: false,
     ssl_certificates: false,
+    namingConvention: false,
   },
 };
 

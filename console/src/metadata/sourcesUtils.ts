@@ -12,7 +12,7 @@ type CustomizationPayloadSlice = {
   customization: {
     root_fields?: GraphQLFieldCustomization['rootFields'];
     type_names?: GraphQLFieldCustomization['typeNames'];
-    naming_convention: 'hasura-default';
+    naming_convention?: GraphQLFieldCustomization['namingConvention'];
   };
 };
 
@@ -35,7 +35,7 @@ const adaptCustomizations = (
     customization: {
       ...rootFields,
       ...typeNames,
-      naming_convention: 'hasura-default',
+      naming_convention: customization?.namingConvention,
     },
   };
 };

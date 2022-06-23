@@ -423,7 +423,9 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           <GraphQLFieldCustomizationContainer
             rootFields={connectionDBState.customization?.rootFields}
             typeNames={connectionDBState.customization?.typeNames}
+            namingConvention={connectionDBState.customization?.namingConvention}
             connectionDBStateDispatch={connectionDBStateDispatch}
+            connectionDBState={connectionDBState}
           />
         )}
       </div>
