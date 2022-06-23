@@ -186,7 +186,6 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
       schemaContext =
         SchemaContext
           HasuraSchema
-          sources
           (remoteRelationshipField sources (fst <$> remotes))
   runMonadSchema schemaOptions schemaContext role $ do
     -- build all sources
@@ -323,7 +322,6 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
       schemaContext =
         SchemaContext
           (RelaySchema $ nodeInterface sources)
-          sources
           (remoteRelationshipField sources mempty)
   runMonadSchema schemaOptions schemaContext role do
     node <- fmap NotNamespaced <$> nodeField sources
@@ -447,7 +445,6 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
       fakeSchemaContext =
         SchemaContext
           HasuraSchema
-          mempty
           ignoreRemoteRelationship
       -- chosen arbitrarily to be as improbable as possible
       fakeRole = mkRoleNameSafe [NT.nonEmptyTextQQ|MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair|]

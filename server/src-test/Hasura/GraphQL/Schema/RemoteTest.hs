@@ -130,7 +130,6 @@ buildQueryParsers introspection = do
           undefined :: SchemaOptions,
           SchemaContext
             HasuraSchema
-            mempty
             ignoreRemoteRelationship
         )
   RemoteSchemaParser query _ _ <-

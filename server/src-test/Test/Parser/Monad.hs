@@ -77,7 +77,6 @@ instance Has SchemaContext SchemaEnvironment where
     const
       SchemaContext
         { scSchemaKind = HasuraSchema,
-          scSourceCache = mempty,
           scRemoteRelationshipParserBuilder = ignoreRemoteRelationship
         }
 
