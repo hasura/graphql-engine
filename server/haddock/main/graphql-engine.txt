@@ -21669,13 +21669,10 @@ SchemaOptions :: StringifyNumbers -> Bool -> FunctionPermissionsCtx -> RemoteSch
 
 -- | Aggregation of contextual information required to build the schema.
 data SchemaContext
-SchemaContext :: SchemaKind -> SourceCache -> RemoteRelationshipParserBuilder -> SchemaContext
+SchemaContext :: SchemaKind -> RemoteRelationshipParserBuilder -> SchemaContext
 
 -- | the kind of schema being built
 [scSchemaKind] :: SchemaContext -> SchemaKind
-
--- | the set of all sources (TODO: remove this?)
-[scSourceCache] :: SchemaContext -> SourceCache
 
 -- | how to process remote relationships
 [scRemoteRelationshipParserBuilder] :: SchemaContext -> RemoteRelationshipParserBuilder
@@ -25224,9 +25221,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_awYKy. Lens' (QueryParametersInfo b_awYKy) (Seq (ColumnValue b_awYKy))
-qpiReusableVariableValues :: forall b_awYKy. Lens' (QueryParametersInfo b_awYKy) (HashMap Name (ColumnValue b_awYKy))
-qpiReferencedSessionVariables :: forall b_awYKy. Lens' (QueryParametersInfo b_awYKy) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_awYI3. Lens' (QueryParametersInfo b_awYI3) (Seq (ColumnValue b_awYI3))
+qpiReusableVariableValues :: forall b_awYI3. Lens' (QueryParametersInfo b_awYI3) (HashMap Name (ColumnValue b_awYI3))
+qpiReferencedSessionVariables :: forall b_awYI3. Lens' (QueryParametersInfo b_awYI3) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
