@@ -346,25 +346,19 @@ library dc-api
                      , autodocodec-openapi3
                      , base
                      , bytestring
-                     , containers
                      , deepseq
-                     , file-embed
                      , hashable
                      , insert-ordered-containers
                      , lens
                      , lens-aeson
-                     , mtl
                      , openapi3
                      , scientific
                      , servant
                      , servant-client
                      , servant-client-core
                      , servant-openapi3
-                     , servant-server
                      , text
                      , unordered-containers
-                     , vector
-                     , warp
   if !flag(profiling)
     -- ghc-heap-view can't be built with profiling
     build-depends:     ghc-heap-view
@@ -382,10 +376,6 @@ library dc-api
                      , Hasura.Backends.DataConnector.API.V0.Scalar.Value
                      , Hasura.Backends.DataConnector.API.V0.Schema
                      , Hasura.Backends.DataConnector.API.V0.Table
-                     , Hasura.Backends.DataConnector.Agent.Data
-                     , Hasura.Backends.DataConnector.Agent.Query
-                     , Hasura.Backends.DataConnector.Agent.Schema
-                     , Hasura.Backends.DataConnector.Agent.Server
 
 library
   import: common-all, lib-depends

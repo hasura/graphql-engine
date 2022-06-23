@@ -1,0 +1,36 @@
+{
+  "name": "dc-agent-reference",
+  "version": "1.0.0",
+  "description": "Reference implementation of a Data Connector Agent for Hasura GraphQL Engine",
+  "author": "Hasura (https://github.com/hasura/graphql-engine)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hasura/graphql-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hasura/graphql-engine/issues"
+  },
+  "homepage": "https://github.com/hasura/graphql-engine#readme",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "start": "ts-node ./src/index.ts",
+    "start-no-typecheck": "ts-node --transpileOnly ./src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "fastify": "^3.29.0",
+    "openapi3-ts": "^2.0.2",
+    "pino-pretty": "^8.0.0",
+    "xml2js": "^0.4.23"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.2",
+    "@types/node": "^16.11.38",
+    "@types/xml2js": "^0.4.11",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3"
+  }
+}
