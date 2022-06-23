@@ -279,6 +279,13 @@ in the deployment sub-tasks:
         to mark the migration as already applied on the project. Then
         redeploy the failed commit to continue with further steps.
 
+    - `version check: failed to get version from server`
+
+        In such situations, the project has inconsistent metadata and has issues connecting to the server. 
+        
+        To fix this, try reloading the metadata and confirming all required ENV VARS 
+        for the project are available. If the issue persists, please contact the [Hasura Help Center](https://hasura.io/help/).
+
 ### Inconsistent metadata after finalizing update
 
 -  It is possible your project might be in an unhealthy state depending
