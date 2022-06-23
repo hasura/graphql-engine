@@ -22,6 +22,7 @@ const CustomizationFieldNameToActionTypeMap: Record<
   'rootFields.suffix': 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_SUFFIX',
   'typeNames.prefix': 'UPDATE_CUSTOMIZATION_TYPE_NAMES_PREFIX',
   'typeNames.suffix': 'UPDATE_CUSTOMIZATION_TYPE_NAMES_SUFFIX',
+  namingConvention: 'UPDATE_CUSTOMIZATION_NAMING_CONVENTION',
 };
 
 export const getActionType = (
@@ -32,7 +33,9 @@ export const getActionType = (
 export const GraphQLFieldCustomizationContainer: React.FC<GraphQLFieldCustomizationContainerProps> = ({
   rootFields,
   typeNames,
+  namingConvention,
   connectionDBStateDispatch,
+  connectionDBState,
 }) => {
   const onChange = (fieldName: CustomizationFieldName, fieldValue: string) => {
     const actionType = getActionType(fieldName);
@@ -47,7 +50,9 @@ export const GraphQLFieldCustomizationContainer: React.FC<GraphQLFieldCustomizat
     <GraphQLFieldCustomization
       rootFields={rootFields}
       typeNames={typeNames}
+      namingConvention={namingConvention}
       onChange={onChange}
+      connectionDBState={connectionDBState}
     />
   );
 };

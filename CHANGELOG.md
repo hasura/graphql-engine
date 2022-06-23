@@ -4,7 +4,8 @@
 
 ### Bug fixes and improvements
 
-console: Hide TimescaleDB internal schema from data tab
+- console: Hide TimescaleDB internal schema from data tab
+- console: support naming convention in source customization for postgres DB [CON-297]
 
 ## v2.9.0-beta.1
 

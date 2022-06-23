@@ -96,6 +96,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           customization: {
             rootFields: currentSourceInfo?.customization?.root_fields,
             typeNames: currentSourceInfo?.customization?.type_names,
+            namingConvention:
+              currentSourceInfo?.customization?.naming_convention,
           },
         },
       });

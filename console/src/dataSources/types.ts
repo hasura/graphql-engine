@@ -422,6 +422,7 @@ export type SupportedFeaturesType = {
     pool_timeout: boolean;
     connection_lifetime: boolean;
     ssl_certificates: boolean;
+    namingConvention: boolean;
   };
 };
 
