@@ -2,8 +2,7 @@
 
 -- | Data Connector helpers.
 module Harness.Backend.DataConnector
-  ( mkLocalTestEnvironment,
-    setup,
+  ( setup,
     teardown,
     defaultSourceMetadata,
   )
@@ -11,13 +10,11 @@ where
 
 --------------------------------------------------------------------------------
 
-import Control.Concurrent (ThreadId, forkIO, killThread)
 import Data.Aeson (Value)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context (BackendType (DataConnector), defaultBackendTypeString, defaultSource)
 import Harness.TestEnvironment (TestEnvironment)
-import Hasura.Backends.DataConnector.Agent.Server (runDcServer)
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -75,20 +72,16 @@ defaultBackendConfig =
    in [yaml|
 dataconnector:
   *backendType:
-    uri: "http://localhost:8100/"
+    uri: "http://127.0.0.1:65005/"
 |]
 
-mkLocalTestEnvironment :: TestEnvironment -> IO ThreadId
-mkLocalTestEnvironment _ = forkIO runDcServer
-
 -- | Setup the schema in the most expected way.
-setup :: (TestEnvironment, ThreadId) -> IO ()
+setup :: (TestEnvironment, ()) -> IO ()
 setup (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource testEnvironment defaultSourceMetadata (Just defaultBackendConfig)
 
 -- | Teardown the schema and tracking in the most expected way.
-teardown :: (TestEnvironment, ThreadId) -> IO ()
-teardown (testEnvironment, agentThread) = do
+teardown :: (TestEnvironment, ()) -> IO ()
+teardown (testEnvironment, _) = do
   GraphqlEngine.clearMetadata testEnvironment
-  killThread agentThread

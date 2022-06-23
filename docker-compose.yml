@@ -71,3 +71,8 @@ services:
       POSTGRES_DB: "hasura"
     volumes:
         - ${PWD}/docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh
+
+  dc-reference-agent:
+    build: ./dc-agents/reference/
+    ports:
+      - "65005:8100"

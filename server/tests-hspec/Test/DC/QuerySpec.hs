@@ -23,7 +23,7 @@ spec =
   Context.runWithLocalTestEnvironment
     [ Context.Context
         { name = Context.Backend Context.DataConnector,
-          mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironment,
+          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
           setup = DataConnector.setup,
           teardown = DataConnector.teardown,
           customOptions = Nothing
