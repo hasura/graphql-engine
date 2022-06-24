@@ -50,10 +50,10 @@ runDBQuery' ::
   Logger Hasura ->
   SourceConfig ->
   Tracing.TraceT (ExceptT QErr IO) a ->
-  Maybe IR.Q.Query ->
+  Maybe IR.Q.QueryRequest ->
   m (DiffTime, a)
-runDBQuery' requestId query fieldName _userInfo logger _sourceConfig action ir = do
-  void $ HGL.logQueryLog logger $ mkQueryLog query fieldName ir requestId
+runDBQuery' requestId query fieldName _userInfo logger _sourceConfig action queryRequest = do
+  void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.trace ("Data Connector backend query for root field " <>> fieldName)
     . Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)
@@ -62,7 +62,7 @@ runDBQuery' requestId query fieldName _userInfo logger _sourceConfig action ir =
 mkQueryLog ::
   GQLReqUnparsed ->
   RootFieldAlias ->
-  Maybe IR.Q.Query ->
+  Maybe IR.Q.QueryRequest ->
   RequestId ->
   HGL.QueryLog
 mkQueryLog gqlQuery fieldName maybeQuery requestId =

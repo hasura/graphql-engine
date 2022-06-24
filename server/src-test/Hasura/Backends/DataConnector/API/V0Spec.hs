@@ -6,6 +6,7 @@ import Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec qualified as Config
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec qualified as ExpressionSpec
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec qualified as OrderBySpec
 import Hasura.Backends.DataConnector.API.V0.QuerySpec qualified as QuerySpec
+import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec qualified as RelationshipsSpec
 import Hasura.Backends.DataConnector.API.V0.Scalar.TypeSpec qualified as TypeSpec
 import Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec qualified as ValueSpec
 import Hasura.Backends.DataConnector.API.V0.SchemaSpec qualified as SchemaSpec
@@ -20,6 +21,7 @@ spec = do
   describe "Expression" ExpressionSpec.spec
   describe "OrderBy" OrderBySpec.spec
   describe "Query" QuerySpec.spec
+  describe "Relationships" RelationshipsSpec.spec
   describe "Scalar.Type" TypeSpec.spec
   describe "Scalar.Value" ValueSpec.spec
   describe "Schema" SchemaSpec.spec

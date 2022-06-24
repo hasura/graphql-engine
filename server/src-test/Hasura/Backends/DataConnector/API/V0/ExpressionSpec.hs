@@ -13,8 +13,9 @@ where
 
 import Autodocodec.Extended
 import Data.Aeson.QQ.Simple (aesonQQ)
-import Hasura.Backends.DataConnector.API.V0.API
+import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName)
 import Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec (genValue)
 import Hasura.Prelude
 import Hedgehog
@@ -54,11 +55,18 @@ spec = do
       testToFromJSONToSchema IsNull [aesonQQ|"is_null"|]
     jsonOpenApiProperties genUnaryComparisonOperator
 
+  describe "ComparisonColumn" $ do
+    testToFromJSONToSchema
+      (ComparisonColumn [RelationshipName "table1", RelationshipName "table2"] (ColumnName "column_name"))
+      [aesonQQ|{"path": ["table1", "table2"], "name": "column_name"}|]
+
+    jsonOpenApiProperties genComparisonColumn
+
   describe "ComparisonValue" $ do
     describe "AnotherColumn" $
       testToFromJSONToSchema
-        (AnotherColumn $ ValueWrapper (ColumnName "my_column_name"))
-        [aesonQQ|{"type": "column", "column": "my_column_name"}|]
+        (AnotherColumn $ ValueWrapper (ComparisonColumn [] (ColumnName "my_column_name")))
+        [aesonQQ|{"type": "column", "column": {"path": [], "name": "my_column_name"}}|]
     describe "ScalarValue" $
       testToFromJSONToSchema
         (ScalarValue . ValueWrapper $ String "scalar value")
@@ -67,10 +75,10 @@ spec = do
     jsonOpenApiProperties genComparisonValue
 
   describe "Expression" $ do
-    let columnName = ColumnName "my_column_name"
+    let comparisonColumn = ComparisonColumn [] (ColumnName "my_column_name")
     let scalarValue = ScalarValue . ValueWrapper $ String "scalar value"
-    let scalarValues = [ScalarValue . ValueWrapper $ String "scalar value"]
-    let unaryComparisonExpression = ApplyUnaryComparisonOperator $ ValueWrapper2 IsNull columnName
+    let scalarValues = [String "scalar value"]
+    let unaryComparisonExpression = ApplyUnaryComparisonOperator $ ValueWrapper2 IsNull comparisonColumn
 
     describe "And" $ do
       testToFromJSONToSchema
@@ -82,7 +90,7 @@ spec = do
               {
                 "type": "unary_op",
                 "operator": "is_null",
-                "column": "my_column_name"
+                "column": { "path": [], "name": "my_column_name" }
               }
             ]
           }
@@ -98,7 +106,7 @@ spec = do
               {
                 "type": "unary_op",
                 "operator": "is_null",
-                "column": "my_column_name"
+                "column": { "path": [], "name": "my_column_name" }
               }
             ]
           }
@@ -113,31 +121,31 @@ spec = do
             "expression": {
               "type": "unary_op",
               "operator": "is_null",
-              "column": "my_column_name"
+              "column": { "path": [], "name": "my_column_name" }
             }
           }
         |]
     describe "BinaryComparisonOperator" $ do
       testToFromJSONToSchema
-        (ApplyBinaryComparisonOperator $ ValueWrapper3 Equal columnName scalarValue)
+        (ApplyBinaryComparisonOperator $ ValueWrapper3 Equal comparisonColumn scalarValue)
         [aesonQQ|
           {
             "type": "binary_op",
             "operator": "equal",
-            "column": "my_column_name",
+            "column": { "path": [], "name": "my_column_name" },
             "value": {"type": "scalar", "value": "scalar value"}
           }
         |]
 
     describe "BinaryArrayComparisonOperator" $ do
       testToFromJSONToSchema
-        (ApplyBinaryArrayComparisonOperator $ ValueWrapper3 In columnName scalarValues)
+        (ApplyBinaryArrayComparisonOperator $ ValueWrapper3 In comparisonColumn scalarValues)
         [aesonQQ|
           {
             "type": "binary_arr_op",
             "operator": "in",
-            "column": "my_column_name",
-            "values": [{"type": "scalar", "value": "scalar value"}]
+            "column": { "path": [], "name": "my_column_name" },
+            "values": ["scalar value"]
           }
         |]
 
@@ -148,7 +156,7 @@ spec = do
           {
             "type": "unary_op",
             "operator": "is_null",
-            "column": "my_column_name"
+            "column": { "path": [], "name": "my_column_name" }
           }
         |]
 
@@ -166,10 +174,16 @@ genBinaryArrayComparisonOperator = Gen.enumBounded
 genUnaryComparisonOperator :: MonadGen m => m UnaryComparisonOperator
 genUnaryComparisonOperator = Gen.enumBounded
 
+genComparisonColumn :: MonadGen m => m ComparisonColumn
+genComparisonColumn =
+  ComparisonColumn
+    <$> Gen.list (linear 0 5) genRelationshipName
+    <*> genColumnName
+
 genComparisonValue :: MonadGen m => m ComparisonValue
 genComparisonValue =
   Gen.choice
-    [ AnotherColumn <$> genValueWrapper genColumnName,
+    [ AnotherColumn <$> genValueWrapper genComparisonColumn,
       ScalarValue <$> genValueWrapper genValue
     ]
 
@@ -179,9 +193,9 @@ genExpression =
     [ And <$> genValueWrapper genExpressions,
       Or <$> genValueWrapper genExpressions,
       Not <$> genValueWrapper genSmallExpression,
-      ApplyBinaryComparisonOperator <$> genValueWrapper3 genBinaryComparisonOperator genColumnName genComparisonValue,
-      ApplyBinaryArrayComparisonOperator <$> genValueWrapper3 genBinaryArrayComparisonOperator genColumnName (Gen.list (linear 0 1) genComparisonValue),
-      ApplyUnaryComparisonOperator <$> genValueWrapper2 genUnaryComparisonOperator genColumnName
+      ApplyBinaryComparisonOperator <$> genValueWrapper3 genBinaryComparisonOperator genComparisonColumn genComparisonValue,
+      ApplyBinaryArrayComparisonOperator <$> genValueWrapper3 genBinaryArrayComparisonOperator genComparisonColumn (Gen.list (linear 0 1) genValue),
+      ApplyUnaryComparisonOperator <$> genValueWrapper2 genUnaryComparisonOperator genComparisonColumn
     ]
   where
     genExpressions = Gen.list (linear 0 1) genSmallExpression

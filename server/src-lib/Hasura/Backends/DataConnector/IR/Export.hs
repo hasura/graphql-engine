@@ -2,15 +2,14 @@
 
 module Hasura.Backends.DataConnector.IR.Export
   ( QueryError (..),
-    queryToAPI,
+    queryRequestToAPI,
   )
 where
 
---------------------------------------------------------------------------------
-
+import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson (ToJSON)
 import Data.Aeson.KeyMap (fromHashMapText)
-import Data.HashMap.Strict qualified as M
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Prelude
@@ -22,26 +21,46 @@ data QueryError = ExposedLiteral Text
   deriving stock (Generic)
   deriving anyclass (ToJSON)
 
-queryToAPI :: IR.Q.Query -> Either QueryError API.Query
-queryToAPI IR.Q.Query {..} = do
-  fields' <- traverse fromField fields
+queryRequestToAPI :: IR.Q.QueryRequest -> Either QueryError API.QueryRequest
+queryRequestToAPI IR.Q.QueryRequest {..} = do
+  query <- queryToAPI _qrQuery
   pure $
-    API.Query
-      { fields = fromHashMapText fields',
-        from = Witch.from from,
-        limit = limit,
-        offset = offset,
-        where_ = fmap Witch.from where_,
-        orderBy = nonEmpty $ fmap Witch.from orderBy
+    API.QueryRequest
+      { _qrTable = Witch.from _qrTable,
+        _qrTableRelationships =
+          ( \(sourceTableName, relationships) ->
+              API.TableRelationships
+                { _trSourceTable = Witch.from sourceTableName,
+                  _trRelationships = HashMap.mapKeys Witch.from $ Witch.from <$> relationships
+                }
+          )
+            <$> HashMap.toList _qrTableRelationships,
+        _qrQuery = query
       }
 
-fromField :: IR.Q.Field -> Either QueryError API.Field
-fromField = \case
-  IR.Q.Column contents -> Right $ Witch.from contents
-  IR.Q.Relationship contents -> rcToAPI contents
-  IR.Q.Literal lit -> Left $ ExposedLiteral lit
+queryToAPI :: IR.Q.Query -> Either QueryError API.Query
+queryToAPI IR.Q.Query {..} = do
+  fields' <- traverse fieldToAPI _qFields
+  pure $
+    API.Query
+      { _qFields = fromHashMapText fields',
+        _qLimit = _qLimit,
+        _qOffset = _qOffset,
+        _qWhere = fmap Witch.from _qWhere,
+        _qOrderBy = nonEmpty $ fmap Witch.from _qOrderBy
+      }
 
-rcToAPI :: IR.Q.RelationshipContents -> Either QueryError API.Field
-rcToAPI (IR.Q.RelationshipContents joinCondition relType query) =
-  let joinCondition' = M.mapKeys Witch.from $ fmap Witch.from joinCondition
-   in fmap (API.RelationshipField . API.RelField joinCondition' (Witch.from relType)) $ queryToAPI query
+fieldToAPI :: IR.Q.Field -> Either QueryError API.Field
+fieldToAPI = \case
+  IR.Q.ColumnField contents -> Right . API.ColumnField . ValueWrapper $ Witch.from contents
+  IR.Q.RelField contents -> API.RelField <$> rcToAPI contents
+  IR.Q.LiteralField lit -> Left $ ExposedLiteral lit
+
+rcToAPI :: IR.Q.RelationshipField -> Either QueryError API.RelationshipField
+rcToAPI IR.Q.RelationshipField {..} = do
+  query <- queryToAPI _rfQuery
+  pure $
+    API.RelationshipField
+      { _rfRelationship = Witch.from _rfRelationship,
+        _rfQuery = query
+      }

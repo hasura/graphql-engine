@@ -8,6 +8,7 @@ module Hasura.Backends.DataConnector.API.V0.Expression
     BinaryComparisonOperator (..),
     BinaryArrayComparisonOperator (..),
     UnaryComparisonOperator (..),
+    ComparisonColumn (..),
     ComparisonValue (..),
   )
 where
@@ -22,6 +23,7 @@ import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Scalar.Value qualified as API.V0.Scalar
 import Prelude
 
@@ -82,17 +84,34 @@ data Expression
   = And (ValueWrapper "expressions" [Expression])
   | Or (ValueWrapper "expressions" [Expression])
   | Not (ValueWrapper "expression" Expression)
-  | ApplyBinaryComparisonOperator (ValueWrapper3 "operator" BinaryComparisonOperator "column" API.V0.ColumnName "value" ComparisonValue)
-  | ApplyBinaryArrayComparisonOperator (ValueWrapper3 "operator" BinaryArrayComparisonOperator "column" API.V0.ColumnName "values" [ComparisonValue])
-  | ApplyUnaryComparisonOperator (ValueWrapper2 "operator" UnaryComparisonOperator "column" API.V0.ColumnName)
+  | ApplyBinaryComparisonOperator (ValueWrapper3 "operator" BinaryComparisonOperator "column" ComparisonColumn "value" ComparisonValue)
+  | ApplyBinaryArrayComparisonOperator (ValueWrapper3 "operator" BinaryArrayComparisonOperator "column" ComparisonColumn "values" [API.V0.Scalar.Value])
+  | ApplyUnaryComparisonOperator (ValueWrapper2 "operator" UnaryComparisonOperator "column" ComparisonColumn)
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
 
+-- | Specifies a particular column to use in a comparison via its path and name
+data ComparisonColumn = ComparisonColumn
+  { -- | The path of relationships from the current query table to the table that contains the column
+    _ccPath :: [API.V0.RelationshipName],
+    -- | The name of the column
+    _ccName :: API.V0.ColumnName
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonColumn
+  deriving anyclass (Hashable, NFData)
+
+instance HasCodec ComparisonColumn where
+  codec =
+    object "ComparisonColumn" $
+      ComparisonColumn
+        <$> requiredField "path" "The relationship path from the current query table to the table that contains the specified column. Empty array means the current query table." .= _ccPath
+        <*> requiredField "name" "The name of the column" .= _ccName
+
 -- | A serializable representation of comparison values used in comparisons inside 'Expression's.
 data ComparisonValue
-  = -- | Allows a comparison to a column on the current table
-    -- TODO: joins in Expressions and then comparisons to other tables involved in those joins
-    AnotherColumn (ValueWrapper "column" API.V0.ColumnName)
+  = -- | Allows a comparison to a column on the current table or another table
+    AnotherColumn (ValueWrapper "column" ComparisonColumn)
   | ScalarValue (ValueWrapper "value" API.V0.Scalar.Value)
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)

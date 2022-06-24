@@ -4,6 +4,7 @@
 module Harness.Backend.DataConnector
   ( setup,
     teardown,
+    defaultBackendConfig,
     defaultSourceMetadata,
   )
 where

@@ -40,15 +40,15 @@ POST /v1/metadata
           "kind": "reference",
           "tables": [
             {
-              "table": "albums",
+              "table": "Album",
               "object_relationships": [
                 {
-                  "name": "artist",
+                  "name": "Artist",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "artists",
+                      "remote_table": "Artist",
                       "column_mapping": {
-                        "artist_id": "id"
+                        "ArtistId": "ArtistId"
                       }
                     }
                   }
@@ -56,15 +56,15 @@ POST /v1/metadata
               ]
             },
             {
-              "table": "artists",
+              "table": "Artist",
               "array_relationships": [
                 {
-                  "name": "albums",
+                  "name": "Album",
                   "using": {
                     "manual_configuration": {
-                      "remote_table": "albums",
+                      "remote_table": "Album",
                       "column_mapping": {
-                        "id": "artist_id"
+                        "ArtistId": "ArtistId"
                       }
                     }
                   }
@@ -73,7 +73,7 @@ POST /v1/metadata
             }
           ],
           "configuration": {
-            "tables": [ "artists", "albums" ]
+            "tables": [ "Artist", "Album" ]
           }
         }
       ]
@@ -220,32 +220,36 @@ The service logs queries from the request body in the console. Here is a simple 
 
 ```graphql
 query {
-  artists {
-    id name
+  Artist {
+    ArtistId
+    Name
   }
 }
 ```
 
-and here is the resulting query payload:
+and here is the resulting query request payload:
 
 ```json
 {
-  "from": "artists",
-  "where": {
-    "expressions": [],
-    "type": "and"
-  },
-  "order_by": [],
-  "limit": null,
-  "offset": null,
-  "fields": {
-    "id": {
-      "type": "column",
-      "column": "id"
+  "table": "Artist",
+  "table_relationships": [],
+  "query": {
+    "where": {
+      "expressions": [],
+      "type": "and"
     },
-    "name": {
-      "type": "column",
-      "column": "name"
+    "order_by": [],
+    "limit": null,
+    "offset": null,
+    "fields": {
+      "ArtistId": {
+        "type": "column",
+        "column": "ArtistId"
+      },
+      "Name": {
+        "type": "column",
+        "column": "Name"
+      }
     }
   }
 }
@@ -255,17 +259,19 @@ The implementation of the service is responsible for intepreting this data struc
 
 Let's break down the request:
 
-- The `from` field tells us which table to fetch the data from, namely the `artists` table.
-- The `where` field tells us that there is currently no (interesting) predicate being applied to the rows of the data set (just an empty conjunction, which ought to return every row).
-- The `order_by` field tells us that there is no particular ordering to use, and that we can return data in its natural order.
-- The `limit` and `offset` fields tell us that there is no pagination required.
-- The `fields` field tells us that we ought to return two fields per row (`id` and `name`), and that these fields should be fetched from the columns with the same names.
+- The `table` field tells us which table to fetch the data from, namely the `Artist` table.
+- The `table_relationships` field that lists any relationships used to join between tables in the query. This query does not use any relationships, so this is just an empty list here.
+- The `query` field contains further information about how to query the specified table:
+  - The `where` field tells us that there is currently no (interesting) predicate being applied to the rows of the data set (just an empty conjunction, which ought to return every row).
+  - The `order_by` field tells us that there is no particular ordering to use, and that we can return data in its natural order.
+  - The `limit` and `offset` fields tell us that there is no pagination required.
+  - The `fields` field tells us that we ought to return two fields per row (`ArtistId` and `Name`), and that these fields should be fetched from the columns with the same names.
 
 #### Response Body Structure
 
 The response body for a call to `POST /query` should always consist of a JSON array of JSON objects. Each of those JSON objects should contain all of the same keys as the `fields` property of the request body, even if the values of the corresponding fields may be `null`.
 
-In the case of fields appearing with type `relationship`, this property should apply recursively: such fields should appear in the response body as a nested array of records, each with the appropriate fields described by the relationship field's `query` property.
+In the case of fields appearing with type `relationship`, this property should apply recursively: such fields should appear in the response body as a nested array/object of record(s) (depending on whether the relationship is an object or array relationship), each with the appropriate fields described by the relationship field's `query` property.
 
 #### Pagination
 
@@ -315,6 +321,8 @@ Values (as used in `value` in `binary_op` and the `values` array in `binary_arr_
 | `scalar` | `value`           | A scalar `value` to compare against |
 | `column` | `column`          | A `column` in the current table being queried to compare against |
 
+Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, as well as a `path` to the table that contains the column. This path is an array of relationship names that starts from the table being queried (ie the table being queried by the query that this where expression is being specified in). An empty array means the column would be on the table being queried itself.
+
 Here is a simple example, which correponds to the predicate "`first_name` is John and `last_name` is Smith":
 
 ```json
@@ -324,7 +332,10 @@ Here is a simple example, which correponds to the predicate "`first_name` is Joh
     {
       "type": "binary_op",
       "operator": "equal",
-      "column": "first_name",
+      "column": {
+        "path": [],
+        "name": "first_name"
+      },
       "value": {
         "type": "scalar",
         "value": "John"
@@ -333,7 +344,10 @@ Here is a simple example, which correponds to the predicate "`first_name` is Joh
     {
       "type": "binary_op",
       "operator": "equal",
-      "column": "last_name",
+      "column": {
+        "path": [],
+        "name": "last_name"
+      },
       "value": {
         "type": "scalar",
         "value": "John"
@@ -352,10 +366,16 @@ Here's another example, which corresponds to the predicate "`first_name` is the 
     {
       "type": "binary_op",
       "operator": "equal",
-      "column": "first_name",
+      "column": {
+        "path": [],
+        "name": "first_name"
+      },
       "value": {
         "type": "column",
-        "column": "last_name"
+        "column": {
+          "path": [],
+          "name": "last_name"
+        }
       }
     }
   ]
@@ -389,18 +409,20 @@ If the call to `GET /schema` returns a `capabilities` record with the `relations
 
 _Note_ :if the `relationships` field is set to `false` then `graphql-engine` will attempt to split queries into separate queries whenever relationships are involved. This is not always possible, depending on the structure of the query, but the fastest path to adding a data source as a Data Connector is to set `relationships` to `false` and to ignore this section. (This is currently not supported, but is intended to be in the future.)
 
-Relationship fields are indicated by a `type` field containing the string `relationship`. Such fields will also include column_mapping` and `query` data.
+Relationship fields are indicated by a `type` field containing the string `relationship`. Such fields will also include the name of the relationship in a field called `relationship`. This name refers to a relationship that is specified on the top-level query request object in the `table_relationships` field.
 
-`column_mapping` indicates the mapping from columns in the source table to columns in the related table. It is intended that the backend should execute the contained `query` and return the resulting record set as the value of this field, with the additional record-level predicate that any mapped columns should be equal in the context of the current record of the current table.
+This `table_relationships` is a list of tables, and for each table, a map of relationship name to relationship information. The information is an object that has a field `target_table` that specifies the name of the related table. It has a field called `relationship_type` that specified either an `object` (many to one) or an `array` (one to many) relationship. There  is also a `column_mapping` field that indicates the mapping from columns in the source table to columns in the related table.
+
+It is intended that the backend should execute the `query` contained in the relationship field and return the resulting record set as the value of this field, with the additional record-level predicate that any mapped columns should be equal in the context of the current record of the current table.
 
 An example will illustrate this. Consider the following GraphQL query:
 
 ```graphql
 query {
-  artists {
-    name
-    albums {
-      title
+  Artist {
+    Name
+    Albums {
+      Title
     }
   }
 }
@@ -410,53 +432,65 @@ This will generate the following JSON query if `relationships` is set to `true`:
 
 ```json
 {
-  "where": {
-    "expressions": [],
-    "type": "and"
-  },
-  "offset": null,
-  "from": "artists",
-  "order_by": [],
-  "limit": null,
-  "fields": {
-    "albums": {
-      "type": "relationship",
-      "column_mapping": {
-        "id": "artist_id"
-      },
-      "query": {
-        "where": {
-          "expressions": [],
-          "type": "and"
-        },
-        "offset": null,
-        "from": "albums",
-        "order_by": [],
-        "limit": null,
-        "fields": {
-          "title": {
-            "type": "column",
-            "column": "title"
+  "table": "Artist",
+  "table_relationships": [
+    {
+      "source_table": "Artist",
+      "relationships": {
+        "ArtistAlbums": {
+          "target_table": "Album",
+          "relationship_type": "array",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
           }
         }
       }
+    }
+  ],
+  "query": {
+    "where": {
+      "expressions": [],
+      "type": "and"
     },
-    "name": {
-      "type": "column",
-      "column": "name"
+    "offset": null,
+    "order_by": [],
+    "limit": null,
+    "fields": {
+      "Albums": {
+        "type": "relationship",
+        "relationship": "ArtistAlbums",
+        "query": {
+          "where": {
+            "expressions": [],
+            "type": "and"
+          },
+          "offset": null,
+          "from": "albums",
+          "order_by": [],
+          "limit": null,
+          "fields": {
+            "Title": {
+              "type": "column",
+              "column": "Title"
+            }
+          }
+        }
+      },
+      "Name": {
+        "type": "column",
+        "column": "Name"
+      }
     }
   }
 }
 ```
 
-Note the `albums` field in particular, which traverses the `artists` -> `albums` relationship:
+Note the `Albums` field in particular, which traverses the `Artists` -> `Albums` relationship, via the `ArtistAlbums` relationship:
 
 ```json
 {
   "type": "relationship",
-  "column_mapping": {
-    "id": "artist_id"
-  },
+  "relationship": "ArtistAlbums",
   "query": {
     "where": {
       "expressions": [],
@@ -467,19 +501,175 @@ Note the `albums` field in particular, which traverses the `artists` -> `albums`
     "order_by": [],
     "limit": null,
     "fields": {
-      "title": {
+      "Title": {
         "type": "column",
-        "column": "title"
+        "column": "Title"
       }
     }
   }
 }
 ```
 
-The `column_mapping` field indicates the column mapping for this relationship, namely that the album's `artist_id` must equal the artist's `id`.
+The top-level `table_relationships` can be looked up by starting from the source table (in this case `Artist`), locating the `ArtistAlbums` relationship under that table, then extracting the relationship information. This information includes the `target_table` field which indicates the table to be queried when following this relationship is the `Album` table. The `relationship_type` field indicates that this relationship is an `array` relationship (ie. that it will return zero to many Album rows per Artist row). The `column_mapping` field indicates the column mapping for this relationship, namely that the Artist's `ArtistId` must equal the Album's `ArtistId`.
 
-The `query` field indicates the query that should be executed against the `albums` table, but we must remember to enforce the additional constraint between `artist_id` and `id`. That is, in the context of any single outer `artist` record, we should populate the `albums` field with the array of album records for which the `artist_id` field is equal to the outer record's `id` field.
+Back on the relationship field inside the query, there is another `query` field. This indicates the query that should be executed against the `Album` table, but we must remember to enforce the additional constraint between Artist's `ArtistId` and Album's `ArtistId`. That is, in the context of any single outer `Artist` record, we should populate the `Albums` field with the array of Album records for which the `ArtistId` field is equal to the outer record's `ArtistId` field.
+
+#### Cross-Table Filtering
+It is possible to form queries that filter their results by comparing columns across tables via relationships. One way this can happen in Hasura GraphQL Engine is when configuring permissions on a table. It is possible to configure a filter on a table such that it joins to another table in order to compare some data in the filter expression.
+
+The following metadata when used with HGE configures a `Customer` and `Employee` table, and sets up a select permission rule on `Customer` such that only customers that live in the same country as their SupportRep Employee would be visible to users in the `user` role:
+
+```json
+POST /v1/metadata
+
+{
+  "type": "replace_metadata",
+  "args": {
+    "metadata": {
+      "version": 3,
+      "backend_configs": {
+        "dataconnector": {
+          "reference": {
+            "uri": "http://localhost:8100/"
+          }
+        }
+      },
+      "sources": [
+        {
+          "name": "chinook",
+          "kind": "reference",
+          "tables": [
+            {
+              "table": "Customer",
+              "object_relationships": [
+                {
+                  "name": "SupportRep",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Employee",
+                      "column_mapping": {
+                        "SupportRepId": "EmployeeId"
+                      }
+                    }
+                  }
+                }
+              ],
+              "select_permissions": [
+                {
+                  "role": "user",
+                  "permission": {
+                    "columns": [
+                      "CustomerId",
+                      "FirstName",
+                      "LastName",
+                      "Country",
+                      "SupportRepId"
+                    ],
+                    "filter": {
+                      "SupportRep": {
+                        "Country": {
+                          "_ceq": ["$","Country"]
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "Employee"
+            }
+          ],
+          "configuration": {}
+        }
+      ]
+    }
+  }
+}
+```
+
+Given this GraphQL query (where the `X-Hasura-Role` header is set to `user`):
+
+```graphql
+query getCustomer {
+  Customer {
+    CustomerId
+    FirstName
+    LastName
+    Country
+    SupportRepId
+  }
+}
+```
+
+We would get the following query request JSON:
+
+```json
+{
+  "table": "Customer",
+  "table_relationships": [
+    {
+      "source_table": "Customer",
+      "relationships": {
+        "SupportRep": {
+          "target_table": "Employee",
+          "relationship_type": "object",
+          "column_mapping": {
+            "SupportRepId": "EmployeeId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Country": {
+        "type": "column",
+        "column": "Country"
+      },
+      "CustomerId": {
+        "type": "column",
+        "column": "CustomerId"
+      },
+      "FirstName": {
+        "type": "column",
+        "column": "FirstName"
+      },
+      "LastName": {
+        "type": "column",
+        "column": "LastName"
+      },
+      "SupportRepId": {
+        "type": "column",
+        "column": "SupportRepId"
+      }
+    },
+    "where": {
+      "type": "and",
+      "expressions": [
+        {
+          "type": "binary_op",
+          "operator": "equal",
+          "column": {
+            "path": ["SupportRep"],
+            "name": "Country"
+          },
+          "value": {
+            "type": "column",
+            "column": {
+              "path": [],
+              "name": "Country"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+The key point of interest here is in the `where` field where we are comparing between columns. The first column's `path` is `["SupportRep"]` indicating that the `Country` column specified there is on the other side of the `Customer` table's `SupportRep` relationship (ie. to the `Employee` table). The related `Employee`'s `Country` column is being compared with `equal` to `Customer`'s `Country` column (as indicated by the `[]` path). So, in order to evaluate this condition, we'd need to join the `Employee` table using the `column_mapping` specified in the `SupportRep` relationship and if any of the related rows (in this case, only one because it is an `object` relation) contain a `Country` that is equal to Employee row's `Country`, then the `binary_op` evaluates to True and we don't filter out the row.
 
 #### Type Definitions
 
-The `Query` TypeScript type in the [reference implementation](./reference/src/types/query.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.
+The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/query.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.

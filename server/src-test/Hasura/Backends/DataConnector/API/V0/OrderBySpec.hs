@@ -4,7 +4,7 @@
 module Hasura.Backends.DataConnector.API.V0.OrderBySpec (spec, genOrderBy, genOrderType) where
 
 import Data.Aeson.QQ.Simple (aesonQQ)
-import Hasura.Backends.DataConnector.API.V0.API
+import Hasura.Backends.DataConnector.API.V0
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Prelude
 import Hedgehog
