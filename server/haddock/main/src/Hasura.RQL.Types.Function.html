@@ -64,11 +64,11 @@
 </span><span id="line-64"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="hs-comment">-- | https://www.postgresql.org/docs/current/xfunc-volatility.html</span><span>
-</span><span id="line-67"></span><span id="local-6989586621689114225"><span id="local-6989586621689114226"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionVolatility"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-var">FunctionVolatility</span></a></span></span><span>
+</span><span id="line-67"></span><span id="local-6989586621689123446"><span id="local-6989586621689123447"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionVolatility"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-var">FunctionVolatility</span></a></span></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FTVOLATILE"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FTVOLATILE"><span class="hs-identifier hs-var">FTVOLATILE</span></a></span></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FTIMMUTABLE"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FTIMMUTABLE"><span class="hs-identifier hs-var">FTIMMUTABLE</span></a></span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FTSTABLE"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FTSTABLE"><span class="hs-identifier hs-var">FTSTABLE</span></a></span></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114218"><span id="local-6989586621689114220"><span class="annot"><span class="annottext">FunctionVolatility -&gt; FunctionVolatility -&gt; Bool
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123439"><span id="local-6989586621689123441"><span class="annot"><span class="annottext">FunctionVolatility -&gt; FunctionVolatility -&gt; Bool
 (FunctionVolatility -&gt; FunctionVolatility -&gt; Bool)
 -&gt; (FunctionVolatility -&gt; FunctionVolatility -&gt; Bool)
 -&gt; Eq FunctionVolatility
@@ -88,11 +88,11 @@ $cto :: forall x. Rep FunctionVolatility x -&gt; FunctionVolatility
 $cfrom :: forall x. FunctionVolatility -&gt; Rep FunctionVolatility x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689114212"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123433"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689114208"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span></span><span>
+</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123429"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span></span><span>
 </span><span id="line-76"></span><span>
-</span><span id="line-77"></span><span class="hs-special">$(</span><span id="local-6989586621689114195"><span id="local-6989586621689114197"><span id="local-6989586621689114199"><span id="local-6989586621689114201"><span id="local-6989586621689114203"><span id="local-6989586621689114205"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">2</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionVolatility</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span class="hs-special">$(</span><span id="local-6989586621689123416"><span id="local-6989586621689123418"><span id="local-6989586621689123420"><span id="local-6989586621689123422"><span id="local-6989586621689123424"><span id="local-6989586621689123426"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">2</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionVolatility</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span class="annot"><a href="Hasura.RQL.Types.Function.html#funcTypToTxt"><span class="hs-identifier hs-type">funcTypToTxt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-80"></span><span id="funcTypToTxt"><span class="annot"><span class="annottext">funcTypToTxt :: FunctionVolatility -&gt; Text
@@ -106,8 +106,8 @@ $cfrom :: forall x. FunctionVolatility -&gt; Rep FunctionVolatility x
 </span><a href="Hasura.RQL.Types.Function.html#FTSTABLE"><span class="hs-identifier hs-var">FTSTABLE</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;STABLE&quot;</span></span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689114185"><span id="local-6989586621689114188"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-85"></span><span>  </span><span id="local-6989586621689114183"><span class="annot"><span class="annottext">show :: FunctionVolatility -&gt; String
+</span><span id="line-84"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123406"><span id="local-6989586621689123409"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionVolatility"><span class="hs-identifier hs-type">FunctionVolatility</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621689123404"><span class="annot"><span class="annottext">show :: FunctionVolatility -&gt; String
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String)
 -&gt; (FunctionVolatility -&gt; Text) -&gt; FunctionVolatility -&gt; String
@@ -115,9 +115,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FunctionVolatility -&gt; Text
 </span><a href="Hasura.RQL.Types.Function.html#funcTypToTxt"><span class="hs-identifier hs-var">funcTypToTxt</span></a></span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span id="local-6989586621689114178"><span id="local-6989586621689114179"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="FunctionArgName"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-var">FunctionArgName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionArgName"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-var">FunctionArgName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getFuncArgNameTxt"><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
+</span><span id="line-87"></span><span id="local-6989586621689123399"><span id="local-6989586621689123400"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="FunctionArgName"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-var">FunctionArgName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionArgName"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-var">FunctionArgName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getFuncArgNameTxt"><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
 </span><a href="Hasura.RQL.Types.Function.html#getFuncArgNameTxt"><span class="hs-identifier hs-var hs-var">getFuncArgNameTxt</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-88"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114170"><span id="local-6989586621689114172"><span id="local-6989586621689114174"><span class="annot"><span class="annottext">Int -&gt; FunctionArgName -&gt; ShowS
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123391"><span id="local-6989586621689123393"><span id="local-6989586621689123395"><span class="annot"><span class="annottext">Int -&gt; FunctionArgName -&gt; ShowS
 [FunctionArgName] -&gt; ShowS
 FunctionArgName -&gt; String
 (Int -&gt; FunctionArgName -&gt; ShowS)
@@ -132,7 +132,7 @@ show :: FunctionArgName -&gt; String
 $cshow :: FunctionArgName -&gt; String
 showsPrec :: Int -&gt; FunctionArgName -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionArgName -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114166"><span id="local-6989586621689114168"><span class="annot"><span class="annottext">FunctionArgName -&gt; FunctionArgName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123387"><span id="local-6989586621689123389"><span class="annot"><span class="annottext">FunctionArgName -&gt; FunctionArgName -&gt; Bool
 (FunctionArgName -&gt; FunctionArgName -&gt; Bool)
 -&gt; (FunctionArgName -&gt; FunctionArgName -&gt; Bool)
 -&gt; Eq FunctionArgName
@@ -141,7 +141,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: FunctionArgName -&gt; FunctionArgName -&gt; Bool
 == :: FunctionArgName -&gt; FunctionArgName -&gt; Bool
 $c== :: FunctionArgName -&gt; FunctionArgName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114151"><span id="local-6989586621689114153"><span id="local-6989586621689114155"><span id="local-6989586621689114157"><span id="local-6989586621689114159"><span id="local-6989586621689114161"><span id="local-6989586621689114163"><span class="annot"><span class="annottext">Eq FunctionArgName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123372"><span id="local-6989586621689123374"><span id="local-6989586621689123376"><span id="local-6989586621689123378"><span id="local-6989586621689123380"><span id="local-6989586621689123382"><span id="local-6989586621689123384"><span class="annot"><span class="annottext">Eq FunctionArgName
 Eq FunctionArgName
 -&gt; (FunctionArgName -&gt; FunctionArgName -&gt; Ordering)
 -&gt; (FunctionArgName -&gt; FunctionArgName -&gt; Bool)
@@ -179,12 +179,12 @@ $c&lt; :: FunctionArgName -&gt; FunctionArgName -&gt; Bool
 compare :: FunctionArgName -&gt; FunctionArgName -&gt; Ordering
 $ccompare :: FunctionArgName -&gt; FunctionArgName -&gt; Ordering
 $cp1Ord :: Eq FunctionArgName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114148"><span class="annot"><span class="annottext">FunctionArgName -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123369"><span class="annot"><span class="annottext">FunctionArgName -&gt; ()
 (FunctionArgName -&gt; ()) -&gt; NFData FunctionArgName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: FunctionArgName -&gt; ()
 $crnf :: FunctionArgName -&gt; ()
-</span><a href="#local-6989586621689114148"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114140"><span id="local-6989586621689114142"><span id="local-6989586621689114144"><span id="local-6989586621689114146"><span class="annot"><span class="annottext">[FunctionArgName] -&gt; Value
+</span><a href="#local-6989586621689123369"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123361"><span id="local-6989586621689123363"><span id="local-6989586621689123365"><span id="local-6989586621689123367"><span class="annot"><span class="annottext">[FunctionArgName] -&gt; Value
 [FunctionArgName] -&gt; Encoding
 FunctionArgName -&gt; Value
 FunctionArgName -&gt; Encoding
@@ -207,7 +207,7 @@ toEncoding :: FunctionArgName -&gt; Encoding
 $ctoEncoding :: FunctionArgName -&gt; Encoding
 toJSON :: FunctionArgName -&gt; Value
 $ctoJSON :: FunctionArgName -&gt; Value
-</span><a href="#local-6989586621689114140"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114136"><span id="local-6989586621689114138"><span class="annot"><span class="annottext">ToJSONKeyFunction [FunctionArgName]
+</span><a href="#local-6989586621689123361"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123357"><span id="local-6989586621689123359"><span class="annot"><span class="annottext">ToJSONKeyFunction [FunctionArgName]
 ToJSONKeyFunction FunctionArgName
 ToJSONKeyFunction FunctionArgName
 -&gt; ToJSONKeyFunction [FunctionArgName] -&gt; ToJSONKey FunctionArgName
@@ -217,7 +217,7 @@ toJSONKeyList :: ToJSONKeyFunction [FunctionArgName]
 $ctoJSONKeyList :: ToJSONKeyFunction [FunctionArgName]
 toJSONKey :: ToJSONKeyFunction FunctionArgName
 $ctoJSONKey :: ToJSONKeyFunction FunctionArgName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114131"><span id="local-6989586621689114133"><span class="annot"><span class="annottext">Value -&gt; Parser [FunctionArgName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123352"><span id="local-6989586621689123354"><span class="annot"><span class="annottext">Value -&gt; Parser [FunctionArgName]
 Value -&gt; Parser FunctionArgName
 (Value -&gt; Parser FunctionArgName)
 -&gt; (Value -&gt; Parser [FunctionArgName]) -&gt; FromJSON FunctionArgName
@@ -227,7 +227,7 @@ parseJSONList :: Value -&gt; Parser [FunctionArgName]
 $cparseJSONList :: Value -&gt; Parser [FunctionArgName]
 parseJSON :: Value -&gt; Parser FunctionArgName
 $cparseJSON :: Value -&gt; Parser FunctionArgName
-</span><a href="#local-6989586621689114131"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114127"><span id="local-6989586621689114129"><span class="annot"><span class="annottext">FromJSONKeyFunction [FunctionArgName]
+</span><a href="#local-6989586621689123352"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123348"><span id="local-6989586621689123350"><span class="annot"><span class="annottext">FromJSONKeyFunction [FunctionArgName]
 FromJSONKeyFunction FunctionArgName
 FromJSONKeyFunction FunctionArgName
 -&gt; FromJSONKeyFunction [FunctionArgName]
@@ -238,12 +238,12 @@ fromJSONKeyList :: FromJSONKeyFunction [FunctionArgName]
 $cfromJSONKeyList :: FromJSONKeyFunction [FunctionArgName]
 fromJSONKey :: FromJSONKeyFunction FunctionArgName
 $cfromJSONKey :: FromJSONKeyFunction FunctionArgName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114124"><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123345"><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
 (FunctionArgName -&gt; Text) -&gt; ToTxt FunctionArgName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: FunctionArgName -&gt; Text
 $ctoTxt :: FunctionArgName -&gt; Text
-</span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114121"><span class="annot"><span class="annottext">String -&gt; FunctionArgName
+</span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123342"><span class="annot"><span class="annottext">String -&gt; FunctionArgName
 (String -&gt; FunctionArgName) -&gt; IsString FunctionArgName
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; FunctionArgName
@@ -257,7 +257,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep FunctionArgName x -&gt; FunctionArgName
 $cfrom :: forall x. FunctionArgName -&gt; Rep FunctionArgName x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114115"><span class="annot"><span class="annottext">Eq FunctionArgName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123336"><span class="annot"><span class="annottext">Eq FunctionArgName
 Eq FunctionArgName
 -&gt; (Accesses -&gt; FunctionArgName -&gt; FunctionArgName -&gt; Bool)
 -&gt; Cacheable FunctionArgName
@@ -266,7 +266,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; FunctionArgName -&gt; FunctionArgName -&gt; Bool
 $cunchanged :: Accesses -&gt; FunctionArgName -&gt; FunctionArgName -&gt; Bool
 $cp1Cacheable :: Eq FunctionArgName
-</span><a href="#local-6989586621689114115"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114111"><span id="local-6989586621689114113"><span class="annot"><span class="annottext">Int -&gt; FunctionArgName -&gt; Int
+</span><a href="#local-6989586621689123336"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123332"><span id="local-6989586621689123334"><span class="annot"><span class="annottext">Int -&gt; FunctionArgName -&gt; Int
 FunctionArgName -&gt; Int
 (Int -&gt; FunctionArgName -&gt; Int)
 -&gt; (FunctionArgName -&gt; Int) -&gt; Hashable FunctionArgName
@@ -275,7 +275,7 @@ hash :: FunctionArgName -&gt; Int
 $chash :: FunctionArgName -&gt; Int
 hashWithSalt :: Int -&gt; FunctionArgName -&gt; Int
 $chashWithSalt :: Int -&gt; FunctionArgName -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114106"><span id="local-6989586621689114108"><span class="annot"><span class="annottext">FunctionArgName -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123327"><span id="local-6989586621689123329"><span class="annot"><span class="annottext">FunctionArgName -&gt; Q Exp
 FunctionArgName -&gt; Q (TExp FunctionArgName)
 (FunctionArgName -&gt; Q Exp)
 -&gt; (FunctionArgName -&gt; Q (TExp FunctionArgName))
@@ -285,7 +285,7 @@ liftTyped :: FunctionArgName -&gt; Q (TExp FunctionArgName)
 $cliftTyped :: FunctionArgName -&gt; Q (TExp FunctionArgName)
 lift :: FunctionArgName -&gt; Q Exp
 $clift :: FunctionArgName -&gt; Q Exp
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cFunctionArgName"><span id="%24tFunctionArgName"><span id="local-6989586621689114076"><span id="local-6989586621689114078"><span id="local-6989586621689114080"><span id="local-6989586621689114082"><span id="local-6989586621689114084"><span id="local-6989586621689114086"><span id="local-6989586621689114088"><span id="local-6989586621689114090"><span id="local-6989586621689114092"><span id="local-6989586621689114094"><span id="local-6989586621689114096"><span id="local-6989586621689114098"><span id="local-6989586621689114100"><span id="local-6989586621689114102"><span class="annot"><span class="annottext">Typeable FunctionArgName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cFunctionArgName"><span id="%24tFunctionArgName"><span id="local-6989586621689123297"><span id="local-6989586621689123299"><span id="local-6989586621689123301"><span id="local-6989586621689123303"><span id="local-6989586621689123305"><span id="local-6989586621689123307"><span id="local-6989586621689123309"><span id="local-6989586621689123311"><span id="local-6989586621689123313"><span id="local-6989586621689123315"><span id="local-6989586621689123317"><span id="local-6989586621689123319"><span id="local-6989586621689123321"><span id="local-6989586621689123323"><span class="annot"><span class="annottext">Typeable FunctionArgName
 DataType
 Constr
 Typeable FunctionArgName
@@ -463,10 +463,10 @@ $cgfoldl :: forall (c :: * -&gt; *).
 $cp1Data :: Typeable FunctionArgName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span class="hs-keyword">data</span><span> </span><span id="InputArgument"><span class="annot"><a href="Hasura.RQL.Types.Function.html#InputArgument"><span class="hs-identifier hs-var">InputArgument</span></a></span></span><span> </span><span id="local-6989586621689114347"><span class="annot"><a href="#local-6989586621689114347"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="IAUserProvided"><span class="annot"><a href="Hasura.RQL.Types.Function.html#IAUserProvided"><span class="hs-identifier hs-var">IAUserProvided</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689114347"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">data</span><span> </span><span id="InputArgument"><span class="annot"><a href="Hasura.RQL.Types.Function.html#InputArgument"><span class="hs-identifier hs-var">InputArgument</span></a></span></span><span> </span><span id="local-6989586621689123568"><span class="annot"><a href="#local-6989586621689123568"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="IAUserProvided"><span class="annot"><a href="Hasura.RQL.Types.Function.html#IAUserProvided"><span class="hs-identifier hs-var">IAUserProvided</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689123568"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="IASessionVariables"><span class="annot"><a href="Hasura.RQL.Types.Function.html#IASessionVariables"><span class="hs-identifier hs-var">IASessionVariables</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114065"><span id="local-6989586621689114067"><span id="local-6989586621689114069"><span class="annot"><span class="annottext">Int -&gt; InputArgument a -&gt; ShowS
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123286"><span id="local-6989586621689123288"><span id="local-6989586621689123290"><span class="annot"><span class="annottext">Int -&gt; InputArgument a -&gt; ShowS
 [InputArgument a] -&gt; ShowS
 InputArgument a -&gt; String
 (Int -&gt; InputArgument a -&gt; ShowS)
@@ -484,7 +484,7 @@ show :: InputArgument a -&gt; String
 $cshow :: forall a. Show a =&gt; InputArgument a -&gt; String
 showsPrec :: Int -&gt; InputArgument a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; InputArgument a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114061"><span id="local-6989586621689114063"><span class="annot"><span class="annottext">InputArgument a -&gt; InputArgument a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123282"><span id="local-6989586621689123284"><span class="annot"><span class="annottext">InputArgument a -&gt; InputArgument a -&gt; Bool
 (InputArgument a -&gt; InputArgument a -&gt; Bool)
 -&gt; (InputArgument a -&gt; InputArgument a -&gt; Bool)
 -&gt; Eq (InputArgument a)
@@ -494,7 +494,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: forall a. Eq a =&gt; InputArgument a -&gt; InputArgument a -&gt; Bool
 == :: InputArgument a -&gt; InputArgument a -&gt; Bool
 $c== :: forall a. Eq a =&gt; InputArgument a -&gt; InputArgument a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114057"><span id="local-6989586621689114059"><span class="annot"><span class="annottext">a -&gt; InputArgument b -&gt; InputArgument a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123278"><span id="local-6989586621689123280"><span class="annot"><span class="annottext">a -&gt; InputArgument b -&gt; InputArgument a
 (a -&gt; b) -&gt; InputArgument a -&gt; InputArgument b
 (forall a b. (a -&gt; b) -&gt; InputArgument a -&gt; InputArgument b)
 -&gt; (forall a b. a -&gt; InputArgument b -&gt; InputArgument a)
@@ -510,21 +510,21 @@ fmap :: (a -&gt; b) -&gt; InputArgument a -&gt; InputArgument b
 $cfmap :: forall a b. (a -&gt; b) -&gt; InputArgument a -&gt; InputArgument b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689114048"><span id="local-6989586621689114050"><span id="local-6989586621689114052"><span id="local-6989586621689114054"><span id="local-6989586621689114347"><span class="hs-identifier">deriveToJSON</span><span>
+</span><span id="line-95"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689123269"><span id="local-6989586621689123271"><span id="local-6989586621689123273"><span id="local-6989586621689123275"><span id="local-6989586621689123568"><span class="hs-identifier">deriveToJSON</span><span>
 </span><span id="line-96"></span><span>     </span><span class="hs-identifier">defaultOptions</span><span>
 </span><span id="line-97"></span><span>       </span><span class="hs-special">{</span><span> </span><span class="hs-identifier">constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">snakeCase</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">2</span><span class="hs-special">,</span><span>
 </span><span id="line-98"></span><span>         </span><span class="hs-identifier">sumEncoding</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">TaggedObject</span><span> </span><span class="hs-string">&quot;type&quot;</span><span> </span><span class="hs-string">&quot;argument&quot;</span><span>
 </span><span id="line-99"></span><span>       </span><span class="hs-special">}</span><span>
 </span><span id="line-100"></span><span>     </span><span class="hs-special">''</span><span class="hs-identifier">InputArgument</span></span></span></span></span></span><span>
 </span><span id="line-101"></span><span> </span><span class="hs-special">)</span><span>
-</span><span id="line-102"></span><span class="hs-special">$(</span><span id="_IAUserProvided"><span id="_IASessionVariables"><span id="local-6989586621689114347"><span id="local-6989586621689114348"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">InputArgument</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span class="hs-special">$(</span><span id="_IAUserProvided"><span id="_IASessionVariables"><span id="local-6989586621689123568"><span id="local-6989586621689123569"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">InputArgument</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span class="hs-keyword">type</span><span> </span><span id="FunctionInputArgument"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInputArgument"><span class="hs-identifier hs-var">FunctionInputArgument</span></a></span></span><span> </span><span id="local-6989586621689114047"><span class="annot"><a href="#local-6989586621689114047"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#InputArgument"><span class="hs-identifier hs-type">InputArgument</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689114047"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span class="hs-keyword">type</span><span> </span><span id="FunctionInputArgument"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInputArgument"><span class="hs-identifier hs-var">FunctionInputArgument</span></a></span></span><span> </span><span id="local-6989586621689123268"><span class="annot"><a href="#local-6989586621689123268"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#InputArgument"><span class="hs-identifier hs-type">InputArgument</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123268"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="hs-comment">-- | Indicates whether the user requested the corresponding function to be</span><span>
 </span><span id="line-107"></span><span class="hs-comment">-- tracked as a mutation or a query/subscription, in @track_function@.</span><span>
-</span><span id="line-108"></span><span id="local-6989586621689114045"><span id="local-6989586621689114046"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionExposedAs"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionExposedAs"><span class="hs-identifier hs-var">FunctionExposedAs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FEAQuery"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FEAQuery"><span class="hs-identifier hs-var">FEAQuery</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="FEAMutation"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FEAMutation"><span class="hs-identifier hs-var">FEAMutation</span></a></span></span><span>
-</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114037"><span id="local-6989586621689114039"><span id="local-6989586621689114041"><span class="annot"><span class="annottext">Int -&gt; FunctionExposedAs -&gt; ShowS
+</span><span id="line-108"></span><span id="local-6989586621689123266"><span id="local-6989586621689123267"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionExposedAs"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionExposedAs"><span class="hs-identifier hs-var">FunctionExposedAs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FEAQuery"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FEAQuery"><span class="hs-identifier hs-var">FEAQuery</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="FEAMutation"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FEAMutation"><span class="hs-identifier hs-var">FEAMutation</span></a></span></span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123258"><span id="local-6989586621689123260"><span id="local-6989586621689123262"><span class="annot"><span class="annottext">Int -&gt; FunctionExposedAs -&gt; ShowS
 [FunctionExposedAs] -&gt; ShowS
 FunctionExposedAs -&gt; String
 (Int -&gt; FunctionExposedAs -&gt; ShowS)
@@ -539,7 +539,7 @@ show :: FunctionExposedAs -&gt; String
 $cshow :: FunctionExposedAs -&gt; String
 showsPrec :: Int -&gt; FunctionExposedAs -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionExposedAs -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114033"><span id="local-6989586621689114035"><span class="annot"><span class="annottext">FunctionExposedAs -&gt; FunctionExposedAs -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123254"><span id="local-6989586621689123256"><span class="annot"><span class="annottext">FunctionExposedAs -&gt; FunctionExposedAs -&gt; Bool
 (FunctionExposedAs -&gt; FunctionExposedAs -&gt; Bool)
 -&gt; (FunctionExposedAs -&gt; FunctionExposedAs -&gt; Bool)
 -&gt; Eq FunctionExposedAs
@@ -559,20 +559,20 @@ $cto :: forall x. Rep FunctionExposedAs x -&gt; FunctionExposedAs
 $cfrom :: forall x. FunctionExposedAs -&gt; Rep FunctionExposedAs x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>
-</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689114029"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionExposedAs"><span class="hs-identifier hs-type">FunctionExposedAs</span></a></span></span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123250"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionExposedAs"><span class="hs-identifier hs-type">FunctionExposedAs</span></a></span></span><span>
 </span><span id="line-112"></span><span>
-</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689114026"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionExposedAs"><span class="hs-identifier hs-type">FunctionExposedAs</span></a></span></span><span>
+</span><span id="line-113"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123247"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionExposedAs"><span class="hs-identifier hs-type">FunctionExposedAs</span></a></span></span><span>
 </span><span id="line-114"></span><span>
-</span><span id="line-115"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689114014"><span id="local-6989586621689114016"><span id="local-6989586621689114018"><span id="local-6989586621689114020"><span id="local-6989586621689114022"><span id="local-6989586621689114024"><span class="hs-identifier">deriveJSON</span><span>
+</span><span id="line-115"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689123235"><span id="local-6989586621689123237"><span id="local-6989586621689123239"><span id="local-6989586621689123241"><span id="local-6989586621689123243"><span id="local-6989586621689123245"><span class="hs-identifier">deriveJSON</span><span>
 </span><span id="line-116"></span><span>     </span><span class="hs-identifier">defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">sumEncoding</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">UntaggedValue</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">map</span><span> </span><span class="hs-identifier">toLower</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">3</span><span class="hs-special">}</span><span>
 </span><span id="line-117"></span><span>     </span><span class="hs-special">''</span><span class="hs-identifier">FunctionExposedAs</span></span></span></span></span></span></span><span>
 </span><span id="line-118"></span><span> </span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>
-</span><span id="line-120"></span><span id="local-6989586621689114012"><span id="local-6989586621689114013"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="FunctionPermissionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionInfo"><span class="hs-identifier hs-var">FunctionPermissionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionPermissionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionInfo"><span class="hs-identifier hs-var">FunctionPermissionInfo</span></a></span></span><span>
+</span><span id="line-120"></span><span id="local-6989586621689123233"><span id="local-6989586621689123234"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="FunctionPermissionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionInfo"><span class="hs-identifier hs-var">FunctionPermissionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionPermissionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionInfo"><span class="hs-identifier hs-var">FunctionPermissionInfo</span></a></span></span><span>
 </span><span id="line-121"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_fpmRole"><span class="annot"><span class="annottext">FunctionPermissionInfo -&gt; RoleName
 </span><a href="Hasura.RQL.Types.Function.html#_fpmRole"><span class="hs-identifier hs-var hs-var">_fpmRole</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114004"><span id="local-6989586621689114006"><span id="local-6989586621689114008"><span class="annot"><span class="annottext">Int -&gt; FunctionPermissionInfo -&gt; ShowS
+</span><span id="line-123"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123225"><span id="local-6989586621689123227"><span id="local-6989586621689123229"><span class="annot"><span class="annottext">Int -&gt; FunctionPermissionInfo -&gt; ShowS
 [FunctionPermissionInfo] -&gt; ShowS
 FunctionPermissionInfo -&gt; String
 (Int -&gt; FunctionPermissionInfo -&gt; ShowS)
@@ -587,7 +587,7 @@ show :: FunctionPermissionInfo -&gt; String
 $cshow :: FunctionPermissionInfo -&gt; String
 showsPrec :: Int -&gt; FunctionPermissionInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionPermissionInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114000"><span id="local-6989586621689114002"><span class="annot"><span class="annottext">FunctionPermissionInfo -&gt; FunctionPermissionInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123221"><span id="local-6989586621689123223"><span class="annot"><span class="annottext">FunctionPermissionInfo -&gt; FunctionPermissionInfo -&gt; Bool
 (FunctionPermissionInfo -&gt; FunctionPermissionInfo -&gt; Bool)
 -&gt; (FunctionPermissionInfo -&gt; FunctionPermissionInfo -&gt; Bool)
 -&gt; Eq FunctionPermissionInfo
@@ -608,10 +608,10 @@ $cto :: forall x. Rep FunctionPermissionInfo x -&gt; FunctionPermissionInfo
 $cfrom :: forall x. FunctionPermissionInfo -&gt; Rep FunctionPermissionInfo x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113995"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionInfo"><span class="hs-identifier hs-type">FunctionPermissionInfo</span></a></span></span><span>
+</span><span id="line-125"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123216"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionInfo"><span class="hs-identifier hs-type">FunctionPermissionInfo</span></a></span></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-special">$(</span><span id="fpmRole"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionPermissionInfo</span></span><span class="hs-special">)</span><span>
-</span><span id="line-128"></span><span class="hs-special">$(</span><span id="local-6989586621689113983"><span id="local-6989586621689113985"><span id="local-6989586621689113987"><span id="local-6989586621689113989"><span id="local-6989586621689113991"><span id="local-6989586621689113993"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionPermissionInfo</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span class="hs-special">$(</span><span id="local-6989586621689123204"><span id="local-6989586621689123206"><span id="local-6989586621689123208"><span id="local-6989586621689123210"><span id="local-6989586621689123212"><span id="local-6989586621689123214"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionPermissionInfo</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-129"></span><span>
 </span><span id="line-130"></span><span class="hs-keyword">type</span><span> </span><span id="FunctionPermissionsMap"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsMap"><span class="hs-identifier hs-var">FunctionPermissionsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionInfo"><span class="hs-identifier hs-type">FunctionPermissionInfo</span></a></span><span>
 </span><span id="line-131"></span><span>
@@ -619,13 +619,13 @@ $cfrom :: forall x. FunctionPermissionInfo -&gt; Rep FunctionPermissionInfo x
 </span><span id="line-133"></span><span class="hs-comment">--   to the user in the schema.</span><span>
 </span><span id="line-134"></span><span class="hs-comment">--</span><span>
 </span><span id="line-135"></span><span class="hs-comment">--   See rfcs/function-root-field-customisation.md for more information.</span><span>
-</span><span id="line-136"></span><span id="local-6989586621689113981"><span id="local-6989586621689113982"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionCustomRootFields"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-var">FunctionCustomRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionCustomRootFields"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-var">FunctionCustomRootFields</span></a></span></span><span>
+</span><span id="line-136"></span><span id="local-6989586621689123202"><span id="local-6989586621689123203"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionCustomRootFields"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-var">FunctionCustomRootFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionCustomRootFields"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-var">FunctionCustomRootFields</span></a></span></span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_fcrfFunction"><span class="annot"><span class="annottext">FunctionCustomRootFields -&gt; Maybe Name
 </span><a href="Hasura.RQL.Types.Function.html#_fcrfFunction"><span class="hs-identifier hs-var hs-var">_fcrfFunction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
 </span><span id="line-138"></span><span>    </span><span id="_fcrfFunctionAggregate"><span class="annot"><span class="annottext">FunctionCustomRootFields -&gt; Maybe Name
 </span><a href="Hasura.RQL.Types.Function.html#_fcrfFunctionAggregate"><span class="hs-identifier hs-var hs-var">_fcrfFunctionAggregate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-140"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689113972"><span id="local-6989586621689113974"><span id="local-6989586621689113976"><span class="annot"><span class="annottext">Int -&gt; FunctionCustomRootFields -&gt; ShowS
+</span><span id="line-140"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123193"><span id="local-6989586621689123195"><span id="local-6989586621689123197"><span class="annot"><span class="annottext">Int -&gt; FunctionCustomRootFields -&gt; ShowS
 [FunctionCustomRootFields] -&gt; ShowS
 FunctionCustomRootFields -&gt; String
 (Int -&gt; FunctionCustomRootFields -&gt; ShowS)
@@ -640,7 +640,7 @@ show :: FunctionCustomRootFields -&gt; String
 $cshow :: FunctionCustomRootFields -&gt; String
 showsPrec :: Int -&gt; FunctionCustomRootFields -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionCustomRootFields -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689113968"><span id="local-6989586621689113970"><span class="annot"><span class="annottext">FunctionCustomRootFields -&gt; FunctionCustomRootFields -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123189"><span id="local-6989586621689123191"><span class="annot"><span class="annottext">FunctionCustomRootFields -&gt; FunctionCustomRootFields -&gt; Bool
 (FunctionCustomRootFields -&gt; FunctionCustomRootFields -&gt; Bool)
 -&gt; (FunctionCustomRootFields -&gt; FunctionCustomRootFields -&gt; Bool)
 -&gt; Eq FunctionCustomRootFields
@@ -666,15 +666,15 @@ $cfrom :: forall x.
 FunctionCustomRootFields -&gt; Rep FunctionCustomRootFields x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-141"></span><span>
-</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113964"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span></span><span>
+</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123185"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span></span><span>
 </span><span id="line-143"></span><span>
-</span><span id="line-144"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113961"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span></span><span>
+</span><span id="line-144"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123182"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span></span><span>
 </span><span id="line-145"></span><span>
-</span><span id="line-146"></span><span class="hs-special">$(</span><span id="local-6989586621689113953"><span id="local-6989586621689113955"><span id="local-6989586621689113957"><span id="local-6989586621689113959"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionCustomRootFields</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span class="hs-special">$(</span><span id="local-6989586621689123174"><span id="local-6989586621689123176"><span id="local-6989586621689123178"><span id="local-6989586621689123180"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionCustomRootFields</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-147"></span><span>
-</span><span id="line-148"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113950"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-149"></span><span>  </span><span id="local-6989586621689113949"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser FunctionCustomRootFields
-</span><a href="#local-6989586621689113949"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-148"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123171"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-149"></span><span>  </span><span id="local-6989586621689123170"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser FunctionCustomRootFields
+</span><a href="#local-6989586621689123170"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser FunctionCustomRootFields)
 -&gt; Value
 -&gt; Parser FunctionCustomRootFields
@@ -686,32 +686,32 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser FunctionCustomRootFields
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689113947"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113947"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-150"></span><span>    </span><span id="local-6989586621689113946"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113946"><span class="hs-identifier hs-var">function</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113947"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689123168"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689123168"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621689123167"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689123167"><span class="hs-identifier hs-var">function</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689123168"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;function&quot;</span></span><span>
-</span><span id="line-151"></span><span>    </span><span id="local-6989586621689113944"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113944"><span class="hs-identifier hs-var">functionAggregate</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113947"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+</span><span id="line-151"></span><span>    </span><span id="local-6989586621689123165"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689123165"><span class="hs-identifier hs-var">functionAggregate</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689123168"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;function_aggregate&quot;</span></span><span>
 </span><span id="line-152"></span><span>
 </span><span id="line-153"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113946"><span class="hs-identifier hs-var">function</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113944"><span class="hs-identifier hs-var">functionAggregate</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-154"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689113943"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113943"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689113942"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113942"><span class="hs-identifier hs-var">fa</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689123167"><span class="hs-identifier hs-var">function</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689123165"><span class="hs-identifier hs-var">functionAggregate</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-154"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689123164"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689123164"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689123163"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689123163"><span class="hs-identifier hs-var">fa</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-155"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113943"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
+</span><a href="#local-6989586621689123164"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113942"><span class="hs-identifier hs-var">fa</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689123163"><span class="hs-identifier hs-var">fa</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-156"></span><span>          </span><span class="annot"><span class="annottext">String -&gt; Parser ()
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser ()) -&gt; String -&gt; Parser ()
@@ -728,7 +728,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113943"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689123164"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; and &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -736,7 +736,7 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113942"><span class="hs-identifier hs-var">fa</span></a></span><span>
+</span><a href="#local-6989586621689123163"><span class="hs-identifier hs-var">fa</span></a></span><span>
 </span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">(Maybe Name, Maybe Name)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-161"></span><span>        </span><span class="annot"><span class="annottext">() -&gt; Parser ()
@@ -750,8 +750,8 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Maybe Name -&gt; FunctionCustomRootFields
 </span><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-var">FunctionCustomRootFields</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113946"><span class="hs-identifier hs-var">function</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113944"><span class="hs-identifier hs-var">functionAggregate</span></a></span><span>
+</span><a href="#local-6989586621689123167"><span class="hs-identifier hs-var">function</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689123165"><span class="hs-identifier hs-var">functionAggregate</span></a></span><span>
 </span><span id="line-164"></span><span>
 </span><span id="line-165"></span><span class="hs-comment">-- | A function custom root fields without custom names set. This is the default.</span><span>
 </span><span id="line-166"></span><span class="annot"><a href="Hasura.RQL.Types.Function.html#emptyFunctionCustomRootFields"><span class="hs-identifier hs-type">emptyFunctionCustomRootFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span><span>
@@ -770,9 +770,9 @@ forall a. Maybe a
 </span><span id="line-171"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-172"></span><span>
 </span><span id="line-173"></span><span class="hs-comment">-- | Tracked SQL function metadata. See 'buildFunctionInfo'.</span><span>
-</span><span id="line-174"></span><span id="local-6989586621689113937"><span id="local-6989586621689113938"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-var">FunctionInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114343"><span class="annot"><a href="#local-6989586621689114343"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-var">FunctionInfo</span></a></span></span><span>
+</span><span id="line-174"></span><span id="local-6989586621689123158"><span id="local-6989586621689123159"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-var">FunctionInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123564"><span class="annot"><a href="#local-6989586621689123564"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionInfo"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-var">FunctionInfo</span></a></span></span><span>
 </span><span id="line-175"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_fiSQLName"><span class="annot"><span class="annottext">FunctionInfo b -&gt; FunctionName b
-</span><a href="Hasura.RQL.Types.Function.html#_fiSQLName"><span class="hs-identifier hs-var hs-var">_fiSQLName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689114343"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Function.html#_fiSQLName"><span class="hs-identifier hs-var hs-var">_fiSQLName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123564"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-176"></span><span>    </span><span id="_fiGQLName"><span class="annot"><span class="annottext">FunctionInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Function.html#_fiGQLName"><span class="hs-identifier hs-var hs-var">_fiGQLName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span>
 </span><span id="line-177"></span><span>    </span><span id="_fiGQLArgsName"><span class="annot"><span class="annottext">FunctionInfo b -&gt; Name
@@ -789,12 +789,12 @@ forall a. Maybe a
 </span><span id="line-184"></span><span>    </span><span id="_fiExposedAs"><span class="annot"><span class="annottext">FunctionInfo b -&gt; FunctionExposedAs
 </span><a href="Hasura.RQL.Types.Function.html#_fiExposedAs"><span class="hs-identifier hs-var hs-var">_fiExposedAs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionExposedAs"><span class="hs-identifier hs-type">FunctionExposedAs</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-185"></span><span>    </span><span id="_fiInputArgs"><span class="annot"><span class="annottext">FunctionInfo b -&gt; Seq (FunctionInputArgument b)
-</span><a href="Hasura.RQL.Types.Function.html#_fiInputArgs"><span class="hs-identifier hs-var hs-var">_fiInputArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInputArgument"><span class="hs-identifier hs-type">FunctionInputArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689114343"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Function.html#_fiInputArgs"><span class="hs-identifier hs-var hs-var">_fiInputArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInputArgument"><span class="hs-identifier hs-type">FunctionInputArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123564"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-186"></span><span>    </span><span class="hs-comment">-- | NOTE: when a table is created, a new composite type of the same name is</span><span>
 </span><span id="line-187"></span><span>    </span><span class="hs-comment">-- automatically created; so strictly speaking this field means &quot;the function</span><span>
 </span><span id="line-188"></span><span>    </span><span class="hs-comment">-- returns the composite type corresponding to this table&quot;.</span><span>
 </span><span id="line-189"></span><span>    </span><span id="_fiReturnType"><span class="annot"><span class="annottext">FunctionInfo b -&gt; TableName b
-</span><a href="Hasura.RQL.Types.Function.html#_fiReturnType"><span class="hs-identifier hs-var hs-var">_fiReturnType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689114343"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Function.html#_fiReturnType"><span class="hs-identifier hs-var hs-var">_fiReturnType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123564"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-190"></span><span>    </span><span class="hs-comment">-- | this field represents the description of the function as present on the database</span><span>
 </span><span id="line-191"></span><span>    </span><span id="_fiDescription"><span class="annot"><span class="annottext">FunctionInfo b -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.Function.html#_fiDescription"><span class="hs-identifier hs-var hs-var">_fiDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
@@ -823,20 +823,20 @@ $cfrom :: forall (b :: BackendType) x.
 FunctionInfo b -&gt; Rep (FunctionInfo b) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-198"></span><span>
-</span><span id="line-199"></span><span id="local-6989586621689113914"><span id="local-6989586621689113916"><span id="local-6989586621689113918"><span id="local-6989586621689113920"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113920"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113920"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-199"></span><span id="local-6989586621689123135"><span id="local-6989586621689123137"><span id="local-6989586621689123139"><span id="local-6989586621689123141"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123141"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123141"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-200"></span><span>
-</span><span id="line-201"></span><span id="local-6989586621689113909"><span id="local-6989586621689113911"><span id="local-6989586621689113913"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113913"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113913"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-201"></span><span id="local-6989586621689123130"><span id="local-6989586621689123132"><span id="local-6989586621689123134"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123134"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123134"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-202"></span><span>
-</span><span id="line-203"></span><span id="local-6989586621689113908"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113901"><span id="local-6989586621689113903"><span id="local-6989586621689113905"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113908"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113908"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-204"></span><span>  </span><span id="local-6989586621689113900"><span class="annot"><span class="annottext">toJSON :: FunctionInfo b -&gt; Value
-</span><a href="#local-6989586621689113900"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FunctionInfo b -&gt; Value
+</span><span id="line-203"></span><span id="local-6989586621689123129"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123122"><span id="local-6989586621689123124"><span id="local-6989586621689123126"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123129"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123129"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-204"></span><span>  </span><span id="local-6989586621689123121"><span class="annot"><span class="annottext">toJSON :: FunctionInfo b -&gt; Value
+</span><a href="#local-6989586621689123121"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; FunctionInfo b -&gt; Value
 forall a.
 (Generic a, GToJSON' Value Zero (Rep a)) =&gt;
 Options -&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
 </span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
 </span><span id="line-205"></span><span>
-</span><span id="line-206"></span><span class="hs-special">$(</span><span id="fiVolatility"><span id="fiSystemDefined"><span id="fiSQLName"><span id="fiReturnType"><span id="fiPermissions"><span id="fiJsonAggSelect"><span id="fiInputArgs"><span id="fiGQLName"><span id="fiGQLArgsName"><span id="fiGQLAggregateName"><span id="fiExposedAs"><span id="fiDescription"><span id="fiComment"><span id="local-6989586621689114343"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionInfo</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-206"></span><span class="hs-special">$(</span><span id="fiVolatility"><span id="fiSystemDefined"><span id="fiSQLName"><span id="fiReturnType"><span id="fiPermissions"><span id="fiJsonAggSelect"><span id="fiInputArgs"><span id="fiGQLName"><span id="fiGQLArgsName"><span id="fiGQLAggregateName"><span id="fiExposedAs"><span id="fiDescription"><span id="fiComment"><span id="local-6989586621689123564"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionInfo</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-207"></span><span>
 </span><span id="line-208"></span><span class="hs-comment">-- | Apply function name customization to function arguments, as detailed in</span><span>
 </span><span id="line-209"></span><span class="hs-comment">-- 'rfcs/function-root-field-customisation.md'.  We want the different</span><span>
@@ -851,9 +851,9 @@ Options -&gt; a -&gt; Value
 </span><span id="line-218"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-219"></span><span id="getFunctionArgsGQLName"><span class="annot"><span class="annottext">getFunctionArgsGQLName :: Name -&gt; FunctionConfig -&gt; (Name -&gt; Name) -&gt; Name
 </span><a href="Hasura.RQL.Types.Function.html#getFunctionArgsGQLName"><span class="hs-identifier hs-var hs-var">getFunctionArgsGQLName</span></a></span></span><span>
-</span><span id="line-220"></span><span>  </span><span id="local-6989586621689113897"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113897"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
-</span><span id="line-221"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689113892"><span id="local-6989586621689113893"><span id="local-6989586621689113894"><span id="local-6989586621689113895"><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-220"></span><span>  </span><span id="local-6989586621689123118"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689123118"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689123113"><span id="local-6989586621689123114"><span id="local-6989586621689123115"><span id="local-6989586621689123116"><span class="annot"><span class="annottext">Maybe Name
 Maybe FunctionArgName
 Maybe FunctionExposedAs
 FunctionCustomRootFields
@@ -866,16 +866,16 @@ _fcCustomRootFields :: FunctionCustomRootFields
 _fcExposedAs :: Maybe FunctionExposedAs
 _fcSessionArgument :: Maybe FunctionArgName
 </span><a href="Hasura.RQL.Types.Function.html#_fcCustomName"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span>
-</span><span id="line-222"></span><span>  </span><span id="local-6989586621689113887"><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621689113887"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-222"></span><span>  </span><span id="local-6989586621689123108"><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621689123108"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-223"></span><span>    </span><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621689113887"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689123108"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; Name -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113897"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113892"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689123118"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689123113"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__args"><span class="hs-identifier hs-var">Name.__args</span></a></span><span>
@@ -890,17 +890,17 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-232"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-233"></span><span id="getFunctionGQLName"><span class="annot"><span class="annottext">getFunctionGQLName :: Name -&gt; FunctionConfig -&gt; (Name -&gt; Name) -&gt; Name
 </span><a href="Hasura.RQL.Types.Function.html#getFunctionGQLName"><span class="hs-identifier hs-var hs-var">getFunctionGQLName</span></a></span></span><span>
-</span><span id="line-234"></span><span>  </span><span id="local-6989586621689113884"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113884"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
+</span><span id="line-234"></span><span>  </span><span id="local-6989586621689123105"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689123105"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
 </span><span id="line-235"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span>
 </span><span id="line-236"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_fcCustomRootFields :: FunctionConfig -&gt; FunctionCustomRootFields
-</span><a href="Hasura.RQL.Types.Function.html#_fcCustomRootFields"><span class="hs-identifier hs-var">_fcCustomRootFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689113882"><span id="local-6989586621689113883"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="Hasura.RQL.Types.Function.html#_fcCustomRootFields"><span class="hs-identifier hs-var">_fcCustomRootFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689123103"><span id="local-6989586621689123104"><span class="annot"><span class="annottext">Maybe Name
 _fcrfFunctionAggregate :: Maybe Name
 _fcrfFunction :: Maybe Name
 _fcrfFunctionAggregate :: FunctionCustomRootFields -&gt; Maybe Name
 _fcrfFunction :: FunctionCustomRootFields -&gt; Maybe Name
-</span><a href="#local-6989586621689113882"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
-</span><span id="line-237"></span><span>      </span><span id="local-6989586621689113879"><span id="local-6989586621689113880"><span id="local-6989586621689113881"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689123103"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-237"></span><span>      </span><span id="local-6989586621689123100"><span id="local-6989586621689123101"><span id="local-6989586621689123102"><span class="annot"><span class="annottext">Maybe Name
 Maybe FunctionArgName
 Maybe FunctionExposedAs
 _fcCustomName :: Maybe Name
@@ -909,25 +909,25 @@ _fcSessionArgument :: Maybe FunctionArgName
 _fcCustomName :: FunctionConfig -&gt; Maybe Name
 _fcExposedAs :: FunctionConfig -&gt; Maybe FunctionExposedAs
 _fcSessionArgument :: FunctionConfig -&gt; Maybe FunctionArgName
-</span><a href="#local-6989586621689113879"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span>
+</span><a href="#local-6989586621689123100"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span>
 </span><span id="line-238"></span><span>    </span><span class="hs-special">}</span><span>
-</span><span id="line-239"></span><span>  </span><span id="local-6989586621689113878"><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621689113878"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-239"></span><span>  </span><span id="local-6989586621689123099"><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621689123099"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-240"></span><span>    </span><span class="annot"><span class="annottext">[Maybe Name] -&gt; Maybe Name
 forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
 </span><a href="Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span>
 </span><span id="line-241"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113883"><span class="hs-identifier hs-var">_fcrfFunction</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689123104"><span class="hs-identifier hs-var">_fcrfFunction</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-242"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113879"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span>
+</span><a href="#local-6989586621689123100"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span>
 </span><span id="line-243"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-244"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; (Maybe Name -&gt; Name) -&gt; Name
 forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621689113878"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113884"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689123099"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689123105"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-245"></span><span>
 </span><span id="line-246"></span><span class="hs-comment">-- | Apply function name customization to the aggregate function variation, as</span><span>
 </span><span id="line-247"></span><span class="hs-comment">-- detailed in 'rfcs/function-root-field-customisation.md'.</span><span>
@@ -939,17 +939,17 @@ forall a. a -&gt; Maybe a -&gt; a
 </span><span id="line-253"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-254"></span><span id="getFunctionAggregateGQLName"><span class="annot"><span class="annottext">getFunctionAggregateGQLName :: Name -&gt; FunctionConfig -&gt; (Name -&gt; Name) -&gt; Name
 </span><a href="Hasura.RQL.Types.Function.html#getFunctionAggregateGQLName"><span class="hs-identifier hs-var hs-var">getFunctionAggregateGQLName</span></a></span></span><span>
-</span><span id="line-255"></span><span>  </span><span id="local-6989586621689113875"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113875"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
+</span><span id="line-255"></span><span>  </span><span id="local-6989586621689123096"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689123096"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span>
 </span><span id="line-256"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span>
 </span><span id="line-257"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_fcCustomRootFields :: FunctionConfig -&gt; FunctionCustomRootFields
-</span><a href="Hasura.RQL.Types.Function.html#_fcCustomRootFields"><span class="hs-identifier hs-var">_fcCustomRootFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689113873"><span id="local-6989586621689113874"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="Hasura.RQL.Types.Function.html#_fcCustomRootFields"><span class="hs-identifier hs-var">_fcCustomRootFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCustomRootFields"><span class="hs-identifier hs-type">FunctionCustomRootFields</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689123094"><span id="local-6989586621689123095"><span class="annot"><span class="annottext">Maybe Name
 _fcrfFunctionAggregate :: Maybe Name
 _fcrfFunction :: Maybe Name
 _fcrfFunctionAggregate :: FunctionCustomRootFields -&gt; Maybe Name
 _fcrfFunction :: FunctionCustomRootFields -&gt; Maybe Name
-</span><a href="#local-6989586621689113873"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
-</span><span id="line-258"></span><span>      </span><span id="local-6989586621689113870"><span id="local-6989586621689113871"><span id="local-6989586621689113872"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689123094"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><span id="line-258"></span><span>      </span><span id="local-6989586621689123091"><span id="local-6989586621689123092"><span id="local-6989586621689123093"><span class="annot"><span class="annottext">Maybe Name
 Maybe FunctionArgName
 Maybe FunctionExposedAs
 _fcCustomName :: Maybe Name
@@ -958,17 +958,17 @@ _fcSessionArgument :: Maybe FunctionArgName
 _fcCustomName :: FunctionConfig -&gt; Maybe Name
 _fcExposedAs :: FunctionConfig -&gt; Maybe FunctionExposedAs
 _fcSessionArgument :: FunctionConfig -&gt; Maybe FunctionArgName
-</span><a href="#local-6989586621689113870"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span>
+</span><a href="#local-6989586621689123091"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span>
 </span><span id="line-259"></span><span>    </span><span class="hs-special">}</span><span>
-</span><span id="line-260"></span><span>  </span><span id="local-6989586621689113869"><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621689113869"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-260"></span><span>  </span><span id="local-6989586621689123090"><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621689123090"><span class="hs-identifier hs-var">setCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-261"></span><span>    </span><span class="annot"><span class="annottext">[Maybe Name] -&gt; Maybe Name
 forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
 </span><a href="Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span>
 </span><span id="line-262"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113873"><span class="hs-identifier hs-var">_fcrfFunctionAggregate</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689123094"><span class="hs-identifier hs-var">_fcrfFunctionAggregate</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-263"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689113870"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; (Name -&gt; Name) -&gt; Maybe Name
+</span><a href="#local-6989586621689123091"><span class="hs-identifier hs-var">_fcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; (Name -&gt; Name) -&gt; Maybe Name
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -980,15 +980,15 @@ forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621689113869"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689123090"><span class="hs-identifier hs-var">setCase</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Name) -&gt; Name -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689113875"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689123096"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__aggregate"><span class="hs-identifier hs-var">Name.__aggregate</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-266"></span><span>
-</span><span id="line-267"></span><span id="local-6989586621689113866"><span class="annot"><a href="Hasura.RQL.Types.Function.html#getInputArgs"><span class="hs-identifier hs-type">getInputArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113866"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113866"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-267"></span><span id="local-6989586621689123087"><span class="annot"><a href="Hasura.RQL.Types.Function.html#getInputArgs"><span class="hs-identifier hs-type">getInputArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123087"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123087"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-268"></span><span id="getInputArgs"><span class="annot"><span class="annottext">getInputArgs :: FunctionInfo b -&gt; Seq (FunctionArgument b)
 </span><a href="Hasura.RQL.Types.Function.html#getInputArgs"><span class="hs-identifier hs-var hs-var">getInputArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-269"></span><span>  </span><span class="annot"><span class="annottext">[FunctionArgument b] -&gt; Seq (FunctionArgument b)
@@ -1032,13 +1032,13 @@ forall (b :: BackendType).
 FunctionInfo b -&gt; Seq (FunctionInputArgument b)
 </span><a href="Hasura.RQL.Types.Function.html#_fiInputArgs"><span class="hs-identifier hs-var hs-var">_fiInputArgs</span></a></span><span>
 </span><span id="line-270"></span><span>
-</span><span id="line-271"></span><span class="hs-keyword">type</span><span> </span><span id="FunctionCache"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCache"><span class="hs-identifier hs-var">FunctionCache</span></a></span></span><span> </span><span id="local-6989586621689113861"><span class="annot"><a href="#local-6989586621689113861"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113861"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113861"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- info of all functions</span><span>
+</span><span id="line-271"></span><span class="hs-keyword">type</span><span> </span><span id="FunctionCache"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionCache"><span class="hs-identifier hs-var">FunctionCache</span></a></span></span><span> </span><span id="local-6989586621689123082"><span class="annot"><a href="#local-6989586621689123082"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123082"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123082"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- info of all functions</span><span>
 </span><span id="line-272"></span><span>
 </span><span id="line-273"></span><span class="hs-comment">-- Metadata requests related types</span><span>
 </span><span id="line-274"></span><span>
 </span><span id="line-275"></span><span class="hs-comment">-- | Tracked function configuration, and payload of the 'pg_track_function' and</span><span>
 </span><span id="line-276"></span><span class="hs-comment">-- 'pg_set_function_customization' API calls.</span><span>
-</span><span id="line-277"></span><span id="local-6989586621689113859"><span id="local-6989586621689113860"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionConfig"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-var">FunctionConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionConfig"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-var">FunctionConfig</span></a></span></span><span>
+</span><span id="line-277"></span><span id="local-6989586621689123080"><span id="local-6989586621689123081"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionConfig"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-var">FunctionConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionConfig"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-var">FunctionConfig</span></a></span></span><span>
 </span><span id="line-278"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_fcSessionArgument"><span class="annot"><span class="annottext">FunctionConfig -&gt; Maybe FunctionArgName
 </span><a href="Hasura.RQL.Types.Function.html#_fcSessionArgument"><span class="hs-identifier hs-var hs-var">_fcSessionArgument</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-279"></span><span>    </span><span class="hs-comment">-- | In which top-level field should we expose this function?</span><span>
@@ -1053,7 +1053,7 @@ FunctionInfo b -&gt; Seq (FunctionInputArgument b)
 </span><span id="line-286"></span><span>    </span><span id="_fcCustomName"><span class="annot"><span class="annottext">FunctionConfig -&gt; Maybe Name
 </span><a href="Hasura.RQL.Types.Function.html#_fcCustomName"><span class="hs-identifier hs-var hs-var">_fcCustomName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-287"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-288"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689113853"><span id="local-6989586621689113855"><span id="local-6989586621689113857"><span class="annot"><span class="annottext">Int -&gt; FunctionConfig -&gt; ShowS
+</span><span id="line-288"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123074"><span id="local-6989586621689123076"><span id="local-6989586621689123078"><span class="annot"><span class="annottext">Int -&gt; FunctionConfig -&gt; ShowS
 [FunctionConfig] -&gt; ShowS
 FunctionConfig -&gt; String
 (Int -&gt; FunctionConfig -&gt; ShowS)
@@ -1068,7 +1068,7 @@ show :: FunctionConfig -&gt; String
 $cshow :: FunctionConfig -&gt; String
 showsPrec :: Int -&gt; FunctionConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionConfig -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689113849"><span id="local-6989586621689113851"><span class="annot"><span class="annottext">FunctionConfig -&gt; FunctionConfig -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123070"><span id="local-6989586621689123072"><span class="annot"><span class="annottext">FunctionConfig -&gt; FunctionConfig -&gt; Bool
 (FunctionConfig -&gt; FunctionConfig -&gt; Bool)
 -&gt; (FunctionConfig -&gt; FunctionConfig -&gt; Bool) -&gt; Eq FunctionConfig
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1087,13 +1087,13 @@ $cto :: forall x. Rep FunctionConfig x -&gt; FunctionConfig
 $cfrom :: forall x. FunctionConfig -&gt; Rep FunctionConfig x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-289"></span><span>
-</span><span id="line-290"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113845"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span></span><span>
+</span><span id="line-290"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123066"><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span></span><span>
 </span><span id="line-291"></span><span>
-</span><span id="line-292"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113842"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span></span><span>
+</span><span id="line-292"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123063"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span></span><span>
 </span><span id="line-293"></span><span>
-</span><span id="line-294"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113839"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-295"></span><span>  </span><span id="local-6989586621689113838"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser FunctionConfig
-</span><a href="#local-6989586621689113838"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-294"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123060"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-295"></span><span>  </span><span id="local-6989586621689123059"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser FunctionConfig
+</span><a href="#local-6989586621689123059"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser FunctionConfig)
 -&gt; Value
 -&gt; Parser FunctionConfig
@@ -1105,8 +1105,8 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser FunctionConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689113837"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113837"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689123058"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689123058"><span class="hs-identifier hs-var">obj</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-296"></span><span>    </span><span class="annot"><span class="annottext">Maybe FunctionArgName
 -&gt; Maybe FunctionExposedAs
 -&gt; FunctionCustomRootFields
@@ -1124,7 +1124,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
       -&gt; FunctionCustomRootFields -&gt; Maybe Name -&gt; FunctionConfig)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113837"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe FunctionArgName)
+</span><a href="#local-6989586621689123058"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe FunctionArgName)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;session_argument&quot;</span></span><span>
@@ -1136,7 +1136,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
      (FunctionCustomRootFields -&gt; Maybe Name -&gt; FunctionConfig)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113837"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe FunctionExposedAs)
+</span><a href="#local-6989586621689123058"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe FunctionExposedAs)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;exposed_as&quot;</span></span><span>
@@ -1145,7 +1145,7 @@ forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 -&gt; Parser (Maybe Name -&gt; FunctionConfig)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113837"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe FunctionCustomRootFields)
+</span><a href="#local-6989586621689123058"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe FunctionCustomRootFields)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;custom_root_fields&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe FunctionCustomRootFields)
@@ -1157,12 +1157,12 @@ forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 -&gt; Parser (Maybe Name) -&gt; Parser FunctionConfig
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689113837"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
+</span><a href="#local-6989586621689123058"><span class="hs-identifier hs-var">obj</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Name)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;custom_name&quot;</span></span><span>
 </span><span id="line-301"></span><span>
-</span><span id="line-302"></span><span class="hs-special">$(</span><span id="local-6989586621689113827"><span id="local-6989586621689113829"><span id="local-6989586621689113831"><span id="local-6989586621689113833"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionConfig</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-302"></span><span class="hs-special">$(</span><span id="local-6989586621689123048"><span id="local-6989586621689123050"><span id="local-6989586621689123052"><span id="local-6989586621689123054"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">FunctionConfig</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-303"></span><span>
 </span><span id="line-304"></span><span class="hs-comment">-- | The default function config; v1 of the API implies this.</span><span>
 </span><span id="line-305"></span><span class="annot"><a href="Hasura.RQL.Types.Function.html#emptyFunctionConfig"><span class="hs-identifier hs-type">emptyFunctionConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span>
@@ -1182,12 +1182,12 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-307"></span><span>
 </span><span id="line-308"></span><span class="hs-comment">-- Lists are used to model overloaded functions.</span><span>
-</span><span id="line-309"></span><span class="hs-keyword">type</span><span> </span><span id="DBFunctionsMetadata"><span class="annot"><a href="Hasura.RQL.Types.Function.html#DBFunctionsMetadata"><span class="hs-identifier hs-var">DBFunctionsMetadata</span></a></span></span><span> </span><span id="local-6989586621689113826"><span class="annot"><a href="#local-6989586621689113826"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113826"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#RawFunctionInfo"><span class="hs-identifier hs-type">RawFunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113826"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-309"></span><span class="hs-keyword">type</span><span> </span><span id="DBFunctionsMetadata"><span class="annot"><a href="Hasura.RQL.Types.Function.html#DBFunctionsMetadata"><span class="hs-identifier hs-var">DBFunctionsMetadata</span></a></span></span><span> </span><span id="local-6989586621689123047"><span class="annot"><a href="#local-6989586621689123047"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123047"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#RawFunctionInfo"><span class="hs-identifier hs-type">RawFunctionInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689123047"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-310"></span><span>
 </span><span id="line-311"></span><span class="hs-keyword">data</span><span> </span><span id="FunctionPermissionsCtx"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier hs-var">FunctionPermissionsCtx</span></a></span></span><span>
 </span><span id="line-312"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FunctionPermissionsInferred"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsInferred"><span class="hs-identifier hs-var">FunctionPermissionsInferred</span></a></span></span><span>
 </span><span id="line-313"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FunctionPermissionsManual"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsManual"><span class="hs-identifier hs-var">FunctionPermissionsManual</span></a></span></span><span>
-</span><span id="line-314"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689113817"><span id="local-6989586621689113819"><span id="local-6989586621689113821"><span class="annot"><span class="annottext">Int -&gt; FunctionPermissionsCtx -&gt; ShowS
+</span><span id="line-314"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123038"><span id="local-6989586621689123040"><span id="local-6989586621689123042"><span class="annot"><span class="annottext">Int -&gt; FunctionPermissionsCtx -&gt; ShowS
 [FunctionPermissionsCtx] -&gt; ShowS
 FunctionPermissionsCtx -&gt; String
 (Int -&gt; FunctionPermissionsCtx -&gt; ShowS)
@@ -1202,7 +1202,7 @@ show :: FunctionPermissionsCtx -&gt; String
 $cshow :: FunctionPermissionsCtx -&gt; String
 showsPrec :: Int -&gt; FunctionPermissionsCtx -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionPermissionsCtx -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689113813"><span id="local-6989586621689113815"><span class="annot"><span class="annottext">FunctionPermissionsCtx -&gt; FunctionPermissionsCtx -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123034"><span id="local-6989586621689123036"><span class="annot"><span class="annottext">FunctionPermissionsCtx -&gt; FunctionPermissionsCtx -&gt; Bool
 (FunctionPermissionsCtx -&gt; FunctionPermissionsCtx -&gt; Bool)
 -&gt; (FunctionPermissionsCtx -&gt; FunctionPermissionsCtx -&gt; Bool)
 -&gt; Eq FunctionPermissionsCtx
@@ -1213,9 +1213,9 @@ $c/= :: FunctionPermissionsCtx -&gt; FunctionPermissionsCtx -&gt; Bool
 $c== :: FunctionPermissionsCtx -&gt; FunctionPermissionsCtx -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-315"></span><span>
-</span><span id="line-316"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113810"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier hs-type">FunctionPermissionsCtx</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-317"></span><span>  </span><span id="local-6989586621689113809"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser FunctionPermissionsCtx
-</span><a href="#local-6989586621689113809"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-316"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123031"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier hs-type">FunctionPermissionsCtx</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-317"></span><span>  </span><span id="local-6989586621689123030"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser FunctionPermissionsCtx
+</span><a href="#local-6989586621689123030"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-318"></span><span>    </span><span class="annot"><span class="annottext">String
 -&gt; (Bool -&gt; Parser FunctionPermissionsCtx)
 -&gt; Value
@@ -1243,9 +1243,9 @@ forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsManual"><span class="hs-identifier hs-var">FunctionPermissionsManual</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionPermissionsCtx
 </span><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsInferred"><span class="hs-identifier hs-var">FunctionPermissionsInferred</span></a></span><span>
 </span><span id="line-320"></span><span>
-</span><span id="line-321"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113800"><span id="local-6989586621689113802"><span id="local-6989586621689113804"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier hs-type">FunctionPermissionsCtx</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-322"></span><span>  </span><span id="local-6989586621689113799"><span class="annot"><span class="annottext">toJSON :: FunctionPermissionsCtx -&gt; Value
-</span><a href="#local-6989586621689113799"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-321"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689123021"><span id="local-6989586621689123023"><span id="local-6989586621689123025"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsCtx"><span class="hs-identifier hs-type">FunctionPermissionsCtx</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-322"></span><span>  </span><span id="local-6989586621689123020"><span class="annot"><span class="annottext">toJSON :: FunctionPermissionsCtx -&gt; Value
+</span><a href="#local-6989586621689123020"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-323"></span><span>    </span><span class="annot"><span class="annottext">FunctionPermissionsCtx
 </span><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsInferred"><span class="hs-identifier hs-var">FunctionPermissionsInferred</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
@@ -1255,13 +1255,13 @@ forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-325"></span><span>
-</span><span id="line-326"></span><span id="local-6989586621689113796"><span id="local-6989586621689113797"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionArgsExpG"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-var">FunctionArgsExpG</span></a></span></span><span> </span><span id="local-6989586621689114257"><span class="annot"><a href="#local-6989586621689114257"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionArgsExp"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-var">FunctionArgsExp</span></a></span></span><span>
+</span><span id="line-326"></span><span id="local-6989586621689123017"><span id="local-6989586621689123018"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionArgsExpG"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-var">FunctionArgsExpG</span></a></span></span><span> </span><span id="local-6989586621689123478"><span class="annot"><a href="#local-6989586621689123478"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionArgsExp"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-var">FunctionArgsExp</span></a></span></span><span>
 </span><span id="line-327"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_faePositional"><span class="annot"><span class="annottext">FunctionArgsExpG a -&gt; [a]
-</span><a href="Hasura.RQL.Types.Function.html#_faePositional"><span class="hs-identifier hs-var hs-var">_faePositional</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689114257"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Function.html#_faePositional"><span class="hs-identifier hs-var hs-var">_faePositional</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689123478"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-328"></span><span>    </span><span id="_faeNamed"><span class="annot"><span class="annottext">FunctionArgsExpG a -&gt; HashMap Text a
-</span><a href="Hasura.RQL.Types.Function.html#_faeNamed"><span class="hs-identifier hs-var hs-var">_faeNamed</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="#local-6989586621689114257"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.RQL.Types.Function.html#_faeNamed"><span class="hs-identifier hs-var hs-var">_faeNamed</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HM.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="#local-6989586621689123478"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-329"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-330"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689113787"><span id="local-6989586621689113789"><span id="local-6989586621689113791"><span class="annot"><span class="annottext">Int -&gt; FunctionArgsExpG a -&gt; ShowS
+</span><span id="line-330"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689123008"><span id="local-6989586621689123010"><span id="local-6989586621689123012"><span class="annot"><span class="annottext">Int -&gt; FunctionArgsExpG a -&gt; ShowS
 [FunctionArgsExpG a] -&gt; ShowS
 FunctionArgsExpG a -&gt; String
 (Int -&gt; FunctionArgsExpG a -&gt; ShowS)
@@ -1279,7 +1279,7 @@ show :: FunctionArgsExpG a -&gt; String
 $cshow :: forall a. Show a =&gt; FunctionArgsExpG a -&gt; String
 showsPrec :: Int -&gt; FunctionArgsExpG a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; FunctionArgsExpG a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689113783"><span id="local-6989586621689113785"><span class="annot"><span class="annottext">FunctionArgsExpG a -&gt; FunctionArgsExpG a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123004"><span id="local-6989586621689123006"><span class="annot"><span class="annottext">FunctionArgsExpG a -&gt; FunctionArgsExpG a -&gt; Bool
 (FunctionArgsExpG a -&gt; FunctionArgsExpG a -&gt; Bool)
 -&gt; (FunctionArgsExpG a -&gt; FunctionArgsExpG a -&gt; Bool)
 -&gt; Eq (FunctionArgsExpG a)
@@ -1289,7 +1289,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: forall a. Eq a =&gt; FunctionArgsExpG a -&gt; FunctionArgsExpG a -&gt; Bool
 == :: FunctionArgsExpG a -&gt; FunctionArgsExpG a -&gt; Bool
 $c== :: forall a. Eq a =&gt; FunctionArgsExpG a -&gt; FunctionArgsExpG a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689113779"><span id="local-6989586621689113781"><span class="annot"><span class="annottext">a -&gt; FunctionArgsExpG b -&gt; FunctionArgsExpG a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689123000"><span id="local-6989586621689123002"><span class="annot"><span class="annottext">a -&gt; FunctionArgsExpG b -&gt; FunctionArgsExpG a
 (a -&gt; b) -&gt; FunctionArgsExpG a -&gt; FunctionArgsExpG b
 (forall a b. (a -&gt; b) -&gt; FunctionArgsExpG a -&gt; FunctionArgsExpG b)
 -&gt; (forall a b. a -&gt; FunctionArgsExpG b -&gt; FunctionArgsExpG a)
@@ -1303,7 +1303,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; FunctionArgsExpG b -&gt; FunctionArgsExpG a
 fmap :: (a -&gt; b) -&gt; FunctionArgsExpG a -&gt; FunctionArgsExpG b
 $cfmap :: forall a b. (a -&gt; b) -&gt; FunctionArgsExpG a -&gt; FunctionArgsExpG b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689113745"><span id="local-6989586621689113747"><span id="local-6989586621689113749"><span id="local-6989586621689113751"><span id="local-6989586621689113753"><span id="local-6989586621689113755"><span id="local-6989586621689113757"><span id="local-6989586621689113759"><span id="local-6989586621689113761"><span id="local-6989586621689113763"><span id="local-6989586621689113765"><span id="local-6989586621689113767"><span id="local-6989586621689113769"><span id="local-6989586621689113771"><span id="local-6989586621689113773"><span id="local-6989586621689113775"><span id="local-6989586621689113777"><span class="annot"><span class="annottext">FunctionArgsExpG a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122966"><span id="local-6989586621689122968"><span id="local-6989586621689122970"><span id="local-6989586621689122972"><span id="local-6989586621689122974"><span id="local-6989586621689122976"><span id="local-6989586621689122978"><span id="local-6989586621689122980"><span id="local-6989586621689122982"><span id="local-6989586621689122984"><span id="local-6989586621689122986"><span id="local-6989586621689122988"><span id="local-6989586621689122990"><span id="local-6989586621689122992"><span id="local-6989586621689122994"><span id="local-6989586621689122996"><span id="local-6989586621689122998"><span class="annot"><span class="annottext">FunctionArgsExpG a -&gt; Bool
 (a -&gt; m) -&gt; FunctionArgsExpG a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; FunctionArgsExpG a -&gt; b
 (forall m. Monoid m =&gt; FunctionArgsExpG m -&gt; m)
@@ -1388,7 +1388,7 @@ foldMap :: (a -&gt; m) -&gt; FunctionArgsExpG a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; FunctionArgsExpG a -&gt; m
 fold :: FunctionArgsExpG m -&gt; m
 $cfold :: forall m. Monoid m =&gt; FunctionArgsExpG m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689113734"><span id="local-6989586621689113736"><span id="local-6989586621689113738"><span id="local-6989586621689113740"><span class="annot"><span class="annottext">Functor FunctionArgsExpG
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689122955"><span id="local-6989586621689122957"><span id="local-6989586621689122959"><span id="local-6989586621689122961"><span class="annot"><span class="annottext">Functor FunctionArgsExpG
 Foldable FunctionArgsExpG
 Functor FunctionArgsExpG
 -&gt; Foldable FunctionArgsExpG
@@ -1461,15 +1461,15 @@ $cto :: forall a x. Rep (FunctionArgsExpG a) x -&gt; FunctionArgsExpG a
 $cfrom :: forall a x. FunctionArgsExpG a -&gt; Rep (FunctionArgsExpG a) x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-331"></span><span>
-</span><span id="line-332"></span><span id="local-6989586621689113730"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113726"><span id="local-6989586621689113728"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689113730"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113730"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-332"></span><span id="local-6989586621689122951"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689122947"><span id="local-6989586621689122949"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689122951"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689122951"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-333"></span><span>
-</span><span id="line-334"></span><span id="local-6989586621689113725"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113722"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113725"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113725"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-334"></span><span id="local-6989586621689122946"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689122943"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689122946"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689122946"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-335"></span><span>
-</span><span id="line-336"></span><span id="local-6989586621689113721"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689113719"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689113721"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113721"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-336"></span><span id="local-6989586621689122942"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689122940"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="annot"><a href="#local-6989586621689122942"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689122942"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-337"></span><span>
-</span><span id="line-338"></span><span class="hs-keyword">type</span><span> </span><span id="FunctionArgsExp"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-var">FunctionArgsExp</span></a></span></span><span> </span><span id="local-6989586621689113718"><span class="annot"><a href="#local-6989586621689113718"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689113717"><span class="annot"><a href="#local-6989586621689113717"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgumentExp"><span class="hs-identifier hs-type">FunctionArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113718"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113717"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-338"></span><span class="hs-keyword">type</span><span> </span><span id="FunctionArgsExp"><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-var">FunctionArgsExp</span></a></span></span><span> </span><span id="local-6989586621689122939"><span class="annot"><a href="#local-6989586621689122939"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689122938"><span class="annot"><a href="#local-6989586621689122938"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgumentExp"><span class="hs-identifier hs-type">FunctionArgumentExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689122939"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689122938"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-339"></span><span>
-</span><span id="line-340"></span><span id="local-6989586621689113715"><span class="annot"><a href="Hasura.RQL.Types.Function.html#emptyFunctionArgsExp"><span class="hs-identifier hs-type">emptyFunctionArgsExp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689113715"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-340"></span><span id="local-6989586621689122936"><span class="annot"><a href="Hasura.RQL.Types.Function.html#emptyFunctionArgsExp"><span class="hs-identifier hs-type">emptyFunctionArgsExp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExpG"><span class="hs-identifier hs-type">FunctionArgsExpG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689122936"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-341"></span><span id="emptyFunctionArgsExp"><span class="annot"><span class="annottext">emptyFunctionArgsExp :: FunctionArgsExpG a
 </span><a href="Hasura.RQL.Types.Function.html#emptyFunctionArgsExp"><span class="hs-identifier hs-var hs-var">emptyFunctionArgsExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; HashMap Text a -&gt; FunctionArgsExpG a
 forall a. [a] -&gt; HashMap Text a -&gt; FunctionArgsExpG a

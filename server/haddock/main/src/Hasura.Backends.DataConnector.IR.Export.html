@@ -2,24 +2,23 @@
 </span><span id="line-2"></span><span>
 </span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.DataConnector.IR.Export</span><span>
 </span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier">QueryError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#queryToAPI"><span class="hs-identifier">queryToAPI</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#queryRequestToAPI"><span class="hs-identifier">queryRequestToAPI</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-7"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-8"></span><span>
-</span><span id="line-9"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
-</span><span id="line-10"></span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.KeyMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromHashMapText</span></span><span class="hs-special">)</span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier">Hasura.Backends.DataConnector.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API</span></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html"><span class="hs-identifier">Hasura.Backends.DataConnector.IR.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR.Q</span></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Witch</span></span><span> </span><span class="hs-keyword">qualified</span><span>
-</span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
-</span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span id="local-6989586621689112216"><span id="local-6989586621689112217"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryError"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-var">QueryError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExposedLiteral"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#ExposedLiteral"><span class="hs-identifier hs-var">ExposedLiteral</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. QueryError -&gt; Rep QueryError x)
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier">Autodocodec.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier">ValueWrapper</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.KeyMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromHashMapText</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HashMap</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier">Hasura.Backends.DataConnector.API</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">API</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html"><span class="hs-identifier">Hasura.Backends.DataConnector.IR.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR.Q</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Witch</span></span><span> </span><span class="hs-keyword">qualified</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span id="local-6989586621689121427"><span id="local-6989586621689121428"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryError"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-var">QueryError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExposedLiteral"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#ExposedLiteral"><span class="hs-identifier hs-var">ExposedLiteral</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. QueryError -&gt; Rep QueryError x)
 -&gt; (forall x. Rep QueryError x -&gt; QueryError) -&gt; Generic QueryError
 forall x. Rep QueryError x -&gt; QueryError
 forall x. QueryError -&gt; Rep QueryError x
@@ -28,7 +27,7 @@ forall a.
 $cto :: forall x. Rep QueryError x -&gt; QueryError
 $cfrom :: forall x. QueryError -&gt; Rep QueryError x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689112204"><span id="local-6989586621689112206"><span id="local-6989586621689112208"><span id="local-6989586621689112210"><span class="annot"><span class="annottext">[QueryError] -&gt; Value
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689121415"><span id="local-6989586621689121417"><span id="local-6989586621689121419"><span id="local-6989586621689121421"><span class="annot"><span class="annottext">[QueryError] -&gt; Value
 [QueryError] -&gt; Encoding
 QueryError -&gt; Value
 QueryError -&gt; Encoding
@@ -52,78 +51,147 @@ $ctoEncoding :: QueryError -&gt; Encoding
 toJSON :: QueryError -&gt; Value
 $ctoJSON :: QueryError -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#queryToAPI"><span class="hs-identifier hs-type">queryToAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-type">IR.Q.Query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-type">QueryError</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Query</span></a></span><span>
-</span><span id="line-26"></span><span id="queryToAPI"><span class="annot"><span class="annottext">queryToAPI :: Query -&gt; Either QueryError Query
-</span><a href="Hasura.Backends.DataConnector.IR.Export.html#queryToAPI"><span class="hs-identifier hs-var hs-var">queryToAPI</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-type">IR.Q.Query</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689112195"><span id="local-6989586621689112196"><span id="local-6989586621689112197"><span id="local-6989586621689112198"><span id="local-6989586621689112199"><span id="local-6989586621689112200"><span id="local-6989586621689112201"><span class="annot"><span class="annottext">[OrderBy]
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#queryRequestToAPI"><span class="hs-identifier hs-type">queryRequestToAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#QueryRequest"><span class="hs-identifier hs-type">IR.Q.QueryRequest</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-type">QueryError</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.QueryRequest</span></a></span><span>
+</span><span id="line-25"></span><span id="queryRequestToAPI"><span class="annot"><span class="annottext">queryRequestToAPI :: QueryRequest -&gt; Either QueryError QueryRequest
+</span><a href="Hasura.Backends.DataConnector.IR.Export.html#queryRequestToAPI"><span class="hs-identifier hs-var hs-var">queryRequestToAPI</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#QueryRequest"><span class="hs-identifier hs-type">IR.Q.QueryRequest</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689121410"><span id="local-6989586621689121411"><span id="local-6989586621689121412"><span class="annot"><span class="annottext">TableRelationships
+Name
+Query
+_qrQuery :: QueryRequest -&gt; Query
+_qrTableRelationships :: QueryRequest -&gt; TableRelationships
+_qrTable :: QueryRequest -&gt; Name
+_qrQuery :: Query
+_qrTableRelationships :: TableRelationships
+_qrTable :: Name
+</span><a href="Hasura.Backends.DataConnector.IR.Query.html#_qrQuery"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-26"></span><span>  </span><span id="local-6989586621689121406"><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621689121406"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Query -&gt; Either QueryError Query
+</span><a href="Hasura.Backends.DataConnector.IR.Export.html#queryToAPI"><span class="hs-identifier hs-var">queryToAPI</span></a></span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621689121410"><span class="hs-identifier hs-var">_qrQuery</span></a></span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="annottext">QueryRequest -&gt; Either QueryError QueryRequest
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(QueryRequest -&gt; Either QueryError QueryRequest)
+-&gt; QueryRequest -&gt; Either QueryError QueryRequest
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">QueryRequest :: TableName -&gt; [TableRelationships] -&gt; Query -&gt; QueryRequest
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.QueryRequest</span></a></span><span>
+</span><span id="line-29"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_qrTable :: TableName
+</span><a href="#local-6989586621689121403"><span class="hs-identifier hs-var">_qrTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; TableName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689121412"><span class="hs-identifier hs-var">_qrTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">_qrTableRelationships :: [TableRelationships]
+</span><a href="#local-6989586621689121401"><span class="hs-identifier hs-var">_qrTableRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-31"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689121400"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689121400"><span class="hs-identifier hs-var">sourceTableName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689121399"><span class="annot"><span class="annottext">HashMap RelationshipName Relationship
+</span><a href="#local-6989586621689121399"><span class="hs-identifier hs-var">relationships</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-32"></span><span>              </span><span class="annot"><span class="annottext">TableRelationships :: TableName
+-&gt; HashMap RelationshipName Relationship -&gt; TableRelationships
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.TableRelationships</span></a></span><span>
+</span><span id="line-33"></span><span>                </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_trSourceTable :: TableName
+</span><a href="#local-6989586621689121397"><span class="hs-identifier hs-var">_trSourceTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; TableName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689121400"><span class="hs-identifier hs-var">sourceTableName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>                  </span><span class="annot"><span class="annottext">_trRelationships :: HashMap RelationshipName Relationship
+</span><a href="#local-6989586621689121396"><span class="hs-identifier hs-var">_trRelationships</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RelationshipName -&gt; RelationshipName)
+-&gt; HashMap RelationshipName Relationship
+-&gt; HashMap RelationshipName Relationship
+forall k2 k1 v.
+(Eq k2, Hashable k2) =&gt;
+(k1 -&gt; k2) -&gt; HashMap k1 v -&gt; HashMap k2 v
+</span><span class="hs-identifier hs-var">HashMap.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">RelationshipName -&gt; RelationshipName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(HashMap RelationshipName Relationship
+ -&gt; HashMap RelationshipName Relationship)
+-&gt; HashMap RelationshipName Relationship
+-&gt; HashMap RelationshipName Relationship
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Relationship -&gt; Relationship
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(Relationship -&gt; Relationship)
+-&gt; HashMap RelationshipName Relationship
+-&gt; HashMap RelationshipName Relationship
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap RelationshipName Relationship
+</span><a href="#local-6989586621689121399"><span class="hs-identifier hs-var">relationships</span></a></span><span>
+</span><span id="line-35"></span><span>                </span><span class="hs-special">}</span><span>
+</span><span id="line-36"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>            </span><span class="annot"><span class="annottext">((Name, HashMap RelationshipName Relationship)
+ -&gt; TableRelationships)
+-&gt; [(Name, HashMap RelationshipName Relationship)]
+-&gt; [TableRelationships]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableRelationships
+-&gt; [(Name, HashMap RelationshipName Relationship)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">HashMap.toList</span></span><span> </span><span class="annot"><span class="annottext">TableRelationships
+</span><a href="#local-6989586621689121411"><span class="hs-identifier hs-var">_qrTableRelationships</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">_qrQuery :: Query
+</span><a href="#local-6989586621689121392"><span class="hs-identifier hs-var">_qrQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621689121406"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#queryToAPI"><span class="hs-identifier hs-type">queryToAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-type">IR.Q.Query</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-type">QueryError</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Query</span></a></span><span>
+</span><span id="line-42"></span><span id="queryToAPI"><span class="annot"><span class="annottext">queryToAPI :: Query -&gt; Either QueryError Query
+</span><a href="Hasura.Backends.DataConnector.IR.Export.html#queryToAPI"><span class="hs-identifier hs-var hs-var">queryToAPI</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Query"><span class="hs-identifier hs-type">IR.Q.Query</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689121386"><span id="local-6989586621689121387"><span id="local-6989586621689121388"><span id="local-6989586621689121389"><span id="local-6989586621689121390"><span class="annot"><span class="annottext">[OrderBy]
 Maybe Int
 Maybe Expression
 HashMap Text Field
-Name
-Cardinality
-cardinality :: Query -&gt; Cardinality
-orderBy :: Query -&gt; [OrderBy]
-where_ :: Query -&gt; Maybe Expression
-offset :: Query -&gt; Maybe Int
-limit :: Query -&gt; Maybe Int
-from :: Query -&gt; Name
-fields :: Query -&gt; HashMap Text Field
-cardinality :: Cardinality
-orderBy :: [OrderBy]
-where_ :: Maybe Expression
-offset :: Maybe Int
-limit :: Maybe Int
-from :: Name
-fields :: HashMap Text Field
-</span><a href="Hasura.Backends.DataConnector.IR.Query.html#cardinality"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-27"></span><span>  </span><span id="local-6989586621689112187"><span class="annot"><span class="annottext">HashMap Text Field
-</span><a href="#local-6989586621689112187"><span class="hs-identifier hs-var">fields'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Field -&gt; Either QueryError Field)
+_qOrderBy :: Query -&gt; [OrderBy]
+_qWhere :: Query -&gt; Maybe Expression
+_qOffset :: Query -&gt; Maybe Int
+_qLimit :: Query -&gt; Maybe Int
+_qFields :: Query -&gt; HashMap Text Field
+_qOrderBy :: [OrderBy]
+_qWhere :: Maybe Expression
+_qOffset :: Maybe Int
+_qLimit :: Maybe Int
+_qFields :: HashMap Text Field
+</span><a href="Hasura.Backends.DataConnector.IR.Query.html#_qOrderBy"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621689121380"><span class="annot"><span class="annottext">HashMap Text Field
+</span><a href="#local-6989586621689121380"><span class="hs-identifier hs-var">fields'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Field -&gt; Either QueryError Field)
 -&gt; HashMap Text Field -&gt; Either QueryError (HashMap Text Field)
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">Field -&gt; Either QueryError Field
-</span><a href="Hasura.Backends.DataConnector.IR.Export.html#fromField"><span class="hs-identifier hs-var">fromField</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Field
-</span><a href="#local-6989586621689112201"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-28"></span><span>  </span><span class="annot"><span class="annottext">Query -&gt; Either QueryError Query
+</span><a href="Hasura.Backends.DataConnector.IR.Export.html#fieldToAPI"><span class="hs-identifier hs-var">fieldToAPI</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Field
+</span><a href="#local-6989586621689121390"><span class="hs-identifier hs-var">_qFields</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="annottext">Query -&gt; Either QueryError Query
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Query -&gt; Either QueryError Query)
 -&gt; Query -&gt; Either QueryError Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">Query :: KeyMap Field
--&gt; TableName
+</span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">Query :: KeyMap Field
 -&gt; Maybe Int
 -&gt; Maybe Int
 -&gt; Maybe Expression
 -&gt; Maybe (NonEmpty OrderBy)
 -&gt; Query
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Query</span></a></span><span>
-</span><span id="line-30"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">fields :: KeyMap Field
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Field -&gt; KeyMap Field
+</span><span id="line-46"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_qFields :: KeyMap Field
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_qFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Field -&gt; KeyMap Field
 forall v. HashMap Text v -&gt; KeyMap v
 </span><span class="hs-identifier hs-var">fromHashMapText</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text Field
-</span><a href="#local-6989586621689112187"><span class="hs-identifier hs-var">fields'</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">from :: TableName
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">from</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; TableName
-forall source target. From source target =&gt; source -&gt; target
-</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689112200"><span class="hs-identifier hs-var">from</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>        </span><span class="annot"><span class="annottext">limit :: Maybe Int
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">limit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689112199"><span class="hs-identifier hs-var">limit</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">offset :: Maybe Int
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">offset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689112198"><span class="hs-identifier hs-var">offset</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>        </span><span class="annot"><span class="annottext">where_ :: Maybe Expression
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">where_</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; Maybe Expression -&gt; Maybe Expression
+</span><a href="#local-6989586621689121380"><span class="hs-identifier hs-var">fields'</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">_qLimit :: Maybe Int
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_qLimit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689121389"><span class="hs-identifier hs-var">_qLimit</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">_qOffset :: Maybe Int
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_qOffset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689121388"><span class="hs-identifier hs-var">_qOffset</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>        </span><span class="annot"><span class="annottext">_qWhere :: Maybe Expression
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_qWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; Expression) -&gt; Maybe Expression -&gt; Maybe Expression
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Expression
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Maybe Expression
-</span><a href="#local-6989586621689112197"><span class="hs-identifier hs-var">where_</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>        </span><span class="annot"><span class="annottext">orderBy :: Maybe (NonEmpty OrderBy)
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">orderBy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[OrderBy] -&gt; Maybe (NonEmpty OrderBy)
+</span><a href="#local-6989586621689121387"><span class="hs-identifier hs-var">_qWhere</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">_qOrderBy :: Maybe (NonEmpty OrderBy)
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_qOrderBy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[OrderBy] -&gt; Maybe (NonEmpty OrderBy)
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">([OrderBy] -&gt; Maybe (NonEmpty OrderBy))
 -&gt; [OrderBy] -&gt; Maybe (NonEmpty OrderBy)
@@ -133,75 +201,79 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">OrderBy -&gt; OrderBy
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">[OrderBy]
-</span><a href="#local-6989586621689112196"><span class="hs-identifier hs-var">orderBy</span></a></span><span>
-</span><span id="line-36"></span><span>      </span><span class="hs-special">}</span><span>
-</span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#fromField"><span class="hs-identifier hs-type">fromField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Field"><span class="hs-identifier hs-type">IR.Q.Field</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-type">QueryError</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Field</span></a></span><span>
-</span><span id="line-39"></span><span id="fromField"><span class="annot"><span class="annottext">fromField :: Field -&gt; Either QueryError Field
-</span><a href="Hasura.Backends.DataConnector.IR.Export.html#fromField"><span class="hs-identifier hs-var hs-var">fromField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-40"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Column"><span class="hs-identifier hs-type">IR.Q.Column</span></a></span><span> </span><span id="local-6989586621689112174"><span class="annot"><span class="annottext">ColumnContents
-</span><a href="#local-6989586621689112174"><span class="hs-identifier hs-var">contents</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Field -&gt; Either QueryError Field
+</span><a href="#local-6989586621689121386"><span class="hs-identifier hs-var">_qOrderBy</span></a></span><span>
+</span><span id="line-51"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#fieldToAPI"><span class="hs-identifier hs-type">fieldToAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Field"><span class="hs-identifier hs-type">IR.Q.Field</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-type">QueryError</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Field</span></a></span><span>
+</span><span id="line-54"></span><span id="fieldToAPI"><span class="annot"><span class="annottext">fieldToAPI :: Field -&gt; Either QueryError Field
+</span><a href="Hasura.Backends.DataConnector.IR.Export.html#fieldToAPI"><span class="hs-identifier hs-var hs-var">fieldToAPI</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#ColumnField"><span class="hs-identifier hs-type">IR.Q.ColumnField</span></a></span><span> </span><span id="local-6989586621689121369"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689121369"><span class="hs-identifier hs-var">contents</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Field -&gt; Either QueryError Field
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Field -&gt; Either QueryError Field)
--&gt; Field -&gt; Either QueryError Field
+-&gt; (ColumnName -&gt; Field) -&gt; ColumnName -&gt; Either QueryError Field
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ValueWrapper &quot;column&quot; ColumnName -&gt; Field
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ColumnField</span></a></span><span> </span><span class="annot"><span class="annottext">(ValueWrapper &quot;column&quot; ColumnName -&gt; Field)
+-&gt; (ColumnName -&gt; ValueWrapper &quot;column&quot; ColumnName)
+-&gt; ColumnName
+-&gt; Field
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; ValueWrapper &quot;column&quot; ColumnName
+forall (t :: Symbol) a. a -&gt; ValueWrapper t a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">ValueWrapper</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnName -&gt; Either QueryError Field)
+-&gt; ColumnName -&gt; Either QueryError Field
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnContents -&gt; Field
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
-</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">ColumnContents
-</span><a href="#local-6989586621689112174"><span class="hs-identifier hs-var">contents</span></a></span><span>
-</span><span id="line-41"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Relationship"><span class="hs-identifier hs-type">IR.Q.Relationship</span></a></span><span> </span><span id="local-6989586621689112172"><span class="annot"><span class="annottext">RelationshipContents
-</span><a href="#local-6989586621689112172"><span class="hs-identifier hs-var">contents</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RelationshipContents -&gt; Either QueryError Field
-</span><a href="Hasura.Backends.DataConnector.IR.Export.html#rcToAPI"><span class="hs-identifier hs-var">rcToAPI</span></a></span><span> </span><span class="annot"><span class="annottext">RelationshipContents
-</span><a href="#local-6989586621689112172"><span class="hs-identifier hs-var">contents</span></a></span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#Literal"><span class="hs-identifier hs-type">IR.Q.Literal</span></a></span><span> </span><span id="local-6989586621689112169"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689112169"><span class="hs-identifier hs-var">lit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QueryError -&gt; Either QueryError Field
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689121369"><span class="hs-identifier hs-var">contents</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelField"><span class="hs-identifier hs-type">IR.Q.RelField</span></a></span><span> </span><span id="local-6989586621689121364"><span class="annot"><span class="annottext">RelationshipField
+</span><a href="#local-6989586621689121364"><span class="hs-identifier hs-var">contents</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RelationshipField -&gt; Field
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.RelField</span></a></span><span> </span><span class="annot"><span class="annottext">(RelationshipField -&gt; Field)
+-&gt; Either QueryError RelationshipField -&gt; Either QueryError Field
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">RelationshipField -&gt; Either QueryError RelationshipField
+</span><a href="Hasura.Backends.DataConnector.IR.Export.html#rcToAPI"><span class="hs-identifier hs-var">rcToAPI</span></a></span><span> </span><span class="annot"><span class="annottext">RelationshipField
+</span><a href="#local-6989586621689121364"><span class="hs-identifier hs-var">contents</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#LiteralField"><span class="hs-identifier hs-type">IR.Q.LiteralField</span></a></span><span> </span><span id="local-6989586621689121360"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689121360"><span class="hs-identifier hs-var">lit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QueryError -&gt; Either QueryError Field
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(QueryError -&gt; Either QueryError Field)
 -&gt; QueryError -&gt; Either QueryError Field
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; QueryError
 </span><a href="Hasura.Backends.DataConnector.IR.Export.html#ExposedLiteral"><span class="hs-identifier hs-var">ExposedLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689112169"><span class="hs-identifier hs-var">lit</span></a></span><span>
-</span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#rcToAPI"><span class="hs-identifier hs-type">rcToAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-type">IR.Q.RelationshipContents</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-type">QueryError</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Field</span></a></span><span>
-</span><span id="line-45"></span><span id="rcToAPI"><span class="annot"><span class="annottext">rcToAPI :: RelationshipContents -&gt; Either QueryError Field
-</span><a href="Hasura.Backends.DataConnector.IR.Export.html#rcToAPI"><span class="hs-identifier hs-var hs-var">rcToAPI</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipContents"><span class="hs-identifier hs-type">IR.Q.RelationshipContents</span></a></span><span> </span><span id="local-6989586621689112167"><span class="annot"><span class="annottext">HashMap PrimaryKey ForeignKey
-</span><a href="#local-6989586621689112167"><span class="hs-identifier hs-var">joinCondition</span></a></span></span><span> </span><span id="local-6989586621689112166"><span class="annot"><span class="annottext">RelType
-</span><a href="#local-6989586621689112166"><span class="hs-identifier hs-var">relType</span></a></span></span><span> </span><span id="local-6989586621689112165"><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621689112165"><span class="hs-identifier hs-var">query</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689112164"><span class="annot"><span class="annottext">joinCondition' :: HashMap PrimaryKey ForeignKey
-</span><a href="#local-6989586621689112164"><span class="hs-identifier hs-var hs-var">joinCondition'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PrimaryKey -&gt; PrimaryKey)
--&gt; HashMap PrimaryKey ForeignKey -&gt; HashMap PrimaryKey ForeignKey
-forall k2 k1 v.
-(Eq k2, Hashable k2) =&gt;
-(k1 -&gt; k2) -&gt; HashMap k1 v -&gt; HashMap k2 v
-</span><span class="hs-identifier hs-var">M.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">PrimaryKey -&gt; PrimaryKey
-forall source target. From source target =&gt; source -&gt; target
-</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">(HashMap PrimaryKey ForeignKey -&gt; HashMap PrimaryKey ForeignKey)
--&gt; HashMap PrimaryKey ForeignKey -&gt; HashMap PrimaryKey ForeignKey
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ForeignKey -&gt; ForeignKey)
--&gt; HashMap PrimaryKey ForeignKey -&gt; HashMap PrimaryKey ForeignKey
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ForeignKey -&gt; ForeignKey
-forall source target. From source target =&gt; source -&gt; target
-</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">HashMap PrimaryKey ForeignKey
-</span><a href="#local-6989586621689112167"><span class="hs-identifier hs-var">joinCondition</span></a></span><span>
-</span><span id="line-47"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(Query -&gt; Field)
--&gt; Either QueryError Query -&gt; Either QueryError Field
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelField -&gt; Field
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.RelationshipField</span></a></span><span> </span><span class="annot"><span class="annottext">(RelField -&gt; Field) -&gt; (Query -&gt; RelField) -&gt; Query -&gt; Field
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HashMap PrimaryKey ForeignKey -&gt; RelType -&gt; Query -&gt; RelField
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.RelField</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap PrimaryKey ForeignKey
-</span><a href="#local-6989586621689112164"><span class="hs-identifier hs-var">joinCondition'</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelType -&gt; RelType
-forall source target. From source target =&gt; source -&gt; target
-</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">RelType
-</span><a href="#local-6989586621689112166"><span class="hs-identifier hs-var">relType</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either QueryError Query -&gt; Either QueryError Field)
--&gt; Either QueryError Query -&gt; Either QueryError Field
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Query -&gt; Either QueryError Query
+</span><a href="#local-6989586621689121360"><span class="hs-identifier hs-var">lit</span></a></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#rcToAPI"><span class="hs-identifier hs-type">rcToAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipField"><span class="hs-identifier hs-type">IR.Q.RelationshipField</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Export.html#QueryError"><span class="hs-identifier hs-type">QueryError</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipField</span></a></span><span>
+</span><span id="line-60"></span><span id="rcToAPI"><span class="annot"><span class="annottext">rcToAPI :: RelationshipField -&gt; Either QueryError RelationshipField
+</span><a href="Hasura.Backends.DataConnector.IR.Export.html#rcToAPI"><span class="hs-identifier hs-var hs-var">rcToAPI</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Query.html#RelationshipField"><span class="hs-identifier hs-type">IR.Q.RelationshipField</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689121357"><span id="local-6989586621689121358"><span class="annot"><span class="annottext">RelationshipName
+Query
+_rfQuery :: RelationshipField -&gt; Query
+_rfRelationship :: RelationshipField -&gt; RelationshipName
+_rfQuery :: Query
+_rfRelationship :: RelationshipName
+</span><a href="Hasura.Backends.DataConnector.IR.Query.html#_rfQuery"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621689121354"><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621689121354"><span class="hs-identifier hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Query -&gt; Either QueryError Query
 </span><a href="Hasura.Backends.DataConnector.IR.Export.html#queryToAPI"><span class="hs-identifier hs-var">queryToAPI</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621689112165"><span class="hs-identifier hs-var">query</span></a></span><span>
-</span><span id="line-48"></span></pre></body></html>
+</span><a href="#local-6989586621689121357"><span class="hs-identifier hs-var">_rfQuery</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><span class="annottext">RelationshipField -&gt; Either QueryError RelationshipField
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(RelationshipField -&gt; Either QueryError RelationshipField)
+-&gt; RelationshipField -&gt; Either QueryError RelationshipField
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">RelationshipField :: RelationshipName -&gt; Query -&gt; RelationshipField
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipField</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_rfRelationship :: RelationshipName
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_rfRelationship</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RelationshipName -&gt; RelationshipName
+forall source target. From source target =&gt; source -&gt; target
+</span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">RelationshipName
+</span><a href="#local-6989586621689121358"><span class="hs-identifier hs-var">_rfRelationship</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">_rfQuery :: Query
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">_rfQuery</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Query
+</span><a href="#local-6989586621689121354"><span class="hs-identifier hs-var">query</span></a></span><span>
+</span><span id="line-66"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-67"></span></pre></body></html>
