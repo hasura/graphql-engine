@@ -84,7 +84,10 @@ const PayloadOptionsTransforms: React.FC<PayloadOptionsTransformsProps> = ({
   }
 
   return (
-    <div className="m-md pl-lg pr-sm border-l border-l-gray-400">
+    <div
+      className="m-md pl-lg pr-sm border-l border-l-gray-400"
+      data-cy="Change Payload"
+    >
       <div className="mb-md">
         <NumberedSidebar
           title="Sample Input"
