@@ -5,7 +5,7 @@ import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
 import { Nullable } from './components/Common/utils/tsUtils';
 
-type ConsoleType = 'oss' | 'cloud' | 'pro' | 'pro-cloud';
+export type ConsoleType = 'oss' | 'cloud' | 'pro' | 'pro-cloud';
 
 declare global {
   interface Window {

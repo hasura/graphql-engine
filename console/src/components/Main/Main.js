@@ -13,7 +13,6 @@ import {
 } from 'react-icons/fa';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import globals from '../../Globals';
 import { versionGT } from '../../helpers/versionUtils';
@@ -481,6 +480,7 @@ class Main extends React.Component {
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
+
           <UpdateVersion
             closeUpdateBanner={this.closeUpdateBanner}
             dispatch={this.props.dispatch}

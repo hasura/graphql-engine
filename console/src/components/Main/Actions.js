@@ -12,6 +12,7 @@ import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
 import dataHeaders from '../Services/Data/Common/Headers';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { getUserType, getConsoleScope } from './utils';
+import { fetchSampleDBCohortConfig } from '../Services/Data/DataSources/SampleDatabase';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -42,6 +43,8 @@ const FETCHING_HEROKU_SESSION = 'Main/FETCHING_HEROKU_SESSION';
 const FETCHING_HEROKU_SESSION_FAILED = 'Main/FETCHING_HEROKU_SESSION_FAILED';
 const SET_HEROKU_SESSION = 'Main/SET_HEROKU_SESSION';
 const SET_CLOUD_PROJECT_INFO = 'Main/SET_CLOUD_PROJECT_INFO';
+const SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG =
+  'Main/SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG';
 
 const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
 const registerRunTimeError = data => ({
@@ -506,6 +509,28 @@ export const fetchHerokuSession = () => dispatch => {
     });
 };
 
+// fetches the cohort config for sample DB and stores in redux
+export const initialiseOnboardingSampleDBConfig = () => {
+  return dispatch => {
+    if (globals.consoleType !== 'cloud') {
+      return null;
+    }
+
+    fetchSampleDBCohortConfig()
+      .then(cohortConfig => {
+        if (cohortConfig) {
+          dispatch({
+            type: SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG,
+            data: cohortConfig,
+          });
+        }
+      })
+      .catch(() => {
+        console.error('unable to fetch sample DB cohort config');
+      });
+  };
+};
+
 const mainReducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_MIGRATION_STATUS_SUCCESS:
@@ -653,7 +678,18 @@ const mainReducer = (state = defaultState, action) => {
       return {
         ...state,
         cloud: {
+          ...state.cloud,
           project: action.data,
+        },
+      };
+    case SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG:
+      return {
+        ...state,
+        cloud: {
+          ...state.cloud,
+          onboardingSampleDB: {
+            cohortConfig: action.data,
+          },
         },
       };
     default:

@@ -1,5 +1,9 @@
 import { ConsoleNotification } from './ConsoleNotification';
 import { HerokuSession } from '../Services/Data/DataSources/CreateDataSource/Heroku/types';
+import {
+  StateType as OnboardingSampleDBStateType,
+  initState as onboardingSampleDBState,
+} from '../Services/Data/DataSources/SampleDatabase/ReduxState';
 
 export type CloudProjectInfo = {
   name: string;
@@ -66,6 +70,7 @@ export interface MainState {
   };
   cloud: {
     project?: CloudProjectInfo;
+    onboardingSampleDB: OnboardingSampleDBStateType;
   };
 }
 
@@ -108,6 +113,7 @@ const defaultState: MainState = {
   },
   cloud: {
     project: undefined,
+    onboardingSampleDB: onboardingSampleDBState,
   },
 };
 
