@@ -5,8 +5,8 @@
     "checkJs": true,
     "baseUrl": "../node_modules",
     "target": "es5",
-    "lib": ["es5", "dom"],
-    "types": ["cypress"]
+    "lib": ["es2015", "dom"],
+    "types": ["cypress", "cypress-wait-until"]
   },
   "include": ["**/*.ts"]
 }

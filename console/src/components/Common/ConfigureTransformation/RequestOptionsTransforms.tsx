@@ -42,7 +42,10 @@ const RequestOptionsTransforms: React.FC<RequestOptionsTransformsProps> = ({
   ];
 
   return (
-    <div className="m-md pl-lg pr-sm border-l border-l-gray-400">
+    <div
+      className="m-md pl-lg pr-sm border-l border-l-gray-400"
+      data-cy="Change Request Options"
+    >
       <div className="mb-md">
         <NumberedSidebar
           title="Request Method"

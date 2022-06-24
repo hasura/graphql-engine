@@ -1,14 +1,9 @@
-import {
-  createActionTransform,
-  modifyActionTransform,
-  deleteActionTransform,
-  modifyV1ActionTransform,
-} from './spec';
+import { modifyV1ActionTransform } from './spec';
 import { testMode } from '../../helpers/common';
 import { setMetaData } from '../validators/validators';
 
 const setup = () => {
-  describe('Setup route', () => {
+  describe.skip('Setup route', () => {
     it('Visit the index route', () => {
       cy.visit('/actions/manage/actions');
       // Get and set validation metadata
@@ -20,7 +15,7 @@ const setup = () => {
 // TODO: what about the codegen part? Why is it not tested?
 
 export const runActionsTests = () => {
-  describe('Actions', () => {
+  describe.skip('Actions', () => {
     // The test has been moved to mutationAction.e2e.test
     // it('Create Mutation Action', createMutationAction);
 
@@ -45,9 +40,15 @@ export const runActionsTests = () => {
     // The test has been moved to queryAction.e2e.test.e2e.test
     // it('Delete Query Action', deleteQueryAction);
 
-    it('Create Action With Transform', createActionTransform);
-    it('Update Action With Transform', modifyActionTransform);
-    it('Delete Action With Transform', deleteActionTransform);
+    // The test has been moved to actionWithTransform.e2e.test.ts
+    // it('Create Action With Transform', createActionTransform);
+
+    // The test has been moved to actionWithTransform.e2e.test.ts
+    // it('Update Action With Transform', modifyActionTransform);
+
+    // The test has been moved to actionWithTransform.e2e.test.ts
+    // it('Delete Action With Transform', deleteActionTransform);
+
     it(
       'Create an action with V1 Transform and edit it through console, which will lead to the action being saved as V2',
       modifyV1ActionTransform

@@ -17,7 +17,7 @@ if (testMode !== 'cli') {
     after(() => {
       // Cleanup after the whole test file run
 
-      // Endure the application is not there when manually deleting the created action to avoid any
+      // Ensure the application is not there when manually deleting the created action to avoid any
       // potential client-side error that makes the test fail
       cy.visitEmptyPage();
 

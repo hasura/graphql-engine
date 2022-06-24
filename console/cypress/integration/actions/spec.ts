@@ -26,10 +26,18 @@ const statements = {
       accessToken
     `,
   createMutationQueryVars: `{"username": "john", "password": "p"`,
+  createQueryActionText: `type Query {
+    addNumbers (numbers: [Int]): AddResult
+  }`,
+  createQueryActionCustomType: `type AddResult {
+    sum: Int
+  }`,
+  createQueryHandler: 'https://hasura-actions-demo.glitch.me/addNumbers',
   createQueryGQLQuery: `query {
     addNumbers(numbers: [1, 2, 3, 4]) {
       sum
     `,
+  changeHandlerText: 'http://host.docker.internal:3000',
   createActionTransform: `type Mutation {
     login (username: String!, password: String!): LoginResponse
   }
@@ -145,6 +153,35 @@ const deleteAction = (promptValue: string) => {
   cy.window().its('prompt').should('be.called');
 };
 
+export const createQueryAction = () => {
+  // Routing to the index page
+  cy.visit('/actions/manage/actions');
+  cy.intercept('*', req => {
+    // send all other requests to the destination server
+    req.reply();
+  });
+  cy.url({ timeout: AWAIT_LONG }).should(
+    'eq',
+    `${baseUrl}/actions/manage/actions`
+  );
+  // Click on create
+  cy.getBySel('data-create-actions').click();
+  // Clear default text on
+  clearActionDef();
+  // type statement
+  typeIntoActionDef(statements.createQueryActionText);
+  // clear defaults on action types
+  clearActionTypes();
+  // type the action type text
+  typeIntoActionTypes(statements.createQueryActionCustomType);
+  // clear handler
+  clearHandler();
+  // type into handler
+  typeIntoHandler(statements.createQueryHandler);
+  // click to create action
+  clickOnCreateAction();
+};
+
 export const verifyQuery = () => {
   cy.on('uncaught:exception', () => {
     // NOTE: doing this since, there was some exception thrown by the
@@ -162,6 +199,31 @@ export const verifyQuery = () => {
   cy.get('.cm-property').contains('sum');
   cy.get('.cm-number').contains('10');
 };
+
+export const modifyQueryAction = () => {
+  cy.visit('/actions/manage/addNumbers/modify');
+  cy.url({ timeout: AWAIT_LONG }).should(
+    'eq',
+    `${baseUrl}/actions/manage/addNumbers/modify`
+  );
+
+  clearHandler();
+  typeIntoHandler(statements.changeHandlerText);
+
+  cy.getBySel('save-modify-action-changes').click();
+
+  // permissions part
+  cy.getBySel('actions-permissions').click();
+
+  cy.getBySel('role-textbox').type('MANAGER');
+
+  cy.getBySel('MANAGER-Permission').click();
+  cy.getBySel('save-permissions-for-action').click();
+
+  cy.getBySel('actions-modify').click();
+};
+
+export const deleteQueryAction = () => deleteAction('addNumbers');
 
 export const createActionTransform = () => {
   // Click on create
@@ -265,27 +327,6 @@ export const createActionTransform = () => {
   });
   clickOnCreateAction();
   cy.getBySel('action-timeout-seconds').should('have.value', '25');
-};
-
-export const modifyActionTransform = () => {
-  cy.visit('/actions/manage/login/modify');
-  cy.url({ timeout: AWAIT_LONG }).should(
-    'eq',
-    `${baseUrl}/actions/manage/login/modify`
-  );
-  cy.getBySel('transform-GET').click();
-  cy.getBySel('transform-requestUrl')
-    .clear()
-    .type('/{{$body.action.name}}/actions', {
-      parseSpecialCharSequences: false,
-    });
-  cy.getBySel('transform-query-params-kv-remove-button-0').click();
-  togglePayloadTransformSection();
-
-  cy.getBySel('save-modify-action-changes').click();
-  cy.get('.notification', { timeout: AWAIT_LONG })
-    .should('be.visible')
-    .and('contain', 'Action saved successfully');
 };
 
 export const deleteActionTransform = () => deleteAction('login');
