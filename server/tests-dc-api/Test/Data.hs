@@ -6,7 +6,11 @@ module Test.Data
     artistsAsJson,
     artistsAsJsonById,
     albumsAsJson,
+    customersAsJson,
+    employeesAsJson,
+    employeesAsJsonById,
     sortBy,
+    filterColumnsByQueryFields,
   )
 where
 
@@ -28,7 +32,7 @@ import Data.Scientific (Scientific)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
-import Hasura.Backends.DataConnector.API (TableInfo (..))
+import Hasura.Backends.DataConnector.API (Query, TableInfo (..), qFields)
 import Text.XML qualified as XML
 import Text.XML.Lens qualified as XML
 import Prelude
@@ -78,5 +82,21 @@ artistsAsJsonById =
 albumsAsJson :: [Object]
 albumsAsJson = sortBy "AlbumId" $ readTableFromXmlIntoJson "Album"
 
+customersAsJson :: [Object]
+customersAsJson = sortBy "CustomerId" $ readTableFromXmlIntoJson "Customer"
+
+employeesAsJson :: [Object]
+employeesAsJson = sortBy "EmployeeId" $ readTableFromXmlIntoJson "Employee"
+
+employeesAsJsonById :: HashMap Scientific Object
+employeesAsJsonById =
+  HashMap.fromList $ mapMaybe (\employee -> (,employee) <$> employee ^? ix "EmployeeId" . _Number) employeesAsJson
+
 sortBy :: K.Key -> [Object] -> [Object]
 sortBy propName = sortOn (^? ix propName)
+
+filterColumnsByQueryFields :: Query -> Object -> Object
+filterColumnsByQueryFields query =
+  KM.filterWithKey (\key _value -> key `elem` columns)
+  where
+    columns = KM.keys $ query ^. qFields

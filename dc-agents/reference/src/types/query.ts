@@ -1,6 +1,34 @@
+export type QueryRequest = {
+  table: TableName,
+  table_relationships: TableRelationships[],
+  query: Query,
+}
+
+export type TableName = string
+
+export type TableRelationships = {
+  source_table: TableName,
+  relationships: { [relationshipName: RelationshipName]: Relationship }
+}
+
+export type Relationship = {
+  target_table: TableName,
+  relationship_type: RelationshipType,
+  column_mapping: { [source: SourceColumnName]: TargetColumnName },
+}
+
+export type SourceColumnName = ColumnName
+export type TargetColumnName = ColumnName
+
+export type RelationshipName = string
+
+export enum RelationshipType {
+  Object = "object",
+  Array = "array"
+}
+
 export type Query = {
   fields: Fields,
-  from: string,
   limit?: number | null,
   offset?: number | null,
   where?: Expression | null,
@@ -17,19 +45,18 @@ export type ColumnField = {
   column: ColumnName,
 }
 
-export type PrimaryKey = ColumnName
-export type ForeignKey = ColumnName
-
-export type RelType = "object" | "array"
-
 export type RelationshipField = {
   type: "relationship",
-  column_mapping: { [primaryKey: PrimaryKey]: ForeignKey },
-  relation_type: RelType,
+  relationship: RelationshipName
   query: Query,
 }
 
 export type ScalarValue = string | number | boolean | null
+
+export type ComparisonColumn = {
+  path: RelationshipName[],
+  name: ColumnName,
+}
 
 export type ComparisonValue =
   | AnotherColumnComparisonValue
@@ -37,7 +64,7 @@ export type ComparisonValue =
 
 export type AnotherColumnComparisonValue = {
   type: "column",
-  column: ColumnName,
+  column: ComparisonColumn,
 }
 
 export type ScalarComparisonValue = {
@@ -71,21 +98,21 @@ export type NotExpression = {
 export type ApplyBinaryComparisonOperatorExpression = {
   type: "binary_op",
   operator: BinaryComparisonOperator,
-  column: ColumnName,
+  column: ComparisonColumn,
   value: ComparisonValue,
 }
 
 export type ApplyBinaryArrayComparisonOperatorExpression = {
   type: "binary_arr_op",
   operator: BinaryArrayComparisonOperator,
-  column: ColumnName,
-  values: ComparisonValue[],
+  column: ComparisonColumn,
+  values: ScalarValue[],
 }
 
 export type ApplyUnaryComparisonOperatorExpression = {
   type: "unary_op",
   operator: UnaryComparisonOperator,
-  column: ColumnName,
+  column: ComparisonColumn,
 }
 
 export enum BinaryComparisonOperator {

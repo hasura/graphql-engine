@@ -50,6 +50,12 @@ instance Witch.From API.ColumnName (Name 'Column) where
 instance Witch.From (Name 'Column) API.ColumnName where
   from (Name n) = API.ColumnName n
 
+instance Witch.From API.RelationshipName (Name 'Relationship) where
+  from (API.RelationshipName n) = Name n
+
+instance Witch.From (Name 'Relationship) API.RelationshipName where
+  from (Name n) = API.RelationshipName n
+
 -- | The "type" of "name" that the 'Name' type is meant to provide a textual
 -- representation for.
 --
@@ -59,3 +65,4 @@ data NameType
   = Column
   | Function
   | Table
+  | Relationship

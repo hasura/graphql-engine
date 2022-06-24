@@ -31,29 +31,29 @@ import Hasura.Tracing qualified as Tracing
 --------------------------------------------------------------------------------
 
 instance BackendExecute 'DataConnector where
-  type PreparedQuery 'DataConnector = IR.Q.Query
+  type PreparedQuery 'DataConnector = IR.Q.QueryRequest
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = Tracing.TraceT (ExceptT QErr IO)
 
   mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir = do
-    query' <- DC.mkPlan _uiSession sourceConfig ir
+    queryRequest <- DC.mkPlan _uiSession sourceConfig ir
     pure
       DBStepInfo
         { dbsiSourceName = sourceName,
           dbsiSourceConfig = sourceConfig,
-          dbsiPreparedQuery = Just query',
-          dbsiAction = buildAction sourceName sourceConfig query'
+          dbsiPreparedQuery = Just queryRequest,
+          dbsiAction = buildAction sourceName sourceConfig queryRequest
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir = do
-    query' <- DC.mkPlan _uiSession sourceConfig ir
+    queryRequest <- DC.mkPlan _uiSession sourceConfig ir
     pure $
       mkAnyBackend @'DataConnector
         DBStepInfo
           { dbsiSourceName = sourceName,
             dbsiSourceConfig = sourceConfig,
-            dbsiPreparedQuery = Just query',
-            dbsiAction = pure . encJFromJValue . toExplainPlan fieldName $ query'
+            dbsiPreparedQuery = Just queryRequest,
+            dbsiAction = pure . encJFromJValue . toExplainPlan fieldName $ queryRequest
           }
   mkDBMutationPlan _ _ _ _ _ =
     throw400 NotSupported "mkDBMutationPlan: not implemented for the Data Connector backend."
@@ -66,19 +66,19 @@ instance BackendExecute 'DataConnector where
   mkSubscriptionExplain _ =
     throw400 NotSupported "mkSubscriptionExplain: not implemented for the Data Connector backend."
 
-toExplainPlan :: GQL.RootFieldAlias -> IR.Q.Query -> ExplainPlan
-toExplainPlan fieldName query' =
-  ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ query'])
+toExplainPlan :: GQL.RootFieldAlias -> IR.Q.QueryRequest -> ExplainPlan
+toExplainPlan fieldName queryRequest =
+  ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ queryRequest])
 
-buildAction :: RQL.SourceName -> DC.SourceConfig -> IR.Q.Query -> Tracing.TraceT (ExceptT QErr IO) EncJSON
-buildAction sourceName DC.SourceConfig {..} query = do
+buildAction :: RQL.SourceName -> DC.SourceConfig -> IR.Q.QueryRequest -> Tracing.TraceT (ExceptT QErr IO) EncJSON
+buildAction sourceName DC.SourceConfig {..} queryRequest = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
-  when (DC.queryHasRelations query && isNothing (API.cRelationships _scCapabilities)) $
+  when (DC.queryHasRelations queryRequest && isNothing (API.cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
   API.Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) _scManager _scEndpoint
-  case IR.queryToAPI query of
-    Right queryRequest -> do
-      queryResponse <- _query (toTxt sourceName) _scConfig queryRequest
+  case IR.queryRequestToAPI queryRequest of
+    Right queryRequest' -> do
+      queryResponse <- _query (toTxt sourceName) _scConfig queryRequest'
       pure $ encJFromJValue queryResponse
     Left (IR.ExposedLiteral lit) ->
       throw500 $ "Invalid query constructed: Exposed IR Literal '" <> lit <> "'."

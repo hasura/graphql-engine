@@ -8,12 +8,12 @@ where
 
 --------------------------------------------------------------------------------
 
+import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Data.Semigroup (Any (..), Min (..))
-import Data.Text as T
+import Data.Semigroup (Min (..))
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended ((<>>))
 import Hasura.Backends.DataConnector.Adapter.Types
@@ -22,7 +22,9 @@ import Hasura.Backends.DataConnector.IR.Export qualified as IR
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
+import Hasura.Backends.DataConnector.IR.Relationships qualified as IR.R
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S
+import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -31,6 +33,7 @@ import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
 import Hasura.SQL.Backend
 import Hasura.Session
 
@@ -43,15 +46,14 @@ data ResponseError
   | UnexpectedFields
   | ExpectedObject
   | ExpectedArray
-  | UnexpectedResponseCardinality
   deriving (Show, Eq)
 
 -- | Extract the 'IR.Q' from a 'Plan' and render it as 'Text'.
 --
 -- NOTE: This is for logging and debug purposes only.
-renderQuery :: IR.Q.Query -> Text
+renderQuery :: IR.Q.QueryRequest -> Text
 renderQuery =
-  TE.decodeUtf8 . BL.toStrict . J.encode . IR.queryToAPI
+  TE.decodeUtf8 . BL.toStrict . J.encode . IR.queryRequestToAPI
 
 -- | Map a 'QueryDB 'DataConnector' term into a 'Plan'
 mkPlan ::
@@ -60,49 +62,67 @@ mkPlan ::
   SessionVariables ->
   SourceConfig ->
   QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  m IR.Q.Query
+  m IR.Q.QueryRequest
 mkPlan session (SourceConfig {}) ir = translateQueryDB ir
   where
     translateQueryDB ::
       QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      m IR.Q.Query
+      m IR.Q.QueryRequest
     translateQueryDB =
       \case
-        QDBMultipleRows s -> translateAnnSelect IR.Q.Many s
-        QDBSingleRow s -> translateAnnSelect IR.Q.OneOrZero s
+        QDBMultipleRows s -> translateAnnSelectToQueryRequest s
+        QDBSingleRow s -> translateAnnSelectToQueryRequest s
         QDBAggregation {} -> throw400 NotSupported "QDBAggregation: not supported"
 
-    translateAnnSelect ::
-      IR.Q.Cardinality ->
+    translateAnnSelectToQueryRequest ::
       AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      m IR.Q.Query
-    translateAnnSelect card selectG = do
-      tableName <- case _asnFrom selectG of
+      m IR.Q.QueryRequest
+    translateAnnSelectToQueryRequest selectG = do
+      tableName <- extractTableName selectG
+      (query, tableRelationships) <- CPS.runWriterT (translateAnnSelect tableName selectG)
+      pure $
+        IR.Q.QueryRequest
+          { _qrTable = tableName,
+            _qrTableRelationships = tableRelationships,
+            _qrQuery = query
+          }
+
+    extractTableName :: AnnSimpleSelectG 'DataConnector Void v -> m IR.T.Name
+    extractTableName selectG =
+      case _asnFrom selectG of
         FromTable tn -> pure tn
         FromIdentifier _ -> throw400 NotSupported "AnnSelectG: FromIdentifier not supported"
         FromFunction {} -> throw400 NotSupported "AnnSelectG: FromFunction not supported"
-      fields <- translateFields card (_asnFields selectG)
+
+    recordTableRelationship :: IR.T.Name -> IR.R.RelationshipName -> IR.R.Relationship -> CPS.WriterT IR.R.TableRelationships m ()
+    recordTableRelationship sourceTableName relationshipName relationship =
+      CPS.tell $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
+
+    translateAnnSelect ::
+      IR.T.Name ->
+      AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+      CPS.WriterT IR.R.TableRelationships m IR.Q.Query
+    translateAnnSelect tableName selectG = do
+      fields <- translateFields tableName (_asnFields selectG)
       let whereClauseWithPermissions =
             case _saWhere (_asnArgs selectG) of
               Just expr -> BoolAnd [expr, _tpFilter (_asnPerm selectG)]
               Nothing -> _tpFilter (_asnPerm selectG)
-      whereClause <- translateBoolExp whereClauseWithPermissions
-      orderBy <- translateOrderBy (_saOrderBy $ _asnArgs selectG)
+      whereClause <- translateBoolExp [] tableName whereClauseWithPermissions
+      orderBy <- lift $ translateOrderBy (_saOrderBy $ _asnArgs selectG)
       pure
         IR.Q.Query
-          { from = tableName,
-            fields = fields,
-            limit =
+          { _qFields = fields,
+            _qLimit =
               fmap getMin $
                 foldMap
                   (fmap Min)
                   [ _saLimit (_asnArgs selectG),
                     _tpLimit (_asnPerm selectG)
                   ],
-            offset = fmap fromIntegral (_saOffset (_asnArgs selectG)),
-            where_ = Just whereClause,
-            orderBy = orderBy,
-            cardinality = card
+            _qOffset = fmap fromIntegral (_saOffset (_asnArgs selectG)),
+            _qWhere = Just whereClause,
+            _qOrderBy = orderBy
           }
 
     translateOrderBy ::
@@ -127,11 +147,11 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
               throw400 NotSupported "translateOrderBy: AOCArrayAggregation unsupported in the Data Connector backend"
 
     translateFields ::
-      IR.Q.Cardinality ->
+      IR.T.Name ->
       AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      m (HashMap Text IR.Q.Field)
-    translateFields cardinality fields = do
-      translatedFields <- traverse (traverse (translateField cardinality)) fields
+      CPS.WriterT IR.R.TableRelationships m (HashMap Text IR.Q.Field)
+    translateFields sourceTableName fields = do
+      translatedFields <- traverse (traverse (translateField sourceTableName)) fields
       pure $
         HashMap.fromList $
           mapMaybe
@@ -139,40 +159,60 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
             [(getFieldNameTxt f, field) | (f, field) <- translatedFields]
 
     translateField ::
-      IR.Q.Cardinality ->
+      IR.T.Name ->
       AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-      m (Maybe IR.Q.Field)
-    translateField cardinality = \case
+      CPS.WriterT IR.R.TableRelationships m (Maybe IR.Q.Field)
+    translateField sourceTableName = \case
       AFColumn colField ->
         -- TODO: make sure certain fields in colField are not in use, since we don't
         -- support them
-        pure $ Just $ IR.Q.Column (IR.Q.ColumnContents $ _acfColumn colField)
+        pure . Just . IR.Q.ColumnField $ _acfColumn colField
       AFObjectRelation objRel -> do
-        fields <- translateFields cardinality (_aosFields (_aarAnnSelect objRel))
-        whereClause <- translateBoolExp (_aosTableFilter (_aarAnnSelect objRel))
-        pure . Just . IR.Q.Relationship $
-          IR.Q.RelationshipContents
-            (HashMap.mapKeys IR.Q.PrimaryKey . fmap IR.Q.ForeignKey $ _aarColumnMapping objRel)
-            IR.Q.ObjectRelationship
+        let targetTable = _aosTableFrom (_aarAnnSelect objRel)
+        let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName objRel
+        fields <- translateFields targetTable (_aosFields (_aarAnnSelect objRel))
+        whereClause <- translateBoolExp [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
+
+        recordTableRelationship
+          sourceTableName
+          relationshipName
+          IR.R.Relationship
+            { _rTargetTable = targetTable,
+              _rRelationshipType = IR.R.ObjectRelationship,
+              _rColumnMapping = _aarColumnMapping objRel
+            }
+
+        pure . Just . IR.Q.RelField $
+          IR.Q.RelationshipField
+            relationshipName
             ( IR.Q.Query
-                { fields = fields,
-                  from = _aosTableFrom (_aarAnnSelect objRel),
-                  where_ = Just whereClause,
-                  limit = Nothing,
-                  offset = Nothing,
-                  orderBy = [],
-                  cardinality = cardinality
+                { _qFields = fields,
+                  _qWhere = Just whereClause,
+                  _qLimit = Nothing,
+                  _qOffset = Nothing,
+                  _qOrderBy = []
                 }
             )
       AFArrayRelation (ASSimple arrRel) -> do
-        query <- translateAnnSelect IR.Q.Many (_aarAnnSelect arrRel)
-        pure . Just . IR.Q.Relationship $
-          IR.Q.RelationshipContents
-            (HashMap.mapKeys IR.Q.PrimaryKey $ fmap IR.Q.ForeignKey $ _aarColumnMapping arrRel)
-            IR.Q.ArrayRelationship
+        targetTable <- lift $ extractTableName (_aarAnnSelect arrRel)
+        query <- translateAnnSelect targetTable (_aarAnnSelect arrRel)
+        let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName arrRel
+
+        recordTableRelationship
+          sourceTableName
+          relationshipName
+          IR.R.Relationship
+            { _rTargetTable = targetTable,
+              _rRelationshipType = IR.R.ArrayRelationship,
+              _rColumnMapping = _aarColumnMapping arrRel
+            }
+
+        pure . Just . IR.Q.RelField $
+          IR.Q.RelationshipField
+            relationshipName
             query
       AFArrayRelation (ASAggregate _) ->
-        throw400 NotSupported "translateField: AFArrayRelation ASAggregate not supported"
+        lift $ throw400 NotSupported "translateField: AFArrayRelation ASAggregate not supported"
       AFExpression _literal ->
         pure Nothing
 
@@ -188,29 +228,50 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
         Just s -> pure (IR.S.ValueLiteral (IR.S.String s))
 
     translateBoolExp ::
+      [IR.R.RelationshipName] ->
+      IR.T.Name ->
       AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
-      m IR.E.Expression
-    translateBoolExp = \case
+      CPS.WriterT IR.R.TableRelationships m IR.E.Expression
+    translateBoolExp columnRelationshipReversePath sourceTableName = \case
       BoolAnd xs ->
-        IR.E.And <$> traverse (translateBoolExp) xs
+        mkIfZeroOrMany IR.E.And <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolOr xs ->
-        IR.E.Or <$> traverse (translateBoolExp) xs
+        mkIfZeroOrMany IR.E.Or <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolNot x ->
-        IR.E.Not <$> (translateBoolExp) x
+        IR.E.Not <$> (translateBoolExp columnRelationshipReversePath sourceTableName) x
       BoolFld (AVColumn c xs) ->
-        IR.E.And
-          <$> sequence
-            [translateOp (ciColumn c) x | x <- xs]
-      BoolFld (AVRelationship _ _) ->
-        throw400 NotSupported "The BoolFld AVRelationship expression type is not supported by the Data Connector backend"
+        lift $ mkIfZeroOrMany IR.E.And <$> traverse (translateOp columnRelationshipReversePath (ciColumn c)) xs
+      BoolFld (AVRelationship relationshipInfo boolExp) -> do
+        let relationshipName = IR.R.mkRelationshipName $ riName relationshipInfo
+        let targetTable = riRTable relationshipInfo
+        let relationshipType = case riType relationshipInfo of
+              ObjRel -> IR.R.ObjectRelationship
+              ArrRel -> IR.R.ArrayRelationship
+        recordTableRelationship
+          sourceTableName
+          relationshipName
+          IR.R.Relationship
+            { _rTargetTable = targetTable,
+              _rRelationshipType = relationshipType,
+              _rColumnMapping = riMapping relationshipInfo
+            }
+        translateBoolExp (relationshipName : columnRelationshipReversePath) targetTable boolExp
       BoolExists _ ->
-        throw400 NotSupported "The BoolExists expression type is not supported by the Data Connector backend"
+        lift $ throw400 NotSupported "The BoolExists expression type is not supported by the Data Connector backend"
+      where
+        -- Makes an 'IR.E.Expression' like 'IR.E.And' if there is zero or many input expressions otherwise
+        -- just returns the singleton expression. This helps remove redundant 'IE.E.And' etcs from the expression.
+        mkIfZeroOrMany :: ([IR.E.Expression] -> IR.E.Expression) -> [IR.E.Expression] -> IR.E.Expression
+        mkIfZeroOrMany mk = \case
+          [singleExp] -> singleExp
+          zeroOrManyExps -> mk zeroOrManyExps
 
     translateOp ::
+      [IR.R.RelationshipName] ->
       IR.C.Name ->
       OpExpG 'DataConnector (UnpreparedValue 'DataConnector) ->
       m IR.E.Expression
-    translateOp columnName opExp = do
+    translateOp columnRelationshipReversePath columnName opExp = do
       preparedOpExp <- traverse prepareLiterals $ opExp
       case preparedOpExp of
         AEQ _ (IR.S.ValueLiteral value) ->
@@ -238,9 +299,9 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
         ALTE (IR.S.ArrayLiteral _array) ->
           throw400 NotSupported "Array literals not supported for ALTE operator"
         ANISNULL ->
-          pure $ IR.E.ApplyUnaryComparisonOperator IR.E.IsNull columnName
+          pure $ IR.E.ApplyUnaryComparisonOperator IR.E.IsNull currentComparisonColumn
         ANISNOTNULL ->
-          pure $ IR.E.Not (IR.E.ApplyUnaryComparisonOperator IR.E.IsNull columnName)
+          pure $ IR.E.Not (IR.E.ApplyUnaryComparisonOperator IR.E.IsNull currentComparisonColumn)
         AIN literal -> pure $ inOperator literal
         ANIN literal -> pure . IR.E.Not $ inOperator literal
         CEQ rootOrCurrentColumn ->
@@ -262,25 +323,27 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
         ACast _literal ->
           throw400 NotSupported "The ACast operator is not supported by the Data Connector backend"
       where
+        currentComparisonColumn :: IR.E.ComparisonColumn
+        currentComparisonColumn = IR.E.ComparisonColumn (reverse columnRelationshipReversePath) columnName
+
         mkApplyBinaryComparisonOperatorToAnotherColumn :: IR.E.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> m IR.E.Expression
         mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) = do
-          case rootOrCurrent of
-            IsRoot -> throw400 NotSupported "Comparing columns on the root table in a BoolExp is not supported by the Data Connector backend"
-            IsCurrent -> pure $ IR.E.ApplyBinaryComparisonOperator operator columnName (IR.E.AnotherColumn otherColumnName)
+          let columnPath = case rootOrCurrent of
+                IsRoot -> []
+                IsCurrent -> (reverse columnRelationshipReversePath)
+          pure $ IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.AnotherColumn $ IR.E.ComparisonColumn columnPath otherColumnName)
 
         inOperator :: IR.S.Literal -> IR.E.Expression
         inOperator literal =
           let values = case literal of
-                IR.S.ArrayLiteral array -> IR.E.ScalarValue <$> array
-                IR.S.ValueLiteral value -> [IR.E.ScalarValue value]
-           in IR.E.ApplyBinaryArrayComparisonOperator IR.E.In columnName values
+                IR.S.ArrayLiteral array -> array
+                IR.S.ValueLiteral value -> [value]
+           in IR.E.ApplyBinaryArrayComparisonOperator IR.E.In currentComparisonColumn values
 
         mkApplyBinaryComparisonOperatorToScalar :: IR.E.BinaryComparisonOperator -> IR.S.Value -> IR.E.Expression
         mkApplyBinaryComparisonOperatorToScalar operator value =
-          IR.E.ApplyBinaryComparisonOperator operator columnName (IR.E.ScalarValue value)
+          IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.ScalarValue value)
 
 -- | Validate if a 'IR.Q' contains any relationships.
-queryHasRelations :: IR.Q.Query -> Bool
-queryHasRelations IR.Q.Query {fields} = getAny $ flip foldMap fields \case
-  IR.Q.Relationship _ -> Any True
-  _ -> Any False
+queryHasRelations :: IR.Q.QueryRequest -> Bool
+queryHasRelations IR.Q.QueryRequest {..} = _qrTableRelationships /= mempty

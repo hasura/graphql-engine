@@ -5,6 +5,7 @@ module Hasura.Backends.DataConnector.IR.Expression
     BinaryComparisonOperator (..),
     BinaryArrayComparisonOperator (..),
     UnaryComparisonOperator (..),
+    ComparisonColumn (..),
     ComparisonValue (..),
   )
 where
@@ -15,6 +16,7 @@ import Autodocodec.Extended (ValueWrapper (..), ValueWrapper2 (..), ValueWrapper
 import Data.Aeson (FromJSON, ToJSON)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
+import Hasura.Backends.DataConnector.IR.Relationships qualified as IR.R
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -51,16 +53,16 @@ data Expression
   | -- | Apply a 'BinaryComparisonOperator' that compares a column to a 'ComparisonValue';
     -- the result of this application will return "true" or "false" depending on the
     -- 'BinaryComparisonOperator' that's being applied.
-    ApplyBinaryComparisonOperator BinaryComparisonOperator IR.C.Name ComparisonValue
+    ApplyBinaryComparisonOperator BinaryComparisonOperator ComparisonColumn ComparisonValue
   | -- | Apply a 'BinaryArrayComparisonOperator' that evaluates a column with the
     -- 'BinaryArrayComparisonOperator' against an array of 'ComparisonValue's.
     -- The result of this application will return "true" or "false" depending
     -- on the 'BinaryArrayComparisonOperator' that's being applied.
-    ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator IR.C.Name [ComparisonValue]
+    ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [IR.S.Value]
   | -- | Apply a 'UnaryComparisonOperator' that evaluates a column with the
     -- 'UnaryComparisonOperator'; the result of this application will return "true" or
     -- "false" depending on the 'UnaryComparisonOperator' that's being applied.
-    ApplyUnaryComparisonOperator UnaryComparisonOperator IR.C.Name
+    ApplyUnaryComparisonOperator UnaryComparisonOperator ComparisonColumn
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
@@ -144,8 +146,29 @@ instance Witch.From API.BinaryArrayComparisonOperator BinaryArrayComparisonOpera
 instance Witch.From BinaryArrayComparisonOperator API.BinaryArrayComparisonOperator where
   from In = API.In
 
+data ComparisonColumn = ComparisonColumn
+  { _ccPath :: [IR.R.RelationshipName],
+    _ccName :: IR.C.Name
+  }
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
+
+instance Witch.From ComparisonColumn API.ComparisonColumn where
+  from ComparisonColumn {..} =
+    API.ComparisonColumn
+      { _ccPath = Witch.from <$> _ccPath,
+        _ccName = Witch.from _ccName
+      }
+
+instance Witch.From API.ComparisonColumn ComparisonColumn where
+  from API.ComparisonColumn {..} =
+    ComparisonColumn
+      { _ccPath = Witch.from <$> _ccPath,
+        _ccName = Witch.from _ccName
+      }
+
 data ComparisonValue
-  = AnotherColumn IR.C.Name
+  = AnotherColumn ComparisonColumn
   | ScalarValue IR.S.Value
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)

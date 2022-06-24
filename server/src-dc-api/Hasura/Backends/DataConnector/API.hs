@@ -17,7 +17,7 @@ import Data.Aeson qualified as J
 import Data.Data (Proxy (..))
 import Data.OpenApi (OpenApi)
 import Data.Text (Text)
-import Hasura.Backends.DataConnector.API.V0.API as V0
+import Hasura.Backends.DataConnector.API.V0 as V0
 import Servant.API
 import Servant.API.Generic
 import Servant.Client (Client, ClientM, client)
@@ -41,7 +41,7 @@ type QueryApi =
   "query"
     :> SourceNameHeader
     :> ConfigHeader
-    :> ReqBody '[JSON] V0.Query
+    :> ReqBody '[JSON] V0.QueryRequest
     :> Post '[JSON] V0.QueryResponse
 
 type ConfigHeader = Header' '[Required, Strict] "X-Hasura-DataConnector-Config" V0.Config

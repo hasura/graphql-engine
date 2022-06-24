@@ -6,9 +6,7 @@ module Hasura.Backends.DataConnector.API.V0.QuerySpec (spec) where
 import Autodocodec.Extended
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.QQ.Simple (aesonQQ)
-import Data.HashMap.Strict qualified as Map
-import Hasura.Backends.DataConnector.API.V0.API
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
+import Hasura.Backends.DataConnector.API.V0
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
@@ -18,11 +16,6 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  describe "PrimaryKey" $ do
-    testToFromJSONToSchema (PrimaryKey $ ColumnName "my_primary_key") [aesonQQ|"my_primary_key"|]
-    jsonOpenApiProperties genPrimaryKey
-  describe "ForeignKey" $
-    testToFromJSONToSchema (ForeignKey $ ColumnName "my_foreign_key") [aesonQQ|"my_foreign_key"|]
   describe "Field" $ do
     describe "ColumnField" $
       testToFromJSONToSchema
@@ -33,44 +26,52 @@ spec = do
         }
       |]
     describe "RelationshipField" $ do
-      let fieldMapping = Map.fromList [(PrimaryKey $ ColumnName "id", ForeignKey $ ColumnName "my_foreign_id")]
-          query = Query mempty (TableName "my_table_name") Nothing Nothing Nothing Nothing
+      let query = Query mempty Nothing Nothing Nothing Nothing
       testToFromJSONToSchema
-        (RelationshipField $ RelField fieldMapping ArrayRelationship query)
+        (RelField $ RelationshipField (RelationshipName "a_relationship") query)
         [aesonQQ|
         { "type": "relationship",
-          "relation_type": "array",
-          "column_mapping": {"id": "my_foreign_id"},
-          "query": {"fields": {}, "from": "my_table_name"}
+          "relationship": "a_relationship",
+          "query": {"fields": {}}
         }
       |]
   describe "Query" $ do
     let query =
           Query
-            { fields = KM.fromList [("my_field_alias", ColumnField $ ValueWrapper $ ColumnName "my_field_name")],
-              from = TableName "my_table_name",
-              limit = Just 10,
-              offset = Just 20,
-              where_ = Just . And $ ValueWrapper [],
-              orderBy = Just [OrderBy (ColumnName "my_column_name") Ascending]
+            { _qFields = KM.fromList [("my_field_alias", ColumnField $ ValueWrapper $ ColumnName "my_field_name")],
+              _qLimit = Just 10,
+              _qOffset = Just 20,
+              _qWhere = Just . And $ ValueWrapper [],
+              _qOrderBy = Just [OrderBy (ColumnName "my_column_name") Ascending]
             }
     testToFromJSONToSchema
       query
       [aesonQQ|
         { "fields": {"my_field_alias": {"type": "column", "column": "my_field_name"}},
-          "from": "my_table_name",
           "limit": 10,
           "offset": 20,
           "where": {"type": "and", "expressions": []},
           "order_by": [{"column": "my_column_name", "ordering": "asc"}]
         }
       |]
+  describe "QueryRequest" $ do
+    let queryRequest =
+          QueryRequest
+            { _qrTable = TableName "my_table",
+              _qrTableRelationships = [],
+              _qrQuery = Query mempty Nothing Nothing Nothing Nothing
+            }
+    testToFromJSONToSchema
+      queryRequest
+      [aesonQQ|
+        { "table": "my_table",
+          "table_relationships": [],
+          "query": { "fields": {} } }
+      |]
+
   describe "QueryResponse" $ do
     testToFromJSONToSchema (QueryResponse []) [aesonQQ|[]|]
     jsonOpenApiProperties genQueryResponse
-
-genPrimaryKey :: MonadGen m => m PrimaryKey
-genPrimaryKey = PrimaryKey <$> genColumnName
 
 genQueryResponse :: MonadGen m => m QueryResponse
 genQueryResponse =

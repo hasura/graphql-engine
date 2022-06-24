@@ -7,7 +7,7 @@ import Data.Aeson (toJSON)
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.Data (Proxy (..))
 import Data.OpenApi (OpenApiItems (..), OpenApiType (..), Reference (..), Referenced (..), Schema (..), toSchema)
-import Hasura.Backends.DataConnector.API.V0.API
+import Hasura.Backends.DataConnector.API.V0
 import Hasura.Prelude
 import Test.Aeson.Utils (testToFromJSON)
 import Test.Hspec
