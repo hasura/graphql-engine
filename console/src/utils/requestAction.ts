@@ -12,6 +12,7 @@ import {
 } from '../components/App/Actions';
 import { globalCookiePolicy } from '../Endpoints';
 import { processResponseDetails } from '../components/Services/ApiExplorer/Actions';
+import { maskPostgresError } from '../components/Services/Data/DataSources/SampleDatabase/service';
 
 const requestAction = <T = any>(
   url: string,
@@ -60,6 +61,7 @@ const requestAction = <T = any>(
                 dispatch({ type: SUCCESS, data: results });
               }
               dispatch({ type: DONE_REQUEST });
+
               if (requestTrackingId) {
                 const endTime = new Date().getTime();
                 const responseTimeMs = endTime - startTime;
@@ -73,6 +75,17 @@ const requestAction = <T = any>(
                     requestTrackingId
                   )
                 );
+              }
+
+              // if GraphQL error, mask it if it's a postgres trial read-only DB error
+              if (results?.errors) {
+                const maskedErrorMsg = maskPostgresError(results, getState);
+                if (maskedErrorMsg) {
+                  const graphqlError: any = {
+                    errors: [{ message: maskedErrorMsg }],
+                  };
+                  resolve(graphqlError);
+                }
               }
 
               resolve(results);
@@ -97,6 +110,12 @@ const requestAction = <T = any>(
               });
             }
             return response.json().then(errorMsg => {
+              // if it's a postgres trial read-only DB error, mask it with a friendly error
+              const maskedErrorMsg = maskPostgresError(errorMsg, getState);
+              if (maskedErrorMsg) {
+                reject(maskedErrorMsg);
+              }
+
               const msg = errorMsg;
               if (ERROR) {
                 dispatch({ type: ERROR, data: msg });

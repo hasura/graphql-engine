@@ -11,6 +11,7 @@ import { Dispatch, ReduxState } from '../../../types';
 import { getLSItem, LS_KEYS, setLSItem } from '../../../utils/localStorage';
 import hasuraDarkIcon from './hasura_icon_dark.svg';
 import styles from './Onboarding.scss';
+import { SampleDBBanner } from '../../Services/Data/DataSources/SampleDatabase';
 
 type PopupLinkProps = {
   title: string;
@@ -92,6 +93,7 @@ const connectDatabaseHelper = {
 
 const onboardingList = [
   {
+    id: 'getting-started-docs',
     title: 'Read the Getting Started Docs',
     link: {
       pro:
@@ -102,8 +104,13 @@ const onboardingList = [
         'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=cloud&plcmt=onboarding-checklist#create-a-table',
     },
   },
-  { title: 'Watch Our Getting Started Video', videoId: 'ZGKQ0U18USU' },
   {
+    id: 'getting-started-video',
+    title: 'Watch Our Getting Started Video',
+    videoId: 'ZGKQ0U18USU',
+  },
+  {
+    id: 'learn-courses',
     title: 'Bookmark Our Course',
     link: {
       pro:
@@ -120,12 +127,14 @@ interface OnboardingProps {
   dispatch: Dispatch;
   console_opts: ReduxState['telemetry']['console_opts'];
   metadata: ReduxState['metadata']['metadataObject'];
+  isExploringSampleDB?: boolean;
 }
 
 const Onboarding: React.FC<OnboardingProps> = ({
   dispatch,
   console_opts,
   metadata,
+  isExploringSampleDB,
 }) => {
   const [visible, setVisible] = React.useState(true);
 
@@ -137,7 +146,7 @@ const Onboarding: React.FC<OnboardingProps> = ({
     if (!metadata) {
       return true;
     }
-    return isMetadataEmpty(metadata) && !shown;
+    return isExploringSampleDB || (isMetadataEmpty(metadata) && !shown);
   }, [metadata, console_opts]);
 
   React.useEffect(() => {
@@ -160,6 +169,10 @@ const Onboarding: React.FC<OnboardingProps> = ({
     return null;
   }
 
+  const onboardingListFiltered = onboardingList.filter(
+    o => !isExploringSampleDB || o.id !== 'getting-started-video'
+  );
+
   return (
     <>
       {!visible && (
@@ -181,11 +194,16 @@ const Onboarding: React.FC<OnboardingProps> = ({
           </div>
           <div className={styles.popup_body}>
             <ul>
-              {metadata && !hasSources(metadata) ? (
+              {metadata && !hasSources(metadata) && !isExploringSampleDB ? (
                 <PopupLink {...connectDatabaseHelper} index={0} />
               ) : null}
-              {onboardingList.map((item, i) => (
-                <PopupLink {...item} key={i} index={i + 1} />
+              {isExploringSampleDB && (
+                <div className="p-sm">
+                  <SampleDBBanner show={isExploringSampleDB} />
+                </div>
+              )}
+              {onboardingListFiltered.map((item, i) => (
+                <PopupLink {...item} key={item.id} index={i + 1} />
               ))}
             </ul>
           </div>

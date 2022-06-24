@@ -8,6 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        current: 'currentColor',
         yellow: colors.amber,
         gray: colors.blueGray,
         primary: {
@@ -15,6 +16,10 @@ module.exports = {
           DEFAULT: '#f9c548',
           dark: '#d5ae52',
           darker: '#ae8e3e',
+        },
+        // added this new colour from tailwindv3, can be removed on tailwind upgrade
+        slate: {
+          700: '#334155'
         },
         cloud: {
           DEFAULT: '#1eb4d4',
