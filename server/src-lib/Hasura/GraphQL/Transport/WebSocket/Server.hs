@@ -186,7 +186,7 @@ forceConnReconnect wsConn bs = liftIO $ closeConnWithCode wsConn 1012 bs
 
 closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()
 closeConnWithCode wsConn code bs = do
-  (L.unLogger . _wcLogger) wsConn $
+  ((\x -> L.unLogger x) . _wcLogger) wsConn $
     WSLog (_wcConnId wsConn) (ECloseSent $ SB.fromLBS bs) Nothing
   WS.sendCloseCode (_wcConnRaw wsConn) code bs
 

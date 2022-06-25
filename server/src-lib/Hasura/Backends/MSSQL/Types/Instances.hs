@@ -1,5 +1,10 @@
-{-# LANGUAGE TemplateHaskell #-}
+{- ORMOLU_DISABLE -}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE CPP #-}
+-- NOTE: This module previously used Template Haskell to generate its instances,
+-- but additional restrictions on Template Haskell splices introduced in GHC 9.0 impose an ordering
+-- on the generated instances that is difficult to satisfy (see ../MySQL/Types/Instances.hs).
+-- To avoid these difficulties, we now use CPP.
 
 -- | MSSQL Types Instances
 --
@@ -13,141 +18,102 @@ import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Types.Internal
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
-import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
-$( fmap concat $ for
-     [''Aliased]
-     \name ->
-       [d|
-         deriving instance Generic ($(conT name) a)
+deriving instance Generic (Aliased a)
+instance Hashable a => Hashable (Aliased a)
+instance Cacheable a => Cacheable (Aliased a)
+deriving instance Eq a => Eq (Aliased a)
+instance NFData a => NFData (Aliased a)
+deriving instance Show a => Show (Aliased a)
+deriving instance Functor Aliased
+deriving instance Data a => Data (Aliased a)
 
-         instance Hashable a => Hashable ($(conT name) a)
 
-         instance Cacheable a => Cacheable ($(conT name) a)
+#define INSTANCE_CLUMP_1(name) \
+         deriving instance Generic name ;\
+         instance Hashable name ;\
+         instance Cacheable name ;\
+         deriving instance Eq name ;\
+         deriving instance Show name ;\
+         deriving instance Data name ;\
+         instance NFData name ;\
+         instance FromJSON name ;\
+         deriving instance Ord name
+INSTANCE_CLUMP_1(UnifiedTableName)
+INSTANCE_CLUMP_1(UnifiedObjectRelationship)
+INSTANCE_CLUMP_1(UnifiedArrayRelationship)
+INSTANCE_CLUMP_1(UnifiedUsing)
+INSTANCE_CLUMP_1(UnifiedOn)
+INSTANCE_CLUMP_1(UnifiedColumn)
+INSTANCE_CLUMP_1(TempTableName)
+INSTANCE_CLUMP_1(SomeTableName)
 
-         deriving instance Eq a => Eq ($(conT name) a)
 
-         instance NFData a => NFData ($(conT name) a)
+#define INSTANCE_CLUMP_2(name) \
+         deriving instance Generic name ;\
+         instance Hashable name ;\
+         instance Cacheable name ;\
+         deriving instance Eq name ;\
+         deriving instance Show name ;\
+         deriving instance Data name ;\
+         instance NFData name
+INSTANCE_CLUMP_2(Where)
+INSTANCE_CLUMP_2(For)
+INSTANCE_CLUMP_2(Aggregate)
+INSTANCE_CLUMP_2(EntityAlias)
+INSTANCE_CLUMP_2(ForJson)
+INSTANCE_CLUMP_2(JsonCardinality)
+INSTANCE_CLUMP_2(Root)
+INSTANCE_CLUMP_2(OrderBy)
+INSTANCE_CLUMP_2(JoinAlias)
+INSTANCE_CLUMP_2(Reselect)
+INSTANCE_CLUMP_2(ColumnName)
+INSTANCE_CLUMP_2(DataLength)
+INSTANCE_CLUMP_2(Expression)
+INSTANCE_CLUMP_2(FunctionApplicationExpression)
+INSTANCE_CLUMP_2(MethodApplicationExpression)
+INSTANCE_CLUMP_2(NullsOrder)
+INSTANCE_CLUMP_2(Order)
+INSTANCE_CLUMP_2(ScalarType)
+INSTANCE_CLUMP_2(TableName)
+INSTANCE_CLUMP_2(Select)
+INSTANCE_CLUMP_2(With)
+INSTANCE_CLUMP_2(Top)
+INSTANCE_CLUMP_2(FieldName)
+INSTANCE_CLUMP_2(JsonPath)
+INSTANCE_CLUMP_2(Op)
+INSTANCE_CLUMP_2(SpatialOp)
+INSTANCE_CLUMP_2(Projection)
+INSTANCE_CLUMP_2(From)
+INSTANCE_CLUMP_2(OpenJson)
+INSTANCE_CLUMP_2(JsonFieldSpec)
+INSTANCE_CLUMP_2(Join)
+INSTANCE_CLUMP_2(JoinSource)
+INSTANCE_CLUMP_2(SelectIntoTempTable)
+INSTANCE_CLUMP_2(SITTConstraints)
+INSTANCE_CLUMP_2(InsertValuesIntoTempTable)
+INSTANCE_CLUMP_2(InsertOutput)
+INSTANCE_CLUMP_2(Inserted)
+INSTANCE_CLUMP_2(OutputColumn)
+INSTANCE_CLUMP_2(TempTable)
+INSTANCE_CLUMP_2(Deleted)
+INSTANCE_CLUMP_2(DeleteOutput)
+INSTANCE_CLUMP_2(Values)
+INSTANCE_CLUMP_2(Delete)
+INSTANCE_CLUMP_2(Insert)
+INSTANCE_CLUMP_2(Merge)
+INSTANCE_CLUMP_2(MergeUsing)
+INSTANCE_CLUMP_2(MergeOn)
+INSTANCE_CLUMP_2(MergeWhenMatched)
+INSTANCE_CLUMP_2(MergeWhenNotMatched)
 
-         deriving instance Show a => Show ($(conT name) a)
+deriving instance Ord TableName
+deriving instance Ord ScalarType
 
-         deriving instance Functor $(conT name)
-
-         deriving instance Data a => Data ($(conT name) a)
-         |]
- )
-
-$( fmap concat $ for
-     [ ''UnifiedTableName,
-       ''UnifiedObjectRelationship,
-       ''UnifiedArrayRelationship,
-       ''UnifiedUsing,
-       ''UnifiedOn,
-       ''UnifiedColumn,
-       ''TempTableName,
-       ''SomeTableName
-     ]
-     \name ->
-       [d|
-         deriving instance Generic $(conT name)
-
-         instance Hashable $(conT name)
-
-         instance Cacheable $(conT name)
-
-         deriving instance Eq $(conT name)
-
-         deriving instance Show $(conT name)
-
-         deriving instance Data $(conT name)
-
-         instance NFData $(conT name)
-
-         instance FromJSON $(conT name)
-
-         deriving instance Ord $(conT name)
-         |]
- )
-
-$( fmap concat $ for
-     [ ''Where,
-       ''For,
-       ''Aggregate,
-       ''EntityAlias,
-       ''ForJson,
-       ''JsonCardinality,
-       ''Root,
-       ''OrderBy,
-       ''JoinAlias,
-       ''Reselect,
-       ''ColumnName,
-       ''DataLength,
-       ''Expression,
-       ''FunctionApplicationExpression,
-       ''MethodApplicationExpression,
-       ''NullsOrder,
-       ''Order,
-       ''ScalarType,
-       ''TableName,
-       ''Select,
-       ''With,
-       ''Top,
-       ''FieldName,
-       ''JsonPath,
-       ''Op,
-       ''SpatialOp,
-       ''Projection,
-       ''From,
-       ''OpenJson,
-       ''JsonFieldSpec,
-       ''Join,
-       ''JoinSource,
-       ''SelectIntoTempTable,
-       ''SITTConstraints,
-       ''InsertValuesIntoTempTable,
-       ''InsertOutput,
-       ''Inserted,
-       ''OutputColumn,
-       ''TempTable,
-       ''Deleted,
-       ''DeleteOutput,
-       ''Values,
-       ''Delete,
-       ''Insert,
-       ''Merge,
-       ''MergeUsing,
-       ''MergeOn,
-       ''MergeWhenMatched,
-       ''MergeWhenNotMatched
-     ]
-     \name ->
-       [d|
-         deriving instance Generic $(conT name)
-
-         instance Hashable $(conT name)
-
-         instance Cacheable $(conT name)
-
-         deriving instance Eq $(conT name)
-
-         deriving instance Show $(conT name)
-
-         deriving instance Data $(conT name)
-
-         instance NFData $(conT name)
-         |]
- )
-
-$( fmap concat $ for
-     [''TableName, ''ScalarType]
-     \name -> [d|deriving instance Ord $(conT name)|]
- )
-
-$( fmap concat $ for
-     [''TableName, ''NullsOrder, ''Order]
-     \name -> [d|deriving instance Lift $(conT name)|]
- )
+deriving instance Lift TableName
+deriving instance Lift NullsOrder
+deriving instance Lift Order
 
 --------------------------------------------------------------------------------
 -- Third-party types
@@ -171,17 +137,15 @@ instance ToTxt TableName where
 instance ToTxt ColumnName where
   toTxt = columnNameText
 
-$( fmap concat $ for
-     [''Order, ''NullsOrder, ''ScalarType, ''FieldName]
-     \name ->
-       [d|
-         instance ToJSON $(conT name) where
-           toJSON = genericToJSON hasuraJSON
-
-         instance FromJSON $(conT name) where
-           parseJSON = genericParseJSON hasuraJSON
-         |]
- )
+#define INSTANCE_CLUMP_3(name) \
+         instance ToJSON name where \
+           { toJSON = genericToJSON hasuraJSON } ;\
+         instance FromJSON name where \
+           { parseJSON = genericParseJSON hasuraJSON }
+INSTANCE_CLUMP_3(Order)
+INSTANCE_CLUMP_3(NullsOrder)
+INSTANCE_CLUMP_3(ScalarType)
+INSTANCE_CLUMP_3(FieldName)
 
 deriving instance FromJSON ColumnName
 

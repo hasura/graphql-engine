@@ -169,19 +169,16 @@ fromOffsetAndLimit (Top val) (Just offset) =
 fromOrderBys ::
   Maybe (NonEmpty OrderBy) -> Printer
 fromOrderBys Nothing = ""
-fromOrderBys morderBys =
+fromOrderBys (Just orderBys) =
   SeqPrinter
     [ "ORDER BY ",
       IndentPrinter
         9
         ( SepByPrinter
             NewlinePrinter
-            [ case morderBys of
-                Nothing -> ""
-                Just orderBys ->
-                  SepByPrinter
-                    ("," <+> NewlinePrinter)
-                    (concatMap fromOrderBy (toList orderBys))
+            [ SepByPrinter
+                ("," <+> NewlinePrinter)
+                (concatMap fromOrderBy (toList orderBys))
             ]
         )
     ]

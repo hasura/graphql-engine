@@ -7,8 +7,6 @@
 -- ...or, it can be copied if you would like to customize any settings:
 --   $ cp cabal/cabal.project.dev cabal.project.local
 
-with-compiler: ghc-8.10.7
-
 package *
   documentation: true
 

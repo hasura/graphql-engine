@@ -102,6 +102,7 @@ common common-all
     NamedFieldPuns
     NoImplicitPrelude
     OverloadedStrings
+    PackageImports
     RankNTypes
     RecordWildCards
     RoleAnnotations

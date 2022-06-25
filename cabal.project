@@ -65,6 +65,7 @@ source-repository-package
   location: https://github.com/hasura/pool.git
   tag: 427c8f47b5a0de858780b0a9522ad953197b1658
 
+-- This is an unrelesaed version of "odbc"
 source-repository-package
   type: git
   location: https://github.com/fpco/odbc.git
@@ -81,7 +82,7 @@ package odbc
 source-repository-package
   type: git
   location: https://github.com/hasura/ekg-core.git
-  tag: ac51c3834e242833e9735394295cbcaa583233f8
+  tag: b0cdc337ca2a52e392d427916ba3e28246b396c0
 
 source-repository-package
   type: git

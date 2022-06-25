@@ -117,14 +117,6 @@ instance NFData CustomTypes
 
 instance Cacheable CustomTypes
 
-instance J.FromJSON CustomTypes where
-  parseJSON = J.withObject "CustomTypes" \o ->
-    CustomTypes
-      <$> (o .:? "input_objects" .!= [])
-      <*> (o .:? "objects" .!= [])
-      <*> (o .:? "scalars" .!= [])
-      <*> (o .:? "enums" .!= [])
-
 emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes [] [] [] []
 
@@ -174,14 +166,6 @@ data ObjectTypeDefinition = ObjectTypeDefinition
 instance NFData ObjectTypeDefinition
 
 instance Cacheable ObjectTypeDefinition
-
-instance J.FromJSON ObjectTypeDefinition where
-  parseJSON = J.withObject "ObjectTypeDefinition" \o ->
-    ObjectTypeDefinition
-      <$> (o .: "name")
-      <*> (o .:? "description")
-      <*> (o .: "fields")
-      <*> (o .:? "relationships" .!= [])
 
 newtype ObjectTypeName = ObjectTypeName {unObjectTypeName :: G.Name}
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, ToTxt, Generic, NFData, Cacheable)
@@ -315,15 +299,6 @@ data AnnotatedScalarType
   | ASTReusedScalar G.Name (AnyBackend ScalarWrapper)
   deriving (Eq, Generic)
 
-instance J.ToJSON AnnotatedScalarType where
-  toJSON = \case
-    ASTCustom std ->
-      J.object ["tag" .= J.String "ASTCustom", "contents" .= J.toJSON std]
-    -- warning: can't be parsed back, as it does not include the
-    -- backend-specific scalar information.
-    ASTReusedScalar name _scalar ->
-      J.object ["tag" .= J.String "ASTReusedScalar", "contents" .= J.toJSON name]
-
 newtype ScalarWrapper b = ScalarWrapper {unwrapScalar :: (ScalarType b)}
 
 deriving instance (Backend b) => Eq (ScalarWrapper b)
@@ -362,21 +337,51 @@ data AnnotatedTypeRelationship = AnnotatedTypeRelationship
 
 -------------------------------------------------------------------------------
 -- Template haskell derivation
+-- ...and other instances that need to live here in a particular order, due to
+-- GHC 9.0 TH changes...
 
 $(J.deriveJSON hasuraJSON ''InputObjectFieldDefinition)
 $(J.deriveJSON hasuraJSON ''InputObjectTypeDefinition)
 $(J.deriveJSON hasuraJSON ''ObjectFieldDefinition)
 $(J.deriveJSON hasuraJSON ''ScalarTypeDefinition)
-$(J.deriveJSON hasuraJSON ''EnumTypeDefinition)
+
 $(J.deriveJSON hasuraJSON ''EnumValueDefinition)
 
-$(J.deriveToJSON hasuraJSON ''CustomTypes)
-$(J.deriveToJSON hasuraJSON ''ObjectTypeDefinition)
 $(J.deriveToJSON hasuraJSON ''TypeRelationshipDefinition)
-$(J.deriveToJSON hasuraJSON ''AnnotatedInputType)
-$(J.deriveToJSON hasuraJSON ''AnnotatedOutputType)
-$(J.deriveToJSON hasuraJSON ''AnnotatedObjectType)
-$(J.deriveToJSON hasuraJSON ''AnnotatedObjectFieldType)
-$(J.deriveToJSON hasuraJSON ''AnnotatedTypeRelationship)
+
+instance J.ToJSON AnnotatedScalarType where
+  toJSON = \case
+    ASTCustom std ->
+      J.object ["tag" .= J.String "ASTCustom", "contents" .= J.toJSON std]
+    -- warning: can't be parsed back, as it does not include the
+    -- backend-specific scalar information.
+    ASTReusedScalar name _scalar ->
+      J.object ["tag" .= J.String "ASTReusedScalar", "contents" .= J.toJSON name]
 
 $(makeLenses ''TypeRelationshipDefinition)
+
+$(J.deriveJSON hasuraJSON ''EnumTypeDefinition)
+
+instance J.FromJSON CustomTypes where
+  parseJSON = J.withObject "CustomTypes" \o ->
+    CustomTypes
+      <$> (o .:? "input_objects" .!= [])
+      <*> (o .:? "objects" .!= [])
+      <*> (o .:? "scalars" .!= [])
+      <*> (o .:? "enums" .!= [])
+
+instance J.FromJSON ObjectTypeDefinition where
+  parseJSON = J.withObject "ObjectTypeDefinition" \o ->
+    ObjectTypeDefinition
+      <$> (o .: "name")
+      <*> (o .:? "description")
+      <*> (o .: "fields")
+      <*> (o .:? "relationships" .!= [])
+
+$(J.deriveToJSON hasuraJSON ''ObjectTypeDefinition)
+$(J.deriveToJSON hasuraJSON ''CustomTypes)
+$(J.deriveToJSON hasuraJSON ''AnnotatedInputType)
+$(J.deriveToJSON hasuraJSON ''AnnotatedObjectFieldType)
+$(J.deriveToJSON hasuraJSON ''AnnotatedTypeRelationship)
+$(J.deriveToJSON hasuraJSON ''AnnotatedObjectType)
+$(J.deriveToJSON hasuraJSON ''AnnotatedOutputType)

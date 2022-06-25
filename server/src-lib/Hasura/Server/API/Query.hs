@@ -144,30 +144,34 @@ data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
 
-instance FromJSON RQLQuery where
-  parseJSON = withObject "Object" $ \o -> do
-    mVersion <- o .:? "version"
-    let version = fromMaybe VIVersion1 mVersion
-        val = Object o
-    case version of
-      VIVersion1 -> RQV1 <$> parseJSON val
-      VIVersion2 -> RQV2 <$> parseJSON val
-
-$( deriveFromJSON
-     defaultOptions
-       { constructorTagModifier = snakeCase . drop 2,
-         sumEncoding = TaggedObject "type" "args"
-       }
-     ''RQLQueryV1
- )
-
-$( deriveFromJSON
-     defaultOptions
-       { constructorTagModifier = snakeCase . drop 4,
-         sumEncoding = TaggedObject "type" "args",
-         tagSingleConstructors = True
-       }
-     ''RQLQueryV2
+-- Since at least one of the following mutually recursive instances is defined
+-- via TH, after 9.0 they must all be defined within the same TH splice.
+$( concat
+     <$> sequence
+       [ [d|
+           instance FromJSON RQLQuery where
+             parseJSON = withObject "Object" $ \o -> do
+               mVersion <- o .:? "version"
+               let version = fromMaybe VIVersion1 mVersion
+                   val = Object o
+               case version of
+                 VIVersion1 -> RQV1 <$> parseJSON val
+                 VIVersion2 -> RQV2 <$> parseJSON val
+           |],
+         deriveFromJSON
+           defaultOptions
+             { constructorTagModifier = snakeCase . drop 2,
+               sumEncoding = TaggedObject "type" "args"
+             }
+           ''RQLQueryV1,
+         deriveFromJSON
+           defaultOptions
+             { constructorTagModifier = snakeCase . drop 4,
+               sumEncoding = TaggedObject "type" "args",
+               tagSingleConstructors = True
+             }
+           ''RQLQueryV2
+       ]
  )
 
 runQuery ::
