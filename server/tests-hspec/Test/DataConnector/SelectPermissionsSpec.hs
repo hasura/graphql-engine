@@ -28,7 +28,7 @@ spec =
     [ Context.Context
         { name = Context.Backend Context.DataConnector,
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = setupFixture,
+          setup = DataConnector.setupFixture sourceMetadata defaultBackendConfig,
           teardown = DataConnector.teardown,
           customOptions = Nothing
         }
@@ -89,11 +89,6 @@ sourceMetadata =
                         _ceq: [ "$", "Country" ]
         configuration: {}
 |]
-
-setupFixture :: (TestEnvironment, ()) -> IO ()
-setupFixture (testEnvironment, _) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment sourceMetadata (Just defaultBackendConfig)
 
 tests :: Context.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "SelectPermissionsSpec" $ do

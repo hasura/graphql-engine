@@ -6,17 +6,21 @@ module Test.DataConnector.QuerySpec
   )
 where
 
+--------------------------------------------------------------------------------
+
+import Data.Aeson qualified as Aeson
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
+import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
 --------------------------------------------------------------------------------
--- Preamble
+-- Reference Agent Query Tests
 
 spec :: SpecWith TestEnvironment
 spec =
@@ -24,12 +28,61 @@ spec =
     [ Context.Context
         { name = Context.Backend Context.DataConnector,
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = DataConnector.setup,
+          setup = DataConnector.setupFixture sourceMetadata DataConnector.defaultBackendConfig,
           teardown = DataConnector.teardown,
           customOptions = Nothing
         }
     ]
     tests
+
+sourceMetadata :: Aeson.Value
+sourceMetadata =
+  let source = defaultSource DataConnector
+      backendType = defaultBackendTypeString DataConnector
+   in [yaml|
+name : *source
+kind: *backendType
+tables:
+  - table: Album
+    configuration:
+      custom_root_fields:
+        select: albums
+        select_by_pk: albums_by_pk
+      column_config:
+        AlbumId:
+          custom_name: id
+        Title:
+          custom_name: title
+        ArtistId:
+          custom_name: artist_id
+    object_relationships:
+      - name: artist
+        using:
+          manual_configuration:
+            remote_table: Artist
+            column_mapping:
+              ArtistId: ArtistId
+  - table: Artist
+    configuration:
+      custom_root_fields:
+        select: artists
+        select_by_pk: artists_by_pk
+      column_config:
+        ArtistId:
+          custom_name: id
+        Name:
+          custom_name: name
+    array_relationships:
+      - name: albums
+        using:
+          manual_configuration:
+            remote_table: Album
+            column_mapping:
+              ArtistId: ArtistId
+configuration: {}
+|]
+
+--------------------------------------------------------------------------------
 
 tests :: Context.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "Queries" $ do

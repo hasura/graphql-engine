@@ -1087,6 +1087,7 @@ test-suite tests-hspec
     , network
     , network-uri
     , odbc
+    , openapi3
     , optparse-applicative
     , parsec
     , pg-client
@@ -1098,6 +1099,7 @@ test-suite tests-hspec
     , safe
     , safe-exceptions
     , scientific
+    , servant-server
     , split
     , stm
     , template-haskell
@@ -1140,6 +1142,7 @@ test-suite tests-hspec
     Harness.Backend.BigQuery
     Harness.Backend.Citus
     Harness.Backend.DataConnector
+    Harness.Backend.DataConnector.MockAgent
     Harness.Backend.Mysql
     Harness.Backend.Postgres
     Harness.Backend.Sqlserver
@@ -1165,6 +1168,7 @@ test-suite tests-hspec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.DataConnector.QuerySpec
+    Test.DataConnector.QueryMockAgentSpec
     Test.DataConnector.SelectPermissionsSpec
     Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
