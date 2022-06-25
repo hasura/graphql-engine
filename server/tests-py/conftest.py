@@ -9,6 +9,7 @@ import sys
 import os
 from collections import OrderedDict
 from validate import assert_response_code
+import json
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -654,7 +655,7 @@ def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_
     def v1q_f(f):
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v1q_f(f)
-            assert st_code == 200, resp
+            assert st_code == 200, f'Expected {st_code} to be 200. Response:\n{json.dumps(resp, indent=2)}'
     if not skip_setup:
         run_on_elem_or_list(v1q_f, setup_files)
     yield
@@ -671,7 +672,7 @@ def setup_and_teardown_v2q(request, hge_ctx, setup_files, teardown_files, check_
     def v2q_f(f):
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v2q_f(f)
-            assert st_code == 200, resp
+            assert st_code == 200, f'Expected {st_code} to be 200. Response:\n{json.dumps(resp, indent=2)}'
     if not skip_setup:
         run_on_elem_or_list(v2q_f, setup_files)
     yield
