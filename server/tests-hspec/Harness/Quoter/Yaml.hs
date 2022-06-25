@@ -5,6 +5,7 @@
 -- | Templating yaml files.
 module Harness.Quoter.Yaml
   ( yaml,
+    yamlObjects,
     shouldReturnYaml,
     shouldReturnOneOfYaml,
     shouldBeYaml,
@@ -137,6 +138,40 @@ templateYaml inputString = do
           case Data.Yaml.decodeEither' bs of
             Left e -> impureThrow e
             Right (v :: Aeson.Value) -> pure v
+      )
+    |]
+  where
+    inputBytes = encodeUtf8 $ T.pack inputString
+
+yamlObjects :: QuasiQuoter
+yamlObjects =
+  QuasiQuoter
+    { quoteExp = templateObjects,
+      quotePat = \_ -> fail "invalid",
+      quoteType = \_ -> fail "invalid",
+      quoteDec = \_ -> fail "invalid"
+    }
+
+-- | Template a YAML file contents. Throws a bunch of exception types:
+--  'YamlTemplateException' or 'YamlException' or 'ParseException'.
+--
+-- Produces '[Aeson.Object]'.
+templateObjects :: String -> Q Exp
+templateObjects inputString = do
+  events <-
+    runIO
+      ( runConduitRes
+          (Libyaml.decode inputBytes .| CL.mapM processor .| CL.consume)
+      )
+  [|
+    unsafePerformIO
+      ( do
+          bs <-
+            runConduitRes
+              (CL.sourceList (concat $(listE events)) .| Libyaml.encode)
+          case Data.Yaml.decodeEither' bs of
+            Left e -> impureThrow e
+            Right (v :: [Aeson.Object]) -> pure v
       )
     |]
   where
