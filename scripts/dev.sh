@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091 # We do not want Shellcheck to validate that sourced scripts are present.
+
 set -euo pipefail
 shopt -s globstar
 
@@ -151,15 +153,16 @@ cd "$PROJECT_ROOT"
 # In CI we use the get version script to actually populate the version number
 # that will be compiled into the server. For local development we use this
 # magic number, which means we won't recompile unnecessarily. This number also
-# gets explicitly ignored in the version test in integration tests. 
+# gets explicitly ignored in the version test in integration tests.
 echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
 if command -v pyenv >/dev/null; then
   # For now I guess use the greatest python3 >= 3.5
-  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1)
+  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 { print $1 }' | tail -n1)
   if [ -z "$v" ]; then
-    echo_error 'Please `pyenv install` a version of python >= 3.5 so we can use it'
+    # shellcheck disable=SC2016
+    echo_error 'Please `pyenv install` a version of python >= 3.6 so we can use it'
     exit 2
   fi
   echo_pretty "Pyenv found. Using python version: $v"
@@ -215,7 +218,7 @@ function mssql_start() {
   if [ $MSSQL_RUNNING -eq 0 ]; then
     mssql_launch_container
     MSSQL_RUNNING=1
-    if [[ `uname -m` == 'arm64' ]]; then
+    if [[ "$(uname -m)" == 'arm64' ]]; then
       # mssql_wait uses the tool sqlcmd to wait for a database connection which unfortunately
       # is not available for the azure-sql-edge docker image - which is the only image from microsoft
       # that runs on M1 computers. So we sleep for 20 seconds, cross fingers and hope for the best
@@ -284,7 +287,7 @@ if [ "$MODE" = "graphql-engine" ]; then
       # optimizations.
       #
       # See also: https://hackage.haskell.org/package/cabal-plan
-      distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
+      distdir=$(jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"' dist-newstyle/cache/plan.json)
       hpcdir="$distdir/hpc/dyn/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
       COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
@@ -569,7 +572,6 @@ elif [ "$MODE" = "test" ]; then
     else
       echo_warn 'dev.sh version was bumped or fresh install. Forcing reinstallation of dependencies.'
       rm -rf "$PY_VENV"
-      echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
     # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
     export CRYPTOGRAPHY_DONT_BUILD_RUST=1
@@ -588,6 +590,7 @@ elif [ "$MODE" = "test" ]; then
         pip3 install -r requirements-top-level.txt
         pip3 freeze > requirements.txt
       fi
+      echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     else
       echo_pretty "It looks like python dependencies have been installed already. Skipping."
       echo_pretty "If things fail please run this and try again"
@@ -597,7 +600,14 @@ elif [ "$MODE" = "test" ]; then
     fi
 
     # TODO MAYBE: fix deprecation warnings, make them an error
-    if ! pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$PG_DB_URL" --durations=20 "${PYTEST_ARGS[@]}"; then
+    if ! pytest \
+          -W ignore::DeprecationWarning \
+          --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT \
+          --pg-urls "$PG_DB_URL" \
+          --durations=20 \
+          --assert=plain \
+          "${PYTEST_ARGS[@]}"
+    then
       echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv
