@@ -85,7 +85,7 @@ instance
 
 instance Example (MetadataT (CacheRefT m) ()) where
   type Arg (MetadataT (CacheRefT m) ()) = MetadataT (CacheRefT m) :~> IO
-  evaluateExample m params action = evaluateExample (action ($$ m)) params ($ ())
+  evaluateExample m params action = evaluateExample (action (\x -> x $$ m)) params ($ ())
 
 type SpecWithCache m = SpecWith (MetadataT (CacheRefT m) :~> IO)
 

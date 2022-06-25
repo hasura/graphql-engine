@@ -5,8 +5,6 @@
 -- You can temporarily override values here rather than modifying 'dev.sh'
 -- during development (although that might break certain things).
 
-with-compiler: ghc-8.10.7
-
 package *
   documentation: true
   -- build with DWARF support. This may not be very useful yet, but we want

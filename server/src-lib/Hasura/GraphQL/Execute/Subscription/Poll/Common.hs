@@ -398,4 +398,4 @@ type SubscriptionPostPollHook = PollDetails -> IO ()
 
 -- the default SubscriptionPostPollHook
 defaultSubscriptionPostPollHook :: L.Logger L.Hasura -> SubscriptionPostPollHook
-defaultSubscriptionPostPollHook = L.unLogger
+defaultSubscriptionPostPollHook = \x -> L.unLogger x

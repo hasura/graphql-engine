@@ -74,7 +74,7 @@ import System.Metrics qualified as EKG
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 post :: HasCallStack => TestEnvironment -> String -> Value -> IO Value
-post testEnvironment path = withFrozenCallStack . postWithHeaders testEnvironment path mempty
+post testEnvironment path v = withFrozenCallStack $ postWithHeaders testEnvironment path mempty v
 
 -- | Same as 'post', but ignores the value.
 --
@@ -82,7 +82,7 @@ post testEnvironment path = withFrozenCallStack . postWithHeaders testEnvironmen
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 post_ :: HasCallStack => TestEnvironment -> String -> Value -> IO ()
-post_ testEnvironment path = void . withFrozenCallStack . postWithHeaders_ testEnvironment path mempty
+post_ testEnvironment path v = void $ withFrozenCallStack $ postWithHeaders_ testEnvironment path mempty v
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -92,7 +92,7 @@ post_ testEnvironment path = void . withFrozenCallStack . postWithHeaders_ testE
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders ::
   HasCallStack => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeaders = withFrozenCallStack . postWithHeadersStatus 200
+postWithHeaders v = withFrozenCallStack $ postWithHeadersStatus 200 v
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -102,8 +102,8 @@ postWithHeaders = withFrozenCallStack . postWithHeadersStatus 200
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeadersStatus ::
   HasCallStack => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
-postWithHeadersStatus statusCode (getServer -> Server {urlPrefix, port}) path headers =
-  withFrozenCallStack . Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers
+postWithHeadersStatus statusCode (getServer -> Server {urlPrefix, port}) path headers v =
+  withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers v
 
 -- | Post some JSON to graphql-engine, getting back more JSON.
 --
@@ -113,15 +113,15 @@ postWithHeadersStatus statusCode (getServer -> Server {urlPrefix, port}) path he
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postWithHeaders_ ::
   HasCallStack => TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO ()
-postWithHeaders_ testEnvironment path headers =
-  void . withFrozenCallStack . postWithHeaders testEnvironment path headers
+postWithHeaders_ testEnvironment path headers v =
+  void $ withFrozenCallStack $ postWithHeaders testEnvironment path headers v
 
 -- | Same as 'post', but defaults to the graphql end-point.
 --
 -- Note: We add 'withFrozenCallStack' to reduce stack trace clutter.
 postGraphqlYaml ::
   HasCallStack => TestEnvironment -> Value -> IO Value
-postGraphqlYaml testEnvironment = withFrozenCallStack . postGraphqlYamlWithHeaders testEnvironment mempty
+postGraphqlYaml testEnvironment v = withFrozenCallStack $ postGraphqlYamlWithHeaders testEnvironment mempty v
 
 -- | Same as 'postWithHeaders', but defaults to the graphql end-point.
 --
@@ -164,8 +164,8 @@ postMetadata :: HasCallStack => TestEnvironment -> Value -> IO Value
 postMetadata testEnvironment = withFrozenCallStack $ post testEnvironment "/v1/metadata"
 
 postMetadataWithStatus :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
-postMetadataWithStatus statusCode testEnvironment =
-  withFrozenCallStack . postWithHeadersStatus statusCode testEnvironment "/v1/metadata" mempty
+postMetadataWithStatus statusCode testEnvironment v =
+  withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v1/metadata" mempty v
 
 -- | Resets metadata, removing all sources or remote schemas.
 --

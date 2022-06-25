@@ -95,6 +95,12 @@
 - ignore: {name: Use <$>, within: [Hasura.RQL.DDL.Metadata, Hasura.Backends.MSSQL.Types.Instances]}
 - ignore: {name: Functor law, within: Hasura.Server.AuthSpec}
 - ignore: {name: Use underscore} # suggests to format port numbers
+# These three need to be disabled under 'simplified subsumption' unfortunately.
+# If we want to use -XDeepSubsumption these can be reenabled and lints fixed
+# See: https://github.com/mpickering/ghc-proposals/blob/deep-subsumption/proposals/0000-deep-subsumption.rst
+- ignore: {name: Avoid lambda}
+- ignore: {name: Redundant lambda}
+- ignore: {name: Avoid lambda using `infix`}
 
 # Define some custom infix operators
 # - fixity: infixr 3 ~^#^~

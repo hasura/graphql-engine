@@ -1065,10 +1065,10 @@ instance (MonadIO m, MonadBaseControl IO m) => MonadConfigApiHandler (PGMetadata
   runConfigApiHandler = configApiGetHandler
 
 instance (MonadIO m) => MonadQueryLog (PGMetadataStorageAppT m) where
-  logQueryLog = unLogger
+  logQueryLog logger = unLogger logger
 
 instance (MonadIO m) => WS.MonadWSLog (PGMetadataStorageAppT m) where
-  logWSLog = unLogger
+  logWSLog logger = unLogger logger
 
 instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
   getPGSourceResolver = mkPgSourceResolver <$> asks snd

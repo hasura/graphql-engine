@@ -21,7 +21,50 @@ import Hasura.Prelude
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
+----
+---- Countable instances
+
+-- These instances must be defined before the TH-defined instances below.
+
+deriving instance Generic (Countable n)
+
+instance Hashable n => Hashable (Countable n)
+
+instance Cacheable n => Cacheable (Countable n)
+
+deriving instance Eq n => Eq (Countable n)
+
+deriving instance Show n => Show (Countable n)
+
+deriving instance Data n => Data (Countable n)
+
+instance NFData n => NFData (Countable n)
+
+instance ToJSON n => ToJSON (Countable n)
+
+instance FromJSON n => FromJSON (Countable n)
+
+----
+---- TH-defined instances
+
 $( concat <$> for
+     [ ''ScalarType
+     ]
+     \name ->
+       [d|
+         deriving instance Generic $(conT name)
+
+         instance Hashable $(conT name)
+
+         instance Cacheable $(conT name)
+
+         deriving instance Data $(conT name)
+
+         instance NFData $(conT name)
+         |]
+ )
+
+$( fmap concat $ for
      [''Aliased]
      \name ->
        [d|
@@ -83,23 +126,6 @@ $( concat <$> for
  )
 
 $( concat <$> for
-     [ ''ScalarType
-     ]
-     \name ->
-       [d|
-         deriving instance Generic $(conT name)
-
-         instance Hashable $(conT name)
-
-         instance Cacheable $(conT name)
-
-         deriving instance Data $(conT name)
-
-         instance NFData $(conT name)
-         |]
- )
-
-$( concat <$> for
      [''TableName, ''ScalarType]
      \name -> [d|deriving instance Ord $(conT name)|]
  )
@@ -122,28 +148,10 @@ $( concat <$> for
  )
 
 ----
----- Manual instances
+---- Manually-defined instances
 
 instance ToTxt TableName where
   toTxt TableName {..} = name
-
-deriving instance Generic (Countable n)
-
-instance Hashable n => Hashable (Countable n)
-
-instance Cacheable n => Cacheable (Countable n)
-
-deriving instance Eq n => Eq (Countable n)
-
-deriving instance Show n => Show (Countable n)
-
-deriving instance Data n => Data (Countable n)
-
-instance NFData n => NFData (Countable n)
-
-instance ToJSON n => ToJSON (Countable n)
-
-instance FromJSON n => FromJSON (Countable n)
 
 instance FromJSON TableName where
   parseJSON v@(String _) =

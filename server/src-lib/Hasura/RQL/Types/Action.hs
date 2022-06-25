@@ -94,14 +94,6 @@ instance NFData ActionMetadata
 
 instance Cacheable ActionMetadata
 
-instance J.FromJSON ActionMetadata where
-  parseJSON = J.withObject "ActionMetadata" $ \o ->
-    ActionMetadata
-      <$> o .: "name"
-      <*> o .:? "comment"
-      <*> o .: "definition"
-      <*> o .:? "permissions" .!= []
-
 data ActionPermissionMetadata = ActionPermissionMetadata
   { _apmRole :: !RoleName,
     _apmComment :: !(Maybe Text)
@@ -157,45 +149,6 @@ data ActionDefinition arg webhook = ActionDefinition
 instance (NFData a, NFData w) => NFData (ActionDefinition a w)
 
 instance (Cacheable a, Cacheable w) => Cacheable (ActionDefinition a w)
-
-instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
-  parseJSON = J.withObject "ActionDefinition" $ \o -> do
-    _adArguments <- o .:? "arguments" .!= []
-    _adOutputType <- o .: "output_type"
-    _adHeaders <- o .:? "headers" .!= []
-    _adForwardClientHeaders <- o .:? "forward_client_headers" .!= False
-    _adHandler <- o .: "handler"
-    _adTimeout <- o .:? "timeout" .!= defaultActionTimeoutSecs
-    actionType <- o .:? "type" .!= "mutation"
-    _adType <- case actionType of
-      "mutation" -> ActionMutation <$> o .:? "kind" .!= ActionSynchronous
-      "query" -> pure ActionQuery
-      t -> fail $ "expected mutation or query, but found " <> t
-    _adRequestTransform <- o .:? "request_transform"
-    _adResponseTransform <- o .:? "response_transform"
-    pure ActionDefinition {..}
-
-instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
-  toJSON (ActionDefinition {..}) =
-    let typeAndKind = case _adType of
-          ActionQuery -> ["type" .= ("query" :: String)]
-          ActionMutation kind ->
-            [ "type" .= ("mutation" :: String),
-              "kind" .= kind
-            ]
-     in J.object $
-          [ "arguments" .= _adArguments,
-            "output_type" .= _adOutputType,
-            "headers" .= _adHeaders,
-            "forward_client_headers" .= _adForwardClientHeaders,
-            "handler" .= _adHandler,
-            "timeout" .= _adTimeout
-          ]
-            <> catMaybes
-              [ ("request_transform" .=) <$> _adRequestTransform,
-                ("response_transform" .=) <$> _adResponseTransform
-              ]
-            <> typeAndKind
 
 data ActionType
   = ActionQuery
@@ -312,10 +265,60 @@ instance Q.ToPrepArg LockedActionIdArray where
 
 -------------------------------------------------------------------------------
 -- Template haskell derivation
+-- ...and other instances that need to live here in a particular order, due to
+-- GHC 9.0 TH changes...
 
 $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''ActionPermissionMetadata)
+
 $(J.deriveJSON hasuraJSON ''ArgumentDefinition)
 $(J.deriveJSON J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 6} ''ActionMutationKind)
+
+instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
+  parseJSON = J.withObject "ActionDefinition" $ \o -> do
+    _adArguments <- o .:? "arguments" .!= []
+    _adOutputType <- o .: "output_type"
+    _adHeaders <- o .:? "headers" .!= []
+    _adForwardClientHeaders <- o .:? "forward_client_headers" .!= False
+    _adHandler <- o .: "handler"
+    _adTimeout <- o .:? "timeout" .!= defaultActionTimeoutSecs
+    actionType <- o .:? "type" .!= "mutation"
+    _adType <- case actionType of
+      "mutation" -> ActionMutation <$> o .:? "kind" .!= ActionSynchronous
+      "query" -> pure ActionQuery
+      t -> fail $ "expected mutation or query, but found " <> t
+    _adRequestTransform <- o .:? "request_transform"
+    _adResponseTransform <- o .:? "response_transform"
+    pure ActionDefinition {..}
+
+instance J.FromJSON ActionMetadata where
+  parseJSON = J.withObject "ActionMetadata" $ \o ->
+    ActionMetadata
+      <$> o .: "name"
+      <*> o .:? "comment"
+      <*> o .: "definition"
+      <*> o .:? "permissions" .!= []
+
+instance (J.ToJSON a, J.ToJSON b) => J.ToJSON (ActionDefinition a b) where
+  toJSON (ActionDefinition {..}) =
+    let typeAndKind = case _adType of
+          ActionQuery -> ["type" .= ("query" :: String)]
+          ActionMutation kind ->
+            [ "type" .= ("mutation" :: String),
+              "kind" .= kind
+            ]
+     in J.object $
+          [ "arguments" .= _adArguments,
+            "output_type" .= _adOutputType,
+            "headers" .= _adHeaders,
+            "forward_client_headers" .= _adForwardClientHeaders,
+            "handler" .= _adHandler,
+            "timeout" .= _adTimeout
+          ]
+            <> catMaybes
+              [ ("request_transform" .=) <$> _adRequestTransform,
+                ("response_transform" .=) <$> _adResponseTransform
+              ]
+            <> typeAndKind
 
 $(J.deriveToJSON hasuraJSON ''ActionLogResponse)
 $(J.deriveToJSON hasuraJSON ''ActionMetadata)
