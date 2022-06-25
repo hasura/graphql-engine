@@ -22,13 +22,13 @@
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span id="local-6989586621689217280"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#aggregateFieldsToExtractorExps"><span class="hs-identifier hs-type">aggregateFieldsToExtractorExps</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-26"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-type">Identifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AggregateFields"><span class="hs-identifier hs-type">AggregateFields</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689217280"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span><span>
+</span><span id="line-25"></span><span id="local-6989586621689216442"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#aggregateFieldsToExtractorExps"><span class="hs-identifier hs-type">aggregateFieldsToExtractorExps</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-type">Identifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AggregateFields"><span class="hs-identifier hs-type">AggregateFields</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689216442"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span><span>
 </span><span id="line-27"></span><span id="aggregateFieldsToExtractorExps"><span class="annot"><span class="annottext">aggregateFieldsToExtractorExps :: Identifier
 -&gt; AggregateFields ('Postgres pgKind) -&gt; [(Alias, SQLExp)]
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#aggregateFieldsToExtractorExps"><span class="hs-identifier hs-var hs-var">aggregateFieldsToExtractorExps</span></a></span></span><span> </span><span id="local-6989586621689217279"><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217279"><span class="hs-identifier hs-var">sourcePrefix</span></a></span></span><span> </span><span id="local-6989586621689217278"><span class="annot"><span class="annottext">AggregateFields ('Postgres pgKind)
-</span><a href="#local-6989586621689217278"><span class="hs-identifier hs-var">aggregateFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#aggregateFieldsToExtractorExps"><span class="hs-identifier hs-var hs-var">aggregateFieldsToExtractorExps</span></a></span></span><span> </span><span id="local-6989586621689216441"><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621689216441"><span class="hs-identifier hs-var">sourcePrefix</span></a></span></span><span> </span><span id="local-6989586621689216440"><span class="annot"><span class="annottext">AggregateFields ('Postgres pgKind)
+</span><a href="#local-6989586621689216440"><span class="hs-identifier hs-var">aggregateFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-28"></span><span>  </span><span class="annot"><span class="annottext">(((FieldName, AggregateField ('Postgres pgKind))
   -&gt; [(Alias, SQLExp)])
  -&gt; AggregateFields ('Postgres pgKind) -&gt; [(Alias, SQLExp)])
@@ -42,7 +42,7 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 -&gt; AggregateFields ('Postgres pgKind) -&gt; [(Alias, SQLExp)]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">AggregateFields ('Postgres pgKind)
-</span><a href="#local-6989586621689217278"><span class="hs-identifier hs-var">aggregateFields</span></a></span><span> </span><span class="annot"><span class="annottext">(((FieldName, AggregateField ('Postgres pgKind))
+</span><a href="#local-6989586621689216440"><span class="hs-identifier hs-var">aggregateFields</span></a></span><span> </span><span class="annot"><span class="annottext">(((FieldName, AggregateField ('Postgres pgKind))
   -&gt; [(Alias, SQLExp)])
  -&gt; [(Alias, SQLExp)])
 -&gt; ((FieldName, AggregateField ('Postgres pgKind))
@@ -50,40 +50,40 @@ forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 -&gt; [(Alias, SQLExp)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689217275"><span class="annot"><span class="annottext">AggregateField ('Postgres pgKind)
-</span><a href="#local-6989586621689217275"><span class="hs-identifier hs-var">field</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689216437"><span class="annot"><span class="annottext">AggregateField ('Postgres pgKind)
+</span><a href="#local-6989586621689216437"><span class="hs-identifier hs-var">field</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-29"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AggregateField ('Postgres pgKind)
-</span><a href="#local-6989586621689217275"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-30"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AFCount"><span class="hs-identifier hs-type">AFCount</span></a></span><span> </span><span id="local-6989586621689217273"><span class="annot"><span class="annottext">CountType ('Postgres pgKind)
-</span><a href="#local-6989586621689217273"><span class="hs-identifier hs-var">cty</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CountType ('Postgres pgKind)
-</span><a href="#local-6989586621689217273"><span class="hs-identifier hs-var">cty</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689216437"><span class="hs-identifier hs-var">field</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-30"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AFCount"><span class="hs-identifier hs-type">AFCount</span></a></span><span> </span><span id="local-6989586621689216435"><span class="annot"><span class="annottext">CountType ('Postgres pgKind)
+</span><a href="#local-6989586621689216435"><span class="hs-identifier hs-var">cty</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CountType ('Postgres pgKind)
+</span><a href="#local-6989586621689216435"><span class="hs-identifier hs-var">cty</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">CountType ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTStar"><span class="hs-identifier hs-var">S.CTStar</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-32"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#CTSimple"><span class="hs-identifier hs-type">S.CTSimple</span></a></span><span> </span><span id="local-6989586621689217270"><span class="annot"><a href="#local-6989586621689217270"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[PGCol] -&gt; [(Alias, SQLExp)]
-</span><a href="#local-6989586621689217269"><span class="hs-identifier hs-var">colsToExps</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689217270"><span class="hs-identifier hs-var">cols</span></a></span><span>
-</span><span id="line-33"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#CTDistinct"><span class="hs-identifier hs-type">S.CTDistinct</span></a></span><span> </span><span id="local-6989586621689217267"><span class="annot"><a href="#local-6989586621689217267"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[PGCol] -&gt; [(Alias, SQLExp)]
-</span><a href="#local-6989586621689217269"><span class="hs-identifier hs-var">colsToExps</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689217267"><span class="hs-identifier hs-var">cols</span></a></span><span>
-</span><span id="line-34"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AFOp"><span class="hs-identifier hs-type">AFOp</span></a></span><span> </span><span id="local-6989586621689217265"><span class="annot"><span class="annottext">AggregateOp ('Postgres pgKind)
-</span><a href="#local-6989586621689217265"><span class="hs-identifier hs-var">aggOp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AggregateOp ('Postgres pgKind) -&gt; [(Alias, SQLExp)]
-</span><a href="#local-6989586621689217264"><span class="hs-identifier hs-var">aggOpToExps</span></a></span><span> </span><span class="annot"><span class="annottext">AggregateOp ('Postgres pgKind)
-</span><a href="#local-6989586621689217265"><span class="hs-identifier hs-var">aggOp</span></a></span><span>
+</span><span id="line-32"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#CTSimple"><span class="hs-identifier hs-type">S.CTSimple</span></a></span><span> </span><span id="local-6989586621689216432"><span class="annot"><a href="#local-6989586621689216432"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[PGCol] -&gt; [(Alias, SQLExp)]
+</span><a href="#local-6989586621689216431"><span class="hs-identifier hs-var">colsToExps</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621689216432"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><span id="line-33"></span><span>        </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#CTDistinct"><span class="hs-identifier hs-type">S.CTDistinct</span></a></span><span> </span><span id="local-6989586621689216429"><span class="annot"><a href="#local-6989586621689216429"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[PGCol] -&gt; [(Alias, SQLExp)]
+</span><a href="#local-6989586621689216431"><span class="hs-identifier hs-var">colsToExps</span></a></span><span> </span><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621689216429"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><span id="line-34"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AFOp"><span class="hs-identifier hs-type">AFOp</span></a></span><span> </span><span id="local-6989586621689216427"><span class="annot"><span class="annottext">AggregateOp ('Postgres pgKind)
+</span><a href="#local-6989586621689216427"><span class="hs-identifier hs-var">aggOp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AggregateOp ('Postgres pgKind) -&gt; [(Alias, SQLExp)]
+</span><a href="#local-6989586621689216426"><span class="hs-identifier hs-var">aggOpToExps</span></a></span><span> </span><span class="annot"><span class="annottext">AggregateOp ('Postgres pgKind)
+</span><a href="#local-6989586621689216427"><span class="hs-identifier hs-var">aggOp</span></a></span><span>
 </span><span id="line-35"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AFExp"><span class="hs-identifier hs-type">AFExp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621689217269"><span class="annot"><span class="annottext">colsToExps :: [PGCol] -&gt; [(Alias, SQLExp)]
-</span><a href="#local-6989586621689217269"><span class="hs-identifier hs-var hs-var">colsToExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PGCol -&gt; (Alias, SQLExp)) -&gt; [PGCol] -&gt; [(Alias, SQLExp)]
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621689216431"><span class="annot"><span class="annottext">colsToExps :: [PGCol] -&gt; [(Alias, SQLExp)]
+</span><a href="#local-6989586621689216431"><span class="hs-identifier hs-var hs-var">colsToExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PGCol -&gt; (Alias, SQLExp)) -&gt; [PGCol] -&gt; [(Alias, SQLExp)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; (Alias, SQLExp)
-</span><a href="#local-6989586621689217262"><span class="hs-identifier hs-var">mkColExp</span></a></span><span>
+</span><a href="#local-6989586621689216424"><span class="hs-identifier hs-var">mkColExp</span></a></span><span>
 </span><span id="line-38"></span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621689217264"><span class="annot"><span class="annottext">aggOpToExps :: AggregateOp ('Postgres pgKind) -&gt; [(Alias, SQLExp)]
-</span><a href="#local-6989586621689217264"><span class="hs-identifier hs-var hs-var">aggOpToExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((FieldName, ColFld ('Postgres pgKind)) -&gt; Maybe (Alias, SQLExp))
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621689216426"><span class="annot"><span class="annottext">aggOpToExps :: AggregateOp ('Postgres pgKind) -&gt; [(Alias, SQLExp)]
+</span><a href="#local-6989586621689216426"><span class="hs-identifier hs-var hs-var">aggOpToExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((FieldName, ColFld ('Postgres pgKind)) -&gt; Maybe (Alias, SQLExp))
 -&gt; [(FieldName, ColFld ('Postgres pgKind))] -&gt; [(Alias, SQLExp)]
 forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">(FieldName, ColFld ('Postgres pgKind)) -&gt; Maybe (Alias, SQLExp)
-</span><a href="#local-6989586621689217260"><span class="hs-identifier hs-var">colToMaybeExp</span></a></span><span> </span><span class="annot"><span class="annottext">([(FieldName, ColFld ('Postgres pgKind))] -&gt; [(Alias, SQLExp)])
+</span><a href="#local-6989586621689216422"><span class="hs-identifier hs-var">colToMaybeExp</span></a></span><span> </span><span class="annot"><span class="annottext">([(FieldName, ColFld ('Postgres pgKind))] -&gt; [(Alias, SQLExp)])
 -&gt; (AggregateOp ('Postgres pgKind)
     -&gt; [(FieldName, ColFld ('Postgres pgKind))])
 -&gt; AggregateOp ('Postgres pgKind)
@@ -93,64 +93,64 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; [(FieldName, ColFld ('Postgres pgKind))]
 forall (b :: BackendType). AggregateOp b -&gt; ColumnFields b
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_aoFields%3AAggregateOp"><span class="hs-identifier hs-var hs-var">_aoFields</span></a></span><span>
-</span><span id="line-40"></span><span>    </span><span id="local-6989586621689217260"><span class="annot"><span class="annottext">colToMaybeExp :: (FieldName, ColFld ('Postgres pgKind)) -&gt; Maybe (Alias, SQLExp)
-</span><a href="#local-6989586621689217260"><span class="hs-identifier hs-var hs-var">colToMaybeExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-40"></span><span>    </span><span id="local-6989586621689216422"><span class="annot"><span class="annottext">colToMaybeExp :: (FieldName, ColFld ('Postgres pgKind)) -&gt; Maybe (Alias, SQLExp)
+</span><a href="#local-6989586621689216422"><span class="hs-identifier hs-var hs-var">colToMaybeExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-41"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#CFCol"><span class="hs-identifier hs-type">CFCol</span></a></span><span> </span><span id="local-6989586621689217256"><span class="annot"><span class="annottext">Column ('Postgres pgKind)
-</span><a href="#local-6989586621689217256"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#CFCol"><span class="hs-identifier hs-type">CFCol</span></a></span><span> </span><span id="local-6989586621689216418"><span class="annot"><span class="annottext">Column ('Postgres pgKind)
+</span><a href="#local-6989586621689216418"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Alias, SQLExp) -&gt; Maybe (Alias, SQLExp)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">((Alias, SQLExp) -&gt; Maybe (Alias, SQLExp))
 -&gt; (Alias, SQLExp) -&gt; Maybe (Alias, SQLExp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; (Alias, SQLExp)
-</span><a href="#local-6989586621689217262"><span class="hs-identifier hs-var">mkColExp</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
+</span><a href="#local-6989586621689216424"><span class="hs-identifier hs-var">mkColExp</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
 PGCol
-</span><a href="#local-6989586621689217256"><span class="hs-identifier hs-var">col</span></a></span><span>
+</span><a href="#local-6989586621689216418"><span class="hs-identifier hs-var">col</span></a></span><span>
 </span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">(FieldName, ColFld ('Postgres pgKind))
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (Alias, SQLExp)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span>    </span><span id="local-6989586621689217262"><span class="annot"><span class="annottext">mkColExp :: PGCol -&gt; (Alias, SQLExp)
-</span><a href="#local-6989586621689217262"><span class="hs-identifier hs-var hs-var">mkColExp</span></a></span></span><span> </span><span id="local-6989586621689217255"><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621689217255"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-45"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689217254"><span class="annot"><span class="annottext">qualCol :: SQLExp
-</span><a href="#local-6989586621689217254"><span class="hs-identifier hs-var hs-var">qualCol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; SQLExp
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621689216424"><span class="annot"><span class="annottext">mkColExp :: PGCol -&gt; (Alias, SQLExp)
+</span><a href="#local-6989586621689216424"><span class="hs-identifier hs-var hs-var">mkColExp</span></a></span></span><span> </span><span id="local-6989586621689216417"><span class="annot"><span class="annottext">PGCol
+</span><a href="#local-6989586621689216417"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-45"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689216416"><span class="annot"><span class="annottext">qualCol :: SQLExp
+</span><a href="#local-6989586621689216416"><span class="hs-identifier hs-var hs-var">qualCol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; SQLExp
 forall a b. (IsIdentifier a, IsIdentifier b) =&gt; a -&gt; b -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkQIdenExp"><span class="hs-identifier hs-var">S.mkQIdenExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Identifier -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkBaseTableAlias"><span class="hs-identifier hs-var">mkBaseTableAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217279"><span class="hs-identifier hs-var">sourcePrefix</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol -&gt; Identifier
+</span><a href="#local-6989586621689216441"><span class="hs-identifier hs-var">sourcePrefix</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol -&gt; Identifier
 forall a. IsIdentifier a =&gt; a -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621689217255"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-46"></span><span>          </span><span id="local-6989586621689217250"><span class="annot"><span class="annottext">colAls :: Identifier
-</span><a href="#local-6989586621689217250"><span class="hs-identifier hs-var hs-var">colAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; Identifier
+</span><a href="#local-6989586621689216417"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>          </span><span id="local-6989586621689216412"><span class="annot"><span class="annottext">colAls :: Identifier
+</span><a href="#local-6989586621689216412"><span class="hs-identifier hs-var hs-var">colAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; Identifier
 forall a. IsIdentifier a =&gt; a -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">PGCol
-</span><a href="#local-6989586621689217255"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><a href="#local-6989586621689216417"><span class="hs-identifier hs-var">c</span></a></span><span>
 </span><span id="line-47"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Identifier -&gt; Alias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-var">S.Alias</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217250"><span class="hs-identifier hs-var">colAls</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217254"><span class="hs-identifier hs-var">qualCol</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689216412"><span class="hs-identifier hs-var">colAls</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689216416"><span class="hs-identifier hs-var">qualCol</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#mkAggregateOrderByExtractorAndFields"><span class="hs-identifier hs-type">mkAggregateOrderByExtractorAndFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689217248"><span class="annot"><a href="#local-6989586621689217248"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-51"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689217248"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-52"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689217248"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-type">S.Extractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AggregateFields"><span class="hs-identifier hs-type">AggregateFields</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689217248"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689216410"><span class="annot"><a href="#local-6989586621689216410"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689216410"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnotatedAggregateOrderBy"><span class="hs-identifier hs-type">AnnotatedAggregateOrderBy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689216410"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-type">S.Extractor</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AggregateFields"><span class="hs-identifier hs-type">AggregateFields</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689216410"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span id="mkAggregateOrderByExtractorAndFields"><span class="annot"><span class="annottext">mkAggregateOrderByExtractorAndFields :: AnnotatedAggregateOrderBy ('Postgres pgKind)
 -&gt; (Extractor, AggregateFields ('Postgres pgKind))
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#mkAggregateOrderByExtractorAndFields"><span class="hs-identifier hs-var hs-var">mkAggregateOrderByExtractorAndFields</span></a></span></span><span> </span><span id="local-6989586621689217247"><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind)
-</span><a href="#local-6989586621689217247"><span class="hs-identifier hs-var">annAggOrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#mkAggregateOrderByExtractorAndFields"><span class="hs-identifier hs-var hs-var">mkAggregateOrderByExtractorAndFields</span></a></span></span><span> </span><span id="local-6989586621689216409"><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind)
+</span><a href="#local-6989586621689216409"><span class="hs-identifier hs-var">annAggOrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-55"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind)
-</span><a href="#local-6989586621689217247"><span class="hs-identifier hs-var">annAggOrderBy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689216409"><span class="hs-identifier hs-var">annAggOrderBy</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind)
 </span><a href="Hasura.RQL.IR.Select.html#AAOCount"><span class="hs-identifier hs-var">AAOCount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe Alias -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">S.Extractor</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#countStar"><span class="hs-identifier hs-var">S.countStar</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Alias
-</span><a href="#local-6989586621689217243"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216405"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-58"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;count&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">CountType ('Postgres pgKind) -&gt; AggregateField ('Postgres pgKind)
@@ -159,36 +159,36 @@ forall (b :: BackendType). CountType b -&gt; AggregateField b
 CountType
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTStar"><span class="hs-identifier hs-var">S.CTStar</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-59"></span><span>      </span><span class="hs-special">)</span><span>
-</span><span id="line-60"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AAOOp"><span class="hs-identifier hs-type">AAOOp</span></a></span><span> </span><span id="local-6989586621689217240"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689217240"><span class="hs-identifier hs-var">opText</span></a></span></span><span> </span><span id="local-6989586621689217239"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689217239"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-61"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689217238"><span class="annot"><span class="annottext">pgColumn :: Column ('Postgres pgKind)
-</span><a href="#local-6989586621689217238"><span class="hs-identifier hs-var hs-var">pgColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind) -&gt; Column ('Postgres pgKind)
+</span><span id="line-60"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AAOOp"><span class="hs-identifier hs-type">AAOOp</span></a></span><span> </span><span id="local-6989586621689216402"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689216402"><span class="hs-identifier hs-var">opText</span></a></span></span><span> </span><span id="local-6989586621689216401"><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689216401"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689216400"><span class="annot"><span class="annottext">pgColumn :: Column ('Postgres pgKind)
+</span><a href="#local-6989586621689216400"><span class="hs-identifier hs-var hs-var">pgColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind) -&gt; Column ('Postgres pgKind)
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689217239"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span><span>
-</span><span id="line-62"></span><span>          </span><span id="local-6989586621689217236"><span class="annot"><span class="annottext">pgType :: ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689217236"><span class="hs-identifier hs-var hs-var">pgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind) -&gt; ColumnType ('Postgres pgKind)
+</span><a href="#local-6989586621689216401"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span><span>
+</span><span id="line-62"></span><span>          </span><span id="local-6989586621689216398"><span class="annot"><span class="annottext">pgType :: ColumnType ('Postgres pgKind)
+</span><a href="#local-6989586621689216398"><span class="hs-identifier hs-var hs-var">pgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind) -&gt; ColumnType ('Postgres pgKind)
 forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689217239"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span><span>
+</span><a href="#local-6989586621689216401"><span class="hs-identifier hs-var">pgColumnInfo</span></a></span><span>
 </span><span id="line-63"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe Alias -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">S.Extractor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">S.SEFnApp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689217240"><span class="hs-identifier hs-var">opText</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Identifier -&gt; SQLExp
+</span><a href="#local-6989586621689216402"><span class="hs-identifier hs-var">opText</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Identifier -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEIdentifier"><span class="hs-identifier hs-var">S.SEIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">(Identifier -&gt; SQLExp) -&gt; Identifier -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; Identifier
 forall a. IsIdentifier a =&gt; a -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
 PGCol
-</span><a href="#local-6989586621689217238"><span class="hs-identifier hs-var">pgColumn</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216400"><span class="hs-identifier hs-var">pgColumn</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Alias
-</span><a href="#local-6989586621689217243"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216405"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-64"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689217240"><span class="hs-identifier hs-var">opText</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216402"><span class="hs-identifier hs-var">opText</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-65"></span><span>                </span><span class="annot"><span class="annottext">AggregateOp ('Postgres pgKind) -&gt; AggregateField ('Postgres pgKind)
 forall (b :: BackendType). AggregateOp b -&gt; AggregateField b
 </span><a href="Hasura.RQL.IR.Select.html#AFOp"><span class="hs-identifier hs-var">AFOp</span></a></span><span> </span><span class="annot"><span class="annottext">(AggregateOp ('Postgres pgKind)
@@ -203,25 +203,25 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType). Text -&gt; ColumnFields b -&gt; AggregateOp b
 </span><a href="Hasura.RQL.IR.Select.html#AggregateOp"><span class="hs-identifier hs-var">AggregateOp</span></a></span><span>
 </span><span id="line-67"></span><span>                    </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689217240"><span class="hs-identifier hs-var">opText</span></a></span><span>
+</span><a href="#local-6989586621689216402"><span class="hs-identifier hs-var">opText</span></a></span><span>
 </span><span id="line-68"></span><span>                    </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind) -&gt; FieldName
 forall (b :: BackendType). Backend b =&gt; Column b -&gt; FieldName
-</span><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-var">fromCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689217248"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
-</span><a href="#local-6989586621689217238"><span class="hs-identifier hs-var">pgColumn</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Column.html#fromCol"><span class="hs-identifier hs-var">fromCol</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689216410"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
+</span><a href="#local-6989586621689216400"><span class="hs-identifier hs-var">pgColumn</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-69"></span><span>                        </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
 -&gt; ColumnType ('Postgres pgKind) -&gt; ColFld ('Postgres pgKind)
 forall (b :: BackendType). Column b -&gt; ColumnType b -&gt; ColFld b
 </span><a href="Hasura.RQL.IR.Select.html#CFCol"><span class="hs-identifier hs-var">CFCol</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
-</span><a href="#local-6989586621689217238"><span class="hs-identifier hs-var">pgColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689217236"><span class="hs-identifier hs-var">pgType</span></a></span><span>
+</span><a href="#local-6989586621689216400"><span class="hs-identifier hs-var">pgColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
+</span><a href="#local-6989586621689216398"><span class="hs-identifier hs-var">pgType</span></a></span><span>
 </span><span id="line-70"></span><span>                      </span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>                    </span><span class="hs-special">]</span><span>
 </span><span id="line-72"></span><span>              </span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-74"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-76"></span><span>    </span><span id="local-6989586621689217243"><span class="annot"><span class="annottext">alias :: Maybe Alias
-</span><a href="#local-6989586621689217243"><span class="hs-identifier hs-var hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Alias -&gt; Maybe Alias
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621689216405"><span class="annot"><span class="annottext">alias :: Maybe Alias
+</span><a href="#local-6989586621689216405"><span class="hs-identifier hs-var hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Alias -&gt; Maybe Alias
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Alias -&gt; Maybe Alias) -&gt; Alias -&gt; Maybe Alias
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -229,89 +229,89 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (pgKind :: PostgresKind).
 AnnotatedAggregateOrderBy ('Postgres pgKind) -&gt; Alias
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Aliases.html#mkAggregateOrderByAlias"><span class="hs-identifier hs-var">mkAggregateOrderByAlias</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedAggregateOrderBy ('Postgres pgKind)
-</span><a href="#local-6989586621689217247"><span class="hs-identifier hs-var">annAggOrderBy</span></a></span><span>
+</span><a href="#local-6989586621689216409"><span class="hs-identifier hs-var">annAggOrderBy</span></a></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#withJsonAggExtr"><span class="hs-identifier hs-type">withJsonAggExtr</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#PermissionLimitSubQuery"><span class="hs-identifier hs-type">PermissionLimitSubQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">S.OrderByExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span>
 </span><span id="line-80"></span><span id="withJsonAggExtr"><span class="annot"><span class="annottext">withJsonAggExtr :: PermissionLimitSubQuery -&gt; Maybe OrderByExp -&gt; Alias -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#withJsonAggExtr"><span class="hs-identifier hs-var hs-var">withJsonAggExtr</span></a></span></span><span> </span><span id="local-6989586621689217229"><span class="annot"><span class="annottext">PermissionLimitSubQuery
-</span><a href="#local-6989586621689217229"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span></span><span> </span><span id="local-6989586621689217228"><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217228"><span class="hs-identifier hs-var">ordBy</span></a></span></span><span> </span><span id="local-6989586621689217227"><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217227"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#withJsonAggExtr"><span class="hs-identifier hs-var hs-var">withJsonAggExtr</span></a></span></span><span> </span><span id="local-6989586621689216391"><span class="annot"><span class="annottext">PermissionLimitSubQuery
+</span><a href="#local-6989586621689216391"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span></span><span> </span><span id="local-6989586621689216390"><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216390"><span class="hs-identifier hs-var">ordBy</span></a></span></span><span> </span><span id="local-6989586621689216389"><span class="annot"><span class="annottext">Alias
+</span><a href="#local-6989586621689216389"><span class="hs-identifier hs-var">alias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-81"></span><span>  </span><span class="hs-comment">-- if select has aggregations then use subquery to apply permission limit</span><span>
 </span><span id="line-82"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PermissionLimitSubQuery
-</span><a href="#local-6989586621689217229"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-83"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#PLSQRequired"><span class="hs-identifier hs-type">PLSQRequired</span></a></span><span> </span><span id="local-6989586621689217225"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217225"><span class="hs-identifier hs-var">permLimit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SQLExp
-</span><a href="#local-6989586621689217224"><span class="hs-identifier hs-var">withPermLimit</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217225"><span class="hs-identifier hs-var">permLimit</span></a></span><span>
+</span><a href="#local-6989586621689216391"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-83"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Types.html#PLSQRequired"><span class="hs-identifier hs-type">PLSQRequired</span></a></span><span> </span><span id="local-6989586621689216387"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689216387"><span class="hs-identifier hs-var">permLimit</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SQLExp
+</span><a href="#local-6989586621689216386"><span class="hs-identifier hs-var">withPermLimit</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689216387"><span class="hs-identifier hs-var">permLimit</span></a></span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">PermissionLimitSubQuery
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#PLSQNotRequired"><span class="hs-identifier hs-var">PLSQNotRequired</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217222"><span class="hs-identifier hs-var">simpleJsonAgg</span></a></span><span>
+</span><a href="#local-6989586621689216384"><span class="hs-identifier hs-var">simpleJsonAgg</span></a></span><span>
 </span><span id="line-85"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-86"></span><span>    </span><span id="local-6989586621689217222"><span class="annot"><span class="annottext">simpleJsonAgg :: SQLExp
-</span><a href="#local-6989586621689217222"><span class="hs-identifier hs-var hs-var">simpleJsonAgg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe OrderByExp -&gt; SQLExp
-</span><a href="#local-6989586621689217221"><span class="hs-identifier hs-var">mkSimpleJsonAgg</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217220"><span class="hs-identifier hs-var">rowIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217228"><span class="hs-identifier hs-var">ordBy</span></a></span><span>
-</span><span id="line-87"></span><span>    </span><span id="local-6989586621689217220"><span class="annot"><span class="annottext">rowIdenExp :: SQLExp
-</span><a href="#local-6989586621689217220"><span class="hs-identifier hs-var hs-var">rowIdenExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; SQLExp
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621689216384"><span class="annot"><span class="annottext">simpleJsonAgg :: SQLExp
+</span><a href="#local-6989586621689216384"><span class="hs-identifier hs-var hs-var">simpleJsonAgg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe OrderByExp -&gt; SQLExp
+</span><a href="#local-6989586621689216383"><span class="hs-identifier hs-var">mkSimpleJsonAgg</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689216382"><span class="hs-identifier hs-var">rowIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216390"><span class="hs-identifier hs-var">ordBy</span></a></span><span>
+</span><span id="line-87"></span><span>    </span><span id="local-6989586621689216382"><span class="annot"><span class="annottext">rowIdenExp :: SQLExp
+</span><a href="#local-6989586621689216382"><span class="hs-identifier hs-var hs-var">rowIdenExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEIdentifier"><span class="hs-identifier hs-var">S.SEIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">(Identifier -&gt; SQLExp) -&gt; Identifier -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Alias -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#getAlias"><span class="hs-identifier hs-var hs-var">S.getAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217227"><span class="hs-identifier hs-var">alias</span></a></span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621689217218"><span class="annot"><span class="annottext">subSelAls :: Identifier
-</span><a href="#local-6989586621689217218"><span class="hs-identifier hs-var hs-var">subSelAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
+</span><a href="#local-6989586621689216389"><span class="hs-identifier hs-var">alias</span></a></span><span>
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621689216380"><span class="annot"><span class="annottext">subSelAls :: Identifier
+</span><a href="#local-6989586621689216380"><span class="hs-identifier hs-var hs-var">subSelAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;sub_query&quot;</span></span><span>
-</span><span id="line-89"></span><span>    </span><span id="local-6989586621689217216"><span class="annot"><span class="annottext">unnestTable :: Identifier
-</span><a href="#local-6989586621689217216"><span class="hs-identifier hs-var hs-var">unnestTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621689216378"><span class="annot"><span class="annottext">unnestTable :: Identifier
+</span><a href="#local-6989586621689216378"><span class="hs-identifier hs-var hs-var">unnestTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;unnest_table&quot;</span></span><span>
 </span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span>    </span><span id="local-6989586621689217221"><span class="annot"><span class="annottext">mkSimpleJsonAgg :: SQLExp -&gt; Maybe OrderByExp -&gt; SQLExp
-</span><a href="#local-6989586621689217221"><span class="hs-identifier hs-var hs-var">mkSimpleJsonAgg</span></a></span></span><span> </span><span id="local-6989586621689217215"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217215"><span class="hs-identifier hs-var">rowExp</span></a></span></span><span> </span><span id="local-6989586621689217214"><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217214"><span class="hs-identifier hs-var">ob</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-92"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689217213"><span class="annot"><span class="annottext">jsonAggExp :: SQLExp
-</span><a href="#local-6989586621689217213"><span class="hs-identifier hs-var hs-var">jsonAggExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621689216383"><span class="annot"><span class="annottext">mkSimpleJsonAgg :: SQLExp -&gt; Maybe OrderByExp -&gt; SQLExp
+</span><a href="#local-6989586621689216383"><span class="hs-identifier hs-var hs-var">mkSimpleJsonAgg</span></a></span></span><span> </span><span id="local-6989586621689216377"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689216377"><span class="hs-identifier hs-var">rowExp</span></a></span></span><span> </span><span id="local-6989586621689216376"><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216376"><span class="hs-identifier hs-var">ob</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689216375"><span class="annot"><span class="annottext">jsonAggExp :: SQLExp
+</span><a href="#local-6989586621689216375"><span class="hs-identifier hs-var hs-var">jsonAggExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">S.SEFnApp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;json_agg&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217215"><span class="hs-identifier hs-var">rowExp</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217214"><span class="hs-identifier hs-var">ob</span></a></span><span>
+</span><a href="#local-6989586621689216377"><span class="hs-identifier hs-var">rowExp</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216376"><span class="hs-identifier hs-var">ob</span></a></span><span>
 </span><span id="line-93"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">S.SEFnApp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;coalesce&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217213"><span class="hs-identifier hs-var">jsonAggExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
+</span><a href="#local-6989586621689216375"><span class="hs-identifier hs-var">jsonAggExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">S.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;[]&quot;</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span>    </span><span id="local-6989586621689217224"><span class="annot"><span class="annottext">withPermLimit :: Int -&gt; SQLExp
-</span><a href="#local-6989586621689217224"><span class="hs-identifier hs-var hs-var">withPermLimit</span></a></span></span><span> </span><span id="local-6989586621689217211"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217211"><span class="hs-identifier hs-var">limit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-96"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689217210"><span class="annot"><span class="annottext">subSelect :: Select
-</span><a href="#local-6989586621689217210"><span class="hs-identifier hs-var hs-var">subSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Select
-</span><a href="#local-6989586621689217209"><span class="hs-identifier hs-var">mkSubSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217211"><span class="hs-identifier hs-var">limit</span></a></span><span>
-</span><span id="line-97"></span><span>          </span><span id="local-6989586621689217208"><span class="annot"><span class="annottext">rowIdentifier :: SQLExp
-</span><a href="#local-6989586621689217208"><span class="hs-identifier hs-var hs-var">rowIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Alias -&gt; SQLExp
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621689216386"><span class="annot"><span class="annottext">withPermLimit :: Int -&gt; SQLExp
+</span><a href="#local-6989586621689216386"><span class="hs-identifier hs-var hs-var">withPermLimit</span></a></span></span><span> </span><span id="local-6989586621689216373"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689216373"><span class="hs-identifier hs-var">limit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-96"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689216372"><span class="annot"><span class="annottext">subSelect :: Select
+</span><a href="#local-6989586621689216372"><span class="hs-identifier hs-var hs-var">subSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Select
+</span><a href="#local-6989586621689216371"><span class="hs-identifier hs-var">mkSubSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689216373"><span class="hs-identifier hs-var">limit</span></a></span><span>
+</span><span id="line-97"></span><span>          </span><span id="local-6989586621689216370"><span class="annot"><span class="annottext">rowIdentifier :: SQLExp
+</span><a href="#local-6989586621689216370"><span class="hs-identifier hs-var hs-var">rowIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Alias -&gt; SQLExp
 forall a b. (IsIdentifier a, IsIdentifier b) =&gt; a -&gt; b -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkQIdenExp"><span class="hs-identifier hs-var">S.mkQIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217218"><span class="hs-identifier hs-var">subSelAls</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217227"><span class="hs-identifier hs-var">alias</span></a></span><span>
-</span><span id="line-98"></span><span>          </span><span id="local-6989586621689217207"><span class="annot"><span class="annottext">extr :: Extractor
-</span><a href="#local-6989586621689217207"><span class="hs-identifier hs-var hs-var">extr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe Alias -&gt; Extractor
+</span><a href="#local-6989586621689216380"><span class="hs-identifier hs-var">subSelAls</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
+</span><a href="#local-6989586621689216389"><span class="hs-identifier hs-var">alias</span></a></span><span>
+</span><span id="line-98"></span><span>          </span><span id="local-6989586621689216369"><span class="annot"><span class="annottext">extr :: Extractor
+</span><a href="#local-6989586621689216369"><span class="hs-identifier hs-var hs-var">extr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe Alias -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">S.Extractor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe OrderByExp -&gt; SQLExp
-</span><a href="#local-6989586621689217221"><span class="hs-identifier hs-var">mkSimpleJsonAgg</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217208"><span class="hs-identifier hs-var">rowIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217206"><span class="hs-identifier hs-var">newOrderBy</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Alias
+</span><a href="#local-6989586621689216383"><span class="hs-identifier hs-var">mkSimpleJsonAgg</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689216370"><span class="hs-identifier hs-var">rowIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216368"><span class="hs-identifier hs-var">newOrderBy</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Alias
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-99"></span><span>          </span><span id="local-6989586621689217205"><span class="annot"><span class="annottext">fromExp :: FromExp
-</span><a href="#local-6989586621689217205"><span class="hs-identifier hs-var hs-var">fromExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-99"></span><span>          </span><span id="local-6989586621689216367"><span class="annot"><span class="annottext">fromExp :: FromExp
+</span><a href="#local-6989586621689216367"><span class="hs-identifier hs-var hs-var">fromExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-100"></span><span>            </span><span class="annot"><span class="annottext">[FromItem] -&gt; FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#FromExp"><span class="hs-identifier hs-var">S.FromExp</span></a></span><span> </span><span class="annot"><span class="annottext">([FromItem] -&gt; FromExp) -&gt; [FromItem] -&gt; FromExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -323,11 +323,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-102"></span><span>                </span><span class="annot"><span class="annottext">Select -&gt; Alias -&gt; FromItem
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSelFromItem"><span class="hs-identifier hs-var">S.mkSelFromItem</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689217210"><span class="hs-identifier hs-var">subSelect</span></a></span><span> </span><span class="annot"><span class="annottext">(Alias -&gt; FromItem) -&gt; Alias -&gt; FromItem
+</span><a href="#local-6989586621689216372"><span class="hs-identifier hs-var">subSelect</span></a></span><span> </span><span class="annot"><span class="annottext">(Alias -&gt; FromItem) -&gt; Alias -&gt; FromItem
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Alias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-var">S.Alias</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217218"><span class="hs-identifier hs-var">subSelAls</span></a></span><span>
+</span><a href="#local-6989586621689216380"><span class="hs-identifier hs-var">subSelAls</span></a></span><span>
 </span><span id="line-103"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Select -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SESelect"><span class="hs-identifier hs-var">S.SESelect</span></a></span><span> </span><span class="annot"><span class="annottext">(Select -&gt; SQLExp) -&gt; Select -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -338,19 +338,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selExtr"><span class="hs-identifier hs-var">S.selExtr</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Extractor -&gt; [Extractor]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689217207"><span class="hs-identifier hs-var">extr</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216369"><span class="hs-identifier hs-var">extr</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-106"></span><span>                </span><span class="annot"><span class="annottext">selFrom :: Maybe FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selFrom"><span class="hs-identifier hs-var">S.selFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FromExp -&gt; Maybe FromExp
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">FromExp
-</span><a href="#local-6989586621689217205"><span class="hs-identifier hs-var">fromExp</span></a></span><span>
+</span><a href="#local-6989586621689216367"><span class="hs-identifier hs-var">fromExp</span></a></span><span>
 </span><span id="line-107"></span><span>              </span><span class="hs-special">}</span><span>
 </span><span id="line-108"></span><span>
-</span><span id="line-109"></span><span>    </span><span id="local-6989586621689217209"><span class="annot"><span class="annottext">mkSubSelect :: Int -&gt; Select
-</span><a href="#local-6989586621689217209"><span class="hs-identifier hs-var hs-var">mkSubSelect</span></a></span></span><span> </span><span id="local-6989586621689217198"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217198"><span class="hs-identifier hs-var">limit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-110"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689217197"><span class="annot"><span class="annottext">jsonRowExtr :: Extractor
-</span><a href="#local-6989586621689217197"><span class="hs-identifier hs-var hs-var">jsonRowExtr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-109"></span><span>    </span><span id="local-6989586621689216371"><span class="annot"><span class="annottext">mkSubSelect :: Int -&gt; Select
+</span><a href="#local-6989586621689216371"><span class="hs-identifier hs-var hs-var">mkSubSelect</span></a></span></span><span> </span><span id="local-6989586621689216360"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689216360"><span class="hs-identifier hs-var">limit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689216359"><span class="annot"><span class="annottext">jsonRowExtr :: Extractor
+</span><a href="#local-6989586621689216359"><span class="hs-identifier hs-var hs-var">jsonRowExtr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-111"></span><span>            </span><span class="annot"><span class="annottext">(SQLExp -&gt; Maybe Alias -&gt; Extractor)
 -&gt; Maybe Alias -&gt; SQLExp -&gt; Extractor
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
@@ -358,32 +358,32 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">S.Extractor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Alias -&gt; Maybe Alias
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217227"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; Extractor) -&gt; SQLExp -&gt; Extractor
+</span><a href="#local-6989586621689216389"><span class="hs-identifier hs-var">alias</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; Extractor) -&gt; SQLExp -&gt; Extractor
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-112"></span><span>              </span><span class="annot"><span class="annottext">Identifier -&gt; Alias -&gt; SQLExp
 forall a b. (IsIdentifier a, IsIdentifier b) =&gt; a -&gt; b -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkQIdenExp"><span class="hs-identifier hs-var">S.mkQIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217216"><span class="hs-identifier hs-var">unnestTable</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217227"><span class="hs-identifier hs-var">alias</span></a></span><span>
-</span><span id="line-113"></span><span>          </span><span id="local-6989586621689217196"><span class="annot"><span class="annottext">obExtrs :: [Extractor]
-</span><a href="#local-6989586621689217196"><span class="hs-identifier hs-var hs-var">obExtrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Identifier -&gt; Extractor) -&gt; [Identifier] -&gt; [Extractor])
+</span><a href="#local-6989586621689216378"><span class="hs-identifier hs-var">unnestTable</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
+</span><a href="#local-6989586621689216389"><span class="hs-identifier hs-var">alias</span></a></span><span>
+</span><span id="line-113"></span><span>          </span><span id="local-6989586621689216358"><span class="annot"><span class="annottext">obExtrs :: [Extractor]
+</span><a href="#local-6989586621689216358"><span class="hs-identifier hs-var hs-var">obExtrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Identifier -&gt; Extractor) -&gt; [Identifier] -&gt; [Extractor])
 -&gt; [Identifier] -&gt; (Identifier -&gt; Extractor) -&gt; [Extractor]
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(Identifier -&gt; Extractor) -&gt; [Identifier] -&gt; [Extractor]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[Identifier]
-</span><a href="#local-6989586621689217195"><span class="hs-identifier hs-var">newOBAliases</span></a></span><span> </span><span class="annot"><span class="annottext">((Identifier -&gt; Extractor) -&gt; [Extractor])
+</span><a href="#local-6989586621689216357"><span class="hs-identifier hs-var">newOBAliases</span></a></span><span> </span><span class="annot"><span class="annottext">((Identifier -&gt; Extractor) -&gt; [Extractor])
 -&gt; (Identifier -&gt; Extractor) -&gt; [Extractor]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689217194"><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217194"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689216356"><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621689216356"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-114"></span><span>            </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe Alias -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">S.Extractor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; SQLExp
 forall a b. (IsIdentifier a, IsIdentifier b) =&gt; a -&gt; b -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkQIdenExp"><span class="hs-identifier hs-var">S.mkQIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217216"><span class="hs-identifier hs-var">unnestTable</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217194"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe Alias -&gt; Extractor) -&gt; Maybe Alias -&gt; Extractor
+</span><a href="#local-6989586621689216378"><span class="hs-identifier hs-var">unnestTable</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621689216356"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe Alias -&gt; Extractor) -&gt; Maybe Alias -&gt; Extractor
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Alias -&gt; Maybe Alias
 forall a. a -&gt; Maybe a
@@ -391,15 +391,15 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Alias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-var">S.Alias</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217194"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621689216356"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-115"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSelect"><span class="hs-identifier hs-var">S.mkSelect</span></a></span><span>
 </span><span id="line-116"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">selExtr :: [Extractor]
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selExtr"><span class="hs-identifier hs-var">S.selExtr</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689217197"><span class="hs-identifier hs-var">jsonRowExtr</span></a></span><span> </span><span class="annot"><span class="annottext">Extractor -&gt; [Extractor] -&gt; [Extractor]
+</span><a href="#local-6989586621689216359"><span class="hs-identifier hs-var">jsonRowExtr</span></a></span><span> </span><span class="annot"><span class="annottext">Extractor -&gt; [Extractor] -&gt; [Extractor]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Extractor]
-</span><a href="#local-6989586621689217196"><span class="hs-identifier hs-var">obExtrs</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216358"><span class="hs-identifier hs-var">obExtrs</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-117"></span><span>              </span><span class="annot"><span class="annottext">selFrom :: Maybe FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selFrom"><span class="hs-identifier hs-var">S.selFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FromExp -&gt; Maybe FromExp
 forall a. a -&gt; Maybe a
@@ -411,7 +411,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FromItem -&gt; [FromItem]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">FromItem
-</span><a href="#local-6989586621689217193"><span class="hs-identifier hs-var">unnestFromItem</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216355"><span class="hs-identifier hs-var">unnestFromItem</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-118"></span><span>              </span><span class="annot"><span class="annottext">selLimit :: Maybe LimitExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selLimit"><span class="hs-identifier hs-var">S.selLimit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LimitExp -&gt; Maybe LimitExp
 forall a. a -&gt; Maybe a
@@ -422,74 +422,74 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#intToSQLExp"><span class="hs-identifier hs-var">S.intToSQLExp</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217198"><span class="hs-identifier hs-var">limit</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216360"><span class="hs-identifier hs-var">limit</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-119"></span><span>              </span><span class="annot"><span class="annottext">selOrderBy :: Maybe OrderByExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selOrderBy"><span class="hs-identifier hs-var">S.selOrderBy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217206"><span class="hs-identifier hs-var">newOrderBy</span></a></span><span>
+</span><a href="#local-6989586621689216368"><span class="hs-identifier hs-var">newOrderBy</span></a></span><span>
 </span><span id="line-120"></span><span>            </span><span class="hs-special">}</span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span>    </span><span id="local-6989586621689217193"><span class="annot"><span class="annottext">unnestFromItem :: FromItem
-</span><a href="#local-6989586621689217193"><span class="hs-identifier hs-var hs-var">unnestFromItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-123"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689217188"><span class="annot"><span class="annottext">arrayAggItems :: [SQLExp]
-</span><a href="#local-6989586621689217188"><span class="hs-identifier hs-var hs-var">arrayAggItems</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((SQLExp -&gt; SQLExp) -&gt; [SQLExp] -&gt; [SQLExp])
+</span><span id="line-122"></span><span>    </span><span id="local-6989586621689216355"><span class="annot"><span class="annottext">unnestFromItem :: FromItem
+</span><a href="#local-6989586621689216355"><span class="hs-identifier hs-var hs-var">unnestFromItem</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-123"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689216350"><span class="annot"><span class="annottext">arrayAggItems :: [SQLExp]
+</span><a href="#local-6989586621689216350"><span class="hs-identifier hs-var hs-var">arrayAggItems</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((SQLExp -&gt; SQLExp) -&gt; [SQLExp] -&gt; [SQLExp])
 -&gt; [SQLExp] -&gt; (SQLExp -&gt; SQLExp) -&gt; [SQLExp]
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; SQLExp) -&gt; [SQLExp] -&gt; [SQLExp]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217220"><span class="hs-identifier hs-var">rowIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; [SQLExp] -&gt; [SQLExp]
+</span><a href="#local-6989586621689216382"><span class="hs-identifier hs-var">rowIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; [SQLExp] -&gt; [SQLExp]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[SQLExp]
-</span><a href="#local-6989586621689217187"><span class="hs-identifier hs-var">obCols</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((SQLExp -&gt; SQLExp) -&gt; [SQLExp]) -&gt; (SQLExp -&gt; SQLExp) -&gt; [SQLExp]
+</span><a href="#local-6989586621689216349"><span class="hs-identifier hs-var">obCols</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((SQLExp -&gt; SQLExp) -&gt; [SQLExp]) -&gt; (SQLExp -&gt; SQLExp) -&gt; [SQLExp]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-124"></span><span>            </span><span class="hs-glyph">\</span><span id="local-6989586621689217186"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217186"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
+</span><span id="line-124"></span><span>            </span><span class="hs-glyph">\</span><span id="local-6989586621689216348"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689216348"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">S.SEFnApp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;array_agg&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217186"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216348"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-125"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[SQLExp] -&gt; Alias -&gt; [SQLExp] -&gt; FromItem
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#FIUnnest"><span class="hs-identifier hs-var">S.FIUnnest</span></a></span><span> </span><span class="annot"><span class="annottext">[SQLExp]
-</span><a href="#local-6989586621689217188"><span class="hs-identifier hs-var">arrayAggItems</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Identifier -&gt; Alias
+</span><a href="#local-6989586621689216350"><span class="hs-identifier hs-var">arrayAggItems</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Identifier -&gt; Alias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-var">S.Alias</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217216"><span class="hs-identifier hs-var">unnestTable</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; FromItem) -&gt; [SQLExp] -&gt; FromItem
+</span><a href="#local-6989586621689216378"><span class="hs-identifier hs-var">unnestTable</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; FromItem) -&gt; [SQLExp] -&gt; FromItem
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-126"></span><span>            </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217220"><span class="hs-identifier hs-var">rowIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; [SQLExp] -&gt; [SQLExp]
+</span><a href="#local-6989586621689216382"><span class="hs-identifier hs-var">rowIdenExp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; [SQLExp] -&gt; [SQLExp]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">(Identifier -&gt; SQLExp) -&gt; [Identifier] -&gt; [SQLExp]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEIdentifier"><span class="hs-identifier hs-var">S.SEIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">[Identifier]
-</span><a href="#local-6989586621689217195"><span class="hs-identifier hs-var">newOBAliases</span></a></span><span>
+</span><a href="#local-6989586621689216357"><span class="hs-identifier hs-var">newOBAliases</span></a></span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span>    </span><span id="local-6989586621689217206"><span class="annot"><span class="annottext">newOrderBy :: Maybe OrderByExp
-</span><a href="#local-6989586621689217206"><span class="hs-identifier hs-var hs-var">newOrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty OrderByItem -&gt; OrderByExp
+</span><span id="line-128"></span><span>    </span><span id="local-6989586621689216368"><span class="annot"><span class="annottext">newOrderBy :: Maybe OrderByExp
+</span><a href="#local-6989586621689216368"><span class="hs-identifier hs-var hs-var">newOrderBy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty OrderByItem -&gt; OrderByExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-var">S.OrderByExp</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmpty OrderByItem -&gt; OrderByExp)
 -&gt; Maybe (NonEmpty OrderByItem) -&gt; Maybe OrderByExp
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[OrderByItem] -&gt; Maybe (NonEmpty OrderByItem)
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">NE.nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[OrderByItem]
-</span><a href="#local-6989586621689217181"><span class="hs-identifier hs-var">newOBItems</span></a></span><span>
+</span><a href="#local-6989586621689216343"><span class="hs-identifier hs-var">newOBItems</span></a></span><span>
 </span><span id="line-129"></span><span>
-</span><span id="line-130"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689217181"><span class="annot"><span class="annottext">[OrderByItem]
-</span><a href="#local-6989586621689217181"><span class="hs-identifier hs-var">newOBItems</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689217187"><span class="annot"><span class="annottext">[SQLExp]
-</span><a href="#local-6989586621689217187"><span class="hs-identifier hs-var">obCols</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689217195"><span class="annot"><span class="annottext">[Identifier]
-</span><a href="#local-6989586621689217195"><span class="hs-identifier hs-var">newOBAliases</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([OrderByItem], [SQLExp], [Identifier])
+</span><span id="line-130"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689216343"><span class="annot"><span class="annottext">[OrderByItem]
+</span><a href="#local-6989586621689216343"><span class="hs-identifier hs-var">newOBItems</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689216349"><span class="annot"><span class="annottext">[SQLExp]
+</span><a href="#local-6989586621689216349"><span class="hs-identifier hs-var">obCols</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689216357"><span class="annot"><span class="annottext">[Identifier]
+</span><a href="#local-6989586621689216357"><span class="hs-identifier hs-var">newOBAliases</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([OrderByItem], [SQLExp], [Identifier])
 -&gt; (OrderByExp -&gt; ([OrderByItem], [SQLExp], [Identifier]))
 -&gt; Maybe OrderByExp
 -&gt; ([OrderByItem], [SQLExp], [Identifier])
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OrderByExp -&gt; ([OrderByItem], [SQLExp], [Identifier])
-</span><a href="#local-6989586621689217179"><span class="hs-identifier hs-var">transformOrderBy</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217228"><span class="hs-identifier hs-var">ordBy</span></a></span><span>
-</span><span id="line-131"></span><span>    </span><span id="local-6989586621689217179"><span class="annot"><span class="annottext">transformOrderBy :: OrderByExp -&gt; ([OrderByItem], [SQLExp], [Identifier])
-</span><a href="#local-6989586621689217179"><span class="hs-identifier hs-var hs-var">transformOrderBy</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">S.OrderByExp</span></a></span><span> </span><span id="local-6989586621689217178"><span class="annot"><span class="annottext">NonEmpty OrderByItem
-</span><a href="#local-6989586621689217178"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(OrderByItem, SQLExp, Identifier)]
+</span><a href="#local-6989586621689216341"><span class="hs-identifier hs-var">transformOrderBy</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216390"><span class="hs-identifier hs-var">ordBy</span></a></span><span>
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621689216341"><span class="annot"><span class="annottext">transformOrderBy :: OrderByExp -&gt; ([OrderByItem], [SQLExp], [Identifier])
+</span><a href="#local-6989586621689216341"><span class="hs-identifier hs-var hs-var">transformOrderBy</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#OrderByExp"><span class="hs-identifier hs-type">S.OrderByExp</span></a></span><span> </span><span id="local-6989586621689216340"><span class="annot"><span class="annottext">NonEmpty OrderByItem
+</span><a href="#local-6989586621689216340"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(OrderByItem, SQLExp, Identifier)]
 -&gt; ([OrderByItem], [SQLExp], [Identifier])
 forall a b c. [(a, b, c)] -&gt; ([a], [b], [c])
 </span><span class="hs-identifier hs-var">unzip3</span></span><span> </span><span class="annot"><span class="annottext">([(OrderByItem, SQLExp, Identifier)]
@@ -512,17 +512,17 @@ forall a b. [a] -&gt; [b] -&gt; [(a, b)]
 </span><span class="hs-identifier hs-var">zip</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmpty OrderByItem -&gt; [OrderByItem]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty OrderByItem
-</span><a href="#local-6989586621689217178"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689216340"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">..</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(((OrderByItem, Int) -&gt; (OrderByItem, SQLExp, Identifier))
  -&gt; [(OrderByItem, SQLExp, Identifier)])
 -&gt; ((OrderByItem, Int) -&gt; (OrderByItem, SQLExp, Identifier))
 -&gt; [(OrderByItem, SQLExp, Identifier)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689217175"><span class="annot"><span class="annottext">OrderByItem
-</span><a href="#local-6989586621689217175"><span class="hs-identifier hs-var">obItem</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689217174"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217174"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-133"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689217173"><span class="annot"><span class="annottext">iden :: Identifier
-</span><a href="#local-6989586621689217173"><span class="hs-identifier hs-var hs-var">iden</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689216337"><span class="annot"><span class="annottext">OrderByItem
+</span><a href="#local-6989586621689216337"><span class="hs-identifier hs-var">obItem</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689216336"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689216336"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-133"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689216335"><span class="annot"><span class="annottext">iden :: Identifier
+</span><a href="#local-6989586621689216335"><span class="hs-identifier hs-var hs-var">iden</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#Identifier"><span class="hs-identifier hs-var">Identifier</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Identifier) -&gt; Text -&gt; Identifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -531,34 +531,34 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689217174"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621689216336"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-134"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">OrderByItem
-</span><a href="#local-6989586621689217175"><span class="hs-identifier hs-var">obItem</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">oColumn :: SQLExp
+</span><a href="#local-6989586621689216337"><span class="hs-identifier hs-var">obItem</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">oColumn :: SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#oColumn"><span class="hs-identifier hs-var">S.oColumn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEIdentifier"><span class="hs-identifier hs-var">S.SEIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217173"><span class="hs-identifier hs-var">iden</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216335"><span class="hs-identifier hs-var">iden</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span>
 </span><span id="line-135"></span><span>              </span><span class="annot"><span class="annottext">OrderByItem -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#oColumn"><span class="hs-identifier hs-var hs-var">S.oColumn</span></a></span><span> </span><span class="annot"><span class="annottext">OrderByItem
-</span><a href="#local-6989586621689217175"><span class="hs-identifier hs-var">obItem</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689216337"><span class="hs-identifier hs-var">obItem</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-136"></span><span>              </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689217173"><span class="hs-identifier hs-var">iden</span></a></span><span>
+</span><a href="#local-6989586621689216335"><span class="hs-identifier hs-var">iden</span></a></span><span>
 </span><span id="line-137"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-138"></span><span>
 </span><span id="line-139"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#asSingleRowExtr"><span class="hs-identifier hs-type">asSingleRowExtr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Alias"><span class="hs-identifier hs-type">S.Alias</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span>
 </span><span id="line-140"></span><span id="asSingleRowExtr"><span class="annot"><span class="annottext">asSingleRowExtr :: Alias -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#asSingleRowExtr"><span class="hs-identifier hs-var hs-var">asSingleRowExtr</span></a></span></span><span> </span><span id="local-6989586621689217170"><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217170"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#asSingleRowExtr"><span class="hs-identifier hs-var hs-var">asSingleRowExtr</span></a></span></span><span> </span><span id="local-6989586621689216332"><span class="annot"><span class="annottext">Alias
+</span><a href="#local-6989586621689216332"><span class="hs-identifier hs-var">col</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">S.SEFnApp</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;coalesce&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689217169"><span class="hs-identifier hs-var">jsonAgg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
+</span><a href="#local-6989586621689216331"><span class="hs-identifier hs-var">jsonAgg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">S.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;null&quot;</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-142"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-143"></span><span>    </span><span id="local-6989586621689217169"><span class="annot"><span class="annottext">jsonAgg :: SQLExp
-</span><a href="#local-6989586621689217169"><span class="hs-identifier hs-var hs-var">jsonAgg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-143"></span><span>    </span><span id="local-6989586621689216331"><span class="annot"><span class="annottext">jsonAgg :: SQLExp
+</span><a href="#local-6989586621689216331"><span class="hs-identifier hs-var hs-var">jsonAgg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-144"></span><span>      </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEOpApp"><span class="hs-identifier hs-var">S.SEOpApp</span></a></span><span>
 </span><span id="line-145"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; SQLOp
@@ -572,7 +572,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Alias -&gt; Identifier
 forall a. IsIdentifier a =&gt; a -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217170"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216332"><span class="hs-identifier hs-var">col</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span>
 </span><span id="line-147"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
@@ -587,11 +587,11 @@ forall a. Maybe a
 -&gt; PermissionLimitSubQuery
 -&gt; Maybe OrderByExp
 -&gt; Extractor
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#asJsonAggExtr"><span class="hs-identifier hs-var hs-var">asJsonAggExtr</span></a></span></span><span> </span><span id="local-6989586621689217165"><span class="annot"><span class="annottext">JsonAggSelect
-</span><a href="#local-6989586621689217165"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span></span><span> </span><span id="local-6989586621689217164"><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217164"><span class="hs-identifier hs-var">als</span></a></span></span><span> </span><span id="local-6989586621689217163"><span class="annot"><span class="annottext">PermissionLimitSubQuery
-</span><a href="#local-6989586621689217163"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span></span><span> </span><span id="local-6989586621689217162"><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217162"><span class="hs-identifier hs-var">ordByExpM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#asJsonAggExtr"><span class="hs-identifier hs-var hs-var">asJsonAggExtr</span></a></span></span><span> </span><span id="local-6989586621689216327"><span class="annot"><span class="annottext">JsonAggSelect
+</span><a href="#local-6989586621689216327"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span></span><span> </span><span id="local-6989586621689216326"><span class="annot"><span class="annottext">Alias
+</span><a href="#local-6989586621689216326"><span class="hs-identifier hs-var">als</span></a></span></span><span> </span><span id="local-6989586621689216325"><span class="annot"><span class="annottext">PermissionLimitSubQuery
+</span><a href="#local-6989586621689216325"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span></span><span> </span><span id="local-6989586621689216324"><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216324"><span class="hs-identifier hs-var">ordByExpM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-153"></span><span>  </span><span class="annot"><span class="annottext">(SQLExp -&gt; Maybe Alias -&gt; Extractor)
 -&gt; Maybe Alias -&gt; SQLExp -&gt; Extractor
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
@@ -599,18 +599,18 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">S.Extractor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Alias -&gt; Maybe Alias
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217164"><span class="hs-identifier hs-var">als</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; Extractor) -&gt; SQLExp -&gt; Extractor
+</span><a href="#local-6989586621689216326"><span class="hs-identifier hs-var">als</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; Extractor) -&gt; SQLExp -&gt; Extractor
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
-</span><a href="#local-6989586621689217165"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689216327"><span class="hs-identifier hs-var">jsonAggSelect</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-154"></span><span>    </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASMultipleRows"><span class="hs-identifier hs-var">JASMultipleRows</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PermissionLimitSubQuery -&gt; Maybe OrderByExp -&gt; Alias -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#withJsonAggExtr"><span class="hs-identifier hs-var">withJsonAggExtr</span></a></span><span> </span><span class="annot"><span class="annottext">PermissionLimitSubQuery
-</span><a href="#local-6989586621689217163"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
-</span><a href="#local-6989586621689217162"><span class="hs-identifier hs-var">ordByExpM</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217164"><span class="hs-identifier hs-var">als</span></a></span><span>
+</span><a href="#local-6989586621689216325"><span class="hs-identifier hs-var">permLimitSubQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OrderByExp
+</span><a href="#local-6989586621689216324"><span class="hs-identifier hs-var">ordByExpM</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
+</span><a href="#local-6989586621689216326"><span class="hs-identifier hs-var">als</span></a></span><span>
 </span><span id="line-155"></span><span>    </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASSingleObject"><span class="hs-identifier hs-var">JASSingleObject</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Alias -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Extractor.html#asSingleRowExtr"><span class="hs-identifier hs-var">asSingleRowExtr</span></a></span><span> </span><span class="annot"><span class="annottext">Alias
-</span><a href="#local-6989586621689217164"><span class="hs-identifier hs-var">als</span></a></span><span>
+</span><a href="#local-6989586621689216326"><span class="hs-identifier hs-var">als</span></a></span><span>
 </span><span id="line-156"></span></pre></body></html>
