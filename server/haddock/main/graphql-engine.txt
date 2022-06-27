@@ -21219,10 +21219,11 @@ runDeleteRemoteSchemaRemoteRelationship :: forall m. (MonadError QErr m, CacheRW
 --   the backend-agnostic intermediary collection, and used here to build
 --   remote field info.
 data PartiallyResolvedSource b
-PartiallyResolvedSource :: !SourceMetadata b -> !ResolvedSource b -> !HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)) -> PartiallyResolvedSource b
-[_prsSourceMetadata] :: PartiallyResolvedSource b -> !SourceMetadata b
-[_resolvedSource] :: PartiallyResolvedSource b -> !ResolvedSource b
-[_tableCoreInfoMap] :: PartiallyResolvedSource b -> !HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+PartiallyResolvedSource :: SourceMetadata b -> ResolvedSource b -> HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)) -> HashMap (TableName b) (EventTriggerInfoMap b) -> PartiallyResolvedSource b
+[_prsSourceMetadata] :: PartiallyResolvedSource b -> SourceMetadata b
+[_resolvedSource] :: PartiallyResolvedSource b -> ResolvedSource b
+[_tableCoreInfoMap] :: PartiallyResolvedSource b -> HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
+[_eventTriggerInfoMap] :: PartiallyResolvedSource b -> HashMap (TableName b) (EventTriggerInfoMap b)
 
 -- | Builds the schema cache representation of a remote relationship TODO:
 --   this is not actually called by the remote relationship DDL API and is
@@ -21268,20 +21269,20 @@ CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe
 [_cetqReplace] :: CreateEventTriggerQuery (b :: BackendType) -> !Bool
 [_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe MetadataResponseTransform
-cetqWebhookFromEnv :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe Text)
-cetqWebhook :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe InputWebhook)
-cetqUpdate :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe (SubscribeOpSpec b_arGc0))
-cetqTable :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (TableName b_arGc0)
-cetqSource :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) SourceName
-cetqRetryConf :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe RequestTransform)
-cetqReplace :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) Bool
-cetqName :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) TriggerName
-cetqInsert :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe (SubscribeOpSpec b_arGc0))
-cetqHeaders :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe Bool)
-cetqDelete :: forall b_arGc0. Lens' (CreateEventTriggerQuery b_arGc0) (Maybe (SubscribeOpSpec b_arGc0))
+cetqWebhookFromEnv :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe Text)
+cetqWebhook :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe InputWebhook)
+cetqUpdate :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe (SubscribeOpSpec b_arGdO))
+cetqTable :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (TableName b_arGdO)
+cetqSource :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) SourceName
+cetqRetryConf :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe RequestTransform)
+cetqReplace :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) Bool
+cetqName :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) TriggerName
+cetqInsert :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe (SubscribeOpSpec b_arGdO))
+cetqHeaders :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe Bool)
+cetqDelete :: forall b_arGdO. Lens' (CreateEventTriggerQuery b_arGdO) (Maybe (SubscribeOpSpec b_arGdO))
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: !SourceName -> !TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
 [_detqSource] :: DeleteEventTriggerQuery (b :: BackendType) -> !SourceName
@@ -25200,9 +25201,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_ax0th. Lens' (QueryParametersInfo b_ax0th) (Seq (ColumnValue b_ax0th))
-qpiReusableVariableValues :: forall b_ax0th. Lens' (QueryParametersInfo b_ax0th) (HashMap Name (ColumnValue b_ax0th))
-qpiReferencedSessionVariables :: forall b_ax0th. Lens' (QueryParametersInfo b_ax0th) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ax0v5. Lens' (QueryParametersInfo b_ax0v5) (Seq (ColumnValue b_ax0v5))
+qpiReusableVariableValues :: forall b_ax0v5. Lens' (QueryParametersInfo b_ax0v5) (HashMap Name (ColumnValue b_ax0v5))
+qpiReferencedSessionVariables :: forall b_ax0v5. Lens' (QueryParametersInfo b_ax0v5) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -26866,11 +26867,10 @@ unTrackExistingTableOrViewP1 :: forall b m. (CacheRM m, QErrM m, Backend b) => U
 unTrackExistingTableOrViewP2 :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b) => UntrackTable b -> m EncJSON
 runUntrackTableQ :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b) => UntrackTable b -> m EncJSON
 
--- | Builds an initial <tt><a>TableCache</a> <a>ColumnInfo</a></tt> from
---   catalog information. Does not fill in <a>_tiRolePermInfoMap</a> or
---   <a>_tiEventTriggerInfoMap</a> at all, and <tt>_tiFieldInfoMap</tt>
---   only contains columns, not relationships; those pieces of information
---   are filled in by later stages.
+-- | Builds an initial table cache. Does not fill in permissions or event
+--   triggers, and the returned <tt>FieldInfoMap</tt>s only contain
+--   columns, not relationships; those pieces of information are filled in
+--   later.
 buildTableCache :: forall arr m b. (ArrowChoice arr, ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, ArrowCache m arr, MonadIO m, MonadBaseControl IO m, BackendMetadata b) => (SourceName, SourceConfig b, DBTablesMetadata b, [TableBuildInput b], Dependency InvalidationKey, NamingCase) `arr` HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b))
 instance GHC.Classes.Eq Hasura.RQL.DDL.Schema.Table.SetTableIsEnum
 instance GHC.Show.Show Hasura.RQL.DDL.Schema.Table.SetTableIsEnum
