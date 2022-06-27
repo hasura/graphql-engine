@@ -3,33 +3,30 @@ import { OnboardingSampleDBCohortConfig } from './ReduxState';
 
 // this can later be pulled out as a common lux client for console codebase
 const newLuxClient = () => {
-  const fetchWithOptions = async (
-    query: string,
-    variables: any
-  ): Promise<any> => {
-    try {
-      const response = await fetch(Endpoints.luxDataGraphql, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          query,
-          variables: variables || {},
-        }),
+  const fetchWithOptions = (query: string, variables: any): Promise<any> => {
+    return fetch(Endpoints.luxDataGraphql, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        query,
+        variables: variables || {},
+      }),
+    })
+      .then(response => {
+        return response.json();
+      })
+      .catch(() => {
+        return {
+          errors: [
+            {
+              message: 'unexpected http exception',
+            },
+          ],
+        };
       });
-      const responseJson = await response.json();
-      return responseJson;
-    } catch (e) {
-      return {
-        errors: [
-          {
-            message: 'unexpected http exception',
-          },
-        ],
-      };
-    }
   };
 
   return {
