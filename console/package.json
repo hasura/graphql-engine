@@ -17,7 +17,7 @@
     "--- DEV ------------------------------------------------": "",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\"",
     "start-dev": "node -r dotenv/config ./bin/server.js",
-    "watch-client": "TAILWIND_MODE=watch node -r dotenv/config webpack/webpack-dev-server.js",
+    "watch-client": "node -r dotenv/config webpack/webpack-dev-server.js",
     "--- STORYBOOK ------------------------------------------------": "",
     "chromatic": "npx chromatic",
     "storybook": "TAILWIND_MODE=watch start-storybook -p 6006 -s static --no-manager-cache",
