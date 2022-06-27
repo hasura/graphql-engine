@@ -49,6 +49,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix dropping column from a table that has update permissions (fix #8415)
 - console: Hide TimescaleDB internal schema from data tab
 - console: support naming convention in source customization for postgres DB [CON-297]
 

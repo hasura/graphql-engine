@@ -489,7 +489,7 @@ buildUpdPermInfo source tn fieldInfoMap (UpdPerm colSpec set fltr check backendO
                 <<> " is not updatable and so cannot have update permissions defined"
             )
 
-  let updColDeps = map (mkColDep @b DRUntyped source tn) allUpdCols
+  let updColDeps = map (mkColDep @b DRUntyped source tn) updCols
       deps = mkParentDep @b source tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `HS.union` (HS.fromList setHeaders)
