@@ -111,8 +111,8 @@ query {
   # we put id=1 restrictions here because we don't assume ordering support
   hasura_author(where: {id: {_eq: 1}}) {
     id
-    # the _by_author_id part is necessary to distinguish between multiple foreign key relationships between the same two tables
-    articles_by_author_id(where: {id: {_eq: 1}}) {
+    # the _by_id_to_author_id part is necessary to distinguish between multiple foreign key relationships between the same two tables
+    articles_by_id_to_author_id(where: {id: {_eq: 1}}) {
       id
     }
   }
@@ -123,6 +123,6 @@ query {
 data:
   hasura_author:
   - id: 1
-    articles_by_author_id:
+    articles_by_id_to_author_id:
       - id: 1
 |]

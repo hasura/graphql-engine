@@ -14,6 +14,7 @@ module Harness.Test.Context
     defaultSource,
     defaultBackendTypeString,
     defaultSchema,
+    schemaKeyword,
     noLocalTestEnvironment,
     Options (..),
     combineOptions,

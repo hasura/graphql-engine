@@ -10,12 +10,13 @@ module Hasura.Backends.BigQuery.Execute
     executeBigQuery,
     executeProblemMessage,
     BigQuery (..),
-    OutputValue (..),
-    RecordSet (..),
     Execute,
     ExecuteProblem (..),
-    Value (..),
     FieldNameText (..),
+    OutputValue (..),
+    RecordSet (..),
+    ShowDetails (..),
+    Value (..),
   )
 where
 
@@ -33,6 +34,7 @@ import Data.Maybe
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Builder qualified as LT
+import Data.Text.Lazy.Encoding qualified as LT
 import Data.Text.Read qualified as TR
 import Data.Time
 import Data.Time.Format.ISO8601 (iso8601Show)
@@ -116,6 +118,12 @@ data ExecuteProblem
   | RESTRequestNonOK Status Aeson.Value
   deriving (Generic)
 
+-- | We use this to hide certain details from the front-end, while allowing
+-- them in tests. We have not actually decided whether showing the details is
+-- insecure, but until we decide otherwise, it's probably best to err on the side
+-- of caution.
+data ShowDetails = HideDetails | InsecurelyShowDetails
+
 instance Aeson.ToJSON ExecuteProblem where
   toJSON =
     Aeson.object . \case
@@ -124,12 +132,16 @@ instance Aeson.ToJSON ExecuteProblem where
       ExecuteRunBigQueryProblem problem -> ["execute_run_bigquery_problem" Aeson..= problem]
       RESTRequestNonOK _ resp -> ["rest_request_non_ok" Aeson..= resp]
 
-executeProblemMessage :: ExecuteProblem -> Text
-executeProblemMessage = \case
-  GetJobDecodeProblem err -> "Fetching bigquery job status, cannot decode  HTTP response; " <> tshow err
-  CreateQueryJobDecodeProblem err -> "Creating bigquery job, cannot decode HTTP response: " <> tshow err
-  ExecuteRunBigQueryProblem _ -> "Cannot execute bigquery request"
-  RESTRequestNonOK status _ -> "Bigquery HTTP request failed with status code " <> tshow (statusCode status) <> " and status message " <> tshow (statusMessage status)
+executeProblemMessage :: ShowDetails -> ExecuteProblem -> Text
+executeProblemMessage showDetails = \case
+  GetJobDecodeProblem err -> "Fetching BigQuery job status, cannot decode HTTP response; " <> tshow err
+  CreateQueryJobDecodeProblem err -> "Creating BigQuery job, cannot decode HTTP response: " <> tshow err
+  ExecuteRunBigQueryProblem _ -> "Cannot execute BigQuery request"
+  RESTRequestNonOK status body ->
+    let summary = "BigQuery HTTP request failed with status " <> tshow (statusCode status) <> " " <> tshow (statusMessage status)
+     in case showDetails of
+          HideDetails -> summary
+          InsecurelyShowDetails -> summary <> " and body:\n" <> LT.toStrict (LT.decodeUtf8 (Aeson.encode body))
 
 -- | Execute monad; as queries are performed, the record sets are
 -- stored in the map.

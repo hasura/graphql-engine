@@ -111,7 +111,7 @@ internal:
         locationType: parameter
         message: 'Syntax error: Expected end of input but got keyword SOME at [1:1]'
 path: "$"
-error: Bigquery HTTP request failed with status code 400 and status message "Bad Request"
+error: BigQuery HTTP request failed with status 400 "Bad Request"
 code: bigquery-error
 |]
 

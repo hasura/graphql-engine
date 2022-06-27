@@ -114,7 +114,7 @@ usingWhereClause opts = do
 query {
   hasura_article(where: {id: {_eq: 1}}) {
     id
-    author_by_author_id {
+    author_by_author_id_to_id {
       id
     }
   }
@@ -125,7 +125,7 @@ query {
 data:
   hasura_article:
   - id: 1
-    author_by_author_id:
+    author_by_author_id_to_id:
       id: 1
 |]
 
@@ -140,7 +140,7 @@ nullField opts = do
 query {
   hasura_article(where: {id: {_eq: 4}}) {
     id
-    author_by_author_id {
+    author_by_author_id_to_id {
       id
     }
   }
@@ -150,6 +150,6 @@ query {
       [yaml|
 data:
   hasura_article:
-  - author_by_author_id: null
+  - author_by_author_id_to_id: null
     id: 4
 |]

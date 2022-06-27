@@ -4,9 +4,11 @@ module Harness.Test.BackendType
     defaultSource,
     defaultBackendTypeString,
     defaultSchema,
+    schemaKeyword,
   )
 where
 
+import Data.Aeson.Key (Key)
 import Harness.Constants qualified as Constants (bigqueryDataset, citusDb, dataConnectorDb, mysqlDb, postgresDb, sqlserverDb)
 import Prelude
 
@@ -49,3 +51,12 @@ defaultSchema = \case
   BigQuery -> Constants.bigqueryDataset
   Citus -> Constants.citusDb
   DataConnector -> Constants.dataConnectorDb
+
+schemaKeyword :: BackendType -> Key
+schemaKeyword = \case
+  Postgres -> "schema"
+  MySQL -> "schema"
+  SQLServer -> "schema"
+  BigQuery -> "dataset"
+  Citus -> "schema"
+  DataConnector -> "schema"

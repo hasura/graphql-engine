@@ -237,14 +237,18 @@ setup tables (testEnvironment, _) = do
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown tables (testEnvironment, _) = do
-  forFinally_ (reverse tables) $ \table ->
-    finally
-      (Schema.untrackRelationships MySQL table testEnvironment)
-      ( finally
+teardown (reverse -> tables) (testEnvironment, _) = do
+  finally
+    -- Teardown relationships first
+    ( forFinally_ tables $ \table ->
+        Schema.untrackRelationships MySQL table testEnvironment
+    )
+    -- Then teardown tables
+    ( forFinally_ tables $ \table ->
+        finally
           (untrackTable testEnvironment table)
           (dropTable table)
-      )
+    )
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

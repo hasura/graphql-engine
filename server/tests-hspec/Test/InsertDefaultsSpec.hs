@@ -268,7 +268,7 @@ data:
           [graphql|
 mutation {
   insert_hasura_withrelationship(
-    objects: [{ nickname: "the a", alldefaults_by_time_id: {data: {} } }]
+    objects: [{ nickname: "the a", alldefaults_by_time_id_to_id: {data: {} } }]
     on_conflict: {
       constraint: withrelationship_pkey,
       update_columns: []
@@ -278,7 +278,7 @@ mutation {
     returning {
       id
       nickname
-      alldefaults_by_time_id {
+      alldefaults_by_time_id_to_id {
         id
       }
     }
@@ -293,7 +293,7 @@ data:
     returning:
     - id: 1
       nickname: "the a"
-      alldefaults_by_time_id:
+      alldefaults_by_time_id_to_id:
         id: 1
 |]
 

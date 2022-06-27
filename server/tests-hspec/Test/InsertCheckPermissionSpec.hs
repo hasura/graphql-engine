@@ -4,6 +4,7 @@
 module Test.InsertCheckPermissionSpec (spec) where
 
 import Harness.Backend.Sqlserver qualified as Sqlserver
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
@@ -87,7 +88,7 @@ args:
     role: user
     permission:
       check:
-        author_by_author_id:
+        author_by_author_id_to_id:
           id: X-Hasura-User-Id
       columns:
       - id
@@ -103,7 +104,7 @@ args:
     role: user
     permission:
       filter:
-        author_by_author_id:
+        author_by_author_id_to_id:
           id: X-Hasura-User-Id
       columns:
       - id
@@ -128,8 +129,9 @@ args:
 mssqlTeardown :: (TestEnvironment, ()) -> IO ()
 mssqlTeardown (testEnvironment, ()) = do
   -- teardown permissions
-  GraphqlEngine.postMetadata_ testEnvironment $
-    [yaml|
+  let teardownPermissions =
+        GraphqlEngine.postMetadata_ testEnvironment $
+          [yaml|
 type: bulk
 args:
 - type: mssql_drop_insert_permission
@@ -155,8 +157,10 @@ args:
     role: user
 |]
 
-  -- and then rest of the teardown
-  Sqlserver.teardown schema (testEnvironment, ())
+  finally
+    teardownPermissions
+    -- and then rest of the teardown
+    (Sqlserver.teardown schema (testEnvironment, ()))
 
 --------------------------------------------------------------------------------
 
