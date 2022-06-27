@@ -428,8 +428,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadError QErr m,
         MonadBaseControl IO m
       ) =>
-      (Int, SourceConfig b) `arr` RecreateEventTriggers
-    initCatalogIfNeeded = Inc.cache proc (numEventTriggers, sourceConfig) -> do
+      (Proxy b, Int, SourceConfig b) `arr` RecreateEventTriggers
+    initCatalogIfNeeded = Inc.cache proc (Proxy, numEventTriggers, sourceConfig) -> do
       arrM id
         -< do
           if numEventTriggers > 0
@@ -470,36 +470,27 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         Inc.ArrowDistribute arr,
         Inc.ArrowCache m arr,
         ArrowWriter (Seq CollectedInfo) arr,
-        MonadBaseControl IO m,
         HasServerConfigCtx m,
-        MonadIO m,
         MonadError QErr m,
-        MonadReader BuildReason m,
-        BackendMetadata b,
-        BackendEventTrigger b
+        BackendMetadata b
       ) =>
       ( HashMap SourceName (AB.AnyBackend PartiallyResolvedSource),
         SourceMetadata b,
         SourceConfig b,
         HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
+        HashMap (TableName b) (EventTriggerInfoMap b),
         DBTablesMetadata b,
         DBFunctionsMetadata b,
         RemoteSchemaMap,
-        Inc.Dependency InvalidationKeys,
         OrderedRoles
       )
         `arr` BackendSourceInfo
-    buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, _dbTables, dbFunctions, remoteSchemaMap, invalidationKeys, orderedRoles) -> do
+    buildSource = proc (allSources, sourceMetadata, sourceConfig, tablesRawInfo, eventTriggerInfoMaps, _dbTables, dbFunctions, remoteSchemaMap, orderedRoles) -> do
       let SourceMetadata sourceName _backendKind tables functions _ queryTagsConfig sourceCustomization = sourceMetadata
           tablesMetadata = OMap.elems tables
           (_, nonColumnInputs, permissions) = unzip3 $ map mkTableInputs tablesMetadata
-          eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
           alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
           alignTableMap = M.intersectionWith (,)
-          metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
-          numEventTriggers = sum $ map (length . snd) eventTriggers
-
-      recreateEventTriggers <- initCatalogIfNeeded @b -< (numEventTriggers, sourceConfig)
 
       -- relationships and computed fields
       let nonColumnsByTable = mapFromL _nctiTable nonColumnInputs
@@ -515,20 +506,19 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
       tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
 
-      -- permissions and event triggers
+      -- permissions
       tableCache <-
         (|
           Inc.keyed
-            ( \_ ((tableCoreInfo, permissionInputs), (_, eventTriggerConfs)) -> do
+            ( \_ ((tableCoreInfo, permissionInputs), eventTriggerInfos) -> do
                 let tableFields = _tciFieldInfoMap tableCoreInfo
                 permissionInfos <-
                   buildTablePermissions
                     -<
                       (Proxy :: Proxy b, sourceName, tableCoreInfosDep, tableFields, permissionInputs, orderedRoles)
-                eventTriggerInfos <- buildTableEventTriggers -< (sourceName, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
                 returnA -< TableInfo tableCoreInfo permissionInfos eventTriggerInfos (mkAdminRolePermInfo tableCoreInfo)
             )
-          |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` mapFromL fst eventTriggers)
+          |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
 
       defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
 
@@ -654,7 +644,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         (|
           Inc.keyed
             ( \_ exists ->
-                AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata
+                AB.dispatchAnyBackendArrow @BackendMetadata @BackendEventTrigger
                   ( proc (backendConfigAndSourceMetadata, (invalidationKeys, defaultNC)) -> do
                       let sourceMetadata = _bcasmSourceMetadata backendConfigAndSourceMetadata
                           sourceName = _smName sourceMetadata
@@ -676,11 +666,30 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                   metadataInvalidationKey,
                                   namingConv
                                 )
+
+                          let tablesMetadata = OMap.elems $ _smTables sourceMetadata
+                              eventTriggers = map (_tmTable &&& OMap.elems . _tmEventTriggers) tablesMetadata
+                              numEventTriggers = sum $ map (length . snd) eventTriggers
+                              sourceConfig = _rsConfig source
+
+                          recreateEventTriggers <- initCatalogIfNeeded -< (Proxy :: Proxy b, numEventTriggers, sourceConfig)
+
+                          let alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
+                              alignTableMap = M.intersectionWith (,)
+
+                          eventTriggerInfoMaps <-
+                            (|
+                              Inc.keyed
+                                ( \_ (tableCoreInfo, (_, eventTriggerConfs)) ->
+                                    buildTableEventTriggers -< (sourceName, sourceConfig, tableCoreInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers)
+                                )
+                              |) (tablesCoreInfo `alignTableMap` mapFromL fst eventTriggers)
+
                           returnA
                             -<
                               Just $
                                 AB.mkAnyBackend @b $
-                                  PartiallyResolvedSource sourceMetadata source tablesCoreInfo
+                                  PartiallyResolvedSource sourceMetadata source tablesCoreInfo eventTriggerInfoMaps
                   )
                   -<
                     (exists, (invalidationKeys, defaultNC))
@@ -694,13 +703,13 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         (|
           Inc.keyed
             ( \_ exists ->
-                AB.dispatchAnyBackendArrow @BackendMetadata @BackendEventTrigger
+                AB.dispatchAnyBackendArrow @BackendMetadata @BackendMetadata
                   ( proc
                       ( partiallyResolvedSource :: PartiallyResolvedSource b,
-                        (allResolvedSources, invalidationKeys, remoteSchemaCtxMap, orderedRoles)
+                        (allResolvedSources, remoteSchemaCtxMap, orderedRoles)
                         )
                     -> do
-                      let PartiallyResolvedSource sourceMetadata resolvedSource tablesInfo = partiallyResolvedSource
+                      let PartiallyResolvedSource sourceMetadata resolvedSource tablesInfo eventTriggers = partiallyResolvedSource
                           ResolvedSource sourceConfig _sourceCustomization tablesMeta functionsMeta scalars = resolvedSource
                       so <-
                         buildSource
@@ -709,17 +718,17 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                               sourceMetadata,
                               sourceConfig,
                               tablesInfo,
+                              eventTriggers,
                               tablesMeta,
                               functionsMeta,
                               remoteSchemaCtxMap,
-                              invalidationKeys,
                               orderedRoles
                             )
                       returnA -< (so, BackendMap.singleton scalars)
                   )
                   -<
                     ( exists,
-                      (partiallyResolvedSources, invalidationKeys, remoteSchemaCtxMap, orderedRoles)
+                      (partiallyResolvedSources, remoteSchemaCtxMap, orderedRoles)
                     )
             )
           |) partiallyResolvedSources
@@ -1006,7 +1015,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       ) =>
       ( SourceName,
         SourceConfig b,
-        TableCoreInfo b,
+        TableCoreInfoG b (ColumnInfo b) (ColumnInfo b),
         [EventTriggerConf b],
         Inc.Dependency Inc.InvalidationKey,
         RecreateEventTriggers
@@ -1072,7 +1081,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             -> do
               bindA
                 -< do
-                  let tableColumns = M.elems $ M.mapMaybe (^? _FIColumn) tableFieldInfoMap
+                  let tableColumns = M.elems tableFieldInfoMap
                   buildReason <- ask
                   serverConfigCtx <- askServerConfigCtx
                   let isCatalogUpdate =

@@ -390,9 +390,9 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 @b q
   unTrackExistingTableOrViewP2 @b q
 
--- | Builds an initial @'TableCache' 'ColumnInfo'@ from catalog information. Does not fill in
--- '_tiRolePermInfoMap' or '_tiEventTriggerInfoMap' at all, and '_tiFieldInfoMap' only contains
--- columns, not relationships; those pieces of information are filled in by later stages.
+-- | Builds an initial table cache. Does not fill in permissions or event triggers, and the returned
+-- @FieldInfoMap@s only contain columns, not relationships; those pieces of information are filled
+-- in later.
 buildTableCache ::
   forall arr m b.
   ( ArrowChoice arr,
