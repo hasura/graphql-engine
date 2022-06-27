@@ -12,9 +12,9 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v3"
 
-	"github.com/vektah/gqlparser/ast"
-	"github.com/vektah/gqlparser/formatter"
-	"github.com/vektah/gqlparser/parser"
+	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/formatter"
+	"github.com/vektah/gqlparser/v2/parser"
 )
 
 type QueryCollectionConfig struct {
@@ -96,7 +96,7 @@ func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[strin
 				if err != nil {
 					return nil, q.error(err)
 				}
-				gqlFormatter := formatter.NewFormatter(buf)
+				gqlFormatter := formatter.NewFormatter(buf, formatter.WithIndent("  "))
 				gqlFormatter.FormatQueryDocument(queryDoc)
 				if buf.Len() > 0 {
 					collections[collectionIdx].Definition.Queries[queryIdx].Query = buf.String()

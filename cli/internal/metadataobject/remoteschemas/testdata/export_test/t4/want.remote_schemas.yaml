@@ -11,1284 +11,1284 @@
       definition:
         schema: |
           schema {
-          	query: query_root
-          	mutation: mutation_root
+            query: query_root
+            mutation: mutation_root
           }
           type battle_character_loot {
-          	battle_character: battle_characters!
-          	battle_character_id: uuid!
-          	created_at: timestamptz!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
+            battle_character: battle_characters!
+            battle_character_id: uuid!
+            created_at: timestamptz!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
           }
           type battle_character_stats {
-          	amount: Int!
-          	battle_character: battle_characters!
-          	battle_character_id: uuid!
-          	battle_stat_type: battle_stat_types_enum!
-          	created_at: timestamptz!
-          	id: uuid!
-          	updated_at: timestamptz!
+            amount: Int!
+            battle_character: battle_characters!
+            battle_character_id: uuid!
+            battle_stat_type: battle_stat_types_enum!
+            created_at: timestamptz!
+            id: uuid!
+            updated_at: timestamptz!
           }
           type battle_character_xp {
-          	amount: Int!
-          	battle_character: battle_characters!
-          	battle_character_id: uuid!
-          	character_skill_type: character_skill_types_enum!
-          	created_at: timestamptz!
-          	id: uuid!
-          	updated_at: timestamptz!
+            amount: Int!
+            battle_character: battle_characters!
+            battle_character_id: uuid!
+            character_skill_type: character_skill_types_enum!
+            created_at: timestamptz!
+            id: uuid!
+            updated_at: timestamptz!
           }
           type battle_characters {
-          	battle: battles!
-          	battle_character_loots(limit: Int, offset: Int): [battle_character_loot!]!
-          	battle_character_stats(limit: Int, offset: Int): [battle_character_stats!]!
-          	battle_character_xps(limit: Int, offset: Int): [battle_character_xp!]!
-          	battle_id: uuid!
-          	battle_loot_votes(limit: Int, offset: Int): [battle_loot_votes!]!
-          	character: characters!
-          	character_id: uuid!
-          	created_at: timestamptz!
-          	gold_gained: Int
-          	id: uuid!
-          	updated_at: timestamptz!
+            battle: battles!
+            battle_character_loots(limit: Int, offset: Int): [battle_character_loot!]!
+            battle_character_stats(limit: Int, offset: Int): [battle_character_stats!]!
+            battle_character_xps(limit: Int, offset: Int): [battle_character_xp!]!
+            battle_id: uuid!
+            battle_loot_votes(limit: Int, offset: Int): [battle_loot_votes!]!
+            character: characters!
+            character_id: uuid!
+            created_at: timestamptz!
+            gold_gained: Int
+            id: uuid!
+            updated_at: timestamptz!
           }
           type battle_groups {
-          	characters(limit: Int, offset: Int): [characters!]!
-          	created_at: timestamptz!
-          	id: uuid!
-          	in_combat: Boolean!
-          	leader: characters
-          	leader_id: uuid
-          	updated_at: timestamptz!
+            characters(limit: Int, offset: Int): [characters!]!
+            created_at: timestamptz!
+            id: uuid!
+            in_combat: Boolean!
+            leader: characters
+            leader_id: uuid
+            updated_at: timestamptz!
           }
           type battle_loot_pending {
-          	battle: battles!
-          	battle_id: uuid!
-          	battle_loot_votes(limit: Int, offset: Int): [battle_loot_votes!]!
-          	created_at: timestamptz!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
+            battle: battles!
+            battle_id: uuid!
+            battle_loot_votes(limit: Int, offset: Int): [battle_loot_votes!]!
+            created_at: timestamptz!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
           }
           type battle_loot_votes {
-          	battle_character: battle_characters!
-          	battle_character_id: uuid!
-          	battle_loot_pending: battle_loot_pending!
-          	battle_loot_pending_id: uuid!
-          	created_at: timestamptz!
-          	greed: Boolean
-          	id: uuid!
-          	need: Boolean
-          	updated_at: timestamptz!
+            battle_character: battle_characters!
+            battle_character_id: uuid!
+            battle_loot_pending: battle_loot_pending!
+            battle_loot_pending_id: uuid!
+            created_at: timestamptz!
+            greed: Boolean
+            id: uuid!
+            need: Boolean
+            updated_at: timestamptz!
           }
           enum battle_stat_types_enum {
-          	damage_dealt
-          	damage_received
-          	health_restored
+            damage_dealt
+            damage_received
+            health_restored
           }
           enum battle_states_enum {
-          	complete
-          	connecting
-          	pending
-          	post_battle
-          	running
+            complete
+            connecting
+            pending
+            post_battle
+            running
           }
           type battles {
-          	battle_characters(limit: Int, offset: Int): [battle_characters!]!
-          	battle_loot_pendings(limit: Int, offset: Int): [battle_loot_pending!]!
-          	completed_at: timestamptz
-          	created_at: timestamptz!
-          	id: uuid!
-          	realm: realms!
-          	realm_id: uuid!
-          	room: rooms
-          	room_id: uuid
-          	started_at: timestamptz
-          	state: battle_states_enum!
-          	updated_at: timestamptz!
+            battle_characters(limit: Int, offset: Int): [battle_characters!]!
+            battle_loot_pendings(limit: Int, offset: Int): [battle_loot_pending!]!
+            completed_at: timestamptz
+            created_at: timestamptz!
+            id: uuid!
+            realm: realms!
+            realm_id: uuid!
+            room: rooms
+            room_id: uuid
+            started_at: timestamptz
+            state: battle_states_enum!
+            updated_at: timestamptz!
           }
           scalar bigint
           enum category_types_enum {
-          	astronomy
-          	components
-          	equipment
-          	farming
-          	mining
-          	woodcutting
+            astronomy
+            components
+            equipment
+            farming
+            mining
+            woodcutting
           }
           enum character_class_types_enum {
-          	archer
-          	defender
-          	sharpshooter
-          	thaumturgist
-          	warrior
-          	wizard
+            archer
+            defender
+            sharpshooter
+            thaumturgist
+            warrior
+            wizard
           }
           type character_classes {
-          	character: characters!
-          	character_id: uuid!
-          	character_loadouts(limit: Int, offset: Int): [character_loadouts!]!
-          	class: classes!
-          	class_id: uuid!
-          	created_at: timestamptz!
-          	id: uuid!
-          	unlocked: Boolean!
-          	updated_at: timestamptz!
+            character: characters!
+            character_id: uuid!
+            character_loadouts(limit: Int, offset: Int): [character_loadouts!]!
+            class: classes!
+            class_id: uuid!
+            created_at: timestamptz!
+            id: uuid!
+            unlocked: Boolean!
+            updated_at: timestamptz!
           }
           type character_equipment_components {
-          	character_item_equipment: character_item_equipments!
-          	character_item_equipment_id: uuid!
-          	component_grade: equipment_component_grade_types_enum!
-          	component_id: uuid!
-          	created_at: timestamptz!
-          	equipment_component: equipment_components!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
-          	variant: String!
+            character_item_equipment: character_item_equipments!
+            character_item_equipment_id: uuid!
+            component_grade: equipment_component_grade_types_enum!
+            component_id: uuid!
+            created_at: timestamptz!
+            equipment_component: equipment_components!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
+            variant: String!
           }
           type character_events {
-          	character: characters!
-          	character_id: uuid!
-          	checksum: String!
-          	created_at: timestamptz!
-          	id: uuid!
-          	patch_diff(path: String): jsonb!
-          	query_result(path: String): jsonb!
-          	query_type: query_types_enum!
-          	revision: Int!
-          	updated_at: timestamptz!
+            character: characters!
+            character_id: uuid!
+            checksum: String!
+            created_at: timestamptz!
+            id: uuid!
+            patch_diff(path: String): jsonb!
+            query_result(path: String): jsonb!
+            query_type: query_types_enum!
+            revision: Int!
+            updated_at: timestamptz!
           }
           enum character_inventory_types_enum {
-          	character_item_basic
-          	character_item_equipment_components
-          	character_item_equipments
+            character_item_basic
+            character_item_equipment_components
+            character_item_equipments
           }
           type character_item_basic {
-          	amount: Int!
-          	character: characters!
-          	character_id: uuid!
-          	created_at: timestamptz!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
+            amount: Int!
+            character: characters!
+            character_id: uuid!
+            created_at: timestamptz!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
           }
           type character_item_equipment_components {
-          	amount: Int!
-          	character: characters!
-          	character_id: uuid!
-          	component_grade: equipment_component_grade_types_enum!
-          	component_material: item_material_types_enum!
-          	component_type: equipment_component_types_enum!
-          	created_at: timestamptz!
-          	equipment_components(limit: Int, offset: Int): [equipment_components!]!
-          	icon: String!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
+            amount: Int!
+            character: characters!
+            character_id: uuid!
+            component_grade: equipment_component_grade_types_enum!
+            component_material: item_material_types_enum!
+            component_type: equipment_component_types_enum!
+            created_at: timestamptz!
+            equipment_components(limit: Int, offset: Int): [equipment_components!]!
+            icon: String!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
           }
           type character_item_equipments {
-          	amount: Int!
-          	character: characters!
-          	character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
-          	character_id: uuid!
-          	character_loadout_equipments(limit: Int, offset: Int): [character_loadout_equipment!]!
-          	created_at: timestamptz!
-          	equipment_category: equipment_category_types_enum!
-          	equipment_slot: equipment_slot_types_enum!
-          	equipment_type: equipment_types_enum!
-          	id: uuid!
-          	is_equipped: Boolean!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
+            amount: Int!
+            character: characters!
+            character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
+            character_id: uuid!
+            character_loadout_equipments(limit: Int, offset: Int): [character_loadout_equipment!]!
+            created_at: timestamptz!
+            equipment_category: equipment_category_types_enum!
+            equipment_slot: equipment_slot_types_enum!
+            equipment_type: equipment_types_enum!
+            id: uuid!
+            is_equipped: Boolean!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
           }
           type character_loadout_equipment {
-          	character_equipment_id: uuid!
-          	character_item_equipment: character_item_equipments!
-          	character_loadout: character_loadouts!
-          	character_loadouts_id: uuid!
-          	created_at: timestamptz!
-          	id: uuid!
-          	updated_at: timestamptz!
+            character_equipment_id: uuid!
+            character_item_equipment: character_item_equipments!
+            character_loadout: character_loadouts!
+            character_loadouts_id: uuid!
+            created_at: timestamptz!
+            id: uuid!
+            updated_at: timestamptz!
           }
           type character_loadouts {
-          	character: characters!
-          	character_class: character_classes!
-          	character_class_id: uuid!
-          	character_id: uuid!
-          	character_loadout_equipments(limit: Int, offset: Int): [character_loadout_equipment!]!
-          	characters(limit: Int, offset: Int): [characters!]!
-          	created_at: timestamptz!
-          	id: uuid!
-          	name: String!
-          	order: Int!
-          	updated_at: timestamptz!
+            character: characters!
+            character_class: character_classes!
+            character_class_id: uuid!
+            character_id: uuid!
+            character_loadout_equipments(limit: Int, offset: Int): [character_loadout_equipment!]!
+            characters(limit: Int, offset: Int): [characters!]!
+            created_at: timestamptz!
+            id: uuid!
+            name: String!
+            order: Int!
+            updated_at: timestamptz!
           }
           type character_name_available_result {
-          	available: Boolean!
+            available: Boolean!
           }
           type character_recipes {
-          	character: characters!
-          	character_id: uuid!
-          	created_at: timestamptz!
-          	id: uuid!
-          	recipe: recipes!
-          	recipe_id: uuid!
-          	updated_at: timestamptz!
+            character: characters!
+            character_id: uuid!
+            created_at: timestamptz!
+            id: uuid!
+            recipe: recipes!
+            recipe_id: uuid!
+            updated_at: timestamptz!
           }
           enum character_skill_types_enum {
-          	astronomy
-          	attack
-          	crafting
-          	defense
-          	farming
-          	health
-          	magic
-          	mining
-          	woodcutting
+            astronomy
+            attack
+            crafting
+            defense
+            farming
+            health
+            magic
+            mining
+            woodcutting
           }
           type character_skills {
-          	character: characters!
-          	character_id: uuid!
-          	character_skill_type: character_skill_types_enum!
-          	created_at: timestamptz!
-          	id: uuid!
-          	level: Int!
-          	updated_at: timestamptz!
-          	xp: bigint!
-          	xp_next: bigint!
+            character: characters!
+            character_id: uuid!
+            character_skill_type: character_skill_types_enum!
+            created_at: timestamptz!
+            id: uuid!
+            level: Int!
+            updated_at: timestamptz!
+            xp: bigint!
+            xp_next: bigint!
           }
           type character_tick_mining_result {
-          	status: String!
+            status: String!
           }
           type characters {
-          	active_loadout_id: uuid
-          	battle_characters(limit: Int, offset: Int): [battle_characters!]!
-          	battle_group: battle_groups
-          	battle_group_id: uuid
-          	battle_groups(limit: Int, offset: Int): [battle_groups!]!
-          	character_classes(limit: Int, offset: Int): [character_classes!]!
-          	character_events(limit: Int, offset: Int): [character_events!]!
-          	character_item_basics(limit: Int, offset: Int): [character_item_basic!]!
-          	character_item_equipment_components(limit: Int, offset: Int): [character_item_equipment_components!]!
-          	character_item_equipments(limit: Int, offset: Int): [character_item_equipments!]!
-          	character_loadout: character_loadouts
-          	character_loadouts(limit: Int, offset: Int): [character_loadouts!]!
-          	character_recipes(limit: Int, offset: Int): [character_recipes!]!
-          	character_skills(limit: Int, offset: Int): [character_skills!]!
-          	created_at: timestamptz!
-          	gold: bigint!
-          	id: uuid!
-          	last_astronomy_update: timestamptz!
-          	last_crafting_update: timestamptz!
-          	last_farming_update: timestamptz!
-          	last_mining_update: timestamptz!
-          	last_woodcutting_update: timestamptz!
-          	mining_spaces(limit: Int, offset: Int): [mining_spaces!]!
-          	name: String!
-          	realm: realms!
-          	realm_id: uuid!
-          	updated_at: timestamptz!
-          	user: users!
-          	user_id: uuid!
-          	users(limit: Int, offset: Int): [users!]!
+            active_loadout_id: uuid
+            battle_characters(limit: Int, offset: Int): [battle_characters!]!
+            battle_group: battle_groups
+            battle_group_id: uuid
+            battle_groups(limit: Int, offset: Int): [battle_groups!]!
+            character_classes(limit: Int, offset: Int): [character_classes!]!
+            character_events(limit: Int, offset: Int): [character_events!]!
+            character_item_basics(limit: Int, offset: Int): [character_item_basic!]!
+            character_item_equipment_components(limit: Int, offset: Int): [character_item_equipment_components!]!
+            character_item_equipments(limit: Int, offset: Int): [character_item_equipments!]!
+            character_loadout: character_loadouts
+            character_loadouts(limit: Int, offset: Int): [character_loadouts!]!
+            character_recipes(limit: Int, offset: Int): [character_recipes!]!
+            character_skills(limit: Int, offset: Int): [character_skills!]!
+            created_at: timestamptz!
+            gold: bigint!
+            id: uuid!
+            last_astronomy_update: timestamptz!
+            last_crafting_update: timestamptz!
+            last_farming_update: timestamptz!
+            last_mining_update: timestamptz!
+            last_woodcutting_update: timestamptz!
+            mining_spaces(limit: Int, offset: Int): [mining_spaces!]!
+            name: String!
+            realm: realms!
+            realm_id: uuid!
+            updated_at: timestamptz!
+            user: users!
+            user_id: uuid!
+            users(limit: Int, offset: Int): [users!]!
           }
           type classes {
-          	character_classes(limit: Int, offset: Int): [character_classes!]!
-          	class: character_class_types_enum!
-          	created_at: timestamptz!
-          	equipment_armor: equipment_category_types_enum!
-          	equipment_mainhand: equipment_category_types_enum!
-          	equipment_offhand: equipment_category_types_enum!
-          	id: uuid!
-          	updated_at: timestamptz!
+            character_classes(limit: Int, offset: Int): [character_classes!]!
+            class: character_class_types_enum!
+            created_at: timestamptz!
+            equipment_armor: equipment_category_types_enum!
+            equipment_mainhand: equipment_category_types_enum!
+            equipment_offhand: equipment_category_types_enum!
+            id: uuid!
+            updated_at: timestamptz!
           }
           enum combat_stat_types_enum {
-          	accuracy
-          	accuracyExtra
-          	armor
-          	armorExtra
-          	attackMax
-          	attackMaxExtra
-          	attackMin
-          	attackMinExtra
-          	attackSpeed
-          	attackSpeedExtra
-          	criticalChance
-          	criticalChanceExtra
-          	evasion
-          	evasionExtra
-          	healingPower
-          	healingPowerExtra
-          	health
-          	healthExtra
-          	magicArmor
-          	magicArmorExtra
-          	magicPower
-          	magicPowerExtra
+            accuracy
+            accuracyExtra
+            armor
+            armorExtra
+            attackMax
+            attackMaxExtra
+            attackMin
+            attackMinExtra
+            attackSpeed
+            attackSpeedExtra
+            criticalChance
+            criticalChanceExtra
+            evasion
+            evasionExtra
+            healingPower
+            healingPowerExtra
+            health
+            healthExtra
+            magicArmor
+            magicArmorExtra
+            magicPower
+            magicPowerExtra
           }
           type craft_result {
-          	amount: Int!
-          	id: uuid!
+            amount: Int!
+            id: uuid!
           }
           type create_tower_battle_result {
-          	status: String!
+            status: String!
           }
           enum equipment_category_types_enum {
-          	magic_armor
-          	magic_mainhand
-          	magic_offhand
-          	melee_armor
-          	melee_mainhand
-          	melee_offhand
-          	none
-          	ranged_armor
-          	ranged_mainhand
+            magic_armor
+            magic_mainhand
+            magic_offhand
+            melee_armor
+            melee_mainhand
+            melee_offhand
+            none
+            ranged_armor
+            ranged_mainhand
           }
           enum equipment_component_grade_types_enum {
-          	A
-          	B
-          	C
-          	D
-          	F
-          	S
+            A
+            B
+            C
+            D
+            F
+            S
           }
           type equipment_component_stats {
-          	created_at: timestamptz!
-          	equipment_component: equipment_components!
-          	equipment_components_id: uuid!
-          	id: uuid!
-          	stat: combat_stat_types_enum!
-          	updated_at: timestamptz!
-          	value: Float
+            created_at: timestamptz!
+            equipment_component: equipment_components!
+            equipment_components_id: uuid!
+            id: uuid!
+            stat: combat_stat_types_enum!
+            updated_at: timestamptz!
+            value: Float
           }
           enum equipment_component_types_enum {
-          	axe_blade
-          	blade
-          	bowlimbs
-          	bowstring
-          	catalyst
-          	chain
-          	core
-          	fabric
-          	guard
-          	handle
-          	hilt
-          	lens
-          	magical_core
-          	plates
-          	rod
-          	rune
-          	trim
-          	trowel_blade
+            axe_blade
+            blade
+            bowlimbs
+            bowstring
+            catalyst
+            chain
+            core
+            fabric
+            guard
+            handle
+            hilt
+            lens
+            magical_core
+            plates
+            rod
+            rune
+            trim
+            trowel_blade
           }
           type equipment_components {
-          	character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
-          	component_material: item_material_types_enum!
-          	component_type: equipment_component_types_enum!
-          	created_at: timestamptz!
-          	equipment_component_stats(limit: Int, offset: Int): [equipment_component_stats!]!
-          	equipment_type: equipment_types_enum!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
-          	variants(path: String): jsonb!
+            character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
+            component_material: item_material_types_enum!
+            component_type: equipment_component_types_enum!
+            created_at: timestamptz!
+            equipment_component_stats(limit: Int, offset: Int): [equipment_component_stats!]!
+            equipment_type: equipment_types_enum!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
+            variants(path: String): jsonb!
           }
           enum equipment_slot_types_enum {
-          	armor
-          	astronomy
-          	farming
-          	mainhand
-          	mining
-          	offhand
-          	woodcutting
+            armor
+            astronomy
+            farming
+            mainhand
+            mining
+            offhand
+            woodcutting
           }
           enum equipment_types_enum {
-          	apprentice_robes
-          	axe
-          	base
-          	battleaxe
-          	buckler
-          	chain_armor
-          	crossbow
-          	grimoire
-          	halberd
-          	hammer
-          	idle
-          	kite_shield
-          	leather_armor
-          	long_bow
-          	mage_bracers
-          	orb
-          	padded_armor
-          	pickaxe
-          	plate_armor
-          	round_shield
-          	scimitar
-          	short_bow
-          	short_sword
-          	spear
-          	spellgem
-          	staff
-          	telescope
-          	tower_shield
-          	trident
-          	trowel
-          	wand
-          	wizard_robes
+            apprentice_robes
+            axe
+            base
+            battleaxe
+            buckler
+            chain_armor
+            crossbow
+            grimoire
+            halberd
+            hammer
+            idle
+            kite_shield
+            leather_armor
+            long_bow
+            mage_bracers
+            orb
+            padded_armor
+            pickaxe
+            plate_armor
+            round_shield
+            scimitar
+            short_bow
+            short_sword
+            spear
+            spellgem
+            staff
+            telescope
+            tower_shield
+            trident
+            trowel
+            wand
+            wizard_robes
           }
           type floors {
-          	boss_available: Boolean!
-          	cleared: Boolean!
-          	created_at: timestamptz!
-          	floor: Int!
-          	height: Int!
-          	id: uuid!
-          	open: Boolean!
-          	realm: realms!
-          	realm_id: uuid!
-          	rooms(limit: Int, offset: Int): [rooms!]!
-          	starting_position: Int!
-          	updated_at: timestamptz!
-          	width: Int!
+            boss_available: Boolean!
+            cleared: Boolean!
+            created_at: timestamptz!
+            floor: Int!
+            height: Int!
+            id: uuid!
+            open: Boolean!
+            realm: realms!
+            realm_id: uuid!
+            rooms(limit: Int, offset: Int): [rooms!]!
+            starting_position: Int!
+            updated_at: timestamptz!
+            width: Int!
           }
           input forge_equipment_component_element {
-          	id: uuid!
-          	variant: String!
+            id: uuid!
+            variant: String!
           }
           type forge_result {
-          	id: uuid!
+            id: uuid!
           }
           enum icon_variant_types_enum {
-          	armor_body
-          	armor_helmet
-          	armor_shoulders
+            armor_body
+            armor_helmet
+            armor_shoulders
           }
           type icon_variants {
-          	base: String!
-          	created_at: timestamptz!
-          	id: uuid!
-          	item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
-          	item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
-          	template: String!
-          	updated_at: timestamptz!
-          	variant: icon_variant_types_enum
-          	z_index: Int!
+            base: String!
+            created_at: timestamptz!
+            id: uuid!
+            item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
+            item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
+            template: String!
+            updated_at: timestamptz!
+            variant: icon_variant_types_enum
+            z_index: Int!
           }
           enum internal_name_enemy_enum {
-          	bee
-          	bird
-          	goblin
-          	rat
-          	slime
-          	unknown
-          	wasp
-          	worm
+            bee
+            bird
+            goblin
+            rat
+            slime
+            unknown
+            wasp
+            worm
           }
           enum internal_name_item_enum {
-          	adamantine_axe_blade
-          	adamantine_blade
-          	adamantine_bowlimbs
-          	adamantine_bowstring
-          	adamantine_catalyst
-          	adamantine_chain
-          	adamantine_core
-          	adamantine_fabric
-          	adamantine_guard
-          	adamantine_handle
-          	adamantine_hilt
-          	adamantine_lens
-          	adamantine_magical_core
-          	adamantine_plates
-          	adamantine_rod
-          	adamantine_rune
-          	adamantine_trim
-          	adamantine_trowel_blade
-          	bar_adamantine
-          	bar_copper
-          	bar_cursed
-          	bar_iron
-          	bar_mithril
-          	bar_moonsilver
-          	bar_starmetal
-          	bar_steel
-          	bar_stone
-          	bar_titanium
-          	copper_axe_blade
-          	copper_blade
-          	copper_bowlimbs
-          	copper_bowstring
-          	copper_catalyst
-          	copper_chain
-          	copper_core
-          	copper_fabric
-          	copper_guard
-          	copper_handle
-          	copper_hilt
-          	copper_lens
-          	copper_magical_core
-          	copper_plates
-          	copper_rod
-          	copper_rune
-          	copper_trim
-          	copper_trowel_blade
-          	cursed_axe_blade
-          	cursed_blade
-          	cursed_bowlimbs
-          	cursed_bowstring
-          	cursed_catalyst
-          	cursed_chain
-          	cursed_core
-          	cursed_fabric
-          	cursed_guard
-          	cursed_handle
-          	cursed_hilt
-          	cursed_lens
-          	cursed_magical_core
-          	cursed_plates
-          	cursed_rod
-          	cursed_rune
-          	cursed_trim
-          	cursed_trowel_blade
-          	iron_axe_blade
-          	iron_blade
-          	iron_bowlimbs
-          	iron_bowstring
-          	iron_catalyst
-          	iron_chain
-          	iron_core
-          	iron_fabric
-          	iron_guard
-          	iron_handle
-          	iron_hilt
-          	iron_lens
-          	iron_magical_core
-          	iron_plates
-          	iron_rod
-          	iron_rune
-          	iron_trim
-          	iron_trowel_blade
-          	mithril_axe_blade
-          	mithril_blade
-          	mithril_bowlimbs
-          	mithril_bowstring
-          	mithril_catalyst
-          	mithril_chain
-          	mithril_core
-          	mithril_fabric
-          	mithril_guard
-          	mithril_handle
-          	mithril_hilt
-          	mithril_lens
-          	mithril_magical_core
-          	mithril_plates
-          	mithril_rod
-          	mithril_rune
-          	mithril_trim
-          	mithril_trowel_blade
-          	moonsilver_axe_blade
-          	moonsilver_blade
-          	moonsilver_bowlimbs
-          	moonsilver_bowstring
-          	moonsilver_catalyst
-          	moonsilver_chain
-          	moonsilver_core
-          	moonsilver_fabric
-          	moonsilver_guard
-          	moonsilver_handle
-          	moonsilver_hilt
-          	moonsilver_lens
-          	moonsilver_magical_core
-          	moonsilver_plates
-          	moonsilver_rod
-          	moonsilver_rune
-          	moonsilver_trim
-          	moonsilver_trowel_blade
-          	ore_adamantine
-          	ore_copper
-          	ore_cursed
-          	ore_iron
-          	ore_mithril
-          	ore_moonsilver
-          	ore_starmetal
-          	ore_steel
-          	ore_stone
-          	ore_titanium
-          	plate_armor
-          	short_sword
-          	spear
-          	starmetal_axe_blade
-          	starmetal_blade
-          	starmetal_bowlimbs
-          	starmetal_bowstring
-          	starmetal_catalyst
-          	starmetal_chain
-          	starmetal_core
-          	starmetal_fabric
-          	starmetal_guard
-          	starmetal_handle
-          	starmetal_hilt
-          	starmetal_lens
-          	starmetal_magical_core
-          	starmetal_plates
-          	starmetal_rod
-          	starmetal_rune
-          	starmetal_trim
-          	starmetal_trowel_blade
-          	steel_axe_blade
-          	steel_blade
-          	steel_bowlimbs
-          	steel_bowstring
-          	steel_catalyst
-          	steel_chain
-          	steel_core
-          	steel_fabric
-          	steel_guard
-          	steel_handle
-          	steel_hilt
-          	steel_lens
-          	steel_magical_core
-          	steel_plates
-          	steel_rod
-          	steel_rune
-          	steel_trim
-          	steel_trowel_blade
-          	stone_axe_blade
-          	stone_blade
-          	stone_bowlimbs
-          	stone_bowstring
-          	stone_catalyst
-          	stone_chain
-          	stone_core
-          	stone_fabric
-          	stone_guard
-          	stone_handle
-          	stone_hilt
-          	stone_lens
-          	stone_magical_core
-          	stone_plates
-          	stone_rod
-          	stone_rune
-          	stone_trim
-          	stone_trowel_blade
-          	titanium_axe_blade
-          	titanium_blade
-          	titanium_bowlimbs
-          	titanium_bowstring
-          	titanium_catalyst
-          	titanium_chain
-          	titanium_core
-          	titanium_fabric
-          	titanium_guard
-          	titanium_handle
-          	titanium_hilt
-          	titanium_lens
-          	titanium_magical_core
-          	titanium_plates
-          	titanium_rod
-          	titanium_rune
-          	titanium_trim
-          	titanium_trowel_blade
-          	tower_shield
+            adamantine_axe_blade
+            adamantine_blade
+            adamantine_bowlimbs
+            adamantine_bowstring
+            adamantine_catalyst
+            adamantine_chain
+            adamantine_core
+            adamantine_fabric
+            adamantine_guard
+            adamantine_handle
+            adamantine_hilt
+            adamantine_lens
+            adamantine_magical_core
+            adamantine_plates
+            adamantine_rod
+            adamantine_rune
+            adamantine_trim
+            adamantine_trowel_blade
+            bar_adamantine
+            bar_copper
+            bar_cursed
+            bar_iron
+            bar_mithril
+            bar_moonsilver
+            bar_starmetal
+            bar_steel
+            bar_stone
+            bar_titanium
+            copper_axe_blade
+            copper_blade
+            copper_bowlimbs
+            copper_bowstring
+            copper_catalyst
+            copper_chain
+            copper_core
+            copper_fabric
+            copper_guard
+            copper_handle
+            copper_hilt
+            copper_lens
+            copper_magical_core
+            copper_plates
+            copper_rod
+            copper_rune
+            copper_trim
+            copper_trowel_blade
+            cursed_axe_blade
+            cursed_blade
+            cursed_bowlimbs
+            cursed_bowstring
+            cursed_catalyst
+            cursed_chain
+            cursed_core
+            cursed_fabric
+            cursed_guard
+            cursed_handle
+            cursed_hilt
+            cursed_lens
+            cursed_magical_core
+            cursed_plates
+            cursed_rod
+            cursed_rune
+            cursed_trim
+            cursed_trowel_blade
+            iron_axe_blade
+            iron_blade
+            iron_bowlimbs
+            iron_bowstring
+            iron_catalyst
+            iron_chain
+            iron_core
+            iron_fabric
+            iron_guard
+            iron_handle
+            iron_hilt
+            iron_lens
+            iron_magical_core
+            iron_plates
+            iron_rod
+            iron_rune
+            iron_trim
+            iron_trowel_blade
+            mithril_axe_blade
+            mithril_blade
+            mithril_bowlimbs
+            mithril_bowstring
+            mithril_catalyst
+            mithril_chain
+            mithril_core
+            mithril_fabric
+            mithril_guard
+            mithril_handle
+            mithril_hilt
+            mithril_lens
+            mithril_magical_core
+            mithril_plates
+            mithril_rod
+            mithril_rune
+            mithril_trim
+            mithril_trowel_blade
+            moonsilver_axe_blade
+            moonsilver_blade
+            moonsilver_bowlimbs
+            moonsilver_bowstring
+            moonsilver_catalyst
+            moonsilver_chain
+            moonsilver_core
+            moonsilver_fabric
+            moonsilver_guard
+            moonsilver_handle
+            moonsilver_hilt
+            moonsilver_lens
+            moonsilver_magical_core
+            moonsilver_plates
+            moonsilver_rod
+            moonsilver_rune
+            moonsilver_trim
+            moonsilver_trowel_blade
+            ore_adamantine
+            ore_copper
+            ore_cursed
+            ore_iron
+            ore_mithril
+            ore_moonsilver
+            ore_starmetal
+            ore_steel
+            ore_stone
+            ore_titanium
+            plate_armor
+            short_sword
+            spear
+            starmetal_axe_blade
+            starmetal_blade
+            starmetal_bowlimbs
+            starmetal_bowstring
+            starmetal_catalyst
+            starmetal_chain
+            starmetal_core
+            starmetal_fabric
+            starmetal_guard
+            starmetal_handle
+            starmetal_hilt
+            starmetal_lens
+            starmetal_magical_core
+            starmetal_plates
+            starmetal_rod
+            starmetal_rune
+            starmetal_trim
+            starmetal_trowel_blade
+            steel_axe_blade
+            steel_blade
+            steel_bowlimbs
+            steel_bowstring
+            steel_catalyst
+            steel_chain
+            steel_core
+            steel_fabric
+            steel_guard
+            steel_handle
+            steel_hilt
+            steel_lens
+            steel_magical_core
+            steel_plates
+            steel_rod
+            steel_rune
+            steel_trim
+            steel_trowel_blade
+            stone_axe_blade
+            stone_blade
+            stone_bowlimbs
+            stone_bowstring
+            stone_catalyst
+            stone_chain
+            stone_core
+            stone_fabric
+            stone_guard
+            stone_handle
+            stone_hilt
+            stone_lens
+            stone_magical_core
+            stone_plates
+            stone_rod
+            stone_rune
+            stone_trim
+            stone_trowel_blade
+            titanium_axe_blade
+            titanium_blade
+            titanium_bowlimbs
+            titanium_bowstring
+            titanium_catalyst
+            titanium_chain
+            titanium_core
+            titanium_fabric
+            titanium_guard
+            titanium_handle
+            titanium_hilt
+            titanium_lens
+            titanium_magical_core
+            titanium_plates
+            titanium_rod
+            titanium_rune
+            titanium_trim
+            titanium_trowel_blade
+            tower_shield
           }
           enum internal_name_recipe_enum {
-          	adamantine_axe_blade
-          	adamantine_blade
-          	adamantine_bowlimbs
-          	adamantine_bowstring
-          	adamantine_catalyst
-          	adamantine_chain
-          	adamantine_core
-          	adamantine_fabric
-          	adamantine_guard
-          	adamantine_handle
-          	adamantine_hilt
-          	adamantine_lens
-          	adamantine_magical_core
-          	adamantine_plates
-          	adamantine_rod
-          	adamantine_rune
-          	adamantine_trim
-          	adamantine_trowel_blade
-          	bar_adamantine
-          	bar_copper
-          	bar_cursed
-          	bar_iron
-          	bar_mithril
-          	bar_moonsilver
-          	bar_starmetal
-          	bar_steel
-          	bar_stone
-          	bar_titanium
-          	copper_axe_blade
-          	copper_blade
-          	copper_bowlimbs
-          	copper_bowstring
-          	copper_catalyst
-          	copper_chain
-          	copper_core
-          	copper_fabric
-          	copper_guard
-          	copper_handle
-          	copper_hilt
-          	copper_lens
-          	copper_magical_core
-          	copper_plates
-          	copper_rod
-          	copper_rune
-          	copper_trim
-          	copper_trowel_blade
-          	cursed_axe_blade
-          	cursed_blade
-          	cursed_bowlimbs
-          	cursed_bowstring
-          	cursed_catalyst
-          	cursed_chain
-          	cursed_core
-          	cursed_fabric
-          	cursed_guard
-          	cursed_handle
-          	cursed_hilt
-          	cursed_lens
-          	cursed_magical_core
-          	cursed_plates
-          	cursed_rod
-          	cursed_rune
-          	cursed_trim
-          	cursed_trowel_blade
-          	iron_axe_blade
-          	iron_blade
-          	iron_bowlimbs
-          	iron_bowstring
-          	iron_catalyst
-          	iron_chain
-          	iron_core
-          	iron_fabric
-          	iron_guard
-          	iron_handle
-          	iron_hilt
-          	iron_lens
-          	iron_magical_core
-          	iron_plates
-          	iron_rod
-          	iron_rune
-          	iron_trim
-          	iron_trowel_blade
-          	mithril_axe_blade
-          	mithril_blade
-          	mithril_bowlimbs
-          	mithril_bowstring
-          	mithril_catalyst
-          	mithril_chain
-          	mithril_core
-          	mithril_fabric
-          	mithril_guard
-          	mithril_handle
-          	mithril_hilt
-          	mithril_lens
-          	mithril_magical_core
-          	mithril_plates
-          	mithril_rod
-          	mithril_rune
-          	mithril_trim
-          	mithril_trowel_blade
-          	moonsilver_axe_blade
-          	moonsilver_blade
-          	moonsilver_bowlimbs
-          	moonsilver_bowstring
-          	moonsilver_catalyst
-          	moonsilver_chain
-          	moonsilver_core
-          	moonsilver_fabric
-          	moonsilver_guard
-          	moonsilver_handle
-          	moonsilver_hilt
-          	moonsilver_lens
-          	moonsilver_magical_core
-          	moonsilver_plates
-          	moonsilver_rod
-          	moonsilver_rune
-          	moonsilver_trim
-          	moonsilver_trowel_blade
-          	plate_armor
-          	short_sword
-          	spear
-          	starmetal_axe_blade
-          	starmetal_blade
-          	starmetal_bowlimbs
-          	starmetal_bowstring
-          	starmetal_catalyst
-          	starmetal_chain
-          	starmetal_core
-          	starmetal_fabric
-          	starmetal_guard
-          	starmetal_handle
-          	starmetal_hilt
-          	starmetal_lens
-          	starmetal_magical_core
-          	starmetal_plates
-          	starmetal_rod
-          	starmetal_rune
-          	starmetal_trim
-          	starmetal_trowel_blade
-          	steel_axe_blade
-          	steel_blade
-          	steel_bowlimbs
-          	steel_bowstring
-          	steel_catalyst
-          	steel_chain
-          	steel_core
-          	steel_fabric
-          	steel_guard
-          	steel_handle
-          	steel_hilt
-          	steel_lens
-          	steel_magical_core
-          	steel_plates
-          	steel_rod
-          	steel_rune
-          	steel_trim
-          	steel_trowel_blade
-          	stone_axe_blade
-          	stone_blade
-          	stone_bowlimbs
-          	stone_bowstring
-          	stone_catalyst
-          	stone_chain
-          	stone_core
-          	stone_fabric
-          	stone_guard
-          	stone_handle
-          	stone_hilt
-          	stone_lens
-          	stone_magical_core
-          	stone_plates
-          	stone_rod
-          	stone_rune
-          	stone_trim
-          	stone_trowel_blade
-          	titanium_axe_blade
-          	titanium_blade
-          	titanium_bowlimbs
-          	titanium_bowstring
-          	titanium_catalyst
-          	titanium_chain
-          	titanium_core
-          	titanium_fabric
-          	titanium_guard
-          	titanium_handle
-          	titanium_hilt
-          	titanium_lens
-          	titanium_magical_core
-          	titanium_plates
-          	titanium_rod
-          	titanium_rune
-          	titanium_trim
-          	titanium_trowel_blade
-          	tower_shield
+            adamantine_axe_blade
+            adamantine_blade
+            adamantine_bowlimbs
+            adamantine_bowstring
+            adamantine_catalyst
+            adamantine_chain
+            adamantine_core
+            adamantine_fabric
+            adamantine_guard
+            adamantine_handle
+            adamantine_hilt
+            adamantine_lens
+            adamantine_magical_core
+            adamantine_plates
+            adamantine_rod
+            adamantine_rune
+            adamantine_trim
+            adamantine_trowel_blade
+            bar_adamantine
+            bar_copper
+            bar_cursed
+            bar_iron
+            bar_mithril
+            bar_moonsilver
+            bar_starmetal
+            bar_steel
+            bar_stone
+            bar_titanium
+            copper_axe_blade
+            copper_blade
+            copper_bowlimbs
+            copper_bowstring
+            copper_catalyst
+            copper_chain
+            copper_core
+            copper_fabric
+            copper_guard
+            copper_handle
+            copper_hilt
+            copper_lens
+            copper_magical_core
+            copper_plates
+            copper_rod
+            copper_rune
+            copper_trim
+            copper_trowel_blade
+            cursed_axe_blade
+            cursed_blade
+            cursed_bowlimbs
+            cursed_bowstring
+            cursed_catalyst
+            cursed_chain
+            cursed_core
+            cursed_fabric
+            cursed_guard
+            cursed_handle
+            cursed_hilt
+            cursed_lens
+            cursed_magical_core
+            cursed_plates
+            cursed_rod
+            cursed_rune
+            cursed_trim
+            cursed_trowel_blade
+            iron_axe_blade
+            iron_blade
+            iron_bowlimbs
+            iron_bowstring
+            iron_catalyst
+            iron_chain
+            iron_core
+            iron_fabric
+            iron_guard
+            iron_handle
+            iron_hilt
+            iron_lens
+            iron_magical_core
+            iron_plates
+            iron_rod
+            iron_rune
+            iron_trim
+            iron_trowel_blade
+            mithril_axe_blade
+            mithril_blade
+            mithril_bowlimbs
+            mithril_bowstring
+            mithril_catalyst
+            mithril_chain
+            mithril_core
+            mithril_fabric
+            mithril_guard
+            mithril_handle
+            mithril_hilt
+            mithril_lens
+            mithril_magical_core
+            mithril_plates
+            mithril_rod
+            mithril_rune
+            mithril_trim
+            mithril_trowel_blade
+            moonsilver_axe_blade
+            moonsilver_blade
+            moonsilver_bowlimbs
+            moonsilver_bowstring
+            moonsilver_catalyst
+            moonsilver_chain
+            moonsilver_core
+            moonsilver_fabric
+            moonsilver_guard
+            moonsilver_handle
+            moonsilver_hilt
+            moonsilver_lens
+            moonsilver_magical_core
+            moonsilver_plates
+            moonsilver_rod
+            moonsilver_rune
+            moonsilver_trim
+            moonsilver_trowel_blade
+            plate_armor
+            short_sword
+            spear
+            starmetal_axe_blade
+            starmetal_blade
+            starmetal_bowlimbs
+            starmetal_bowstring
+            starmetal_catalyst
+            starmetal_chain
+            starmetal_core
+            starmetal_fabric
+            starmetal_guard
+            starmetal_handle
+            starmetal_hilt
+            starmetal_lens
+            starmetal_magical_core
+            starmetal_plates
+            starmetal_rod
+            starmetal_rune
+            starmetal_trim
+            starmetal_trowel_blade
+            steel_axe_blade
+            steel_blade
+            steel_bowlimbs
+            steel_bowstring
+            steel_catalyst
+            steel_chain
+            steel_core
+            steel_fabric
+            steel_guard
+            steel_handle
+            steel_hilt
+            steel_lens
+            steel_magical_core
+            steel_plates
+            steel_rod
+            steel_rune
+            steel_trim
+            steel_trowel_blade
+            stone_axe_blade
+            stone_blade
+            stone_bowlimbs
+            stone_bowstring
+            stone_catalyst
+            stone_chain
+            stone_core
+            stone_fabric
+            stone_guard
+            stone_handle
+            stone_hilt
+            stone_lens
+            stone_magical_core
+            stone_plates
+            stone_rod
+            stone_rune
+            stone_trim
+            stone_trowel_blade
+            titanium_axe_blade
+            titanium_blade
+            titanium_bowlimbs
+            titanium_bowstring
+            titanium_catalyst
+            titanium_chain
+            titanium_core
+            titanium_fabric
+            titanium_guard
+            titanium_handle
+            titanium_hilt
+            titanium_lens
+            titanium_magical_core
+            titanium_plates
+            titanium_rod
+            titanium_rune
+            titanium_trim
+            titanium_trowel_blade
+            tower_shield
           }
           type invalidate_character_events_result {
-          	invalidated: Boolean!
+            invalidated: Boolean!
           }
           type invalidate_realm_events_result {
-          	invalidated: Boolean!
+            invalidated: Boolean!
           }
           type item_battle_icon_variants {
-          	created_at: timestamptz!
-          	equipment_type: equipment_types_enum!
-          	icon_variant: icon_variants!
-          	icon_variant_id: uuid!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            equipment_type: equipment_types_enum!
+            icon_variant: icon_variants!
+            icon_variant_id: uuid!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
           }
           type item_inventory_icon_variants {
-          	created_at: timestamptz!
-          	icon_variant: icon_variants!
-          	icon_variant_id: uuid!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            icon_variant: icon_variants!
+            icon_variant_id: uuid!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            updated_at: timestamptz!
           }
           enum item_material_types_enum {
-          	adamantine
-          	copper
-          	cursed
-          	iron
-          	mithril
-          	moonsilver
-          	starmetal
-          	steel
-          	stone
-          	titanium
+            adamantine
+            copper
+            cursed
+            iron
+            mithril
+            moonsilver
+            starmetal
+            steel
+            stone
+            titanium
           }
           type items {
-          	battle_character_loots(limit: Int, offset: Int): [battle_character_loot!]!
-          	battle_loot_pendings(limit: Int, offset: Int): [battle_loot_pending!]!
-          	category: category_types_enum!
-          	character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
-          	character_inventory: character_inventory_types_enum!
-          	character_item_basics(limit: Int, offset: Int): [character_item_basic!]!
-          	character_item_equipment_components(limit: Int, offset: Int): [character_item_equipment_components!]!
-          	character_item_equipments(limit: Int, offset: Int): [character_item_equipments!]!
-          	created_at: timestamptz!
-          	description: String!
-          	equipment_components(limit: Int, offset: Int): [equipment_components!]!
-          	icon: String!
-          	id: uuid!
-          	internal_name: internal_name_item_enum!
-          	item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
-          	item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
-          	mining_spaces(limit: Int, offset: Int): [mining_spaces!]!
-          	name: String!
-          	realm: realms!
-          	realm_id: uuid!
-          	recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
-          	recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
-          	recipes(limit: Int, offset: Int): [recipes!]!
-          	room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
-          	sell_price: Int!
-          	subcategory: subcategory_types_enum!
-          	tier: Int!
-          	updated_at: timestamptz!
+            battle_character_loots(limit: Int, offset: Int): [battle_character_loot!]!
+            battle_loot_pendings(limit: Int, offset: Int): [battle_loot_pending!]!
+            category: category_types_enum!
+            character_equipment_components(limit: Int, offset: Int): [character_equipment_components!]!
+            character_inventory: character_inventory_types_enum!
+            character_item_basics(limit: Int, offset: Int): [character_item_basic!]!
+            character_item_equipment_components(limit: Int, offset: Int): [character_item_equipment_components!]!
+            character_item_equipments(limit: Int, offset: Int): [character_item_equipments!]!
+            created_at: timestamptz!
+            description: String!
+            equipment_components(limit: Int, offset: Int): [equipment_components!]!
+            icon: String!
+            id: uuid!
+            internal_name: internal_name_item_enum!
+            item_battle_icon_variants(limit: Int, offset: Int): [item_battle_icon_variants!]!
+            item_inventory_icon_variants(limit: Int, offset: Int): [item_inventory_icon_variants!]!
+            mining_spaces(limit: Int, offset: Int): [mining_spaces!]!
+            name: String!
+            realm: realms!
+            realm_id: uuid!
+            recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
+            recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
+            sell_price: Int!
+            subcategory: subcategory_types_enum!
+            tier: Int!
+            updated_at: timestamptz!
           }
           scalar jsonb
           type mining_spaces {
-          	character: characters!
-          	character_id: uuid!
-          	created_at: timestamptz!
-          	health: Int!
-          	id: uuid!
-          	item: items
-          	item_id: uuid
-          	max_health: Int!
-          	ore_material: item_material_types_enum!
-          	position: Int!
-          	updated_at: timestamptz!
+            character: characters!
+            character_id: uuid!
+            created_at: timestamptz!
+            health: Int!
+            id: uuid!
+            item: items
+            item_id: uuid
+            max_health: Int!
+            ore_material: item_material_types_enum!
+            position: Int!
+            updated_at: timestamptz!
           }
           type mutation_root {
-          	character_craft_recipe(recipe_internal_name: internal_name_recipe_enum!, amount: Int!): craft_result!
-          	character_forge_equipment(recipe_internal_name: internal_name_recipe_enum!, components: [forge_equipment_component_element!]!): forge_result!
-          	character_select_loadout(loadout_id: uuid!): characters!
-          	character_tick_mining: character_tick_mining_result!
-          	character_update_loadout(loadout_id: uuid!, character_class_id: uuid!, character_equipment_ids: [uuid!]!): character_loadouts!
-          	create_tower_battle(battle_group_id: uuid!, room_id: uuid!): create_tower_battle_result!
-          	invalidate_character_events(query_type: query_types_enum!): invalidate_character_events_result!
-          	invalidate_realm_events(query_type: query_types_enum!): invalidate_realm_events_result!
-          	mining_hit_ore(id: uuid!): mining_spaces!
-          	tower_reveal_floor(floor_id: uuid!): [rooms!]!
-          	user_create_character(id_token: String!, name: String!, realm_id: uuid!): user_create_character_result!
-          	user_login(id_token: String!): user_login_result!
-          	user_select_character(id_token: String!, character_id: uuid!): user_select_character_result!
-          	user_validate_token(id_token: String!): user_validate_result!
+            character_craft_recipe(recipe_internal_name: internal_name_recipe_enum!, amount: Int!): craft_result!
+            character_forge_equipment(recipe_internal_name: internal_name_recipe_enum!, components: [forge_equipment_component_element!]!): forge_result!
+            character_select_loadout(loadout_id: uuid!): characters!
+            character_tick_mining: character_tick_mining_result!
+            character_update_loadout(loadout_id: uuid!, character_class_id: uuid!, character_equipment_ids: [uuid!]!): character_loadouts!
+            create_tower_battle(battle_group_id: uuid!, room_id: uuid!): create_tower_battle_result!
+            invalidate_character_events(query_type: query_types_enum!): invalidate_character_events_result!
+            invalidate_realm_events(query_type: query_types_enum!): invalidate_realm_events_result!
+            mining_hit_ore(id: uuid!): mining_spaces!
+            tower_reveal_floor(floor_id: uuid!): [rooms!]!
+            user_create_character(id_token: String!, name: String!, realm_id: uuid!): user_create_character_result!
+            user_login(id_token: String!): user_login_result!
+            user_select_character(id_token: String!, character_id: uuid!): user_select_character_result!
+            user_validate_token(id_token: String!): user_validate_result!
           }
           type query_root {
-          	character_name_available(name: String!): character_name_available_result
+            character_name_available(name: String!): character_name_available_result
           }
           enum query_types_enum {
-          	notifyBattleUpdates
-          	notifyCharacterUpdates
-          	notifyInventoryUpdates
-          	notifyMiningUpdates
-          	notifyRealmUpdates
-          	notifyRecipeUpdates
-          	notifyTowerFloorUpdates
+            notifyBattleUpdates
+            notifyCharacterUpdates
+            notifyInventoryUpdates
+            notifyMiningUpdates
+            notifyRealmUpdates
+            notifyRecipeUpdates
+            notifyTowerFloorUpdates
           }
           type realm_events {
-          	checksum: String!
-          	created_at: timestamptz!
-          	id: uuid!
-          	param1: String!
-          	param2: String!
-          	patch_diff(path: String): jsonb!
-          	query_result(path: String): jsonb!
-          	query_type: query_types_enum!
-          	realm: realms!
-          	realm_id: uuid!
-          	revision: Int!
-          	updated_at: timestamptz!
+            checksum: String!
+            created_at: timestamptz!
+            id: uuid!
+            param1: String!
+            param2: String!
+            patch_diff(path: String): jsonb!
+            query_result(path: String): jsonb!
+            query_type: query_types_enum!
+            realm: realms!
+            realm_id: uuid!
+            revision: Int!
+            updated_at: timestamptz!
           }
           type realms {
-          	active: Boolean
-          	battles(limit: Int, offset: Int): [battles!]!
-          	characters(limit: Int, offset: Int): [characters!]!
-          	created_at: timestamptz!
-          	current_floor: Int
-          	floors(limit: Int, offset: Int): [floors!]!
-          	id: uuid!
-          	items(limit: Int, offset: Int): [items!]!
-          	name: String
-          	realm_events(limit: Int, offset: Int): [realm_events!]!
-          	updated_at: timestamptz!
+            active: Boolean
+            battles(limit: Int, offset: Int): [battles!]!
+            characters(limit: Int, offset: Int): [characters!]!
+            created_at: timestamptz!
+            current_floor: Int
+            floors(limit: Int, offset: Int): [floors!]!
+            id: uuid!
+            items(limit: Int, offset: Int): [items!]!
+            name: String
+            realm_events(limit: Int, offset: Int): [realm_events!]!
+            updated_at: timestamptz!
           }
           type recipe_basic {
-          	created_at: timestamptz!
-          	id: uuid!
-          	recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
-          	recipe_basic_required_skills(limit: Int, offset: Int): [recipe_basic_required_skills!]!
-          	recipes(limit: Int, offset: Int): [recipes!]!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            id: uuid!
+            recipe_basic_required_items(limit: Int, offset: Int): [recipe_basic_required_items!]!
+            recipe_basic_required_skills(limit: Int, offset: Int): [recipe_basic_required_skills!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            updated_at: timestamptz!
           }
           type recipe_basic_required_items {
-          	amount: Int!
-          	consumes: Boolean!
-          	created_at: timestamptz!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	recipe_basic: recipe_basic!
-          	recipe_basic_id: uuid!
-          	updated_at: timestamptz!
+            amount: Int!
+            consumes: Boolean!
+            created_at: timestamptz!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            recipe_basic: recipe_basic!
+            recipe_basic_id: uuid!
+            updated_at: timestamptz!
           }
           type recipe_basic_required_skills {
-          	created_at: timestamptz!
-          	id: uuid!
-          	level: Int!
-          	recipe_basic: recipe_basic!
-          	recipe_basic_id: uuid!
-          	skill: character_skill_types_enum!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            id: uuid!
+            level: Int!
+            recipe_basic: recipe_basic!
+            recipe_basic_id: uuid!
+            skill: character_skill_types_enum!
+            updated_at: timestamptz!
           }
           type recipe_component {
-          	created_at: timestamptz!
-          	equipment_component_material: item_material_types_enum!
-          	equipment_component_type: equipment_component_types_enum!
-          	id: uuid!
-          	recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
-          	recipe_component_required_skills(limit: Int, offset: Int): [recipe_component_required_skills!]!
-          	recipes(limit: Int, offset: Int): [recipes!]!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            equipment_component_material: item_material_types_enum!
+            equipment_component_type: equipment_component_types_enum!
+            id: uuid!
+            recipe_component_required_items(limit: Int, offset: Int): [recipe_component_required_items!]!
+            recipe_component_required_skills(limit: Int, offset: Int): [recipe_component_required_skills!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            updated_at: timestamptz!
           }
           type recipe_component_required_items {
-          	amount: Int!
-          	consumes: Boolean!
-          	created_at: timestamptz!
-          	id: uuid!
-          	item: items!
-          	item_id: uuid!
-          	recipe_component: recipe_component!
-          	recipe_component_id: uuid!
-          	updated_at: timestamptz!
+            amount: Int!
+            consumes: Boolean!
+            created_at: timestamptz!
+            id: uuid!
+            item: items!
+            item_id: uuid!
+            recipe_component: recipe_component!
+            recipe_component_id: uuid!
+            updated_at: timestamptz!
           }
           type recipe_component_required_skills {
-          	created_at: timestamptz!
-          	id: uuid!
-          	level: Int!
-          	recipe_component: recipe_component!
-          	recipe_component_id: uuid!
-          	skill: character_skill_types_enum!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            id: uuid!
+            level: Int!
+            recipe_component: recipe_component!
+            recipe_component_id: uuid!
+            skill: character_skill_types_enum!
+            updated_at: timestamptz!
           }
           type recipe_equipment {
-          	created_at: timestamptz!
-          	equipment_category: equipment_category_types_enum!
-          	equipment_slot: equipment_slot_types_enum!
-          	equipment_type: equipment_types_enum!
-          	icon: String!
-          	id: uuid!
-          	recipe_equipment_components(limit: Int, offset: Int): [recipe_equipment_components!]!
-          	recipes(limit: Int, offset: Int): [recipes!]!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            equipment_category: equipment_category_types_enum!
+            equipment_slot: equipment_slot_types_enum!
+            equipment_type: equipment_types_enum!
+            icon: String!
+            id: uuid!
+            recipe_equipment_components(limit: Int, offset: Int): [recipe_equipment_components!]!
+            recipes(limit: Int, offset: Int): [recipes!]!
+            updated_at: timestamptz!
           }
           type recipe_equipment_components {
-          	component_icon: String!
-          	component_type: equipment_component_types_enum!
-          	created_at: timestamptz!
-          	id: uuid!
-          	order: Int!
-          	recipe_equipment: recipe_equipment!
-          	recipe_equipment_id: uuid!
-          	updated_at: timestamptz!
+            component_icon: String!
+            component_type: equipment_component_types_enum!
+            created_at: timestamptz!
+            id: uuid!
+            order: Int!
+            recipe_equipment: recipe_equipment!
+            recipe_equipment_id: uuid!
+            updated_at: timestamptz!
           }
           enum recipe_types_enum {
-          	recipe_basic
-          	recipe_component
-          	recipe_equipment
+            recipe_basic
+            recipe_component
+            recipe_equipment
           }
           type recipes {
-          	category: category_types_enum!
-          	character_recipes(limit: Int, offset: Int): [character_recipes!]!
-          	created_at: timestamptz!
-          	id: uuid!
-          	internal_name: internal_name_recipe_enum!
-          	item: items!
-          	item_id: uuid!
-          	max_to_craft: Int!
-          	recipe_basic: recipe_basic
-          	recipe_basic_id: uuid
-          	recipe_component: recipe_component
-          	recipe_component_id: uuid
-          	recipe_equipment: recipe_equipment
-          	recipe_equipment_id: uuid
-          	recipe_type: recipe_types_enum!
-          	required_crafting_level: Int!
-          	required_gold: bigint!
-          	subcategory: subcategory_types_enum!
-          	time_to_craft: Int!
-          	updated_at: timestamptz!
-          	xp: Int!
+            category: category_types_enum!
+            character_recipes(limit: Int, offset: Int): [character_recipes!]!
+            created_at: timestamptz!
+            id: uuid!
+            internal_name: internal_name_recipe_enum!
+            item: items!
+            item_id: uuid!
+            max_to_craft: Int!
+            recipe_basic: recipe_basic
+            recipe_basic_id: uuid
+            recipe_component: recipe_component
+            recipe_component_id: uuid
+            recipe_equipment: recipe_equipment
+            recipe_equipment_id: uuid
+            recipe_type: recipe_types_enum!
+            required_crafting_level: Int!
+            required_gold: bigint!
+            subcategory: subcategory_types_enum!
+            time_to_craft: Int!
+            updated_at: timestamptz!
+            xp: Int!
           }
           type room_enemy {
-          	created_at: timestamptz!
-          	id: uuid!
-          	known_internal_name: internal_name_enemy_enum!
-          	order: Int!
-          	real_internal_name: internal_name_enemy_enum!
-          	room: rooms!
-          	room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
-          	room_id: uuid!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            id: uuid!
+            known_internal_name: internal_name_enemy_enum!
+            order: Int!
+            real_internal_name: internal_name_enemy_enum!
+            room: rooms!
+            room_enemy_loots(limit: Int, offset: Int): [room_enemy_loot!]!
+            room_id: uuid!
+            updated_at: timestamptz!
           }
           type room_enemy_loot {
-          	created_at: timestamptz!
-          	id: uuid!
-          	item: items
-          	item_id: uuid
-          	known_amount: Int!
-          	known_chance: Float!
-          	known_chance_string: String!
-          	loot_type: room_loot_types_enum!
-          	order: Int!
-          	real_amount: Int!
-          	real_chance: Float!
-          	real_chance_string: String!
-          	room_enemy: room_enemy!
-          	room_enemy_id: uuid!
-          	updated_at: timestamptz!
+            created_at: timestamptz!
+            id: uuid!
+            item: items
+            item_id: uuid
+            known_amount: Int!
+            known_chance: Float!
+            known_chance_string: String!
+            loot_type: room_loot_types_enum!
+            order: Int!
+            real_amount: Int!
+            real_chance: Float!
+            real_chance_string: String!
+            room_enemy: room_enemy!
+            room_enemy_id: uuid!
+            updated_at: timestamptz!
           }
           enum room_loot_types_enum {
-          	gold
-          	item
+            gold
+            item
           }
           enum room_state_types_enum {
-          	cleared
-          	floor
-          	shadow
-          	wall
+            cleared
+            floor
+            shadow
+            wall
           }
           type rooms {
-          	battles(limit: Int, offset: Int): [battles!]!
-          	cleared: Boolean!
-          	created_at: timestamptz!
-          	floor: floors!
-          	floor_id: uuid!
-          	id: uuid!
-          	known_distance: Int!
-          	known_state: room_state_types_enum!
-          	position: Int!
-          	real_distance: Int!
-          	real_state: room_state_types_enum!
-          	room_enemies(limit: Int, offset: Int): [room_enemy!]!
-          	updated_at: timestamptz!
+            battles(limit: Int, offset: Int): [battles!]!
+            cleared: Boolean!
+            created_at: timestamptz!
+            floor: floors!
+            floor_id: uuid!
+            id: uuid!
+            known_distance: Int!
+            known_state: room_state_types_enum!
+            position: Int!
+            real_distance: Int!
+            real_state: room_state_types_enum!
+            room_enemies(limit: Int, offset: Int): [room_enemy!]!
+            updated_at: timestamptz!
           }
           enum subcategory_types_enum {
-          	apprentice_robes
-          	axe
-          	axe_blade
-          	bars
-          	battleaxe
-          	blade
-          	bowlimbs
-          	bowstring
-          	buckler
-          	catalyst
-          	chain
-          	chain_armor
-          	components
-          	core
-          	crossbow
-          	fabric
-          	grimoire
-          	guard
-          	halberd
-          	hammer
-          	handle
-          	hilt
-          	kite_shield
-          	leather_armor
-          	lens
-          	logs
-          	long_bow
-          	mage_bracers
-          	magical_core
-          	orb
-          	ores
-          	padded_armor
-          	pickaxe
-          	plate_armor
-          	plates
-          	rod
-          	round_shield
-          	rune
-          	scimitar
-          	shards
-          	short_bow
-          	short_sword
-          	spear
-          	spellgem
-          	staff
-          	telescope
-          	tower_shield
-          	trident
-          	trim
-          	trowel
-          	trowel_blade
-          	wand
-          	wizard_robes
+            apprentice_robes
+            axe
+            axe_blade
+            bars
+            battleaxe
+            blade
+            bowlimbs
+            bowstring
+            buckler
+            catalyst
+            chain
+            chain_armor
+            components
+            core
+            crossbow
+            fabric
+            grimoire
+            guard
+            halberd
+            hammer
+            handle
+            hilt
+            kite_shield
+            leather_armor
+            lens
+            logs
+            long_bow
+            mage_bracers
+            magical_core
+            orb
+            ores
+            padded_armor
+            pickaxe
+            plate_armor
+            plates
+            rod
+            round_shield
+            rune
+            scimitar
+            shards
+            short_bow
+            short_sword
+            spear
+            spellgem
+            staff
+            telescope
+            tower_shield
+            trident
+            trim
+            trowel
+            trowel_blade
+            wand
+            wizard_robes
           }
           scalar timestamptz
           type user_create_character_result {
-          	status: String!
+            status: String!
           }
           type user_login_result {
-          	status: String!
+            status: String!
           }
           type user_select_character_result {
-          	status: String!
+            status: String!
           }
           type user_validate_result {
-          	status: String!
+            status: String!
           }
           type users {
-          	active_character_id: uuid
-          	character: characters
-          	characters(limit: Int, offset: Int): [characters!]!
-          	created_at: timestamptz!
-          	id: uuid!
-          	is_guest: Boolean!
-          	jwt_uid: String!
-          	settings(path: String): jsonb
-          	updated_at: timestamptz!
+            active_character_id: uuid
+            character: characters
+            characters(limit: Int, offset: Int): [characters!]!
+            created_at: timestamptz!
+            id: uuid!
+            is_guest: Boolean!
+            jwt_uid: String!
+            settings(path: String): jsonb
+            updated_at: timestamptz!
           }
           scalar uuid
     - role: anonymous
       definition:
         schema: |
           schema {
-          	query: query_root
-          	mutation: mutation_root
+            query: query_root
+            mutation: mutation_root
           }
           type mutation_root {
-          	user_login(id_token: String!): user_login_result!
-          	user_validate_token(id_token: String!): user_validate_result!
+            user_login(id_token: String!): user_login_result!
+            user_validate_token(id_token: String!): user_validate_result!
           }
           type query_root {
-          	required: Int
+            required: Int
           }
           type user_login_result {
-          	status: String!
+            status: String!
           }
           type user_validate_result {
-          	status: String!
+            status: String!
           }

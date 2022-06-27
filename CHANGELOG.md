@@ -2,6 +2,51 @@
 
 ## Next release
 
+### Behaviour changes
+
+- cli: use 2-spaces indent for graphql content in metadata instead of tabs(#8469)
+
+  Example:
+  <table>
+  <thead>
+    <tr>
+      <th>Old Behaviour<pre>metadata/query_collections.yml</pre></th>
+      <th>New Behaviour<pre>metadata/query_collections.yml</pre></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><pre>
+  - name: allowed-queries
+    definition:
+      queries:
+      - name: getAlbums
+        query: |
+        	query getAlbums {
+        		albums {
+        			id
+        			title
+        		}
+        	}
+      </pre></td>
+      <td><pre>
+  - name: allowed-queries
+    definition:
+      queries:
+      - name: getAlbums
+        query: |
+          query getAlbums {
+            albums {
+              id
+              title
+            }
+          }
+      </pre></td>
+    </tr>
+  </tbody>
+  </table>
+
+
 ### Bug fixes and improvements
 
 - console: Hide TimescaleDB internal schema from data tab

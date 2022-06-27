@@ -4,25 +4,25 @@
       - name: getCompanies
         query: |
           query MyQuery {
-          	company {
-          		company_addresses {
-          			address {
-          				address_line_1
-          				address_line_2
-          				city
-          				country
-          				postal_code
-          				state
-          			}
-          		}
-          		id
-          		name
-          	}
+            company {
+              company_addresses {
+                address {
+                  address_line_1
+                  address_line_2
+                  city
+                  country
+                  postal_code
+                  state
+                }
+              }
+              id
+              name
+            }
           }
       - name: addCompany
         query: |
           mutation MyQuery {
-          	insert_company(objects: {company_addresses:{data:{id:"94909f0b-e9db-4ce6-809b-0de59463caf1",address:{data:{address_line_1:"16, swastik circle",address_line_2:"",city:"Ahmedabad",country:"india",id:"1354fd0e-cb95-49ae-97d4-9ebfa225e831",postal_code:"312203",state:"Gujarat"},on_conflict:{constraint:address_pkey}}}},name:"cygnet",id:"81c20bdf-fc22-473b-9ffb-173f4d6c6da2"}) {
-          		affected_rows
-          	}
+            insert_company(objects: {company_addresses:{data:{id:"94909f0b-e9db-4ce6-809b-0de59463caf1",address:{data:{address_line_1:"16, swastik circle",address_line_2:"",city:"Ahmedabad",country:"india",id:"1354fd0e-cb95-49ae-97d4-9ebfa225e831",postal_code:"312203",state:"Gujarat"},on_conflict:{constraint:address_pkey}}}},name:"cygnet",id:"81c20bdf-fc22-473b-9ffb-173f4d6c6da2"}) {
+              affected_rows
+            }
           }

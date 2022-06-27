@@ -9,9 +9,9 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 	"github.com/sirupsen/logrus"
-	"github.com/vektah/gqlparser"
-	"github.com/vektah/gqlparser/ast"
-	"github.com/vektah/gqlparser/formatter"
+	"github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/formatter"
 	"gopkg.in/yaml.v3"
 )
 
@@ -101,7 +101,7 @@ func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][
 		for rsIdx := range remoteSchemas {
 			for pIdx := range remoteSchemas[rsIdx].Permissions {
 				buf := new(bytes.Buffer)
-				gqlFormatter := formatter.NewFormatter(buf)
+				gqlFormatter := formatter.NewFormatter(buf, formatter.WithIndent("  "))
 				schema, err := gqlparser.LoadSchema(&ast.Source{
 					Input: remoteSchemas[rsIdx].Permissions[pIdx].Definition.Schema,
 				})
