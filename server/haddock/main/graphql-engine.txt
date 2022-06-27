@@ -26226,7 +26226,15 @@ GetJobDecodeProblem :: String -> ExecuteProblem
 CreateQueryJobDecodeProblem :: String -> ExecuteProblem
 ExecuteRunBigQueryProblem :: BigQueryProblem -> ExecuteProblem
 RESTRequestNonOK :: Status -> Value -> ExecuteProblem
-executeProblemMessage :: ExecuteProblem -> Text
+
+-- | We use this to hide certain details from the front-end, while allowing
+--   them in tests. We have not actually decided whether showing the
+--   details is insecure, but until we decide otherwise, it's probably best
+--   to err on the side of caution.
+data ShowDetails
+HideDetails :: ShowDetails
+InsecurelyShowDetails :: ShowDetails
+executeProblemMessage :: ShowDetails -> ExecuteProblem -> Text
 
 -- | Execute monad; as queries are performed, the record sets are stored in
 --   the map.
