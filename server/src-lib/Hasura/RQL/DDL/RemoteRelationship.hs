@@ -298,9 +298,10 @@ runDeleteRemoteSchemaRemoteRelationship DeleteRemoteSchemaRemoteRelationship {..
 -- This data structure is used as an argument to @AnyBackend@ in the backend-agnostic intermediary
 -- collection, and used here to build remote field info.
 data PartiallyResolvedSource b = PartiallyResolvedSource
-  { _prsSourceMetadata :: !(SourceMetadata b),
-    _resolvedSource :: !(ResolvedSource b),
-    _tableCoreInfoMap :: !(HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)))
+  { _prsSourceMetadata :: SourceMetadata b,
+    _resolvedSource :: ResolvedSource b,
+    _tableCoreInfoMap :: HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
+    _eventTriggerInfoMap :: HashMap (TableName b) (EventTriggerInfoMap b)
   }
 
 -- | Builds the schema cache representation of a remote relationship
@@ -330,7 +331,7 @@ buildRemoteFieldInfo lhsIdentifier lhsJoinFields RemoteRelationship {..} allSour
         Map.lookup _tsrdSource allSources
           `onNothing` throw400 NotFound ("source not found: " <>> _tsrdSource)
       AB.dispatchAnyBackend @Backend targetTables \(partiallyResolvedSource :: PartiallyResolvedSource b') -> do
-        let PartiallyResolvedSource _ targetSourceInfo targetTablesInfo = partiallyResolvedSource
+        let PartiallyResolvedSource _ targetSourceInfo targetTablesInfo _ = partiallyResolvedSource
         (targetTable :: TableName b') <- runAesonParser J.parseJSON _tsrdTable
         targetColumns <-
           fmap _tciFieldInfoMap $
