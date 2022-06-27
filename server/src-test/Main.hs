@@ -42,6 +42,7 @@ import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
 import Hasura.IncrementalSpec qualified as IncrementalSpec
 import Hasura.Logging
 import Hasura.Metadata.Class
+import Hasura.Metadata.DTO.MetadataDTOSpec qualified as MetadataDTOSpec
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -124,6 +125,7 @@ unitSpecs = do
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.GraphQL.Schema.Build.UpdateSpec" UpdateSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
+  describe "Hasura.Metadata.DTO.Metadata" MetadataDTOSpec.spec
   describe "Hasura.RQL.IR.SelectSpec" SelectSpec.spec
   describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
   describe "Hasura.RQL.PermissionSpec" PermSpec.spec
