@@ -24,7 +24,7 @@ if [[ "$SERVER_TEST_MODE" == "true" ]]; then
 fi
 
 GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-GIT_SHA="$(git rev-parse --short HEAD)"
+GIT_SHA="$(git rev-parse --short=7 HEAD)"
 # NOTE: a commit may have multiple tags; this should return the most recent
 # result of `git tag` if any:
 GIT_TAG_EXACT="$(git describe --tags --exact-match --dirty 2>/dev/null)"

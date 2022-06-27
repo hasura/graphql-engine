@@ -1,0 +1,256 @@
+{
+  "type": "replace_metadata",
+  "args": {
+    "metadata": {
+      "version": 3,
+      "sources": [
+        {
+          "name": "chinook",
+          "kind": "reference",
+          "tables": [
+            {
+              "table": "Album",
+              "object_relationships": [
+                {
+                  "name": "Artist",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Artist",
+                      "column_mapping": {
+                        "ArtistId": "ArtistId"
+                      }
+                    }
+                  }
+                }
+              ],
+              "array_relationships": [
+                {
+                  "name": "Tracks",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Track",
+                      "column_mapping": {
+                        "AlbumId": "AlbumId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "Artist",
+              "array_relationships": [
+                {
+                  "name": "Albums",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Album",
+                      "column_mapping": {
+                        "ArtistId": "ArtistId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "Customer",
+              "object_relationships": [
+                {
+                  "name": "SupportRep",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Employee",
+                      "column_mapping": {
+                        "SupportRepId": "EmployeeId"
+                      }
+                    }
+                  }
+                }
+              ],
+              "array_relationships": [
+                {
+                  "name": "Invoices",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Invoice",
+                      "column_mapping": {
+                        "CustomerId": "CustomerId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "Employee",
+              "array_relationships": [
+                {
+                  "name": "SupportRepForCustomers",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Customer",
+                      "column_mapping": {
+                        "EmployeeId": "SupportRepId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "Genre",
+              "array_relationships": [
+                {
+                  "name": "Tracks",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Track",
+                      "column_mapping": {
+                        "GenreId": "GenreId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "Invoice",
+              "object_relationships": [
+                {
+                  "name": "Customer",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Customer",
+                      "column_mapping": {
+                        "CustomerId": "CustomerId"
+                      }
+                    }
+                  }
+                }
+              ],
+              "array_relationships": [
+                {
+                  "name": "InvoiceLines",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "InvoiceLine",
+                      "column_mapping": {
+                        "InvoiceId": "InvoiceId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "InvoiceLine",
+              "object_relationships": [
+                {
+                  "name": "Invoice",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Invoice",
+                      "column_mapping": {
+                        "InvoiceId": "InvoiceId"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "Track",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Track",
+                      "column_mapping": {
+                        "TrackId": "TrackId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "MediaType",
+              "array_relationships": [
+                {
+                  "name": "Tracks",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Track",
+                      "column_mapping": {
+                        "MediaTypeId": "MediaTypeId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "Playlist"
+            },
+            {
+              "table": "Track",
+              "object_relationships": [
+                {
+                  "name": "Album",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Album",
+                      "column_mapping": {
+                        "AlbumId": "AlbumId"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "MediaType",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "MediaType",
+                      "column_mapping": {
+                        "MediaTypeId": "MediaTypeId"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "Genre",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Genre",
+                      "column_mapping": {
+                        "GenreId": "GenreId"
+                      }
+                    }
+                  }
+                }
+              ],
+              "array_relationships": [
+                {
+                  "name": "InvoiceLines",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "InvoiceLine",
+                      "column_mapping": {
+                        "TrackId": "TrackId"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "configuration": {}
+        }
+      ],
+      "backend_configs": {
+        "dataconnector": {
+          "reference": {
+            "uri": "http://reference-agent:8100"
+          }
+        }
+      }
+    }
+  }
+}
