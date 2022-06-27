@@ -33,14 +33,20 @@ module Harness.Test.Schema
   )
 where
 
+import Data.Aeson
+  ( Value (..),
+    object,
+    (.=),
+  )
+import Data.Aeson.Key qualified as K
 import Data.Foldable (for_)
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Time (UTCTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (BackendType, defaultBackendTypeString, defaultSchema, defaultSource)
+import Harness.Test.Context (BackendType, defaultBackendTypeString, defaultSchema, defaultSource, schemaKeyword)
 import Harness.TestEnvironment (TestEnvironment)
 import Prelude
 
@@ -59,6 +65,7 @@ data Table = Table
     tableColumns :: [Column],
     tablePrimaryKey :: [Text],
     tableReferences :: [Reference],
+    tableManualRelationships :: [Reference],
     tableData :: [[ScalarValue]],
     tableUniqueConstraints :: [UniqueConstraint]
   }
@@ -70,7 +77,7 @@ data UniqueConstraint = UniqueConstraintColumns [Text] | UniqueConstraintExpress
 -- | Create a table from just a name.
 -- Use record updates to modify the result.
 table :: Text -> Table
-table tableName = Table tableName [] [] [] [] []
+table tableName = Table tableName [] [] [] [] [] []
 
 -- | Foreign keys for backends that support it.
 data Reference = Reference
@@ -273,13 +280,19 @@ args:
 
 -- | Helper to create the object relationship name
 mkObjectRelationshipName :: Reference -> Text
-mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable} = referenceTargetTable <> "_by_" <> referenceLocalColumn
+mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
+  referenceTargetTable <> "_by_" <> referenceLocalColumn <> "_to_" <> referenceTargetColumn
 
 -- | Unified track object relationships
 trackObjectRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
-trackObjectRelationships backend Table {tableName, tableReferences} testEnvironment = do
+trackObjectRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
   let source = defaultSource backend
       schema = defaultSchema backend
+      tableObj =
+        object
+          [ schemaKeyword backend .= String (pack schema),
+            "name" .= String tableName
+          ]
       requestType = source <> "_create_object_relationship"
   for_ tableReferences $ \ref@Reference {referenceLocalColumn} -> do
     let relationshipName = mkObjectRelationshipName ref
@@ -289,74 +302,141 @@ trackObjectRelationships backend Table {tableName, tableReferences} testEnvironm
 type: *requestType
 args:
   source: *source
-  table:
-    name: *tableName
-    schema: *schema
+  table: *tableObj
   name: *relationshipName
   using:
     foreign_key_constraint_on: *referenceLocalColumn
 |]
+  for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
+    let relationshipName = mkObjectRelationshipName ref
+        targetTableObj =
+          object
+            [ schemaKeyword backend .= String (pack schema),
+              "name" .= String referenceTargetTable
+            ]
+        manualConfiguration :: Value
+        manualConfiguration =
+          object
+            [ "remote_table" .= targetTableObj,
+              "column_mapping"
+                .= object [K.fromText referenceLocalColumn .= referenceTargetColumn]
+            ]
+        payload =
+          [yaml|
+type: *requestType
+args:
+  source: *source
+  table: *tableObj
+  name: *relationshipName
+  using:
+    manual_configuration: *manualConfiguration
+|]
+
+    GraphqlEngine.postMetadata_ testEnvironment payload
 
 -- | Helper to create the array relationship name
-mkArrayRelationshipName :: Text -> Text -> Text
-mkArrayRelationshipName tableName referenceLocalColumn = tableName <> "s_by_" <> referenceLocalColumn
+mkArrayRelationshipName :: Text -> Text -> Text -> Text
+mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn =
+  tableName <> "s_by_" <> referenceLocalColumn <> "_to_" <> referenceTargetColumn
 
 -- | Unified track array relationships
 trackArrayRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
-trackArrayRelationships backend Table {tableName, tableReferences} testEnvironment = do
+trackArrayRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
   let source = defaultSource backend
       schema = defaultSchema backend
+      tableObj =
+        object
+          [ schemaKeyword backend .= String (pack schema),
+            "name" .= String tableName
+          ]
       requestType = source <> "_create_array_relationship"
-  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable} -> do
-    let relationshipName = mkArrayRelationshipName tableName referenceLocalColumn
+  for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
+    let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
+        targetTableObj =
+          object
+            [ schemaKeyword backend .= String (pack schema),
+              "name" .= String referenceTargetTable
+            ]
     GraphqlEngine.postMetadata_
       testEnvironment
       [yaml|
 type: *requestType
 args:
   source: *source
-  table:
-    name: *referenceTargetTable
-    schema: *schema
+  table: *targetTableObj
   name: *relationshipName
   using:
     foreign_key_constraint_on:
-      table:
-        name: *tableName
-        schema: *schema
+      table: *tableObj
       column: *referenceLocalColumn
 |]
+  for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
+    let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
+        targetTableObj =
+          object
+            [ schemaKeyword backend .= String (pack schema),
+              "name" .= String referenceTargetTable
+            ]
+        manualConfiguration :: Value
+        manualConfiguration =
+          object
+            [ "remote_table"
+                .= tableObj,
+              "column_mapping"
+                .= object [K.fromText referenceTargetColumn .= referenceLocalColumn]
+            ]
+        payload =
+          [yaml|
+type: *requestType
+args:
+  source: *source
+  table: *targetTableObj
+  name: *relationshipName
+  using:
+    manual_configuration: *manualConfiguration
+|]
+
+    GraphqlEngine.postMetadata_ testEnvironment payload
 
 -- | Unified untrack relationships
 untrackRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
-untrackRelationships backend Table {tableName, tableReferences} testEnvironment = do
+untrackRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
   let source = defaultSource backend
       schema = defaultSchema backend
+      tableObj =
+        object
+          [ schemaKeyword backend .= String (pack schema),
+            "name" .= String tableName
+          ]
       requestType = source <> "_drop_relationship"
-  for_ tableReferences $ \ref@Reference {referenceLocalColumn, referenceTargetTable} -> do
-    let arrayRelationshipName = mkArrayRelationshipName tableName referenceLocalColumn
+  forFinally_ (tableManualRelationships <> tableReferences) $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
+    let arrayRelationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
         objectRelationshipName = mkObjectRelationshipName ref
-    -- drop array relationships
-    GraphqlEngine.postMetadata_
-      testEnvironment
-      [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    schema: *schema
-    name: *referenceTargetTable
-  relationship: *arrayRelationshipName
-|]
-    -- drop object relationships
-    GraphqlEngine.postMetadata_
-      testEnvironment
-      [yaml|
-type: *requestType
-args:
-  source: *source
-  table:
-    schema: *schema
-    name: *tableName
-  relationship: *objectRelationshipName
-|]
+        targetTableObj =
+          object
+            [ schemaKeyword backend .= String (pack schema),
+              "name" .= String referenceTargetTable
+            ]
+    finally
+      ( -- drop array relationship
+        GraphqlEngine.postMetadata_
+          testEnvironment
+          [yaml|
+    type: *requestType
+    args:
+      source: *source
+      table: *targetTableObj
+      relationship: *arrayRelationshipName
+    |]
+      )
+      ( -- drop object relationship
+        GraphqlEngine.postMetadata_
+          testEnvironment
+          [yaml|
+    type: *requestType
+    args:
+      source: *source
+      table: *tableObj
+      relationship: *objectRelationshipName
+    |]
+      )

@@ -35,6 +35,7 @@ module Harness.Constants
     citusDb,
     serveOptions,
     dataConnectorDb,
+    maxRetriesRateLimitExceeded,
   )
 where
 
@@ -280,3 +281,6 @@ engineLogLevel = Nothing
 -- These are important for the test suite.
 testSuiteEnabledApis :: HashSet API
 testSuiteEnabledApis = Set.fromList [METADATA, GRAPHQL, DEVELOPER, CONFIG]
+
+maxRetriesRateLimitExceeded :: Int
+maxRetriesRateLimitExceeded = 4

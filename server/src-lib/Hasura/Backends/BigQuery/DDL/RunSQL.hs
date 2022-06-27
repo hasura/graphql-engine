@@ -84,7 +84,7 @@ runSQL_ f (BigQueryRunSQL query source) = do
       Execute.BigQuery {query = LT.fromStrict query, parameters = mempty}
   case result of
     Left executeProblem -> do
-      let errorMessage = Execute.executeProblemMessage executeProblem
+      let errorMessage = Execute.executeProblemMessage Execute.HideDetails executeProblem
       throwError (err400 BigQueryError errorMessage) {qeInternal = Just $ ExtraInternal $ J.toJSON executeProblem}
     Right recordSet ->
       pure
