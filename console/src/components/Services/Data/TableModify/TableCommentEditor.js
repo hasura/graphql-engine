@@ -43,9 +43,9 @@ const TableCommentEditor = ({
   if (tableComment && !tableCommentEdit.enabled) {
     commentHtml = (
       <div>
-        <div className="rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mb-sm">
+        <textarea className="rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mb-sm">
           {tableComment}
-        </div>
+        </textarea>
         {!readOnly && (
           <div
             onClick={editCommentClicked}
@@ -60,7 +60,7 @@ const TableCommentEditor = ({
   } else if (tableCommentEdit.enabled) {
     commentHtml = (
       <div className="flex items-center">
-        <input
+        <textarea
           onChange={commentEdited}
           className={inputStyles}
           type="text"
