@@ -21,6 +21,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@fastify/cors": "^7.0.0",
     "fastify": "^3.29.0",
     "openapi3-ts": "^2.0.2",
     "pino-pretty": "^8.0.0",
