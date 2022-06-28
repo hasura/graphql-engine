@@ -1,10 +1,9 @@
-import { getValidationSchema } from './connectDB/getValidationSchema';
-import { getUISchema } from './connectDB/getUISchema';
+import { getConfigSchema } from './connectDB/getConfigSchema';
+
 import { Database } from '..';
 
 export const postgres: Database = {
   connectDB: {
-    getUISchema,
-    getValidationSchema,
+    getConfigSchema,
   },
 };

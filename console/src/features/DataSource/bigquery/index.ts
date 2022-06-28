@@ -1,10 +1,9 @@
-import { Database } from '..';
-import { getUISchema } from './connectDB/getUISchema';
-import { getValidationSchema } from './connectDB/getValidationSchema';
+import { Database, Feature } from '..';
 
 export const bigquery: Database = {
   connectDB: {
-    getUISchema,
-    getValidationSchema,
+    getConfigSchema: async () => {
+      return Feature.NotImplemented;
+    },
   },
 };
