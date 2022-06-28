@@ -15,7 +15,7 @@ import Data.HashMap.Strict qualified as HM
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
 import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..), UpdateOpExpression (..))
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
-import Hasura.GraphQL.Parser.Schema (Variable)
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))

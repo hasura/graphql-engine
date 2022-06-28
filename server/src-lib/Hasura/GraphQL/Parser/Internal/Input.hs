@@ -27,6 +27,7 @@ import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Hasura.Server.Utils (englishList)
 import Language.GraphQL.Draft.Syntax hiding (Definition)
@@ -36,24 +37,24 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 inputParserInput :: forall k. 'Input <: k => ParserInput k :~: InputValue Variable
 inputParserInput = case subKind @'Input @k of KRefl -> Refl; KBoth -> Refl
 
-pInputParser :: forall k m a. 'Input <: k => Parser k m a -> InputValue Variable -> m a
+pInputParser :: forall origin k m a. 'Input <: k => Parser origin k m a -> InputValue Variable -> m a
 pInputParser = gcastWith (inputParserInput @k) pParser
 
 -- | Parses some collection of input fields. Build an 'InputFieldsParser' using
 -- 'field', 'fieldWithDefault', or 'fieldOptional', combine several together
 -- with the 'Applicative' instance, and finish it off using 'object' to turn it
 -- into a 'Parser'.
-data InputFieldsParser m a = InputFieldsParser
+data InputFieldsParser origin m a = InputFieldsParser
   -- Note: this is isomorphic to
   --     Compose ((,) [Definition (FieldInfo k)])
   --             (ReaderT (HashMap Name (FieldInput k)) m) a
   -- but working with that type sucks.
-  { ifDefinitions :: [Definition InputFieldInfo],
+  { ifDefinitions :: [Definition origin (InputFieldInfo origin)],
     ifParser :: HashMap Name (InputValue Variable) -> m a
   }
   deriving (Functor)
 
-instance Applicative m => Applicative (InputFieldsParser m) where
+instance Applicative m => Applicative (InputFieldsParser origin m) where
   pure v = InputFieldsParser [] (const $ pure v)
   a <*> b =
     InputFieldsParser
@@ -224,11 +225,11 @@ field ::
   (MonadParse m, 'Input <: k) =>
   Name ->
   Maybe Description ->
-  Parser k m a ->
-  InputFieldsParser m a
+  Parser origin k m a ->
+  InputFieldsParser origin m a
 field name description parser =
   InputFieldsParser
-    { ifDefinitions = [Definition name description $ InputFieldInfo (pType parser) Nothing],
+    { ifDefinitions = [Definition name description Nothing $ InputFieldInfo (pType parser) Nothing],
       ifParser = \values -> withKey (Key (K.fromText (unName name))) do
         value <-
           onNothing (M.lookup name values <|> nullableDefault) $
@@ -253,12 +254,12 @@ fieldOptional ::
   (MonadParse m, 'Input <: k) =>
   Name ->
   Maybe Description ->
-  Parser k m a ->
-  InputFieldsParser m (Maybe a)
+  Parser origin k m a ->
+  InputFieldsParser origin m (Maybe a)
 fieldOptional name description parser =
   InputFieldsParser
     { ifDefinitions =
-        [ Definition name description $
+        [ Definition name description Nothing $
             InputFieldInfo (nullableType $ pType parser) Nothing
         ],
       ifParser =
@@ -278,11 +279,11 @@ fieldWithDefault ::
   Maybe Description ->
   -- | default value
   Value Void ->
-  Parser k m a ->
-  InputFieldsParser m a
+  Parser origin k m a ->
+  InputFieldsParser origin m a
 fieldWithDefault name description defaultValue parser =
   InputFieldsParser
-    { ifDefinitions = [Definition name description $ InputFieldInfo (pType parser) (Just defaultValue)],
+    { ifDefinitions = [Definition name description Nothing $ InputFieldInfo (pType parser) (Just defaultValue)],
       ifParser =
         M.lookup name
           >>> withKey (Key (K.fromText (unName name))) . \case
@@ -299,8 +300,8 @@ enum ::
   MonadParse m =>
   Name ->
   Maybe Description ->
-  NonEmpty (Definition EnumValueInfo, a) ->
-  Parser 'Both m a
+  NonEmpty (Definition origin EnumValueInfo, a) ->
+  Parser origin 'Both m a
 enum name description values =
   Parser
     { pType = schemaType,
@@ -312,7 +313,7 @@ enum name description values =
           other -> typeMismatch name "an enum value" other
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description $ TIEnum (fst <$> values)
+    schemaType = TNamed NonNullable $ Definition name description Nothing $ TIEnum (fst <$> values)
     valuesMap = M.fromList $ over (traverse . _1) dName $ toList values
     validate value =
       onNothing (M.lookup value valuesMap) $
@@ -333,8 +334,8 @@ object ::
   MonadParse m =>
   Name ->
   Maybe Description ->
-  InputFieldsParser m a ->
-  Parser 'Input m a
+  InputFieldsParser origin m a ->
+  Parser origin 'Input m a
 object name description parser =
   Parser
     { pType = schemaType,
@@ -355,7 +356,7 @@ object name description parser =
   where
     schemaType =
       TNamed NonNullable $
-        Definition name description $
+        Definition name description Nothing $
           TIInputObject (InputObjectInfo (ifDefinitions parser))
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
     parseFields fields = do
@@ -367,7 +368,7 @@ object name description parser =
             parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
       ifParser parser fields
 
-list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
+list :: forall origin k m a. (MonadParse m, 'Input <: k) => Parser origin k m a -> Parser origin k m [a]
 list parser =
   gcastWith
     (inputParserInput @k)

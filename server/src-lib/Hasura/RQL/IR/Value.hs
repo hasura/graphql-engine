@@ -8,7 +8,7 @@ module Hasura.RQL.IR.Value
   )
 where
 
-import Hasura.GraphQL.Parser.Schema (VariableInfo)
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column

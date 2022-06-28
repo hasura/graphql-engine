@@ -18,13 +18,19 @@ import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..))
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser
+  ( FieldParser,
+    InputFieldsParser,
+    Kind (..),
+    MonadParse,
+    MonadSchema,
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Update qualified as SU
@@ -237,7 +243,7 @@ msMkRelationshipParser _sourceName _relationshipInfo = do
 -- * Individual components
 
 msColumnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
   ColumnType 'MSSQL ->
   G.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
@@ -269,13 +275,13 @@ msColumnParser columnType (G.Nullability isNullable) =
         MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
         _ -> do
           name <- MSSQL.mkMSSQLScalarTypeName scalarType
-          let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
+          let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
           pure $
-            Parser
+            P.Parser
               { pType = schemaType,
                 pParser =
-                  valueToJSON (P.toGraphQLType schemaType)
-                    >=> either (parseErrorWith ParseFailed . qeError) pure . (MSSQL.parseScalarValue scalarType)
+                  P.valueToJSON (P.toGraphQLType schemaType)
+                    >=> either (P.parseErrorWith ParseFailed . qeError) pure . (MSSQL.parseScalarValue scalarType)
               }
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (Map.toList enumValues) of
@@ -289,7 +295,7 @@ msColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) Nothing P.EnumValueInfo,
         ODBC.TextValue $ G.unName value
       )
 
@@ -303,7 +309,7 @@ msOrderByOperators ::
   NamingCase ->
   ( G.Name,
     NonEmpty
-      ( Definition P.EnumValueInfo,
+      ( P.Definition P.EnumValueInfo,
         (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)
       )
   )
@@ -331,7 +337,7 @@ msOrderByOperators _tCase =
         )
       ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
 
 msComparisonExps ::
   forall m n r.
@@ -340,7 +346,7 @@ msComparisonExps ::
     MonadError QErr m,
     MonadReader r m,
     Has SchemaOptions r,
-    Has MkTypename r,
+    Has P.MkTypename r,
     Has NamingCase r
   ) =>
   ColumnType 'MSSQL ->

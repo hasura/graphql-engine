@@ -17,12 +17,12 @@ import Hasura.GraphQL.Execute.Inline
 import Hasura.GraphQL.Execute.Remote (resolveRemoteVariable, runVariableCache)
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
-import Hasura.GraphQL.Parser.Monad (runSchemaT)
 import Hasura.GraphQL.Parser.Name qualified as GName
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.TestUtils
+import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -135,7 +135,7 @@ buildQueryParsers introspection = do
   RemoteSchemaParser query _ _ <-
     runError $
       flip runReaderT schemaInfo $
-        runSchemaT $
+        P.runSchemaT $
           buildRemoteParser introResult remoteSchemaRels remoteSchemaInfo
   pure $
     head query <&> \case

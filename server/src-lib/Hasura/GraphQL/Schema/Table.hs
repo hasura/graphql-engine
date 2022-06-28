@@ -20,10 +20,10 @@ import Data.HashSet qualified as Set
 import Data.Text.Casing
 import Data.Text.Extended
 import Hasura.Base.Error (QErr)
-import Hasura.GraphQL.Parser (Kind (..), Parser)
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser (Kind (..), Parser)
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -105,7 +105,7 @@ tableSelectColumnsEnum sourceInfo tableInfo = do
         ]
   where
     define name =
-      P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
+      P.Definition name (Just $ G.Description "column name") Nothing P.EnumValueInfo
 
 -- | Table update columns enum
 --
@@ -128,7 +128,7 @@ tableUpdateColumnsEnum tableInfo = do
         pure (define $ ciName column, ciColumn column)
   pure $ P.enum enumName enumDesc <$> nonEmpty enumValues
   where
-    define name = P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
+    define name = P.Definition name (Just $ G.Description "column name") Nothing P.EnumValueInfo
 
 -- If there's no column for which the current user has "update"
 -- permissions, this functions returns an enum that only contains a
@@ -147,7 +147,7 @@ updateColumnsPlaceholderParser tableInfo = do
       pure $
         P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
           pure
-            ( P.Definition @P.EnumValueInfo Name.__PLACEHOLDER (Just $ G.Description "placeholder (do not use)") P.EnumValueInfo,
+            ( P.Definition @_ @P.EnumValueInfo Name.__PLACEHOLDER (Just $ G.Description "placeholder (do not use)") Nothing P.EnumValueInfo,
               Nothing
             )
 

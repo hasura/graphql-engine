@@ -16,16 +16,16 @@ where
 import Data.Text.Extended
 import Hasura.Backends.MSSQL.Types.Insert
 import Hasura.Backends.MSSQL.Types.Internal (ScalarType (..))
-import Hasura.GraphQL.Parser
-  ( InputFieldsParser,
-    Kind (..),
-    Parser,
-  )
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser
+  ( InputFieldsParser,
+    Kind (..),
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -131,7 +131,7 @@ tableInsertMatchColumnsEnum sourceInfo tableInfo = do
         ]
   where
     define name =
-      P.Definition name (Just $ G.Description "column name") P.EnumValueInfo
+      P.Definition name (Just $ G.Description "column name") Nothing P.EnumValueInfo
 
 -- | Check whether a column can be used for match_columns.
 isMatchColumnValid :: ColumnInfo 'MSSQL -> Bool

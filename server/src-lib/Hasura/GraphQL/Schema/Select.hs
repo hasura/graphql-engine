@@ -44,19 +44,19 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
 import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser
-  ( FieldParser,
-    InputFieldsParser,
-    Kind (..),
-    Parser,
-  )
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.OrderBy
+import Hasura.GraphQL.Schema.Parser
+  ( FieldParser,
+    InputFieldsParser,
+    Kind (..),
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -67,6 +67,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
@@ -111,15 +112,16 @@ selectTable sourceInfo tableInfo fieldName description = runMaybeT do
     stringifyNum <- retrieve soStringifyNum
     tableArgsParser <- tableArguments sourceInfo tableInfo
     pure $
-      P.subselection fieldName description tableArgsParser selectionSetParser
-        <&> \(args, fields) ->
-          IR.AnnSelectG
-            { IR._asnFields = fields,
-              IR._asnFrom = IR.FromTable tableName,
-              IR._asnPerm = tablePermissionsInfo selectPermissions,
-              IR._asnArgs = args,
-              IR._asnStrfyNum = stringifyNum
-            }
+      P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
+        P.subselection fieldName description tableArgsParser selectionSetParser
+          <&> \(args, fields) ->
+            IR.AnnSelectG
+              { IR._asnFields = fields,
+                IR._asnFrom = IR.FromTable tableName,
+                IR._asnPerm = tablePermissionsInfo selectPermissions,
+                IR._asnArgs = args,
+                IR._asnStrfyNum = stringifyNum
+              }
   where
     tableName = tableInfoName tableInfo
 
@@ -217,19 +219,20 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
           BoolFld . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
             <$> P.field (ciName columnInfo) (ciDescription columnInfo) field
     pure $
-      P.subselection fieldName description argsParser selectionSetParser
-        <&> \(boolExpr, fields) ->
-          let defaultPerms = tablePermissionsInfo selectPermissions
-              -- Do not account permission limit since the result is just a nullable object
-              permissions = defaultPerms {IR._tpLimit = Nothing}
-              whereExpr = Just $ BoolAnd $ toList boolExpr
-           in IR.AnnSelectG
-                { IR._asnFields = fields,
-                  IR._asnFrom = IR.FromTable tableName,
-                  IR._asnPerm = permissions,
-                  IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
-                  IR._asnStrfyNum = stringifyNum
-                }
+      P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
+        P.subselection fieldName description argsParser selectionSetParser
+          <&> \(boolExpr, fields) ->
+            let defaultPerms = tablePermissionsInfo selectPermissions
+                -- Do not account permission limit since the result is just a nullable object
+                permissions = defaultPerms {IR._tpLimit = Nothing}
+                whereExpr = Just $ BoolAnd $ toList boolExpr
+             in IR.AnnSelectG
+                  { IR._asnFields = fields,
+                    IR._asnFrom = IR.FromTable tableName,
+                    IR._asnPerm = permissions,
+                    IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
+                    IR._asnStrfyNum = stringifyNum
+                  }
   where
     tableName = tableInfoName tableInfo
 
@@ -275,15 +278,16 @@ selectTableAggregate sourceInfo tableInfo fieldName description = runMaybeT $ do
                   IR.TAFAgg <$> P.subselection_ Name._aggregate Nothing aggregateParser
                 ]
     pure $
-      P.subselection fieldName description tableArgsParser aggregationParser
-        <&> \(args, fields) ->
-          IR.AnnSelectG
-            { IR._asnFields = fields,
-              IR._asnFrom = IR.FromTable tableName,
-              IR._asnPerm = tablePermissionsInfo selectPermissions,
-              IR._asnArgs = args,
-              IR._asnStrfyNum = stringifyNum
-            }
+      P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
+        P.subselection fieldName description tableArgsParser aggregationParser
+          <&> \(args, fields) ->
+            IR.AnnSelectG
+              { IR._asnFields = fields,
+                IR._asnFrom = IR.FromTable tableName,
+                IR._asnPerm = tablePermissionsInfo selectPermissions,
+                IR._asnArgs = args,
+                IR._asnStrfyNum = stringifyNum
+              }
   where
     tableName = tableInfoName tableInfo
 

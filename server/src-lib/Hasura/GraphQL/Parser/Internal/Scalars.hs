@@ -36,6 +36,7 @@ import Hasura.GraphQL.Parser.Internal.Convert
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Language.GraphQL.Draft.Syntax hiding (Definition)
@@ -43,26 +44,26 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 --------------------------------------------------------------------------------
 -- Built-in scalars
 
-boolean :: MonadParse m => Parser 'Both m Bool
+boolean :: MonadParse m => Parser origin 'Both m Bool
 boolean = mkScalar boolScalar Nothing \case
   GraphQLValue (VBoolean b) -> pure b
   JSONValue (A.Bool b) -> pure b
   v -> typeMismatch boolScalar "a boolean" v
 
-int :: MonadParse m => Parser 'Both m Int32
+int :: MonadParse m => Parser origin 'Both m Int32
 int = mkScalar intScalar Nothing \case
   GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
   JSONValue (A.Number n) -> convertWith scientificToInteger n
   v -> typeMismatch intScalar "a 32-bit integer" v
 
-float :: MonadParse m => Parser 'Both m Double
+float :: MonadParse m => Parser origin 'Both m Double
 float = mkScalar floatScalar Nothing \case
   GraphQLValue (VFloat f) -> convertWith scientificToFloat f
   GraphQLValue (VInt i) -> convertWith scientificToFloat $ fromInteger i
   JSONValue (A.Number n) -> convertWith scientificToFloat n
   v -> typeMismatch floatScalar "a float" v
 
-string :: MonadParse m => Parser 'Both m Text
+string :: MonadParse m => Parser origin 'Both m Text
 string = mkScalar stringScalar Nothing \case
   GraphQLValue (VString s) -> pure s
   JSONValue (A.String s) -> pure s
@@ -70,7 +71,7 @@ string = mkScalar stringScalar Nothing \case
 
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
-identifier :: MonadParse m => Parser 'Both m Text
+identifier :: MonadParse m => Parser origin 'Both m Text
 identifier = mkScalar idScalar Nothing \case
   GraphQLValue (VString s) -> pure s
   GraphQLValue (VInt i) -> pure $ tshow i
@@ -83,7 +84,7 @@ identifier = mkScalar idScalar Nothing \case
 --------------------------------------------------------------------------------
 -- Custom scalars
 
-uuid :: MonadParse m => Parser 'Both m UUID.UUID
+uuid :: MonadParse m => Parser origin 'Both m UUID.UUID
 uuid = mkScalar name Nothing \case
   GraphQLValue (VString s) -> convertWith A.parseJSON $ A.String s
   JSONValue v -> convertWith A.parseJSON v
@@ -91,14 +92,14 @@ uuid = mkScalar name Nothing \case
   where
     name = $$(litName "uuid")
 
-json, jsonb :: MonadParse m => Parser 'Both m A.Value
+json, jsonb :: MonadParse m => Parser origin 'Both m A.Value
 json = jsonScalar $$(litName "json") Nothing
 jsonb = jsonScalar $$(litName "jsonb") Nothing
 
 -- | Additional validation on integers. We do keep the same type name in the schema for backwards
 -- compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "NonNegativeInt".
-nonNegativeInt :: MonadParse m => Parser 'Both m Int32
+nonNegativeInt :: MonadParse m => Parser origin 'Both m Int32
 nonNegativeInt = mkScalar intScalar Nothing \case
   GraphQLValue (VInt i) | i >= 0 -> convertWith scientificToInteger $ fromInteger i
   JSONValue (A.Number n) | n >= 0 -> convertWith scientificToInteger n
@@ -108,7 +109,7 @@ nonNegativeInt = mkScalar intScalar Nothing \case
 -- we declare a cusom scalar that can represent 64-bit ints, which accepts both int literals and
 -- string literals. We do keep the same type name in the schema for backwards compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "BigInt".
-bigInt :: MonadParse m => Parser 'Both m Int64
+bigInt :: MonadParse m => Parser origin 'Both m Int64
 bigInt = mkScalar intScalar Nothing \case
   GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
   JSONValue (A.Number n) -> convertWith scientificToInteger n
@@ -122,7 +123,7 @@ bigInt = mkScalar intScalar Nothing \case
 
 -- | Parser for 'Scientific'. Certain backends like BigQuery support
 -- Decimal/BigDecimal and need an arbitrary precision number.
-scientific :: MonadParse m => Parser 'Both m Scientific
+scientific :: MonadParse m => Parser origin 'Both m Scientific
 scientific = mkScalar name Nothing \case
   GraphQLValue (VFloat f) -> pure f
   GraphQLValue (VInt i) -> pure $ S.scientific i 0
@@ -148,23 +149,23 @@ unsafeRawScalar ::
   MonadParse n =>
   Name ->
   Maybe Description ->
-  Parser 'Both n (InputValue Variable)
+  Parser origin 'Both n (InputValue Variable)
 unsafeRawScalar name description =
   Parser
-    { pType = TNamed NonNullable $ Definition name description TIScalar,
+    { pType = TNamed NonNullable $ Definition name description Nothing TIScalar,
       pParser = pure
     }
 
 -- | Creates a parser that transforms its input into a JSON value. 'valueToJSON'
 -- does properly unpack variables.
-jsonScalar :: MonadParse m => Name -> Maybe Description -> Parser 'Both m A.Value
+jsonScalar :: MonadParse m => Name -> Maybe Description -> Parser origin 'Both m A.Value
 jsonScalar name description =
   Parser
     { pType = schemaType,
       pParser = valueToJSON $ toGraphQLType schemaType
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description TIScalar
+    schemaType = TNamed NonNullable $ Definition name description Nothing TIScalar
 
 --------------------------------------------------------------------------------
 -- Local helpers
@@ -174,14 +175,14 @@ mkScalar ::
   Name ->
   Maybe Description ->
   (InputValue Variable -> m a) ->
-  Parser 'Both m a
+  Parser origin 'Both m a
 mkScalar name description parser =
   Parser
     { pType = schemaType,
       pParser = peelVariable (toGraphQLType schemaType) >=> parser
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description TIScalar
+    schemaType = TNamed NonNullable $ Definition name description Nothing TIScalar
 
 convertWith ::
   MonadParse m =>
