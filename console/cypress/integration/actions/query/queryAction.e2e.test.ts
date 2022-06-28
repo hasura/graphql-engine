@@ -70,15 +70,13 @@ if (testMode !== 'cli') {
           parseSpecialCharSequences: false,
         });
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `test_webhook_transform`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Click the Create button**');
       cy.getBySel('create-action-btn').click();
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `create_action`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
@@ -133,8 +131,6 @@ if (testMode !== 'cli') {
       cy.log('**--- Click Save Permissions**');
       cy.getBySel('save-permissions-for-action').click();
 
-      // sure the Console locally works as the one in CI. The request was `create_action_permission`
-
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
       cy.get(
@@ -168,8 +164,7 @@ if (testMode !== 'cli') {
       cy.log('**--- Click the Delete button**');
       cy.getBySel('delete-action').click();
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `drop_action`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');

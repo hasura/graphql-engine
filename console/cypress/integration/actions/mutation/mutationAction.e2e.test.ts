@@ -68,21 +68,13 @@ if (testMode !== 'cli') {
           parseSpecialCharSequences: false,
         });
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `test_webhook_transform`
-
-      // --------------------
-      // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-      // the payload (see the next cy.intercept) means asserting on it too
-      cy.log('**--- Type in the Custom Timeout field**');
-      cy.getBySel('action-timeout-seconds').clear().type('25');
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Click the Create button**');
       cy.getBySel('create-action-btn').click();
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `create_action`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
@@ -123,8 +115,7 @@ if (testMode !== 'cli') {
       cy.log('**--- Click Save Permissions**');
       cy.getBySel('save-permissions-for-action').click();
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `create_action_permission`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
@@ -163,8 +154,7 @@ if (testMode !== 'cli') {
       cy.log('**--- Check the prompt has been called**');
       cy.window().its('prompt').should('be.called');
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `drop_action`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');

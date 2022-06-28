@@ -57,12 +57,6 @@ if (testMode !== 'cli') {
       );
 
       // --------------------
-      // Pleas note that the custom timeout is not checked explicitly checked, but asserting on
-      // the payload (see the next cy.intercept) means asserting on it too
-      cy.log('**--- Type in the Custom Timeout field**');
-      cy.getBySel('action-timeout-seconds').clearConsoleTextarea().type('25');
-
-      // --------------------
       cy.log('**--- Click the Add Request Options Transform button**');
       cy.contains('Add Request Options Transform').click();
 
@@ -79,8 +73,7 @@ if (testMode !== 'cli') {
         cy.log('**--- Type in the Request URL Template field**');
         cy.get('[placeholder="URL Template (Optional)..."]').type('users');
 
-        // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-        // sure the Console locally works as the one in CI.
+        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
         // --------------------
         cy.log('**--- Look for the "Invalid URL" error**');
@@ -112,8 +105,7 @@ if (testMode !== 'cli') {
           .clearConsoleTextarea()
           .type('/users');
 
-        // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-        // sure the Console locally works as the one in CI.
+        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
         // --------------------
         cy.log('**--- Look for "Missing Env Var" error**');
@@ -141,8 +133,7 @@ if (testMode !== 'cli') {
         delay: 1,
       });
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI.
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check the error disappeared**');
@@ -183,8 +174,7 @@ if (testMode !== 'cli') {
           .type('{{$url}}/users', { parseSpecialCharSequences: false });
       });
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI.
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Look for "Invalid Path" error**');
@@ -220,8 +210,7 @@ if (testMode !== 'cli') {
         }
       );
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI.
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check the error disappeared**');
@@ -270,8 +259,7 @@ if (testMode !== 'cli') {
             { force: true, delay: 1, parseSpecialCharSequences: false }
           );
 
-        // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-        // sure the Console locally works as the one in CI.
+        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
         // --------------------
         cy.log('**--- Look for the "Invalid path" error**');
@@ -304,8 +292,7 @@ if (testMode !== 'cli') {
           { force: true, delay: 1, parseSpecialCharSequences: false }
         );
 
-        // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-        // sure the Console locally works as the one in CI.
+        // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
         // --------------------
         cy.log('**--- Check the error disappeared**');
@@ -321,8 +308,7 @@ if (testMode !== 'cli') {
       cy.log('**--- Click the Create button**');
       cy.getBySel('create-action-btn').click();
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `create_action`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
@@ -376,8 +362,7 @@ if (testMode !== 'cli') {
       cy.log('**--- Click on the Save button**');
       cy.getBySel('save-modify-action-changes').click();
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `create_action_permission`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
@@ -427,8 +412,7 @@ if (testMode !== 'cli') {
       cy.log('**--- Check the prompt has been called**');
       cy.window().its('prompt').should('be.called');
 
-      // Please note: we should wait for the outgoing request but at the moment of writing, I'm not
-      // sure the Console locally works as the one in CI. The request was `drop_action`
+      // Due to the double server/cli mode behavior, we do not assert about the XHR request payload here
 
       // --------------------
       cy.log('**--- Check if the success notification is visible**');
