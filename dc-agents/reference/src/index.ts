@@ -1,4 +1,5 @@
-﻿import Fastify from 'fastify';
+import Fastify from 'fastify';
+import FastifyCors from '@fastify/cors';
 import { SchemaResponse } from './types/schema';
 import { ProjectedRow, QueryRequest } from './types/query';
 import { filterAvailableTables, getSchema, loadStaticData } from './data';
@@ -9,6 +10,15 @@ import { CapabilitiesResponse, capabilitiesResponse} from './capabilities';
 const port = Number(process.env.PORT) || 8100;
 const server = Fastify({ logger: { prettyPrint: true } });
 let staticData = {};
+
+server.register(FastifyCors, {
+  // Accept all origins of requests. This must be modified in
+  // a production setting to be specific allowable list
+  // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+  origin: true,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["X-Hasura-DataConnector-Config", "X-Hasura-DataConnector-SourceName"]
+});
 
 server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
