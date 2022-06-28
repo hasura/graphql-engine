@@ -71,6 +71,9 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 - console: introduce new table relationships UI in alpha
 - cli: fix performance regression with large metadata in `metadata apply`
 - cli: fix error reporting in `metadata apply` command (#8280)
+- server: query runtime performance optimizations
+- server: fix bug that had disabled expression-based indexes in Postgress variants (fix Zendesk 5146)
+- server: add optionality to additional postgres-client-cert fields: sslcert, sslkey and sslpassword
 
 ## v2.8.1
 
