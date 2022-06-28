@@ -92,45 +92,20 @@ author =
     { tableColumns =
         [ Schema.column "id" Schema.TInt,
           Schema.column "name" Schema.TStr,
-          Schema.column "createdAt" dateTimeType
+          Schema.column "createdAt" Schema.TUTCTime
         ],
       tablePrimaryKey = ["id"],
       tableData =
         [ [ Schema.VInt 1,
             Schema.VStr "Author 1",
-            Schema.VCustomValue $
-              defaultBackendScalarValue
-                { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
-                  bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
-                  bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
-                  bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44",
-                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:39:44"
-                }
+            Schema.parseUTCTimeOrError "2017-09-21 09:39:44"
           ],
           [ Schema.VInt 2,
             Schema.VStr "Author 2",
-            Schema.VCustomValue $
-              defaultBackendScalarValue
-                { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
-                  bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
-                  bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
-                  bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44",
-                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:50:44"
-                }
+            Schema.parseUTCTimeOrError "2017-09-21 09:50:44"
           ]
         ]
     }
-  where
-    dateTimeType :: ScalarType
-    dateTimeType =
-      TCustomType $
-        defaultBackendScalarType
-          { bstMysql = Just "DATETIME",
-            bstMssql = Just "DATETIME",
-            bstCitus = Just "TIMESTAMP",
-            bstPostgres = Just "TIMESTAMP",
-            bstBigQuery = Just "DATETIME"
-          }
 
 article :: Schema.Table
 article =
@@ -141,8 +116,8 @@ article =
           Schema.columnNull "content" textType,
           Schema.columnNull "is_published" bitType,
           Schema.columnNull "published_on" timestampType,
-          Schema.columnNull "author_id" intUnsingedType,
-          Schema.columnNull "co_author_id" intUnsingedType
+          Schema.columnNull "author_id" intUnsignedType,
+          Schema.columnNull "co_author_id" intUnsignedType
         ],
       tablePrimaryKey = ["id"],
       tableReferences = [Schema.Reference "author_id" "author" "id"],
@@ -186,8 +161,8 @@ article =
             bstBigQuery = Just "DATETIME"
           }
 
-    intUnsingedType :: ScalarType
-    intUnsingedType =
+    intUnsignedType :: ScalarType
+    intUnsignedType =
       TCustomType $
         defaultBackendScalarType
           { bstMysql = Just "INT UNSIGNED",

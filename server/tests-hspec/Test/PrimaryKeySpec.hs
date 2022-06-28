@@ -10,15 +10,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
-import Harness.Test.Schema
-  ( BackendScalarType (..),
-    BackendScalarValue (..),
-    ScalarType (..),
-    Table (..),
-    defaultBackendScalarType,
-    defaultBackendScalarValue,
-    table,
-  )
+import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
@@ -63,42 +55,20 @@ author =
     { tableColumns =
         [ Schema.column "id" Schema.TInt,
           Schema.column "name" Schema.TStr,
-          Schema.column "createdAt" dateTimeType
+          Schema.column "createdAt" Schema.TUTCTime
         ],
       tablePrimaryKey = ["id"],
       tableData =
         [ [ Schema.VInt 1,
             Schema.VStr "Author 1",
-            Schema.VCustomValue $
-              defaultBackendScalarValue
-                { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
-                  bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
-                  bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
-                  bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44"
-                }
+            Schema.parseUTCTimeOrError "2017-09-21 09:39:44"
           ],
           [ Schema.VInt 2,
             Schema.VStr "Author 2",
-            Schema.VCustomValue $
-              defaultBackendScalarValue
-                { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
-                  bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
-                  bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
-                  bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44"
-                }
+            Schema.parseUTCTimeOrError "2017-09-21 09:50:44"
           ]
         ]
     }
-  where
-    dateTimeType :: ScalarType
-    dateTimeType =
-      TCustomType $
-        defaultBackendScalarType
-          { bstMysql = Just "DATETIME",
-            bstMssql = Just "DATETIME",
-            bstCitus = Just "TIMESTAMP",
-            bstPostgres = Just "TIMESTAMP"
-          }
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = describe "PrimaryKeySpec" $ do
