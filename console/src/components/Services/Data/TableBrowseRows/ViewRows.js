@@ -160,7 +160,7 @@ const ViewRows = props => {
 
     _gridHeadings.push({
       Header: (
-        <div className="flex- w-full justify-center items-center">
+        <div className="flex w-full justify-center items-center">
           <input
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
@@ -301,7 +301,7 @@ const ViewRows = props => {
 
           return (
             <Button
-              className={'mr-xs'}
+              className="mr-1"
               color="white"
               size="xs"
               onClick={disabled ? disabledOnClick : handleClick}
@@ -426,6 +426,7 @@ const ViewRows = props => {
               content: (
                 <div>
                   <Button
+                    className="mr-1"
                     color="white"
                     size="xs"
                     data-test={`run_manual_trigger_${m.name}`}
@@ -483,7 +484,7 @@ const ViewRows = props => {
         return (
           <div
             key={rowIndex}
-            className="flex w-full justify-center items-center overflow-unset"
+            className="flex w-full justify-center items-center !overflow-visible"
           >
             {cloneButton}
             {editButton}
@@ -839,7 +840,7 @@ const ViewRows = props => {
     if (childQueries.length > 0) {
       _childComponent = (
         <div>
-          <ul className="nav nav-tabs">{childTabs}</ul>
+          <ul>{childTabs}</ul>
           {childViewRows}
         </div>
       );
@@ -1023,7 +1024,6 @@ const ViewRows = props => {
 
     return (
       <DragFoldTable
-        className="dataTable -highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
         headerTitle={'Click to sort / Drag to rearrange'}

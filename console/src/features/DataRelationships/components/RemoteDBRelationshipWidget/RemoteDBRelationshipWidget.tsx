@@ -3,7 +3,7 @@ import {
   allowedMetadataTypes,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
-import { fireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '@/new-components/Notifications';
 import { DataTarget } from '@/features/Datasources';
 import { InputField, Select, Form } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
@@ -56,7 +56,7 @@ export const RemoteDBRelationshipWidget = ({
     sourceTableInfo,
     existingRelationshipName,
   });
-
+  const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
     onSuccess: () => {
       const status: StatusType = {

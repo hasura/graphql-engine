@@ -2,7 +2,7 @@ import { useMetadataMigration } from '@/features/MetadataAPI';
 import { Button } from '@/new-components/Button';
 import { FieldError } from 'react-hook-form';
 import { Form, InputField } from '@/new-components/Form';
-import { fireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '@/new-components/Notifications';
 import { ToolTip } from '@/new-components/Tooltip';
 import get from 'lodash.get';
 import { APIError } from '@/hooks/error';
@@ -19,7 +19,7 @@ type Props = {
 
 export const Create = ({ onSuccess }: Props) => {
   const [remoteSchemaName, setRemoteSchemaName] = useState('');
-
+  const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
     onError: (error: APIError) => {
       fireNotification({
