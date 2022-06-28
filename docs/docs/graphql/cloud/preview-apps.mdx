@@ -3,20 +3,20 @@ description: Hasura Cloud Preview Apps on GitHub pull requests
 keywords:
   - hasura
   - cloud
+  - docs
   - preview
   - review
   - test
   - pr
   - pull request
   - GitHub
-sidebar_label: Preview Apps GitHub Action
-sidebar_position: 2
+sidebar_label: Preview apps
+sidebar_position: 10
 ---
 
 import Thumbnail from "@site/src/components/Thumbnail";
-import TOCInline from "@theme/TOCInline";
 
-# Hasura Cloud Preview Apps GitHub Action
+# Hasura Cloud Preview Apps
 
 ## TL;DR
 
@@ -24,6 +24,29 @@ With Preview Apps you can automatically create an app on Hasura Cloud for every 
 repo enabling quick and easy testing of changes as you work.
 
 ## Introduction
+
+Hasura Cloud enables creating Preview Apps from a branch on GitHub on each. This allows you to spin up a Hasura
+Cloud Preview App on each pull request in order to automatically preview changes.
+
+This can be achieved using either of the following:
+
+- [Preview App GitHub Action](#preview-apps-github-action)
+- [Preview App APIs](#preview-apps-api)
+
+:::info Note
+
+This feature is currently in beta. Please reach out through our support channels with any questions or concerns.
+
+:::
+
+:::info Usage Limit
+
+For users with only `Free` tier projects on Hasura Cloud, usage of the Preview App API is limited to 60 calls per
+month. More plans are coming soon.
+
+:::
+
+##  Preview Apps GitHub Action {#preview-apps-github-action}
 
 Hasura Cloud enables automatically creating Preview Apps with Migrations and Metadata from a branch on a GitHub repo by
 triggering a new deployment using the official
@@ -37,18 +60,18 @@ repository.
 
 :::
 
-## GitHub Action Workflow steps
+### GitHub Action Workflow steps
 
 This GitHub Action will do the following:
 
 - Clones the repository from the given branch.
 - Creates a Hasura Cloud Preview App and applies the Migrations and Metadata. Refer to
-  [the GitHub action docs](https://github.com/marketplace/actions/hasura-cloud-preview-apps) for more options.
+[the GitHub action docs](https://github.com/marketplace/actions/hasura-cloud-preview-apps) for more options.
 - Provides the following action outputs in the workflow so that you can use them for the subsequent jobs:
-  - `graphQLEndpoint`: GraphQL endpoint of the created Hasura Cloud project.
-  - `consoleURL`: Console URL of the created Hasura Cloud project.
-  - `projectName`: Name of the created Hasura Cloud project.
-  - `projectId`: The project ID of the created Hasura Cloud project.
+- `graphQLEndpoint`: GraphQL endpoint of the created Hasura Cloud project.
+- `consoleURL`: Console URL of the created Hasura Cloud project.
+- `projectName`: Name of the created Hasura Cloud project.
+- `projectId`: The project ID of the created Hasura Cloud project.
 - Comments on the pull request in the configured format.
 
 For more detailed information, please refer to the GitHub action docs
@@ -61,13 +84,13 @@ month. More plans are coming soon.
 
 :::
 
-## Configure the Hasura Cloud Preview Apps GitHub Action
+### Configure the Hasura Cloud Preview Apps GitHub Action
 
 Follow the steps below to configure the Hasura Cloud Preview Apps GitHub Action in your GitHub repository.
 
 <TOCInline toc={toc} filterTOC={(tocTree) => tocTree[1].children} />
 
-### Step 1: Create a Hasura Cloud Personal Token {#step-1}
+#### Step 1: Create a Hasura Cloud Personal Token {#step-1}
 
 Personal Access Tokens are used to authenticate requests made to Hasura Cloud APIs. A personal access token can be
 created by navigating to `Account Settings` section by clicking the button `My Account` on the bottom left of your
@@ -80,7 +103,7 @@ Hasura Cloud dashboard and selecting the `Access Tokens` submenu.
 
 Copy the generated personal access token, this will be needed in further steps.
 
-### Step 2: Add a Hasura Cloud personal token to GitHub repository secrets {#step-2}
+#### Step 2: Add a Hasura Cloud personal token to GitHub repository secrets {#github-action-step-2}
 
 On GitHub, navigate to the repository with which you want to set up the Hasura Cloud Preview Apps GitHub Action and
 select the `Settings` tab.
@@ -110,7 +133,7 @@ A successfully added secret will result in this screen.
   width="1146px"
 />
 
-### Step 3: Database setup {#step-3}
+#### Step 3: Database setup {#github-action-step-3}
 
 Hasura Preview Apps apply Migrations and Metadata on new database/s. This means that new database(s) are required for
 each Preview App.
@@ -123,8 +146,8 @@ connection string of this fresh database gets added in the Hasura Cloud's projec
 Some points to keep in mind to ensure this works:
 
 1. The Postgres server should accept connections over the internet. You can follow
-   [this guide](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04) to
-   set up a Postgres server on a Digital Ocean droplet or on a VM provided by another vendor of your choice.
+[this guide](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04) to
+set up a Postgres server on a Digital Ocean droplet or on a VM provided by another vendor of your choice.
 
 :::info Note
 
@@ -133,18 +156,18 @@ connection string. Eg: `postgresql://username:password@host:port/dbname?key=valu
 :::
 
 2. In the Hasura Cloud Preview App Action's configuration YAML file, under the `postgresDBConfig` key,
-   `POSTGRES_SERVER_CONNECTION_URI` and `PG_ENV_VARS_FOR_HASURA` must be configured.
+`POSTGRES_SERVER_CONNECTION_URI` and `PG_ENV_VARS_FOR_HASURA` must be configured.
 
 - `POSTGRES_SERVER_CONNECTION_URI`: Connection URI of your Postgres through which the action will create fresh
-  ephemeral databases on your Postgres server. It's recommended that you not provide the value in the configuration
-  file itself, instead the connection URI should be added to the respective GitHub repository's secret, as
-  done in [Step 2](/graphql/cloud/deployment/preview-apps-github-action.mdx#step-2) for a personal access token, in
-  order to keep it secure.
+ephemeral databases on your Postgres server. It's recommended that you not provide the value in the configuration
+file itself, instead the connection URI should be added to the respective GitHub repository's secret, as
+done in [Step 2](#github-action-step-2) for a personal access token, in
+order to keep it secure.
 
 - `PG_ENV_VARS_FOR_HASURA`: This key accepts Hasura Cloud env vars corresponding to the Postgres data sources to be
-  automatically populated by the action in the Hasura Cloud Project created for the Preview App. These env vars are
-  typically referenced in your Hasura Metadata. When the action creates new ephemeral databases, the env vars defined
-  here will get populated with the connection URI corresponding to the new ephemeral databases.
+automatically populated by the action in the Hasura Cloud Project created for the Preview App. These env vars are
+typically referenced in your Hasura Metadata. When the action creates new ephemeral databases, the env vars defined
+here will get populated with the connection URI corresponding to the new ephemeral databases.
 
 A sample configuration for the above two keys in the action's configuration file would look like this:
 
@@ -152,7 +175,7 @@ A sample configuration for the above two keys in the action's configuration file
 postgresDBConfig: |
   POSTGRES_SERVER_CONNECTION_URI=${{secrets.POSTGRES_SERVER_CONNECTION_URI}}
   PG_ENV_VARS_FOR_HASURA=PG_DB_URL_1,PG_DB_URL_2, PG_DB_URL3
-```
+   ```
 
 The above snippet will create three temporary databases and expose their connection string to the created Preview
 App through `PG_DB_URL1`, `PG_DB_URL2` and `PG_DB_URL3` Hasura Cloud env vars.
@@ -164,31 +187,31 @@ the `hasuraEnv` field of the action's configuration file.
 
 :::
 
-### Step 4: Add a workflow to your GitHub repo
+#### Step 4: Add a workflow to your GitHub repo
 
 For creating the action's configuration file, we have created a
 [YAML generator](https://cloud.hasura.io/preview-apps-yaml-generator) to ease the process of creating one.
 
 1. Navigate to the
-   [Hasura Cloud Preview Apps GitHub Action YAML Generator](https://cloud.hasura.io/preview-apps-yaml-generator).
+[Hasura Cloud Preview Apps GitHub Action YAML Generator](https://cloud.hasura.io/preview-apps-yaml-generator).
 
 <Thumbnail
-  src="/img/graphql/cloud/preview-apps/yaml-generator.png"
-  alt="Create Access Token"
-  width="1146px"
+src="/img/graphql/cloud/preview-apps/yaml-generator.png"
+alt="Create Access Token"
+width="1146px"
 />
 
 2. Populate the fields as per the required configuration and click `Generate YAML`.
 
 | Field                                          | YAML key                                                                                           | Description                                                                                                                                                                                                       |
-|------------------------------------------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+   |------------------------------------------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Repository Name                                | under `hasura/hasura-cloud-preview-apps` job: `name`                                               | The GitHub repository to be configured with this action, without the author/organisation name. For example, if the repo is located at `https://github.com/JaneDoe/test-repo`, the input to the field will be `test-repo`. |
 | Path to Hasura Project (in repo)               | under `hasura/hasura-cloud-preview-apps` job: `hasuraProjectDirectoryPath`                         | Path to the Hasura project directory (typically created by the Hasura CLI) containing Migrations and Metadata. The path should be relative to the project's root directory.                                       |
 | Project Region                                 | under `hasura/hasura-cloud-preview-apps` job: `region` and `tier`                                  | Hasura Cloud project region to create projects in. The regions are available in two tiers: `Free` tier and `Standard` tier across various regions, and under two cloud providers: AWS and GCP.                             |
 | Environment Variables                          | under `hasura/hasura-cloud-preview-apps` job: `hasuraEnv`                                          | Env vars to be set in the Hasura Cloud project created.                                                                                                                                                            |
 | Comment                                        | under `hasura/comment-progress` job: `message`                                                     | Content to be displayed in the comment on the PR for which the Preview App is created. If you do not want a comment to be posted, clear this field.                                                               |
-| Postgres Connection URI                        | under `hasura/hasura-cloud-preview-apps` job: `postgresDBConfig`: `POSTGRES_SERVER_CONNECTION_URI` | Postgres server connection URI. For more information, check [Step 3](/graphql/cloud/deployment/preview-apps-github-action.mdx#step-3).                                                                             |
-| Ephemeral Database Setup: Environment Variable | under `hasura/hasura-cloud-preview-apps` job: `postgresDBConfig`: `PG_ENV_VARS_FOR_HASURA`         | Environment variables for connecting to your newly created databases. For more information, check [Step 3](/graphql/cloud/deployment/preview-apps-github-action.mdx#step-3).                                      |
+| Postgres Connection URI                        | under `hasura/hasura-cloud-preview-apps` job: `postgresDBConfig`: `POSTGRES_SERVER_CONNECTION_URI` | Postgres server connection URI. For more information, check [Step 3](#github-action-step-3).                                                                             |
+| Ephemeral Database Setup: Environment Variable | under `hasura/hasura-cloud-preview-apps` job: `postgresDBConfig`: `PG_ENV_VARS_FOR_HASURA`         | Environment variables for connecting to your newly created databases. For more information, check [Step 3](#github-action-step-3).                                      |
 
 By default, the generated YAML gets triggered on all pull requests to the `main` branch and on pushes to the `main` branch. If you'd like to alter this, please change the generated YAMl appropriately. Please refer the [official GitHub docs](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on) for more information.
 
@@ -231,9 +254,9 @@ jobs:
           message: |
             Console URL available at ${{steps.hasura_cloud_preview.outputs.consoleURL}}
             GraphQL Endpoint available at ${{steps.hasura_cloud_preview.outputs.graphQLEndpoint}}
-```
+   ```
 
-### Step 5: Set up the deletion of Preview Apps
+#### Step 5: Set up the deletion of Preview Apps
 
 You can set up cleanup for the above workflow. Preview apps, along with the ephemeral databases created for it, need
 to be deleted to avoid unnecessary costs.
@@ -272,3 +295,89 @@ If you have used `postgresDBConfig` in the creation workflow, make sure that you
 workflow so that the created databases get deleted when the pull request gets closed/merged.
 
 :::
+
+## Preview Apps API {#preview-apps-api}
+
+If the [hasura/hasura-cloud-preview-apps](#preview-apps-github-action) GitHub action does not suit your needs, you can also directly contact the
+[createGitHubPreviewApp](/graphql/cloud/api-reference.mdx#api-ref-create-preview-app) API to manually setup Preview
+Apps for your GitHub repo.
+
+:::info Note
+
+This feature is currently in beta. Please reach out through our support channels with any questions or concerns.
+
+:::
+
+:::info Usage Limit
+
+For users with only `Free` tier projects on Hasura Cloud, usage of the Preview App API is limited to 60 calls per
+month. More plans are coming soon.
+
+:::
+
+A GraphQL mutation to create a Preview App will be of the following format:
+
+```graphql
+mutation createGitHubPreviewApp {
+  createGitHubPreviewApp(
+    payload: {
+      githubPersonalAccessToken: "<github_access_token>"
+      githubRepoDetails: {
+        branch: "main"
+        owner: "my-org"
+        repo: "my-repo"
+        directory: "backend/hasura"
+      }
+      projectOptions: {
+        cloud: "aws"
+        region: "us-east-2"
+        plan: "cloud_free"
+        name: "my-app_name"
+        envVars: [
+          { key: "HASURA_GRAPHQL_AUTH_HOOK", value: "https://my-webhook.com" }
+          { key: "MY_ENV_VAR_1", value: "my value 1" }
+        ]
+      }
+    }
+  ) {
+    githubPreviewAppJobID # job ID of the Preview App creation job
+  }
+}
+```
+
+This mutation queues the creation of the Preview App and returns a UUID: `githubPreviewAppJobID`.
+
+You can get the creation status of the Preview App by running the following query at
+`https://data.pro.hasura.io/v1/graphql`:
+
+```graphql
+query getPreviewAppCreationStatus($jobId: uuid!) {
+  jobs_by_pk(id: $jobId) {
+    id
+    status
+    tasks {
+      id
+      name
+      task_events {
+        id
+        event_type
+        public_event_data
+        error
+      }
+    }
+  }
+}
+```
+
+Make sure to set the `githubPreviewAppJobID` in the `id` argument to the GraphQL query.
+
+### How it works
+
+Hasura Cloud exposes the GraphQL mutation
+[createGitHubPreviewApp](/graphql/cloud/api-reference.mdx#api-ref-create-preview-app) which can be triggered
+programmatically using your Hasura Cloud personal access token. This mutation creates a Hasura Cloud project with the
+given set of environment variables and the Migrations and Metadata from a branch of a GitHub repo.
+
+When the mutation is triggered, Hasura Cloud queues the Preview App for creation. If a Preview App with the
+same name already exists for a user, it is cleaned up and Migrations and Metadata are applied on a fresh Preview App.
+The cleanup is done so that every deployment is declarative and reproducible.
