@@ -164,7 +164,7 @@ selectionSetObject name description parsers implementsInterfaces =
         TNamed Nullable $
           Definition name description $
             TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
-      pParser = \input -> withPath (++ [Key "selectionSet"]) do
+      pParser = \input -> withKey (Key "selectionSet") do
         -- Not all fields have a selection set, but if they have one, it
         -- must contain at least one field. The GraphQL parser returns a
         -- list to represent this: an empty list indicates there was no
@@ -187,10 +187,10 @@ selectionSetObject name description parsers implementsInterfaces =
                 | _fName == $$(litName "__typename") ->
                   pure $ SelectTypename $ getName name
                 | Just parser <- M.lookup _fName parserMap ->
-                  withPath (++ [Key (K.fromText (unName _fName))]) $
+                  withKey (Key (K.fromText (unName _fName))) $
                     SelectField <$> parser selectionField
                 | otherwise ->
-                  withPath (++ [Key (K.fromText (unName _fName))]) $
+                  withKey (Key (K.fromText (unName _fName))) $
                     parseError $ "field " <> _fName <<> " not found in type: " <> squote name
           _dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
           -- insert processing of custom directives here
@@ -295,7 +295,7 @@ rawSelection name description argumentsParser resultParser =
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $ name <<> " has no argument named " <>> argumentName
-        fmap (_fAlias,_fArguments,) $ withPath (++ [Key "args"]) $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
+        fmap (_fAlias,_fArguments,) $ withKey (Key "args") $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
     }
   where
     -- If  `ifDefinitions` is empty, then not forcing this will lead to
@@ -349,7 +349,7 @@ rawSubselection name description argumentsParser bodyParser =
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $ name <<> " has no argument named " <>> argumentName
-        (_fAlias,_fArguments,,) <$> withPath (++ [Key "args"]) (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
+        (_fAlias,_fArguments,,) <$> withKey (Key "args") (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
           <*> pParser bodyParser _fSelectionSet
     }
   where

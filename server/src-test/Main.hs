@@ -37,6 +37,7 @@ import Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec qualified as
 import Hasura.EventingSpec qualified as EventingSpec
 import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
+import Hasura.GraphQL.Parser.MonadParseTest qualified as MonadParseSpec
 import Hasura.GraphQL.Schema.Build.UpdateSpec qualified as UpdateSpec
 import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
 import Hasura.IncrementalSpec qualified as IncrementalSpec
@@ -122,6 +123,7 @@ unitSpecs = do
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
+  describe "Hasura.GraphQL.Parser.Monad" MonadParseSpec.spec
   describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.GraphQL.Schema.Build.UpdateSpec" UpdateSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec

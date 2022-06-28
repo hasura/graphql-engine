@@ -1023,6 +1023,7 @@ test-suite graphql-engine-tests
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
+    Hasura.GraphQL.Parser.MonadParseTest
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.RemoteTest

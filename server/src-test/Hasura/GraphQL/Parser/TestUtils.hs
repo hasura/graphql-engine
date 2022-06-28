@@ -20,7 +20,7 @@ newtype TestMonad a = TestMonad {runTest :: Either Text a}
   deriving (Functor, Applicative, Monad)
 
 instance MonadParse TestMonad where
-  withPath = const id
+  withKey = const id
   parseErrorWith = const $ TestMonad . Left
 
 -- values generation

@@ -270,11 +270,11 @@ mkDirective name description advertised location argsParser =
   Directive
     { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location,
       dAdvertised = advertised,
-      dParser = \(G.Directive _name arguments) -> withPath (++ [Key $ K.fromText $ G.unName name]) $ do
+      dParser = \(G.Directive _name arguments) -> withKey (Key $ K.fromText $ G.unName name) $ do
         for_ (M.keys arguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $ name <<> " has no argument named " <>> argumentName
-        withPath (++ [Key $ K.fromText "args"]) $ ifParser argsParser $ GraphQLValue <$> arguments
+        withKey (Key $ K.fromText "args") $ ifParser argsParser $ GraphQLValue <$> arguments
     }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argsParser)

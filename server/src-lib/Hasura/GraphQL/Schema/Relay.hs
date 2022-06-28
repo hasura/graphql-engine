@@ -147,7 +147,7 @@ nodeField sourceCache = do
             createRootField stringifyNum sourceName tableName nodeValue pKeys
   where
     throwInvalidNodeId :: Text -> n a
-    throwInvalidNodeId t = withPath (++ [Key "args", Key "id"]) $ parseError $ "invalid node id: " <> t
+    throwInvalidNodeId t = withKey (Key "args") $ withKey (Key "id") $ parseError $ "invalid node id: " <> t
 
     parseNodeId :: Text -> n NodeId
     parseNodeId = either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode

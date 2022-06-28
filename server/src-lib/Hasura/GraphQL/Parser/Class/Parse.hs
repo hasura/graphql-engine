@@ -12,7 +12,7 @@ import Hasura.Prelude
 -- | A class that provides functionality for parsing GraphQL queries, i.e.
 -- running a fully-constructed 'Parser'.
 class Monad m => MonadParse m where
-  withPath :: (JSONPath -> JSONPath) -> m a -> m a
+  withKey :: JSONPathElement -> m a -> m a
 
   -- | Not the full power of 'MonadError' because parse errors cannot be
   -- caught.

@@ -229,7 +229,7 @@ field ::
 field name description parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description $ InputFieldInfo (pType parser) Nothing],
-      ifParser = \values -> withPath (++ [Key (K.fromText (unName name))]) do
+      ifParser = \values -> withKey (Key (K.fromText (unName name))) do
         value <-
           onNothing (M.lookup name values <|> nullableDefault) $
             parseError ("missing required field " <>> name)
@@ -263,7 +263,7 @@ fieldOptional name description parser =
         ],
       ifParser =
         M.lookup name
-          >>> withPath (++ [Key (K.fromText (unName name))])
+          >>> withKey (Key (K.fromText (unName name)))
             . traverse (pInputParser parser <=< peelVariable expectedType)
     }
   where
@@ -285,7 +285,7 @@ fieldWithDefault name description defaultValue parser =
     { ifDefinitions = [Definition name description $ InputFieldInfo (pType parser) (Just defaultValue)],
       ifParser =
         M.lookup name
-          >>> withPath (++ [Key (K.fromText (unName name))]) . \case
+          >>> withKey (Key (K.fromText (unName name))) . \case
             Just value -> peelVariableWith True expectedType value >>= pInputParser parser
             Nothing -> pInputParser parser $ GraphQLValue $ literal defaultValue
     }
@@ -363,7 +363,7 @@ object name description parser =
       -- handles parsing the fields it cares about
       for_ (M.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $
-          withPath (++ [Key (K.fromText (unName fieldName))]) $
+          withKey (Key (K.fromText (unName fieldName))) $
             parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
       ifParser parser fields
 
@@ -376,9 +376,9 @@ list parser =
         pParser =
           peelVariable (toGraphQLType schemaType) >=> \case
             GraphQLValue (VList values) -> for (zip [0 ..] values) \(index, value) ->
-              withPath (++ [Index index]) $ pParser parser $ GraphQLValue value
+              withKey (Index index) $ pParser parser $ GraphQLValue value
             JSONValue (A.Array values) -> for (zip [0 ..] $ toList values) \(index, value) ->
-              withPath (++ [Index index]) $ pParser parser $ JSONValue value
+              withKey (Index index) $ pParser parser $ JSONValue value
             -- List Input Coercion
             --
             -- According to section 3.11 of the GraphQL spec: iff the value
@@ -392,7 +392,7 @@ list parser =
             -- which would contradict the spec.
             GraphQLValue VNull -> parseError "expected a list, but found null"
             JSONValue A.Null -> parseError "expected a list, but found null"
-            other -> fmap pure $ withPath (++ [Index 0]) $ pParser parser other
+            other -> fmap pure $ withKey (Index 0) $ pParser parser other
       }
   where
     schemaType = TList NonNullable $ pType parser

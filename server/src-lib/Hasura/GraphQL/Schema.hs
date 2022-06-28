@@ -708,7 +708,7 @@ parseBuildIntrospectionSchema q m s = qerrAsMonadParse $ buildIntrospectionSchem
     qerrAsMonadParse action =
       case runExcept action of
         Right a -> pure a
-        Left QErr {..} -> withPath (++ qePath) $ parseErrorWith qeCode qeError
+        Left QErr {..} -> foldr withKey (parseErrorWith qeCode qeError) qePath
 
 queryWithIntrospectionHelper ::
   forall n m.
