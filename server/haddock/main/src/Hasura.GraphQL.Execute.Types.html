@@ -7,10 +7,10 @@
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-8"></span><span>
 </span><span id="line-9"></span><span class="hs-comment">-- graphql-engine supports two GraphQL interfaces: one at v1/graphql, and a Relay one at v1beta1/relay</span><span>
-</span><span id="line-10"></span><span id="local-6989586621689101274"><span id="local-6989586621689101275"></span></span><span class="hs-keyword">data</span><span> </span><span id="GraphQLQueryType"><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#GraphQLQueryType"><span class="hs-identifier hs-var">GraphQLQueryType</span></a></span></span><span>
+</span><span id="line-10"></span><span id="local-6989586621689101641"><span id="local-6989586621689101642"></span></span><span class="hs-keyword">data</span><span> </span><span id="GraphQLQueryType"><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#GraphQLQueryType"><span class="hs-identifier hs-var">GraphQLQueryType</span></a></span></span><span>
 </span><span id="line-11"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="QueryHasura"><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#QueryHasura"><span class="hs-identifier hs-var">QueryHasura</span></a></span></span><span>
 </span><span id="line-12"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QueryRelay"><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#QueryRelay"><span class="hs-identifier hs-var">QueryRelay</span></a></span></span><span>
-</span><span id="line-13"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689101266"><span id="local-6989586621689101268"><span id="local-6989586621689101270"><span class="annot"><span class="annottext">Int -&gt; GraphQLQueryType -&gt; ShowS
+</span><span id="line-13"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689101633"><span id="local-6989586621689101635"><span id="local-6989586621689101637"><span class="annot"><span class="annottext">Int -&gt; GraphQLQueryType -&gt; ShowS
 [GraphQLQueryType] -&gt; ShowS
 GraphQLQueryType -&gt; String
 (Int -&gt; GraphQLQueryType -&gt; ShowS)
@@ -25,7 +25,7 @@ show :: GraphQLQueryType -&gt; String
 $cshow :: GraphQLQueryType -&gt; String
 showsPrec :: Int -&gt; GraphQLQueryType -&gt; ShowS
 $cshowsPrec :: Int -&gt; GraphQLQueryType -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689101261"><span id="local-6989586621689101263"><span class="annot"><span class="annottext">GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689101628"><span id="local-6989586621689101630"><span class="annot"><span class="annottext">GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool
 (GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool)
 -&gt; (GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool)
 -&gt; Eq GraphQLQueryType
@@ -34,7 +34,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool
 == :: GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool
 $c== :: GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689101245"><span id="local-6989586621689101247"><span id="local-6989586621689101249"><span id="local-6989586621689101251"><span id="local-6989586621689101253"><span id="local-6989586621689101255"><span id="local-6989586621689101257"><span class="annot"><span class="annottext">Eq GraphQLQueryType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689101612"><span id="local-6989586621689101614"><span id="local-6989586621689101616"><span id="local-6989586621689101618"><span id="local-6989586621689101620"><span id="local-6989586621689101622"><span id="local-6989586621689101624"><span class="annot"><span class="annottext">Eq GraphQLQueryType
 Eq GraphQLQueryType
 -&gt; (GraphQLQueryType -&gt; GraphQLQueryType -&gt; Ordering)
 -&gt; (GraphQLQueryType -&gt; GraphQLQueryType -&gt; Bool)
@@ -83,10 +83,10 @@ $cto :: forall x. Rep GraphQLQueryType x -&gt; GraphQLQueryType
 $cfrom :: forall x. GraphQLQueryType -&gt; Rep GraphQLQueryType x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-14"></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689101237"><span id="local-6989586621689101239"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#GraphQLQueryType"><span class="hs-identifier hs-type">GraphQLQueryType</span></a></span></span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689101604"><span id="local-6989586621689101606"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#GraphQLQueryType"><span class="hs-identifier hs-type">GraphQLQueryType</span></a></span></span></span><span>
 </span><span id="line-16"></span><span>
-</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689101229"><span id="local-6989586621689101231"><span id="local-6989586621689101233"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#GraphQLQueryType"><span class="hs-identifier hs-type">GraphQLQueryType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621689101227"><span class="annot"><span class="annottext">toJSON :: GraphQLQueryType -&gt; Value
+</span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689101596"><span id="local-6989586621689101598"><span id="local-6989586621689101600"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Types.html#GraphQLQueryType"><span class="hs-identifier hs-type">GraphQLQueryType</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621689101594"><span class="annot"><span class="annottext">toJSON :: GraphQLQueryType -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-19"></span><span>    </span><span class="annot"><span class="annottext">GraphQLQueryType
 </span><a href="Hasura.GraphQL.Execute.Types.html#QueryHasura"><span class="hs-identifier hs-var">QueryHasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
