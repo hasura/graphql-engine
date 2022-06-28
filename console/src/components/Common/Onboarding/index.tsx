@@ -92,6 +92,7 @@ const connectDatabaseHelper = {
 
 const onboardingList = [
   {
+    id: 'getting-started-docs',
     title: 'Read the Getting Started Docs',
     link: {
       pro:
@@ -102,8 +103,13 @@ const onboardingList = [
         'https://hasura.io/docs/latest/graphql/core/getting-started/first-graphql-query.html?pg=cloud&plcmt=onboarding-checklist#create-a-table',
     },
   },
-  { title: 'Watch Our Getting Started Video', videoId: 'ZGKQ0U18USU' },
   {
+    id: 'getting-started-video',
+    title: 'Watch Our Getting Started Video',
+    videoId: 'ZGKQ0U18USU',
+  },
+  {
+    id: 'learn-courses',
     title: 'Bookmark Our Course',
     link: {
       pro:
@@ -185,7 +191,7 @@ const Onboarding: React.FC<OnboardingProps> = ({
                 <PopupLink {...connectDatabaseHelper} index={0} />
               ) : null}
               {onboardingList.map((item, i) => (
-                <PopupLink {...item} key={i} index={i + 1} />
+                <PopupLink {...item} key={item.id} index={i + 1} />
               ))}
             </ul>
           </div>

@@ -11,10 +11,12 @@ import JSONEditor from '../TablePermissions/JSONEditor';
 import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
 import ConnectionSettingsForm from './ConnectionSettingsForm';
+import { SampleDBSection, SampleDBTrial } from './SampleDatabase';
 
 export interface ConnectDatabaseFormProps {
   // Connect DB State Props
   connectionDBState: ConnectDBState;
+  sampleDBTrial?: SampleDBTrial;
   connectionDBStateDispatch: Dispatch<ConnectDBActions>;
   // Connection Type Props - for the Radio buttons
   updateConnectionTypeRadio: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -81,6 +83,7 @@ const supportedDrivers = getSupportedDrivers('connectDbForm.enabled');
 
 const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
   connectionDBState,
+  sampleDBTrial,
   connectionDBStateDispatch,
   changeConnectionType,
   updateConnectionTypeRadio,
@@ -89,6 +92,26 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
   isEditState = false,
   title,
 }) => {
+  const onSampleDBTry = () => {
+    if (sampleDBTrial && sampleDBTrial.isActive()) {
+      sampleDBTrial.track.tryButton();
+      if (sampleDBTrial.isActive()) {
+        connectionDBStateDispatch({
+          type: 'UPDATE_DISPLAY_NAME',
+          data: 'SampleDB',
+        });
+        connectionDBStateDispatch({
+          type: 'UPDATE_DB_DRIVER',
+          data: 'postgres',
+        });
+        connectionDBStateDispatch({
+          type: 'UPDATE_DB_URL',
+          data: sampleDBTrial.getDatabaseUrl(),
+        });
+      }
+    }
+  };
+
   const isDBSupported = (driver: Driver, connectionType: string) => {
     let ts = 'databaseURL';
     if (connectionType === 'CONNECTION_PARAMETERS') {
@@ -119,6 +142,11 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
       <div className={styles.connect_form_layout}>
         {!isreadreplica ? (
           <>
+            {sampleDBTrial && sampleDBTrial.isActive() && (
+              <div className="mb-md">
+                <SampleDBSection onTrySampleDB={onSampleDBTry} />
+              </div>
+            )}
             <LabeledInput
               onChange={e =>
                 connectionDBStateDispatch({

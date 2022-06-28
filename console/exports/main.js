@@ -73,3 +73,5 @@ export * from './table';
 export { ReactQueryProvider, reactQueryClient } from '../src/lib/reactQuery';
 
 export { FeatureFlags } from '../src/features/FeatureFlags'
+
+export { SampleDBBanner, newSampleDBTrial } from '../src/components/Services/Data/DataSources/SampleDatabase'
