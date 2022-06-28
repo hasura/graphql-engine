@@ -46,12 +46,9 @@ bigquerySetup (testEnvironment, _) = do
           name STRING,
           tax_id DECIMAL,
           total_books BIGDECIMAL
-        );
-        |]
-  Bigquery.runSql_
-    [sql|
-        INSERT hasura.author (id, name, tax_id, total_books)
-        VALUES (1, "sibi", 5555555555555556666, 5555555555555556666);
+        ) AS (SELECT * FROM UNNEST([
+            STRUCT(1 AS id, 'sibi' AS name, 5555555555555556666 AS tax_id, 5555555555555556666 AS total_books)
+        ]));
         |]
 
   Bigquery.trackTable testEnvironment author

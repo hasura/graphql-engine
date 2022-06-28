@@ -13,7 +13,6 @@ module Harness.Backend.BigQuery
     getProjectId,
     createTable,
     defaultSourceMetadata,
-    insertTable,
     trackTable,
     dropTable,
     untrackTable,
@@ -25,13 +24,9 @@ module Harness.Backend.BigQuery
 where
 
 import Control.Concurrent.Extended
-import Control.Monad (void)
-import Data.Aeson
-  ( Value (..),
-  )
-import Data.Foldable (for_)
+import Data.Aeson (Value (..))
+import Data.List qualified as List
 import Data.String
-import Data.Text (Text, pack, replace)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
@@ -41,9 +36,7 @@ import Harness.Env
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context
-  ( BackendType (BigQuery),
-  )
+import Harness.Test.Context (BackendType (BigQuery))
 import Harness.Test.Fixture
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
@@ -57,8 +50,7 @@ import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
 import Hasura.Backends.BigQuery.Source (ServiceAccount)
-import Hasura.Prelude (onLeft, seconds, tshow)
-import Prelude
+import Hasura.Prelude
 
 getServiceAccount :: HasCallStack => IO ServiceAccount
 getServiceAccount = getEnvJson Constants.bigqueryServiceKeyVar
@@ -112,8 +104,7 @@ bigQueryError e query =
 
 -- | Serialize Table into a SQL statement, as needed, and execute it on the BigQuery backend
 createTable :: Schema.Table -> IO ()
-createTable Schema.Table {tableUniqueConstraints = _ : _} = error "Not Implemented: BigQuery test harness support for Unique constraints"
-createTable Schema.Table {tableName, tableColumns} = do
+createTable table@Schema.Table {tableName, tableColumns} = do
   serviceAccount <- getServiceAccount
   projectId <- getProjectId
   run_
@@ -121,15 +112,34 @@ createTable Schema.Table {tableName, tableColumns} = do
     projectId
     $ T.unpack $
       T.unwords
-        [ "CREATE TABLE",
-          T.pack Constants.bigqueryDataset <> "." <> tableName,
-          "(",
-          commaSeparated $
-            (mkColumn <$> tableColumns),
-          -- Primary keys are not supported by BigQuery
-          -- Foreign keys are not support by BigQuery
-          ");"
-        ]
+        ( [ "CREATE TABLE",
+            T.pack Constants.bigqueryDataset <> "." <> tableName,
+            "(",
+            commaSeparated (mkColumn <$> tableColumns),
+            -- Primary keys are not supported by BigQuery
+            -- Foreign keys are not support by BigQuery
+            ")"
+          ]
+            <> tableInsertions table
+            <> [";"]
+        )
+
+-- | Generates a temporary table from structs, which is used to populate the table above.
+-- Along the lines of:
+-- `AS SELECT * FROM UNNEST([STRUCT(1 AS id, 'Alice' AS name), STRUCT(2 AS id, 'Bob' AS name), ...])`
+-- Unlike `INSERT INTO` queries, this is allowed on the BigQuery sandbox.
+tableInsertions :: Schema.Table -> [Text]
+tableInsertions (Schema.Table {tableData = []}) = []
+tableInsertions (Schema.Table {tableColumns, tableData}) =
+  ["AS SELECT * FROM", "UNNEST", "(", "["] <> List.intercalate [","] (map tableInsertion tableData) <> ["]", ")"]
+  where
+    tableInsertion :: [ScalarValue] -> [Text]
+    tableInsertion row = ["STRUCT", "("] <> List.intercalate [","] (zipWith cellInsertion tableColumns row) <> [")"]
+    cellInsertion :: Schema.Column -> ScalarValue -> [Text]
+    -- We need to explicitly `CAST` a `NULL` to ensure that the transient table has the correct type for the column.
+    -- If all the values in a column are `NULL`, BigQuery will infer the type as `INT64` and then fail to create the table.
+    cellInsertion column VNull = ["CAST", "(", serialize VNull, "AS", scalarType (Schema.columnType column), ")", "AS", Schema.columnName column]
+    cellInsertion column value = [serialize value, "AS", Schema.columnName column]
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -148,45 +158,15 @@ mkColumn Schema.Column {columnName, columnType} =
       scalarType columnType
     ]
 
--- | Serialize tableData into an SQL insert statement and execute it.
-insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData}
-  | null tableData = pure ()
-  | otherwise = do
-    serviceAccount <- getServiceAccount
-    projectId <- getProjectId
-    run_
-      serviceAccount
-      projectId
-      $ T.unpack $
-        T.unwords
-          [ "INSERT INTO",
-            T.pack Constants.bigqueryDataset <> "." <> tableName,
-            "(",
-            commaSeparated (Schema.columnName <$> tableColumns),
-            ")",
-            "VALUES",
-            commaSeparated $ mkRow <$> tableData,
-            ";"
-          ]
-
 -- | 'ScalarValue' serializer for BigQuery
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt i -> tshow i
-  VStr s -> "'" <> replace "'" "\'" s <> "'"
-  VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
+  VStr s -> "'" <> T.replace "'" "\'" s <> "'"
+  VUTCTime t -> T.pack $ formatTime defaultTimeLocale "DATETIME '%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
   VNull -> "NULL"
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvBigQuery
-
-mkRow :: [Schema.ScalarValue] -> Text
-mkRow row =
-  T.unwords
-    [ "(",
-      commaSeparated $ serialize <$> row,
-      ")"
-    ]
 
 -- | Serialize Table into an SQL DROP statement and execute it
 dropTable :: Schema.Table -> IO ()
@@ -297,7 +277,6 @@ args:
   -- Setup and track tables
   for_ tables $ \table -> do
     retryIfJobRateLimitExceeded $ createTable table
-    retryIfJobRateLimitExceeded $ insertTable table
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
