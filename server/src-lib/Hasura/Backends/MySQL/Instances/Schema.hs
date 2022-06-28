@@ -14,12 +14,17 @@ import Data.Text.Extended
 import Database.MySQL.Base.Types qualified as MySQL
 import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser
+  ( InputFieldsParser,
+    Kind (..),
+    MonadParse,
+    MonadSchema,
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -158,7 +163,7 @@ bsParser :: MonadParse m => Parser 'Both m ByteString
 bsParser = encodeUtf8 <$> P.string
 
 columnParser' ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
   ColumnType 'MySQL ->
   GQL.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
@@ -184,13 +189,13 @@ columnParser' columnType (GQL.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
+        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
         pure $
-          Parser
+          P.Parser
             { pType = schemaType,
               pParser =
-                valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (parseErrorWith ParseFailed . qeError) pure . (MySQL.parseScalarValue scalarType)
+                P.valueToJSON (P.toGraphQLType schemaType)
+                  >=> either (P.parseErrorWith ParseFailed . qeError) pure . (MySQL.parseScalarValue scalarType)
             }
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (HM.toList enumValues) of
@@ -205,7 +210,7 @@ columnParser' columnType (GQL.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (GQL.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (GQL.Description <$> description) Nothing P.EnumValueInfo,
         MySQL.VarcharValue $ GQL.unName value
       )
 
@@ -215,7 +220,7 @@ scalarSelectionArgumentsParser' ::
   InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
 scalarSelectionArgumentsParser' _columnType = pure Nothing
 
-orderByOperators' :: NamingCase -> (GQL.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
+orderByOperators' :: NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 orderByOperators' _tCase =
   (Name._order_by,) $
     -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
@@ -240,12 +245,12 @@ orderByOperators' _tCase =
         )
       ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
   forall m n r.
-  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r, Has NamingCase r) =>
   ColumnType 'MySQL ->
   m (Parser 'Input n [ComparisonExp 'MySQL])
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do

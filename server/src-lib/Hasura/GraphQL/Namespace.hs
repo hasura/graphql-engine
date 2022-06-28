@@ -15,8 +15,7 @@ where
 import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
-import Hasura.GraphQL.Parser
-import Hasura.GraphQL.Parser qualified as P
+import Hasura.GraphQL.Schema.Parser as P
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 

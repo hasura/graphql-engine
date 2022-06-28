@@ -12,15 +12,15 @@ where
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Hasura.GraphQL.Parser
+import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
     Parser,
   )
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
 import Hasura.Prelude

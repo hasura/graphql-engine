@@ -1,7 +1,11 @@
 -- | This module exports the public API to our internal GraphQL query parser
 -- combinator language. For more details, see the documentation for 'Parser'.
 module Hasura.GraphQL.Parser
-  ( Parser,
+  ( Directive (..),
+    InputFieldsParser (..),
+    FieldParser (..),
+    ParsedSelection (..),
+    Parser (..),
     parserType,
     runParser,
     bind,
@@ -22,17 +26,23 @@ module Hasura.GraphQL.Parser
     jsonScalar,
     enum,
     nullable,
+    nullableParser,
+    nonNullableParser,
+    multiple,
+    setParserOrigin,
+    setFieldParserOrigin,
+    setInputFieldsParserOrigin,
     list,
     object,
     selectionSet,
     safeSelectionSet,
+    selectionSetInterface,
     selectionSetObject,
-    InputFieldsParser,
+    selectionSetUnion,
     field,
     fieldWithDefault,
     fieldOptional,
-    FieldParser,
-    ParsedSelection (..),
+    wrapFieldParser,
     handleTypename,
     selection,
     rawSelection,
@@ -44,13 +54,18 @@ module Hasura.GraphQL.Parser
     valueToJSON,
     module Hasura.GraphQL.Parser.Class,
     module Hasura.GraphQL.Parser.Monad,
+    module Hasura.GraphQL.Parser.Names,
     module Hasura.GraphQL.Parser.Schema,
+    module Hasura.GraphQL.Parser.Variable,
   )
 where
 
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Internal.Convert
 import Hasura.GraphQL.Parser.Internal.Parser
 import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Monad
+import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable

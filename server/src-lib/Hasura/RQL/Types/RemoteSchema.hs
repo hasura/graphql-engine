@@ -54,7 +54,7 @@ import Data.Text.NonEmpty
 import Data.URL.Template (printURLTemplate)
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))

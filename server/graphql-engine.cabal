@@ -790,8 +790,10 @@ library
                      , Hasura.GraphQL.Parser.Name
                      , Hasura.GraphQL.Parser.Name.Introspection
                      , Hasura.GraphQL.Parser.Name.TypeSystem
+                     , Hasura.GraphQL.Parser.Names
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Parser.Schema.Convert
+                     , Hasura.GraphQL.Parser.Variable
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
@@ -804,6 +806,7 @@ library
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.Node
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Parser
                      , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Relay
                      , Hasura.GraphQL.Schema.Remote

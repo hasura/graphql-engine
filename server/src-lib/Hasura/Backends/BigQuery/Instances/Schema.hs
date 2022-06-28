@@ -14,14 +14,19 @@ import Data.Text.Extended
 import Hasura.Backends.BigQuery.Name
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser
+  ( FieldParser,
+    InputFieldsParser,
+    Kind (..),
+    MonadParse,
+    MonadSchema,
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
@@ -154,7 +159,7 @@ bqBuildFunctionMutationFields _ _ _ _ =
 -- Individual components
 
 bqColumnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
   ColumnType 'BigQuery ->
   G.Nullability ->
   m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
@@ -197,20 +202,20 @@ bqColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) Nothing P.EnumValueInfo,
         BigQuery.StringValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar
-       in Parser
+      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing P.TIScalar
+       in P.Parser
             { pType = schemaType,
               pParser =
-                valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (parseErrorWith ParseFailed . qeError) pure . runAesonParser J.parseJSON
+                P.valueToJSON (P.toGraphQLType schemaType)
+                  >=> either (P.parseErrorWith ParseFailed . qeError) pure . runAesonParser J.parseJSON
             }
     stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
     stringBased scalarName =
-      P.string {pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing P.TIScalar}
+      P.string {P.pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing P.TIScalar}
 
 bqScalarSelectionArgumentsParser ::
   MonadParse n =>
@@ -222,7 +227,7 @@ bqOrderByOperators ::
   NamingCase ->
   ( G.Name,
     NonEmpty
-      ( Definition P.EnumValueInfo,
+      ( P.Definition P.EnumValueInfo,
         (BasicOrderType 'BigQuery, NullsOrderType 'BigQuery)
       )
   )
@@ -250,7 +255,7 @@ bqOrderByOperators _tCase =
         )
       ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
 
 bqComparisonExps ::
   forall m n r.
@@ -384,7 +389,7 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)

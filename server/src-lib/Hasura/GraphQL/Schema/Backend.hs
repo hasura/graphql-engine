@@ -38,8 +38,8 @@ where
 import Data.Has
 import Data.Text.Casing (GQLNameIdentifier)
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser hiding (Type)
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser hiding (Type)
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR

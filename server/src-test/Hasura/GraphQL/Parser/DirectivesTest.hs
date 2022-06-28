@@ -2,9 +2,9 @@ module Hasura.GraphQL.Parser.DirectivesTest (spec) where
 
 import Data.Dependent.Map qualified as DM
 import Data.Text qualified as T
-import Hasura.GraphQL.Parser.Directives
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Directives hiding (Directive)
 import Hasura.GraphQL.Parser.TestUtils
+import Hasura.GraphQL.Schema.Parser
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 import Test.Hspec

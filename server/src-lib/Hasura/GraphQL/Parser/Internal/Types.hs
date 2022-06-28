@@ -7,7 +7,9 @@ module Hasura.GraphQL.Parser.Internal.Types
   )
 where
 
+import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 
@@ -50,15 +52,15 @@ import Language.GraphQL.Draft.Syntax hiding (Definition)
 --
 -- For some more information about how to interpret the meaning of a 'Parser',
 -- see Note [The meaning of Parser 'Output].
-data Parser k m a = Parser
+data Parser origin k m a = Parser
   { -- | Lazy for knot-tying reasons; see Note [Tying the knot] in
     -- Hasura.GraphQL.Parser.Class.
-    pType :: ~(Type k),
+    pType :: ~(Type origin k),
     pParser :: ParserInput k -> m a
   }
   deriving (Functor)
 
-instance HasName (Parser k m a) where
+instance HasName (Parser origin k m a) where
   getName = getName . pType
 
 type family ParserInput k where
@@ -68,10 +70,10 @@ type family ParserInput k where
 -- see Note [The meaning of Parser 'Output]
   ParserInput 'Output = SelectionSet NoFragments Variable
 
-parserType :: Parser k m a -> Type k
+parserType :: Parser origin k m a -> Type origin k
 parserType = pType
 
-runParser :: Parser k m a -> ParserInput k -> m a
+runParser :: Parser origin k m a -> ParserInput k -> m a
 runParser = pParser
 
 {- Note [The meaning of Parser 'Output]

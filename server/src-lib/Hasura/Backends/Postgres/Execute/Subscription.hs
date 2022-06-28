@@ -40,7 +40,7 @@ import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Subscription.Plan
-import Hasura.GraphQL.Parser.Schema qualified as PS
+import Hasura.GraphQL.Parser.Names
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
@@ -235,7 +235,7 @@ resolveMultiplexedValue ::
   m S.SQLExp
 resolveMultiplexedValue allSessionVars = \case
   UVParameter varM colVal -> do
-    varJsonPath <- case fmap PS.getName varM of
+    varJsonPath <- case fmap getName varM of
       Just varName -> do
         modifying qpiReusableVariableValues $ Map.insert varName colVal
         pure ["query", G.unName varName]

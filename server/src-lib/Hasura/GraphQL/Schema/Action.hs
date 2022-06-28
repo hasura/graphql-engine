@@ -18,17 +18,16 @@ import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser
+import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
     Kind (..),
     Parser,
   )
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
-import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as IR
@@ -419,7 +418,7 @@ customScalarParser = \case
         | _stdName == boolScalar -> J.toJSON <$> P.boolean
         | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name backendScalarType ->
-    let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
+    let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
         backendScalarValidator =
           AB.dispatchAnyBackend @Backend backendScalarType \(scalarType :: ScalarWrapper b) jsonInput -> do
             -- We attempt to parse the value from JSON to validate it, but still
@@ -452,5 +451,6 @@ customEnumParser (EnumTypeDefinition typeName description enumValues) =
                 P.Definition
                   valueName
                   (_evdDescription enumValue)
+                  Nothing
                   P.EnumValueInfo
    in P.enum enumName description enumValueDefinitions

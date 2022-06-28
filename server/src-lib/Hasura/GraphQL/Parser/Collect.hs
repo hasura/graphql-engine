@@ -15,7 +15,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax
 

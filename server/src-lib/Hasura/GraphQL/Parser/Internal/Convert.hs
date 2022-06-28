@@ -19,7 +19,7 @@ import Data.Scientific (toBoundedInteger)
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.TypeChecking
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 

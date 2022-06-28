@@ -3,7 +3,7 @@ module Test.Parser.Field (field) where
 
 import Data.Attoparsec.Text qualified as Parser
 import Data.Text qualified as T
-import Hasura.GraphQL.Parser.Schema (Variable)
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Language.GraphQL.Draft.Parser qualified as GraphQL
 import Language.GraphQL.Draft.Syntax qualified as GraphQL

@@ -21,11 +21,11 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (commaSeparated, dquote, (<>>))
 import Hasura.Base.Error (QErr)
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend (BackendSchema, MonadBuildSchema, columnParser)
 import Hasura.GraphQL.Schema.BoolExp (boolExp)
 import Hasura.GraphQL.Schema.Common (Scenario (..), mapField, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select (tableSelectionSet)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tablePermissions, tableUpdateColumns)
 import Hasura.Prelude

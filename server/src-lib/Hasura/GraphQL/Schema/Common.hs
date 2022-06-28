@@ -53,10 +53,9 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace (NamespacedField)
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Schema.Node
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR

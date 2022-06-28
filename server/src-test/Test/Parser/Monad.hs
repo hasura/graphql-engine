@@ -16,7 +16,7 @@ import Data.Has (Has (..))
 import Data.Text qualified as T
 import Hasura.Base.Error (Code, QErr)
 import Hasura.GraphQL.Parser.Class (MonadParse (..), MonadSchema (..))
-import Hasura.GraphQL.Parser.Schema (MkTypename (..))
+import Hasura.GraphQL.Parser.Names (MkTypename (..))
 import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaKind (..), SchemaOptions (..), ignoreRemoteRelationship)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (StringifyNumbers (LeaveNumbersAlone))

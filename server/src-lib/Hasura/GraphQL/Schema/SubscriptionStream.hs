@@ -11,15 +11,15 @@ import Data.Has
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended ((<>>))
 import Hasura.Base.Error (QErr)
-import Hasura.GraphQL.Parser
+import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
     Parser,
   )
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select (tablePermissionsInfo, tableSelectionList, tableWhereArg)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns, tableSelectPermissions)
 import Hasura.Name qualified as Name
@@ -75,7 +75,7 @@ cursorOrderingArgParser = do
   where
     define (name, val) =
       let orderingTypeDesc = bool "descending" "ascending" $ val == COAscending
-       in P.Definition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") P.EnumValueInfo
+       in P.Definition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") Nothing P.EnumValueInfo
 
 -- | Argument to specify the ordering of the cursor.
 -- > ordering: cursor_ordering

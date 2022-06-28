@@ -57,10 +57,10 @@ where
 import Data.Has (getter)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
+import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
 import Hasura.GraphQL.Schema.Table (tableSelectPermissions)

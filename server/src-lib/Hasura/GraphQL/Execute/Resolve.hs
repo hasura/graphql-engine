@@ -11,7 +11,8 @@ import Data.List qualified as L
 import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Names
+import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G

@@ -15,12 +15,12 @@ import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), ComparisonExp, MonadBuildSchema)
 import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -120,7 +120,7 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
             )
           ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
 
 comparisonExps' ::
   forall m n r.

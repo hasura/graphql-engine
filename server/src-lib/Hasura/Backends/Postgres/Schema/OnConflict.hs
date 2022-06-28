@@ -18,16 +18,16 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types (showPGCols)
-import Hasura.GraphQL.Parser
-  ( InputFieldsParser,
-    Kind (..),
-    Parser,
-  )
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser
+  ( InputFieldsParser,
+    Kind (..),
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -145,6 +145,7 @@ conflictConstraint constraints sourceInfo tableInfo =
           ( P.Definition
               name
               (Just $ "unique or primary key constraint on columns " <> coerce (showPGCols (HS.toList cCols)))
+              Nothing
               P.EnumValueInfo,
             c
           )

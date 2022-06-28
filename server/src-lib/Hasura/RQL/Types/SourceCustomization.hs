@@ -52,7 +52,7 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier (..))
 import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Names
 import Hasura.Incremental.Internal.Dependency (Cacheable)
 import Hasura.Name qualified as Name
 import Hasura.Prelude

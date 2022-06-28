@@ -1,3 +1,4 @@
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -20,11 +21,11 @@ import Data.Text.Extended
 import Data.Type.Equality
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace
-import Hasura.GraphQL.Parser as P
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
+import Hasura.GraphQL.Parser.Internal.Parser qualified as P (inputParserInput, nonNullableField, nullableField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Parser as P
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Root qualified as IR
@@ -126,7 +127,7 @@ buildRawRemoteParser (IntrospectionResult sdoc queryRoot mutationRoot subscripti
 
 {- Note [Variable expansion in remote schema input parsers]
 
-### Input parsers as lightweight type checkers
+=== Input parsers as lightweight type checkers
 
 The purpose of input parsers for remote schemas is not to translate the provided input values into
 an internal representation: those values will be transmitted more or less unmodified to the remote
@@ -154,7 +155,7 @@ That last example is surprising: why would we accept a string literal for an Int
 because we delegate the task of translating the literal into a scalar to the remote server. After
 all, *we* advertise some values as Int in the schema, despite accepting string literals.
 
-### Inserting remote permissions presets
+=== Inserting remote permissions presets
 
 Where things get more complicated is with remote permissions. We allow users to specify "presets":
 values that will always be provided to the remote schema, and that the user cannot customize in
@@ -183,7 +184,7 @@ required. In this case:
       getValues(range: {low: 0, high: 42})
     }
 
-### Variable expansion
+=== Variable expansion
 
 But where this gets even more complicated is with variables. As much as possible, we simply forward
 variables without interpeting them (not all JSON values are representable in GraphQL). We do so
@@ -229,7 +230,7 @@ Our parsers, like all others in our model, expand the variables as they traverse
 the preset values where required. But the downside of this is that we will create one such JSON
 variable per scalar within a JSON variable!
 
-### Short-circuiting optimization
+=== Short-circuiting optimization
 
 To avoid this, we track in the parsers whether an alteration has occured: if we had to insert a
 preset value. As long as we don't, we can discard the output of the parser, as it will contain the
@@ -374,7 +375,7 @@ remoteFieldScalarParser customizeTypename (G.ScalarTypeDefinition description na
     }
   where
     customizedTypename = runMkTypename customizeTypename name
-    schemaType = TNamed NonNullable $ Definition customizedTypename description TIScalar
+    schemaType = TNamed NonNullable $ Definition customizedTypename description Nothing TIScalar
     gType = toGraphQLType schemaType
 
     mkRemoteGType = \case
@@ -389,7 +390,7 @@ remoteFieldEnumParser ::
 remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directives valueDefns) =
   let enumValDefns =
         valueDefns <&> \(G.EnumValueDefinition enumDesc enumName _) ->
-          ( Definition (G.unEnumValue enumName) enumDesc P.EnumValueInfo,
+          ( Definition (G.unEnumValue enumName) enumDesc Nothing P.EnumValueInfo,
             G.VEnum enumName
           )
    in fmap (Altered False,) $ P.enum (runMkTypename customizeTypename name) desc $ NE.fromList enumValDefns
@@ -837,12 +838,12 @@ remoteFieldFromDefinition schemaDoc parentTypeName remoteRelationships (G.FieldD
   convertType gType
   where
     addNullableList :: FieldParser n a -> FieldParser n a
-    addNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
-      P.FieldParser (Definition name' desc (FieldInfo args (TList Nullable typ))) parser
+    addNullableList (P.FieldParser (Definition name' desc origin (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc origin (FieldInfo args (TList Nullable typ))) parser
 
     addNonNullableList :: FieldParser n a -> FieldParser n a
-    addNonNullableList (P.FieldParser (Definition name' desc (FieldInfo args typ)) parser) =
-      P.FieldParser (Definition name' desc (FieldInfo args (TList NonNullable typ))) parser
+    addNonNullableList (P.FieldParser (Definition name' desc origin (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc origin (FieldInfo args (TList NonNullable typ))) parser
 
     -- TODO add directives, deprecation
     convertType ::
