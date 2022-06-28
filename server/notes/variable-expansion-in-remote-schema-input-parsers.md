@@ -1,12 +1,12 @@
-This note is in [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L127).
+This note is in [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L128).
 It is referenced at:
-  - line 246 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L246)
-  - line 352 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L352)
-  - line 451 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L451)
+  - line 247 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L247)
+  - line 353 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L353)
+  - line 452 of [Hasura.GraphQL.Schema.Remote](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Remote.hs#L452)
 
 # Variable expansion in remote schema input parsers
 
-### Input parsers as lightweight type checkers
+=== Input parsers as lightweight type checkers
 
 The purpose of input parsers for remote schemas is not to translate the provided input values into
 an internal representation: those values will be transmitted more or less unmodified to the remote
@@ -34,7 +34,7 @@ That last example is surprising: why would we accept a string literal for an Int
 because we delegate the task of translating the literal into a scalar to the remote server. After
 all, *we* advertise some values as Int in the schema, despite accepting string literals.
 
-### Inserting remote permissions presets
+=== Inserting remote permissions presets
 
 Where things get more complicated is with remote permissions. We allow users to specify "presets":
 values that will always be provided to the remote schema, and that the user cannot customize in
@@ -63,7 +63,7 @@ required. In this case:
       getValues(range: {low: 0, high: 42})
     }
 
-### Variable expansion
+=== Variable expansion
 
 But where this gets even more complicated is with variables. As much as possible, we simply forward
 variables without interpeting them (not all JSON values are representable in GraphQL). We do so
@@ -109,7 +109,7 @@ Our parsers, like all others in our model, expand the variables as they traverse
 the preset values where required. But the downside of this is that we will create one such JSON
 variable per scalar within a JSON variable!
 
-### Short-circuiting optimization
+=== Short-circuiting optimization
 
 To avoid this, we track in the parsers whether an alteration has occured: if we had to insert a
 preset value. As long as we don't, we can discard the output of the parser, as it will contain the

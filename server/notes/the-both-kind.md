@@ -1,8 +1,8 @@
-This note is in [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L113).
+This note is in [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L82).
 It is referenced at:
-  - line 65 of [Hasura.GraphQL.Parser.Internal.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Types.hs#L65)
-  - line 108 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L108)
-  - line 206 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L206)
+  - line 67 of [Hasura.GraphQL.Parser.Internal.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Types.hs#L67)
+  - line 77 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L77)
+  - line 175 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L175)
 
 # The 'Both kind
 
@@ -21,8 +21,8 @@ polymorphic, like this:
     data TypeInfo k where
       TIScalar      :: TypeInfo k           -- \ Polymorphic!
       TIEnum        :: ... -> TypeInfo k    -- /
-      TIInputObject :: ... -> TypeInfo 'Input
-      TIObject      :: ... -> TypeInfo 'Output
+      TIInputObject :: ... -> TypeInfo origin 'Input
+      TIObject      :: ... -> TypeInfo origin 'Output
 
 Naturally, this would give the `scalar` parser constructor a similarly
 polymorphic type:

@@ -15,18 +15,17 @@
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">OMap</span></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Parser</span></a></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
-</span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span id="local-6989586621689145442"><span id="local-6989586621689145443"></span></span><span class="hs-keyword">data</span><span> </span><span id="RootFieldAlias"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-var">RootFieldAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RootFieldAlias"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-var">RootFieldAlias</span></a></span></span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rfaNamespace"><span class="annot"><span class="annottext">RootFieldAlias -&gt; Maybe Name
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span id="local-6989586621689196406"><span id="local-6989586621689196407"></span></span><span class="hs-keyword">data</span><span> </span><span id="RootFieldAlias"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-var">RootFieldAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RootFieldAlias"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-var">RootFieldAlias</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_rfaNamespace"><span class="annot"><span class="annottext">RootFieldAlias -&gt; Maybe Name
 </span><a href="Hasura.GraphQL.Namespace.html#_rfaNamespace"><span class="hs-identifier hs-var hs-var">_rfaNamespace</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-25"></span><span>    </span><span id="_rfaAlias"><span class="annot"><span class="annottext">RootFieldAlias -&gt; Name
+</span><span id="line-24"></span><span>    </span><span id="_rfaAlias"><span class="annot"><span class="annottext">RootFieldAlias -&gt; Name
 </span><a href="Hasura.GraphQL.Namespace.html#_rfaAlias"><span class="hs-identifier hs-var hs-var">_rfaAlias</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689145433"><span id="local-6989586621689145435"><span id="local-6989586621689145437"><span class="annot"><span class="annottext">Int -&gt; RootFieldAlias -&gt; ShowS
+</span><span id="line-25"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689196397"><span id="local-6989586621689196399"><span id="local-6989586621689196401"><span class="annot"><span class="annottext">Int -&gt; RootFieldAlias -&gt; ShowS
 [RootFieldAlias] -&gt; ShowS
 RootFieldAlias -&gt; String
 (Int -&gt; RootFieldAlias -&gt; ShowS)
@@ -41,7 +40,7 @@ show :: RootFieldAlias -&gt; String
 $cshow :: RootFieldAlias -&gt; String
 showsPrec :: Int -&gt; RootFieldAlias -&gt; ShowS
 $cshowsPrec :: Int -&gt; RootFieldAlias -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689145428"><span id="local-6989586621689145430"><span class="annot"><span class="annottext">RootFieldAlias -&gt; RootFieldAlias -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689196392"><span id="local-6989586621689196394"><span class="annot"><span class="annottext">RootFieldAlias -&gt; RootFieldAlias -&gt; Bool
 (RootFieldAlias -&gt; RootFieldAlias -&gt; Bool)
 -&gt; (RootFieldAlias -&gt; RootFieldAlias -&gt; Bool) -&gt; Eq RootFieldAlias
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -59,41 +58,41 @@ forall a.
 $cto :: forall x. Rep RootFieldAlias x -&gt; RootFieldAlias
 $cfrom :: forall x. RootFieldAlias -&gt; Rep RootFieldAlias x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-28"></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689145420"><span id="local-6989586621689145422"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span></span></span><span>
-</span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621689145416"><span class="annot"><span class="annottext">toTxt :: RootFieldAlias -&gt; Text
-</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689145413"><span id="local-6989586621689145414"><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689196384"><span id="local-6989586621689196386"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span></span></span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621689196380"><span class="annot"><span class="annottext">toTxt :: RootFieldAlias -&gt; Text
+</span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689196377"><span id="local-6989586621689196378"><span class="annot"><span class="annottext">Maybe Name
 Name
 _rfaAlias :: Name
 _rfaNamespace :: Maybe Name
 _rfaAlias :: RootFieldAlias -&gt; Name
 _rfaNamespace :: RootFieldAlias -&gt; Maybe Name
-</span><a href="#local-6989586621689145413"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689145414"><span class="hs-identifier hs-var">_rfaNamespace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-33"></span><span>    </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689196377"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689196378"><span class="hs-identifier hs-var">_rfaNamespace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145413"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span>
-</span><span id="line-34"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689145411"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145411"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><a href="#local-6989586621689196377"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689196375"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689196375"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145411"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689196375"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145413"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span>
-</span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-comment">-- | This ToJSON instance is used in responses to the explain API</span><span>
-</span><span id="line-37"></span><span class="hs-comment">-- (via the ToJSON instance for ExplainPlan).</span><span>
-</span><span id="line-38"></span><span class="hs-comment">-- It will use dot separator for namespaces fields, i.e. &quot;namespace.fieldname&quot;</span><span>
-</span><span id="line-39"></span><span class="hs-comment">-- TODO: We need to decide if this dotted notation is what we want to use for explain responses.</span><span>
-</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689145404"><span id="local-6989586621689145406"><span id="local-6989586621689145408"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621689145402"><span class="annot"><span class="annottext">toJSON :: RootFieldAlias -&gt; Value
+</span><a href="#local-6989586621689196377"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- | This ToJSON instance is used in responses to the explain API</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- (via the ToJSON instance for ExplainPlan).</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- It will use dot separator for namespaces fields, i.e. &quot;namespace.fieldname&quot;</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- TODO: We need to decide if this dotted notation is what we want to use for explain responses.</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689196368"><span id="local-6989586621689196370"><span id="local-6989586621689196372"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621689196366"><span class="annot"><span class="annottext">toJSON :: RootFieldAlias -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value)
@@ -102,16 +101,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span>
-</span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-type">mkUnNamespacedRootFieldAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span>
-</span><span id="line-44"></span><span id="mkUnNamespacedRootFieldAlias"><span class="annot"><span class="annottext">mkUnNamespacedRootFieldAlias :: Name -&gt; RootFieldAlias
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-type">mkUnNamespacedRootFieldAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span>
+</span><span id="line-43"></span><span id="mkUnNamespacedRootFieldAlias"><span class="annot"><span class="annottext">mkUnNamespacedRootFieldAlias :: Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-var hs-var">mkUnNamespacedRootFieldAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-var">RootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#mkNamespacedRootFieldAlias"><span class="hs-identifier hs-type">mkNamespacedRootFieldAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span>
-</span><span id="line-47"></span><span id="mkNamespacedRootFieldAlias"><span class="annot"><span class="annottext">mkNamespacedRootFieldAlias :: Name -&gt; Name -&gt; RootFieldAlias
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#mkNamespacedRootFieldAlias"><span class="hs-identifier hs-type">mkNamespacedRootFieldAlias</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span>
+</span><span id="line-46"></span><span id="mkNamespacedRootFieldAlias"><span class="annot"><span class="annottext">mkNamespacedRootFieldAlias :: Name -&gt; Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#mkNamespacedRootFieldAlias"><span class="hs-identifier hs-var hs-var">mkNamespacedRootFieldAlias</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-var">RootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Name -&gt; Name -&gt; RootFieldAlias)
 -&gt; (Name -&gt; Maybe Name) -&gt; Name -&gt; Name -&gt; RootFieldAlias
@@ -119,15 +118,15 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span>
-</span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span class="hs-keyword">type</span><span> </span><span id="RootFieldMap"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-var">RootFieldMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span>
-</span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span class="hs-keyword">data</span><span> </span><span id="NamespacedField"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-var">NamespacedField</span></a></span></span><span> </span><span id="local-6989586621689145474"><span class="annot"><a href="#local-6989586621689145474"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-52"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Normal field</span><span>
-</span><span id="line-53"></span><span>    </span><span id="NotNamespaced"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NotNamespaced"><span class="hs-identifier hs-var">NotNamespaced</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689145474"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Namespace field with other fields nested within</span><span>
-</span><span id="line-55"></span><span>    </span><span id="Namespaced"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="#local-6989586621689145474"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689145394"><span id="local-6989586621689145396"><span class="annot"><span class="annottext">NamespacedField a -&gt; NamespacedField a -&gt; Bool
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">type</span><span> </span><span id="RootFieldMap"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-var">RootFieldMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-keyword">data</span><span> </span><span id="NamespacedField"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-var">NamespacedField</span></a></span></span><span> </span><span id="local-6989586621689196442"><span class="annot"><a href="#local-6989586621689196442"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Normal field</span><span>
+</span><span id="line-52"></span><span>    </span><span id="NotNamespaced"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NotNamespaced"><span class="hs-identifier hs-var">NotNamespaced</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689196442"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Namespace field with other fields nested within</span><span>
+</span><span id="line-54"></span><span>    </span><span id="Namespaced"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="#local-6989586621689196442"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689196358"><span id="local-6989586621689196360"><span class="annot"><span class="annottext">NamespacedField a -&gt; NamespacedField a -&gt; Bool
 (NamespacedField a -&gt; NamespacedField a -&gt; Bool)
 -&gt; (NamespacedField a -&gt; NamespacedField a -&gt; Bool)
 -&gt; Eq (NamespacedField a)
@@ -137,7 +136,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: forall a. Eq a =&gt; NamespacedField a -&gt; NamespacedField a -&gt; Bool
 == :: NamespacedField a -&gt; NamespacedField a -&gt; Bool
 $c== :: forall a. Eq a =&gt; NamespacedField a -&gt; NamespacedField a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689145388"><span id="local-6989586621689145390"><span id="local-6989586621689145392"><span class="annot"><span class="annottext">Int -&gt; NamespacedField a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689196352"><span id="local-6989586621689196354"><span id="local-6989586621689196356"><span class="annot"><span class="annottext">Int -&gt; NamespacedField a -&gt; ShowS
 [NamespacedField a] -&gt; ShowS
 NamespacedField a -&gt; String
 (Int -&gt; NamespacedField a -&gt; ShowS)
@@ -155,7 +154,7 @@ show :: NamespacedField a -&gt; String
 $cshow :: forall a. Show a =&gt; NamespacedField a -&gt; String
 showsPrec :: Int -&gt; NamespacedField a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; NamespacedField a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689145384"><span id="local-6989586621689145386"><span class="annot"><span class="annottext">a -&gt; NamespacedField b -&gt; NamespacedField a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689196348"><span id="local-6989586621689196350"><span class="annot"><span class="annottext">a -&gt; NamespacedField b -&gt; NamespacedField a
 (a -&gt; b) -&gt; NamespacedField a -&gt; NamespacedField b
 (forall a b. (a -&gt; b) -&gt; NamespacedField a -&gt; NamespacedField b)
 -&gt; (forall a b. a -&gt; NamespacedField b -&gt; NamespacedField a)
@@ -170,51 +169,51 @@ $c&lt;$ :: forall a b. a -&gt; NamespacedField b -&gt; NamespacedField a
 fmap :: (a -&gt; b) -&gt; NamespacedField a -&gt; NamespacedField b
 $cfmap :: forall a b. (a -&gt; b) -&gt; NamespacedField a -&gt; NamespacedField b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span id="local-6989586621689145491"><span id="local-6989586621689145492"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#namespacedField"><span class="hs-identifier hs-type">namespacedField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689145492"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689145491"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="#local-6989586621689145492"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689145491"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145492"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689145491"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
-</span><span id="line-59"></span><span id="namespacedField"><span class="annot"><span class="annottext">namespacedField :: (a -&gt; b) -&gt; (InsOrdHashMap Name a -&gt; b) -&gt; NamespacedField a -&gt; b
-</span><a href="Hasura.GraphQL.Namespace.html#namespacedField"><span class="hs-identifier hs-var hs-var">namespacedField</span></a></span></span><span> </span><span id="local-6989586621689145382"><span class="annot"><span class="annottext">a -&gt; b
-</span><a href="#local-6989586621689145382"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689145381"><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; b
-</span><a href="#local-6989586621689145381"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NotNamespaced"><span class="hs-identifier hs-type">NotNamespaced</span></a></span><span> </span><span id="local-6989586621689145380"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689145380"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; b
-</span><a href="#local-6989586621689145382"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689145380"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-61"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-type">Namespaced</span></a></span><span> </span><span id="local-6989586621689145379"><span class="annot"><span class="annottext">InsOrdHashMap Name a
-</span><a href="#local-6989586621689145379"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; b
-</span><a href="#local-6989586621689145381"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
-</span><a href="#local-6989586621689145379"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">type</span><span> </span><span id="NamespacedFieldMap"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-var">NamespacedFieldMap</span></a></span></span><span> </span><span id="local-6989586621689145378"><span class="annot"><a href="#local-6989586621689145378"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145378"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#flattenNamespaces"><span class="hs-identifier hs-type">flattenNamespaces</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689145377"><span class="annot"><a href="#local-6989586621689145377"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-type">NamespacedFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145377"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145377"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-66"></span><span id="flattenNamespaces"><span class="annot"><span class="annottext">flattenNamespaces :: NamespacedFieldMap a -&gt; RootFieldMap a
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span id="local-6989586621689196459"><span id="local-6989586621689196460"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#namespacedField"><span class="hs-identifier hs-type">namespacedField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689196460"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689196459"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="annot"><a href="#local-6989586621689196460"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689196459"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196460"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689196459"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-58"></span><span id="namespacedField"><span class="annot"><span class="annottext">namespacedField :: (a -&gt; b) -&gt; (InsOrdHashMap Name a -&gt; b) -&gt; NamespacedField a -&gt; b
+</span><a href="Hasura.GraphQL.Namespace.html#namespacedField"><span class="hs-identifier hs-var hs-var">namespacedField</span></a></span></span><span> </span><span id="local-6989586621689196346"><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621689196346"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689196345"><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; b
+</span><a href="#local-6989586621689196345"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NotNamespaced"><span class="hs-identifier hs-type">NotNamespaced</span></a></span><span> </span><span id="local-6989586621689196344"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689196344"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621689196346"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689196344"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-type">Namespaced</span></a></span><span> </span><span id="local-6989586621689196343"><span class="annot"><span class="annottext">InsOrdHashMap Name a
+</span><a href="#local-6989586621689196343"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; b
+</span><a href="#local-6989586621689196345"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
+</span><a href="#local-6989586621689196343"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">type</span><span> </span><span id="NamespacedFieldMap"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-var">NamespacedFieldMap</span></a></span></span><span> </span><span id="local-6989586621689196342"><span class="annot"><a href="#local-6989586621689196342"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196342"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#flattenNamespaces"><span class="hs-identifier hs-type">flattenNamespaces</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689196341"><span class="annot"><a href="#local-6989586621689196341"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-type">NamespacedFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196341"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196341"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-65"></span><span id="flattenNamespaces"><span class="annot"><span class="annottext">flattenNamespaces :: NamespacedFieldMap a -&gt; RootFieldMap a
 </span><a href="Hasura.GraphQL.Namespace.html#flattenNamespaces"><span class="hs-identifier hs-var hs-var">flattenNamespaces</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Name -&gt; NamespacedField a -&gt; RootFieldMap a)
 -&gt; NamespacedFieldMap a -&gt; RootFieldMap a
 forall m k a. Monoid m =&gt; (k -&gt; a -&gt; m) -&gt; InsOrdHashMap k a -&gt; m
 </span><span class="hs-identifier hs-var">OMap.foldMapWithKey</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; NamespacedField a -&gt; RootFieldMap a
-</span><a href="#local-6989586621689145375"><span class="hs-identifier hs-var">flattenNamespace</span></a></span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>    </span><span class="annot"><a href="#local-6989586621689145375"><span class="hs-identifier hs-type">flattenNamespace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145377"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145377"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-69"></span><span>    </span><span id="local-6989586621689145375"><span class="annot"><span class="annottext">flattenNamespace :: Name -&gt; NamespacedField a -&gt; RootFieldMap a
-</span><a href="#local-6989586621689145375"><span class="hs-identifier hs-var hs-var">flattenNamespace</span></a></span></span><span> </span><span id="local-6989586621689145374"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145374"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">(a -&gt; RootFieldMap a)
+</span><a href="#local-6989586621689196339"><span class="hs-identifier hs-var">flattenNamespace</span></a></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>    </span><span class="annot"><a href="#local-6989586621689196339"><span class="hs-identifier hs-type">flattenNamespace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196341"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196341"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-68"></span><span>    </span><span id="local-6989586621689196339"><span class="annot"><span class="annottext">flattenNamespace :: Name -&gt; NamespacedField a -&gt; RootFieldMap a
+</span><a href="#local-6989586621689196339"><span class="hs-identifier hs-var hs-var">flattenNamespace</span></a></span></span><span> </span><span id="local-6989586621689196338"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689196338"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">(a -&gt; RootFieldMap a)
 -&gt; (InsOrdHashMap Name a -&gt; RootFieldMap a)
 -&gt; NamespacedField a
 -&gt; RootFieldMap a
 forall a b.
 (a -&gt; b) -&gt; (InsOrdHashMap Name a -&gt; b) -&gt; NamespacedField a -&gt; b
 </span><a href="Hasura.GraphQL.Namespace.html#namespacedField"><span class="hs-identifier hs-var">namespacedField</span></a></span><span>
-</span><span id="line-71"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RootFieldAlias -&gt; a -&gt; RootFieldMap a
+</span><span id="line-70"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RootFieldAlias -&gt; a -&gt; RootFieldMap a
 forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">(RootFieldAlias -&gt; a -&gt; RootFieldMap a)
 -&gt; RootFieldAlias -&gt; a -&gt; RootFieldMap a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#mkUnNamespacedRootFieldAlias"><span class="hs-identifier hs-var">mkUnNamespacedRootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145374"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-72"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Name -&gt; RootFieldAlias) -&gt; InsOrdHashMap Name a -&gt; RootFieldMap a
+</span><a href="#local-6989586621689196338"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Name -&gt; RootFieldAlias) -&gt; InsOrdHashMap Name a -&gt; RootFieldMap a
 forall k' k v.
 (Eq k', Hashable k') =&gt;
 (k -&gt; k') -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k' v
@@ -226,10 +225,10 @@ forall k' k v.
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; RootFieldAlias
 </span><a href="Hasura.GraphQL.Namespace.html#mkNamespacedRootFieldAlias"><span class="hs-identifier hs-var">mkNamespacedRootFieldAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145374"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span id="local-6989586621689145371"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#unflattenNamespaces"><span class="hs-identifier hs-type">unflattenNamespaces</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145371"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-type">NamespacedFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145371"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-75"></span><span id="unflattenNamespaces"><span class="annot"><span class="annottext">unflattenNamespaces :: RootFieldMap a -&gt; NamespacedFieldMap a
+</span><a href="#local-6989586621689196338"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span id="local-6989586621689196335"><span class="annot"><a href="Hasura.GraphQL.Namespace.html#unflattenNamespaces"><span class="hs-identifier hs-type">unflattenNamespaces</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196335"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedFieldMap"><span class="hs-identifier hs-type">NamespacedFieldMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196335"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-74"></span><span id="unflattenNamespaces"><span class="annot"><span class="annottext">unflattenNamespaces :: RootFieldMap a -&gt; NamespacedFieldMap a
 </span><a href="Hasura.GraphQL.Namespace.html#unflattenNamespaces"><span class="hs-identifier hs-var hs-var">unflattenNamespaces</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(NamespacedFieldMap a
  -&gt; RootFieldAlias -&gt; a -&gt; NamespacedFieldMap a)
 -&gt; NamespacedFieldMap a -&gt; RootFieldMap a -&gt; NamespacedFieldMap a
@@ -238,23 +237,23 @@ forall a k v. (a -&gt; k -&gt; v -&gt; a) -&gt; a -&gt; InsOrdHashMap k v -&gt; 
 forall a.
 InsOrdHashMap Name (NamespacedField a)
 -&gt; RootFieldAlias -&gt; a -&gt; InsOrdHashMap Name (NamespacedField a)
-</span><a href="#local-6989586621689145369"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">NamespacedFieldMap a
+</span><a href="#local-6989586621689196333"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">NamespacedFieldMap a
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-77"></span><span>    </span><span id="local-6989586621689145369"><span class="annot"><span class="annottext">insert :: InsOrdHashMap Name (NamespacedField a)
+</span><span id="line-75"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621689196333"><span class="annot"><span class="annottext">insert :: InsOrdHashMap Name (NamespacedField a)
 -&gt; RootFieldAlias -&gt; a -&gt; InsOrdHashMap Name (NamespacedField a)
-</span><a href="#local-6989586621689145369"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621689145368"><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
-</span><a href="#local-6989586621689145368"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689145366"><span id="local-6989586621689145367"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689196333"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621689196332"><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
+</span><a href="#local-6989586621689196332"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldAlias"><span class="hs-identifier hs-type">RootFieldAlias</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689196330"><span id="local-6989586621689196331"><span class="annot"><span class="annottext">Maybe Name
 Name
 _rfaAlias :: Name
 _rfaNamespace :: Maybe Name
 _rfaAlias :: RootFieldAlias -&gt; Name
 _rfaNamespace :: RootFieldAlias -&gt; Maybe Name
-</span><a href="#local-6989586621689145366"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621689145365"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689145365"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689145367"><span class="hs-identifier hs-var">_rfaNamespace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689196330"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621689196329"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689196329"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689196331"><span class="hs-identifier hs-var">_rfaNamespace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; NamespacedField a
 -&gt; InsOrdHashMap Name (NamespacedField a)
@@ -263,13 +262,13 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145366"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; NamespacedField a
+</span><a href="#local-6989586621689196330"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; NamespacedField a
 forall a. a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#NotNamespaced"><span class="hs-identifier hs-var">NotNamespaced</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689145365"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
-</span><a href="#local-6989586621689145368"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-79"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689145363"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145363"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a)
+</span><a href="#local-6989586621689196329"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
+</span><a href="#local-6989586621689196332"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689196327"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689196327"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a)
 -&gt; Name
 -&gt; NamespacedField a
 -&gt; InsOrdHashMap Name (NamespacedField a)
@@ -280,8 +279,8 @@ forall k v.
 </span><span class="hs-identifier hs-var">OMap.insertWith</span></span><span> </span><span class="annot"><span class="annottext">NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a
 forall a.
 NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a
-</span><a href="#local-6989586621689145361"><span class="hs-identifier hs-var">merge</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145363"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; NamespacedField a
+</span><a href="#local-6989586621689196325"><span class="hs-identifier hs-var">merge</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689196327"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; NamespacedField a
 forall a. InsOrdHashMap Name a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap Name a -&gt; NamespacedField a)
 -&gt; InsOrdHashMap Name a -&gt; NamespacedField a
@@ -289,13 +288,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; a -&gt; InsOrdHashMap Name a
 forall k v. Hashable k =&gt; k -&gt; v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.singleton</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145366"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689145365"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
-</span><a href="#local-6989586621689145368"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-80"></span><span>    </span><span id="local-6989586621689145361"><span class="annot"><span class="annottext">merge :: NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a
-</span><a href="#local-6989586621689145361"><span class="hs-identifier hs-var hs-var">merge</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-type">Namespaced</span></a></span><span> </span><span id="local-6989586621689145360"><span class="annot"><span class="annottext">InsOrdHashMap Name a
-</span><a href="#local-6989586621689145360"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-type">Namespaced</span></a></span><span> </span><span id="local-6989586621689145359"><span class="annot"><span class="annottext">InsOrdHashMap Name a
-</span><a href="#local-6989586621689145359"><span class="hs-identifier hs-var">m'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; NamespacedField a
+</span><a href="#local-6989586621689196330"><span class="hs-identifier hs-var">_rfaAlias</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689196329"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name (NamespacedField a)
+</span><a href="#local-6989586621689196332"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621689196325"><span class="annot"><span class="annottext">merge :: NamespacedField a -&gt; NamespacedField a -&gt; NamespacedField a
+</span><a href="#local-6989586621689196325"><span class="hs-identifier hs-var hs-var">merge</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-type">Namespaced</span></a></span><span> </span><span id="local-6989586621689196324"><span class="annot"><span class="annottext">InsOrdHashMap Name a
+</span><a href="#local-6989586621689196324"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-type">Namespaced</span></a></span><span> </span><span id="local-6989586621689196323"><span class="annot"><span class="annottext">InsOrdHashMap Name a
+</span><a href="#local-6989586621689196323"><span class="hs-identifier hs-var">m'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; NamespacedField a
 forall a. InsOrdHashMap Name a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap Name a
 -&gt; InsOrdHashMap Name a -&gt; InsOrdHashMap Name a
@@ -303,51 +302,54 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 InsOrdHashMap k v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.union</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
-</span><a href="#local-6989586621689145359"><span class="hs-identifier hs-var">m'</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
-</span><a href="#local-6989586621689145360"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Note: order of arguments to OMap.union to preserve ordering</span><span>
-</span><span id="line-81"></span><span>    </span><span class="annot"><a href="#local-6989586621689145361"><span class="hs-identifier hs-var">merge</span></a></span><span> </span><span id="local-6989586621689145357"><span class="annot"><span class="annottext">NamespacedField a
-</span><a href="#local-6989586621689145357"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="annot"><span class="annottext">NamespacedField a
+</span><a href="#local-6989586621689196323"><span class="hs-identifier hs-var">m'</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Name a
+</span><a href="#local-6989586621689196324"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Note: order of arguments to OMap.union to preserve ordering</span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><a href="#local-6989586621689196325"><span class="hs-identifier hs-var">merge</span></a></span><span> </span><span id="local-6989586621689196321"><span class="annot"><span class="annottext">NamespacedField a
+</span><a href="#local-6989586621689196321"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="annot"><span class="annottext">NamespacedField a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamespacedField a
-</span><a href="#local-6989586621689145357"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-comment">-- | Wrap the field parser results in @NamespacedField@</span><span>
-</span><span id="line-84"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-type">customizeNamespace</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689145356"><span class="annot"><a href="#local-6989586621689145356"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689145355"><span class="annot"><a href="#local-6989586621689145355"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-86"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145356"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-87"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-88"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#ParsedSelection"><span class="hs-identifier hs-type">P.ParsedSelection</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145355"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689145355"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-89"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#MkTypename"><span class="hs-identifier hs-type">P.MkTypename</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145356"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145355"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145356"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145355"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-92"></span><span id="customizeNamespace"><span class="annot"><span class="annottext">customizeNamespace :: Maybe Name
+</span><a href="#local-6989586621689196321"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="hs-comment">-- | Wrap the field parser results in @NamespacedField@</span><span>
+</span><span id="line-83"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-type">customizeNamespace</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689196320"><span class="annot"><a href="#local-6989586621689196320"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689196319"><span class="annot"><a href="#local-6989586621689196319"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196320"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Parser.html#ParsedSelection"><span class="hs-identifier hs-type">P.ParsedSelection</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196319"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689196319"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Names.html#MkTypename"><span class="hs-identifier hs-type">P.MkTypename</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196320"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196319"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196320"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196319"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-91"></span><span id="customizeNamespace"><span class="annot"><span class="annottext">customizeNamespace :: Maybe Name
 -&gt; (Name -&gt; ParsedSelection a -&gt; a)
 -&gt; MkTypename
 -&gt; [FieldParser n a]
 -&gt; [FieldParser n (NamespacedField a)]
-</span><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-var hs-var">customizeNamespace</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689145354"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145354"><span class="hs-identifier hs-var">namespace</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689145353"><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
-</span><a href="#local-6989586621689145353"><span class="hs-identifier hs-var">fromParsedSelection</span></a></span></span><span> </span><span id="local-6989586621689145352"><span class="annot"><span class="annottext">MkTypename
-</span><a href="#local-6989586621689145352"><span class="hs-identifier hs-var">mkNamespaceTypename</span></a></span></span><span> </span><span id="local-6989586621689145351"><span class="annot"><span class="annottext">[FieldParser n a]
-</span><a href="#local-6989586621689145351"><span class="hs-identifier hs-var">fieldParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-comment">-- Source or remote schema has a namespace field so wrap the parsers</span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-comment">-- in a new namespace field parser.</span><span>
-</span><span id="line-95"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-var hs-var">customizeNamespace</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689196318"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689196318"><span class="hs-identifier hs-var">namespace</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689196317"><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
+</span><a href="#local-6989586621689196317"><span class="hs-identifier hs-var">fromParsedSelection</span></a></span></span><span> </span><span id="local-6989586621689196316"><span class="annot"><span class="annottext">MkTypename
+</span><a href="#local-6989586621689196316"><span class="hs-identifier hs-var">mkNamespaceTypename</span></a></span></span><span> </span><span id="local-6989586621689196315"><span class="annot"><span class="annottext">[FieldParser n a]
+</span><a href="#local-6989586621689196315"><span class="hs-identifier hs-var">fieldParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-comment">-- Source or remote schema has a namespace field so wrap the parsers</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-comment">-- in a new namespace field parser.</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
--&gt; Parser 'Output n (NamespacedField a)
+-&gt; Parser MetadataObjId 'Output n (NamespacedField a)
 -&gt; FieldParser n (NamespacedField a)
-forall (m :: * -&gt; *) a.
+forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
-Name -&gt; Maybe Description -&gt; Parser 'Output m a -&gt; FieldParser m a
+Name
+-&gt; Maybe Description
+-&gt; Parser origin 'Output m a
+-&gt; FieldParser origin m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#subselection_"><span class="hs-identifier hs-var">P.subselection_</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145354"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689196318"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (NamespacedField a)
-</span><a href="#local-6989586621689145349"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-97"></span><span>    </span><span class="annot"><a href="#local-6989586621689145349"><span class="hs-identifier hs-type">parser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145356"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689145355"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-98"></span><span>    </span><span id="local-6989586621689145349"><span class="annot"><span class="annottext">parser :: Parser 'Output n (NamespacedField a)
-</span><a href="#local-6989586621689145349"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-99"></span><span>      </span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; NamespacedField a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (NamespacedField a)
+</span><a href="#local-6989586621689196313"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><a href="#local-6989586621689196313"><span class="hs-identifier hs-type">parser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196320"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#NamespacedField"><span class="hs-identifier hs-type">NamespacedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689196319"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621689196313"><span class="annot"><span class="annottext">parser :: Parser MetadataObjId 'Output n (NamespacedField a)
+</span><a href="#local-6989586621689196313"><span class="hs-identifier hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">InsOrdHashMap Name a -&gt; NamespacedField a
 forall a. InsOrdHashMap Name a -&gt; NamespacedField a
 </span><a href="Hasura.GraphQL.Namespace.html#Namespaced"><span class="hs-identifier hs-var">Namespaced</span></a></span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap Name a -&gt; NamespacedField a)
 -&gt; (InsOrdHashMap Name (ParsedSelection a) -&gt; InsOrdHashMap Name a)
@@ -359,35 +361,37 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall k v1 v2.
 (k -&gt; v1 -&gt; v2) -&gt; InsOrdHashMap k v1 -&gt; InsOrdHashMap k v2
 </span><span class="hs-identifier hs-var">OMap.mapWithKey</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
-</span><a href="#local-6989586621689145353"><span class="hs-identifier hs-var">fromParsedSelection</span></a></span><span>
-</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">(InsOrdHashMap Name (ParsedSelection a) -&gt; NamespacedField a)
--&gt; Parser 'Output n (InsOrdHashMap Name (ParsedSelection a))
--&gt; Parser 'Output n (NamespacedField a)
+</span><a href="#local-6989586621689196317"><span class="hs-identifier hs-var">fromParsedSelection</span></a></span><span>
+</span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">(InsOrdHashMap Name (ParsedSelection a) -&gt; NamespacedField a)
+-&gt; Parser
+     MetadataObjId 'Output n (InsOrdHashMap Name (ParsedSelection a))
+-&gt; Parser MetadataObjId 'Output n (NamespacedField a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; [FieldParser n a]
--&gt; Parser 'Output n (InsOrdHashMap Name (ParsedSelection a))
-forall (m :: * -&gt; *) a.
+-&gt; Parser
+     MetadataObjId 'Output n (InsOrdHashMap Name (ParsedSelection a))
+forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
--&gt; [FieldParser m a]
--&gt; Parser 'Output m (InsOrdHashMap Name (ParsedSelection a))
+-&gt; [FieldParser origin m a]
+-&gt; Parser origin 'Output m (InsOrdHashMap Name (ParsedSelection a))
 </span><a href="Hasura.GraphQL.Parser.Internal.Parser.html#selectionSet"><span class="hs-identifier hs-var">P.selectionSet</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MkTypename -&gt; Name -&gt; Name
-</span><a href="Hasura.GraphQL.Parser.Schema.html#runMkTypename"><span class="hs-identifier hs-var hs-var">runMkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">MkTypename
-</span><a href="#local-6989586621689145352"><span class="hs-identifier hs-var">mkNamespaceTypename</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689145354"><span class="hs-identifier hs-var">namespace</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="Hasura.GraphQL.Parser.Names.html#runMkTypename"><span class="hs-identifier hs-var hs-var">runMkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">MkTypename
+</span><a href="#local-6989586621689196316"><span class="hs-identifier hs-var">mkNamespaceTypename</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689196318"><span class="hs-identifier hs-var">namespace</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Description
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">[FieldParser n a]
-</span><a href="#local-6989586621689145351"><span class="hs-identifier hs-var">fieldParsers</span></a></span><span>
-</span><span id="line-101"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-var">customizeNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621689196315"><span class="hs-identifier hs-var">fieldParsers</span></a></span><span>
+</span><span id="line-100"></span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#customizeNamespace"><span class="hs-identifier hs-var">customizeNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; ParsedSelection a -&gt; a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">MkTypename
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689145344"><span class="annot"><span class="annottext">[FieldParser n a]
-</span><a href="#local-6989586621689145344"><span class="hs-identifier hs-var">fieldParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-102"></span><span>  </span><span class="hs-comment">-- No namespace so just wrap the field parser results in @NotNamespaced@.</span><span>
-</span><span id="line-103"></span><span>  </span><span class="annot"><span class="annottext">(a -&gt; NamespacedField a)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689196307"><span class="annot"><span class="annottext">[FieldParser n a]
+</span><a href="#local-6989586621689196307"><span class="hs-identifier hs-var">fieldParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-101"></span><span>  </span><span class="hs-comment">-- No namespace so just wrap the field parser results in @NotNamespaced@.</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><span class="annottext">(a -&gt; NamespacedField a)
 -&gt; FieldParser n a -&gt; FieldParser n (NamespacedField a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NamespacedField a
@@ -396,5 +400,5 @@ forall a. a -&gt; NamespacedField a
 -&gt; [FieldParser n a] -&gt; [FieldParser n (NamespacedField a)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[FieldParser n a]
-</span><a href="#local-6989586621689145344"><span class="hs-identifier hs-var">fieldParsers</span></a></span><span>
-</span><span id="line-104"></span></pre></body></html>
+</span><a href="#local-6989586621689196307"><span class="hs-identifier hs-var">fieldParsers</span></a></span><span>
+</span><span id="line-103"></span></pre></body></html>

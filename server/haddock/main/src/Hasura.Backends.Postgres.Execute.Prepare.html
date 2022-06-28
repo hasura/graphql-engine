@@ -30,7 +30,7 @@
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Column.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.Column</span></a></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
 </span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Backend</span></a></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html"><span class="hs-identifier">Hasura.GraphQL.Parser.Schema</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Names.html"><span class="hs-identifier">Hasura.GraphQL.Parser.Names</span></a></span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html"><span class="hs-identifier">Hasura.RQL.IR.Value</span></a></span><span>
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
@@ -63,26 +63,26 @@ forall k v. HashMap k v
 forall a. IntMap a
 </span><span class="hs-identifier hs-var">IntMap.empty</span></span><span>
 </span><span id="line-55"></span><span>
-</span><span id="line-56"></span><span id="local-6989586621689254449"><span id="local-6989586621689254450"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithPlan"><span class="hs-identifier hs-type">prepareWithPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-57"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254450"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-58"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254450"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-56"></span><span id="local-6989586621689263128"><span id="local-6989586621689263129"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithPlan"><span class="hs-identifier hs-type">prepareWithPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263129"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263129"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-60"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-61"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254449"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-62"></span><span>  </span><span class="annot"><a href="#local-6989586621689254450"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span></span></span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263128"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><a href="#local-6989586621689263129"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span></span></span><span>
 </span><span id="line-63"></span><span id="prepareWithPlan"><span class="annot"><span class="annottext">prepareWithPlan :: UserInfo -&gt; UnpreparedValue ('Postgres pgKind) -&gt; m SQLExp
-</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithPlan"><span class="hs-identifier hs-var hs-var">prepareWithPlan</span></a></span></span><span> </span><span id="local-6989586621689254446"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689254446"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVParameter"><span class="hs-identifier hs-type">UVParameter</span></a></span><span> </span><span id="local-6989586621689254444"><span class="annot"><span class="annottext">Maybe VariableInfo
-</span><a href="#local-6989586621689254444"><span class="hs-identifier hs-var">varInfoM</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689254441"><span id="local-6989586621689254442"><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
+</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithPlan"><span class="hs-identifier hs-var hs-var">prepareWithPlan</span></a></span></span><span> </span><span id="local-6989586621689263125"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689263125"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVParameter"><span class="hs-identifier hs-type">UVParameter</span></a></span><span> </span><span id="local-6989586621689263123"><span class="annot"><span class="annottext">Maybe VariableInfo
+</span><a href="#local-6989586621689263123"><span class="hs-identifier hs-var">varInfoM</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689263120"><span id="local-6989586621689263121"><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
 ColumnType ('Postgres pgKind)
 cvValue :: forall (b :: BackendType). ColumnValue b -&gt; ScalarValue b
 cvType :: forall (b :: BackendType). ColumnValue b -&gt; ColumnType b
 cvValue :: ScalarValue ('Postgres pgKind)
 cvType :: ColumnType ('Postgres pgKind)
 </span><a href="Hasura.RQL.Types.Column.html#cvValue"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-65"></span><span>    </span><span id="local-6989586621689254438"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254438"><span class="hs-identifier hs-var">argNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Int -&gt; (VariableInfo -&gt; m Int) -&gt; Maybe VariableInfo -&gt; m Int
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621689263117"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689263117"><span class="hs-identifier hs-var">argNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Int -&gt; (VariableInfo -&gt; m Int) -&gt; Maybe VariableInfo -&gt; m Int
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">m Int
 forall (m :: * -&gt; *). MonadState PlanningSt m =&gt; m Int
@@ -92,33 +92,33 @@ forall (m :: * -&gt; *). MonadState PlanningSt m =&gt; Name -&gt; m Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">VariableInfo -&gt; Name
 forall a. HasName a =&gt; a -&gt; Name
-</span><a href="Hasura.GraphQL.Parser.Schema.html#getName"><span class="hs-identifier hs-var">getName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe VariableInfo
-</span><a href="#local-6989586621689254444"><span class="hs-identifier hs-var">varInfoM</span></a></span><span>
+</span><a href="Hasura.GraphQL.Parser.Names.html#getName"><span class="hs-identifier hs-var">getName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe VariableInfo
+</span><a href="#local-6989586621689263123"><span class="hs-identifier hs-var">varInfoM</span></a></span><span>
 </span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; (PrepArg, PGScalarValue) -&gt; m ()
 forall (m :: * -&gt; *).
 MonadState PlanningSt m =&gt;
 Int -&gt; (PrepArg, PGScalarValue) -&gt; m ()
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#addPrepArg"><span class="hs-identifier hs-var">addPrepArg</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254438"><span class="hs-identifier hs-var">argNum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGScalarValue -&gt; PrepArg
+</span><a href="#local-6989586621689263117"><span class="hs-identifier hs-var">argNum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGScalarValue -&gt; PrepArg
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#binEncoder"><span class="hs-identifier hs-var">binEncoder</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
 PGScalarValue
-</span><a href="#local-6989586621689254441"><span class="hs-identifier hs-var">cvValue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
+</span><a href="#local-6989586621689263120"><span class="hs-identifier hs-var">cvValue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
 PGScalarValue
-</span><a href="#local-6989586621689254441"><span class="hs-identifier hs-var">cvValue</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689263120"><span class="hs-identifier hs-var">cvValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; m SQLExp) -&gt; SQLExp -&gt; m SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; PGScalarType -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#toPrepParam"><span class="hs-identifier hs-var">toPrepParam</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254438"><span class="hs-identifier hs-var">argNum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind) -&gt; PGScalarType
+</span><a href="#local-6989586621689263117"><span class="hs-identifier hs-var">argNum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind) -&gt; PGScalarType
 forall (pgKind :: PostgresKind).
 ColumnType ('Postgres pgKind) -&gt; PGScalarType
 </span><a href="Hasura.Backends.Postgres.Types.Column.html#unsafePGColumnToBackend"><span class="hs-identifier hs-var">unsafePGColumnToBackend</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689254442"><span class="hs-identifier hs-var">cvType</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVSessionVar"><span class="hs-identifier hs-type">UVSessionVar</span></a></span><span> </span><span id="local-6989586621689254427"><span class="annot"><span class="annottext">SessionVarType ('Postgres pgKind)
-</span><a href="#local-6989586621689254427"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621689254426"><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689254426"><span class="hs-identifier hs-var">sessVar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689263121"><span class="hs-identifier hs-var">cvType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVSessionVar"><span class="hs-identifier hs-type">UVSessionVar</span></a></span><span> </span><span id="local-6989586621689263106"><span class="annot"><span class="annottext">SessionVarType ('Postgres pgKind)
+</span><a href="#local-6989586621689263106"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621689263105"><span class="annot"><span class="annottext">SessionVariable
+</span><a href="#local-6989586621689263105"><span class="hs-identifier hs-var">sessVar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-69"></span><span>    </span><span class="hs-comment">-- For queries, we need to make sure the session variables are passed. However,</span><span>
 </span><span id="line-70"></span><span>    </span><span class="hs-comment">-- we want to keep them as variables in the resulting SQL in order to keep</span><span>
 </span><span id="line-71"></span><span>    </span><span class="hs-comment">-- hitting query caching for similar queries.</span><span>
@@ -126,9 +126,9 @@ ColumnType ('Postgres pgKind) -&gt; PGScalarType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-73"></span><span>      </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe SessionVariableValue
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var">getSessionVariableValue</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689254426"><span class="hs-identifier hs-var">sessVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
+</span><a href="#local-6989586621689263105"><span class="hs-identifier hs-var">sessVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.Session.html#_uiSession"><span class="hs-identifier hs-var hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689254446"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689263125"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">Maybe SessionVariableValue
 -&gt; m SessionVariableValue -&gt; m SessionVariableValue
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
@@ -147,21 +147,21 @@ ToTxt t =&gt;
 SessionVariableValue -&gt; t -&gt; SessionVariableValue
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariableValue
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689254426"><span class="hs-identifier hs-var">sessVar</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689254418"><span class="annot"><span class="annottext">sessVarVal :: SQLExp
-</span><a href="#local-6989586621689254418"><span class="hs-identifier hs-var hs-var">sessVarVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689263105"><span class="hs-identifier hs-var">sessVar</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689263097"><span class="annot"><span class="annottext">sessVarVal :: SQLExp
+</span><a href="#local-6989586621689263097"><span class="hs-identifier hs-var hs-var">sessVarVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-78"></span><span>          </span><span class="annot"><span class="annottext">SQLOp -&gt; [SQLExp] -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEOpApp"><span class="hs-identifier hs-var">S.SEOpApp</span></a></span><span>
 </span><span id="line-79"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariableValue -&gt; SQLOp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLOp"><span class="hs-identifier hs-var">S.SQLOp</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariableValue
 </span><span class="hs-string">&quot;-&gt;&gt;&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>            </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689254415"><span class="hs-identifier hs-var">currentSessionExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; SQLExp
+</span><a href="#local-6989586621689263094"><span class="hs-identifier hs-var">currentSessionExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SessionVariableValue -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">S.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariableValue -&gt; SQLExp) -&gt; SessionVariableValue -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariableValue
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689254426"><span class="hs-identifier hs-var">sessVar</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689263105"><span class="hs-identifier hs-var">sessVar</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-81"></span><span>    </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; m SQLExp) -&gt; SQLExp -&gt; m SQLExp
@@ -169,36 +169,36 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CollectableType PGScalarType -&gt; SQLExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#withTypeAnn"><span class="hs-identifier hs-var">withTypeAnn</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVarType ('Postgres pgKind)
 CollectableType PGScalarType
-</span><a href="#local-6989586621689254427"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689254418"><span class="hs-identifier hs-var">sessVarVal</span></a></span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVLiteral"><span class="hs-identifier hs-type">UVLiteral</span></a></span><span> </span><span id="local-6989586621689254411"><span class="annot"><span class="annottext">SQLExpression ('Postgres pgKind)
-</span><a href="#local-6989586621689254411"><span class="hs-identifier hs-var">sqlExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
+</span><a href="#local-6989586621689263106"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689263097"><span class="hs-identifier hs-var">sessVarVal</span></a></span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVLiteral"><span class="hs-identifier hs-type">UVLiteral</span></a></span><span> </span><span id="local-6989586621689263090"><span class="annot"><span class="annottext">SQLExpression ('Postgres pgKind)
+</span><a href="#local-6989586621689263090"><span class="hs-identifier hs-var">sqlExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SQLExpression ('Postgres pgKind)
 SQLExp
-</span><a href="#local-6989586621689254411"><span class="hs-identifier hs-var">sqlExp</span></a></span><span>
+</span><a href="#local-6989586621689263090"><span class="hs-identifier hs-var">sqlExp</span></a></span><span>
 </span><span id="line-83"></span><span>  </span><span class="annot"><span class="annottext">UnpreparedValue ('Postgres pgKind)
 </span><a href="Hasura.RQL.IR.Value.html#UVSession"><span class="hs-identifier hs-var">UVSession</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689254415"><span class="hs-identifier hs-var">currentSessionExp</span></a></span><span>
+</span><a href="#local-6989586621689263094"><span class="hs-identifier hs-var">currentSessionExp</span></a></span><span>
 </span><span id="line-84"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-85"></span><span>    </span><span id="local-6989586621689254415"><span class="annot"><span class="annottext">currentSessionExp :: SQLExp
-</span><a href="#local-6989586621689254415"><span class="hs-identifier hs-var hs-var">currentSessionExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SQLExp
+</span><span id="line-85"></span><span>    </span><span id="local-6989586621689263094"><span class="annot"><span class="annottext">currentSessionExp :: SQLExp
+</span><a href="#local-6989586621689263094"><span class="hs-identifier hs-var hs-var">currentSessionExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEPrep"><span class="hs-identifier hs-var">S.SEPrep</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span id="local-6989586621689254407"><span id="local-6989586621689254408"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithoutPlan"><span class="hs-identifier hs-type">prepareWithoutPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-88"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254408"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-87"></span><span id="local-6989586621689263086"><span id="local-6989586621689263087"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithoutPlan"><span class="hs-identifier hs-type">prepareWithoutPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263087"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-89"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-90"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254407"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-91"></span><span>  </span><span class="annot"><a href="#local-6989586621689254408"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span></span></span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263086"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><a href="#local-6989586621689263087"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span></span></span><span>
 </span><span id="line-92"></span><span id="prepareWithoutPlan"><span class="annot"><span class="annottext">prepareWithoutPlan :: UserInfo -&gt; UnpreparedValue ('Postgres pgKind) -&gt; m SQLExp
-</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithoutPlan"><span class="hs-identifier hs-var hs-var">prepareWithoutPlan</span></a></span></span><span> </span><span id="local-6989586621689254406"><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689254406"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#prepareWithoutPlan"><span class="hs-identifier hs-var hs-var">prepareWithoutPlan</span></a></span></span><span> </span><span id="local-6989586621689263085"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689263085"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-93"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVParameter"><span class="hs-identifier hs-type">UVParameter</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe VariableInfo
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689254405"><span class="annot"><span class="annottext">ColumnValue ('Postgres pgKind)
-</span><a href="#local-6989586621689254405"><span class="hs-identifier hs-var">cv</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689263084"><span class="annot"><span class="annottext">ColumnValue ('Postgres pgKind)
+</span><a href="#local-6989586621689263084"><span class="hs-identifier hs-var">cv</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; m SQLExp) -&gt; SQLExp -&gt; m SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -206,13 +206,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (pgKind :: PostgresKind).
 ColumnValue ('Postgres pgKind) -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-var">toTxtValue</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValue ('Postgres pgKind)
-</span><a href="#local-6989586621689254405"><span class="hs-identifier hs-var">cv</span></a></span><span>
-</span><span id="line-94"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVLiteral"><span class="hs-identifier hs-type">UVLiteral</span></a></span><span> </span><span id="local-6989586621689254403"><span class="annot"><span class="annottext">SQLExpression ('Postgres pgKind)
-</span><a href="#local-6989586621689254403"><span class="hs-identifier hs-var">sqlExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
+</span><a href="#local-6989586621689263084"><span class="hs-identifier hs-var">cv</span></a></span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVLiteral"><span class="hs-identifier hs-type">UVLiteral</span></a></span><span> </span><span id="local-6989586621689263082"><span class="annot"><span class="annottext">SQLExpression ('Postgres pgKind)
+</span><a href="#local-6989586621689263082"><span class="hs-identifier hs-var">sqlExp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">SQLExpression ('Postgres pgKind)
 SQLExp
-</span><a href="#local-6989586621689254403"><span class="hs-identifier hs-var">sqlExp</span></a></span><span>
+</span><a href="#local-6989586621689263082"><span class="hs-identifier hs-var">sqlExp</span></a></span><span>
 </span><span id="line-95"></span><span>  </span><span class="annot"><span class="annottext">UnpreparedValue ('Postgres pgKind)
 </span><a href="Hasura.RQL.IR.Value.html#UVSession"><span class="hs-identifier hs-var">UVSession</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -223,19 +223,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.Session.html#_uiSession"><span class="hs-identifier hs-var hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689254406"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
-</span><span id="line-96"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVSessionVar"><span class="hs-identifier hs-type">UVSessionVar</span></a></span><span> </span><span id="local-6989586621689254401"><span class="annot"><span class="annottext">SessionVarType ('Postgres pgKind)
-</span><a href="#local-6989586621689254401"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621689254400"><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689254400"><span class="hs-identifier hs-var">sessVar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-97"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689254399"><span class="annot"><span class="annottext">maybeSessionVariableValue :: Maybe SessionVariableValue
-</span><a href="#local-6989586621689254399"><span class="hs-identifier hs-var hs-var">maybeSessionVariableValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689263085"><span class="hs-identifier hs-var">userInfo</span></a></span><span>
+</span><span id="line-96"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UVSessionVar"><span class="hs-identifier hs-type">UVSessionVar</span></a></span><span> </span><span id="local-6989586621689263080"><span class="annot"><span class="annottext">SessionVarType ('Postgres pgKind)
+</span><a href="#local-6989586621689263080"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621689263079"><span class="annot"><span class="annottext">SessionVariable
+</span><a href="#local-6989586621689263079"><span class="hs-identifier hs-var">sessVar</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689263078"><span class="annot"><span class="annottext">maybeSessionVariableValue :: Maybe SessionVariableValue
+</span><a href="#local-6989586621689263078"><span class="hs-identifier hs-var hs-var">maybeSessionVariableValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe SessionVariableValue
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var">getSessionVariableValue</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689254400"><span class="hs-identifier hs-var">sessVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
+</span><a href="#local-6989586621689263079"><span class="hs-identifier hs-var">sessVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo -&gt; SessionVariables
 </span><a href="Hasura.Session.html#_uiSession"><span class="hs-identifier hs-var hs-var">_uiSession</span></a></span><span> </span><span class="annot"><span class="annottext">UserInfo
-</span><a href="#local-6989586621689254406"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-99"></span><span>    </span><span id="local-6989586621689254398"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689254398"><span class="hs-identifier hs-var">sessionVariableValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689263085"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>    </span><span id="local-6989586621689263077"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689263077"><span class="hs-identifier hs-var">sessionVariableValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">(SessionVariableValue -&gt; SQLExp)
 -&gt; m SessionVariableValue -&gt; m SQLExp
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -250,7 +250,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; m SessionVariableValue -&gt; m SessionVariableValue
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariableValue
-</span><a href="#local-6989586621689254399"><span class="hs-identifier hs-var">maybeSessionVariableValue</span></a></span><span>
+</span><a href="#local-6989586621689263078"><span class="hs-identifier hs-var">maybeSessionVariableValue</span></a></span><span>
 </span><span id="line-102"></span><span>        </span><span class="annot"><span class="annottext">(m SessionVariableValue -&gt; m SQLExp)
 -&gt; m SessionVariableValue -&gt; m SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -271,7 +271,7 @@ ToTxt t =&gt;
 SessionVariableValue -&gt; t -&gt; SessionVariableValue
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariableValue
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-</span><a href="#local-6989586621689254400"><span class="hs-identifier hs-var">sessVar</span></a></span><span>
+</span><a href="#local-6989586621689263079"><span class="hs-identifier hs-var">sessVar</span></a></span><span>
 </span><span id="line-104"></span><span>    </span><span class="annot"><span class="annottext">SQLExp -&gt; m SQLExp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; m SQLExp) -&gt; SQLExp -&gt; m SQLExp
@@ -279,16 +279,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CollectableType PGScalarType -&gt; SQLExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#withTypeAnn"><span class="hs-identifier hs-var">withTypeAnn</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVarType ('Postgres pgKind)
 CollectableType PGScalarType
-</span><a href="#local-6989586621689254401"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689254398"><span class="hs-identifier hs-var">sessionVariableValue</span></a></span><span>
+</span><a href="#local-6989586621689263080"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689263077"><span class="hs-identifier hs-var">sessionVariableValue</span></a></span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#withUserVars"><span class="hs-identifier hs-type">withUserVars</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PrepArgMap"><span class="hs-identifier hs-type">PrepArgMap</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PrepArgMap"><span class="hs-identifier hs-type">PrepArgMap</span></a></span><span>
 </span><span id="line-107"></span><span id="withUserVars"><span class="annot"><span class="annottext">withUserVars :: SessionVariables -&gt; PrepArgMap -&gt; PrepArgMap
-</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#withUserVars"><span class="hs-identifier hs-var hs-var">withUserVars</span></a></span></span><span> </span><span id="local-6989586621689254396"><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689254396"><span class="hs-identifier hs-var">usrVars</span></a></span></span><span> </span><span id="local-6989586621689254395"><span class="annot"><span class="annottext">PrepArgMap
-</span><a href="#local-6989586621689254395"><span class="hs-identifier hs-var">list</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689254394"><span class="annot"><span class="annottext">usrVarsAsPgScalar :: PGScalarValue
-</span><a href="#local-6989586621689254394"><span class="hs-identifier hs-var hs-var">usrVarsAsPgScalar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSON -&gt; PGScalarValue
+</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#withUserVars"><span class="hs-identifier hs-var hs-var">withUserVars</span></a></span></span><span> </span><span id="local-6989586621689263075"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621689263075"><span class="hs-identifier hs-var">usrVars</span></a></span></span><span> </span><span id="local-6989586621689263074"><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621689263074"><span class="hs-identifier hs-var">list</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689263073"><span class="annot"><span class="annottext">usrVarsAsPgScalar :: PGScalarValue
+</span><a href="#local-6989586621689263073"><span class="hs-identifier hs-var hs-var">usrVarsAsPgScalar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSON -&gt; PGScalarValue
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValJSON"><span class="hs-identifier hs-var">PGValJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(JSON -&gt; PGScalarValue) -&gt; JSON -&gt; PGScalarValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; JSON
@@ -297,37 +297,37 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689254396"><span class="hs-identifier hs-var">usrVars</span></a></span><span>
-</span><span id="line-109"></span><span>      </span><span id="local-6989586621689254390"><span class="annot"><span class="annottext">prepArg :: PrepArg
-</span><a href="#local-6989586621689254390"><span class="hs-identifier hs-var hs-var">prepArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AltJ SessionVariables -&gt; PrepArg
+</span><a href="#local-6989586621689263075"><span class="hs-identifier hs-var">usrVars</span></a></span><span>
+</span><span id="line-109"></span><span>      </span><span id="local-6989586621689263069"><span class="annot"><span class="annottext">prepArg :: PrepArg
+</span><a href="#local-6989586621689263069"><span class="hs-identifier hs-var hs-var">prepArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AltJ SessionVariables -&gt; PrepArg
 forall a. ToPrepArg a =&gt; a -&gt; PrepArg
 </span><span class="hs-identifier hs-var">Q.toPrepVal</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariables -&gt; AltJ SessionVariables
 forall a. a -&gt; AltJ a
 </span><span class="hs-identifier hs-var">Q.AltJ</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689254396"><span class="hs-identifier hs-var">usrVars</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689263075"><span class="hs-identifier hs-var">usrVars</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Int -&gt; (PrepArg, PGScalarValue) -&gt; PrepArgMap -&gt; PrepArgMap
 forall a. Int -&gt; a -&gt; IntMap a -&gt; IntMap a
 </span><span class="hs-identifier hs-var">IntMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PrepArg
-</span><a href="#local-6989586621689254390"><span class="hs-identifier hs-var">prepArg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PGScalarValue
-</span><a href="#local-6989586621689254394"><span class="hs-identifier hs-var">usrVarsAsPgScalar</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PrepArgMap
-</span><a href="#local-6989586621689254395"><span class="hs-identifier hs-var">list</span></a></span><span>
+</span><a href="#local-6989586621689263069"><span class="hs-identifier hs-var">prepArg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PGScalarValue
+</span><a href="#local-6989586621689263073"><span class="hs-identifier hs-var">usrVarsAsPgScalar</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621689263074"><span class="hs-identifier hs-var">list</span></a></span><span>
 </span><span id="line-111"></span><span>
-</span><span id="line-112"></span><span id="local-6989586621689254530"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#getVarArgNum"><span class="hs-identifier hs-type">getVarArgNum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254530"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689254530"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>
+</span><span id="line-112"></span><span id="local-6989586621689263209"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#getVarArgNum"><span class="hs-identifier hs-type">getVarArgNum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263209"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689263209"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>
 </span><span id="line-113"></span><span id="getVarArgNum"><span class="annot"><span class="annottext">getVarArgNum :: Name -&gt; m Int
-</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#getVarArgNum"><span class="hs-identifier hs-var hs-var">getVarArgNum</span></a></span></span><span> </span><span id="local-6989586621689254386"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689254386"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-114"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span id="local-6989586621689254385"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254385"><span class="hs-identifier hs-var">curArgNum</span></a></span></span><span> </span><span id="local-6989586621689254384"><span class="annot"><span class="annottext">PlanVariables
-</span><a href="#local-6989586621689254384"><span class="hs-identifier hs-var">vars</span></a></span></span><span> </span><span id="local-6989586621689254383"><span class="annot"><span class="annottext">PrepArgMap
-</span><a href="#local-6989586621689254383"><span class="hs-identifier hs-var">prepped</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m PlanningSt
+</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#getVarArgNum"><span class="hs-identifier hs-var hs-var">getVarArgNum</span></a></span></span><span> </span><span id="local-6989586621689263065"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689263065"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-114"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span id="local-6989586621689263064"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689263064"><span class="hs-identifier hs-var">curArgNum</span></a></span></span><span> </span><span id="local-6989586621689263063"><span class="annot"><span class="annottext">PlanVariables
+</span><a href="#local-6989586621689263063"><span class="hs-identifier hs-var">vars</span></a></span></span><span> </span><span id="local-6989586621689263062"><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621689263062"><span class="hs-identifier hs-var">prepped</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m PlanningSt
 forall s (m :: * -&gt; *). MonadState s m =&gt; m s
 </span><span class="hs-identifier hs-var">get</span></span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">Name -&gt; PlanVariables -&gt; Maybe Int
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689254386"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">PlanVariables
-</span><a href="#local-6989586621689254384"><span class="hs-identifier hs-var">vars</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; m Int -&gt; m Int
+</span><a href="#local-6989586621689263065"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">PlanVariables
+</span><a href="#local-6989586621689263063"><span class="hs-identifier hs-var">vars</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; m Int -&gt; m Int
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">PlanningSt -&gt; m ()
@@ -336,7 +336,7 @@ forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; PlanVariables -&gt; PrepArgMap -&gt; PlanningSt
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-var">PlanningSt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254385"><span class="hs-identifier hs-var">curArgNum</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621689263064"><span class="hs-identifier hs-var">curArgNum</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Int -&gt; PlanVariables -&gt; PlanVariables
@@ -344,61 +344,61 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; HashMap k v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689254386"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254385"><span class="hs-identifier hs-var">curArgNum</span></a></span><span> </span><span class="annot"><span class="annottext">PlanVariables
-</span><a href="#local-6989586621689254384"><span class="hs-identifier hs-var">vars</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PrepArgMap
-</span><a href="#local-6989586621689254383"><span class="hs-identifier hs-var">prepped</span></a></span><span>
+</span><a href="#local-6989586621689263065"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689263064"><span class="hs-identifier hs-var">curArgNum</span></a></span><span> </span><span class="annot"><span class="annottext">PlanVariables
+</span><a href="#local-6989586621689263063"><span class="hs-identifier hs-var">vars</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621689263062"><span class="hs-identifier hs-var">prepped</span></a></span><span>
 </span><span id="line-117"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; m Int
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254385"><span class="hs-identifier hs-var">curArgNum</span></a></span><span>
+</span><a href="#local-6989586621689263064"><span class="hs-identifier hs-var">curArgNum</span></a></span><span>
 </span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span id="local-6989586621689254522"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#addPrepArg"><span class="hs-identifier hs-type">addPrepArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-120"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254522"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-119"></span><span id="local-6989586621689263201"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#addPrepArg"><span class="hs-identifier hs-type">addPrepArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-120"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263201"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-121"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-122"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.PrepArg</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html#PGScalarValue"><span class="hs-identifier hs-type">PGScalarValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-123"></span><span>  </span><span class="annot"><a href="#local-6989586621689254522"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><a href="#local-6989586621689263201"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-124"></span><span id="addPrepArg"><span class="annot"><span class="annottext">addPrepArg :: Int -&gt; (PrepArg, PGScalarValue) -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#addPrepArg"><span class="hs-identifier hs-var hs-var">addPrepArg</span></a></span></span><span> </span><span id="local-6989586621689254377"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254377"><span class="hs-identifier hs-var">argNum</span></a></span></span><span> </span><span id="local-6989586621689254376"><span class="annot"><span class="annottext">(PrepArg, PGScalarValue)
-</span><a href="#local-6989586621689254376"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-125"></span><span>  </span><span id="local-6989586621689254375"><span class="annot"><span class="annottext">PrepArgMap
-</span><a href="#local-6989586621689254375"><span class="hs-identifier hs-var">prepped</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(PlanningSt -&gt; PrepArgMap) -&gt; m PrepArgMap
+</span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#addPrepArg"><span class="hs-identifier hs-var hs-var">addPrepArg</span></a></span></span><span> </span><span id="local-6989586621689263056"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689263056"><span class="hs-identifier hs-var">argNum</span></a></span></span><span> </span><span id="local-6989586621689263055"><span class="annot"><span class="annottext">(PrepArg, PGScalarValue)
+</span><a href="#local-6989586621689263055"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621689263054"><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621689263054"><span class="hs-identifier hs-var">prepped</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(PlanningSt -&gt; PrepArgMap) -&gt; m PrepArgMap
 forall s (m :: * -&gt; *) a. MonadState s m =&gt; (s -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">gets</span></span><span> </span><span class="annot"><span class="annottext">PlanningSt -&gt; PrepArgMap
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#_psPrepped"><span class="hs-identifier hs-var hs-var">_psPrepped</span></a></span><span>
 </span><span id="line-126"></span><span>  </span><span class="annot"><span class="annottext">(PlanningSt -&gt; PlanningSt) -&gt; m ()
 forall s (m :: * -&gt; *). MonadState s m =&gt; (s -&gt; s) -&gt; m ()
-</span><span class="hs-identifier hs-var">modify</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689254372"><span class="annot"><span class="annottext">PlanningSt
-</span><a href="#local-6989586621689254372"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PlanningSt
-</span><a href="#local-6989586621689254372"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_psPrepped :: PrepArgMap
+</span><span class="hs-identifier hs-var">modify</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689263051"><span class="annot"><span class="annottext">PlanningSt
+</span><a href="#local-6989586621689263051"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PlanningSt
+</span><a href="#local-6989586621689263051"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_psPrepped :: PrepArgMap
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#_psPrepped"><span class="hs-identifier hs-var">_psPrepped</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; (PrepArg, PGScalarValue) -&gt; PrepArgMap -&gt; PrepArgMap
 forall a. Int -&gt; a -&gt; IntMap a -&gt; IntMap a
 </span><span class="hs-identifier hs-var">IntMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254377"><span class="hs-identifier hs-var">argNum</span></a></span><span> </span><span class="annot"><span class="annottext">(PrepArg, PGScalarValue)
-</span><a href="#local-6989586621689254376"><span class="hs-identifier hs-var">arg</span></a></span><span> </span><span class="annot"><span class="annottext">PrepArgMap
-</span><a href="#local-6989586621689254375"><span class="hs-identifier hs-var">prepped</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689263056"><span class="hs-identifier hs-var">argNum</span></a></span><span> </span><span class="annot"><span class="annottext">(PrepArg, PGScalarValue)
+</span><a href="#local-6989586621689263055"><span class="hs-identifier hs-var">arg</span></a></span><span> </span><span class="annot"><span class="annottext">PrepArgMap
+</span><a href="#local-6989586621689263054"><span class="hs-identifier hs-var">prepped</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span id="local-6989586621689254533"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#getNextArgNum"><span class="hs-identifier hs-type">getNextArgNum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689254533"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689254533"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>
+</span><span id="line-128"></span><span id="local-6989586621689263212"><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#getNextArgNum"><span class="hs-identifier hs-type">getNextArgNum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadState</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Prepare.html#PlanningSt"><span class="hs-identifier hs-type">PlanningSt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689263212"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689263212"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>
 </span><span id="line-129"></span><span id="getNextArgNum"><span class="annot"><span class="annottext">getNextArgNum :: m Int
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#getNextArgNum"><span class="hs-identifier hs-var hs-var">getNextArgNum</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-130"></span><span>  </span><span id="local-6989586621689254371"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254371"><span class="hs-identifier hs-var">curArgNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(PlanningSt -&gt; Int) -&gt; m Int
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621689263050"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689263050"><span class="hs-identifier hs-var">curArgNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(PlanningSt -&gt; Int) -&gt; m Int
 forall s (m :: * -&gt; *) a. MonadState s m =&gt; (s -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">gets</span></span><span> </span><span class="annot"><span class="annottext">PlanningSt -&gt; Int
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#_psArgNumber"><span class="hs-identifier hs-var hs-var">_psArgNumber</span></a></span><span>
 </span><span id="line-131"></span><span>  </span><span class="annot"><span class="annottext">(PlanningSt -&gt; PlanningSt) -&gt; m ()
 forall s (m :: * -&gt; *). MonadState s m =&gt; (s -&gt; s) -&gt; m ()
-</span><span class="hs-identifier hs-var">modify</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689254370"><span class="annot"><span class="annottext">PlanningSt
-</span><a href="#local-6989586621689254370"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PlanningSt
-</span><a href="#local-6989586621689254370"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_psArgNumber :: Int
+</span><span class="hs-identifier hs-var">modify</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689263049"><span class="annot"><span class="annottext">PlanningSt
+</span><a href="#local-6989586621689263049"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PlanningSt
+</span><a href="#local-6989586621689263049"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_psArgNumber :: Int
 </span><a href="Hasura.Backends.Postgres.Execute.Prepare.html#_psArgNumber"><span class="hs-identifier hs-var">_psArgNumber</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254371"><span class="hs-identifier hs-var">curArgNum</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621689263050"><span class="hs-identifier hs-var">curArgNum</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-132"></span><span>  </span><span class="annot"><span class="annottext">Int -&gt; m Int
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689254371"><span class="hs-identifier hs-var">curArgNum</span></a></span><span>
+</span><a href="#local-6989586621689263050"><span class="hs-identifier hs-var">curArgNum</span></a></span><span>
 </span><span id="line-133"></span></pre></body></html>
