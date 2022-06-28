@@ -6,7 +6,7 @@ import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
 export type InputFieldProps = FieldWrapperPassThroughProps & {
   name: string;
-  type?: 'text' | 'email' | 'password';
+  type?: 'text' | 'email' | 'password' | 'number';
   className?: string;
   icon?: ReactElement;
   iconPosition?: 'start' | 'end';
