@@ -14,7 +14,7 @@ export const SampleDBButton: React.FC<Props> = ({ onClick }) => {
         onClick();
       }}
     >
-      Use a sample read-only database
+      Get credentials
     </button>
   );
 };

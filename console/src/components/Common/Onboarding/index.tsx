@@ -11,7 +11,6 @@ import { Dispatch, ReduxState } from '../../../types';
 import { getLSItem, LS_KEYS, setLSItem } from '../../../utils/localStorage';
 import hasuraDarkIcon from './hasura_icon_dark.svg';
 import styles from './Onboarding.scss';
-import { SampleDBBanner } from '../../Services/Data/DataSources/SampleDatabase';
 
 type PopupLinkProps = {
   title: string;
@@ -127,14 +126,12 @@ interface OnboardingProps {
   dispatch: Dispatch;
   console_opts: ReduxState['telemetry']['console_opts'];
   metadata: ReduxState['metadata']['metadataObject'];
-  isExploringSampleDB?: boolean;
 }
 
 const Onboarding: React.FC<OnboardingProps> = ({
   dispatch,
   console_opts,
   metadata,
-  isExploringSampleDB,
 }) => {
   const [visible, setVisible] = React.useState(true);
 
@@ -146,7 +143,7 @@ const Onboarding: React.FC<OnboardingProps> = ({
     if (!metadata) {
       return true;
     }
-    return isExploringSampleDB || (isMetadataEmpty(metadata) && !shown);
+    return isMetadataEmpty(metadata) && !shown;
   }, [metadata, console_opts]);
 
   React.useEffect(() => {
@@ -169,10 +166,6 @@ const Onboarding: React.FC<OnboardingProps> = ({
     return null;
   }
 
-  const onboardingListFiltered = onboardingList.filter(
-    o => !isExploringSampleDB || o.id !== 'getting-started-video'
-  );
-
   return (
     <>
       {!visible && (
@@ -194,15 +187,10 @@ const Onboarding: React.FC<OnboardingProps> = ({
           </div>
           <div className={styles.popup_body}>
             <ul>
-              {metadata && !hasSources(metadata) && !isExploringSampleDB ? (
+              {metadata && !hasSources(metadata) ? (
                 <PopupLink {...connectDatabaseHelper} index={0} />
               ) : null}
-              {isExploringSampleDB && (
-                <div className="p-sm">
-                  <SampleDBBanner show={isExploringSampleDB} />
-                </div>
-              )}
-              {onboardingListFiltered.map((item, i) => (
+              {onboardingList.map((item, i) => (
                 <PopupLink {...item} key={item.id} index={i + 1} />
               ))}
             </ul>
