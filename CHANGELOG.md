@@ -2,9 +2,13 @@
 
 ## Next release
 
-server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
+### Bug fixes and improvements
+
+## v2.8.2
 
 ### Bug fixes and improvements
+
+- server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
 
 ## v2.9.0-beta.1
 
