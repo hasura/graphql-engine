@@ -2,8 +2,6 @@
 
 ## Next release
 
-server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
-
 ### Behaviour changes
 
 - cli: use 2-spaces indent for graphql content in metadata instead of tabs(#8469)
@@ -54,6 +52,12 @@ server: revert allow casting most postgres scalar types to strings in comparison
 - server: fix dropping column from a table that has update permissions (fix #8415)
 - console: Hide TimescaleDB internal schema from data tab
 - console: support naming convention in source customization for postgres DB [CON-297]
+
+## v2.8.2
+
+### Bug fixes and improvements
+
+- server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
 
 ## v2.9.0-beta.1
 
