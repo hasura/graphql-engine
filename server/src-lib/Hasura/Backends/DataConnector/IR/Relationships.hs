@@ -1,7 +1,7 @@
 module Hasura.Backends.DataConnector.IR.Relationships
   ( RelationshipName,
     mkRelationshipName,
-    TableRelationships,
+    TableRelationships (..),
     Relationship (..),
     RelationshipType (..),
     SourceColumnName,
@@ -28,7 +28,16 @@ mkRelationshipName relName = IR.N.Name @('IR.N.Relationship) $ toTxt relName
 
 type SourceTableName = IR.T.Name
 
-type TableRelationships = HashMap SourceTableName (HashMap RelationshipName Relationship)
+newtype TableRelationships = TableRelationships
+  {unTableRelationships :: HashMap SourceTableName (HashMap RelationshipName Relationship)}
+  deriving stock (Eq, Ord, Show, Data, Generic)
+  deriving newtype (ToJSON)
+
+instance Semigroup TableRelationships where
+  (TableRelationships l) <> (TableRelationships r) = TableRelationships $ HashMap.unionWith HashMap.union l r
+
+instance Monoid TableRelationships where
+  mempty = TableRelationships mempty
 
 data Relationship = Relationship
   { _rTargetTable :: IR.T.Name,

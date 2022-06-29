@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Query Tests for Data Connector Backend using a Mock Agent
-module Test.DataConnector.QueryMockAgentSpec
+module Test.DataConnector.MockAgent.BasicQuerySpec
   ( spec,
   )
 where
@@ -87,7 +87,7 @@ configuration: {}
 --------------------------------------------------------------------------------
 
 tests :: Context.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
-tests opts = describe "Mock Agent Queries" $ do
+tests opts = do
   describe "Basic Tests" $ do
     it "works with simple object query" $
       DataConnector.runMockedTest opts $

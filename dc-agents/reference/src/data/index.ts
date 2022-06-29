@@ -440,7 +440,7 @@ const schema: SchemaResponse = {
           name: "TrackId",
           type: ScalarType.Number,
           nullable: false,
-          description: "The ID of the playlist"
+          description: "The ID of the track"
         },
         {
           name: "Name",

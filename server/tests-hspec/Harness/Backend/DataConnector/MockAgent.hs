@@ -92,6 +92,105 @@ schema =
                 ],
               API.dtiPrimaryKey = Just "AlbumId",
               API.dtiDescription = Just "Collection of music albums created by artists"
+            },
+          API.TableInfo
+            { API.dtiName = API.TableName "Genre",
+              API.dtiColumns =
+                [ API.ColumnInfo
+                    { API.dciName = API.ColumnName "GenreId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "Genre primary key identifier"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Name",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The name of the genre"
+                    }
+                ],
+              API.dtiPrimaryKey = Just "GenreId",
+              API.dtiDescription = Just "Genres of music"
+            },
+          API.TableInfo
+            { API.dtiName = API.TableName "MediaType",
+              API.dtiColumns =
+                [ API.ColumnInfo
+                    { API.dciName = API.ColumnName "MediaTypeId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "Media Type primary key identifier"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Name",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The name of the media type format"
+                    }
+                ],
+              API.dtiPrimaryKey = Just "MediaTypeId",
+              API.dtiDescription = Just "Collection of media types that tracks can be encoded in"
+            },
+          API.TableInfo
+            { API.dtiName = API.TableName "Track",
+              API.dtiColumns =
+                [ API.ColumnInfo
+                    { API.dciName = API.ColumnName "TrackId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The ID of the track"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Name",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The name of the track"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "AlbumId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The ID of the album the track belongs to"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "MediaTypeId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The ID of the media type the track is encoded with"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "GenreId",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The ID of the genre of the track"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Composer",
+                      API.dciType = API.StringTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The name of the composer of the track"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Milliseconds",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = False,
+                      API.dciDescription = Just "The length of the track in milliseconds"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "Bytes",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The size of the track in bytes"
+                    },
+                  API.ColumnInfo
+                    { API.dciName = API.ColumnName "UnitPrice",
+                      API.dciType = API.NumberTy,
+                      API.dciNullable = True,
+                      API.dciDescription = Just "The price of the track"
+                    }
+                ],
+              API.dtiPrimaryKey = Just "TrackId",
+              API.dtiDescription = Just "Collection of music tracks"
             }
         ]
     }

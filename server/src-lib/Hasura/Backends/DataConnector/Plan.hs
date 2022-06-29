@@ -96,7 +96,7 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
 
     recordTableRelationship :: IR.T.Name -> IR.R.RelationshipName -> IR.R.Relationship -> CPS.WriterT IR.R.TableRelationships m ()
     recordTableRelationship sourceTableName relationshipName relationship =
-      CPS.tell $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
+      CPS.tell . IR.R.TableRelationships $ HashMap.singleton sourceTableName (HashMap.singleton relationshipName relationship)
 
     translateAnnSelect ::
       IR.T.Name ->
