@@ -67,6 +67,7 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 - server: add `*_update_source` API and modify behaviour of `*_add_source` API (See [docs](https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/source/) )
 - server: support limit in BigQuery computed fields (fix #8562)
 - server: improve GraphQL query parsing time and per-query memory allocation
+- server: parameterize array variables in queries and subscriptions
 - console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
 - console: add support for computed fields with session arg in permission builder (fix #8321)
 - console: add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)

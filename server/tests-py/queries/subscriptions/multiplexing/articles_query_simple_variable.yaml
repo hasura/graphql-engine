@@ -1,0 +1,9 @@
+query: |
+  subscription ($id: Int!) {
+    articles (where: {id: {_eq: $id}}) {
+      title
+      content
+    }
+  }
+variables:
+  id: 1
