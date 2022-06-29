@@ -48,6 +48,8 @@ run = do
       Spock.spockT id $ do
         Spock.get "/" $
           Spock.json $ Aeson.String "OK"
+        Spock.post "/hello" $
+          Spock.json $ Aeson.String "world"
         Spock.post "/echo" $ do
           req <- Spock.request
           body <- liftIO $ Wai.strictRequestBody req

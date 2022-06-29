@@ -1199,6 +1199,7 @@ test-suite tests-hspec
     Test.DataConnector.SelectPermissionsSpec
     Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
+    Test.EventTriggersRecreationSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
