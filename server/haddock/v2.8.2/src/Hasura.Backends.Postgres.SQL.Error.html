@@ -1,0 +1,440 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- | Postgres SQL Error</span><span>
+</span><span id="line-4"></span><span class="hs-comment">--</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- Functions and datatypes for interpreting Postgres errors.</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Error</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorType"><span class="hs-identifier">PGErrorType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#_PGDataException"><span class="hs-identifier">_PGDataException</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#_PGIntegrityConstraintViolation"><span class="hs-identifier">_PGIntegrityConstraintViolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#_PGSyntaxErrorOrAccessRuleViolation"><span class="hs-identifier">_PGSyntaxErrorOrAccessRuleViolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#_PGTransactionRollback"><span class="hs-identifier">_PGTransactionRollback</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#pgErrorType"><span class="hs-identifier">pgErrorType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorCode"><span class="hs-identifier">PGErrorCode</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#_PGErrorGeneric"><span class="hs-identifier">_PGErrorGeneric</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#_PGErrorSpecific"><span class="hs-identifier">_PGErrorSpecific</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGDataException"><span class="hs-identifier">PGDataException</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGIntegrityConstraintViolation"><span class="hs-identifier">PGIntegrityConstraintViolation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGSyntaxErrorOrAccessRuleViolation"><span class="hs-identifier">PGSyntaxErrorOrAccessRuleViolation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGTransactionRollback"><span class="hs-identifier">PGTransactionRollback</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens.TH</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makePrisms</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PG.Query.Connection</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- | The top-level error code type. Errors in Postgres are divided into different /classes/, which</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- are further subdivided into individual error codes. Even if a particular status code is not known</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- to the application, it&#8217;s possible to determine its class and handle it appropriately.</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">data</span><span> </span><span id="PGErrorType"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorType"><span class="hs-identifier hs-var">PGErrorType</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PGDataException"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGDataException"><span class="hs-identifier hs-var">PGDataException</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorCode"><span class="hs-identifier hs-type">PGErrorCode</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGDataException"><span class="hs-identifier hs-type">PGDataException</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGIntegrityConstraintViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGIntegrityConstraintViolation"><span class="hs-identifier hs-var">PGIntegrityConstraintViolation</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorCode"><span class="hs-identifier hs-type">PGErrorCode</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGIntegrityConstraintViolation"><span class="hs-identifier hs-type">PGIntegrityConstraintViolation</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGSyntaxErrorOrAccessRuleViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGSyntaxErrorOrAccessRuleViolation"><span class="hs-identifier hs-var">PGSyntaxErrorOrAccessRuleViolation</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorCode"><span class="hs-identifier hs-type">PGErrorCode</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGSyntaxErrorOrAccessRuleViolation"><span class="hs-identifier hs-type">PGSyntaxErrorOrAccessRuleViolation</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGTransactionRollback"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGTransactionRollback"><span class="hs-identifier hs-var">PGTransactionRollback</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorCode"><span class="hs-identifier hs-type">PGErrorCode</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGTransactionRollback"><span class="hs-identifier hs-type">PGTransactionRollback</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689050506"><span id="local-6989586621689050508"><span id="local-6989586621689050510"><span class="annot"><span class="annottext">Int -&gt; PGErrorType -&gt; ShowS
+[PGErrorType] -&gt; ShowS
+PGErrorType -&gt; String
+(Int -&gt; PGErrorType -&gt; ShowS)
+-&gt; (PGErrorType -&gt; String)
+-&gt; ([PGErrorType] -&gt; ShowS)
+-&gt; Show PGErrorType
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PGErrorType] -&gt; ShowS
+$cshowList :: [PGErrorType] -&gt; ShowS
+show :: PGErrorType -&gt; String
+$cshow :: PGErrorType -&gt; String
+showsPrec :: Int -&gt; PGErrorType -&gt; ShowS
+$cshowsPrec :: Int -&gt; PGErrorType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050501"><span id="local-6989586621689050503"><span class="annot"><span class="annottext">PGErrorType -&gt; PGErrorType -&gt; Bool
+(PGErrorType -&gt; PGErrorType -&gt; Bool)
+-&gt; (PGErrorType -&gt; PGErrorType -&gt; Bool) -&gt; Eq PGErrorType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PGErrorType -&gt; PGErrorType -&gt; Bool
+$c/= :: PGErrorType -&gt; PGErrorType -&gt; Bool
+== :: PGErrorType -&gt; PGErrorType -&gt; Bool
+$c== :: PGErrorType -&gt; PGErrorType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">data</span><span> </span><span id="PGErrorCode"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorCode"><span class="hs-identifier hs-var">PGErrorCode</span></a></span></span><span> </span><span id="local-6989586621689050524"><span class="annot"><a href="#local-6989586621689050524"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | represents errors that have the non-specific @000@ status code</span><span>
+</span><span id="line-40"></span><span>    </span><span id="PGErrorGeneric"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorGeneric"><span class="hs-identifier hs-var">PGErrorGeneric</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | represents errors with a known, more specific status code</span><span>
+</span><span id="line-42"></span><span>    </span><span id="PGErrorSpecific"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorSpecific"><span class="hs-identifier hs-var">PGErrorSpecific</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689050524"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689050492"><span id="local-6989586621689050494"><span id="local-6989586621689050496"><span class="annot"><span class="annottext">Int -&gt; PGErrorCode a -&gt; ShowS
+[PGErrorCode a] -&gt; ShowS
+PGErrorCode a -&gt; String
+(Int -&gt; PGErrorCode a -&gt; ShowS)
+-&gt; (PGErrorCode a -&gt; String)
+-&gt; ([PGErrorCode a] -&gt; ShowS)
+-&gt; Show (PGErrorCode a)
+forall a. Show a =&gt; Int -&gt; PGErrorCode a -&gt; ShowS
+forall a. Show a =&gt; [PGErrorCode a] -&gt; ShowS
+forall a. Show a =&gt; PGErrorCode a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PGErrorCode a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [PGErrorCode a] -&gt; ShowS
+show :: PGErrorCode a -&gt; String
+$cshow :: forall a. Show a =&gt; PGErrorCode a -&gt; String
+showsPrec :: Int -&gt; PGErrorCode a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; PGErrorCode a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050488"><span id="local-6989586621689050490"><span class="annot"><span class="annottext">PGErrorCode a -&gt; PGErrorCode a -&gt; Bool
+(PGErrorCode a -&gt; PGErrorCode a -&gt; Bool)
+-&gt; (PGErrorCode a -&gt; PGErrorCode a -&gt; Bool) -&gt; Eq (PGErrorCode a)
+forall a. Eq a =&gt; PGErrorCode a -&gt; PGErrorCode a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PGErrorCode a -&gt; PGErrorCode a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; PGErrorCode a -&gt; PGErrorCode a -&gt; Bool
+== :: PGErrorCode a -&gt; PGErrorCode a -&gt; Bool
+$c== :: forall a. Eq a =&gt; PGErrorCode a -&gt; PGErrorCode a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050484"><span id="local-6989586621689050486"><span class="annot"><span class="annottext">a -&gt; PGErrorCode b -&gt; PGErrorCode a
+(a -&gt; b) -&gt; PGErrorCode a -&gt; PGErrorCode b
+(forall a b. (a -&gt; b) -&gt; PGErrorCode a -&gt; PGErrorCode b)
+-&gt; (forall a b. a -&gt; PGErrorCode b -&gt; PGErrorCode a)
+-&gt; Functor PGErrorCode
+forall a b. a -&gt; PGErrorCode b -&gt; PGErrorCode a
+forall a b. (a -&gt; b) -&gt; PGErrorCode a -&gt; PGErrorCode b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; PGErrorCode b -&gt; PGErrorCode a
+$c&lt;$ :: forall a b. a -&gt; PGErrorCode b -&gt; PGErrorCode a
+fmap :: (a -&gt; b) -&gt; PGErrorCode a -&gt; PGErrorCode b
+$cfmap :: forall a b. (a -&gt; b) -&gt; PGErrorCode a -&gt; PGErrorCode b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">data</span><span> </span><span id="PGDataException"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGDataException"><span class="hs-identifier hs-var">PGDataException</span></a></span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PGInvalidDatetimeFormat"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidDatetimeFormat"><span class="hs-identifier hs-var">PGInvalidDatetimeFormat</span></a></span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGInvalidParameterValue"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidParameterValue"><span class="hs-identifier hs-var">PGInvalidParameterValue</span></a></span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGInvalidEscapeSequence"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidEscapeSequence"><span class="hs-identifier hs-var">PGInvalidEscapeSequence</span></a></span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGInvalidTextRepresentation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidTextRepresentation"><span class="hs-identifier hs-var">PGInvalidTextRepresentation</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689050473"><span id="local-6989586621689050475"><span id="local-6989586621689050477"><span class="annot"><span class="annottext">Int -&gt; PGDataException -&gt; ShowS
+[PGDataException] -&gt; ShowS
+PGDataException -&gt; String
+(Int -&gt; PGDataException -&gt; ShowS)
+-&gt; (PGDataException -&gt; String)
+-&gt; ([PGDataException] -&gt; ShowS)
+-&gt; Show PGDataException
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PGDataException] -&gt; ShowS
+$cshowList :: [PGDataException] -&gt; ShowS
+show :: PGDataException -&gt; String
+$cshow :: PGDataException -&gt; String
+showsPrec :: Int -&gt; PGDataException -&gt; ShowS
+$cshowsPrec :: Int -&gt; PGDataException -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050469"><span id="local-6989586621689050471"><span class="annot"><span class="annottext">PGDataException -&gt; PGDataException -&gt; Bool
+(PGDataException -&gt; PGDataException -&gt; Bool)
+-&gt; (PGDataException -&gt; PGDataException -&gt; Bool)
+-&gt; Eq PGDataException
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PGDataException -&gt; PGDataException -&gt; Bool
+$c/= :: PGDataException -&gt; PGDataException -&gt; Bool
+== :: PGDataException -&gt; PGDataException -&gt; Bool
+$c== :: PGDataException -&gt; PGDataException -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">data</span><span> </span><span id="PGIntegrityConstraintViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGIntegrityConstraintViolation"><span class="hs-identifier hs-var">PGIntegrityConstraintViolation</span></a></span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PGRestrictViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGRestrictViolation"><span class="hs-identifier hs-var">PGRestrictViolation</span></a></span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGNotNullViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGNotNullViolation"><span class="hs-identifier hs-var">PGNotNullViolation</span></a></span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGForeignKeyViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGForeignKeyViolation"><span class="hs-identifier hs-var">PGForeignKeyViolation</span></a></span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGUniqueViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGUniqueViolation"><span class="hs-identifier hs-var">PGUniqueViolation</span></a></span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGCheckViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGCheckViolation"><span class="hs-identifier hs-var">PGCheckViolation</span></a></span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGExclusionViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGExclusionViolation"><span class="hs-identifier hs-var">PGExclusionViolation</span></a></span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689050457"><span id="local-6989586621689050459"><span id="local-6989586621689050461"><span class="annot"><span class="annottext">Int -&gt; PGIntegrityConstraintViolation -&gt; ShowS
+[PGIntegrityConstraintViolation] -&gt; ShowS
+PGIntegrityConstraintViolation -&gt; String
+(Int -&gt; PGIntegrityConstraintViolation -&gt; ShowS)
+-&gt; (PGIntegrityConstraintViolation -&gt; String)
+-&gt; ([PGIntegrityConstraintViolation] -&gt; ShowS)
+-&gt; Show PGIntegrityConstraintViolation
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PGIntegrityConstraintViolation] -&gt; ShowS
+$cshowList :: [PGIntegrityConstraintViolation] -&gt; ShowS
+show :: PGIntegrityConstraintViolation -&gt; String
+$cshow :: PGIntegrityConstraintViolation -&gt; String
+showsPrec :: Int -&gt; PGIntegrityConstraintViolation -&gt; ShowS
+$cshowsPrec :: Int -&gt; PGIntegrityConstraintViolation -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050453"><span id="local-6989586621689050455"><span class="annot"><span class="annottext">PGIntegrityConstraintViolation
+-&gt; PGIntegrityConstraintViolation -&gt; Bool
+(PGIntegrityConstraintViolation
+ -&gt; PGIntegrityConstraintViolation -&gt; Bool)
+-&gt; (PGIntegrityConstraintViolation
+    -&gt; PGIntegrityConstraintViolation -&gt; Bool)
+-&gt; Eq PGIntegrityConstraintViolation
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PGIntegrityConstraintViolation
+-&gt; PGIntegrityConstraintViolation -&gt; Bool
+$c/= :: PGIntegrityConstraintViolation
+-&gt; PGIntegrityConstraintViolation -&gt; Bool
+== :: PGIntegrityConstraintViolation
+-&gt; PGIntegrityConstraintViolation -&gt; Bool
+$c== :: PGIntegrityConstraintViolation
+-&gt; PGIntegrityConstraintViolation -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">data</span><span> </span><span id="PGSyntaxErrorOrAccessRuleViolation"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGSyntaxErrorOrAccessRuleViolation"><span class="hs-identifier hs-var">PGSyntaxErrorOrAccessRuleViolation</span></a></span></span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PGUndefinedObject"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGUndefinedObject"><span class="hs-identifier hs-var">PGUndefinedObject</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGInvalidColumnReference"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidColumnReference"><span class="hs-identifier hs-var">PGInvalidColumnReference</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689050445"><span id="local-6989586621689050447"><span id="local-6989586621689050449"><span class="annot"><span class="annottext">Int -&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; ShowS
+[PGSyntaxErrorOrAccessRuleViolation] -&gt; ShowS
+PGSyntaxErrorOrAccessRuleViolation -&gt; String
+(Int -&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; ShowS)
+-&gt; (PGSyntaxErrorOrAccessRuleViolation -&gt; String)
+-&gt; ([PGSyntaxErrorOrAccessRuleViolation] -&gt; ShowS)
+-&gt; Show PGSyntaxErrorOrAccessRuleViolation
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PGSyntaxErrorOrAccessRuleViolation] -&gt; ShowS
+$cshowList :: [PGSyntaxErrorOrAccessRuleViolation] -&gt; ShowS
+show :: PGSyntaxErrorOrAccessRuleViolation -&gt; String
+$cshow :: PGSyntaxErrorOrAccessRuleViolation -&gt; String
+showsPrec :: Int -&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; ShowS
+$cshowsPrec :: Int -&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050441"><span id="local-6989586621689050443"><span class="annot"><span class="annottext">PGSyntaxErrorOrAccessRuleViolation
+-&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; Bool
+(PGSyntaxErrorOrAccessRuleViolation
+ -&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; Bool)
+-&gt; (PGSyntaxErrorOrAccessRuleViolation
+    -&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; Bool)
+-&gt; Eq PGSyntaxErrorOrAccessRuleViolation
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PGSyntaxErrorOrAccessRuleViolation
+-&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; Bool
+$c/= :: PGSyntaxErrorOrAccessRuleViolation
+-&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; Bool
+== :: PGSyntaxErrorOrAccessRuleViolation
+-&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; Bool
+$c== :: PGSyntaxErrorOrAccessRuleViolation
+-&gt; PGSyntaxErrorOrAccessRuleViolation -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">data</span><span> </span><span id="PGTransactionRollback"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGTransactionRollback"><span class="hs-identifier hs-var">PGTransactionRollback</span></a></span></span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PGSerializationFailure"><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGSerializationFailure"><span class="hs-identifier hs-var">PGSerializationFailure</span></a></span></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689050434"><span id="local-6989586621689050436"><span id="local-6989586621689050438"><span class="annot"><span class="annottext">Int -&gt; PGTransactionRollback -&gt; ShowS
+[PGTransactionRollback] -&gt; ShowS
+PGTransactionRollback -&gt; String
+(Int -&gt; PGTransactionRollback -&gt; ShowS)
+-&gt; (PGTransactionRollback -&gt; String)
+-&gt; ([PGTransactionRollback] -&gt; ShowS)
+-&gt; Show PGTransactionRollback
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PGTransactionRollback] -&gt; ShowS
+$cshowList :: [PGTransactionRollback] -&gt; ShowS
+show :: PGTransactionRollback -&gt; String
+$cshow :: PGTransactionRollback -&gt; String
+showsPrec :: Int -&gt; PGTransactionRollback -&gt; ShowS
+$cshowsPrec :: Int -&gt; PGTransactionRollback -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050430"><span id="local-6989586621689050432"><span class="annot"><span class="annottext">PGTransactionRollback -&gt; PGTransactionRollback -&gt; Bool
+(PGTransactionRollback -&gt; PGTransactionRollback -&gt; Bool)
+-&gt; (PGTransactionRollback -&gt; PGTransactionRollback -&gt; Bool)
+-&gt; Eq PGTransactionRollback
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PGTransactionRollback -&gt; PGTransactionRollback -&gt; Bool
+$c/= :: PGTransactionRollback -&gt; PGTransactionRollback -&gt; Bool
+== :: PGTransactionRollback -&gt; PGTransactionRollback -&gt; Bool
+$c== :: PGTransactionRollback -&gt; PGTransactionRollback -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-special">$(</span><span id="_PGTransactionRollback"><span id="_PGSyntaxErrorOrAccessRuleViolation"><span id="_PGIntegrityConstraintViolation"><span id="_PGDataException"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGErrorType</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span class="hs-special">$(</span><span id="local-6989586621689050429"><span id="_PGErrorSpecific"><span id="_PGErrorGeneric"><span id="local-6989586621689050524"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGErrorCode</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#pgErrorType"><span class="hs-identifier hs-type">pgErrorType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.PGStmtErrDetail</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorType"><span class="hs-identifier hs-type">PGErrorType</span></a></span><span>
+</span><span id="line-74"></span><span id="pgErrorType"><span class="annot"><span class="annottext">pgErrorType :: PGStmtErrDetail -&gt; Maybe PGErrorType
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#pgErrorType"><span class="hs-identifier hs-var hs-var">pgErrorType</span></a></span></span><span> </span><span id="local-6989586621689050428"><span class="annot"><span class="annottext">PGStmtErrDetail
+</span><a href="#local-6989586621689050428"><span class="hs-identifier hs-var">errorDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; Maybe PGErrorType
+</span><a href="#local-6989586621689050427"><span class="hs-identifier hs-var">parseTypes</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe PGErrorType) -&gt; Maybe Text -&gt; Maybe PGErrorType
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">PGStmtErrDetail -&gt; Maybe Text
+</span><span class="hs-identifier hs-var hs-var">Q.edStatusCode</span></span><span> </span><span class="annot"><span class="annottext">PGStmtErrDetail
+</span><a href="#local-6989586621689050428"><span class="hs-identifier hs-var">errorDetails</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621689050427"><span class="annot"><span class="annottext">parseTypes :: Text -&gt; Maybe PGErrorType
+</span><a href="#local-6989586621689050427"><span class="hs-identifier hs-var hs-var">parseTypes</span></a></span></span><span> </span><span id="local-6989586621689050424"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050424"><span class="hs-identifier hs-var">fullCodeText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">[Maybe PGErrorType] -&gt; Maybe PGErrorType
+forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
+</span><a href="Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span>
+</span><span id="line-79"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; (Maybe (PGErrorCode PGDataException) -&gt; PGErrorType)
+-&gt; [Maybe (PGErrorCode PGDataException)]
+-&gt; Maybe PGErrorType
+forall a b. Text -&gt; (Maybe a -&gt; b) -&gt; [Maybe a] -&gt; Maybe b
+</span><a href="#local-6989586621689050422"><span class="hs-identifier hs-var">withClass</span></a></span><span>
+</span><span id="line-80"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;22&quot;</span></span><span>
+</span><span id="line-81"></span><span>            </span><span class="annot"><span class="annottext">Maybe (PGErrorCode PGDataException) -&gt; PGErrorType
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGDataException"><span class="hs-identifier hs-var">PGDataException</span></a></span><span>
+</span><span id="line-82"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text -&gt; PGDataException -&gt; Maybe (PGErrorCode PGDataException)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;007&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGDataException
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidDatetimeFormat"><span class="hs-identifier hs-var">PGInvalidDatetimeFormat</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-83"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; PGDataException -&gt; Maybe (PGErrorCode PGDataException)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;023&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGDataException
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidParameterValue"><span class="hs-identifier hs-var">PGInvalidParameterValue</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-84"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; PGDataException -&gt; Maybe (PGErrorCode PGDataException)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;025&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGDataException
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidEscapeSequence"><span class="hs-identifier hs-var">PGInvalidEscapeSequence</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; PGDataException -&gt; Maybe (PGErrorCode PGDataException)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;P02&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGDataException
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidTextRepresentation"><span class="hs-identifier hs-var">PGInvalidTextRepresentation</span></a></span><span>
+</span><span id="line-86"></span><span>            </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; (Maybe (PGErrorCode PGIntegrityConstraintViolation)
+    -&gt; PGErrorType)
+-&gt; [Maybe (PGErrorCode PGIntegrityConstraintViolation)]
+-&gt; Maybe PGErrorType
+forall a b. Text -&gt; (Maybe a -&gt; b) -&gt; [Maybe a] -&gt; Maybe b
+</span><a href="#local-6989586621689050422"><span class="hs-identifier hs-var">withClass</span></a></span><span>
+</span><span id="line-88"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;23&quot;</span></span><span>
+</span><span id="line-89"></span><span>            </span><span class="annot"><span class="annottext">Maybe (PGErrorCode PGIntegrityConstraintViolation) -&gt; PGErrorType
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGIntegrityConstraintViolation"><span class="hs-identifier hs-var">PGIntegrityConstraintViolation</span></a></span><span>
+</span><span id="line-90"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; PGIntegrityConstraintViolation
+-&gt; Maybe (PGErrorCode PGIntegrityConstraintViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;001&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGIntegrityConstraintViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGRestrictViolation"><span class="hs-identifier hs-var">PGRestrictViolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>              </span><span class="annot"><span class="annottext">Text
+-&gt; PGIntegrityConstraintViolation
+-&gt; Maybe (PGErrorCode PGIntegrityConstraintViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;502&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGIntegrityConstraintViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGNotNullViolation"><span class="hs-identifier hs-var">PGNotNullViolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-92"></span><span>              </span><span class="annot"><span class="annottext">Text
+-&gt; PGIntegrityConstraintViolation
+-&gt; Maybe (PGErrorCode PGIntegrityConstraintViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;503&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGIntegrityConstraintViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGForeignKeyViolation"><span class="hs-identifier hs-var">PGForeignKeyViolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-93"></span><span>              </span><span class="annot"><span class="annottext">Text
+-&gt; PGIntegrityConstraintViolation
+-&gt; Maybe (PGErrorCode PGIntegrityConstraintViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;505&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGIntegrityConstraintViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGUniqueViolation"><span class="hs-identifier hs-var">PGUniqueViolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>              </span><span class="annot"><span class="annottext">Text
+-&gt; PGIntegrityConstraintViolation
+-&gt; Maybe (PGErrorCode PGIntegrityConstraintViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;514&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGIntegrityConstraintViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGCheckViolation"><span class="hs-identifier hs-var">PGCheckViolation</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-95"></span><span>              </span><span class="annot"><span class="annottext">Text
+-&gt; PGIntegrityConstraintViolation
+-&gt; Maybe (PGErrorCode PGIntegrityConstraintViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;P01&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGIntegrityConstraintViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGExclusionViolation"><span class="hs-identifier hs-var">PGExclusionViolation</span></a></span><span>
+</span><span id="line-96"></span><span>            </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; (Maybe (PGErrorCode PGTransactionRollback) -&gt; PGErrorType)
+-&gt; [Maybe (PGErrorCode PGTransactionRollback)]
+-&gt; Maybe PGErrorType
+forall a b. Text -&gt; (Maybe a -&gt; b) -&gt; [Maybe a] -&gt; Maybe b
+</span><a href="#local-6989586621689050422"><span class="hs-identifier hs-var">withClass</span></a></span><span>
+</span><span id="line-98"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;40&quot;</span></span><span>
+</span><span id="line-99"></span><span>            </span><span class="annot"><span class="annottext">Maybe (PGErrorCode PGTransactionRollback) -&gt; PGErrorType
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGTransactionRollback"><span class="hs-identifier hs-var">PGTransactionRollback</span></a></span><span>
+</span><span id="line-100"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; PGTransactionRollback
+-&gt; Maybe (PGErrorCode PGTransactionRollback)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;001&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGTransactionRollback
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGSerializationFailure"><span class="hs-identifier hs-var">PGSerializationFailure</span></a></span><span>
+</span><span id="line-101"></span><span>            </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-102"></span><span>          </span><span class="annot"><span class="annottext">Text
+-&gt; (Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation)
+    -&gt; PGErrorType)
+-&gt; [Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation)]
+-&gt; Maybe PGErrorType
+forall a b. Text -&gt; (Maybe a -&gt; b) -&gt; [Maybe a] -&gt; Maybe b
+</span><a href="#local-6989586621689050422"><span class="hs-identifier hs-var">withClass</span></a></span><span>
+</span><span id="line-103"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;42&quot;</span></span><span>
+</span><span id="line-104"></span><span>            </span><span class="annot"><span class="annottext">Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation)
+-&gt; PGErrorType
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGSyntaxErrorOrAccessRuleViolation"><span class="hs-identifier hs-var">PGSyntaxErrorOrAccessRuleViolation</span></a></span><span>
+</span><span id="line-105"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Text
+-&gt; PGSyntaxErrorOrAccessRuleViolation
+-&gt; Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;704&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGSyntaxErrorOrAccessRuleViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGUndefinedObject"><span class="hs-identifier hs-var">PGUndefinedObject</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>              </span><span class="annot"><span class="annottext">Text
+-&gt; PGSyntaxErrorOrAccessRuleViolation
+-&gt; Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation)
+forall a. Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var">code</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;P10&quot;</span></span><span> </span><span class="annot"><span class="annottext">PGSyntaxErrorOrAccessRuleViolation
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGInvalidColumnReference"><span class="hs-identifier hs-var">PGInvalidColumnReference</span></a></span><span>
+</span><span id="line-107"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-108"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-109"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-110"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621689050420"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050420"><span class="hs-identifier hs-var">classText</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689050419"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050419"><span class="hs-identifier hs-var">codeText</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; (Text, Text)
+</span><span class="hs-identifier hs-var">T.splitAt</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050424"><span class="hs-identifier hs-var">fullCodeText</span></a></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span>        </span><span id="local-6989586621689050533"><span id="local-6989586621689050534"><span class="annot"><a href="#local-6989586621689050422"><span class="hs-identifier hs-type">withClass</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689050534"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689050533"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689050534"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689050533"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-113"></span><span>        </span><span id="local-6989586621689050422"><span class="annot"><span class="annottext">withClass :: Text -&gt; (Maybe a -&gt; b) -&gt; [Maybe a] -&gt; Maybe b
+</span><a href="#local-6989586621689050422"><span class="hs-identifier hs-var hs-var">withClass</span></a></span></span><span> </span><span id="local-6989586621689050417"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050417"><span class="hs-identifier hs-var">expectedClassText</span></a></span></span><span> </span><span id="local-6989586621689050416"><span class="annot"><span class="annottext">Maybe a -&gt; b
+</span><a href="#local-6989586621689050416"><span class="hs-identifier hs-var">mkClass</span></a></span></span><span> </span><span id="local-6989586621689050415"><span class="annot"><span class="annottext">[Maybe a]
+</span><a href="#local-6989586621689050415"><span class="hs-identifier hs-var">codes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-114"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; Maybe ()
+forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
+</span><span class="hs-identifier hs-var">guard</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050420"><span class="hs-identifier hs-var">classText</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050417"><span class="hs-identifier hs-var">expectedClassText</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe () -&gt; b -&gt; Maybe b
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; b
+</span><a href="#local-6989586621689050416"><span class="hs-identifier hs-var">mkClass</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Maybe a] -&gt; Maybe a
+forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
+</span><a href="Hasura.Prelude.html#choice"><span class="hs-identifier hs-var">choice</span></a></span><span> </span><span class="annot"><span class="annottext">[Maybe a]
+</span><a href="#local-6989586621689050415"><span class="hs-identifier hs-var">codes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span>        </span><span id="local-6989586621689050532"><span class="annot"><a href="#local-6989586621689050421"><span class="hs-identifier hs-type">code</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689050532"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorCode"><span class="hs-identifier hs-type">PGErrorCode</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689050532"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-117"></span><span>        </span><span id="local-6989586621689050421"><span class="annot"><span class="annottext">code :: Text -&gt; a -&gt; Maybe (PGErrorCode a)
+</span><a href="#local-6989586621689050421"><span class="hs-identifier hs-var hs-var">code</span></a></span></span><span> </span><span id="local-6989586621689050413"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050413"><span class="hs-identifier hs-var">expectedCodeText</span></a></span></span><span> </span><span id="local-6989586621689050412"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689050412"><span class="hs-identifier hs-var">codeValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-118"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; Maybe ()
+forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
+</span><span class="hs-identifier hs-var">guard</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050419"><span class="hs-identifier hs-var">codeText</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689050413"><span class="hs-identifier hs-var">expectedCodeText</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe () -&gt; PGErrorCode a -&gt; Maybe (PGErrorCode a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; PGErrorCode a
+forall a. a -&gt; PGErrorCode a
+</span><a href="Hasura.Backends.Postgres.SQL.Error.html#PGErrorSpecific"><span class="hs-identifier hs-var">PGErrorSpecific</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689050412"><span class="hs-identifier hs-var">codeValue</span></a></span><span>
+</span><span id="line-119"></span></pre></body></html>

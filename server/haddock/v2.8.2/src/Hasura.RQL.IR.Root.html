@@ -1,0 +1,526 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.IR.Root</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#SourceConfigWith"><span class="hs-identifier">SourceConfigWith</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier">RootField</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationDB"><span class="hs-identifier">MutationDB</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#ActionQuery"><span class="hs-identifier">ActionQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#ActionMutation"><span class="hs-identifier">ActionMutation</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier">QueryRootField</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier">MutationRootField</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#SubscriptionRootField"><span class="hs-identifier">SubscriptionRootField</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryDBRoot"><span class="hs-identifier">QueryDBRoot</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationDBRoot"><span class="hs-identifier">MutationDBRoot</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier">RemoteRelationshipField</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Aeson.Ordered.html"><span class="hs-identifier">Data.Aeson.Ordered</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">JO</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html"><span class="hs-identifier">Hasura.RQL.IR.Action</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html"><span class="hs-identifier">Hasura.RQL.IR.Delete</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Insert.html"><span class="hs-identifier">Hasura.RQL.IR.Insert</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html"><span class="hs-identifier">Hasura.RQL.IR.RemoteSchema</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Update.html"><span class="hs-identifier">Hasura.RQL.IR.Update</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html"><span class="hs-identifier">Hasura.RQL.Types.QueryTags</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html"><span class="hs-identifier">Hasura.RQL.Types.RemoteSchema</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html"><span class="hs-identifier">Hasura.SQL.AnyBackend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AB</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">data</span><span> </span><span id="SourceConfigWith"><span class="annot"><a href="Hasura.RQL.IR.Root.html#SourceConfigWith"><span class="hs-identifier hs-var">SourceConfigWith</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140924"><span class="annot"><a href="#local-6989586621689140924"><span class="hs-identifier hs-type">db</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140923"><span class="annot"><a href="#local-6989586621689140923"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SourceConfigWith"><span class="annot"><a href="Hasura.RQL.IR.Root.html#SourceConfigWith"><span class="hs-identifier hs-var">SourceConfigWith</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">RQL.SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140923"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">RQL.QueryTagsConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689140924"><span class="hs-identifier hs-type">db</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140923"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">data</span><span> </span><span id="RootField"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-var">RootField</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140919"><span class="annot"><a href="#local-6989586621689140919"><span class="hs-identifier hs-type">db</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689140918"><span class="annot"><a href="#local-6989586621689140918"><span class="hs-identifier hs-type">remote</span></a></span></span><span> </span><span id="local-6989586621689140917"><span class="annot"><a href="#local-6989586621689140917"><span class="hs-identifier hs-type">action</span></a></span></span><span> </span><span id="local-6989586621689140916"><span class="annot"><a href="#local-6989586621689140916"><span class="hs-identifier hs-type">raw</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621689140912"><span id="local-6989586621689140913"><span id="local-6989586621689140914"><span id="local-6989586621689140915"><span id="RFDB"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFDB"><span class="hs-identifier hs-var">RFDB</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">RQL.SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#SourceConfigWith"><span class="hs-identifier hs-type">SourceConfigWith</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140915"><span class="hs-identifier hs-type">db</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-type">RootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140915"><span class="hs-identifier hs-type">db</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140914"><span class="hs-identifier hs-type">remote</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140913"><span class="hs-identifier hs-type">action</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140912"><span class="hs-identifier hs-type">raw</span></a></span></span></span></span></span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621689140905"><span id="local-6989586621689140906"><span id="local-6989586621689140907"><span id="local-6989586621689140908"><span id="RFRemote"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFRemote"><span class="hs-identifier hs-var">RFRemote</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689140908"><span class="hs-identifier hs-type">remote</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-type">RootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140907"><span class="hs-identifier hs-type">db</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140908"><span class="hs-identifier hs-type">remote</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140906"><span class="hs-identifier hs-type">action</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140905"><span class="hs-identifier hs-type">raw</span></a></span></span></span></span></span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621689140900"><span id="local-6989586621689140901"><span id="local-6989586621689140902"><span id="local-6989586621689140903"><span id="RFAction"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFAction"><span class="hs-identifier hs-var">RFAction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689140903"><span class="hs-identifier hs-type">action</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-type">RootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140902"><span class="hs-identifier hs-type">db</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140901"><span class="hs-identifier hs-type">remote</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140903"><span class="hs-identifier hs-type">action</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140900"><span class="hs-identifier hs-type">raw</span></a></span></span></span></span></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621689140895"><span id="local-6989586621689140896"><span id="local-6989586621689140897"><span id="local-6989586621689140898"><span id="RFRaw"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RFRaw"><span class="hs-identifier hs-var">RFRaw</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689140898"><span class="hs-identifier hs-type">raw</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-type">RootField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140897"><span class="hs-identifier hs-type">db</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140896"><span class="hs-identifier hs-type">remote</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140895"><span class="hs-identifier hs-type">action</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140898"><span class="hs-identifier hs-type">raw</span></a></span></span></span></span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span id="local-6989586621689140892"><span id="local-6989586621689140893"></span></span><span class="hs-keyword">data</span><span> </span><span id="MutationDB"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationDB"><span class="hs-identifier hs-var">MutationDB</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140891"><span class="annot"><a href="#local-6989586621689140891"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140890"><span class="annot"><a href="#local-6989586621689140890"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689140889"><span class="annot"><a href="#local-6989586621689140889"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MDBInsert"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBInsert"><span class="hs-identifier hs-var">MDBInsert</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Insert.html#AnnotatedInsert"><span class="hs-identifier hs-type">AnnotatedInsert</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140891"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140890"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140889"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MDBUpdate"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBUpdate"><span class="hs-identifier hs-var">MDBUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Update.html#AnnotatedUpdateG"><span class="hs-identifier hs-type">AnnotatedUpdateG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140891"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140890"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140889"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MDBDelete"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBDelete"><span class="hs-identifier hs-var">MDBDelete</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDelG"><span class="hs-identifier hs-type">AnnDelG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140891"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140890"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140889"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | This represents a VOLATILE function, and is AnnSimpleSelG for easy</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-comment">-- re-use of non-VOLATILE function tracking code.</span><span>
+</span><span id="line-52"></span><span>    </span><span id="MDBFunction"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBFunction"><span class="hs-identifier hs-var">MDBFunction</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#JsonAggSelect"><span class="hs-identifier hs-type">RQL.JsonAggSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnSimpleSelectG"><span class="hs-identifier hs-type">AnnSimpleSelectG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140891"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140890"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140889"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. MutationDB b r v -&gt; Rep (MutationDB b r v) x)
+-&gt; (forall x. Rep (MutationDB b r v) x -&gt; MutationDB b r v)
+-&gt; Generic (MutationDB b r v)
+forall x. Rep (MutationDB b r v) x -&gt; MutationDB b r v
+forall x. MutationDB b r v -&gt; Rep (MutationDB b r v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) r v x.
+Rep (MutationDB b r v) x -&gt; MutationDB b r v
+forall (b :: BackendType) r v x.
+MutationDB b r v -&gt; Rep (MutationDB b r v) x
+$cto :: forall (b :: BackendType) r v x.
+Rep (MutationDB b r v) x -&gt; MutationDB b r v
+$cfrom :: forall (b :: BackendType) r v x.
+MutationDB b r v -&gt; Rep (MutationDB b r v) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689140873"><span id="local-6989586621689140875"><span class="annot"><span class="annottext">a -&gt; MutationDB b r b -&gt; MutationDB b r a
+(a -&gt; b) -&gt; MutationDB b r a -&gt; MutationDB b r b
+(forall a b. (a -&gt; b) -&gt; MutationDB b r a -&gt; MutationDB b r b)
+-&gt; (forall a b. a -&gt; MutationDB b r b -&gt; MutationDB b r a)
+-&gt; Functor (MutationDB b r)
+forall a b. a -&gt; MutationDB b r b -&gt; MutationDB b r a
+forall a b. (a -&gt; b) -&gt; MutationDB b r a -&gt; MutationDB b r b
+forall (b :: BackendType) r a b.
+Backend b =&gt;
+a -&gt; MutationDB b r b -&gt; MutationDB b r a
+forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; MutationDB b r a -&gt; MutationDB b r b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; MutationDB b r b -&gt; MutationDB b r a
+$c&lt;$ :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+a -&gt; MutationDB b r b -&gt; MutationDB b r a
+fmap :: (a -&gt; b) -&gt; MutationDB b r a -&gt; MutationDB b r b
+$cfmap :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b) -&gt; MutationDB b r a -&gt; MutationDB b r b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689140838"><span id="local-6989586621689140840"><span id="local-6989586621689140842"><span id="local-6989586621689140844"><span id="local-6989586621689140846"><span id="local-6989586621689140848"><span id="local-6989586621689140850"><span id="local-6989586621689140852"><span id="local-6989586621689140854"><span id="local-6989586621689140856"><span id="local-6989586621689140858"><span id="local-6989586621689140860"><span id="local-6989586621689140862"><span id="local-6989586621689140864"><span id="local-6989586621689140866"><span id="local-6989586621689140868"><span id="local-6989586621689140870"><span class="annot"><span class="annottext">MutationDB b r a -&gt; Bool
+(a -&gt; m) -&gt; MutationDB b r a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+(forall m. Monoid m =&gt; MutationDB b r m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; MutationDB b r a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; MutationDB b r a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a)
+-&gt; (forall a. MutationDB b r a -&gt; [a])
+-&gt; (forall a. MutationDB b r a -&gt; Bool)
+-&gt; (forall a. MutationDB b r a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; MutationDB b r a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; MutationDB b r a -&gt; a)
+-&gt; (forall a. Ord a =&gt; MutationDB b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; MutationDB b r a -&gt; a)
+-&gt; (forall a. Num a =&gt; MutationDB b r a -&gt; a)
+-&gt; Foldable (MutationDB b r)
+forall a. Eq a =&gt; a -&gt; MutationDB b r a -&gt; Bool
+forall a. Num a =&gt; MutationDB b r a -&gt; a
+forall a. Ord a =&gt; MutationDB b r a -&gt; a
+forall m. Monoid m =&gt; MutationDB b r m -&gt; m
+forall a. MutationDB b r a -&gt; Bool
+forall a. MutationDB b r a -&gt; Int
+forall a. MutationDB b r a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; MutationDB b r a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+forall (b :: BackendType) r a.
+(Backend b, Eq a) =&gt;
+a -&gt; MutationDB b r a -&gt; Bool
+forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+MutationDB b r a -&gt; a
+forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+MutationDB b r a -&gt; a
+forall (b :: BackendType) r m.
+(Backend b, Monoid m) =&gt;
+MutationDB b r m -&gt; m
+forall (b :: BackendType) r a.
+Backend b =&gt;
+MutationDB b r a -&gt; Bool
+forall (b :: BackendType) r a. Backend b =&gt; MutationDB b r a -&gt; Int
+forall (b :: BackendType) r a. Backend b =&gt; MutationDB b r a -&gt; [a]
+forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a
+forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; MutationDB b r a -&gt; m
+forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: MutationDB b r a -&gt; a
+$cproduct :: forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+MutationDB b r a -&gt; a
+sum :: MutationDB b r a -&gt; a
+$csum :: forall (b :: BackendType) r a.
+(Backend b, Num a) =&gt;
+MutationDB b r a -&gt; a
+minimum :: MutationDB b r a -&gt; a
+$cminimum :: forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+MutationDB b r a -&gt; a
+maximum :: MutationDB b r a -&gt; a
+$cmaximum :: forall (b :: BackendType) r a.
+(Backend b, Ord a) =&gt;
+MutationDB b r a -&gt; a
+elem :: a -&gt; MutationDB b r a -&gt; Bool
+$celem :: forall (b :: BackendType) r a.
+(Backend b, Eq a) =&gt;
+a -&gt; MutationDB b r a -&gt; Bool
+length :: MutationDB b r a -&gt; Int
+$clength :: forall (b :: BackendType) r a. Backend b =&gt; MutationDB b r a -&gt; Int
+null :: MutationDB b r a -&gt; Bool
+$cnull :: forall (b :: BackendType) r a.
+Backend b =&gt;
+MutationDB b r a -&gt; Bool
+toList :: MutationDB b r a -&gt; [a]
+$ctoList :: forall (b :: BackendType) r a. Backend b =&gt; MutationDB b r a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a
+$cfoldl1 :: forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a
+$cfoldr1 :: forall (b :: BackendType) r a.
+Backend b =&gt;
+(a -&gt; a -&gt; a) -&gt; MutationDB b r a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+$cfoldl' :: forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+$cfoldl :: forall (b :: BackendType) r b a.
+Backend b =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+$cfoldr' :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+$cfoldr :: forall (b :: BackendType) r a b.
+Backend b =&gt;
+(a -&gt; b -&gt; b) -&gt; b -&gt; MutationDB b r a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; MutationDB b r a -&gt; m
+$cfoldMap' :: forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; MutationDB b r a -&gt; m
+foldMap :: (a -&gt; m) -&gt; MutationDB b r a -&gt; m
+$cfoldMap :: forall (b :: BackendType) r m a.
+(Backend b, Monoid m) =&gt;
+(a -&gt; m) -&gt; MutationDB b r a -&gt; m
+fold :: MutationDB b r m -&gt; m
+$cfold :: forall (b :: BackendType) r m.
+(Backend b, Monoid m) =&gt;
+MutationDB b r m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689140827"><span id="local-6989586621689140829"><span id="local-6989586621689140831"><span id="local-6989586621689140833"><span class="annot"><span class="annottext">Functor (MutationDB b r)
+Foldable (MutationDB b r)
+Functor (MutationDB b r)
+-&gt; Foldable (MutationDB b r)
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; MutationDB b r a -&gt; f (MutationDB b r b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    MutationDB b r (f a) -&gt; f (MutationDB b r a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; MutationDB b r a -&gt; m (MutationDB b r b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    MutationDB b r (m a) -&gt; m (MutationDB b r a))
+-&gt; Traversable (MutationDB b r)
+(a -&gt; f b) -&gt; MutationDB b r a -&gt; f (MutationDB b r b)
+forall (b :: BackendType) r. Backend b =&gt; Functor (MutationDB b r)
+forall (b :: BackendType) r. Backend b =&gt; Foldable (MutationDB b r)
+forall (b :: BackendType) r (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+MutationDB b r (m a) -&gt; m (MutationDB b r a)
+forall (b :: BackendType) r (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+MutationDB b r (f a) -&gt; f (MutationDB b r a)
+forall (b :: BackendType) r (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; MutationDB b r a -&gt; m (MutationDB b r b)
+forall (b :: BackendType) r (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; MutationDB b r a -&gt; f (MutationDB b r b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+MutationDB b r (m a) -&gt; m (MutationDB b r a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+MutationDB b r (f a) -&gt; f (MutationDB b r a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; MutationDB b r a -&gt; m (MutationDB b r b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; MutationDB b r a -&gt; f (MutationDB b r b)
+sequence :: MutationDB b r (m a) -&gt; m (MutationDB b r a)
+$csequence :: forall (b :: BackendType) r (m :: * -&gt; *) a.
+(Backend b, Monad m) =&gt;
+MutationDB b r (m a) -&gt; m (MutationDB b r a)
+mapM :: (a -&gt; m b) -&gt; MutationDB b r a -&gt; m (MutationDB b r b)
+$cmapM :: forall (b :: BackendType) r (m :: * -&gt; *) a b.
+(Backend b, Monad m) =&gt;
+(a -&gt; m b) -&gt; MutationDB b r a -&gt; m (MutationDB b r b)
+sequenceA :: MutationDB b r (f a) -&gt; f (MutationDB b r a)
+$csequenceA :: forall (b :: BackendType) r (f :: * -&gt; *) a.
+(Backend b, Applicative f) =&gt;
+MutationDB b r (f a) -&gt; f (MutationDB b r a)
+traverse :: (a -&gt; f b) -&gt; MutationDB b r a -&gt; f (MutationDB b r b)
+$ctraverse :: forall (b :: BackendType) r (f :: * -&gt; *) a b.
+(Backend b, Applicative f) =&gt;
+(a -&gt; f b) -&gt; MutationDB b r a -&gt; f (MutationDB b r b)
+$cp2Traversable :: forall (b :: BackendType) r. Backend b =&gt; Foldable (MutationDB b r)
+$cp1Traversable :: forall (b :: BackendType) r. Backend b =&gt; Functor (MutationDB b r)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">data</span><span> </span><span id="ActionQuery"><span class="annot"><a href="Hasura.RQL.IR.Root.html#ActionQuery"><span class="hs-identifier hs-var">ActionQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140825"><span class="annot"><a href="#local-6989586621689140825"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AQQuery"><span class="annot"><a href="Hasura.RQL.IR.Root.html#AQQuery"><span class="hs-identifier hs-var">AQQuery</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionExecution"><span class="hs-identifier hs-type">AnnActionExecution</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140825"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AQAsync"><span class="annot"><a href="Hasura.RQL.IR.Root.html#AQAsync"><span class="hs-identifier hs-var">AQAsync</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionAsyncQuery"><span class="hs-identifier hs-type">AnnActionAsyncQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689140825"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140815"><span id="local-6989586621689140817"><span class="annot"><span class="annottext">a -&gt; ActionQuery b -&gt; ActionQuery a
+(a -&gt; b) -&gt; ActionQuery a -&gt; ActionQuery b
+(forall a b. (a -&gt; b) -&gt; ActionQuery a -&gt; ActionQuery b)
+-&gt; (forall a b. a -&gt; ActionQuery b -&gt; ActionQuery a)
+-&gt; Functor ActionQuery
+forall a b. a -&gt; ActionQuery b -&gt; ActionQuery a
+forall a b. (a -&gt; b) -&gt; ActionQuery a -&gt; ActionQuery b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; ActionQuery b -&gt; ActionQuery a
+$c&lt;$ :: forall a b. a -&gt; ActionQuery b -&gt; ActionQuery a
+fmap :: (a -&gt; b) -&gt; ActionQuery a -&gt; ActionQuery b
+$cfmap :: forall a b. (a -&gt; b) -&gt; ActionQuery a -&gt; ActionQuery b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689140781"><span id="local-6989586621689140783"><span id="local-6989586621689140785"><span id="local-6989586621689140787"><span id="local-6989586621689140789"><span id="local-6989586621689140791"><span id="local-6989586621689140793"><span id="local-6989586621689140795"><span id="local-6989586621689140797"><span id="local-6989586621689140799"><span id="local-6989586621689140801"><span id="local-6989586621689140803"><span id="local-6989586621689140805"><span id="local-6989586621689140807"><span id="local-6989586621689140809"><span id="local-6989586621689140811"><span id="local-6989586621689140813"><span class="annot"><span class="annottext">ActionQuery a -&gt; Bool
+(a -&gt; m) -&gt; ActionQuery a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+(forall m. Monoid m =&gt; ActionQuery m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionQuery a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionQuery a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; ActionQuery a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; ActionQuery a -&gt; a)
+-&gt; (forall a. ActionQuery a -&gt; [a])
+-&gt; (forall a. ActionQuery a -&gt; Bool)
+-&gt; (forall a. ActionQuery a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; ActionQuery a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; ActionQuery a -&gt; a)
+-&gt; (forall a. Ord a =&gt; ActionQuery a -&gt; a)
+-&gt; (forall a. Num a =&gt; ActionQuery a -&gt; a)
+-&gt; (forall a. Num a =&gt; ActionQuery a -&gt; a)
+-&gt; Foldable ActionQuery
+forall a. Eq a =&gt; a -&gt; ActionQuery a -&gt; Bool
+forall a. Num a =&gt; ActionQuery a -&gt; a
+forall a. Ord a =&gt; ActionQuery a -&gt; a
+forall m. Monoid m =&gt; ActionQuery m -&gt; m
+forall a. ActionQuery a -&gt; Bool
+forall a. ActionQuery a -&gt; Int
+forall a. ActionQuery a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; ActionQuery a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionQuery a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: ActionQuery a -&gt; a
+$cproduct :: forall a. Num a =&gt; ActionQuery a -&gt; a
+sum :: ActionQuery a -&gt; a
+$csum :: forall a. Num a =&gt; ActionQuery a -&gt; a
+minimum :: ActionQuery a -&gt; a
+$cminimum :: forall a. Ord a =&gt; ActionQuery a -&gt; a
+maximum :: ActionQuery a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; ActionQuery a -&gt; a
+elem :: a -&gt; ActionQuery a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; ActionQuery a -&gt; Bool
+length :: ActionQuery a -&gt; Int
+$clength :: forall a. ActionQuery a -&gt; Int
+null :: ActionQuery a -&gt; Bool
+$cnull :: forall a. ActionQuery a -&gt; Bool
+toList :: ActionQuery a -&gt; [a]
+$ctoList :: forall a. ActionQuery a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; ActionQuery a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionQuery a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; ActionQuery a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionQuery a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionQuery a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; ActionQuery a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionQuery a -&gt; m
+foldMap :: (a -&gt; m) -&gt; ActionQuery a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionQuery a -&gt; m
+fold :: ActionQuery m -&gt; m
+$cfold :: forall m. Monoid m =&gt; ActionQuery m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689140771"><span id="local-6989586621689140773"><span id="local-6989586621689140775"><span id="local-6989586621689140777"><span class="annot"><span class="annottext">Functor ActionQuery
+Foldable ActionQuery
+Functor ActionQuery
+-&gt; Foldable ActionQuery
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; ActionQuery a -&gt; f (ActionQuery b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    ActionQuery (f a) -&gt; f (ActionQuery a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; ActionQuery a -&gt; m (ActionQuery b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    ActionQuery (m a) -&gt; m (ActionQuery a))
+-&gt; Traversable ActionQuery
+(a -&gt; f b) -&gt; ActionQuery a -&gt; f (ActionQuery b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionQuery (m a) -&gt; m (ActionQuery a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionQuery (f a) -&gt; f (ActionQuery a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; ActionQuery a -&gt; m (ActionQuery b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; ActionQuery a -&gt; f (ActionQuery b)
+sequence :: ActionQuery (m a) -&gt; m (ActionQuery a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionQuery (m a) -&gt; m (ActionQuery a)
+mapM :: (a -&gt; m b) -&gt; ActionQuery a -&gt; m (ActionQuery b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; ActionQuery a -&gt; m (ActionQuery b)
+sequenceA :: ActionQuery (f a) -&gt; f (ActionQuery a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionQuery (f a) -&gt; f (ActionQuery a)
+traverse :: (a -&gt; f b) -&gt; ActionQuery a -&gt; f (ActionQuery b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; ActionQuery a -&gt; f (ActionQuery b)
+$cp2Traversable :: Foldable ActionQuery
+$cp1Traversable :: Functor ActionQuery
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">data</span><span> </span><span id="ActionMutation"><span class="annot"><a href="Hasura.RQL.IR.Root.html#ActionMutation"><span class="hs-identifier hs-var">ActionMutation</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689140770"><span class="annot"><a href="#local-6989586621689140770"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AMSync"><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMSync"><span class="hs-identifier hs-var">AMSync</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionExecution"><span class="hs-identifier hs-type">AnnActionExecution</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140770"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AMAsync"><span class="annot"><a href="Hasura.RQL.IR.Root.html#AMAsync"><span class="hs-identifier hs-var">AMAsync</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionMutationAsync"><span class="hs-identifier hs-type">AnnActionMutationAsync</span></a></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- The `db` type argument of @RootField@ expects only one type argument, the backend `b`, as not all</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- types stored in a RootField will have a second parameter like @QueryDB@ does: they all only have</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- in common the fact that they're parametric over the backend. To define @QueryRootField@ in terms</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- of @QueryDB@ (and likewise for mutations), we need a type-level function `b -&gt; QueryDB b (v</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- b)`. Sadly, neither type synonyms nor type families may be partially applied. Hence the need for</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- @QueryDBRoot@ and @MutationDBRoot@.</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryDBRoot"><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryDBRoot"><span class="hs-identifier hs-var">QueryDBRoot</span></a></span></span><span> </span><span id="local-6989586621689140766"><span class="annot"><a href="#local-6989586621689140766"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689140765"><span class="annot"><a href="#local-6989586621689140765"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span id="local-6989586621689140764"><span class="annot"><a href="#local-6989586621689140764"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QDBR"><span class="annot"><a href="Hasura.RQL.IR.Root.html#QDBR"><span class="hs-identifier hs-var">QDBR</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#QueryDB"><span class="hs-identifier hs-type">QueryDB</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140764"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140766"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689140765"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140764"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">newtype</span><span> </span><span id="MutationDBRoot"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationDBRoot"><span class="hs-identifier hs-var">MutationDBRoot</span></a></span></span><span> </span><span id="local-6989586621689140761"><span class="annot"><a href="#local-6989586621689140761"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689140760"><span class="annot"><a href="#local-6989586621689140760"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span id="local-6989586621689140759"><span class="annot"><a href="#local-6989586621689140759"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MDBR"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MDBR"><span class="hs-identifier hs-var">MDBR</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationDB"><span class="hs-identifier hs-type">MutationDB</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140759"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140761"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689140760"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140759"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- | IR of a remote relationship. A remote relationship currently can be to</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- either a remote schema or a database's table. See RemoteSourceSelect for</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- explanation on 'vf'.</span><span>
+</span><span id="line-77"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteRelationshipField"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-var">RemoteRelationshipField</span></a></span></span><span> </span><span id="local-6989586621689140757"><span class="annot"><a href="#local-6989586621689140757"><span class="hs-identifier hs-type">vf</span></a></span></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaField"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteSchemaField"><span class="hs-identifier hs-var">RemoteSchemaField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaSelect"><span class="hs-identifier hs-type">RemoteSchemaSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140757"><span class="hs-identifier hs-type">vf</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | AnyBackend is used here to capture a relationship to an arbitrary target</span><span>
+</span><span id="line-80"></span><span>    </span><span id="RemoteSourceField"><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteSourceField"><span class="hs-identifier hs-var">RemoteSourceField</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.AnyBackend.html#AnyBackend"><span class="hs-identifier hs-type">AB.AnyBackend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#RemoteSourceSelect"><span class="hs-identifier hs-type">RemoteSourceSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140757"><span class="hs-identifier hs-type">vf</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689140757"><span class="hs-identifier hs-type">vf</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="hs-comment">-- | Represents a query root field to an action</span><span>
+</span><span id="line-83"></span><span class="hs-keyword">type</span><span> </span><span id="QueryActionRoot"><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryActionRoot"><span class="hs-identifier hs-var">QueryActionRoot</span></a></span></span><span> </span><span id="local-6989586621689140751"><span class="annot"><a href="#local-6989586621689140751"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#ActionQuery"><span class="hs-identifier hs-type">ActionQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140751"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- | Represents a mutation root field to an action</span><span>
+</span><span id="line-87"></span><span class="hs-keyword">type</span><span> </span><span id="MutationActionRoot"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationActionRoot"><span class="hs-identifier hs-var">MutationActionRoot</span></a></span></span><span> </span><span id="local-6989586621689140749"><span class="annot"><a href="#local-6989586621689140749"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#ActionMutation"><span class="hs-identifier hs-type">ActionMutation</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140749"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">type</span><span> </span><span id="QueryRootField"><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-var">QueryRootField</span></a></span></span><span> </span><span id="local-6989586621689140748"><span class="annot"><a href="#local-6989586621689140748"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-type">RootField</span></a></span><span>
+</span><span id="line-92"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryDBRoot"><span class="hs-identifier hs-type">QueryDBRoot</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140748"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689140748"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">RemoteSchemaRootField</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140748"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RQL.RemoteSchemaVariable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryActionRoot"><span class="hs-identifier hs-type">QueryActionRoot</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140748"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">JO.Value</span></a></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="hs-keyword">type</span><span> </span><span id="MutationRootField"><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier hs-var">MutationRootField</span></a></span></span><span> </span><span id="local-6989586621689140744"><span class="annot"><a href="#local-6989586621689140744"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-98"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-type">RootField</span></a></span><span>
+</span><span id="line-99"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationDBRoot"><span class="hs-identifier hs-type">MutationDBRoot</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140744"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689140744"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">RemoteSchemaRootField</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140744"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RQL.RemoteSchemaVariable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationActionRoot"><span class="hs-identifier hs-type">MutationActionRoot</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140744"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">JO.Value</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="hs-keyword">type</span><span> </span><span id="SubscriptionRootField"><span class="annot"><a href="Hasura.RQL.IR.Root.html#SubscriptionRootField"><span class="hs-identifier hs-var">SubscriptionRootField</span></a></span></span><span> </span><span id="local-6989586621689140743"><span class="annot"><a href="#local-6989586621689140743"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RootField"><span class="hs-identifier hs-type">RootField</span></a></span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryDBRoot"><span class="hs-identifier hs-type">QueryDBRoot</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140743"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689140743"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.RemoteSchema.html#RemoteSchemaRootField"><span class="hs-identifier hs-type">RemoteSchemaRootField</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#RemoteRelationshipField"><span class="hs-identifier hs-type">RemoteRelationshipField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140743"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.RemoteSchema.html#RemoteSchemaVariable"><span class="hs-identifier hs-type">RQL.RemoteSchemaVariable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryActionRoot"><span class="hs-identifier hs-type">QueryActionRoot</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689140743"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><a href="Data.Aeson.Ordered.html#Value"><span class="hs-identifier hs-type">JO.Value</span></a></span><span>
+</span><span id="line-110"></span></pre></body></html>

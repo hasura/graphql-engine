@@ -1,0 +1,643 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Transport.WSServerApp</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WSServerApp.html#createWSServerApp"><span class="hs-identifier">createWSServerApp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Transport.WSServerApp.html#stopWSServerApp"><span class="hs-identifier">stopWSServerApp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Transport.WSServerApp.html#createWSServerEnv"><span class="hs-identifier">createWSServerEnv</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.Async.Lifted.Safe</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">LA</span></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">STM</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception.Lifted</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MC</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">object</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">toJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">pack</span></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Environment.html"><span class="hs-identifier">Data.Environment</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Env</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">pack</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">unpack</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.html"><span class="hs-identifier">Hasura.GraphQL.Execute</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">E</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Backend</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EB</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html"><span class="hs-identifier">Hasura.GraphQL.Execute.Subscription.State</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">ES</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Logging.html"><span class="hs-identifier">Hasura.GraphQL.Logging</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.html"><span class="hs-identifier">Hasura.GraphQL.Transport.HTTP</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.html#MonadExecuteQuery"><span class="hs-identifier">MonadExecuteQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.Instances.html"><span class="hs-identifier">Hasura.GraphQL.Transport.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.html"><span class="hs-identifier">Hasura.GraphQL.Transport.WebSocket</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.WebSocket.Protocol</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html"><span class="hs-identifier">Hasura.GraphQL.Transport.WebSocket.Server</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html"><span class="hs-identifier">Hasura.GraphQL.Transport.WebSocket.Types</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html"><span class="hs-identifier">Hasura.Server.Auth</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier">AuthMode</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#UserAuthentication"><span class="hs-identifier">UserAuthentication</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html"><span class="hs-identifier">Hasura.Server.Cors</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html"><span class="hs-identifier">Hasura.Server.Init.Config</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier">KeepAliveDelay</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#WSConnectionInitTimeout"><span class="hs-identifier">WSConnectionInitTimeout</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Limits.html"><span class="hs-identifier">Hasura.Server.Limits</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html"><span class="hs-identifier">Hasura.Server.Metrics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetrics"><span class="hs-identifier">ServerMetrics</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Types.html#ReadOnlyMode"><span class="hs-identifier">ReadOnlyMode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Client</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.WebSockets</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">WS</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Metrics.Gauge</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">EKG.Gauge</span></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span id="local-6989586621689219773"><span class="annot"><a href="Hasura.GraphQL.Transport.WSServerApp.html#createWSServerApp"><span class="hs-identifier hs-type">createWSServerApp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MC.MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">LA.Forall</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">LA.Pure</span></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.html#UserAuthentication"><span class="hs-identifier hs-type">UserAuthentication</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.html#TraceT"><span class="hs-identifier hs-type">Tracing.TraceT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Common.html#MonadGQLExecutionCheck"><span class="hs-identifier hs-type">E.MonadGQLExecutionCheck</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#MonadWSLog"><span class="hs-identifier hs-type">WS.MonadWSLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Logging.html#MonadQueryLog"><span class="hs-identifier hs-type">MonadQueryLog</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#HasReporter"><span class="hs-identifier hs-type">Tracing.HasReporter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.html#MonadExecuteQuery"><span class="hs-identifier hs-type">MonadExecuteQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MetadataStorageT"><span class="hs-identifier hs-type">MetadataStorageT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#MonadQueryTags"><span class="hs-identifier hs-type">EB.MonadQueryTags</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><a href="Hasura.Server.Limits.html#HasResourceLimits"><span class="hs-identifier hs-type">HasResourceLimits</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">L.EngineLogType</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-type">WSServerEnv</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#WSConnectionInitTimeout"><span class="hs-identifier hs-type">WSConnectionInitTimeout</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#HasuraServerApp"><span class="hs-identifier hs-type">WS.HasuraServerApp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689219773"><span class="hs-identifier hs-type">m</span></a></span></span><span>
+</span><span id="line-65"></span><span class="hs-comment">--   -- ^ aka generalized 'WS.ServerApp'</span><span>
+</span><span id="line-66"></span><span id="createWSServerApp"><span class="annot"><span class="annottext">createWSServerApp :: Environment
+-&gt; HashSet (EngineLogType Hasura)
+-&gt; AuthMode
+-&gt; WSServerEnv
+-&gt; WSConnectionInitTimeout
+-&gt; HasuraServerApp m
+</span><a href="Hasura.GraphQL.Transport.WSServerApp.html#createWSServerApp"><span class="hs-identifier hs-var hs-var">createWSServerApp</span></a></span></span><span> </span><span id="local-6989586621689219772"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689219772"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span id="local-6989586621689219771"><span class="annot"><span class="annottext">HashSet (EngineLogType Hasura)
+</span><a href="#local-6989586621689219771"><span class="hs-identifier hs-var">enabledLogTypes</span></a></span></span><span> </span><span id="local-6989586621689219770"><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621689219770"><span class="hs-identifier hs-var">authMode</span></a></span></span><span> </span><span id="local-6989586621689219769"><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219769"><span class="hs-identifier hs-var">serverEnv</span></a></span></span><span> </span><span id="local-6989586621689219768"><span class="annot"><span class="annottext">WSConnectionInitTimeout
+</span><a href="#local-6989586621689219768"><span class="hs-identifier hs-var">connInitTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689219767"><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621689219767"><span class="hs-identifier hs-var">ipAddress</span></a></span></span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621689219766"><span class="annot"><span class="annottext">PendingConnection
+</span><a href="#local-6989586621689219766"><span class="hs-identifier hs-var">pendingConn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">WSConnectionInitTimeout
+-&gt; WSServer WSConnData
+-&gt; WSHandlers m WSConnData
+-&gt; HasuraServerApp m
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadBaseControl IO m, Forall (Pure m),
+ MonadWSLog m) =&gt;
+WSConnectionInitTimeout
+-&gt; WSServer a -&gt; WSHandlers m a -&gt; HasuraServerApp m
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#createServerApp"><span class="hs-identifier hs-var">WS.createServerApp</span></a></span><span> </span><span class="annot"><span class="annottext">WSConnectionInitTimeout
+</span><a href="#local-6989586621689219768"><span class="hs-identifier hs-var">connInitTimeout</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSServerEnv -&gt; WSServer WSConnData
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseServer"><span class="hs-identifier hs-var hs-var">_wseServer</span></a></span><span> </span><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219769"><span class="hs-identifier hs-var">serverEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">WSHandlers m WSConnData
+</span><a href="#local-6989586621689219763"><span class="hs-identifier hs-var">handlers</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621689219767"><span class="hs-identifier hs-var">ipAddress</span></a></span><span> </span><span class="annot"><span class="annottext">PendingConnection
+</span><a href="#local-6989586621689219766"><span class="hs-identifier hs-var">pendingConn</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621689219763"><span class="annot"><span class="annottext">handlers :: WSHandlers m WSConnData
+</span><a href="#local-6989586621689219763"><span class="hs-identifier hs-var hs-var">handlers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">(WSId
+ -&gt; RequestHead
+ -&gt; IpAddress
+ -&gt; WSSubProtocol
+ -&gt; m (Either RejectRequest (AcceptWith WSConnData)))
+-&gt; (WSConn WSConnData -&gt; ByteString -&gt; WSSubProtocol -&gt; m ())
+-&gt; OnCloseH m WSConnData
+-&gt; WSHandlers m WSConnData
+forall (m :: * -&gt; *) a.
+(WSId
+ -&gt; RequestHead
+ -&gt; IpAddress
+ -&gt; WSSubProtocol
+ -&gt; m (Either RejectRequest (AcceptWith a)))
+-&gt; (WSConn a -&gt; ByteString -&gt; WSSubProtocol -&gt; m ())
+-&gt; OnCloseH m a
+-&gt; WSHandlers m a
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSHandlers"><span class="hs-identifier hs-var">WS.WSHandlers</span></a></span><span>
+</span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">WSId
+-&gt; RequestHead
+-&gt; IpAddress
+-&gt; WSSubProtocol
+-&gt; m (Either RejectRequest (AcceptWith WSConnData))
+</span><a href="#local-6989586621689219761"><span class="hs-identifier hs-var">onConnHandler</span></a></span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">WSConn WSConnData -&gt; ByteString -&gt; WSSubProtocol -&gt; m ()
+</span><a href="#local-6989586621689219760"><span class="hs-identifier hs-var">onMessageHandler</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">OnCloseH m WSConnData
+</span><a href="#local-6989586621689219759"><span class="hs-identifier hs-var">onCloseHandler</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621689219758"><span class="annot"><span class="annottext">logger :: Logger Hasura
+</span><a href="#local-6989586621689219758"><span class="hs-identifier hs-var hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">WSServerEnv -&gt; Logger Hasura
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseLogger"><span class="hs-identifier hs-var hs-var">_wseLogger</span></a></span><span> </span><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219769"><span class="hs-identifier hs-var">serverEnv</span></a></span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621689219756"><span class="annot"><span class="annottext">serverMetrics :: ServerMetrics
+</span><a href="#local-6989586621689219756"><span class="hs-identifier hs-var hs-var">serverMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">WSServerEnv -&gt; ServerMetrics
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseServerMetrics"><span class="hs-identifier hs-var hs-var">_wseServerMetrics</span></a></span><span> </span><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219769"><span class="hs-identifier hs-var">serverEnv</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621689219754"><span class="annot"><span class="annottext">wsActions :: WSSubProtocol -&gt; WSActions WSConnData
+</span><a href="#local-6989586621689219754"><span class="hs-identifier hs-var hs-var">wsActions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; WSSubProtocol -&gt; WSActions WSConnData
+</span><a href="Hasura.GraphQL.Transport.WSServerApp.html#mkWSActions"><span class="hs-identifier hs-var">mkWSActions</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219758"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-comment">-- Mask async exceptions during event processing to help maintain integrity of mutable vars:</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-comment">-- here `sp` stands for sub-protocol</span><span>
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621689219761"><span class="annot"><span class="annottext">onConnHandler :: WSId
+-&gt; RequestHead
+-&gt; IpAddress
+-&gt; WSSubProtocol
+-&gt; m (Either RejectRequest (AcceptWith WSConnData))
+</span><a href="#local-6989586621689219761"><span class="hs-identifier hs-var hs-var">onConnHandler</span></a></span></span><span> </span><span id="local-6989586621689219752"><span class="annot"><span class="annottext">WSId
+</span><a href="#local-6989586621689219752"><span class="hs-identifier hs-var">rid</span></a></span></span><span> </span><span id="local-6989586621689219751"><span class="annot"><span class="annottext">RequestHead
+</span><a href="#local-6989586621689219751"><span class="hs-identifier hs-var">rh</span></a></span></span><span> </span><span id="local-6989586621689219750"><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621689219750"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span id="local-6989586621689219749"><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219749"><span class="hs-identifier hs-var">sp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m (Either RejectRequest (AcceptWith WSConnData))
+-&gt; m (Either RejectRequest (AcceptWith WSConnData))
+forall (m :: * -&gt; *) a. MonadBaseControl IO m =&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">mask_</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-83"></span><span>      </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
+</span><span class="hs-identifier hs-var">EKG.Gauge.inc</span></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
+</span><a href="Hasura.Server.Metrics.html#smWebsocketConnections"><span class="hs-identifier hs-var hs-var">smWebsocketConnections</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621689219756"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">(ReaderT
+   WSServerEnv m (Either RejectRequest (AcceptWith WSConnData))
+ -&gt; WSServerEnv -&gt; m (Either RejectRequest (AcceptWith WSConnData)))
+-&gt; WSServerEnv
+-&gt; ReaderT
+     WSServerEnv m (Either RejectRequest (AcceptWith WSConnData))
+-&gt; m (Either RejectRequest (AcceptWith WSConnData))
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">ReaderT
+  WSServerEnv m (Either RejectRequest (AcceptWith WSConnData))
+-&gt; WSServerEnv -&gt; m (Either RejectRequest (AcceptWith WSConnData))
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219769"><span class="hs-identifier hs-var">serverEnv</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT
+   WSServerEnv m (Either RejectRequest (AcceptWith WSConnData))
+ -&gt; m (Either RejectRequest (AcceptWith WSConnData)))
+-&gt; ReaderT
+     WSServerEnv m (Either RejectRequest (AcceptWith WSConnData))
+-&gt; m (Either RejectRequest (AcceptWith WSConnData))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OnConnH (ReaderT WSServerEnv m) WSConnData
+forall (m :: * -&gt; *).
+(MonadIO m, MonadReader WSServerEnv m) =&gt;
+OnConnH m WSConnData
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#onConn"><span class="hs-identifier hs-var">onConn</span></a></span><span> </span><span class="annot"><span class="annottext">WSId
+</span><a href="#local-6989586621689219752"><span class="hs-identifier hs-var">rid</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHead
+</span><a href="#local-6989586621689219751"><span class="hs-identifier hs-var">rh</span></a></span><span> </span><span class="annot"><span class="annottext">IpAddress
+</span><a href="#local-6989586621689219750"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSSubProtocol -&gt; WSActions WSConnData
+</span><a href="#local-6989586621689219754"><span class="hs-identifier hs-var">wsActions</span></a></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219749"><span class="hs-identifier hs-var">sp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621689219760"><span class="annot"><span class="annottext">onMessageHandler :: WSConn WSConnData -&gt; ByteString -&gt; WSSubProtocol -&gt; m ()
+</span><a href="#local-6989586621689219760"><span class="hs-identifier hs-var hs-var">onMessageHandler</span></a></span></span><span> </span><span id="local-6989586621689219741"><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219741"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span id="local-6989586621689219740"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689219740"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span id="local-6989586621689219739"><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219739"><span class="hs-identifier hs-var">sp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">m () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadBaseControl IO m =&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">mask_</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">Environment
+-&gt; HashSet (EngineLogType Hasura)
+-&gt; AuthMode
+-&gt; WSServerEnv
+-&gt; WSConn WSConnData
+-&gt; ByteString
+-&gt; WSActions WSConnData
+-&gt; m ()
+forall (m :: * -&gt; *).
+(MonadIO m, UserAuthentication (TraceT m),
+ MonadGQLExecutionCheck m, MonadQueryLog m, HasReporter m,
+ MonadExecuteQuery m, MonadBaseControl IO m,
+ MonadMetadataStorage (MetadataStorageT m), MonadQueryTags m,
+ HasResourceLimits m) =&gt;
+Environment
+-&gt; HashSet (EngineLogType Hasura)
+-&gt; AuthMode
+-&gt; WSServerEnv
+-&gt; WSConn WSConnData
+-&gt; ByteString
+-&gt; WSActions WSConnData
+-&gt; m ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#onMessage"><span class="hs-identifier hs-var">onMessage</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689219772"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet (EngineLogType Hasura)
+</span><a href="#local-6989586621689219771"><span class="hs-identifier hs-var">enabledLogTypes</span></a></span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621689219770"><span class="hs-identifier hs-var">authMode</span></a></span><span> </span><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219769"><span class="hs-identifier hs-var">serverEnv</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219741"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689219740"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSSubProtocol -&gt; WSActions WSConnData
+</span><a href="#local-6989586621689219754"><span class="hs-identifier hs-var">wsActions</span></a></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219739"><span class="hs-identifier hs-var">sp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span>    </span><span id="local-6989586621689219759"><span class="annot"><span class="annottext">onCloseHandler :: OnCloseH m WSConnData
+</span><a href="#local-6989586621689219759"><span class="hs-identifier hs-var hs-var">onCloseHandler</span></a></span></span><span> </span><span id="local-6989586621689219737"><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219737"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadBaseControl IO m =&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">mask_</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Gauge -&gt; IO ()
+</span><span class="hs-identifier hs-var">EKG.Gauge.dec</span></span><span> </span><span class="annot"><span class="annottext">(Gauge -&gt; IO ()) -&gt; Gauge -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics -&gt; Gauge
+</span><a href="Hasura.Server.Metrics.html#smWebsocketConnections"><span class="hs-identifier hs-var hs-var">smWebsocketConnections</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621689219756"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
+</span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; ServerMetrics -&gt; SubscriptionsState -&gt; OnCloseH m WSConnData
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Logger Hasura
+-&gt; ServerMetrics -&gt; SubscriptionsState -&gt; WSConn WSConnData -&gt; m ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#onClose"><span class="hs-identifier hs-var">onClose</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219758"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621689219756"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSServerEnv -&gt; SubscriptionsState
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseSubscriptionState"><span class="hs-identifier hs-var hs-var">_wseSubscriptionState</span></a></span><span> </span><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219769"><span class="hs-identifier hs-var">serverEnv</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219737"><span class="hs-identifier hs-var">conn</span></a></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WSServerApp.html#stopWSServerApp"><span class="hs-identifier hs-type">stopWSServerApp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-type">WSServerEnv</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span id="stopWSServerApp"><span class="annot"><span class="annottext">stopWSServerApp :: WSServerEnv -&gt; IO ()
+</span><a href="Hasura.GraphQL.Transport.WSServerApp.html#stopWSServerApp"><span class="hs-identifier hs-var hs-var">stopWSServerApp</span></a></span></span><span> </span><span id="local-6989586621689219733"><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219733"><span class="hs-identifier hs-var">wsEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">WSServer WSConnData -&gt; IO ()
+forall a. WSServer a -&gt; IO ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#shutdown"><span class="hs-identifier hs-var">WS.shutdown</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSServerEnv -&gt; WSServer WSConnData
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#_wseServer"><span class="hs-identifier hs-var hs-var">_wseServer</span></a></span><span> </span><span class="annot"><span class="annottext">WSServerEnv
+</span><a href="#local-6989586621689219733"><span class="hs-identifier hs-var">wsEnv</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span id="local-6989586621689219731"><span class="annot"><a href="Hasura.GraphQL.Transport.WSServerApp.html#createWSServerEnv"><span class="hs-identifier hs-type">createWSServerEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-98"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689219731"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-99"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.State.html#SubscriptionsState"><span class="hs-identifier hs-type">ES.SubscriptionsState</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCache"><span class="hs-identifier hs-type">SchemaCache</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#SchemaCacheVer"><span class="hs-identifier hs-type">SchemaCacheVer</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsPolicy"><span class="hs-identifier hs-type">CorsPolicy</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SQLGenCtx"><span class="hs-identifier hs-type">SQLGenCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.Server.Types.html#ReadOnlyMode"><span class="hs-identifier hs-type">ReadOnlyMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier hs-type">KeepAliveDelay</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetrics"><span class="hs-identifier hs-type">ServerMetrics</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><a href="#local-6989586621689219731"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-type">WSServerEnv</span></a></span></span><span>
+</span><span id="line-110"></span><span id="createWSServerEnv"><span class="annot"><span class="annottext">createWSServerEnv :: Logger Hasura
+-&gt; SubscriptionsState
+-&gt; IO (SchemaCache, SchemaCacheVer)
+-&gt; Manager
+-&gt; CorsPolicy
+-&gt; SQLGenCtx
+-&gt; ReadOnlyMode
+-&gt; Bool
+-&gt; KeepAliveDelay
+-&gt; ServerMetrics
+-&gt; m WSServerEnv
+</span><a href="Hasura.GraphQL.Transport.WSServerApp.html#createWSServerEnv"><span class="hs-identifier hs-var hs-var">createWSServerEnv</span></a></span></span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621689219730"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219730"><span class="hs-identifier hs-var">logger</span></a></span></span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621689219729"><span class="annot"><span class="annottext">SubscriptionsState
+</span><a href="#local-6989586621689219729"><span class="hs-identifier hs-var">lqState</span></a></span></span><span>
+</span><span id="line-113"></span><span>  </span><span id="local-6989586621689219728"><span class="annot"><span class="annottext">IO (SchemaCache, SchemaCacheVer)
+</span><a href="#local-6989586621689219728"><span class="hs-identifier hs-var">getSchemaCache</span></a></span></span><span>
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621689219727"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689219727"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span>
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621689219726"><span class="annot"><span class="annottext">CorsPolicy
+</span><a href="#local-6989586621689219726"><span class="hs-identifier hs-var">corsPolicy</span></a></span></span><span>
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621689219725"><span class="annot"><span class="annottext">SQLGenCtx
+</span><a href="#local-6989586621689219725"><span class="hs-identifier hs-var">sqlGenCtx</span></a></span></span><span>
+</span><span id="line-117"></span><span>  </span><span id="local-6989586621689219724"><span class="annot"><span class="annottext">ReadOnlyMode
+</span><a href="#local-6989586621689219724"><span class="hs-identifier hs-var">readOnlyMode</span></a></span></span><span>
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621689219723"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689219723"><span class="hs-identifier hs-var">enableAL</span></a></span></span><span>
+</span><span id="line-119"></span><span>  </span><span id="local-6989586621689219722"><span class="annot"><span class="annottext">KeepAliveDelay
+</span><a href="#local-6989586621689219722"><span class="hs-identifier hs-var">keepAliveDelay</span></a></span></span><span>
+</span><span id="line-120"></span><span>  </span><span id="local-6989586621689219721"><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621689219721"><span class="hs-identifier hs-var">serverMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-121"></span><span>    </span><span id="local-6989586621689219720"><span class="annot"><span class="annottext">WSServer WSConnData
+</span><a href="#local-6989586621689219720"><span class="hs-identifier hs-var">wsServer</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (WSServer WSConnData) -&gt; m (WSServer WSConnData)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (WSServer WSConnData) -&gt; m (WSServer WSConnData))
+-&gt; IO (WSServer WSConnData) -&gt; m (WSServer WSConnData)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">STM (WSServer WSConnData) -&gt; IO (WSServer WSConnData)
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">STM.atomically</span></span><span> </span><span class="annot"><span class="annottext">(STM (WSServer WSConnData) -&gt; IO (WSServer WSConnData))
+-&gt; STM (WSServer WSConnData) -&gt; IO (WSServer WSConnData)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura -&gt; STM (WSServer WSConnData)
+forall a. Logger Hasura -&gt; STM (WSServer a)
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#createWSServer"><span class="hs-identifier hs-var">WS.createWSServer</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219730"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">WSServerEnv -&gt; m WSServerEnv
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(WSServerEnv -&gt; m WSServerEnv) -&gt; WSServerEnv -&gt; m WSServerEnv
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; SubscriptionsState
+-&gt; IO (SchemaCache, SchemaCacheVer)
+-&gt; Manager
+-&gt; CorsPolicy
+-&gt; SQLGenCtx
+-&gt; ReadOnlyMode
+-&gt; WSServer WSConnData
+-&gt; Bool
+-&gt; KeepAliveDelay
+-&gt; ServerMetrics
+-&gt; WSServerEnv
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSServerEnv"><span class="hs-identifier hs-var">WSServerEnv</span></a></span><span>
+</span><span id="line-124"></span><span>        </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219730"><span class="hs-identifier hs-var">logger</span></a></span><span>
+</span><span id="line-125"></span><span>        </span><span class="annot"><span class="annottext">SubscriptionsState
+</span><a href="#local-6989586621689219729"><span class="hs-identifier hs-var">lqState</span></a></span><span>
+</span><span id="line-126"></span><span>        </span><span class="annot"><span class="annottext">IO (SchemaCache, SchemaCacheVer)
+</span><a href="#local-6989586621689219728"><span class="hs-identifier hs-var">getSchemaCache</span></a></span><span>
+</span><span id="line-127"></span><span>        </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689219727"><span class="hs-identifier hs-var">httpManager</span></a></span><span>
+</span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">CorsPolicy
+</span><a href="#local-6989586621689219726"><span class="hs-identifier hs-var">corsPolicy</span></a></span><span>
+</span><span id="line-129"></span><span>        </span><span class="annot"><span class="annottext">SQLGenCtx
+</span><a href="#local-6989586621689219725"><span class="hs-identifier hs-var">sqlGenCtx</span></a></span><span>
+</span><span id="line-130"></span><span>        </span><span class="annot"><span class="annottext">ReadOnlyMode
+</span><a href="#local-6989586621689219724"><span class="hs-identifier hs-var">readOnlyMode</span></a></span><span>
+</span><span id="line-131"></span><span>        </span><span class="annot"><span class="annottext">WSServer WSConnData
+</span><a href="#local-6989586621689219720"><span class="hs-identifier hs-var">wsServer</span></a></span><span>
+</span><span id="line-132"></span><span>        </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689219723"><span class="hs-identifier hs-var">enableAL</span></a></span><span>
+</span><span id="line-133"></span><span>        </span><span class="annot"><span class="annottext">KeepAliveDelay
+</span><a href="#local-6989586621689219722"><span class="hs-identifier hs-var">keepAliveDelay</span></a></span><span>
+</span><span id="line-134"></span><span>        </span><span class="annot"><span class="annottext">ServerMetrics
+</span><a href="#local-6989586621689219721"><span class="hs-identifier hs-var">serverMetrics</span></a></span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span class="annot"><a href="Hasura.GraphQL.Transport.WSServerApp.html#mkWSActions"><span class="hs-identifier hs-type">mkWSActions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">L.Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">L.Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#WSSubProtocol"><span class="hs-identifier hs-type">WSSubProtocol</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSActions"><span class="hs-identifier hs-type">WS.WSActions</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WSConnData"><span class="hs-identifier hs-type">WSConnData</span></a></span><span>
+</span><span id="line-137"></span><span id="mkWSActions"><span class="annot"><span class="annottext">mkWSActions :: Logger Hasura -&gt; WSSubProtocol -&gt; WSActions WSConnData
+</span><a href="Hasura.GraphQL.Transport.WSServerApp.html#mkWSActions"><span class="hs-identifier hs-var hs-var">mkWSActions</span></a></span></span><span> </span><span id="local-6989586621689219716"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219716"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689219715"><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><span class="annottext">WSPostExecErrMessageAction WSConnData
+-&gt; WSOnErrorMessageAction WSConnData
+-&gt; WSCloseConnAction WSConnData
+-&gt; WSKeepAliveMessageAction WSConnData
+-&gt; (DataMsg -&gt; ServerMsg)
+-&gt; AcceptRequest
+-&gt; ([Value] -&gt; Value)
+-&gt; WSActions WSConnData
+forall a.
+WSPostExecErrMessageAction a
+-&gt; WSOnErrorMessageAction a
+-&gt; WSCloseConnAction a
+-&gt; WSKeepAliveMessageAction a
+-&gt; (DataMsg -&gt; ServerMsg)
+-&gt; AcceptRequest
+-&gt; ([Value] -&gt; Value)
+-&gt; WSActions a
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Server.html#WSActions"><span class="hs-identifier hs-var">WS.WSActions</span></a></span><span>
+</span><span id="line-139"></span><span>    </span><span class="annot"><span class="annottext">WSPostExecErrMessageAction WSConnData
+</span><a href="#local-6989586621689219713"><span class="hs-identifier hs-var">mkPostExecErrMessageAction</span></a></span><span>
+</span><span id="line-140"></span><span>    </span><span class="annot"><span class="annottext">WSOnErrorMessageAction WSConnData
+</span><a href="#local-6989586621689219712"><span class="hs-identifier hs-var">mkOnErrorMessageAction</span></a></span><span>
+</span><span id="line-141"></span><span>    </span><span class="annot"><span class="annottext">WSCloseConnAction WSConnData
+</span><a href="#local-6989586621689219711"><span class="hs-identifier hs-var">mkConnectionCloseAction</span></a></span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><span class="annottext">WSKeepAliveMessageAction WSConnData
+</span><a href="#local-6989586621689219710"><span class="hs-identifier hs-var">keepAliveAction</span></a></span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><span class="annottext">DataMsg -&gt; ServerMsg
+</span><a href="#local-6989586621689219709"><span class="hs-identifier hs-var">getServerMsgType</span></a></span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">AcceptRequest
+</span><a href="#local-6989586621689219708"><span class="hs-identifier hs-var">mkAcceptRequest</span></a></span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">[Value] -&gt; Value
+</span><a href="#local-6989586621689219707"><span class="hs-identifier hs-var">fmtErrorMessage</span></a></span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-147"></span><span>    </span><span id="local-6989586621689219713"><span class="annot"><span class="annottext">mkPostExecErrMessageAction :: WSPostExecErrMessageAction WSConnData
+</span><a href="#local-6989586621689219713"><span class="hs-identifier hs-var hs-var">mkPostExecErrMessageAction</span></a></span></span><span> </span><span id="local-6989586621689219706"><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219706"><span class="hs-identifier hs-var">wsConn</span></a></span></span><span> </span><span id="local-6989586621689219705"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621689219705"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621689219704"><span class="annot"><span class="annottext">GQExecError
+</span><a href="#local-6989586621689219704"><span class="hs-identifier hs-var">execErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-148"></span><span>      </span><span class="annot"><span class="annottext">WSConn WSConnData -&gt; ServerMsg -&gt; IO ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+WSConn WSConnData -&gt; ServerMsg -&gt; m ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#sendMsg"><span class="hs-identifier hs-var">sendMsg</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219706"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">(ServerMsg -&gt; IO ()) -&gt; ServerMsg -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-149"></span><span>        </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Apollo"><span class="hs-identifier hs-var">Apollo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DataMsg -&gt; ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMData"><span class="hs-identifier hs-var">SMData</span></a></span><span> </span><span class="annot"><span class="annottext">(DataMsg -&gt; ServerMsg) -&gt; DataMsg -&gt; ServerMsg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; GQResponse -&gt; DataMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#DataMsg"><span class="hs-identifier hs-var">DataMsg</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621689219705"><span class="hs-identifier hs-var">opId</span></a></span><span> </span><span class="annot"><span class="annottext">(GQResponse -&gt; DataMsg) -&gt; GQResponse -&gt; DataMsg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQExecError -&gt; GQResponse
+forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">GQExecError
+</span><a href="#local-6989586621689219704"><span class="hs-identifier hs-var">execErr</span></a></span><span>
+</span><span id="line-150"></span><span>        </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ErrorMsg -&gt; ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMErr"><span class="hs-identifier hs-var">SMErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ErrorMsg -&gt; ServerMsg) -&gt; ErrorMsg -&gt; ServerMsg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; Value -&gt; ErrorMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ErrorMsg"><span class="hs-identifier hs-var">ErrorMsg</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621689219705"><span class="hs-identifier hs-var">opId</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ErrorMsg) -&gt; Value -&gt; ErrorMsg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">GQExecError -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">GQExecError
+</span><a href="#local-6989586621689219704"><span class="hs-identifier hs-var">execErr</span></a></span><span>
+</span><span id="line-151"></span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621689219712"><span class="annot"><span class="annottext">mkOnErrorMessageAction :: WSOnErrorMessageAction WSConnData
+</span><a href="#local-6989586621689219712"><span class="hs-identifier hs-var hs-var">mkOnErrorMessageAction</span></a></span></span><span> </span><span id="local-6989586621689219695"><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219695"><span class="hs-identifier hs-var">wsConn</span></a></span></span><span> </span><span id="local-6989586621689219694"><span class="annot"><span class="annottext">ConnErrMsg
+</span><a href="#local-6989586621689219694"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span id="local-6989586621689219693"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689219693"><span class="hs-identifier hs-var">mErrMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-153"></span><span>      </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Apollo"><span class="hs-identifier hs-var">Apollo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData -&gt; ServerMsg -&gt; IO ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+WSConn WSConnData -&gt; ServerMsg -&gt; m ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#sendMsg"><span class="hs-identifier hs-var">sendMsg</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219695"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">(ServerMsg -&gt; IO ()) -&gt; ServerMsg -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ConnErrMsg -&gt; ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnErr"><span class="hs-identifier hs-var">SMConnErr</span></a></span><span> </span><span class="annot"><span class="annottext">ConnErrMsg
+</span><a href="#local-6989586621689219694"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-154"></span><span>      </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; WSConn WSConnData
+-&gt; ServerErrorCode
+-&gt; Maybe ServerMsg
+-&gt; Maybe Word16
+-&gt; IO ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Logger Hasura
+-&gt; WSConn WSConnData
+-&gt; ServerErrorCode
+-&gt; Maybe ServerMsg
+-&gt; Maybe Word16
+-&gt; m ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#sendCloseWithMsg"><span class="hs-identifier hs-var">sendCloseWithMsg</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219716"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219695"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ServerErrorCode
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GenericError4400"><span class="hs-identifier hs-var">GenericError4400</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ServerErrorCode) -&gt; String -&gt; ServerErrorCode
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Maybe String -&gt; String
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689219693"><span class="hs-identifier hs-var">mErrMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; (ConnErrMsg -&gt; Text) -&gt; ConnErrMsg -&gt; String
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ConnErrMsg -&gt; Text
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#unConnErrMsg"><span class="hs-identifier hs-var hs-var">unConnErrMsg</span></a></span><span> </span><span class="annot"><span class="annottext">(ConnErrMsg -&gt; String) -&gt; ConnErrMsg -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ConnErrMsg
+</span><a href="#local-6989586621689219694"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe ServerMsg
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Word16
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span>    </span><span id="local-6989586621689219711"><span class="annot"><span class="annottext">mkConnectionCloseAction :: WSCloseConnAction WSConnData
+</span><a href="#local-6989586621689219711"><span class="hs-identifier hs-var hs-var">mkConnectionCloseAction</span></a></span></span><span> </span><span id="local-6989586621689219686"><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219686"><span class="hs-identifier hs-var">wsConn</span></a></span></span><span> </span><span id="local-6989586621689219685"><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621689219685"><span class="hs-identifier hs-var">opId</span></a></span></span><span> </span><span id="local-6989586621689219684"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689219684"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-157"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol -&gt; WSSubProtocol -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-158"></span><span>        </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; WSConn WSConnData
+-&gt; ServerErrorCode
+-&gt; Maybe ServerMsg
+-&gt; Maybe Word16
+-&gt; IO ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+Logger Hasura
+-&gt; WSConn WSConnData
+-&gt; ServerErrorCode
+-&gt; Maybe ServerMsg
+-&gt; Maybe Word16
+-&gt; m ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#sendCloseWithMsg"><span class="hs-identifier hs-var">sendCloseWithMsg</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689219716"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219686"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ServerErrorCode
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GenericError4400"><span class="hs-identifier hs-var">GenericError4400</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689219684"><span class="hs-identifier hs-var">errMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ServerMsg -&gt; Maybe ServerMsg
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(ServerMsg -&gt; Maybe ServerMsg)
+-&gt; (ErrorMsg -&gt; ServerMsg) -&gt; ErrorMsg -&gt; Maybe ServerMsg
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ErrorMsg -&gt; ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMErr"><span class="hs-identifier hs-var">SMErr</span></a></span><span> </span><span class="annot"><span class="annottext">(ErrorMsg -&gt; Maybe ServerMsg) -&gt; ErrorMsg -&gt; Maybe ServerMsg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OperationId -&gt; Value -&gt; ErrorMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#ErrorMsg"><span class="hs-identifier hs-var">ErrorMsg</span></a></span><span> </span><span class="annot"><span class="annottext">OperationId
+</span><a href="#local-6989586621689219685"><span class="hs-identifier hs-var">opId</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ErrorMsg) -&gt; Value -&gt; ErrorMsg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689219684"><span class="hs-identifier hs-var">errMsg</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word16 -&gt; Maybe Word16
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Word16
+</span><span class="hs-number">1000</span></span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span>    </span><span id="local-6989586621689219709"><span class="annot"><span class="annottext">getServerMsgType :: DataMsg -&gt; ServerMsg
+</span><a href="#local-6989586621689219709"><span class="hs-identifier hs-var hs-var">getServerMsgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-161"></span><span>      </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Apollo"><span class="hs-identifier hs-var">Apollo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DataMsg -&gt; ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMData"><span class="hs-identifier hs-var">SMData</span></a></span><span>
+</span><span id="line-162"></span><span>      </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DataMsg -&gt; ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMNext"><span class="hs-identifier hs-var">SMNext</span></a></span><span>
+</span><span id="line-163"></span><span>
+</span><span id="line-164"></span><span>    </span><span id="local-6989586621689219710"><span class="annot"><span class="annottext">keepAliveAction :: WSKeepAliveMessageAction WSConnData
+</span><a href="#local-6989586621689219710"><span class="hs-identifier hs-var hs-var">keepAliveAction</span></a></span></span><span> </span><span id="local-6989586621689219681"><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219681"><span class="hs-identifier hs-var">wsConn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData -&gt; ServerMsg -&gt; IO ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+WSConn WSConnData -&gt; ServerMsg -&gt; m ()
+</span><a href="Hasura.GraphQL.Transport.WebSocket.html#sendMsg"><span class="hs-identifier hs-var">sendMsg</span></a></span><span> </span><span class="annot"><span class="annottext">WSConn WSConnData
+</span><a href="#local-6989586621689219681"><span class="hs-identifier hs-var">wsConn</span></a></span><span> </span><span class="annot"><span class="annottext">(ServerMsg -&gt; IO ()) -&gt; ServerMsg -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-165"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-166"></span><span>        </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Apollo"><span class="hs-identifier hs-var">Apollo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMConnKeepAlive"><span class="hs-identifier hs-var">SMConnKeepAlive</span></a></span><span>
+</span><span id="line-167"></span><span>        </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe PingPongPayload -&gt; ServerMsg
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#SMPing"><span class="hs-identifier hs-var">SMPing</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe PingPongPayload -&gt; ServerMsg)
+-&gt; (PingPongPayload -&gt; Maybe PingPongPayload)
+-&gt; PingPongPayload
+-&gt; ServerMsg
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">PingPongPayload -&gt; Maybe PingPongPayload
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(PingPongPayload -&gt; ServerMsg) -&gt; PingPongPayload -&gt; ServerMsg
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PingPongPayload
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#keepAliveMessage"><span class="hs-identifier hs-var">keepAliveMessage</span></a></span><span>
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621689219708"><span class="annot"><span class="annottext">mkAcceptRequest :: AcceptRequest
+</span><a href="#local-6989586621689219708"><span class="hs-identifier hs-var hs-var">mkAcceptRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-170"></span><span>      </span><span class="annot"><span class="annottext">AcceptRequest
+</span><span class="hs-identifier hs-var">WS.defaultAcceptRequest</span></span><span>
+</span><span id="line-171"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">acceptSubprotocol :: Maybe ByteString
+</span><span class="hs-identifier hs-var">WS.acceptSubprotocol</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Maybe ByteString)
+-&gt; (WSSubProtocol -&gt; ByteString)
+-&gt; WSSubProtocol
+-&gt; Maybe ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
+</span><span class="hs-identifier hs-var">B.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString)
+-&gt; (WSSubProtocol -&gt; String) -&gt; WSSubProtocol -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol -&gt; String
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#showSubProtocol"><span class="hs-identifier hs-var">showSubProtocol</span></a></span><span> </span><span class="annot"><span class="annottext">(WSSubProtocol -&gt; Maybe ByteString)
+-&gt; WSSubProtocol -&gt; Maybe ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span><span>
+</span><span id="line-172"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span>    </span><span id="local-6989586621689219707"><span class="annot"><span class="annottext">fmtErrorMessage :: [Value] -&gt; Value
+</span><a href="#local-6989586621689219707"><span class="hs-identifier hs-var hs-var">fmtErrorMessage</span></a></span></span><span> </span><span id="local-6989586621689219674"><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621689219674"><span class="hs-identifier hs-var">errMsgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="#local-6989586621689219715"><span class="hs-identifier hs-var">subProtocol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-175"></span><span>      </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#Apollo"><span class="hs-identifier hs-var">Apollo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;errors&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Value] -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621689219674"><span class="hs-identifier hs-var">errMsgs</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-176"></span><span>      </span><span class="annot"><span class="annottext">WSSubProtocol
+</span><a href="Hasura.GraphQL.Transport.WebSocket.Protocol.html#GraphQLWS"><span class="hs-identifier hs-var">GraphQLWS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621689219674"><span class="hs-identifier hs-var">errMsgs</span></a></span><span>
+</span><span id="line-177"></span></pre></body></html>

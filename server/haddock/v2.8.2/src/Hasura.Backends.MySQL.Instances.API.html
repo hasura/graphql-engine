@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MySQL.Instances.API</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html"><span class="hs-identifier">Hasura.Server.API.Backend</span></a></span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Server.API.Backend.html#BackendAPI"><span class="hs-identifier hs-type">BackendAPI</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span>  </span><span id="local-6989586621689212263"><span class="annot"><span class="annottext">metadataV1CommandParsers :: [CommandParser 'MySQL]
+</span><a href="Hasura.Server.API.Backend.html#metadataV1CommandParsers"><span class="hs-identifier hs-var hs-var hs-var hs-var">metadataV1CommandParsers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><span class="annottext">[[CommandParser 'MySQL]] -&gt; [CommandParser 'MySQL]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">concat</span></span><span>
+</span><span id="line-12"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Backend 'MySQL =&gt; [CommandParser 'MySQL]
+forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.Server.API.Backend.html#sourceCommands"><span class="hs-identifier hs-var">sourceCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>        </span><span class="annot"><span class="annottext">Backend 'MySQL =&gt; [CommandParser 'MySQL]
+forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.Server.API.Backend.html#tableCommands"><span class="hs-identifier hs-var">tableCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>        </span><span class="annot"><span class="annottext">Backend 'MySQL =&gt; [CommandParser 'MySQL]
+forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.Server.API.Backend.html#tablePermissionsCommands"><span class="hs-identifier hs-var">tablePermissionsCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>        </span><span class="annot"><span class="annottext">Backend 'MySQL =&gt; [CommandParser 'MySQL]
+forall (b :: BackendType). Backend b =&gt; [CommandParser b]
+</span><a href="Hasura.Server.API.Backend.html#relationshipCommands"><span class="hs-identifier hs-var">relationshipCommands</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span>
+</span><span id="line-16"></span><span>      </span><span class="hs-special">]</span><span>
+</span><span id="line-17"></span></pre></body></html>

@@ -1,0 +1,665 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_4qL6Q8WpLf8JT72mnaa0v5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Endpoint.Trie</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Types</span></span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier">MultiMapPathTrie</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchResult"><span class="hs-identifier">MatchResult</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier">PathComponent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Path matching</span></span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#matchPath"><span class="hs-identifier">matchPath</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPaths"><span class="hs-identifier">ambiguousPaths</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPathsGrouped"><span class="hs-identifier">ambiguousPathsGrouped</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSONKey</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.HashMap.Strict.Multi.html"><span class="hs-identifier">Data.HashMap.Strict.Multi</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MM</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Set.Extended.html"><span class="hs-identifier">Data.Set.Extended</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Trie.html"><span class="hs-identifier">Data.Trie</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- Types</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- | Trie from 'PathComponent's to 'MultiMap's</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">type</span><span> </span><span id="MultiMapPathTrie"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-var">MultiMapPathTrie</span></a></span></span><span> </span><span id="local-6989586621689053683"><span class="annot"><a href="#local-6989586621689053683"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621689053682"><span class="annot"><a href="#local-6989586621689053682"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621689053681"><span class="annot"><a href="#local-6989586621689053681"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.Trie.html#Trie"><span class="hs-identifier hs-type">T.Trie</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053683"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.HashMap.Strict.Multi.html#MultiMap"><span class="hs-identifier hs-type">MM.MultiMap</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053682"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053681"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | A component in a URL path: either a literal or a wildcard parameter</span><span>
+</span><span id="line-28"></span><span id="local-6989586621689053679"><span id="local-6989586621689053680"></span></span><span class="hs-keyword">data</span><span> </span><span id="PathComponent"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-var">PathComponent</span></a></span></span><span> </span><span id="local-6989586621689053762"><span class="annot"><a href="#local-6989586621689053762"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PathLiteral"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathLiteral"><span class="hs-identifier hs-var">PathLiteral</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689053762"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PathParam"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathParam"><span class="hs-identifier hs-var">PathParam</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689053671"><span id="local-6989586621689053673"><span id="local-6989586621689053675"><span class="annot"><span class="annottext">Int -&gt; PathComponent a -&gt; ShowS
+[PathComponent a] -&gt; ShowS
+PathComponent a -&gt; String
+(Int -&gt; PathComponent a -&gt; ShowS)
+-&gt; (PathComponent a -&gt; String)
+-&gt; ([PathComponent a] -&gt; ShowS)
+-&gt; Show (PathComponent a)
+forall a. Show a =&gt; Int -&gt; PathComponent a -&gt; ShowS
+forall a. Show a =&gt; [PathComponent a] -&gt; ShowS
+forall a. Show a =&gt; PathComponent a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PathComponent a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [PathComponent a] -&gt; ShowS
+show :: PathComponent a -&gt; String
+$cshow :: forall a. Show a =&gt; PathComponent a -&gt; String
+showsPrec :: Int -&gt; PathComponent a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; PathComponent a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689053666"><span id="local-6989586621689053668"><span class="annot"><span class="annottext">PathComponent a -&gt; PathComponent a -&gt; Bool
+(PathComponent a -&gt; PathComponent a -&gt; Bool)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; Bool)
+-&gt; Eq (PathComponent a)
+forall a. Eq a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PathComponent a -&gt; PathComponent a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+== :: PathComponent a -&gt; PathComponent a -&gt; Bool
+$c== :: forall a. Eq a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689053650"><span id="local-6989586621689053652"><span id="local-6989586621689053654"><span id="local-6989586621689053656"><span id="local-6989586621689053658"><span id="local-6989586621689053660"><span id="local-6989586621689053662"><span class="annot"><span class="annottext">Eq (PathComponent a)
+Eq (PathComponent a)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; Ordering)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; Bool)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; Bool)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; Bool)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; Bool)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; PathComponent a)
+-&gt; (PathComponent a -&gt; PathComponent a -&gt; PathComponent a)
+-&gt; Ord (PathComponent a)
+PathComponent a -&gt; PathComponent a -&gt; Bool
+PathComponent a -&gt; PathComponent a -&gt; Ordering
+PathComponent a -&gt; PathComponent a -&gt; PathComponent a
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a. Ord a =&gt; Eq (PathComponent a)
+forall a. Ord a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+forall a. Ord a =&gt; PathComponent a -&gt; PathComponent a -&gt; Ordering
+forall a.
+Ord a =&gt;
+PathComponent a -&gt; PathComponent a -&gt; PathComponent a
+min :: PathComponent a -&gt; PathComponent a -&gt; PathComponent a
+$cmin :: forall a.
+Ord a =&gt;
+PathComponent a -&gt; PathComponent a -&gt; PathComponent a
+max :: PathComponent a -&gt; PathComponent a -&gt; PathComponent a
+$cmax :: forall a.
+Ord a =&gt;
+PathComponent a -&gt; PathComponent a -&gt; PathComponent a
+&gt;= :: PathComponent a -&gt; PathComponent a -&gt; Bool
+$c&gt;= :: forall a. Ord a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+&gt; :: PathComponent a -&gt; PathComponent a -&gt; Bool
+$c&gt; :: forall a. Ord a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+&lt;= :: PathComponent a -&gt; PathComponent a -&gt; Bool
+$c&lt;= :: forall a. Ord a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+&lt; :: PathComponent a -&gt; PathComponent a -&gt; Bool
+$c&lt; :: forall a. Ord a =&gt; PathComponent a -&gt; PathComponent a -&gt; Bool
+compare :: PathComponent a -&gt; PathComponent a -&gt; Ordering
+$ccompare :: forall a. Ord a =&gt; PathComponent a -&gt; PathComponent a -&gt; Ordering
+$cp1Ord :: forall a. Ord a =&gt; Eq (PathComponent a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. PathComponent a -&gt; Rep (PathComponent a) x)
+-&gt; (forall x. Rep (PathComponent a) x -&gt; PathComponent a)
+-&gt; Generic (PathComponent a)
+forall x. Rep (PathComponent a) x -&gt; PathComponent a
+forall x. PathComponent a -&gt; Rep (PathComponent a) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall a x. Rep (PathComponent a) x -&gt; PathComponent a
+forall a x. PathComponent a -&gt; Rep (PathComponent a) x
+$cto :: forall a x. Rep (PathComponent a) x -&gt; PathComponent a
+$cfrom :: forall a x. PathComponent a -&gt; Rep (PathComponent a) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span id="local-6989586621689053645"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689053637"><span id="local-6989586621689053639"><span id="local-6989586621689053641"><span id="local-6989586621689053643"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689053645"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053645"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span id="local-6989586621689053635"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689053631"><span id="local-6989586621689053633"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689053635"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053635"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span id="local-6989586621689053629"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689053625"><span id="local-6989586621689053627"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053629"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053629"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | Result of matching a path @['PathComponent'] a@ and key @k@ in a 'MultiMapPathTrie'.</span><span>
+</span><span id="line-40"></span><span class="hs-comment">--</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- 'MatchResult' is a lattice where 'MatchNotFound' is the bottom element and</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- 'MatchAmbiguous' is the top element:</span><span>
+</span><span id="line-43"></span><span class="hs-comment">--</span><span>
+</span><span id="line-44"></span><span class="hs-comment">--               MatchAmbiguous</span><span>
+</span><span id="line-45"></span><span class="hs-comment">--             /               \</span><span>
+</span><span id="line-46"></span><span class="hs-comment">--   MatchFound v0 as0     MatchFound v1 as1</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--             \               /</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--        MatchMissingKey (ks0 &lt;&gt; ks1)</span><span>
+</span><span id="line-49"></span><span class="hs-comment">--             /               \</span><span>
+</span><span id="line-50"></span><span class="hs-comment">--  MatchMissingKey ks0     MatchMissingKey ks1</span><span>
+</span><span id="line-51"></span><span class="hs-comment">--             \               /</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--               MatchNotFound</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">data</span><span> </span><span id="MatchResult"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchResult"><span class="hs-identifier hs-var">MatchResult</span></a></span></span><span> </span><span id="local-6989586621689053792"><span class="annot"><a href="#local-6989586621689053792"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621689053791"><span class="annot"><a href="#local-6989586621689053791"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621689053790"><span class="annot"><a href="#local-6989586621689053790"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Multiple results.</span><span>
+</span><span id="line-55"></span><span>    </span><span id="MatchAmbiguous"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchAmbiguous"><span class="hs-identifier hs-var">MatchAmbiguous</span></a></span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | A single unambiguous result. Returns the value found and a list of</span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-comment">-- parameter bindings.</span><span>
+</span><span id="line-58"></span><span>    </span><span id="MatchFound"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchFound"><span class="hs-identifier hs-var">MatchFound</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689053790"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689053792"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | A path was found, but not a key. Returns a list of keys found.</span><span>
+</span><span id="line-60"></span><span>    </span><span id="MatchMissingKey"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchMissingKey"><span class="hs-identifier hs-var">MatchMissingKey</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="#local-6989586621689053791"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Path was not found in the 'MultiMapPathTrie'.</span><span>
+</span><span id="line-62"></span><span>    </span><span id="MatchNotFound"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchNotFound"><span class="hs-identifier hs-var">MatchNotFound</span></a></span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689053616"><span id="local-6989586621689053618"><span class="annot"><span class="annottext">MatchResult a k v -&gt; MatchResult a k v -&gt; Bool
+(MatchResult a k v -&gt; MatchResult a k v -&gt; Bool)
+-&gt; (MatchResult a k v -&gt; MatchResult a k v -&gt; Bool)
+-&gt; Eq (MatchResult a k v)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall a k v.
+(Eq v, Eq a, Eq k) =&gt;
+MatchResult a k v -&gt; MatchResult a k v -&gt; Bool
+/= :: MatchResult a k v -&gt; MatchResult a k v -&gt; Bool
+$c/= :: forall a k v.
+(Eq v, Eq a, Eq k) =&gt;
+MatchResult a k v -&gt; MatchResult a k v -&gt; Bool
+== :: MatchResult a k v -&gt; MatchResult a k v -&gt; Bool
+$c== :: forall a k v.
+(Eq v, Eq a, Eq k) =&gt;
+MatchResult a k v -&gt; MatchResult a k v -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689053610"><span id="local-6989586621689053612"><span id="local-6989586621689053614"><span class="annot"><span class="annottext">Int -&gt; MatchResult a k v -&gt; ShowS
+[MatchResult a k v] -&gt; ShowS
+MatchResult a k v -&gt; String
+(Int -&gt; MatchResult a k v -&gt; ShowS)
+-&gt; (MatchResult a k v -&gt; String)
+-&gt; ([MatchResult a k v] -&gt; ShowS)
+-&gt; Show (MatchResult a k v)
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+forall a k v.
+(Show v, Show a, Show k) =&gt;
+Int -&gt; MatchResult a k v -&gt; ShowS
+forall a k v.
+(Show v, Show a, Show k) =&gt;
+[MatchResult a k v] -&gt; ShowS
+forall a k v.
+(Show v, Show a, Show k) =&gt;
+MatchResult a k v -&gt; String
+showList :: [MatchResult a k v] -&gt; ShowS
+$cshowList :: forall a k v.
+(Show v, Show a, Show k) =&gt;
+[MatchResult a k v] -&gt; ShowS
+show :: MatchResult a k v -&gt; String
+$cshow :: forall a k v.
+(Show v, Show a, Show k) =&gt;
+MatchResult a k v -&gt; String
+showsPrec :: Int -&gt; MatchResult a k v -&gt; ShowS
+$cshowsPrec :: forall a k v.
+(Show v, Show a, Show k) =&gt;
+Int -&gt; MatchResult a k v -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- | Semigroup and Monoid instances implement join (i.e. least upper bound)</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- on the above lattice.</span><span>
+</span><span id="line-67"></span><span id="local-6989586621689053607"><span id="local-6989586621689053608"><span id="local-6989586621689053609"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689053602"><span id="local-6989586621689053604"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchResult"><span class="hs-identifier hs-type">MatchResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053609"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053608"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053607"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-comment">-- Ambiguous match with anything else is ambiguous</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchAmbiguous"><span class="hs-identifier hs-var">MatchAmbiguous</span></a></span><span> </span><span id="local-6989586621689053600"><span class="annot"><span class="annottext">&lt;&gt; :: MatchResult a k v -&gt; MatchResult a k v -&gt; MatchResult a k v
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+forall a k v. MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchAmbiguous"><span class="hs-identifier hs-var">MatchAmbiguous</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchAmbiguous"><span class="hs-identifier hs-var">MatchAmbiguous</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+forall a k v. MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchAmbiguous"><span class="hs-identifier hs-var">MatchAmbiguous</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-comment">-- Two unambiguous matches is ambiguous</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchFound"><span class="hs-identifier hs-type">MatchFound</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchFound"><span class="hs-identifier hs-type">MatchFound</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+forall a k v. MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchAmbiguous"><span class="hs-identifier hs-var">MatchAmbiguous</span></a></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-comment">-- Unambiguous match with missing key or not found is unambiguous</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621689053599"><span class="annot"><span class="annottext">m :: MatchResult a k v
+</span><a href="#local-6989586621689053599"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchFound"><span class="hs-identifier hs-type">MatchFound</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="#local-6989586621689053599"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span id="local-6989586621689053598"><span class="annot"><span class="annottext">m :: MatchResult a k v
+</span><a href="#local-6989586621689053598"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchFound"><span class="hs-identifier hs-type">MatchFound</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="#local-6989586621689053598"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-comment">-- Collect allowed keys</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchMissingKey"><span class="hs-identifier hs-type">MatchMissingKey</span></a></span><span> </span><span id="local-6989586621689053597"><span class="annot"><span class="annottext">NonEmpty k
+</span><a href="#local-6989586621689053597"><span class="hs-identifier hs-var">ks</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchMissingKey"><span class="hs-identifier hs-type">MatchMissingKey</span></a></span><span> </span><span id="local-6989586621689053596"><span class="annot"><span class="annottext">NonEmpty k
+</span><a href="#local-6989586621689053596"><span class="hs-identifier hs-var">ks'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmpty k -&gt; MatchResult a k v
+forall a k v. NonEmpty k -&gt; MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchMissingKey"><span class="hs-identifier hs-var">MatchMissingKey</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmpty k -&gt; MatchResult a k v)
+-&gt; NonEmpty k -&gt; MatchResult a k v
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty k
+</span><a href="#local-6989586621689053597"><span class="hs-identifier hs-var">ks</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty k -&gt; NonEmpty k -&gt; NonEmpty k
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty k
+</span><a href="#local-6989586621689053596"><span class="hs-identifier hs-var">ks'</span></a></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-comment">-- Not found is the identity element</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchNotFound"><span class="hs-identifier hs-var">MatchNotFound</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span id="local-6989586621689053595"><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="#local-6989586621689053595"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="#local-6989586621689053595"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621689053594"><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="#local-6989586621689053594"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchNotFound"><span class="hs-identifier hs-var">MatchNotFound</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+</span><a href="#local-6989586621689053594"><span class="hs-identifier hs-var">r</span></a></span></span></span></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span id="local-6989586621689053591"><span id="local-6989586621689053592"><span id="local-6989586621689053593"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689053585"><span id="local-6989586621689053587"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchResult"><span class="hs-identifier hs-type">MatchResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053593"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053592"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053591"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621689053583"><span class="annot"><span class="annottext">mempty :: MatchResult a k v
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+forall a k v. MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchNotFound"><span class="hs-identifier hs-var">MatchNotFound</span></a></span></span></span></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- Matching paths</span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- | Look up the value at a path.</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- @PathParam@ matches any path component.</span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- Returns a list of pairs containing the value found and bindings for any @PathParam@s.</span><span>
+</span><span id="line-91"></span><span id="local-6989586621689053771"><span id="local-6989586621689053772"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#lookupPath"><span class="hs-identifier hs-type">lookupPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689053772"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053772"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689053772"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Trie.html#Trie"><span class="hs-identifier hs-type">T.Trie</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053772"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689053771"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689053771"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689053772"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-92"></span><span id="lookupPath"><span class="annot"><span class="annottext">lookupPath :: [a] -&gt; Trie (PathComponent a) v -&gt; [(v, [a])]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#lookupPath"><span class="hs-identifier hs-var hs-var">lookupPath</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span id="local-6989586621689053581"><span class="annot"><span class="annottext">Trie (PathComponent a) v
+</span><a href="#local-6989586621689053581"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689053580"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689053580"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689053580"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe v -&gt; [v]
+forall a. Maybe a -&gt; [a]
+</span><span class="hs-identifier hs-var">maybeToList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Trie (PathComponent a) v -&gt; Maybe v
+forall k v. Trie k v -&gt; Maybe v
+</span><a href="Data.Trie.html#trieData"><span class="hs-identifier hs-var hs-var">T.trieData</span></a></span><span> </span><span class="annot"><span class="annottext">Trie (PathComponent a) v
+</span><a href="#local-6989586621689053581"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-93"></span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#lookupPath"><span class="hs-identifier hs-var">lookupPath</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689053577"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689053577"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689053576"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689053576"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689053575"><span class="annot"><span class="annottext">Trie (PathComponent a) v
+</span><a href="#local-6989586621689053575"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621689053574"><span class="annot"><span class="annottext">PathComponent ()
+</span><a href="#local-6989586621689053574"><span class="hs-identifier hs-var">pc</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689053573"><span class="annot"><span class="annottext">Trie (PathComponent a) v
+</span><a href="#local-6989586621689053573"><span class="hs-identifier hs-var">t'</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">a
+-&gt; HashMap (PathComponent a) (Trie (PathComponent a) v)
+-&gt; [(PathComponent (), Trie (PathComponent a) v)]
+forall a v.
+(Eq a, Hashable a) =&gt;
+a -&gt; HashMap (PathComponent a) v -&gt; [(PathComponent (), v)]
+</span><a href="#local-6989586621689053572"><span class="hs-identifier hs-var">matchPathComponent</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689053577"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap (PathComponent a) (Trie (PathComponent a) v)
+ -&gt; [(PathComponent (), Trie (PathComponent a) v)])
+-&gt; HashMap (PathComponent a) (Trie (PathComponent a) v)
+-&gt; [(PathComponent (), Trie (PathComponent a) v)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Trie (PathComponent a) v
+-&gt; HashMap (PathComponent a) (Trie (PathComponent a) v)
+forall k v. Trie k v -&gt; HashMap k (Trie k v)
+</span><a href="Data.Trie.html#trieMap"><span class="hs-identifier hs-var hs-var">T.trieMap</span></a></span><span> </span><span class="annot"><span class="annottext">Trie (PathComponent a) v
+</span><a href="#local-6989586621689053575"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621689053570"><span class="annot"><span class="annottext">(v, [a])
+</span><a href="#local-6989586621689053570"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[a] -&gt; Trie (PathComponent a) v -&gt; [(v, [a])]
+forall a v.
+(Eq a, Hashable a) =&gt;
+[a] -&gt; Trie (PathComponent a) v -&gt; [(v, [a])]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#lookupPath"><span class="hs-identifier hs-var">lookupPath</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689053576"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Trie (PathComponent a) v
+</span><a href="#local-6989586621689053573"><span class="hs-identifier hs-var">t'</span></a></span><span>
+</span><span id="line-96"></span><span>  </span><span class="annot"><span class="annottext">(v, [a]) -&gt; [(v, [a])]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">((v, [a]) -&gt; [(v, [a])]) -&gt; (v, [a]) -&gt; [(v, [a])]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PathComponent ()
+</span><a href="#local-6989586621689053574"><span class="hs-identifier hs-var">pc</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathLiteral"><span class="hs-identifier hs-type">PathLiteral</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(v, [a])
+</span><a href="#local-6989586621689053570"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><span class="annottext">PathComponent ()
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathParam"><span class="hs-identifier hs-var">PathParam</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689053577"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; [a] -&gt; [a]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([a] -&gt; [a]) -&gt; (v, [a]) -&gt; (v, [a])
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v, [a])
+</span><a href="#local-6989586621689053570"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-100"></span><span>    </span><span id="local-6989586621689053773"><span id="local-6989586621689053774"><span class="annot"><a href="#local-6989586621689053572"><span class="hs-identifier hs-type">matchPathComponent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-101"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689053774"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053774"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-102"></span><span>      </span><span class="annot"><a href="#local-6989586621689053774"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-103"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053774"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689053773"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-104"></span><span>      </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621689053773"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-105"></span><span>    </span><span id="local-6989586621689053572"><span class="annot"><span class="annottext">matchPathComponent :: a -&gt; HashMap (PathComponent a) v -&gt; [(PathComponent (), v)]
+</span><a href="#local-6989586621689053572"><span class="hs-identifier hs-var hs-var">matchPathComponent</span></a></span></span><span> </span><span id="local-6989586621689053568"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689053568"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689053567"><span class="annot"><span class="annottext">HashMap (PathComponent a) v
+</span><a href="#local-6989586621689053567"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>      </span><span class="annot"><span class="annottext">[Maybe (PathComponent (), v)] -&gt; [(PathComponent (), v)]
+forall a. [Maybe a] -&gt; [a]
+</span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">() -&gt; PathComponent ()
+forall a. a -&gt; PathComponent a
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathLiteral"><span class="hs-identifier hs-var">PathLiteral</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(v -&gt; (PathComponent (), v))
+-&gt; Maybe v -&gt; Maybe (PathComponent (), v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">PathComponent a -&gt; HashMap (PathComponent a) v -&gt; Maybe v
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; PathComponent a
+forall a. a -&gt; PathComponent a
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathLiteral"><span class="hs-identifier hs-var">PathLiteral</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689053568"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashMap (PathComponent a) v
+</span><a href="#local-6989586621689053567"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PathComponent ()
+forall a. PathComponent a
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathParam"><span class="hs-identifier hs-var">PathParam</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(v -&gt; (PathComponent (), v))
+-&gt; Maybe v -&gt; Maybe (PathComponent (), v)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">PathComponent a -&gt; HashMap (PathComponent a) v -&gt; Maybe v
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">PathComponent a
+forall a. PathComponent a
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathParam"><span class="hs-identifier hs-var">PathParam</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (PathComponent a) v
+</span><a href="#local-6989586621689053567"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- | Match a key @k@ and path @[a]@ against a @MultiMapPathTrie a k v@</span><span>
+</span><span id="line-109"></span><span id="local-6989586621689053562"><span id="local-6989586621689053563"><span id="local-6989586621689053564"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#matchPath"><span class="hs-identifier hs-type">matchPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689053564"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689053563"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053563"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053564"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689053563"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689053564"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-type">MultiMapPathTrie</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053564"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053563"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053562"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchResult"><span class="hs-identifier hs-type">MatchResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053564"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053563"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053562"><span class="hs-identifier hs-type">v</span></a></span></span></span></span><span>
+</span><span id="line-110"></span><span id="matchPath"><span class="annot"><span class="annottext">matchPath :: k -&gt; [a] -&gt; MultiMapPathTrie a k v -&gt; MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#matchPath"><span class="hs-identifier hs-var hs-var">matchPath</span></a></span></span><span> </span><span id="local-6989586621689053561"><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689053561"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span id="local-6989586621689053560"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689053560"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((MultiMap k v, [a]) -&gt; MatchResult a k v)
+-&gt; [(MultiMap k v, [a])] -&gt; MatchResult a k v
+forall (t :: * -&gt; *) m a.
+(Foldable t, Monoid m) =&gt;
+(a -&gt; m) -&gt; t a -&gt; m
+</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="annot"><span class="annottext">(MultiMap k v, [a]) -&gt; MatchResult a k v
+</span><a href="#local-6989586621689053558"><span class="hs-identifier hs-var">toResult</span></a></span><span> </span><span class="annot"><span class="annottext">([(MultiMap k v, [a])] -&gt; MatchResult a k v)
+-&gt; (MultiMapPathTrie a k v -&gt; [(MultiMap k v, [a])])
+-&gt; MultiMapPathTrie a k v
+-&gt; MatchResult a k v
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[a] -&gt; MultiMapPathTrie a k v -&gt; [(MultiMap k v, [a])]
+forall a v.
+(Eq a, Hashable a) =&gt;
+[a] -&gt; Trie (PathComponent a) v -&gt; [(v, [a])]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#lookupPath"><span class="hs-identifier hs-var">lookupPath</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689053560"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621689053558"><span class="annot"><span class="annottext">toResult :: (MultiMap k v, [a]) -&gt; MatchResult a k v
+</span><a href="#local-6989586621689053558"><span class="hs-identifier hs-var hs-var">toResult</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689053556"><span class="annot"><span class="annottext">MultiMap k v
+</span><a href="#local-6989586621689053556"><span class="hs-identifier hs-var">methodMap</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689053555"><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689053555"><span class="hs-identifier hs-var">paramMatches</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Set v -&gt; [v]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">S.toList</span></span><span> </span><span class="annot"><span class="annottext">(Set v -&gt; [v]) -&gt; Set v -&gt; [v]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">k -&gt; MultiMap k v -&gt; Set v
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; MultiMap k v -&gt; Set v
+</span><a href="Data.HashMap.Strict.Multi.html#lookup"><span class="hs-identifier hs-var">MM.lookup</span></a></span><span> </span><span class="annot"><span class="annottext">k
+</span><a href="#local-6989586621689053561"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">MultiMap k v
+</span><a href="#local-6989586621689053556"><span class="hs-identifier hs-var">methodMap</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-114"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+-&gt; (NonEmpty k -&gt; MatchResult a k v)
+-&gt; Maybe (NonEmpty k)
+-&gt; MatchResult a k v
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+forall a k v. MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchNotFound"><span class="hs-identifier hs-var">MatchNotFound</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty k -&gt; MatchResult a k v
+forall a k v. NonEmpty k -&gt; MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchMissingKey"><span class="hs-identifier hs-var">MatchMissingKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[k] -&gt; Maybe (NonEmpty k)
+forall a. [a] -&gt; Maybe (NonEmpty a)
+</span><span class="hs-identifier hs-var">nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">([k] -&gt; Maybe (NonEmpty k)) -&gt; [k] -&gt; Maybe (NonEmpty k)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiMap k v -&gt; [k]
+forall k v. MultiMap k v -&gt; [k]
+</span><a href="Data.HashMap.Strict.Multi.html#keys"><span class="hs-identifier hs-var">MM.keys</span></a></span><span> </span><span class="annot"><span class="annottext">MultiMap k v
+</span><a href="#local-6989586621689053556"><span class="hs-identifier hs-var">methodMap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>        </span><span class="hs-special">[</span><span id="local-6989586621689053549"><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689053549"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">v -&gt; [a] -&gt; MatchResult a k v
+forall a k v. v -&gt; [a] -&gt; MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchFound"><span class="hs-identifier hs-var">MatchFound</span></a></span><span> </span><span class="annot"><span class="annottext">v
+</span><a href="#local-6989586621689053549"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
+</span><a href="#local-6989586621689053555"><span class="hs-identifier hs-var">paramMatches</span></a></span><span>
+</span><span id="line-116"></span><span>        </span><span class="annot"><span class="annottext">[v]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MatchResult a k v
+forall a k v. MatchResult a k v
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#MatchAmbiguous"><span class="hs-identifier hs-var">MatchAmbiguous</span></a></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- | A version of ambiguousPaths that attempts to group all ambiguous paths that have overlapping endpoints</span><span>
+</span><span id="line-119"></span><span id="local-6989586621689053546"><span id="local-6989586621689053547"><span id="local-6989586621689053548"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPathsGrouped"><span class="hs-identifier hs-type">ambiguousPathsGrouped</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053548"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689053547"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053547"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689053546"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689053548"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-type">MultiMapPathTrie</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053548"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053547"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053546"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053548"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689053546"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-120"></span><span id="ambiguousPathsGrouped"><span class="annot"><span class="annottext">ambiguousPathsGrouped :: MultiMapPathTrie a k v -&gt; [(Set [PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPathsGrouped"><span class="hs-identifier hs-var hs-var">ambiguousPathsGrouped</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+forall a v.
+(Ord a, Ord v) =&gt;
+[(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#groupAmbiguousPaths"><span class="hs-identifier hs-var">groupAmbiguousPaths</span></a></span><span> </span><span class="annot"><span class="annottext">([(Set [PathComponent a], Set v)]
+ -&gt; [(Set [PathComponent a], Set v)])
+-&gt; (MultiMapPathTrie a k v -&gt; [(Set [PathComponent a], Set v)])
+-&gt; MultiMapPathTrie a k v
+-&gt; [(Set [PathComponent a], Set v)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(([PathComponent a], Set v) -&gt; (Set [PathComponent a], Set v))
+-&gt; [([PathComponent a], Set v)] -&gt; [(Set [PathComponent a], Set v)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">([PathComponent a] -&gt; Set [PathComponent a])
+-&gt; ([PathComponent a], Set v) -&gt; (Set [PathComponent a], Set v)
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; a (b, d) (c, d)
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">[PathComponent a] -&gt; Set [PathComponent a]
+forall a. a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.singleton</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([([PathComponent a], Set v)] -&gt; [(Set [PathComponent a], Set v)])
+-&gt; (MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)])
+-&gt; MultiMapPathTrie a k v
+-&gt; [(Set [PathComponent a], Set v)]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)]
+forall a k v.
+(Eq a, Hashable a, Eq k, Hashable k, Ord v) =&gt;
+MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPaths"><span class="hs-identifier hs-var">ambiguousPaths</span></a></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span id="local-6989586621689053735"><span id="local-6989586621689053736"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#groupAmbiguousPaths"><span class="hs-identifier hs-type">groupAmbiguousPaths</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689053736"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689053735"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053736"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689053735"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053736"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689053735"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-123"></span><span id="groupAmbiguousPaths"><span class="annot"><span class="annottext">groupAmbiguousPaths :: [(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#groupAmbiguousPaths"><span class="hs-identifier hs-var hs-var">groupAmbiguousPaths</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-124"></span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#groupAmbiguousPaths"><span class="hs-identifier hs-var">groupAmbiguousPaths</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689053543"><span class="annot"><span class="annottext">(Set [PathComponent a], Set v)
+</span><a href="#local-6989586621689053543"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689053542"><span class="annot"><span class="annottext">[(Set [PathComponent a], Set v)]
+</span><a href="#local-6989586621689053542"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">((Bool, (Set [PathComponent a], Set v)) -&gt; Bool)
+-&gt; [(Bool, (Set [PathComponent a], Set v))] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="annot"><span class="annottext">(Bool, (Set [PathComponent a], Set v)) -&gt; Bool
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">[(Bool, (Set [PathComponent a], Set v))]
+</span><a href="#local-6989586621689053540"><span class="hs-identifier hs-var">added</span></a></span><span>
+</span><span id="line-126"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">[(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+forall a v.
+(Ord a, Ord v) =&gt;
+[(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#groupAmbiguousPaths"><span class="hs-identifier hs-var">groupAmbiguousPaths</span></a></span><span> </span><span class="annot"><span class="annottext">([(Set [PathComponent a], Set v)]
+ -&gt; [(Set [PathComponent a], Set v)])
+-&gt; [(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">((Bool, (Set [PathComponent a], Set v))
+ -&gt; (Set [PathComponent a], Set v))
+-&gt; [(Bool, (Set [PathComponent a], Set v))]
+-&gt; [(Set [PathComponent a], Set v)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(Bool, (Set [PathComponent a], Set v))
+-&gt; (Set [PathComponent a], Set v)
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">[(Bool, (Set [PathComponent a], Set v))]
+</span><a href="#local-6989586621689053540"><span class="hs-identifier hs-var">added</span></a></span><span>
+</span><span id="line-127"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">(Set [PathComponent a], Set v)
+</span><a href="#local-6989586621689053543"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">(Set [PathComponent a], Set v)
+-&gt; [(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+forall a v.
+(Ord a, Ord v) =&gt;
+[(Set [PathComponent a], Set v)]
+-&gt; [(Set [PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#groupAmbiguousPaths"><span class="hs-identifier hs-var">groupAmbiguousPaths</span></a></span><span> </span><span class="annot"><span class="annottext">[(Set [PathComponent a], Set v)]
+</span><a href="#local-6989586621689053542"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621689053540"><span class="annot"><span class="annottext">added :: [(Bool, (Set [PathComponent a], Set v))]
+</span><a href="#local-6989586621689053540"><span class="hs-identifier hs-var hs-var">added</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Set [PathComponent a], Set v)
+ -&gt; (Bool, (Set [PathComponent a], Set v)))
+-&gt; [(Set [PathComponent a], Set v)]
+-&gt; [(Bool, (Set [PathComponent a], Set v))]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Set [PathComponent a], Set v)
+-&gt; (Set [PathComponent a], Set v)
+-&gt; (Bool, (Set [PathComponent a], Set v))
+forall a a.
+(Ord a, Ord a) =&gt;
+(Set a, Set a) -&gt; (Set a, Set a) -&gt; (Bool, (Set a, Set a))
+</span><a href="#local-6989586621689053539"><span class="hs-identifier hs-var">add</span></a></span><span> </span><span class="annot"><span class="annottext">(Set [PathComponent a], Set v)
+</span><a href="#local-6989586621689053543"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(Set [PathComponent a], Set v)]
+</span><a href="#local-6989586621689053542"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621689053539"><span class="annot"><span class="annottext">add :: (Set a, Set a) -&gt; (Set a, Set a) -&gt; (Bool, (Set a, Set a))
+</span><a href="#local-6989586621689053539"><span class="hs-identifier hs-var hs-var">add</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689053538"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053538"><span class="hs-identifier hs-var">p1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689053537"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053537"><span class="hs-identifier hs-var">v1</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689053536"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053536"><span class="hs-identifier hs-var">p2</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689053535"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053535"><span class="hs-identifier hs-var">v2</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Set a -&gt; Set a -&gt; Bool
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Bool
+</span><a href="Data.Set.Extended.html#intersects"><span class="hs-identifier hs-var">S.intersects</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053537"><span class="hs-identifier hs-var">v1</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053535"><span class="hs-identifier hs-var">v2</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set a -&gt; Set a -&gt; Set a
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.union</span></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053538"><span class="hs-identifier hs-var">p1</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053536"><span class="hs-identifier hs-var">p2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Set a -&gt; Set a -&gt; Set a
+forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><span class="hs-identifier hs-var">S.union</span></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053537"><span class="hs-identifier hs-var">v1</span></a></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053535"><span class="hs-identifier hs-var">v2</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-132"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053536"><span class="hs-identifier hs-var">p2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053535"><span class="hs-identifier hs-var">v2</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>
+</span><span id="line-134"></span><span class="hs-comment">-- | Detect and return all ambiguous paths in the @MultiMapPathTrie@</span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- A path @p@ is ambiguous if @matchPath k p@ can return @MatchAmbiguous@ for some @k@.</span><span>
+</span><span id="line-136"></span><span id="local-6989586621689053724"><span id="local-6989586621689053725"><span id="local-6989586621689053726"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPaths"><span class="hs-identifier hs-type">ambiguousPaths</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689053726"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053726"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621689053725"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689053725"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689053724"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-type">MultiMapPathTrie</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053726"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053725"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053724"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathComponent"><span class="hs-identifier hs-type">PathComponent</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689053726"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">S.Set</span></span><span> </span><span class="annot"><a href="#local-6989586621689053724"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span></span></span></span><span>
+</span><span id="line-137"></span><span id="ambiguousPaths"><span class="annot"><span class="annottext">ambiguousPaths :: MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPaths"><span class="hs-identifier hs-var hs-var">ambiguousPaths</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Trie.html#Trie"><span class="hs-identifier hs-type">T.Trie</span></a></span><span> </span><span id="local-6989586621689053531"><span class="annot"><span class="annottext">HashMap (PathComponent a) (MultiMapPathTrie a k v)
+</span><a href="#local-6989586621689053531"><span class="hs-identifier hs-var">pathMap</span></a></span></span><span> </span><span id="local-6989586621689053530"><span class="annot"><span class="annottext">Maybe (MultiMap k v)
+</span><a href="#local-6989586621689053530"><span class="hs-identifier hs-var">methodMap</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><span class="annottext">[([PathComponent a], Set v)]
+</span><a href="#local-6989586621689053529"><span class="hs-identifier hs-var">thisNodeAmbiguousPaths</span></a></span><span> </span><span class="annot"><span class="annottext">[([PathComponent a], Set v)]
+-&gt; [([PathComponent a], Set v)] -&gt; [([PathComponent a], Set v)]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[([PathComponent a], Set v)]
+</span><a href="#local-6989586621689053528"><span class="hs-identifier hs-var">childNodesAmbiguousPaths</span></a></span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621689053527"><span class="annot"><span class="annottext">isAmbiguous :: Set a -&gt; Bool
+</span><a href="#local-6989586621689053527"><span class="hs-identifier hs-var hs-var">isAmbiguous</span></a></span></span><span> </span><span id="local-6989586621689053526"><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053526"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Set a -&gt; Int
+forall a. Set a -&gt; Int
+</span><span class="hs-identifier hs-var">S.size</span></span><span> </span><span class="annot"><span class="annottext">Set a
+</span><a href="#local-6989586621689053526"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">2</span></span><span>
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621689053524"><span class="annot"><span class="annottext">ambiguous :: Set v
+</span><a href="#local-6989586621689053524"><span class="hs-identifier hs-var hs-var">ambiguous</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Set v] -&gt; Set v
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="annot"><span class="annottext">([Set v] -&gt; Set v) -&gt; [Set v] -&gt; Set v
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Set v -&gt; Bool) -&gt; [Set v] -&gt; [Set v]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="annot"><span class="annottext">Set v -&gt; Bool
+forall a. Set a -&gt; Bool
+</span><a href="#local-6989586621689053527"><span class="hs-identifier hs-var">isAmbiguous</span></a></span><span> </span><span class="annot"><span class="annottext">([Set v] -&gt; [Set v]) -&gt; [Set v] -&gt; [Set v]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Set v]
+-&gt; (MultiMap k v -&gt; [Set v]) -&gt; Maybe (MultiMap k v) -&gt; [Set v]
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">MultiMap k v -&gt; [Set v]
+forall k v. MultiMap k v -&gt; [Set v]
+</span><a href="Data.HashMap.Strict.Multi.html#elems"><span class="hs-identifier hs-var">MM.elems</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (MultiMap k v)
+</span><a href="#local-6989586621689053530"><span class="hs-identifier hs-var">methodMap</span></a></span><span>
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621689053529"><span class="annot"><span class="annottext">thisNodeAmbiguousPaths :: [([PathComponent a], Set v)]
+</span><a href="#local-6989586621689053529"><span class="hs-identifier hs-var hs-var">thisNodeAmbiguousPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; [()]
+forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
+</span><span class="hs-identifier hs-var">guard</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; Bool -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Set v -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">(Set v -&gt; Bool) -&gt; Set v -&gt; Bool
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Set v
+</span><a href="#local-6989586621689053524"><span class="hs-identifier hs-var">ambiguous</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[()]
+-&gt; [([PathComponent a], Set v)] -&gt; [([PathComponent a], Set v)]
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Set v
+</span><a href="#local-6989586621689053524"><span class="hs-identifier hs-var">ambiguous</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-143"></span><span>    </span><span id="local-6989586621689053528"><span class="annot"><span class="annottext">childNodesAmbiguousPaths :: [([PathComponent a], Set v)]
+</span><a href="#local-6989586621689053528"><span class="hs-identifier hs-var hs-var">childNodesAmbiguousPaths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PathComponent a
+ -&gt; MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)])
+-&gt; (PathComponent a, MultiMapPathTrie a k v)
+-&gt; [([PathComponent a], Set v)]
+forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><span class="hs-identifier hs-var">uncurry</span></span><span> </span><span class="annot"><span class="annottext">PathComponent a
+-&gt; MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)]
+</span><a href="#local-6989586621689053519"><span class="hs-identifier hs-var">childNodeAmbiguousPaths</span></a></span><span> </span><span class="annot"><span class="annottext">((PathComponent a, MultiMapPathTrie a k v)
+ -&gt; [([PathComponent a], Set v)])
+-&gt; [(PathComponent a, MultiMapPathTrie a k v)]
+-&gt; [([PathComponent a], Set v)]
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap (PathComponent a) (MultiMapPathTrie a k v)
+-&gt; [(PathComponent a, MultiMapPathTrie a k v)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">M.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap (PathComponent a) (MultiMapPathTrie a k v)
+</span><a href="#local-6989586621689053531"><span class="hs-identifier hs-var">pathMap</span></a></span><span>
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621689053519"><span class="annot"><span class="annottext">childNodeAmbiguousPaths :: PathComponent a
+-&gt; MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)]
+</span><a href="#local-6989586621689053519"><span class="hs-identifier hs-var hs-var">childNodeAmbiguousPaths</span></a></span></span><span> </span><span id="local-6989586621689053516"><span class="annot"><span class="annottext">PathComponent a
+</span><a href="#local-6989586621689053516"><span class="hs-identifier hs-var">pc</span></a></span></span><span> </span><span id="local-6989586621689053515"><span class="annot"><span class="annottext">MultiMapPathTrie a k v
+</span><a href="#local-6989586621689053515"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([PathComponent a] -&gt; [PathComponent a])
+-&gt; ([PathComponent a], Set v) -&gt; ([PathComponent a], Set v)
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; a (b, d) (c, d)
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PathComponent a
+</span><a href="#local-6989586621689053516"><span class="hs-identifier hs-var">pc</span></a></span><span> </span><span class="annot"><span class="annottext">PathComponent a -&gt; [PathComponent a] -&gt; [PathComponent a]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(([PathComponent a], Set v) -&gt; ([PathComponent a], Set v))
+-&gt; [([PathComponent a], Set v)] -&gt; [([PathComponent a], Set v)]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)]
+forall a k v.
+(Eq a, Hashable a, Eq k, Hashable k, Ord v) =&gt;
+MultiMapPathTrie a k v -&gt; [([PathComponent a], Set v)]
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#ambiguousPaths"><span class="hs-identifier hs-var">ambiguousPaths</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MultiMapPathTrie a k v -&gt; MultiMapPathTrie a k v
+</span><a href="#local-6989586621689053514"><span class="hs-identifier hs-var">mergeWildcardTrie</span></a></span><span> </span><span class="annot"><span class="annottext">MultiMapPathTrie a k v
+</span><a href="#local-6989586621689053515"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span>    </span><span id="local-6989586621689053513"><span class="annot"><span class="annottext">wildcardTrie :: Maybe (MultiMapPathTrie a k v)
+</span><a href="#local-6989586621689053513"><span class="hs-identifier hs-var hs-var">wildcardTrie</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PathComponent a
+-&gt; HashMap (PathComponent a) (MultiMapPathTrie a k v)
+-&gt; Maybe (MultiMapPathTrie a k v)
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">PathComponent a
+forall a. PathComponent a
+</span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathParam"><span class="hs-identifier hs-var">PathParam</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (PathComponent a) (MultiMapPathTrie a k v)
+</span><a href="#local-6989586621689053531"><span class="hs-identifier hs-var">pathMap</span></a></span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621689053514"><span class="annot"><span class="annottext">mergeWildcardTrie :: MultiMapPathTrie a k v -&gt; MultiMapPathTrie a k v
+</span><a href="#local-6989586621689053514"><span class="hs-identifier hs-var hs-var">mergeWildcardTrie</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MultiMapPathTrie a k v -&gt; MultiMapPathTrie a k v)
+-&gt; (MultiMapPathTrie a k v
+    -&gt; MultiMapPathTrie a k v -&gt; MultiMapPathTrie a k v)
+-&gt; Maybe (MultiMapPathTrie a k v)
+-&gt; MultiMapPathTrie a k v
+-&gt; MultiMapPathTrie a k v
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">MultiMapPathTrie a k v -&gt; MultiMapPathTrie a k v
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">MultiMapPathTrie a k v
+-&gt; MultiMapPathTrie a k v -&gt; MultiMapPathTrie a k v
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span> </span><span class="annot"><span class="annottext">Maybe (MultiMapPathTrie a k v)
+</span><a href="#local-6989586621689053513"><span class="hs-identifier hs-var">wildcardTrie</span></a></span><span>
+</span><span id="line-147"></span></pre></body></html>
