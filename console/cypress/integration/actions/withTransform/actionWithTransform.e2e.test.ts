@@ -250,6 +250,7 @@ if (testMode !== 'cli') {
           // this second attempt tries to workaround a problem between Cypress and our text area.
           // In case the problem arises with other tests, it would be better off moving the double
           // clear to the clearConsoleTextarea command itself
+          .wait(200)
           .clearConsoleTextarea()
           .type(
             `{
