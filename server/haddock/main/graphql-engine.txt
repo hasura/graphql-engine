@@ -24156,11 +24156,6 @@ nonNullableObjectList :: Parser 'Output m a -> Parser 'Output m a
 --   </pre>
 tableConnectionSelectionSet :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableInfo b -> m (Maybe (Parser 'Output n (ConnectionFields b)))
 
--- | User-defined function (AKA custom function)
-selectFunction :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
-selectFunctionAggregate :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
-selectFunctionConnection :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> PrimaryKeyColumns ('Postgres pgKind) -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
-
 -- | Arguments for a table selection. Default implementation for
 --   BackendSchema.
 --   
@@ -24232,27 +24227,6 @@ fieldSelection :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> Ta
 
 -- | Field parsers for a table relationship
 relationshipField :: forall b r m n. MonadBuildSchema b r m n => SourceInfo b -> TableName b -> RelInfo b -> m (Maybe [FieldParser n (AnnotatedField b)])
-
--- | Computed field parser
-computedFieldPG :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> ComputedFieldInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
-
--- | The custom SQL functions' input "args" field parser &gt;
---   function_name(args: function_args)
-customSQLFunctionArgs :: MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Name -> Name -> m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
-
--- | Parses the arguments to the underlying sql function of a computed
---   field or a custom function. All arguments to the underlying sql
---   function are parsed as an "args" object. Named arguments are expected
---   in a field with the same name, while positional arguments are expected
---   in an field named "arg_$n". Note that collisions are possible, but
---   ignored for now, if a named argument is also named "arg_$n". (FIXME:
---   link to an issue?)
---   
---   If the function requires no argument, or if its only argument is not
---   user-provided (the session argument in the case of custom functions,
---   the table row argument in the case of computed fields), the args
---   object will be omitted.
-functionArgs :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionTrackedAs ('Postgres pgKind) -> Seq (FunctionInputArgument ('Postgres pgKind)) -> m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
 tablePermissionsInfo :: Backend b => SelPermInfo b -> TablePerms b
 
 
@@ -24582,9 +24556,37 @@ buildTableInsertMutationFields :: forall b r m n. MonadBuildSchema b r m n => (S
 --   </pre>
 buildTableUpdateMutationFields :: forall b r m n. MonadBuildSchema b r m n => (TableInfo b -> m (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))) -> Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableDeleteMutationFields :: forall b r m n. MonadBuildSchema b r m n => Scenario -> SourceInfo b -> TableName b -> TableInfo b -> GQLNameIdentifier -> m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+buildFieldDescription :: Text -> Comment -> Maybe Description
+
+module Hasura.Backends.Postgres.Schema.Select
+
+-- | User-defined function (AKA custom function)
+selectFunction :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
+selectFunctionAggregate :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
+selectFunctionConnection :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Maybe Description -> PrimaryKeyColumns ('Postgres pgKind) -> m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
+
+-- | Computed field parser
+computedFieldPG :: forall pgKind r m n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> ComputedFieldInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
+
+-- | The custom SQL functions' input "args" field parser &gt;
+--   function_name(args: function_args)
+customSQLFunctionArgs :: MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> Name -> Name -> m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
+
+-- | Parses the arguments to the underlying sql function of a computed
+--   field or a custom function. All arguments to the underlying sql
+--   function are parsed as an "args" object. Named arguments are expected
+--   in a field with the same name, while positional arguments are expected
+--   in an field named "arg_$n". Note that collisions are possible, but
+--   ignored for now, if a named argument is also named "arg_$n". (FIXME:
+--   link to an issue?)
+--   
+--   If the function requires no argument, or if its only argument is not
+--   user-provided (the session argument in the case of custom functions,
+--   the table row argument in the case of computed fields), the args
+--   object will be omitted.
+functionArgs :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionTrackedAs ('Postgres pgKind) -> Seq (FunctionInputArgument ('Postgres pgKind)) -> m (InputFieldsParser n (FunctionArgsExp ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))))
 buildFunctionQueryFieldsPG :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 buildFunctionMutationFieldsPG :: forall r m n pgKind. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> FunctionName ('Postgres pgKind) -> FunctionInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> m [FieldParser n (MutationDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildFieldDescription :: Text -> Comment -> Maybe Description
 
 
 -- | Postgres Schema OnConflict
@@ -25504,9 +25506,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_ax5Jc. Lens' (QueryParametersInfo b_ax5Jc) (Seq (ColumnValue b_ax5Jc))
-qpiReusableVariableValues :: forall b_ax5Jc. Lens' (QueryParametersInfo b_ax5Jc) (HashMap Name (ColumnValue b_ax5Jc))
-qpiReferencedSessionVariables :: forall b_ax5Jc. Lens' (QueryParametersInfo b_ax5Jc) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ax5MB. Lens' (QueryParametersInfo b_ax5MB) (Seq (ColumnValue b_ax5MB))
+qpiReusableVariableValues :: forall b_ax5MB. Lens' (QueryParametersInfo b_ax5MB) (HashMap Name (ColumnValue b_ax5MB))
+qpiReferencedSessionVariables :: forall b_ax5MB. Lens' (QueryParametersInfo b_ax5MB) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
