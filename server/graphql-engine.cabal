@@ -504,6 +504,7 @@ library
                      , Hasura.Backends.Postgres.Instances.Transport
                      , Hasura.Backends.Postgres.Instances.Types
                      , Hasura.Backends.Postgres.Schema.OnConflict
+                     , Hasura.Backends.Postgres.Schema.Select
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
                      , Hasura.Backends.Postgres.SQL.IdentifierUniqueness

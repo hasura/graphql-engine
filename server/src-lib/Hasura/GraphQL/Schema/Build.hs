@@ -44,9 +44,7 @@
 -- they have the sizes and shapes that result in the most elegant uses of them
 -- that we can manage.
 module Hasura.GraphQL.Schema.Build
-  ( buildFunctionMutationFieldsPG,
-    buildFunctionQueryFieldsPG,
-    buildTableDeleteMutationFields,
+  ( buildTableDeleteMutationFields,
     buildTableInsertMutationFields,
     buildTableQueryAndSubscriptionFields,
     buildTableStreamingSubscriptionFields,
@@ -69,13 +67,11 @@ import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
-import Hasura.SQL.Backend
 import Hasura.Server.Types (StreamingSubscriptionsCtx (..))
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -314,51 +310,6 @@ buildTableDeleteMutationFields scenario sourceInfo tableName tableInfo gqlName =
     defaultDeleteDesc = "delete data from the table: " <>> tableName
     defaultDeletePKDesc = "delete single row from the table: " <>> tableName
     TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
-
-buildFunctionQueryFieldsPG ::
-  forall r m n pgKind.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceInfo ('Postgres pgKind) ->
-  FunctionName ('Postgres pgKind) ->
-  FunctionInfo ('Postgres pgKind) ->
-  TableName ('Postgres pgKind) ->
-  m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildFunctionQueryFieldsPG sourceInfo functionName functionInfo tableName = do
-  let -- select function
-      funcDesc =
-        Just . G.Description $
-          flip fromMaybe (_fiComment functionInfo) $ "execute function " <> functionName <<> " which returns " <>> tableName
-      -- select function agg
-
-      funcAggDesc = Just $ G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> tableName
-
-      queryResultType =
-        case _fiJsonAggSelect functionInfo of
-          JASMultipleRows -> QDBMultipleRows
-          JASSingleObject -> QDBSingleRow
-
-  catMaybes
-    <$> sequenceA
-      [ optionalFieldParser (queryResultType) $ selectFunction sourceInfo functionInfo funcDesc,
-        optionalFieldParser (QDBAggregation) $ selectFunctionAggregate sourceInfo functionInfo funcAggDesc
-      ]
-
-buildFunctionMutationFieldsPG ::
-  forall r m n pgKind.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
-  SourceInfo ('Postgres pgKind) ->
-  FunctionName ('Postgres pgKind) ->
-  FunctionInfo ('Postgres pgKind) ->
-  TableName ('Postgres pgKind) ->
-  m [FieldParser n (MutationDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
-buildFunctionMutationFieldsPG sourceInfo functionName functionInfo tableName = do
-  let funcDesc = Just $ G.Description $ "execute VOLATILE function " <> functionName <<> " which returns " <>> tableName
-      jsonAggSelect = _fiJsonAggSelect functionInfo
-  catMaybes
-    <$> sequenceA
-      [ optionalFieldParser (MDBFunction jsonAggSelect) $ selectFunction sourceInfo functionInfo funcDesc
-      -- TODO: do we want aggregate mutation functions?
-      ]
 
 buildFieldDescription :: Text -> Comment -> Maybe G.Description
 buildFieldDescription defaultDescription = \case
