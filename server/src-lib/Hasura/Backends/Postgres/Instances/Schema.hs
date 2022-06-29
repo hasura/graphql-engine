@@ -396,7 +396,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
                 tCase
                 collapseIfNull
                 (IR.mkParameter <$> typedParser)
-                (mkListLiteral columnType <$> columnListParser),
+                (mkListParameter columnType <$> columnListParser),
               -- Comparison ops for non Raster types
               guard (isScalarColumnWhere (/= PGRaster) columnType)
                 *> comparisonOperators
@@ -651,6 +651,13 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
         SETyAnn
           (SEArray $ txtEncoder . cvValue <$> columnValues)
           (mkTypeAnn $ CollectableTypeArray $ unsafePGColumnToBackend columnType)
+    mkListParameter :: ColumnType ('Postgres pgKind) -> [ColumnValue ('Postgres pgKind)] -> IR.UnpreparedValue ('Postgres pgKind)
+    mkListParameter columnType columnValues = do
+      let scalarType = unsafePGColumnToBackend columnType
+      IR.UVParameter Nothing $
+        ColumnValue
+          (ColumnScalar $ PG.PGArray scalarType)
+          (PG.PGValArray $ cvValue <$> columnValues)
 
     castExp :: ColumnType ('Postgres pgKind) -> m (Maybe (Parser 'Input n (CastExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
     castExp sourceType = do

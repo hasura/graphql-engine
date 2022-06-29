@@ -75,7 +75,7 @@ instance FromJSON Ltree where
     where
       message = "Expecting label path: a sequence of zero or more labels separated by dots, for example L1.L2.L3"
 
---  Binary value. Used in prepared sq
+-- @PGScalarValue@ represents any value that can be a column in a Postgres table
 data PGScalarValue
   = PGValInteger !Int32
   | PGValSmallInt !Int16
@@ -103,6 +103,7 @@ data PGScalarValue
   | PGValLquery !Text
   | PGValLtxtquery !Text
   | PGValUnknown !Text
+  | PGValArray [PGScalarValue]
   deriving (Show, Eq)
 
 pgScalarValueToJson :: PGScalarValue -> Value
@@ -134,6 +135,7 @@ pgScalarValueToJson = \case
   PGValLquery t -> toJSON t
   PGValLtxtquery t -> toJSON t
   PGValUnknown t -> toJSON t
+  PGValArray a -> toJSON (map pgScalarValueToJson a)
 
 textToScalarValue :: Maybe Text -> PGScalarValue
 textToScalarValue = maybe (PGNull PGText) PGValText
@@ -223,6 +225,7 @@ parsePGValue ty val = case (ty, val) of
         fail $ "A string is expected for type: " ++ T.unpack tyName
       PGEnumScalar tyName ->
         fail $ "A string is expected for type: " ++ T.unpack tyName
+      PGArray s -> parseJSON val >>= fmap PGValArray . traverse (parsePGValue s)
 
 txtEncodedVal :: PGScalarValue -> TxtEncodedVal
 txtEncodedVal = \case
@@ -265,39 +268,7 @@ txtEncodedVal = \case
   PGValLquery t -> TELit t
   PGValLtxtquery t -> TELit t
   PGValUnknown t -> TELit t
-
-pgTypeOid :: PGScalarType -> PQ.Oid
-pgTypeOid = \case
-  PGSmallInt -> PTI.int2
-  PGInteger -> PTI.int4
-  PGBigInt -> PTI.int8
-  PGSerial -> PTI.int4
-  PGBigSerial -> PTI.int8
-  PGFloat -> PTI.float4
-  PGDouble -> PTI.float8
-  PGNumeric -> PTI.numeric
-  PGMoney -> PTI.numeric
-  PGBoolean -> PTI.bool
-  PGChar -> PTI.char
-  PGVarchar -> PTI.varchar
-  PGText -> PTI.text
-  PGCitext -> PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
-  PGDate -> PTI.date
-  PGTimeStamp -> PTI.timestamp
-  PGTimeStampTZ -> PTI.timestamptz
-  PGTimeTZ -> PTI.timetz
-  PGJSON -> PTI.json
-  PGJSONB -> PTI.jsonb
-  PGGeometry -> PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
-  PGGeography -> PTI.text
-  PGRaster -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
-  PGUUID -> PTI.uuid
-  PGLtree -> PTI.text
-  PGLquery -> PTI.text
-  PGLtxtquery -> PTI.text
-  PGUnknown _ -> PTI.auto
-  PGCompositeScalar _ -> PTI.auto
-  PGEnumScalar _ -> PTI.auto
+  PGValArray ts -> TELit $ buildArrayLiteral ts
 
 binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder = \case
@@ -327,6 +298,7 @@ binEncoder = \case
   PGValLquery t -> Q.toPrepVal t
   PGValLtxtquery t -> Q.toPrepVal t
   PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+  PGValArray s -> (PTI.auto, Just (TE.encodeUtf8 $ buildArrayLiteral s, PQ.Text))
 
 formatTimestamp :: FormatTime t => t -> Text
 formatTimestamp = T.pack . formatTime defaultTimeLocale "%0Y-%m-%dT%T%QZ"
@@ -335,6 +307,20 @@ txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedVal colVal of
   TENull -> S.SENull
   TELit t -> S.SELit t
+
+-- arrays are sufficiently complicated, e.g. in the case of empty and unknown element arrays,
+-- for us to default to text encoding in all cases, and defer to Postgres' handling of them
+--
+-- FIXME: this will fail if we ever introduce the box type as a @PGScalarValue@,
+-- which uses a different seperator https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT
+-- https://github.com/hasura/graphql-engine-mono/issues/4892
+buildArrayLiteral :: [PGScalarValue] -> Text
+buildArrayLiteral ts =
+  T.concat ["{", T.intercalate "," (map (inner . txtEncodedVal) ts), "}"]
+  where
+    inner = \case
+      TENull -> "null"
+      TELit t -> t
 
 {- Note [Type casting prepared params]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -48,6 +48,7 @@ module Hasura.Backends.Postgres.SQL.Types
     mkFunctionArgScalarType,
     PGRawFunctionInfo (..),
     mkScalarTypeName,
+    pgTypeOid,
   )
 where
 
@@ -56,11 +57,14 @@ import Data.Aeson.Encoding (text)
 import Data.Aeson.Key qualified as K
 import Data.Aeson.TH
 import Data.Aeson.Types (toJSONKeyText)
+import Data.Int
 import Data.List (uncons)
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
+import Database.PG.Query.PTI qualified as PTI
+import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Name qualified as Name
@@ -345,6 +349,7 @@ data PGScalarType
   | PGLtree
   | PGLquery
   | PGLtxtquery
+  | PGArray PGScalarType
   | PGUnknown !Text
   | PGCompositeScalar !Text
   | PGEnumScalar !Text
@@ -385,6 +390,7 @@ pgScalarTypeToText = \case
   PGLtree -> "ltree"
   PGLquery -> "lquery"
   PGLtxtquery -> "ltxtquery"
+  PGArray t -> pgScalarTypeToText t <> "[]"
   PGUnknown t -> t
   PGCompositeScalar t -> t
   PGEnumScalar t -> t
@@ -642,3 +648,37 @@ instance IsIdentifier RelName where
 
 instance IsIdentifier FieldName where
   toIdentifier (FieldName f) = Identifier f
+
+pgTypeOid :: PGScalarType -> PQ.Oid
+pgTypeOid = \case
+  PGSmallInt -> PTI.int2
+  PGInteger -> PTI.int4
+  PGBigInt -> PTI.int8
+  PGSerial -> PTI.int4
+  PGBigSerial -> PTI.int8
+  PGFloat -> PTI.float4
+  PGDouble -> PTI.float8
+  PGNumeric -> PTI.numeric
+  PGMoney -> PTI.numeric
+  PGBoolean -> PTI.bool
+  PGChar -> PTI.char
+  PGVarchar -> PTI.varchar
+  PGText -> PTI.text
+  PGCitext -> PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
+  PGDate -> PTI.date
+  PGTimeStamp -> PTI.timestamp
+  PGTimeStampTZ -> PTI.timestamptz
+  PGTimeTZ -> PTI.timetz
+  PGJSON -> PTI.json
+  PGJSONB -> PTI.jsonb
+  PGGeometry -> PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
+  PGGeography -> PTI.text
+  PGRaster -> PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
+  PGUUID -> PTI.uuid
+  PGLtree -> PTI.text
+  PGLquery -> PTI.text
+  PGLtxtquery -> PTI.text
+  PGUnknown _ -> PTI.auto
+  PGCompositeScalar _ -> PTI.auto
+  PGEnumScalar _ -> PTI.auto
+  PGArray _ -> PTI.auto
