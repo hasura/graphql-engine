@@ -55,10 +55,8 @@ import Hasura.SQL.Backend
 import Hasura.Server.Init (DowngradeOptions (..), databaseUrlEnv)
 import Hasura.Server.Logging (StartupLog (..))
 import Hasura.Server.Migrate.Internal
+import Hasura.Server.Migrate.LatestVersion
 import Hasura.Server.Migrate.Version
-  ( latestCatalogVersion,
-    latestCatalogVersionString,
-  )
 import Hasura.Server.Types (MaintenanceMode (..))
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
@@ -159,14 +157,11 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
       pure MRInitialized
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: Float -> m MigrationResult
+    migrateFrom :: CatalogVersion -> m MigrationResult
     migrateFrom previousVersion
-      | previousVersion == fromInteger latestCatalogVersion = pure MRNothingToDo
+      | previousVersion == latestCatalogVersion = pure MRNothingToDo
       | otherwise = do
         let upMigrations = migrations maybeDefaultSourceConfig False maintenanceMode
-            -- 0.8 is the only non-integral catalog version and we'd like to output the version for other
-            -- versions as integer rather than float, for example: 40 instead of 40.0
-            previousVersionText = bool (tshow ((floor previousVersion) :: Integer)) "0.8" $ previousVersion == 0.8
         case neededMigrations previousVersion upMigrations of
           [] ->
             throw400 NotSupported $
@@ -175,12 +170,12 @@ migrateCatalog maybeDefaultSourceConfig maintenanceMode migrationTime = do
                 <> latestCatalogVersionString
                 <> ", but the current version"
                 <> " is "
-                <> previousVersionText
+                <> tshow previousVersion
                 <> ")."
           migrationsToBeApplied -> do
             traverse_ (mpMigrate . snd) migrationsToBeApplied
             updateCatalogVersion
-            pure $ MRMigrated previousVersionText
+            pure . MRMigrated $ tshow previousVersion
       where
         neededMigrations prevVersion upMigrations =
           dropWhile ((< prevVersion) . fst) upMigrations
@@ -196,13 +191,13 @@ downgradeCatalog ::
   m MigrationResult
 downgradeCatalog defaultSourceConfig opts time = do
   currentCatalogVersion <- liftTx getCatalogVersion
-  targetVersionFloat :: Float <-
+  targetVersionFloat :: CatalogVersion <-
     onLeft (readEither (T.unpack $ dgoTargetVersion opts)) $ \err ->
       throw500 $ "Unexpected: couldn't convert " <> dgoTargetVersion opts <> " to a float, error: " <> tshow err
   downgradeFrom currentCatalogVersion targetVersionFloat
   where
     -- downgrades an existing catalog to the specified version
-    downgradeFrom :: Float -> Float -> m MigrationResult
+    downgradeFrom :: CatalogVersion -> CatalogVersion -> m MigrationResult
     downgradeFrom previousVersion targetVersion
       | previousVersion == targetVersion = pure MRNothingToDo
       | otherwise =
@@ -228,9 +223,9 @@ downgradeCatalog defaultSourceConfig opts time = do
             (reverse (migrations defaultSourceConfig (dgoDryRun opts) MaintenanceModeDisabled))
 
         downgrade ::
-          Float ->
-          Float ->
-          [(Float, MigrationPair m)] ->
+          CatalogVersion ->
+          CatalogVersion ->
+          [(CatalogVersion, MigrationPair m)] ->
           Either Text [m ()]
         downgrade lower upper = skipFutureDowngrades
           where
@@ -240,7 +235,7 @@ downgradeCatalog defaultSourceConfig opts time = do
             -- Then we take migrations as needed until we reach the target
             -- version, dropping any remaining migrations from the end of the
             -- (reversed) list.
-            skipFutureDowngrades, dropOlderDowngrades :: [(Float, MigrationPair m)] -> Either Text [m ()]
+            skipFutureDowngrades, dropOlderDowngrades :: [(CatalogVersion, MigrationPair m)] -> Either Text [m ()]
             skipFutureDowngrades xs | previousVersion == lower = dropOlderDowngrades xs
             skipFutureDowngrades [] = Left "the starting version is unrecognized."
             skipFutureDowngrades ((x, _) : xs)
@@ -260,7 +255,7 @@ migrations ::
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   Bool ->
   MaintenanceMode () ->
-  [(Float, MigrationPair m)]
+  [(CatalogVersion, MigrationPair m)]
 migrations maybeDefaultSourceConfig dryRun maintenanceMode =
   -- We need to build the list of migrations at compile-time so that we can compile the SQL
   -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -276,15 +271,13 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
              then [|Just (runTxOrPrint $(Q.sqlFromFile path))|]
              else [|Nothing|]
 
-         migrationsFromFile = map $ \(to :: Float) ->
-           let from = to - 1
-               fromInt :: Integer = floor from
-               toInt :: Integer = floor to
+         migrationsFromFile = map $ \(to :: CatalogVersion) ->
+           let from = pred to
             in [|
                  ( $(TH.lift from),
                    MigrationPair
-                     $(migrationFromFile (show fromInt) (show toInt))
-                     $(migrationFromFileMaybe (show toInt) (show fromInt))
+                     $(migrationFromFile (show from) (show to))
+                     $(migrationFromFileMaybe (show to) (show from))
                  )
                  |]
       in TH.listE
@@ -294,12 +287,12 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
          -- source catalog changes and we'd like to keep source catalog migrations in a different
          -- path than metadata catalog migrations.
          $
-           [|(0.8, MigrationPair $(migrationFromFile "08" "1") Nothing)|] :
-           migrationsFromFile [2 .. 3]
-             ++ [|(3, MigrationPair from3To4 Nothing)|] :
-           (migrationsFromFile [5 .. 40] ++ migrationsFromFile [42])
-             ++ [|(42, MigrationPair from42To43 (Just from43To42))|] :
-           migrationsFromFile [44 .. (fromInteger latestCatalogVersion)]
+           [|(CatalogVersion08, MigrationPair $(migrationFromFile "08" "1") Nothing)|] :
+           migrationsFromFile [CatalogVersion 2 .. CatalogVersion 3]
+             ++ [|(CatalogVersion 3, MigrationPair from3To4 Nothing)|] :
+           (migrationsFromFile [CatalogVersion 5 .. CatalogVersion 40] ++ migrationsFromFile [CatalogVersion 42])
+             ++ [|(CatalogVersion 42, MigrationPair from42To43 (Just from43To42))|] :
+           migrationsFromFile [CatalogVersion 44 .. latestCatalogVersion]
    )
   where
     runTxOrPrint :: Q.Query -> m ()

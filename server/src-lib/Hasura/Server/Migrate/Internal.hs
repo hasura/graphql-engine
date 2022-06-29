@@ -18,11 +18,11 @@ import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Common (InputWebhook)
 import Hasura.RQL.Types.EventTrigger
 import Hasura.SQL.Backend
+import Hasura.Server.Migrate.Version
 
--- | The old 0.8 catalog version is non-integral, so the version has always been stored
---   as a string.
---   TODO: Change the version column to Float?
-getCatalogVersion :: Q.TxE QErr Float
+-- | The old 0.8 catalog version is non-integral, so the version has always been
+-- stored as a string.
+getCatalogVersion :: Q.TxE QErr CatalogVersion
 getCatalogVersion = do
   versionText <-
     runIdentity . Q.getRow
@@ -32,7 +32,7 @@ getCatalogVersion = do
         ()
         False
   onLeft (readEither $ T.unpack versionText) $
-    \err -> throw500 $ "Unexpected: couldn't convert " <> versionText <> " to float, err:" <> tshow err
+    \err -> throw500 $ "Unexpected: couldn't convert read catalog version " <> versionText <> ", err:" <> tshow err
 
 from3To4 :: forall m. (Backend ('Postgres 'Vanilla), MonadTx m) => m ()
 from3To4 = liftTx $

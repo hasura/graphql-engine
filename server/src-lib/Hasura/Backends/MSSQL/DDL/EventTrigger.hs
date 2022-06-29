@@ -46,7 +46,7 @@ import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey (..))
 import Hasura.SQL.Backend
-import Hasura.Server.Migrate.Version
+import Hasura.Server.Migrate.LatestVersion
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -433,9 +433,9 @@ checkEventTx eventId = do
     multiRowQueryE
       HGE.defaultMSSQLTxErrorHandler
       [ODBC.sql|
-        SELECT l.locked 
+        SELECT l.locked
         FROM hdb_catalog.event_log l
-        WHERE (l.locked IS NOT NULL AND l.locked >= DATEADD(MINUTE, -30, SYSDATETIMEOFFSET())) 
+        WHERE (l.locked IS NOT NULL AND l.locked >= DATEADD(MINUTE, -30, SYSDATETIMEOFFSET()))
               AND l.id = $eId
       |]
 
@@ -482,7 +482,7 @@ getMaintenanceModeVersionTx :: TxE QErr MaintenanceModeVersion
 getMaintenanceModeVersionTx = do
   catalogVersion <- getSourceCatalogVersion
   if
-      | catalogVersion == fromInteger latestCatalogVersion -> pure CurrentMMVersion
+      | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
         throw500 $
           "Maintenance mode is only supported with catalog versions: "

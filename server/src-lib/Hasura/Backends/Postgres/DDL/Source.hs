@@ -53,6 +53,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Internal
+import Hasura.Server.Migrate.Version
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 
@@ -185,17 +186,17 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) Q.ReadWrite do
         initPgSourceCatalog
         return RETDoNothing
       -- Only 'hdb_catalog' schema defined
-      | not sourceVersionTableExist && not eventLogTableExist -> do
+      | not (sourceVersionTableExist || eventLogTableExist) -> do
         liftTx initPgSourceCatalog
         return RETDoNothing
       -- Source is initialised by pre multisource support servers
       | not sourceVersionTableExist && eventLogTableExist -> do
         -- Update the Source Catalog to v43 to include the new migration
         -- changes. Skipping this step will result in errors.
-        currMetadataCatalogVersionFloat <- liftTx getCatalogVersion
+        currMetadataCatalogVersion <- liftTx getCatalogVersion
         -- we migrate to the 43 version, which is the migration where
         -- metadata separation is introduced
-        migrateTo43MetadataCatalog currMetadataCatalogVersionFloat
+        migrateTo43MetadataCatalog currMetadataCatalogVersion
         liftTx createVersionTable
         -- Migrate the catalog from initial version i.e '0'
         migrateSourceCatalogFrom "0"
@@ -278,27 +279,27 @@ migrateSourceCatalogFrom prevVersion
 sourceMigrations :: [(Text, Q.TxE QErr ())]
 sourceMigrations =
   $( let migrationFromFile from =
-           let to = from + 1
+           let to = succ from
                path = "src-rsr/pg_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
             in [|Q.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= Q.sqlFromFile)|]
 
-         migrationsFromFile = map $ \(from :: Integer) ->
+         migrationsFromFile = map $ \from ->
            [|($(TH.lift $ tshow from), $(migrationFromFile from))|]
-      in TH.listE $ migrationsFromFile [0 .. (latestSourceCatalogVersion - 1)]
+      in TH.listE $ migrationsFromFile previousSourceCatalogVersions
    )
 
 -- Upgrade the hdb_catalog schema to v43 (Metadata catalog)
-upMigrationsUntil43 :: [(Float, Q.TxE QErr ())]
+upMigrationsUntil43 :: [(CatalogVersion, Q.TxE QErr ())]
 upMigrationsUntil43 =
   $( let migrationFromFile from to =
            let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
             in [|Q.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= Q.sqlFromFile)|]
 
-         migrationsFromFile = map $ \(to :: Float) ->
-           let from = to - 1
+         migrationsFromFile = map $ \(to :: Int) ->
+           let from = pred to
             in [|
-                 ( $(TH.lift from),
-                   $(migrationFromFile (show (floor from :: Integer)) (show (floor to :: Integer)))
+                 ( $(TH.lift (CatalogVersion from)),
+                   $(migrationFromFile (show from) (show to))
                  )
                  |]
       in TH.listE
@@ -309,9 +310,9 @@ upMigrationsUntil43 =
          -- moved to source catalog migrations and the 41st up migration is removed
          -- entirely.
          $
-           [|(0.8, $(migrationFromFile "08" "1"))|] :
+           [|(CatalogVersion08, $(migrationFromFile "08" "1"))|] :
            migrationsFromFile [2 .. 3]
-             ++ [|(3, from3To4)|] :
+             ++ [|(CatalogVersion 3, from3To4)|] :
            (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
    )
 

@@ -64,6 +64,7 @@ import Hasura.Server.Auth.JWTSpec qualified as JWTSpec
 import Hasura.Server.AuthSpec qualified as AuthSpec
 import Hasura.Server.Init
 import Hasura.Server.Migrate
+import Hasura.Server.Migrate.VersionSpec qualified as VersionSpec
 import Hasura.Server.MigrateSpec qualified as MigrateSpec
 import Hasura.Server.TelemetrySpec qualified as TelemetrySpec
 import Hasura.Server.Types
@@ -140,6 +141,7 @@ unitSpecs = do
   describe "Hasura.Session" SessionSpec.spec
   describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Auth.JWT" JWTSpec.spec
+  describe "Hasura.Server.Migrate.Version" VersionSpec.spec
   describe "Hasura.Server.Telemetry" TelemetrySpec.spec
   describe "Network.HTTP.Client.TransformableSpec" TransformableSpec.spec
 
