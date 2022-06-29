@@ -1,28 +1,37 @@
-{-# LANGUAGE TemplateHaskell #-}
+module Hasura.Server.Migrate.Version (CatalogVersion (..)) where
 
--- | A module that defines the current catalog version and nothing else. This is necessary to
--- circumvent the unfortunate “GHC stage restriction,” which prevents us from using a binding in a
--- compile-time splice unless it is defined in a different module. The actual migration code is in
--- "Hasura.Server.Migrate".
-module Hasura.Server.Migrate.Version
-  ( latestCatalogVersion,
-    latestCatalogVersionString,
-  )
-where
-
-import Data.FileEmbed (embedStringFile, makeRelativeToProject)
+import Data.List (isPrefixOf)
 import Hasura.Prelude
-import Language.Haskell.TH.Syntax qualified as TH
+import Language.Haskell.TH.Lift (Lift)
 
--- | The current catalog schema version. We store this in a file
--- because we want to append the current verson to the catalog_versions file
--- when tagging a new release, in @tag-release.sh@.
-latestCatalogVersion :: Integer
-latestCatalogVersion =
-  $( do
-       let s = $(makeRelativeToProject "src-rsr/catalog_version.txt" >>= embedStringFile)
-       TH.lift (read s :: Integer)
-   )
+-- | Represents the catalog version. This is stored in the database and then
+-- compared with the latest version on startup.
+data CatalogVersion
+  = -- | A typical catalog version.
+    CatalogVersion Int
+  | -- | Maintained for compatibility with catalog version 0.8.
+    CatalogVersion08
+  deriving stock (Eq, Lift)
 
-latestCatalogVersionString :: Text
-latestCatalogVersionString = tshow latestCatalogVersion
+instance Ord CatalogVersion where
+  compare = compare `on` toFloat
+    where
+      toFloat :: CatalogVersion -> Float
+      toFloat (CatalogVersion v) = fromIntegral v
+      toFloat CatalogVersion08 = 0.8
+
+instance Enum CatalogVersion where
+  toEnum = CatalogVersion
+  fromEnum (CatalogVersion v) = v
+  fromEnum CatalogVersion08 = error "Cannot enumerate unstable catalog versions."
+
+instance Show CatalogVersion where
+  show (CatalogVersion v) = show v
+  show CatalogVersion08 = "0.8"
+
+instance Read CatalogVersion where
+  readsPrec prec s
+    | "0.8" `isPrefixOf` s =
+      [(CatalogVersion08, drop 3 s)]
+    | otherwise =
+      map (first CatalogVersion) $ filter ((>= 0) . fst) $ readsPrec @Int prec s

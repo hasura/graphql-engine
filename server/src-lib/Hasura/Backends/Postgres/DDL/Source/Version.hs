@@ -4,9 +4,10 @@
 --
 -- Deals with catalog version - used by 'Hasura.Backends.Postgres.DDL.Source'.
 module Hasura.Backends.Postgres.DDL.Source.Version
-  ( getSourceCatalogVersion,
-    latestSourceCatalogVersion,
+  ( latestSourceCatalogVersion,
     latestSourceCatalogVersionText,
+    previousSourceCatalogVersions,
+    getSourceCatalogVersion,
     setSourceCatalogVersion,
   )
 where
@@ -14,12 +15,16 @@ where
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection
 import Hasura.Prelude
+import Hasura.Server.Migrate.Version
 
-latestSourceCatalogVersion :: Integer
-latestSourceCatalogVersion = 2
+latestSourceCatalogVersion :: CatalogVersion
+latestSourceCatalogVersion = CatalogVersion 2
 
 latestSourceCatalogVersionText :: Text
 latestSourceCatalogVersionText = tshow latestSourceCatalogVersion
+
+previousSourceCatalogVersions :: [CatalogVersion]
+previousSourceCatalogVersions = [CatalogVersion 0 .. pred latestSourceCatalogVersion]
 
 setSourceCatalogVersion :: MonadTx m => m ()
 setSourceCatalogVersion =
