@@ -22,8 +22,8 @@
 </span><span id="line-22"></span><span class="hs-comment">--</span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- The OpenAPI specification for metadata is experimental and incomplete. Please</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- do not incorporate it into essential workflows at this time.</span><span>
-</span><span id="line-25"></span><span id="local-6989586621689114256"><span id="local-6989586621689114257"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataDTO"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier hs-var">MetadataDTO</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="V1"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V1"><span class="hs-identifier hs-var">V1</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-type">MetadataV1</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="V2"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V2"><span class="hs-identifier hs-var">V2</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="V3"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V3"><span class="hs-identifier hs-var">V3</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114247"><span id="local-6989586621689114249"><span id="local-6989586621689114251"><span class="annot"><span class="annottext">Int -&gt; MetadataDTO -&gt; ShowS
+</span><span id="line-25"></span><span id="local-6989586621689112767"><span id="local-6989586621689112768"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataDTO"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier hs-var">MetadataDTO</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="V1"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V1"><span class="hs-identifier hs-var">V1</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV1.html#MetadataV1"><span class="hs-identifier hs-type">MetadataV1</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="V2"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V2"><span class="hs-identifier hs-var">V2</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="V3"><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V3"><span class="hs-identifier hs-var">V3</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689112758"><span id="local-6989586621689112760"><span id="local-6989586621689112762"><span class="annot"><span class="annottext">Int -&gt; MetadataDTO -&gt; ShowS
 [MetadataDTO] -&gt; ShowS
 MetadataDTO -&gt; String
 (Int -&gt; MetadataDTO -&gt; ShowS)
@@ -38,7 +38,7 @@ show :: MetadataDTO -&gt; String
 $cshow :: MetadataDTO -&gt; String
 showsPrec :: Int -&gt; MetadataDTO -&gt; ShowS
 $cshowsPrec :: Int -&gt; MetadataDTO -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114242"><span id="local-6989586621689114244"><span class="annot"><span class="annottext">MetadataDTO -&gt; MetadataDTO -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689112753"><span id="local-6989586621689112755"><span class="annot"><span class="annottext">MetadataDTO -&gt; MetadataDTO -&gt; Bool
 (MetadataDTO -&gt; MetadataDTO -&gt; Bool)
 -&gt; (MetadataDTO -&gt; MetadataDTO -&gt; Bool) -&gt; Eq MetadataDTO
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -56,7 +56,7 @@ forall a.
 $cto :: forall x. Rep MetadataDTO x -&gt; MetadataDTO
 $cfrom :: forall x. MetadataDTO -&gt; Rep MetadataDTO x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689114234"><span id="local-6989586621689114236"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataDTO]
+</span><span id="line-27"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689112745"><span id="local-6989586621689112747"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataDTO]
 Value -&gt; Parser MetadataDTO
 (Value -&gt; Parser MetadataDTO)
 -&gt; (Value -&gt; Parser [MetadataDTO]) -&gt; FromJSON MetadataDTO
@@ -66,7 +66,7 @@ parseJSONList :: Value -&gt; Parser [MetadataDTO]
 $cparseJSONList :: Value -&gt; Parser [MetadataDTO]
 parseJSON :: Value -&gt; Parser MetadataDTO
 $cparseJSON :: Value -&gt; Parser MetadataDTO
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114225"><span id="local-6989586621689114227"><span id="local-6989586621689114229"><span id="local-6989586621689114231"><span class="annot"><span class="annottext">[MetadataDTO] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689112736"><span id="local-6989586621689112738"><span id="local-6989586621689112740"><span id="local-6989586621689112742"><span class="annot"><span class="annottext">[MetadataDTO] -&gt; Value
 [MetadataDTO] -&gt; Encoding
 MetadataDTO -&gt; Value
 MetadataDTO -&gt; Encoding
@@ -89,7 +89,7 @@ toEncoding :: MetadataDTO -&gt; Encoding
 $ctoEncoding :: MetadataDTO -&gt; Encoding
 toJSON :: MetadataDTO -&gt; Value
 $ctoJSON :: MetadataDTO -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689114221"><span class="annot"><span class="annottext">Typeable MetadataDTO
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689112732"><span class="annot"><span class="annottext">Typeable MetadataDTO
 Typeable MetadataDTO
 -&gt; (Proxy MetadataDTO -&gt; Declare (Definitions Schema) NamedSchema)
 -&gt; ToSchema MetadataDTO
@@ -115,9 +115,9 @@ $cp1ToSchema :: Typeable MetadataDTO
 </span><span id="line-38"></span><span class="hs-comment">-- nesting `disjointEitherCodec`. Thankfully in the generated OpenApi</span><span>
 </span><span id="line-39"></span><span class="hs-comment">-- documentation these three variants are flattened into a single @oneOf@ list</span><span>
 </span><span id="line-40"></span><span class="hs-comment">-- of allowed schemas.</span><span>
-</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689114217"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier hs-type">MetadataDTO</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621689114215"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataDTO
-</span><a href="#local-6989586621689114215"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689112728"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier hs-type">MetadataDTO</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621689112726"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataDTO
+</span><a href="#local-6989586621689112726"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-43"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec MetadataDTO -&gt; JSONCodec MetadataDTO
 forall input output.
 Text -&gt; ValueCodec input output -&gt; ValueCodec input output
@@ -140,8 +140,8 @@ forall oldOutput newOutput newInput oldInput context.
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Either MetadataV1 (Either MetadataV2 MetadataV3) -&gt; MetadataDTO
-</span><a href="#local-6989586621689114214"><span class="hs-identifier hs-var">decode</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataDTO -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
-</span><a href="#local-6989586621689114213"><span class="hs-identifier hs-var">encode</span></a></span><span> </span><span class="annot"><span class="annottext">(Codec
+</span><a href="#local-6989586621689112725"><span class="hs-identifier hs-var">decode</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataDTO -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
+</span><a href="#local-6989586621689112724"><span class="hs-identifier hs-var">encode</span></a></span><span> </span><span class="annot"><span class="annottext">(Codec
    Value
    (Either MetadataV1 (Either MetadataV2 MetadataV3))
    (Either MetadataV1 (Either MetadataV2 MetadataV3))
@@ -198,8 +198,8 @@ ValueCodec input output -&gt; Text -&gt; ValueCodec input output
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;configuration format for the Hasura GraphQL Engine&quot;</span></span><span>
 </span><span id="line-52"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>      </span><span id="local-6989586621689114214"><span class="annot"><span class="annottext">decode :: Either MetadataV1 (Either MetadataV2 MetadataV3) -&gt; MetadataDTO
-</span><a href="#local-6989586621689114214"><span class="hs-identifier hs-var hs-var">decode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MetadataV1 -&gt; MetadataDTO)
+</span><span id="line-53"></span><span>      </span><span id="local-6989586621689112725"><span class="annot"><span class="annottext">decode :: Either MetadataV1 (Either MetadataV2 MetadataV3) -&gt; MetadataDTO
+</span><a href="#local-6989586621689112725"><span class="hs-identifier hs-var hs-var">decode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MetadataV1 -&gt; MetadataDTO)
 -&gt; (Either MetadataV2 MetadataV3 -&gt; MetadataDTO)
 -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
 -&gt; MetadataDTO
@@ -219,15 +219,15 @@ forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; MetadataDTO
 </span><a href="Hasura.Metadata.DTO.Metadata.html#V2"><span class="hs-identifier hs-var">V2</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataDTO
 </span><a href="Hasura.Metadata.DTO.Metadata.html#V3"><span class="hs-identifier hs-var">V3</span></a></span><span>
-</span><span id="line-54"></span><span>      </span><span id="local-6989586621689114213"><span class="annot"><span class="annottext">encode :: MetadataDTO -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
-</span><a href="#local-6989586621689114213"><span class="hs-identifier hs-var hs-var">encode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-55"></span><span>        </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V1"><span class="hs-identifier hs-type">V1</span></a></span><span> </span><span id="local-6989586621689114211"><span class="annot"><span class="annottext">MetadataV1
-</span><a href="#local-6989586621689114211"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataV1 -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
+</span><span id="line-54"></span><span>      </span><span id="local-6989586621689112724"><span class="annot"><span class="annottext">encode :: MetadataDTO -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
+</span><a href="#local-6989586621689112724"><span class="hs-identifier hs-var hs-var">encode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-55"></span><span>        </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V1"><span class="hs-identifier hs-type">V1</span></a></span><span> </span><span id="local-6989586621689112722"><span class="annot"><span class="annottext">MetadataV1
+</span><a href="#local-6989586621689112722"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataV1 -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">MetadataV1
-</span><a href="#local-6989586621689114211"><span class="hs-identifier hs-var">v1</span></a></span><span>
-</span><span id="line-56"></span><span>        </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V2"><span class="hs-identifier hs-type">V2</span></a></span><span> </span><span id="local-6989586621689114210"><span class="annot"><span class="annottext">MetadataV2
-</span><a href="#local-6989586621689114210"><span class="hs-identifier hs-var">v2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either MetadataV2 MetadataV3
+</span><a href="#local-6989586621689112722"><span class="hs-identifier hs-var">v1</span></a></span><span>
+</span><span id="line-56"></span><span>        </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V2"><span class="hs-identifier hs-type">V2</span></a></span><span> </span><span id="local-6989586621689112721"><span class="annot"><span class="annottext">MetadataV2
+</span><a href="#local-6989586621689112721"><span class="hs-identifier hs-var">v2</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either MetadataV2 MetadataV3
 -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Either MetadataV2 MetadataV3
@@ -238,9 +238,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MetadataV2 -&gt; Either MetadataV2 MetadataV3
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">MetadataV2
-</span><a href="#local-6989586621689114210"><span class="hs-identifier hs-var">v2</span></a></span><span>
-</span><span id="line-57"></span><span>        </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V3"><span class="hs-identifier hs-type">V3</span></a></span><span> </span><span id="local-6989586621689114209"><span class="annot"><span class="annottext">MetadataV3
-</span><a href="#local-6989586621689114209"><span class="hs-identifier hs-var">v3</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either MetadataV2 MetadataV3
+</span><a href="#local-6989586621689112721"><span class="hs-identifier hs-var">v2</span></a></span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#V3"><span class="hs-identifier hs-type">V3</span></a></span><span> </span><span id="local-6989586621689112720"><span class="annot"><span class="annottext">MetadataV3
+</span><a href="#local-6989586621689112720"><span class="hs-identifier hs-var">v3</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either MetadataV2 MetadataV3
 -&gt; Either MetadataV1 (Either MetadataV2 MetadataV3)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Either MetadataV2 MetadataV3
@@ -251,5 +251,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Either MetadataV2 MetadataV3
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3
-</span><a href="#local-6989586621689114209"><span class="hs-identifier hs-var">v3</span></a></span><span>
+</span><a href="#local-6989586621689112720"><span class="hs-identifier hs-var">v3</span></a></span><span>
 </span><span id="line-58"></span></pre></body></html>

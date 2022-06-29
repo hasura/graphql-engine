@@ -31,10 +31,10 @@
 </span><a href="Hasura.RQL.DDL.QueryTags.html#_sqtConfig"><span class="hs-identifier hs-var hs-var">_sqtConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.QueryTags.html#QueryTagsConfig"><span class="hs-identifier hs-type">QueryTagsConfig</span></a></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-31"></span><span>
-</span><span id="line-32"></span><span class="hs-special">$(</span><span id="local-6989586621689212768"><span id="local-6989586621689212770"><span id="local-6989586621689212772"><span id="local-6989586621689212774"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SetQueryTagsConfig</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-special">$(</span><span id="local-6989586621689211279"><span id="local-6989586621689211281"><span id="local-6989586621689211283"><span id="local-6989586621689211285"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SetQueryTagsConfig</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689212762"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.QueryTags.html#SetQueryTagsConfig"><span class="hs-identifier hs-type">SetQueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>  </span><span id="local-6989586621689212760"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SetQueryTagsConfig
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689211273"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.QueryTags.html#SetQueryTagsConfig"><span class="hs-identifier hs-type">SetQueryTagsConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621689211271"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SetQueryTagsConfig
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser SetQueryTagsConfig)
 -&gt; Value
@@ -47,23 +47,23 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser SetQueryTagsConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689212757"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689212757"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-36"></span><span>    </span><span id="local-6989586621689212756"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689212756"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689212757"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser SourceName
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689211268"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689211268"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-36"></span><span>    </span><span id="local-6989586621689211267"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689211267"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689211268"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser SourceName
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source_name&quot;</span></span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621689212754"><span class="annot"><span class="annottext">QueryTagsConfig
-</span><a href="#local-6989586621689212754"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser QueryTagsConfig
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621689211265"><span class="annot"><span class="annottext">QueryTagsConfig
+</span><a href="#local-6989586621689211265"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser QueryTagsConfig
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser QueryTagsConfig)
 -&gt; Value -&gt; Parser QueryTagsConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">Object</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689212757"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621689211268"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-38"></span><span>    </span><span class="annot"><span class="annottext">SetQueryTagsConfig -&gt; Parser SetQueryTagsConfig
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(SetQueryTagsConfig -&gt; Parser SetQueryTagsConfig)
@@ -71,19 +71,19 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; QueryTagsConfig -&gt; SetQueryTagsConfig
 </span><a href="Hasura.RQL.DDL.QueryTags.html#SetQueryTagsConfig"><span class="hs-identifier hs-var">SetQueryTagsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689212756"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig
-</span><a href="#local-6989586621689212754"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span>
+</span><a href="#local-6989586621689211267"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig
+</span><a href="#local-6989586621689211265"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span id="local-6989586621689212752"><span class="annot"><a href="Hasura.RQL.DDL.QueryTags.html#runSetQueryTagsConfig"><span class="hs-identifier hs-type">runSetQueryTagsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689212752"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689212752"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689212752"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-40"></span><span id="local-6989586621689211263"><span class="annot"><a href="Hasura.RQL.DDL.QueryTags.html#runSetQueryTagsConfig"><span class="hs-identifier hs-type">runSetQueryTagsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689211263"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689211263"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689211263"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-42"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.QueryTags.html#SetQueryTagsConfig"><span class="hs-identifier hs-type">SetQueryTagsConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-43"></span><span>  </span><span class="annot"><a href="#local-6989586621689212752"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><a href="#local-6989586621689211263"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
 </span><span id="line-44"></span><span id="runSetQueryTagsConfig"><span class="annot"><span class="annottext">runSetQueryTagsConfig :: SetQueryTagsConfig -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.QueryTags.html#runSetQueryTagsConfig"><span class="hs-identifier hs-var hs-var">runSetQueryTagsConfig</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.QueryTags.html#SetQueryTagsConfig"><span class="hs-identifier hs-type">SetQueryTagsConfig</span></a></span><span> </span><span id="local-6989586621689212751"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689212751"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689212750"><span class="annot"><span class="annottext">QueryTagsConfig
-</span><a href="#local-6989586621689212750"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621689212749"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689212749"><span class="hs-identifier hs-var">oldMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Metadata
+</span><a href="Hasura.RQL.DDL.QueryTags.html#runSetQueryTagsConfig"><span class="hs-identifier hs-var hs-var">runSetQueryTagsConfig</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.QueryTags.html#SetQueryTagsConfig"><span class="hs-identifier hs-type">SetQueryTagsConfig</span></a></span><span> </span><span id="local-6989586621689211262"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689211262"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span> </span><span id="local-6989586621689211261"><span class="annot"><span class="annottext">QueryTagsConfig
+</span><a href="#local-6989586621689211261"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621689211260"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621689211260"><span class="hs-identifier hs-var">oldMetadata</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m Metadata
 forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#getMetadata"><span class="hs-identifier hs-var">getMetadata</span></a></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">SourceName
@@ -91,9 +91,9 @@ forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
 -&gt; Maybe BackendSourceMetadata
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OM.lookup</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689212751"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; InsOrdHashMap SourceName BackendSourceMetadata
+</span><a href="#local-6989586621689211262"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; InsOrdHashMap SourceName BackendSourceMetadata
 </span><a href="Hasura.RQL.Types.Metadata.html#_metaSources"><span class="hs-identifier hs-var hs-var">_metaSources</span></a></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689212749"><span class="hs-identifier hs-var">oldMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689211260"><span class="hs-identifier hs-var">oldMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Maybe BackendSourceMetadata
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m EncJSON
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
@@ -104,42 +104,42 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;source with name &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689212751"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689211262"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; does not exist&quot;</span></span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689212743"><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212743"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689212742"><span class="annot"><span class="annottext">backendType :: BackendType
-</span><a href="#local-6989586621689212742"><span class="hs-identifier hs-var hs-var">backendType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata -&gt; BackendType
-</span><a href="#local-6989586621689212741"><span class="hs-identifier hs-var">getBackendType</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212743"><span class="hs-identifier hs-var">exists</span></a></span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689211254"><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211254"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689211253"><span class="annot"><span class="annottext">backendType :: BackendType
+</span><a href="#local-6989586621689211253"><span class="hs-identifier hs-var hs-var">backendType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata -&gt; BackendType
+</span><a href="#local-6989586621689211252"><span class="hs-identifier hs-var">getBackendType</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211254"><span class="hs-identifier hs-var">exists</span></a></span><span>
 </span><span id="line-50"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">BackendType
-</span><a href="#local-6989586621689212742"><span class="hs-identifier hs-var">backendType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689211253"><span class="hs-identifier hs-var">backendType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-51"></span><span>        </span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
 </span><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-var">Vanilla</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; m EncJSON
-</span><a href="#local-6989586621689212738"><span class="hs-identifier hs-var">setQueryTagsConfigInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212743"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Maybe QueryTagsConfig
+</span><a href="#local-6989586621689211249"><span class="hs-identifier hs-var">setQueryTagsConfigInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211254"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Maybe QueryTagsConfig
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig
-</span><a href="#local-6989586621689212750"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689211261"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>        </span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresKind
 </span><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-var">Citus</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; m EncJSON
-</span><a href="#local-6989586621689212738"><span class="hs-identifier hs-var">setQueryTagsConfigInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212743"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Maybe QueryTagsConfig
+</span><a href="#local-6989586621689211249"><span class="hs-identifier hs-var">setQueryTagsConfigInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211254"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryTagsConfig -&gt; Maybe QueryTagsConfig
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">QueryTagsConfig
-</span><a href="#local-6989586621689212750"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689211261"><span class="hs-identifier hs-var">queryTagsConfig</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">BackendType
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BackendType -&gt; m EncJSON
 forall (m :: * -&gt; *) a a. (MonadError QErr m, ToTxt a) =&gt; a -&gt; m a
-</span><a href="#local-6989586621689212736"><span class="hs-identifier hs-var">queryTagsNotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
-</span><a href="#local-6989586621689212742"><span class="hs-identifier hs-var">backendType</span></a></span><span>
+</span><a href="#local-6989586621689211247"><span class="hs-identifier hs-var">queryTagsNotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">BackendType
+</span><a href="#local-6989586621689211253"><span class="hs-identifier hs-var">backendType</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><a href="#local-6989586621689212741"><span class="hs-identifier hs-type">getBackendType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#BackendSourceMetadata"><span class="hs-identifier hs-type">BackendSourceMetadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span>
-</span><span id="line-56"></span><span>    </span><span id="local-6989586621689212741"><span class="annot"><span class="annottext">getBackendType :: BackendSourceMetadata -&gt; BackendType
-</span><a href="#local-6989586621689212741"><span class="hs-identifier hs-var hs-var">getBackendType</span></a></span></span><span> </span><span id="local-6989586621689212735"><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212735"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="#local-6989586621689211252"><span class="hs-identifier hs-type">getBackendType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#BackendSourceMetadata"><span class="hs-identifier hs-type">BackendSourceMetadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span>
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621689211252"><span class="annot"><span class="annottext">getBackendType :: BackendSourceMetadata -&gt; BackendType
+</span><a href="#local-6989586621689211252"><span class="hs-identifier hs-var hs-var">getBackendType</span></a></span></span><span> </span><span id="local-6989586621689211246"><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211246"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">BackendSourceMetadata
 -&gt; (forall (b :: BackendType).
     Backend b =&gt;
@@ -149,7 +149,7 @@ forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212735"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType).
+</span><a href="#local-6989586621689211246"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType).
   Backend b =&gt;
   SourceMetadata b -&gt; BackendType)
  -&gt; BackendType)
@@ -158,41 +158,41 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
     SourceMetadata b -&gt; BackendType)
 -&gt; BackendType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689212733"><span id="local-6989586621689212732"><span class="annot"><span class="annottext">SourceMetadata b
-</span><a href="#local-6989586621689212732"><span class="hs-identifier hs-var">_sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689212733"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689211244"><span id="local-6989586621689211243"><span class="annot"><span class="annottext">SourceMetadata b
+</span><a href="#local-6989586621689211243"><span class="hs-identifier hs-var">_sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689211244"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">BackendTag b -&gt; BackendType
 forall (b :: BackendType). BackendTag b -&gt; BackendType
 </span><a href="Hasura.SQL.Tag.html#reify"><span class="hs-identifier hs-var">reify</span></a></span><span> </span><span class="annot"><span class="annottext">(BackendTag b -&gt; BackendType) -&gt; BackendTag b -&gt; BackendType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HasTag b =&gt; BackendTag b
 forall (b :: BackendType). HasTag b =&gt; BackendTag b
-</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689212733"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689211244"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span>    </span><span id="local-6989586621689212738"><span class="annot"><span class="annottext">setQueryTagsConfigInMetadata :: BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; m EncJSON
-</span><a href="#local-6989586621689212738"><span class="hs-identifier hs-var hs-var">setQueryTagsConfigInMetadata</span></a></span></span><span> </span><span id="local-6989586621689212729"><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212729"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span id="local-6989586621689212728"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
-</span><a href="#local-6989586621689212728"><span class="hs-identifier hs-var">qtConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-61"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689212727"><span class="annot"><span class="annottext">metadataModifier :: MetadataModifier
-</span><a href="#local-6989586621689212727"><span class="hs-identifier hs-var hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; MetadataModifier
-</span><a href="#local-6989586621689212726"><span class="hs-identifier hs-var">queryTagsMetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212729"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
-</span><a href="#local-6989586621689212728"><span class="hs-identifier hs-var">qtConfig</span></a></span><span>
+</span><span id="line-60"></span><span>    </span><span id="local-6989586621689211249"><span class="annot"><span class="annottext">setQueryTagsConfigInMetadata :: BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; m EncJSON
+</span><a href="#local-6989586621689211249"><span class="hs-identifier hs-var hs-var">setQueryTagsConfigInMetadata</span></a></span></span><span> </span><span id="local-6989586621689211240"><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211240"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span id="local-6989586621689211239"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621689211239"><span class="hs-identifier hs-var">qtConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-61"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689211238"><span class="annot"><span class="annottext">metadataModifier :: MetadataModifier
+</span><a href="#local-6989586621689211238"><span class="hs-identifier hs-var hs-var">metadataModifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; MetadataModifier
+</span><a href="#local-6989586621689211237"><span class="hs-identifier hs-var">queryTagsMetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211240"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621689211239"><span class="hs-identifier hs-var">qtConfig</span></a></span><span>
 </span><span id="line-62"></span><span>      </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
 forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOSource"><span class="hs-identifier hs-var">MOSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689212751"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
-</span><a href="#local-6989586621689212727"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
+</span><a href="#local-6989586621689211262"><span class="hs-identifier hs-var">sourceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MetadataModifier
+</span><a href="#local-6989586621689211238"><span class="hs-identifier hs-var">metadataModifier</span></a></span><span>
 </span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span>    </span><span id="local-6989586621689212736"><span class="annot"><span class="annottext">queryTagsNotSupported :: a -&gt; m a
-</span><a href="#local-6989586621689212736"><span class="hs-identifier hs-var hs-var">queryTagsNotSupported</span></a></span></span><span> </span><span id="local-6989586621689212722"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689212722"><span class="hs-identifier hs-var">backendType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m a
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621689211247"><span class="annot"><span class="annottext">queryTagsNotSupported :: a -&gt; m a
+</span><a href="#local-6989586621689211247"><span class="hs-identifier hs-var hs-var">queryTagsNotSupported</span></a></span></span><span> </span><span id="local-6989586621689211233"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689211233"><span class="hs-identifier hs-var">backendType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m a
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m a) -&gt; Text -&gt; m a
@@ -200,15 +200,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689212722"><span class="hs-identifier hs-var">backendType</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689211233"><span class="hs-identifier hs-var">backendType</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; sources do not support query-tags yet&quot;</span></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621689212726"><span class="annot"><span class="annottext">queryTagsMetadataModifier :: BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; MetadataModifier
-</span><a href="#local-6989586621689212726"><span class="hs-identifier hs-var hs-var">queryTagsMetadataModifier</span></a></span></span><span> </span><span id="local-6989586621689212720"><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212720"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span id="local-6989586621689212719"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
-</span><a href="#local-6989586621689212719"><span class="hs-identifier hs-var">qtConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621689211237"><span class="annot"><span class="annottext">queryTagsMetadataModifier :: BackendSourceMetadata -&gt; Maybe QueryTagsConfig -&gt; MetadataModifier
+</span><a href="#local-6989586621689211237"><span class="hs-identifier hs-var hs-var">queryTagsMetadataModifier</span></a></span></span><span> </span><span id="local-6989586621689211231"><span class="annot"><span class="annottext">BackendSourceMetadata
+</span><a href="#local-6989586621689211231"><span class="hs-identifier hs-var">exists</span></a></span></span><span> </span><span id="local-6989586621689211230"><span class="annot"><span class="annottext">Maybe QueryTagsConfig
+</span><a href="#local-6989586621689211230"><span class="hs-identifier hs-var">qtConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">BackendSourceMetadata
 -&gt; (forall (b :: BackendType).
     Backend b =&gt;
@@ -218,7 +218,7 @@ forall (c :: BackendType -&gt; Constraint) (i :: BackendType -&gt; *) r.
 AllBackendsSatisfy c =&gt;
 AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
 </span><a href="Hasura.SQL.AnyBackend.html#dispatchAnyBackend"><span class="hs-identifier hs-var">AB.dispatchAnyBackend</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><span class="annottext">BackendSourceMetadata
-</span><a href="#local-6989586621689212720"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType).
+</span><a href="#local-6989586621689211231"><span class="hs-identifier hs-var">exists</span></a></span><span> </span><span class="annot"><span class="annottext">((forall (b :: BackendType).
   Backend b =&gt;
   SourceMetadata b -&gt; MetadataModifier)
  -&gt; MetadataModifier)
@@ -227,7 +227,7 @@ AnyBackend i -&gt; (forall (b :: BackendType). c b =&gt; i b -&gt; r) -&gt; r
     SourceMetadata b -&gt; MetadataModifier)
 -&gt; MetadataModifier
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689212718"><span id="local-6989586621689212717"><span class="annot"><a href="#local-6989586621689212717"><span class="hs-identifier hs-var">_sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689212718"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689211229"><span id="local-6989586621689211228"><span class="annot"><a href="#local-6989586621689211228"><span class="hs-identifier hs-var">_sourceMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689211229"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
 </span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
 -&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
@@ -253,7 +253,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall m. Ixed m =&gt; Index m -&gt; Traversal' m (IxValue m)
 </span><span class="hs-identifier hs-var">ix</span></span><span> </span><span class="annot"><span class="annottext">Index (InsOrdHashMap SourceName BackendSourceMetadata)
 SourceName
-</span><a href="#local-6989586621689212751"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">((BackendSourceMetadata -&gt; Identity BackendSourceMetadata)
+</span><a href="#local-6989586621689211262"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">((BackendSourceMetadata -&gt; Identity BackendSourceMetadata)
  -&gt; InsOrdHashMap SourceName BackendSourceMetadata
  -&gt; Identity (InsOrdHashMap SourceName BackendSourceMetadata))
 -&gt; ((Maybe QueryTagsConfig -&gt; Identity (Maybe QueryTagsConfig))
@@ -266,7 +266,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (b :: BackendType).
 Backend b =&gt;
 Prism' BackendSourceMetadata (SourceMetadata b)
-</span><a href="Hasura.RQL.Types.Metadata.html#toSourceMetadata"><span class="hs-identifier hs-var">toSourceMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689212718"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">((SourceMetadata b -&gt; Identity (SourceMetadata b))
+</span><a href="Hasura.RQL.Types.Metadata.html#toSourceMetadata"><span class="hs-identifier hs-var">toSourceMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689211229"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">((SourceMetadata b -&gt; Identity (SourceMetadata b))
  -&gt; BackendSourceMetadata -&gt; Identity BackendSourceMetadata)
 -&gt; ((Maybe QueryTagsConfig -&gt; Identity (Maybe QueryTagsConfig))
     -&gt; SourceMetadata b -&gt; Identity (SourceMetadata b))
@@ -283,5 +283,5 @@ Lens' (SourceMetadata b) (Maybe QueryTagsConfig)
 -&gt; Maybe QueryTagsConfig -&gt; Metadata -&gt; Metadata
 forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Maybe QueryTagsConfig
-</span><a href="#local-6989586621689212719"><span class="hs-identifier hs-var">qtConfig</span></a></span><span>
+</span><a href="#local-6989586621689211230"><span class="hs-identifier hs-var">qtConfig</span></a></span><span>
 </span><span id="line-70"></span></pre></body></html>
