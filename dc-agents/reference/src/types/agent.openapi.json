@@ -1,0 +1,1022 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "",
+    "version": ""
+  },
+  "paths": {
+    "/capabilities": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapabilitiesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/schema": {
+      "get": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-SourceName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-Config",
+            "required": true,
+            "schema": {
+              "additionalProperties": true,
+              "nullable": false,
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchemaResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          }
+        }
+      }
+    },
+    "/query": {
+      "post": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-SourceName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-Config",
+            "required": true,
+            "schema": {
+              "additionalProperties": true,
+              "nullable": false,
+              "type": "object"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CapabilitiesResponse": {
+        "nullable": false,
+        "properties": {
+          "capabilities": {
+            "$ref": "#/components/schemas/Capabilities"
+          },
+          "configSchemas": {
+            "$ref": "#/components/schemas/ConfigSchemaResponse"
+          }
+        },
+        "required": [
+          "capabilities",
+          "configSchemas"
+        ],
+        "type": "object"
+      },
+      "Capabilities": {
+        "properties": {
+          "filtering": {
+            "$ref": "#/components/schemas/FilteringCapabilities"
+          },
+          "mutations": {
+            "$ref": "#/components/schemas/MutationCapabilities"
+          },
+          "queries": {
+            "$ref": "#/components/schemas/QueryCapabilities"
+          },
+          "relationships": {
+            "$ref": "#/components/schemas/RelationshipCapabilities"
+          },
+          "subscriptions": {
+            "$ref": "#/components/schemas/SubscriptionCapabilities"
+          }
+        },
+        "type": "object"
+      },
+      "QueryCapabilities": {
+        "properties": {
+          "supportsPrimaryKeys": {
+            "description": "Does the agent support querying a table by primary key?",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "supportsPrimaryKeys"
+        ],
+        "type": "object"
+      },
+      "MutationCapabilities": {},
+      "SubscriptionCapabilities": {},
+      "BooleanOperators": {},
+      "ComparisonOperators": {},
+      "FilteringCapabilities": {
+        "properties": {
+          "booleanOperators": {
+            "$ref": "#/components/schemas/BooleanOperators"
+          },
+          "comparisonOperators": {
+            "$ref": "#/components/schemas/ComparisonOperators"
+          }
+        },
+        "required": [
+          "booleanOperators",
+          "comparisonOperators"
+        ],
+        "type": "object"
+      },
+      "RelationshipCapabilities": {},
+      "ConfigSchemaResponse": {
+        "nullable": false,
+        "properties": {
+          "configSchema": {
+            "$ref": "#/components/schemas/OpenApiSchema"
+          },
+          "otherSchemas": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OpenApiSchema"
+            },
+            "nullable": false,
+            "type": "object"
+          }
+        },
+        "required": [
+          "configSchema",
+          "otherSchemas"
+        ],
+        "type": "object"
+      },
+      "OpenApiSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OpenApiSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/OpenApiReference"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "default": true
+          },
+          "allOf": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OpenApiSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/OpenApiReference"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "anyOf": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OpenApiSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/OpenApiReference"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "default": {},
+          "deprecated": {
+            "default": false,
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string"
+          },
+          "discriminator": {
+            "$ref": "#/components/schemas/OpenApiDiscriminator"
+          },
+          "enum": {
+            "items": {},
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": false
+          },
+          "example": {},
+          "exclusiveMaximum": {
+            "default": false,
+            "type": "boolean"
+          },
+          "exclusiveMinimum": {
+            "default": false,
+            "type": "boolean"
+          },
+          "externalDocs": {
+            "$ref": "#/components/schemas/OpenApiExternalDocumentation"
+          },
+          "format": {
+            "type": "string"
+          },
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OpenApiSchema"
+              },
+              {
+                "$ref": "#/components/schemas/OpenApiReference"
+              }
+            ]
+          },
+          "maxItems": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxLength": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maximum": {
+            "type": "number"
+          },
+          "minItems": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minLength": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minProperties": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "minimum": {
+            "type": "number"
+          },
+          "multipleOf": {
+            "exclusiveMinimum": true,
+            "minimum": 0,
+            "type": "number"
+          },
+          "not": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OpenApiSchema"
+              },
+              {
+                "$ref": "#/components/schemas/OpenApiReference"
+              }
+            ]
+          },
+          "nullable": {
+            "default": false,
+            "type": "boolean"
+          },
+          "oneOf": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OpenApiSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/OpenApiReference"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "pattern": {
+            "format": "regex",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OpenApiSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/OpenApiReference"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "readOnly": {
+            "default": false,
+            "type": "boolean"
+          },
+          "required": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "array",
+              "boolean",
+              "integer",
+              "number",
+              "object",
+              "string"
+            ],
+            "type": "string"
+          },
+          "uniqueItems": {
+            "default": false,
+            "type": "boolean"
+          },
+          "writeOnly": {
+            "default": false,
+            "type": "boolean"
+          },
+          "xml": {
+            "$ref": "#/components/schemas/OpenApiXml"
+          }
+        },
+        "type": "object"
+      },
+      "OpenApiReference": {
+        "properties": {
+          "$ref": {
+            "format": "uri-reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "$ref"
+        ],
+        "type": "object"
+      },
+      "OpenApiDiscriminator": {
+        "properties": {
+          "mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "propertyName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "propertyName"
+        ],
+        "type": "object"
+      },
+      "OpenApiExternalDocumentation": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "url": {
+            "format": "uri-reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "OpenApiXml": {
+        "additionalProperties": false,
+        "properties": {
+          "attribute": {
+            "default": false,
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "namespace": {
+            "format": "uri",
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "wrapped": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "SchemaResponse": {
+        "properties": {
+          "tables": {
+            "description": "Available tables",
+            "items": {
+              "$ref": "#/components/schemas/TableInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "tables"
+        ],
+        "type": "object"
+      },
+      "ScalarType": {
+        "enum": [
+          "string",
+          "number",
+          "bool"
+        ],
+        "type": "string"
+      },
+      "ColumnInfo": {
+        "properties": {
+          "description": {
+            "description": "Column description",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Column name",
+            "type": "string"
+          },
+          "nullable": {
+            "description": "Is column nullable",
+            "type": "boolean"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ScalarType"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "nullable"
+        ],
+        "type": "object"
+      },
+      "TableInfo": {
+        "properties": {
+          "columns": {
+            "description": "The columns of the table",
+            "items": {
+              "$ref": "#/components/schemas/ColumnInfo"
+            },
+            "type": "array"
+          },
+          "description": {
+            "description": "Description of the table",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "The name of the table",
+            "type": "string"
+          },
+          "primary_key": {
+            "description": "The primary key of the table",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "columns"
+        ],
+        "type": "object"
+      },
+      "QueryResponse": {
+        "items": {
+          "additionalProperties": {
+            "additionalProperties": true
+          },
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "QueryRequest": {
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/Query"
+          },
+          "table": {
+            "description": "The name of the table to query",
+            "type": "string"
+          },
+          "table_relationships": {
+            "description": "The relationships between tables involved in the entire query request",
+            "items": {
+              "$ref": "#/components/schemas/TableRelationships"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "table",
+          "table_relationships",
+          "query"
+        ],
+        "type": "object"
+      },
+      "RelationshipType": {
+        "enum": [
+          "object",
+          "array"
+        ],
+        "type": "string"
+      },
+      "Relationship": {
+        "properties": {
+          "column_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A mapping between columns on the source table to columns on the target table",
+            "type": "object"
+          },
+          "relationship_type": {
+            "$ref": "#/components/schemas/RelationshipType"
+          },
+          "target_table": {
+            "description": "The name of the target table in the relationship",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_table",
+          "relationship_type",
+          "column_mapping"
+        ],
+        "type": "object"
+      },
+      "TableRelationships": {
+        "properties": {
+          "relationships": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Relationship"
+            },
+            "description": "A map of relationships from the source table to target tables. The key of the map is the relationship name",
+            "type": "object"
+          },
+          "source_table": {
+            "description": "The name of the source table in the relationship",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_table",
+          "relationships"
+        ],
+        "type": "object"
+      },
+      "Query": {
+        "properties": {
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "description": "Fields of the query",
+            "type": "object"
+          },
+          "limit": {
+            "description": "Optionally limit to N results",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
+          "offset": {
+            "description": "Optionally offset from the Nth result",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "nullable": true,
+            "type": "number"
+          },
+          "order_by": {
+            "description": "Optionally order the results by the value of one or more fields",
+            "items": {
+              "$ref": "#/components/schemas/OrderBy"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "where": {
+            "$ref": "#/components/schemas/Expression"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "type": "object"
+      },
+      "ColumnField": {
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "column"
+        ],
+        "type": "object"
+      },
+      "RelationshipField": {
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/Query"
+          },
+          "relationship": {
+            "description": "The name of the relationship to follow for the subquery",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "relationship"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "relationship",
+          "query"
+        ],
+        "type": "object"
+      },
+      "Field": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ColumnField"
+          },
+          {
+            "$ref": "#/components/schemas/RelationshipField"
+          }
+        ]
+      },
+      "Expression": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AndExpression"
+          },
+          {
+            "$ref": "#/components/schemas/OrExpression"
+          },
+          {
+            "$ref": "#/components/schemas/NotExpression"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyBinaryComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyBinaryArrayComparisonExpression"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyUnaryComparisonOperator"
+          }
+        ]
+      },
+      "BinaryComparisonOperator": {
+        "enum": [
+          "less_than",
+          "less_than_or_equal",
+          "greater_than",
+          "greater_than_or_equal",
+          "equal"
+        ],
+        "type": "string"
+      },
+      "ComparisonColumn": {
+        "properties": {
+          "name": {
+            "description": "The name of the column",
+            "type": "string"
+          },
+          "path": {
+            "description": "The relationship path from the current query table to the table that contains the specified column. Empty array means the current query table.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "name"
+        ],
+        "type": "object"
+      },
+      "ScalarValue": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "AnotherColumnComparison": {
+        "properties": {
+          "column": {
+            "$ref": "#/components/schemas/ComparisonColumn"
+          },
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "column"
+        ],
+        "type": "object"
+      },
+      "ScalarValueComparison": {
+        "properties": {
+          "type": {
+            "enum": [
+              "scalar"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ScalarValue"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "type": "object"
+      },
+      "ComparisonValue": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/AnotherColumnComparison"
+          },
+          {
+            "$ref": "#/components/schemas/ScalarValueComparison"
+          }
+        ]
+      },
+      "BinaryArrayComparisonOperator": {
+        "enum": [
+          "in"
+        ],
+        "type": "string"
+      },
+      "UnaryComparisonOperator": {
+        "enum": [
+          "is_null"
+        ],
+        "type": "string"
+      },
+      "ApplyBinaryArrayComparisonExpression": {
+        "properties": {
+          "column": {
+            "$ref": "#/components/schemas/ComparisonColumn"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/BinaryArrayComparisonOperator"
+          },
+          "type": {
+            "enum": [
+              "binary_arr_op"
+            ],
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/ScalarValue"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "type",
+          "operator",
+          "column",
+          "values"
+        ],
+        "type": "object"
+      },
+      "ApplyUnaryComparisonOperator": {
+        "properties": {
+          "column": {
+            "$ref": "#/components/schemas/ComparisonColumn"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/UnaryComparisonOperator"
+          },
+          "type": {
+            "enum": [
+              "unary_op"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "operator",
+          "column"
+        ],
+        "type": "object"
+      },
+      "ApplyBinaryComparisonOperator": {
+        "properties": {
+          "column": {
+            "$ref": "#/components/schemas/ComparisonColumn"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/BinaryComparisonOperator"
+          },
+          "type": {
+            "enum": [
+              "binary_op"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ComparisonValue"
+          }
+        },
+        "required": [
+          "type",
+          "operator",
+          "column",
+          "value"
+        ],
+        "type": "object"
+      },
+      "NotExpression": {
+        "properties": {
+          "expression": {
+            "$ref": "#/components/schemas/Expression"
+          },
+          "type": {
+            "enum": [
+              "not"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "expression"
+        ],
+        "type": "object"
+      },
+      "OrExpression": {
+        "properties": {
+          "expressions": {
+            "items": {
+              "$ref": "#/components/schemas/Expression"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "or"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "expressions"
+        ],
+        "type": "object"
+      },
+      "AndExpression": {
+        "properties": {
+          "expressions": {
+            "items": {
+              "$ref": "#/components/schemas/Expression"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "and"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "expressions"
+        ],
+        "type": "object"
+      },
+      "OrderType": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "type": "string"
+      },
+      "OrderBy": {
+        "properties": {
+          "column": {
+            "description": "Column to order by",
+            "type": "string"
+          },
+          "ordering": {
+            "$ref": "#/components/schemas/OrderType"
+          }
+        },
+        "required": [
+          "column",
+          "ordering"
+        ],
+        "type": "object"
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@ import Control.Monad ((>=>))
 import Data.Aeson.Text (encodeToLazyText)
 import Data.Proxy (Proxy (..))
 import Data.Text.Lazy.IO qualified as Text
-import Hasura.Backends.DataConnector.API (Routes (..), apiClient, openApiSchemaJson)
+import Hasura.Backends.DataConnector.API (Routes (..), apiClient, openApiSchema)
 import Hasura.Backends.DataConnector.API qualified as API
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
@@ -38,7 +38,7 @@ main = do
       agentCapabilities <- getAgentCapabilities api _toAgentCapabilities
       runSpec (tests api testSourceName _toAgentConfig agentCapabilities) (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
     ExportOpenAPISpec ->
-      Text.putStrLn $ encodeToLazyText openApiSchemaJson
+      Text.putStrLn $ encodeToLazyText openApiSchema
 
   pure ()
 

@@ -113,7 +113,10 @@ deriving via Autodocodec Field instance ToSchema Field
 -- endpoint encoded as a list of JSON objects.
 newtype QueryResponse = QueryResponse {getQueryResponse :: [Object]}
   deriving newtype (Eq, Ord, Show, NFData)
-  deriving (ToJSON, FromJSON, ToSchema) via Autodocodec [Object]
+  deriving (ToJSON, FromJSON, ToSchema) via Autodocodec QueryResponse
+
+instance HasCodec QueryResponse where
+  codec = named "QueryResponse" $ dimapCodec QueryResponse getQueryResponse codec
 
 $(makeLenses ''QueryRequest)
 $(makeLenses ''Query)

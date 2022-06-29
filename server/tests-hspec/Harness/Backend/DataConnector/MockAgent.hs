@@ -1,6 +1,7 @@
 module Harness.Backend.DataConnector.MockAgent
   ( MockConfig (..),
     chinookMock,
+    mockAgentPort,
     runMockServer,
   )
 where
@@ -220,12 +221,22 @@ mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> AP
 mockQueryHandler mcfg mquery _sourceName _cfg query = liftIO $ do
   handler <- fmap _queryResponse $ I.readIORef mcfg
   I.writeIORef mquery (Just query)
-  pure $ handler (error "WTF DUDE")
+  pure $ handler query
 
-dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> Server API.Api
-dcMockableServer mcfg mquery = mockCapabilitiesHandler mcfg :<|> mockSchemaHandler mcfg :<|> mockQueryHandler mcfg mquery
+type HealthcheckApi =
+  "healthz"
+    :> Get '[JSON] ()
+
+healthcheckHandler :: Handler ()
+healthcheckHandler = pure ()
+
+dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> Server (API.Api :<|> HealthcheckApi)
+dcMockableServer mcfg mquery = (mockCapabilitiesHandler mcfg :<|> mockSchemaHandler mcfg :<|> mockQueryHandler mcfg mquery) :<|> healthcheckHandler
+
+mockAgentPort :: Warp.Port
+mockAgentPort = 65006
 
 runMockServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> IO ()
 runMockServer mcfg mquery = do
-  let app = serve (Proxy :: Proxy API.Api) $ dcMockableServer mcfg mquery
-  Warp.run 65006 app
+  let app = serve (Proxy :: Proxy (API.Api :<|> HealthcheckApi)) $ dcMockableServer mcfg mquery
+  Warp.run mockAgentPort app

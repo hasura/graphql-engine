@@ -7,13 +7,12 @@ module Hasura.Backends.DataConnector.API
     ConfigHeader,
     SourceNameHeader,
     SourceName,
-    openApiSchemaJson,
+    openApiSchema,
     Routes (..),
     apiClient,
   )
 where
 
-import Data.Aeson qualified as J
 import Data.Data (Proxy (..))
 import Data.OpenApi (OpenApi)
 import Data.Text (Text)
@@ -22,7 +21,6 @@ import Servant.API
 import Servant.API.Generic
 import Servant.Client (Client, ClientM, client)
 import Servant.OpenApi
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Servant Routes
@@ -67,13 +65,6 @@ type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi
 openApiSchema = toOpenApi (Proxy @Api)
-
--- | The OpenAPI 3.0 schema for the API
---
--- This is not exposed as the 'OpenApi' type because we need to do some hackery in
--- the serialized JSON to work around some limitations in the openapi3 library
-openApiSchemaJson :: J.Value
-openApiSchemaJson = V0.fixExternalSchemaRefsInComponentSchemas $ J.toJSON openApiSchema
 
 apiClient :: Client ClientM (NamedRoutes Routes)
 apiClient =

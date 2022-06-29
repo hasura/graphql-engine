@@ -27,6 +27,7 @@ import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.MockAgent
 import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.Http (healthCheck)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
 import Harness.Test.Context (BackendType (DataConnector), Options, defaultBackendTypeString)
 import Harness.TestEnvironment (TestEnvironment)
@@ -48,10 +49,11 @@ dataconnector:
 mockBackendConfig :: Aeson.Value
 mockBackendConfig =
   let backendType = defaultBackendTypeString $ DataConnector
+      agentUri = "http://127.0.0.1:" <> show mockAgentPort <> "/"
    in [yaml|
 dataconnector:
   *backendType:
-    uri: "http://127.0.0.1:65006/"
+    uri: *agentUri
 |]
 
 --------------------------------------------------------------------------------
@@ -114,6 +116,7 @@ mkLocalTestEnvironmentMock _ = do
   maeConfig <- I.newIORef chinookMock
   maeQuery <- I.newIORef Nothing
   maeThreadId <- forkIO $ runMockServer maeConfig maeQuery
+  healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/healthz"
   pure $ MockAgentEnvironment {..}
 
 -- | Load the agent schema into HGE.
