@@ -22,6 +22,7 @@ module Harness.GraphqlEngine
     postWithHeadersStatus,
     clearMetadata,
     postV2Query,
+    postV2Query_,
 
     -- ** Misc.
     setSource,
@@ -184,6 +185,10 @@ exportMetadata s = withFrozenCallStack $ postMetadata s [yaml|{type: export_meta
 postV2Query :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
 postV2Query statusCode testEnvironment =
   withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v2/query" mempty
+
+postV2Query_ :: HasCallStack => TestEnvironment -> Value -> IO ()
+postV2Query_ testEnvironment =
+  withFrozenCallStack $ post_ testEnvironment "/v2/query"
 
 -------------------------------------------------------------------------------
 
