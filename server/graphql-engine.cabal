@@ -1193,8 +1193,9 @@ test-suite tests-hspec
     Test.BackendOnlyPermissionsSpec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
+    Test.DataConnector.MockAgent.BasicQuerySpec
+    Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.QuerySpec
-    Test.DataConnector.QueryMockAgentSpec
     Test.DataConnector.SelectPermissionsSpec
     Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
