@@ -25,6 +25,7 @@ import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType, incOp)
 import Hasura.Backends.Postgres.SQL.Types as PG hiding (FunctionName, TableName)
 import Hasura.Backends.Postgres.SQL.Value as PG
 import Hasura.Backends.Postgres.Schema.OnConflict
+import Hasura.Backends.Postgres.Schema.Select
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Backends.Postgres.Types.Insert as PGIR
@@ -131,9 +132,9 @@ instance
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableUpdateMutationFields = pgkBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
-  buildFunctionQueryFields = GSB.buildFunctionQueryFieldsPG
+  buildFunctionQueryFields = buildFunctionQueryFieldsPG
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
-  buildFunctionMutationFields = GSB.buildFunctionMutationFieldsPG
+  buildFunctionMutationFields = buildFunctionMutationFieldsPG
 
   -- table components
   tableArguments = defaultTableArgs
