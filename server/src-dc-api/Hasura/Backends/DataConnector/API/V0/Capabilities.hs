@@ -22,7 +22,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data, Proxy (..))
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable)
-import Data.OpenApi (NamedSchema (..), OpenApiType (OpenApiObject), Referenced (..), Schema (..), ToSchema (..))
+import Data.OpenApi (NamedSchema (..), OpenApiType (OpenApiObject), Schema (..), ToSchema (..), declareSchemaRef)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema (ConfigSchemaResponse)
 import Prelude
@@ -137,8 +137,8 @@ instance HasCodec CapabilitiesResponse where
 
 instance ToSchema CapabilitiesResponse where
   declareNamedSchema _ = do
-    capabilitiesSchema <- declareNamedSchema (Proxy @Capabilities)
-    configSchemasSchema <- declareNamedSchema (Proxy @ConfigSchemaResponse)
+    capabilitiesSchemaRef <- declareSchemaRef (Proxy @Capabilities)
+    configSchemasSchemaRef <- declareSchemaRef (Proxy @ConfigSchemaResponse)
     let schema =
           mempty
             { _schemaType = Just OpenApiObject,
@@ -146,8 +146,8 @@ instance ToSchema CapabilitiesResponse where
               _schemaRequired = ["capabilities", "configSchemas"],
               _schemaProperties =
                 InsOrdHashMap.fromList
-                  [ ("capabilities", Inline $ _namedSchemaSchema capabilitiesSchema),
-                    ("configSchemas", Inline $ _namedSchemaSchema configSchemasSchema)
+                  [ ("capabilities", capabilitiesSchemaRef),
+                    ("configSchemas", configSchemasSchemaRef)
                   ]
             }
 

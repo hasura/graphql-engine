@@ -1,13 +1,8 @@
 import { FastifyRequest } from "fastify"
-import { SchemaObject } from "openapi3-ts"
+import { ConfigSchemaResponse } from "./types"
 
 export type Config = {
   tables: String[] | null
-}
-
-export type ConfigSchemaResponse = {
-  configSchema: SchemaObject,
-  otherSchemas: { [schemaName: string]: SchemaObject },
 }
 
 export const getConfig = (request: FastifyRequest): Config => {

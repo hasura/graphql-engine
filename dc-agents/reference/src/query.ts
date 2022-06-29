@@ -1,49 +1,56 @@
-﻿import { Expression, Fields, BinaryComparisonOperator, OrderBy, OrderType, ProjectedRow, Query, QueryResponse, RelationshipType, ScalarValue, UnaryComparisonOperator, ComparisonValue, BinaryArrayComparisonOperator, QueryRequest, TableName, ComparisonColumn, TableRelationships, Relationship, RelationshipName } from "./types/query";
+﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse } from "./types";
 import { coerceUndefinedToNull, crossProduct, unreachable, zip } from "./util";
 
 type StaticData = {
   [tableName: string]: Record<string, ScalarValue>[]
 }
 
+type TableName = string
+type RelationshipName = string
+
+type ProjectedRow = {
+  [fieldName: string]: ScalarValue | ProjectedRow[] | ProjectedRow
+}
+
 const prettyPrintBinaryComparisonOperator = (operator: BinaryComparisonOperator): string => {
   switch (operator) {
-    case BinaryComparisonOperator.GreaterThan: return ">";
-    case BinaryComparisonOperator.GreaterThanOrEqual: return ">=";
-    case BinaryComparisonOperator.LessThan: return "<";
-    case BinaryComparisonOperator.LessThanOrEqual: return "<=";
-    case BinaryComparisonOperator.Equal: return "==";
+    case "greater_than": return ">";
+    case "greater_than_or_equal": return ">=";
+    case "less_than": return "<";
+    case "less_than_or_equal": return "<=";
+    case "equal": return "==";
     default: return unreachable(operator);
   };
 };
 
 const prettyPrintBinaryArrayComparisonOperator = (operator: BinaryArrayComparisonOperator): string => {
   switch (operator) {
-    case BinaryArrayComparisonOperator.In: return "IN";
+    case "in": return "IN";
     default: return unreachable(operator);
   };
 };
 
 const prettyPrintUnaryComparisonOperator = (operator: UnaryComparisonOperator): string => {
   switch (operator) {
-    case UnaryComparisonOperator.IsNull: return "IS NULL";
+    case "is_null": return "IS NULL";
     default: return unreachable(operator);
   };
 };
 
 const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator): ((left: ScalarValue, right: ScalarValue) => boolean) => {
   switch (operator) {
-    case BinaryComparisonOperator.GreaterThan: return (a, b) => a !== null && b !== null && a > b;
-    case BinaryComparisonOperator.GreaterThanOrEqual: return (a, b) => a !== null && b !== null && a >= b;
-    case BinaryComparisonOperator.LessThan: return (a, b) => a !== null && b !== null && a < b;
-    case BinaryComparisonOperator.LessThanOrEqual: return (a, b) => a !== null && b !== null && a <= b;
-    case BinaryComparisonOperator.Equal: return (a, b) => a !== null && b !== null && a === b;
+    case "greater_than": return (a, b) => a !== null && b !== null && a > b;
+    case "greater_than_or_equal": return (a, b) => a !== null && b !== null && a >= b;
+    case "less_than": return (a, b) => a !== null && b !== null && a < b;
+    case "less_than_or_equal": return (a, b) => a !== null && b !== null && a <= b;
+    case "equal": return (a, b) => a !== null && b !== null && a === b;
     default: return unreachable(operator);
   };
 };
 
 const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparisonOperator): ((left: ScalarValue, right: ScalarValue[]) => boolean) => {
   switch (operator) {
-    case BinaryArrayComparisonOperator.In: return (a, bs) => a !== null && bs.includes(a);
+    case "in": return (a, bs) => a !== null && bs.includes(a);
     default: return unreachable(operator);
   };
 };
@@ -51,7 +58,7 @@ const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparis
 
 const getUnaryComparisonOperatorEvaluator = (operator: UnaryComparisonOperator): ((value: ScalarValue) => boolean) => {
   switch (operator) {
-    case UnaryComparisonOperator.IsNull: return (v) => v === null;
+    case "is_null": return (v) => v === null;
     default: return unreachable(operator);
   };
 };
@@ -162,7 +169,7 @@ const sortRows = (rows: Record<string, ScalarValue>[], orderBy: OrderBy[]): Reco
                 ? -1
                 : 1;
 
-      return ordering === OrderType.Descending ? -compared : compared;
+      return ordering === "desc" ? -compared : compared;
     }, 0)
   );
 
@@ -191,7 +198,7 @@ const createFilterExpressionForRelationshipJoin = (row: Record<string, ScalarVal
     .map(([outerValue, innerColumnName]) => {
       return {
         type: "binary_op",
-        operator: BinaryComparisonOperator.Equal,
+        operator: "equal",
         column: {
           path: [],
           name: innerColumnName,
@@ -222,7 +229,7 @@ const addRelationshipFilterToQuery = (row: Record<string, ScalarValue>, relation
   }
 };
 
-const buildFieldsForPathedComparisonColumn = (comparisonColumn: ComparisonColumn): Fields => {
+const buildFieldsForPathedComparisonColumn = (comparisonColumn: ComparisonColumn): Record<string, Field> => {
   const [relationshipName, ...remainingPath] = comparisonColumn.path;
   if (relationshipName === undefined) {
     return {
@@ -276,7 +283,7 @@ const makeGetComparisonColumnValues = (findRelationship: (relationshipName: Rela
   }
 };
 
-const projectRow = (fields: Fields, findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => ProjectedRow[]) => (row: Record<string, ScalarValue>): ProjectedRow => {
+const projectRow = (fields: Record<string, Field>, findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => ProjectedRow[]) => (row: Record<string, ScalarValue>): ProjectedRow => {
   const projectedRow: ProjectedRow = {};
   for (const [fieldName, field] of Object.entries(fields)) {
 
@@ -289,11 +296,11 @@ const projectRow = (fields: Fields, findRelationship: (relationshipName: Relatio
         const relationship = findRelationship(field.relationship);
         const subquery = addRelationshipFilterToQuery(row, relationship, field.query);
         switch (relationship.relationship_type) {
-          case RelationshipType.Object:
+          case "object":
             projectedRow[fieldName] = subquery ? coerceUndefinedToNull(performQuery(relationship.target_table, subquery)[0]) : null;
             break;
 
-          case RelationshipType.Array:
+          case "array":
             projectedRow[fieldName] = subquery ? performQuery(relationship.target_table, subquery) : [];
             break;
 

@@ -210,7 +210,7 @@ Notice that the names of tables and columns are used in the metadata document to
 
 #### Type definitions
 
-The `SchemaResponse` TypeScript type from [the reference implementation](./reference/src/types/schema.ts) describes the valid response body for the `GET /schema` endpoint.
+The `SchemaResponse` TypeScript type from [the reference implementation](./reference/src/types/index.ts) describes the valid response body for the `GET /schema` endpoint.
 
 ### Responding to queries
 
@@ -672,4 +672,4 @@ The key point of interest here is in the `where` field where we are comparing be
 
 #### Type Definitions
 
-The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/query.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.
+The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/index.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.

@@ -42,7 +42,7 @@ import Data.Text.Extended
 import Data.Text.Lazy qualified as LT
 import Data.Text.Lazy.Encoding qualified as TL
 import GHC.Stats.Extended qualified as RTS
-import Hasura.Backends.DataConnector.API (openApiSchemaJson)
+import Hasura.Backends.DataConnector.API (openApiSchema)
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Base.Error
 import Hasura.EncJSON
@@ -1078,7 +1078,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue openApiSchemaJson) [])
+          return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue openApiSchema) [])
   Spock.get "api/swagger/json" $
     spockAction encodeQErr id $
       mkGetHandler $ do

@@ -31,5 +31,5 @@ data Type
 
 instance HasCodec Type where
   codec =
-    named "Type" $
+    named "ScalarType" $
       disjointStringConstCodec [(StringTy, "string"), (NumberTy, "number"), (BoolTy, "bool")]

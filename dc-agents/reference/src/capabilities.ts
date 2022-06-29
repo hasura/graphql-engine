@@ -1,17 +1,7 @@
-import { ConfigSchemaResponse, configSchema } from "./config"
-
-export type Relationships = {}
-
-export type Capabilities = {
-  relationships: Relationships
-}
-
-export type CapabilitiesResponse = {
-  capabilities: Capabilities,
-  configSchemas: ConfigSchemaResponse,
-}
+import { configSchema } from "./config"
+import { CapabilitiesResponse } from "./types"
 
 export const capabilitiesResponse: CapabilitiesResponse = {
-  capabilities: { relationships: {}},
+  capabilities: { relationships: {} },
   configSchemas: configSchema
 }

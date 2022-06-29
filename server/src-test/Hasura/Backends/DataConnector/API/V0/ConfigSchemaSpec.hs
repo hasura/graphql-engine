@@ -65,8 +65,8 @@ spec = do
         |]
     testToFromJSON val jsonVal
 
-    it "produces the correct OpenAPI Spec once external schema refs are fixed up" $
-      fixExternalSchemaRefsInSchema (toJSON $ toSchema (Proxy @ConfigSchemaResponse))
+    it "OpenAPI spec is as expected" $
+      toJSON (toSchema (Proxy @ConfigSchemaResponse))
         `shouldBe` [aesonQQ|
         {
           "required": [
@@ -77,11 +77,11 @@ spec = do
           "nullable": false,
           "properties": {
             "configSchema": {
-              "$ref": "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/80c781e479f85ac67001ceb3e7e410e25d2a561b/schemas/v3.0/schema.json#/definitions/Schema"
+              "$ref": "#/components/schemas/OpenApiSchema"
             },
             "otherSchemas": {
               "additionalProperties": {
-                "$ref": "https://raw.githubusercontent.com/OAI/OpenAPI-Specification/80c781e479f85ac67001ceb3e7e410e25d2a561b/schemas/v3.0/schema.json#/definitions/Schema"
+                "$ref": "#/components/schemas/OpenApiSchema"
               },
               "type": "object",
               "nullable": false
