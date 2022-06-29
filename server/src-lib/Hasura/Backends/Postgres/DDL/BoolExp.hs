@@ -216,21 +216,6 @@ parseBoolExpOperations rhsParser rootTable fim columnRef value = do
           (ColumnScalar PGGeometry, PGGeography) -> return ()
           (ColumnScalar PGGeography, PGGeometry) -> return ()
           (ColumnScalar PGJSONB, PGText) -> return ()
-          (ColumnScalar PGSmallInt, PGText) -> return ()
-          (ColumnScalar PGInteger, PGText) -> return ()
-          (ColumnScalar PGBigInt, PGText) -> return ()
-          (ColumnScalar PGFloat, PGText) -> return ()
-          (ColumnScalar PGDouble, PGText) -> return ()
-          (ColumnScalar PGNumeric, PGText) -> return ()
-          (ColumnScalar PGMoney, PGText) -> return ()
-          (ColumnScalar PGBoolean, PGText) -> return ()
-          (ColumnScalar PGChar, PGText) -> return ()
-          (ColumnScalar PGDate, PGText) -> return ()
-          (ColumnScalar PGTimeStamp, PGText) -> return ()
-          (ColumnScalar PGTimeStampTZ, PGText) -> return ()
-          (ColumnScalar PGTimeTZ, PGText) -> return ()
-          (ColumnScalar PGJSON, PGText) -> return ()
-          (ColumnScalar PGUUID, PGText) -> return ()
           _ ->
             throw400 UnexpectedPayload $
               "cannot cast column of type " <> colTy <<> " to type " <>> targetType

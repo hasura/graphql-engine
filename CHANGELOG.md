@@ -2,6 +2,8 @@
 
 ## Next release
 
+server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
+
 ### Behaviour changes
 
 - cli: use 2-spaces indent for graphql content in metadata instead of tabs(#8469)
