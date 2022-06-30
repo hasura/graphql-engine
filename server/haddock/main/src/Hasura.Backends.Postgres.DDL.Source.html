@@ -60,42 +60,42 @@
 </span><span id="line-60"></span><span class="hs-comment">-- | We differentiate the handling of metadata between Citus and Vanilla</span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- Postgres because Citus imposes limitations on the types of joins that it</span><span>
 </span><span id="line-62"></span><span class="hs-comment">-- permits, which then limits the types of relations that we can track.</span><span>
-</span><span id="line-63"></span><span class="hs-keyword">class</span><span> </span><span id="ToMetadataFetchQuery"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-var">ToMetadataFetchQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689204402"><span class="annot"><a href="#local-6989586621689204402"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-63"></span><span class="hs-keyword">class</span><span> </span><span id="ToMetadataFetchQuery"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-var">ToMetadataFetchQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689205907"><span class="annot"><a href="#local-6989586621689205907"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-64"></span><span>  </span><span id="tableMetadata"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#tableMetadata"><span class="hs-identifier hs-type">tableMetadata</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.Query</span></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-67"></span><span>  </span><span id="local-6989586621689204175"><span class="annot"><span class="annottext">tableMetadata :: Query
-</span><a href="#local-6989586621689204175"><span class="hs-identifier hs-var hs-var hs-var hs-var">tableMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/pg_table_metadata.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621689205680"><span class="annot"><span class="annottext">tableMetadata :: Query
+</span><a href="#local-6989586621689205680"><span class="hs-identifier hs-var hs-var hs-var hs-var">tableMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/pg_table_metadata.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621689204171"><span class="annot"><span class="annottext">tableMetadata :: Query
-</span><a href="#local-6989586621689204171"><span class="hs-identifier hs-var hs-var hs-var hs-var">tableMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/citus_table_metadata.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621689205676"><span class="annot"><span class="annottext">tableMetadata :: Query
+</span><a href="#local-6989586621689205676"><span class="hs-identifier hs-var hs-var hs-var hs-var">tableMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/citus_table_metadata.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Q.sqlFromFile</span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>
-</span><span id="line-72"></span><span id="local-6989586621689204169"><span id="local-6989586621689204170"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-type">resolveSourceConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-73"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689204170"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204170"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-72"></span><span id="local-6989586621689205674"><span id="local-6989586621689205675"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-type">resolveSourceConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205675"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205675"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-74"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.Settings.html#PostgresConnConfiguration"><span class="hs-identifier hs-type">PostgresConnConfiguration</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204169"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendConfig"><span class="hs-identifier hs-type">BackendConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204169"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendSourceKind"><span class="hs-identifier hs-type">BackendSourceKind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205674"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#BackendConfig"><span class="hs-identifier hs-type">BackendConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205674"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-79"></span><span>  </span><span class="annot"><a href="#local-6989586621689204170"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204169"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="#local-6989586621689205675"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205674"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-80"></span><span id="resolveSourceConfig"><span class="annot"><span class="annottext">resolveSourceConfig :: SourceName
 -&gt; PostgresConnConfiguration
 -&gt; BackendSourceKind ('Postgres pgKind)
 -&gt; BackendConfig ('Postgres pgKind)
 -&gt; Environment
 -&gt; m (Either QErr (SourceConfig ('Postgres pgKind)))
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var hs-var">resolveSourceConfig</span></a></span></span><span> </span><span id="local-6989586621689204168"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689204168"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689204167"><span class="annot"><span class="annottext">PostgresConnConfiguration
-</span><a href="#local-6989586621689204167"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621689204166"><span class="annot"><span class="annottext">BackendSourceKind ('Postgres pgKind)
-</span><a href="#local-6989586621689204166"><span class="hs-identifier hs-var">_backendKind</span></a></span></span><span> </span><span id="local-6989586621689204165"><span class="annot"><span class="annottext">BackendConfig ('Postgres pgKind)
-</span><a href="#local-6989586621689204165"><span class="hs-identifier hs-var">_backendConfig</span></a></span></span><span> </span><span id="local-6989586621689204164"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689204164"><span class="hs-identifier hs-var">_env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m PGSourceConfig -&gt; m (Either QErr PGSourceConfig)
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var hs-var">resolveSourceConfig</span></a></span></span><span> </span><span id="local-6989586621689205673"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689205673"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689205672"><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><a href="#local-6989586621689205672"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621689205671"><span class="annot"><span class="annottext">BackendSourceKind ('Postgres pgKind)
+</span><a href="#local-6989586621689205671"><span class="hs-identifier hs-var">_backendKind</span></a></span></span><span> </span><span id="local-6989586621689205670"><span class="annot"><span class="annottext">BackendConfig ('Postgres pgKind)
+</span><a href="#local-6989586621689205670"><span class="hs-identifier hs-var">_backendConfig</span></a></span></span><span> </span><span id="local-6989586621689205669"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689205669"><span class="hs-identifier hs-var">_env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m PGSourceConfig -&gt; m (Either QErr PGSourceConfig)
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621689204162"><span class="annot"><span class="annottext">SourceName
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621689205667"><span class="annot"><span class="annottext">SourceName
 -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig)
-</span><a href="#local-6989586621689204162"><span class="hs-identifier hs-var">sourceResolver</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT
+</span><a href="#local-6989586621689205667"><span class="hs-identifier hs-var">sourceResolver</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT
   QErr
   m
   (SourceName
@@ -122,9 +122,9 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig)
-</span><a href="#local-6989586621689204162"><span class="hs-identifier hs-var">sourceResolver</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689204168"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnConfiguration
-</span><a href="#local-6989586621689204167"><span class="hs-identifier hs-var">config</span></a></span><span>
+</span><a href="#local-6989586621689205667"><span class="hs-identifier hs-var">sourceResolver</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689205673"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnConfiguration
+</span><a href="#local-6989586621689205672"><span class="hs-identifier hs-var">config</span></a></span><span>
 </span><span id="line-83"></span><span>
 </span><span id="line-84"></span><span class="hs-comment">-- | 'PGSourceLockQuery' is a data type which represents the contents of a single object of the</span><span>
 </span><span id="line-85"></span><span class="hs-comment">--   locked queries which are queried from the `pg_stat_activity`. See `logPGSourceCatalogMigrationLockedQueries`.</span><span>
@@ -145,20 +145,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#_psqaBlockingQuery"><span class="hs-identifier hs-var hs-var">_psqaBlockingQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-94"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span class="hs-special">$(</span><span id="local-6989586621689204139"><span id="local-6989586621689204141"><span id="local-6989586621689204143"><span id="local-6989586621689204145"><span id="local-6989586621689204147"><span id="local-6989586621689204149"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGSourceLockQuery</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span class="hs-special">$(</span><span id="local-6989586621689205644"><span id="local-6989586621689205646"><span id="local-6989586621689205648"><span id="local-6989586621689205650"><span id="local-6989586621689205652"><span id="local-6989586621689205654"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PGSourceLockQuery</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>
 </span><span id="line-98"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">ToEngineLog</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#PGSourceLockQuery"><span class="hs-identifier hs-type">PGSourceLockQuery</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-99"></span><span>  </span><span id="local-6989586621689204131"><span class="annot"><span class="annottext">toEngineLog :: [PGSourceLockQuery] -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689204129"><span class="annot"><span class="annottext">[PGSourceLockQuery]
-</span><a href="#local-6989586621689204129"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621689205636"><span class="annot"><span class="annottext">toEngineLog :: [PGSourceLockQuery] -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689205634"><span class="annot"><span class="annottext">[PGSourceLockQuery]
+</span><a href="#local-6989586621689205634"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
 </span><a href="Hasura.Logging.html#sourceCatalogMigrationLogType"><span class="hs-identifier hs-var">sourceCatalogMigrationLogType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[PGSourceLockQuery] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">[PGSourceLockQuery]
-</span><a href="#local-6989586621689204129"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205634"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span class="hs-keyword">newtype</span><span> </span><span id="PGSourceLockQueryError"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#PGSourceLockQueryError"><span class="hs-identifier hs-var">PGSourceLockQueryError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PGSourceLockQueryError"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#PGSourceLockQueryError"><span class="hs-identifier hs-var">PGSourceLockQueryError</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span>
-</span><span id="line-102"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689204118"><span id="local-6989586621689204120"><span id="local-6989586621689204122"><span id="local-6989586621689204124"><span class="annot"><span class="annottext">[PGSourceLockQueryError] -&gt; Value
+</span><span id="line-102"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689205623"><span id="local-6989586621689205625"><span id="local-6989586621689205627"><span id="local-6989586621689205629"><span class="annot"><span class="annottext">[PGSourceLockQueryError] -&gt; Value
 [PGSourceLockQueryError] -&gt; Encoding
 PGSourceLockQueryError -&gt; Value
 PGSourceLockQueryError -&gt; Encoding
@@ -181,38 +181,38 @@ toEncoding :: PGSourceLockQueryError -&gt; Encoding
 $ctoEncoding :: PGSourceLockQueryError -&gt; Encoding
 toJSON :: PGSourceLockQueryError -&gt; Value
 $ctoJSON :: PGSourceLockQueryError -&gt; Value
-</span><a href="#local-6989586621689204118"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205623"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#PGSourceLockQueryError"><span class="hs-identifier hs-type">PGSourceLockQueryError</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-105"></span><span>  </span><span id="local-6989586621689204115"><span class="annot"><span class="annottext">toEngineLog :: PGSourceLockQueryError -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="#local-6989586621689204115"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689204114"><span class="annot"><span class="annottext">PGSourceLockQueryError
-</span><a href="#local-6989586621689204114"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621689205620"><span class="annot"><span class="annottext">toEngineLog :: PGSourceLockQueryError -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="#local-6989586621689205620"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689205619"><span class="annot"><span class="annottext">PGSourceLockQueryError
+</span><a href="#local-6989586621689205619"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">EngineLogType Hasura
 </span><a href="Hasura.Logging.html#sourceCatalogMigrationLogType"><span class="hs-identifier hs-var">sourceCatalogMigrationLogType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PGSourceLockQueryError -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">PGSourceLockQueryError
-</span><a href="#local-6989586621689204114"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205619"><span class="hs-identifier hs-var">resp</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="hs-comment">-- | 'logPGSourceCatalogMigrationLockedQueries' as the name suggests logs</span><span>
 </span><span id="line-108"></span><span class="hs-comment">--   the queries which are blocking in the database. This function is called</span><span>
 </span><span id="line-109"></span><span class="hs-comment">--   asynchronously from `initCatalogIfNeeded` while the source catalog is being</span><span>
 </span><span id="line-110"></span><span class="hs-comment">--   migrated.</span><span>
 </span><span id="line-111"></span><span class="hs-comment">--   NOTE: When there are no locking queries present in the database, nothing will be logged.</span><span>
-</span><span id="line-112"></span><span id="local-6989586621689204112"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#logPGSourceCatalogMigrationLockedQueries"><span class="hs-identifier hs-type">logPGSourceCatalogMigrationLockedQueries</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-113"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689204112"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-112"></span><span id="local-6989586621689205617"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#logPGSourceCatalogMigrationLockedQueries"><span class="hs-identifier hs-type">logPGSourceCatalogMigrationLockedQueries</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-113"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205617"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-114"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html#PGSourceConfig"><span class="hs-identifier hs-type">PGSourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-116"></span><span>  </span><span class="annot"><a href="#local-6989586621689204112"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><a href="#local-6989586621689205617"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span></span><span>
 </span><span id="line-117"></span><span id="logPGSourceCatalogMigrationLockedQueries"><span class="annot"><span class="annottext">logPGSourceCatalogMigrationLockedQueries :: Logger Hasura -&gt; PGSourceConfig -&gt; m Void
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#logPGSourceCatalogMigrationLockedQueries"><span class="hs-identifier hs-var hs-var">logPGSourceCatalogMigrationLockedQueries</span></a></span></span><span> </span><span id="local-6989586621689204111"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689204111"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689204110"><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689204110"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; m Void
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#logPGSourceCatalogMigrationLockedQueries"><span class="hs-identifier hs-var hs-var">logPGSourceCatalogMigrationLockedQueries</span></a></span></span><span> </span><span id="local-6989586621689205616"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689205616"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689205615"><span class="annot"><span class="annottext">PGSourceConfig
+</span><a href="#local-6989586621689205615"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m () -&gt; m Void
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m Void) -&gt; m () -&gt; m Void
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-118"></span><span>  </span><span id="local-6989586621689204108"><span class="annot"><span class="annottext">Either QErr (Maybe [PGSourceLockQuery])
-</span><a href="#local-6989586621689204108"><span class="hs-identifier hs-var">dbStats</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either QErr (Maybe [PGSourceLockQuery]))
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621689205613"><span class="annot"><span class="annottext">Either QErr (Maybe [PGSourceLockQuery])
+</span><a href="#local-6989586621689205613"><span class="hs-identifier hs-var">dbStats</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either QErr (Maybe [PGSourceLockQuery]))
 -&gt; m (Either QErr (Maybe [PGSourceLockQuery]))
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either QErr (Maybe [PGSourceLockQuery]))
@@ -227,12 +227,12 @@ forall (m :: * -&gt; *) a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 PGSourceConfig -&gt; TxET QErr m a -&gt; m (Either QErr a)
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#runPgSourceReadTx"><span class="hs-identifier hs-var">runPgSourceReadTx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689204110"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr IO (Maybe [PGSourceLockQuery])
-</span><a href="#local-6989586621689204106"><span class="hs-identifier hs-var">fetchLockedQueriesTx</span></a></span><span>
+</span><a href="#local-6989586621689205615"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr IO (Maybe [PGSourceLockQuery])
+</span><a href="#local-6989586621689205611"><span class="hs-identifier hs-var">fetchLockedQueriesTx</span></a></span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either QErr (Maybe [PGSourceLockQuery])
-</span><a href="#local-6989586621689204108"><span class="hs-identifier hs-var">dbStats</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-120"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689204105"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621689204105"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689205613"><span class="hs-identifier hs-var">dbStats</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689205610"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621689205610"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a Hasura, MonadIO m) =&gt;
    a -&gt; m ()
@@ -242,15 +242,15 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689204111"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(PGSourceLockQueryError -&gt; m ()) -&gt; PGSourceLockQueryError -&gt; m ()
+</span><a href="#local-6989586621689205616"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(PGSourceLockQueryError -&gt; m ()) -&gt; PGSourceLockQueryError -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; PGSourceLockQueryError
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#PGSourceLockQueryError"><span class="hs-identifier hs-var">PGSourceLockQueryError</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621689204105"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-121"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689204103"><span class="annot"><span class="annottext">Maybe [PGSourceLockQuery]
-</span><a href="#local-6989586621689204103"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#PGSourceLockQuery"><span class="hs-identifier hs-type">PGSourceLockQuery</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689205610"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689205608"><span class="annot"><span class="annottext">Maybe [PGSourceLockQuery]
+</span><a href="#local-6989586621689205608"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#PGSourceLockQuery"><span class="hs-identifier hs-type">PGSourceLockQuery</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-122"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe [PGSourceLockQuery]
-</span><a href="#local-6989586621689204103"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689205608"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-123"></span><span>        </span><span class="annot"><span class="annottext">Maybe [PGSourceLockQuery]
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -258,8 +258,8 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-124"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; m ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-125"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689204102"><span class="annot"><span class="annottext">[PGSourceLockQuery]
-</span><a href="#local-6989586621689204102"><span class="hs-identifier hs-var">val'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+</span><span id="line-125"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689205607"><span class="annot"><span class="annottext">[PGSourceLockQuery]
+</span><a href="#local-6989586621689205607"><span class="hs-identifier hs-var">val'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -273,10 +273,10 @@ Logger impl
    (ToEngineLog a impl, MonadIO m) =&gt;
    a -&gt; m ()
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689204111"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">([PGSourceLockQuery] -&gt; IO ()) -&gt; [PGSourceLockQuery] -&gt; IO ()
+</span><a href="#local-6989586621689205616"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">([PGSourceLockQuery] -&gt; IO ()) -&gt; [PGSourceLockQuery] -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[PGSourceLockQuery]
-</span><a href="#local-6989586621689204102"><span class="hs-identifier hs-var">val'</span></a></span><span>
+</span><a href="#local-6989586621689205607"><span class="hs-identifier hs-var">val'</span></a></span><span>
 </span><span id="line-126"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
@@ -290,8 +290,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-127"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-128"></span><span>    </span><span class="hs-comment">-- The blocking query in the below transaction is truncated to the first 20 characters because it may contain</span><span>
 </span><span id="line-129"></span><span>    </span><span class="hs-comment">-- sensitive info.</span><span>
-</span><span id="line-130"></span><span>    </span><span id="local-6989586621689204106"><span class="annot"><span class="annottext">fetchLockedQueriesTx :: TxET QErr IO (Maybe [PGSourceLockQuery])
-</span><a href="#local-6989586621689204106"><span class="hs-identifier hs-var hs-var">fetchLockedQueriesTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621689205611"><span class="annot"><span class="annottext">fetchLockedQueriesTx :: TxET QErr IO (Maybe [PGSourceLockQuery])
+</span><a href="#local-6989586621689205611"><span class="hs-identifier hs-var hs-var">fetchLockedQueriesTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-131"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ (Maybe [PGSourceLockQuery]) -&gt; Maybe [PGSourceLockQuery]
 forall a. AltJ a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">Q.getAltJ</span></span><span> </span><span class="annot"><span class="annottext">(AltJ (Maybe [PGSourceLockQuery]) -&gt; Maybe [PGSourceLockQuery])
@@ -345,27 +345,27 @@ forall (m :: * -&gt; *) a r e.
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-144"></span><span>
 </span><span id="line-145"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-type">resolveDatabaseMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-146"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689204093"><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689204092"><span class="annot"><a href="#local-6989586621689204092"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-147"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689204092"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689204092"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-149"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-146"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689205598"><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689205597"><span class="annot"><a href="#local-6989586621689205597"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205597"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205597"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#SourceMetadata"><span class="hs-identifier hs-type">SourceMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-149"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-150"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#SourceTypeCustomization"><span class="hs-identifier hs-type">SourceTypeCustomization</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-151"></span><span>  </span><span class="annot"><a href="#local-6989586621689204092"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#ResolvedSource"><span class="hs-identifier hs-type">ResolvedSource</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="#local-6989586621689205597"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#ResolvedSource"><span class="hs-identifier hs-type">ResolvedSource</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-152"></span><span id="resolveDatabaseMetadata"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata ('Postgres pgKind)
 -&gt; SourceConfig ('Postgres pgKind)
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource ('Postgres pgKind)))
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var hs-var">resolveDatabaseMetadata</span></a></span></span><span> </span><span id="local-6989586621689204091"><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind)
-</span><a href="#local-6989586621689204091"><span class="hs-identifier hs-var">sourceMetadata</span></a></span></span><span> </span><span id="local-6989586621689204090"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
-</span><a href="#local-6989586621689204090"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689204089"><span class="annot"><span class="annottext">SourceTypeCustomization
-</span><a href="#local-6989586621689204089"><span class="hs-identifier hs-var">sourceCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (ResolvedSource ('Postgres pgKind))
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var hs-var">resolveDatabaseMetadata</span></a></span></span><span> </span><span id="local-6989586621689205596"><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind)
+</span><a href="#local-6989586621689205596"><span class="hs-identifier hs-var">sourceMetadata</span></a></span></span><span> </span><span id="local-6989586621689205595"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621689205595"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span id="local-6989586621689205594"><span class="annot"><span class="annottext">SourceTypeCustomization
+</span><a href="#local-6989586621689205594"><span class="hs-identifier hs-var">sourceCustomization</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (ResolvedSource ('Postgres pgKind))
 -&gt; m (Either QErr (ResolvedSource ('Postgres pgKind)))
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-153"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621689204088"><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
-</span><a href="#local-6989586621689204088"><span class="hs-identifier hs-var">tablesMeta</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689204087"><span class="annot"><span class="annottext">HashMap QualifiedFunction [PGRawFunctionInfo]
-</span><a href="#local-6989586621689204087"><span class="hs-identifier hs-var">functionsMeta</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689204086"><span class="annot"><span class="annottext">HashMap Name PGScalarType
-</span><a href="#local-6989586621689204086"><span class="hs-identifier hs-var">pgScalars</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PGExecCtx
+</span><span id="line-153"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621689205593"><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
+</span><a href="#local-6989586621689205593"><span class="hs-identifier hs-var">tablesMeta</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689205592"><span class="annot"><span class="annottext">HashMap QualifiedFunction [PGRawFunctionInfo]
+</span><a href="#local-6989586621689205592"><span class="hs-identifier hs-var">functionsMeta</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689205591"><span class="annot"><span class="annottext">HashMap Name PGScalarType
+</span><a href="#local-6989586621689205591"><span class="hs-identifier hs-var">pgScalars</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PGExecCtx
 -&gt; TxAccess
 -&gt; TxET
      QErr
@@ -385,7 +385,7 @@ PGExecCtx -&gt; TxAccess -&gt; TxET QErr m a -&gt; ExceptT QErr m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runTx"><span class="hs-identifier hs-var">runTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
 SourceConfig ('Postgres pgKind)
-</span><a href="#local-6989586621689204090"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxAccess
+</span><a href="#local-6989586621689205595"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxAccess
 </span><span class="hs-identifier hs-var">Q.ReadOnly</span></span><span> </span><span class="annot"><span class="annottext">(TxET
    QErr
    m
@@ -412,8 +412,8 @@ SourceConfig ('Postgres pgKind)
       HashMap Name PGScalarType)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-154"></span><span>    </span><span id="local-6989586621689204082"><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
-</span><a href="#local-6989586621689204082"><span class="hs-identifier hs-var">tablesMeta</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[QualifiedTable]
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621689205587"><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
+</span><a href="#local-6989586621689205587"><span class="hs-identifier hs-var">tablesMeta</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[QualifiedTable]
 -&gt; TxET QErr m (DBTablesMetadata ('Postgres pgKind))
 forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (Backend ('Postgres pgKind), ToMetadataFetchQuery pgKind,
@@ -435,9 +435,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind) -&gt; Tables ('Postgres pgKind)
 forall (b :: BackendType). SourceMetadata b -&gt; Tables b
 </span><a href="Hasura.RQL.Types.Metadata.html#_smTables"><span class="hs-identifier hs-var hs-var">_smTables</span></a></span><span> </span><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind)
-</span><a href="#local-6989586621689204091"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span>
-</span><span id="line-155"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689204079"><span class="annot"><span class="annottext">allFunctions :: [QualifiedFunction]
-</span><a href="#local-6989586621689204079"><span class="hs-identifier hs-var hs-var">allFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689205596"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span>
+</span><span id="line-155"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689205584"><span class="annot"><span class="annottext">allFunctions :: [QualifiedFunction]
+</span><a href="#local-6989586621689205584"><span class="hs-identifier hs-var hs-var">allFunctions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-156"></span><span>          </span><span class="annot"><span class="annottext">InsOrdHashMap
   QualifiedFunction (FunctionMetadata ('Postgres pgKind))
 -&gt; [QualifiedFunction]
@@ -445,7 +445,7 @@ forall k v. InsOrdHashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">OMap.keys</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind) -&gt; Functions ('Postgres pgKind)
 forall (b :: BackendType). SourceMetadata b -&gt; Functions b
 </span><a href="Hasura.RQL.Types.Metadata.html#_smFunctions"><span class="hs-identifier hs-var hs-var">_smFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind)
-</span><a href="#local-6989586621689204091"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Tracked functions</span><span>
+</span><a href="#local-6989586621689205596"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Tracked functions</span><span>
 </span><span id="line-157"></span><span>            </span><span class="annot"><span class="annottext">[QualifiedFunction] -&gt; [QualifiedFunction] -&gt; [QualifiedFunction]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(TableMetadata ('Postgres pgKind) -&gt; [QualifiedFunction])
@@ -454,7 +454,7 @@ forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">TableMetadata ('Postgres pgKind)
 -&gt; [FunctionName ('Postgres pgKind)]
 TableMetadata ('Postgres pgKind) -&gt; [QualifiedFunction]
-</span><a href="#local-6989586621689204076"><span class="hs-identifier hs-var">getComputedFieldFunctionsMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap QualifiedTable (TableMetadata ('Postgres pgKind))
+</span><a href="#local-6989586621689205581"><span class="hs-identifier hs-var">getComputedFieldFunctionsMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap QualifiedTable (TableMetadata ('Postgres pgKind))
 -&gt; [TableMetadata ('Postgres pgKind)]
 forall k v. InsOrdHashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">OMap.elems</span></span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap QualifiedTable (TableMetadata ('Postgres pgKind))
@@ -465,30 +465,30 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind) -&gt; Tables ('Postgres pgKind)
 forall (b :: BackendType). SourceMetadata b -&gt; Tables b
 </span><a href="Hasura.RQL.Types.Metadata.html#_smTables"><span class="hs-identifier hs-var hs-var">_smTables</span></a></span><span> </span><span class="annot"><span class="annottext">SourceMetadata ('Postgres pgKind)
-</span><a href="#local-6989586621689204091"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Computed field functions</span><span>
-</span><span id="line-158"></span><span>    </span><span id="local-6989586621689204074"><span class="annot"><span class="annottext">HashMap QualifiedFunction [PGRawFunctionInfo]
-</span><a href="#local-6989586621689204074"><span class="hs-identifier hs-var">functionsMeta</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[QualifiedFunction]
+</span><a href="#local-6989586621689205596"><span class="hs-identifier hs-var">sourceMetadata</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- Computed field functions</span><span>
+</span><span id="line-158"></span><span>    </span><span id="local-6989586621689205579"><span class="annot"><span class="annottext">HashMap QualifiedFunction [PGRawFunctionInfo]
+</span><a href="#local-6989586621689205579"><span class="hs-identifier hs-var">functionsMeta</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[QualifiedFunction]
 -&gt; TxET QErr m (DBFunctionsMetadata ('Postgres Any))
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 MonadTx m =&gt;
 [QualifiedFunction] -&gt; m (DBFunctionsMetadata ('Postgres pgKind))
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchFunctionMetadata"><span class="hs-identifier hs-var">fetchFunctionMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">[QualifiedFunction]
-</span><a href="#local-6989586621689204079"><span class="hs-identifier hs-var">allFunctions</span></a></span><span>
-</span><span id="line-159"></span><span>    </span><span id="local-6989586621689204073"><span class="annot"><span class="annottext">HashSet PGScalarType
-</span><a href="#local-6989586621689204073"><span class="hs-identifier hs-var">pgScalars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxET QErr m (HashSet PGScalarType)
+</span><a href="#local-6989586621689205584"><span class="hs-identifier hs-var">allFunctions</span></a></span><span>
+</span><span id="line-159"></span><span>    </span><span id="local-6989586621689205578"><span class="annot"><span class="annottext">HashSet PGScalarType
+</span><a href="#local-6989586621689205578"><span class="hs-identifier hs-var">pgScalars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxET QErr m (HashSet PGScalarType)
 forall (m :: * -&gt; *). MonadTx m =&gt; m (HashSet PGScalarType)
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchPgScalars"><span class="hs-identifier hs-var">fetchPgScalars</span></a></span><span>
-</span><span id="line-160"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689204071"><span class="annot"><span class="annottext">scalarsMap :: HashMap Name PGScalarType
-</span><a href="#local-6989586621689204071"><span class="hs-identifier hs-var hs-var">scalarsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name, PGScalarType)] -&gt; HashMap Name PGScalarType
+</span><span id="line-160"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689205576"><span class="annot"><span class="annottext">scalarsMap :: HashMap Name PGScalarType
+</span><a href="#local-6989586621689205576"><span class="hs-identifier hs-var hs-var">scalarsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name, PGScalarType)] -&gt; HashMap Name PGScalarType
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-161"></span><span>          </span><span id="local-6989586621689204069"><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621689204069"><span class="hs-identifier hs-var">scalar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">HashSet PGScalarType -&gt; [PGScalarType]
+</span><span id="line-161"></span><span>          </span><span id="local-6989586621689205574"><span class="annot"><span class="annottext">PGScalarType
+</span><a href="#local-6989586621689205574"><span class="hs-identifier hs-var">scalar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">HashSet PGScalarType -&gt; [PGScalarType]
 forall a. HashSet a -&gt; [a]
 </span><span class="hs-identifier hs-var">Set.toList</span></span><span> </span><span class="annot"><span class="annottext">HashSet PGScalarType
-</span><a href="#local-6989586621689204073"><span class="hs-identifier hs-var">pgScalars</span></a></span><span>
-</span><span id="line-162"></span><span>          </span><span id="local-6989586621689204067"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689204067"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a.
+</span><a href="#local-6989586621689205578"><span class="hs-identifier hs-var">pgScalars</span></a></span><span>
+</span><span id="line-162"></span><span>          </span><span id="local-6989586621689205572"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689205572"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a.
 (Foldable (Either QErr), Alternative f) =&gt;
 Either QErr a -&gt; f a
 forall (t :: * -&gt; *) (f :: * -&gt; *) a.
@@ -499,12 +499,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGScalarType -&gt; Either QErr Name
 forall (m :: * -&gt; *). MonadError QErr m =&gt; PGScalarType -&gt; m Name
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#mkScalarTypeName"><span class="hs-identifier hs-var">mkScalarTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621689204069"><span class="hs-identifier hs-var">scalar</span></a></span><span>
+</span><a href="#local-6989586621689205574"><span class="hs-identifier hs-var">scalar</span></a></span><span>
 </span><span id="line-163"></span><span>          </span><span class="annot"><span class="annottext">(Name, PGScalarType) -&gt; [(Name, PGScalarType)]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689204067"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621689204069"><span class="hs-identifier hs-var">scalar</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205572"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PGScalarType
+</span><a href="#local-6989586621689205574"><span class="hs-identifier hs-var">scalar</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-164"></span><span>    </span><span class="annot"><span class="annottext">(HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind)),
  HashMap QualifiedFunction [PGRawFunctionInfo],
  HashMap Name PGScalarType)
@@ -516,9 +516,9 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
       HashMap Name PGScalarType)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
-</span><a href="#local-6989586621689204082"><span class="hs-identifier hs-var">tablesMeta</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedFunction [PGRawFunctionInfo]
-</span><a href="#local-6989586621689204074"><span class="hs-identifier hs-var">functionsMeta</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Name PGScalarType
-</span><a href="#local-6989586621689204071"><span class="hs-identifier hs-var">scalarsMap</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205587"><span class="hs-identifier hs-var">tablesMeta</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap QualifiedFunction [PGRawFunctionInfo]
+</span><a href="#local-6989586621689205579"><span class="hs-identifier hs-var">functionsMeta</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">HashMap Name PGScalarType
+</span><a href="#local-6989586621689205576"><span class="hs-identifier hs-var">scalarsMap</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-165"></span><span>  </span><span class="annot"><span class="annottext">ResolvedSource ('Postgres pgKind)
 -&gt; ExceptT QErr m (ResolvedSource ('Postgres pgKind))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -541,25 +541,25 @@ SourceConfig b
 -&gt; ScalarMap b
 -&gt; ResolvedSource b
 </span><a href="Hasura.RQL.Types.Source.html#ResolvedSource"><span class="hs-identifier hs-var">ResolvedSource</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
-</span><a href="#local-6989586621689204090"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization
-</span><a href="#local-6989586621689204089"><span class="hs-identifier hs-var">sourceCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">DBTablesMetadata ('Postgres pgKind)
+</span><a href="#local-6989586621689205595"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceTypeCustomization
+</span><a href="#local-6989586621689205594"><span class="hs-identifier hs-var">sourceCustomization</span></a></span><span> </span><span class="annot"><span class="annottext">DBTablesMetadata ('Postgres pgKind)
 HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
-</span><a href="#local-6989586621689204088"><span class="hs-identifier hs-var">tablesMeta</span></a></span><span> </span><span class="annot"><span class="annottext">DBFunctionsMetadata ('Postgres pgKind)
+</span><a href="#local-6989586621689205593"><span class="hs-identifier hs-var">tablesMeta</span></a></span><span> </span><span class="annot"><span class="annottext">DBFunctionsMetadata ('Postgres pgKind)
 HashMap QualifiedFunction [PGRawFunctionInfo]
-</span><a href="#local-6989586621689204087"><span class="hs-identifier hs-var">functionsMeta</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name (ScalarType ('Postgres pgKind))
+</span><a href="#local-6989586621689205592"><span class="hs-identifier hs-var">functionsMeta</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name (ScalarType ('Postgres pgKind))
 -&gt; ScalarMap ('Postgres pgKind)
 forall (b :: BackendType).
 Backend b =&gt;
 HashMap Name (ScalarType b) -&gt; ScalarMap b
 </span><a href="Hasura.RQL.Types.Source.html#ScalarMap"><span class="hs-identifier hs-var">ScalarMap</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ScalarType ('Postgres pgKind))
 HashMap Name PGScalarType
-</span><a href="#local-6989586621689204086"><span class="hs-identifier hs-var">pgScalars</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205591"><span class="hs-identifier hs-var">pgScalars</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-166"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-167"></span><span>    </span><span class="hs-comment">-- A helper function to list all functions underpinning computed fields from a table metadata</span><span>
-</span><span id="line-168"></span><span>    </span><span class="annot"><a href="#local-6989586621689204076"><span class="hs-identifier hs-type">getComputedFieldFunctionsMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204093"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-169"></span><span>    </span><span id="local-6989586621689204076"><span class="annot"><span class="annottext">getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind)
+</span><span id="line-168"></span><span>    </span><span class="annot"><a href="#local-6989586621689205581"><span class="hs-identifier hs-type">getComputedFieldFunctionsMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#TableMetadata"><span class="hs-identifier hs-type">TableMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205598"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621689205581"><span class="annot"><span class="annottext">getComputedFieldFunctionsMetadata :: TableMetadata ('Postgres pgKind)
 -&gt; [FunctionName ('Postgres pgKind)]
-</span><a href="#local-6989586621689204076"><span class="hs-identifier hs-var hs-var">getComputedFieldFunctionsMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689205581"><span class="hs-identifier hs-var hs-var">getComputedFieldFunctionsMetadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-170"></span><span>      </span><span class="annot"><span class="annottext">(ComputedFieldMetadata ('Postgres pgKind) -&gt; QualifiedFunction)
 -&gt; [ComputedFieldMetadata ('Postgres pgKind)]
 -&gt; [QualifiedFunction]
@@ -600,14 +600,14 @@ forall (b :: BackendType). TableMetadata b -&gt; ComputedFields b
 </span><a href="Hasura.RQL.Types.Metadata.html#_tmComputedFields"><span class="hs-identifier hs-var hs-var">_tmComputedFields</span></a></span><span>
 </span><span id="line-171"></span><span>
 </span><span id="line-172"></span><span class="hs-comment">-- | Initialise catalog tables for a source, including those required by the event delivery subsystem.</span><span>
-</span><span id="line-173"></span><span id="local-6989586621689204059"><span id="local-6989586621689204060"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#prepareCatalog"><span class="hs-identifier hs-type">prepareCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-174"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689204060"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689204060"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-175"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204059"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-176"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204060"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span></span><span>
+</span><span id="line-173"></span><span id="local-6989586621689205564"><span id="local-6989586621689205565"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#prepareCatalog"><span class="hs-identifier hs-type">prepareCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-174"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205565"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205565"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-175"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205564"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-176"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205565"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span></span><span>
 </span><span id="line-177"></span><span id="prepareCatalog"><span class="annot"><span class="annottext">prepareCatalog :: SourceConfig ('Postgres pgKind)
 -&gt; ExceptT QErr m RecreateEventTriggers
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#prepareCatalog"><span class="hs-identifier hs-var hs-var">prepareCatalog</span></a></span></span><span> </span><span id="local-6989586621689204058"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
-</span><a href="#local-6989586621689204058"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PGExecCtx
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#prepareCatalog"><span class="hs-identifier hs-var hs-var">prepareCatalog</span></a></span></span><span> </span><span id="local-6989586621689205563"><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
+</span><a href="#local-6989586621689205563"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PGExecCtx
 -&gt; TxAccess
 -&gt; TxET QErr m RecreateEventTriggers
 -&gt; ExceptT QErr m RecreateEventTriggers
@@ -617,23 +617,23 @@ PGExecCtx -&gt; TxAccess -&gt; TxET QErr m a -&gt; ExceptT QErr m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runTx"><span class="hs-identifier hs-var">runTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
 SourceConfig ('Postgres pgKind)
-</span><a href="#local-6989586621689204058"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxAccess
+</span><a href="#local-6989586621689205563"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxAccess
 </span><span class="hs-identifier hs-var">Q.ReadWrite</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-178"></span><span>  </span><span id="local-6989586621689204056"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204056"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TxET QErr m Bool
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621689205561"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689205561"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TxET QErr m Bool
 forall (m :: * -&gt; *). MonadTx m =&gt; SchemaName -&gt; m Bool
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#doesSchemaExist"><span class="hs-identifier hs-var">doesSchemaExist</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span>
-</span><span id="line-179"></span><span>  </span><span id="local-6989586621689204054"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204054"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; TxET QErr m Bool
+</span><span id="line-179"></span><span>  </span><span id="local-6989586621689205559"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689205559"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; TxET QErr m Bool
 forall (m :: * -&gt; *).
 MonadTx m =&gt;
 SchemaName -&gt; TableName -&gt; m Bool
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#doesTableExist"><span class="hs-identifier hs-var">doesTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
 </span><span class="hs-string">&quot;hdb_catalog&quot;</span></span><span> </span><span class="annot"><span class="annottext">TableName
 </span><span class="hs-string">&quot;event_log&quot;</span></span><span>
-</span><span id="line-180"></span><span>  </span><span id="local-6989586621689204052"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204052"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; TxET QErr m Bool
+</span><span id="line-180"></span><span>  </span><span id="local-6989586621689205557"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689205557"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; TxET QErr m Bool
 forall (m :: * -&gt; *).
 MonadTx m =&gt;
 SchemaName -&gt; TableName -&gt; m Bool
@@ -644,7 +644,7 @@ SchemaName -&gt; TableName -&gt; m Bool
 </span><span id="line-182"></span><span>      </span><span class="hs-comment">-- Fresh database</span><span>
 </span><span id="line-183"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204056"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TxE QErr RecreateEventTriggers -&gt; TxET QErr m RecreateEventTriggers
+</span><a href="#local-6989586621689205561"><span class="hs-identifier hs-var">hdbCatalogExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TxE QErr RecreateEventTriggers -&gt; TxET QErr m RecreateEventTriggers
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-184"></span><span>        </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO ()
@@ -659,7 +659,7 @@ forall (m :: * -&gt; *) r e.
 forall (m :: * -&gt; *). MonadTx m =&gt; m ()
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#enablePgcryptoExtension"><span class="hs-identifier hs-var">enablePgcryptoExtension</span></a></span><span>
 </span><span id="line-186"></span><span>        </span><span class="annot"><span class="annottext">TxET QErr IO ()
-</span><a href="#local-6989586621689204047"><span class="hs-identifier hs-var">initPgSourceCatalog</span></a></span><span>
+</span><a href="#local-6989586621689205552"><span class="hs-identifier hs-var">initPgSourceCatalog</span></a></span><span>
 </span><span id="line-187"></span><span>        </span><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; TxE QErr RecreateEventTriggers
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
@@ -667,13 +667,13 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-188"></span><span>      </span><span class="hs-comment">-- Only 'hdb_catalog' schema defined</span><span>
 </span><span id="line-189"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204052"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689205557"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204054"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689205559"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-190"></span><span>        </span><span class="annot"><span class="annottext">TxET QErr IO () -&gt; TxET QErr m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr IO ()
-</span><a href="#local-6989586621689204047"><span class="hs-identifier hs-var">initPgSourceCatalog</span></a></span><span>
+</span><a href="#local-6989586621689205552"><span class="hs-identifier hs-var">initPgSourceCatalog</span></a></span><span>
 </span><span id="line-191"></span><span>        </span><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; TxET QErr m RecreateEventTriggers
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
@@ -681,13 +681,13 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-192"></span><span>      </span><span class="hs-comment">-- Source is initialised by pre multisource support servers</span><span>
 </span><span id="line-193"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204052"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689205557"><span class="hs-identifier hs-var">sourceVersionTableExist</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689204054"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689205559"><span class="hs-identifier hs-var">eventLogTableExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-194"></span><span>        </span><span class="hs-comment">-- Update the Source Catalog to v43 to include the new migration</span><span>
 </span><span id="line-195"></span><span>        </span><span class="hs-comment">-- changes. Skipping this step will result in errors.</span><span>
-</span><span id="line-196"></span><span>        </span><span id="local-6989586621689204043"><span class="annot"><span class="annottext">CatalogVersion
-</span><a href="#local-6989586621689204043"><span class="hs-identifier hs-var">currMetadataCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr CatalogVersion -&gt; TxET QErr m CatalogVersion
+</span><span id="line-196"></span><span>        </span><span id="local-6989586621689205548"><span class="annot"><span class="annottext">CatalogVersion
+</span><a href="#local-6989586621689205548"><span class="hs-identifier hs-var">currMetadataCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr CatalogVersion -&gt; TxET QErr m CatalogVersion
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxE QErr CatalogVersion
 </span><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-var">getCatalogVersion</span></a></span><span>
@@ -697,12 +697,12 @@ forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 forall (m :: * -&gt; *).
 (MonadIO m, MonadTx m) =&gt;
 CatalogVersion -&gt; m ()
-</span><a href="#local-6989586621689204041"><span class="hs-identifier hs-var">migrateTo43MetadataCatalog</span></a></span><span> </span><span class="annot"><span class="annottext">CatalogVersion
-</span><a href="#local-6989586621689204043"><span class="hs-identifier hs-var">currMetadataCatalogVersion</span></a></span><span>
+</span><a href="#local-6989586621689205546"><span class="hs-identifier hs-var">migrateTo43MetadataCatalog</span></a></span><span> </span><span class="annot"><span class="annottext">CatalogVersion
+</span><a href="#local-6989586621689205548"><span class="hs-identifier hs-var">currMetadataCatalogVersion</span></a></span><span>
 </span><span id="line-200"></span><span>        </span><span class="annot"><span class="annottext">TxET QErr IO () -&gt; TxET QErr m ()
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">TxET QErr IO ()
-</span><a href="#local-6989586621689204040"><span class="hs-identifier hs-var">createVersionTable</span></a></span><span>
+</span><a href="#local-6989586621689205545"><span class="hs-identifier hs-var">createVersionTable</span></a></span><span>
 </span><span id="line-201"></span><span>        </span><span class="hs-comment">-- Migrate the catalog from initial version i.e '0'</span><span>
 </span><span id="line-202"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; TxET QErr m RecreateEventTriggers
 forall (m :: * -&gt; *). MonadTx m =&gt; Text -&gt; m RecreateEventTriggers
@@ -713,8 +713,8 @@ forall (m :: * -&gt; *). MonadTx m =&gt; Text -&gt; m RecreateEventTriggers
 forall (m :: * -&gt; *). MonadTx m =&gt; m RecreateEventTriggers
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-var">migrateSourceCatalog</span></a></span><span>
 </span><span id="line-204"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-205"></span><span>    </span><span id="local-6989586621689204047"><span class="annot"><span class="annottext">initPgSourceCatalog :: TxET QErr IO ()
-</span><a href="#local-6989586621689204047"><span class="hs-identifier hs-var hs-var">initPgSourceCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-205"></span><span>    </span><span id="local-6989586621689205552"><span class="annot"><span class="annottext">initPgSourceCatalog :: TxET QErr IO ()
+</span><a href="#local-6989586621689205552"><span class="hs-identifier hs-var hs-var">initPgSourceCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-206"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
 forall (m :: * -&gt; *) a e.
 (MonadIO m, FromRes a) =&gt;
@@ -725,8 +725,8 @@ forall (m :: * -&gt; *) a e.
 forall (m :: * -&gt; *). MonadTx m =&gt; m ()
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-var">setSourceCatalogVersion</span></a></span><span>
 </span><span id="line-208"></span><span>
-</span><span id="line-209"></span><span>    </span><span id="local-6989586621689204040"><span class="annot"><span class="annottext">createVersionTable :: TxET QErr IO ()
-</span><a href="#local-6989586621689204040"><span class="hs-identifier hs-var hs-var">createVersionTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-209"></span><span>    </span><span id="local-6989586621689205545"><span class="annot"><span class="annottext">createVersionTable :: TxET QErr IO ()
+</span><a href="#local-6989586621689205545"><span class="hs-identifier hs-var hs-var">createVersionTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-210"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-211"></span><span>        </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; Query -&gt; TxET QErr IO ()
 forall (m :: * -&gt; *) a e.
@@ -748,18 +748,18 @@ forall (m :: * -&gt; *) a e.
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-223"></span><span>
-</span><span id="line-224"></span><span>    </span><span id="local-6989586621689204041"><span class="annot"><span class="annottext">migrateTo43MetadataCatalog :: CatalogVersion -&gt; m ()
-</span><a href="#local-6989586621689204041"><span class="hs-identifier hs-var hs-var">migrateTo43MetadataCatalog</span></a></span></span><span> </span><span id="local-6989586621689204035"><span class="annot"><span class="annottext">CatalogVersion
-</span><a href="#local-6989586621689204035"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-225"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689204034"><span class="annot"><span class="annottext">neededMigrations :: [(CatalogVersion, TxET QErr IO ())]
-</span><a href="#local-6989586621689204034"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((CatalogVersion, TxET QErr IO ()) -&gt; Bool)
+</span><span id="line-224"></span><span>    </span><span id="local-6989586621689205546"><span class="annot"><span class="annottext">migrateTo43MetadataCatalog :: CatalogVersion -&gt; m ()
+</span><a href="#local-6989586621689205546"><span class="hs-identifier hs-var hs-var">migrateTo43MetadataCatalog</span></a></span></span><span> </span><span id="local-6989586621689205540"><span class="annot"><span class="annottext">CatalogVersion
+</span><a href="#local-6989586621689205540"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-225"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689205539"><span class="annot"><span class="annottext">neededMigrations :: [(CatalogVersion, TxET QErr IO ())]
+</span><a href="#local-6989586621689205539"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((CatalogVersion, TxET QErr IO ()) -&gt; Bool)
 -&gt; [(CatalogVersion, TxET QErr IO ())]
 -&gt; [(CatalogVersion, TxET QErr IO ())]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">dropWhile</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">CatalogVersion -&gt; CatalogVersion -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;</span></span><span> </span><span class="annot"><span class="annottext">CatalogVersion
-</span><a href="#local-6989586621689204035"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(CatalogVersion -&gt; Bool)
+</span><a href="#local-6989586621689205540"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(CatalogVersion -&gt; Bool)
 -&gt; ((CatalogVersion, TxET QErr IO ()) -&gt; CatalogVersion)
 -&gt; (CatalogVersion, TxET QErr IO ())
 -&gt; Bool
@@ -772,12 +772,12 @@ forall a b. (a, b) -&gt; a
 -&gt; Maybe (NonEmpty (CatalogVersion, TxET QErr IO ()))
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">NE.nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[(CatalogVersion, TxET QErr IO ())]
-</span><a href="#local-6989586621689204034"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-227"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689204029"><span class="annot"><span class="annottext">NonEmpty (CatalogVersion, TxET QErr IO ())
-</span><a href="#local-6989586621689204029"><span class="hs-identifier hs-var">nonEmptyNeededMigrations</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689205539"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-227"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689205534"><span class="annot"><span class="annottext">NonEmpty (CatalogVersion, TxET QErr IO ())
+</span><a href="#local-6989586621689205534"><span class="hs-identifier hs-var">nonEmptyNeededMigrations</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-228"></span><span>          </span><span class="hs-comment">-- Migrations aren't empty. We need to update the catalog version after migrations</span><span>
-</span><span id="line-229"></span><span>          </span><span id="local-6989586621689204028"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689204028"><span class="hs-identifier hs-var">migrationTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO UTCTime -&gt; m UTCTime
+</span><span id="line-229"></span><span>          </span><span id="local-6989586621689205533"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621689205533"><span class="hs-identifier hs-var">migrationTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO UTCTime -&gt; m UTCTime
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO UTCTime
 </span><span class="hs-identifier hs-var">getCurrentTime</span></span><span>
@@ -793,12 +793,12 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="annot"><span class="annottext">(CatalogVersion, TxET QErr IO ()) -&gt; TxET QErr IO ()
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (CatalogVersion, TxET QErr IO ())
-</span><a href="#local-6989586621689204029"><span class="hs-identifier hs-var">nonEmptyNeededMigrations</span></a></span><span>
+</span><a href="#local-6989586621689205534"><span class="hs-identifier hs-var">nonEmptyNeededMigrations</span></a></span><span>
 </span><span id="line-231"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; UTCTime -&gt; m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; Text -&gt; UTCTime -&gt; m ()
 </span><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-var">setCatalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;43&quot;</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689204028"><span class="hs-identifier hs-var">migrationTime</span></a></span><span>
+</span><a href="#local-6989586621689205533"><span class="hs-identifier hs-var">migrationTime</span></a></span><span>
 </span><span id="line-232"></span><span>        </span><span class="annot"><span class="annottext">Maybe (NonEmpty (CatalogVersion, TxET QErr IO ()))
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-233"></span><span>          </span><span class="hs-comment">-- No migrations exists, implies the database is migrated to latest metadata catalog version</span><span>
@@ -822,7 +822,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-249"></span><span class="hs-comment">--  downgrade pg sources themselves. Improve error message by referring the URL</span><span>
 </span><span id="line-250"></span><span class="hs-comment">--  to the documentation.</span><span>
 </span><span id="line-251"></span><span>
-</span><span id="line-252"></span><span id="local-6989586621689204233"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-type">migrateSourceCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204233"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689204233"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
+</span><span id="line-252"></span><span id="local-6989586621689205738"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-type">migrateSourceCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205738"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689205738"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
 </span><span id="line-253"></span><span id="migrateSourceCatalog"><span class="annot"><span class="annottext">migrateSourceCatalog :: m RecreateEventTriggers
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalog"><span class="hs-identifier hs-var hs-var">migrateSourceCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-254"></span><span>  </span><span class="annot"><span class="annottext">m Text
@@ -840,12 +840,12 @@ forall (m :: * -&gt; *). MonadTx m =&gt; Text -&gt; m RecreateEventTriggers
 </span><span id="line-259"></span><span class="hs-comment">--    changes introduced in the newly added source catalog migrations. When the source is already</span><span>
 </span><span id="line-260"></span><span class="hs-comment">--    in the latest catalog version, we do nothing because nothing has changed w.r.t the source catalog</span><span>
 </span><span id="line-261"></span><span class="hs-comment">--    so recreating the event triggers will only be extraneous.</span><span>
-</span><span id="line-262"></span><span id="local-6989586621689204234"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-type">migrateSourceCatalogFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204234"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689204234"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
+</span><span id="line-262"></span><span id="local-6989586621689205739"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-type">migrateSourceCatalogFrom</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205739"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689205739"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#RecreateEventTriggers"><span class="hs-identifier hs-type">RecreateEventTriggers</span></a></span></span><span>
 </span><span id="line-263"></span><span id="migrateSourceCatalogFrom"><span class="annot"><span class="annottext">migrateSourceCatalogFrom :: Text -&gt; m RecreateEventTriggers
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-var hs-var">migrateSourceCatalogFrom</span></a></span></span><span> </span><span id="local-6989586621689204024"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689204024"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#migrateSourceCatalogFrom"><span class="hs-identifier hs-var hs-var">migrateSourceCatalogFrom</span></a></span></span><span> </span><span id="local-6989586621689205529"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689205529"><span class="hs-identifier hs-var">prevVersion</span></a></span></span><span>
 </span><span id="line-264"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689204024"><span class="hs-identifier hs-var">prevVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+</span><a href="#local-6989586621689205529"><span class="hs-identifier hs-var">prevVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#latestSourceCatalogVersionText"><span class="hs-identifier hs-var">latestSourceCatalogVersionText</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers -&gt; m RecreateEventTriggers
@@ -853,7 +853,7 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span>
 </span><span id="line-265"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[(Text, TxET QErr IO ())]
-</span><a href="#local-6989586621689204022"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689205527"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-266"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m RecreateEventTriggers
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
@@ -874,7 +874,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-270"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689204024"><span class="hs-identifier hs-var">prevVersion</span></a></span><span>
+</span><a href="#local-6989586621689205529"><span class="hs-identifier hs-var">prevVersion</span></a></span><span>
 </span><span id="line-271"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-272"></span><span>    </span><span class="annot"><span class="annottext">TxET QErr IO () -&gt; m ()
@@ -889,7 +889,7 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span class="hs-identifier hs-var">traverse_</span></span><span> </span><span class="annot"><span class="annottext">(Text, TxET QErr IO ()) -&gt; TxET QErr IO ()
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">[(Text, TxET QErr IO ())]
-</span><a href="#local-6989586621689204022"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span>
+</span><a href="#local-6989586621689205527"><span class="hs-identifier hs-var">neededMigrations</span></a></span><span>
 </span><span id="line-273"></span><span>    </span><span class="annot"><span class="annottext">m ()
 forall (m :: * -&gt; *). MonadTx m =&gt; m ()
 </span><a href="Hasura.Backends.Postgres.DDL.Source.Version.html#setSourceCatalogVersion"><span class="hs-identifier hs-var">setSourceCatalogVersion</span></a></span><span>
@@ -898,15 +898,15 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETRecreate"><span class="hs-identifier hs-var">RETRecreate</span></a></span><span>
 </span><span id="line-275"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-276"></span><span>    </span><span id="local-6989586621689204022"><span class="annot"><span class="annottext">neededMigrations :: [(Text, TxET QErr IO ())]
-</span><a href="#local-6989586621689204022"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-276"></span><span>    </span><span id="local-6989586621689205527"><span class="annot"><span class="annottext">neededMigrations :: [(Text, TxET QErr IO ())]
+</span><a href="#local-6989586621689205527"><span class="hs-identifier hs-var hs-var">neededMigrations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-277"></span><span>      </span><span class="annot"><span class="annottext">((Text, TxET QErr IO ()) -&gt; Bool)
 -&gt; [(Text, TxET QErr IO ())] -&gt; [(Text, TxET QErr IO ())]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">dropWhile</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689204024"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Bool)
+</span><a href="#local-6989586621689205529"><span class="hs-identifier hs-var">prevVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Bool)
 -&gt; ((Text, TxET QErr IO ()) -&gt; Text)
 -&gt; (Text, TxET QErr IO ())
 -&gt; Bool
@@ -960,16 +960,16 @@ forall a b. (a, b) -&gt; a
 </span><span id="line-318"></span><span>
 </span><span id="line-319"></span><span class="hs-comment">-- | Fetch Postgres metadata of all user tables</span><span>
 </span><span id="line-320"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchTableMetadata"><span class="hs-identifier hs-type">fetchTableMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-321"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689204299"><span class="annot"><a href="#local-6989586621689204299"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689204297"><span class="annot"><a href="#local-6989586621689204297"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-322"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204299"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204299"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204297"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-321"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689205804"><span class="annot"><a href="#local-6989586621689205804"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689205802"><span class="annot"><a href="#local-6989586621689205802"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-322"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205804"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205804"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205802"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-323"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier hs-type">QualifiedTable</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-324"></span><span>  </span><span class="annot"><a href="#local-6989586621689204297"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTablesMetadata"><span class="hs-identifier hs-type">DBTablesMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204299"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-324"></span><span>  </span><span class="annot"><a href="#local-6989586621689205802"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#DBTablesMetadata"><span class="hs-identifier hs-type">DBTablesMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205804"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-325"></span><span id="fetchTableMetadata"><span class="annot"><span class="annottext">fetchTableMetadata :: [QualifiedTable] -&gt; m (DBTablesMetadata ('Postgres pgKind))
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchTableMetadata"><span class="hs-identifier hs-var hs-var">fetchTableMetadata</span></a></span></span><span> </span><span id="local-6989586621689204013"><span class="annot"><span class="annottext">[QualifiedTable]
-</span><a href="#local-6989586621689204013"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-326"></span><span>  </span><span id="local-6989586621689204012"><span class="annot"><span class="annottext">[(SchemaName, TableName,
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchTableMetadata"><span class="hs-identifier hs-var hs-var">fetchTableMetadata</span></a></span></span><span> </span><span id="local-6989586621689205518"><span class="annot"><span class="annottext">[QualifiedTable]
+</span><a href="#local-6989586621689205518"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-326"></span><span>  </span><span id="local-6989586621689205517"><span class="annot"><span class="annottext">[(SchemaName, TableName,
   AltJ (DBTableMetadata ('Postgres pgKind)))]
-</span><a href="#local-6989586621689204012"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689205517"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-327"></span><span>    </span><span class="annot"><span class="annottext">TxE
   QErr
   [(SchemaName, TableName,
@@ -1009,7 +1009,7 @@ forall (m :: * -&gt; *) a r e.
 forall (pgKind :: PostgresKind).
 ToMetadataFetchQuery pgKind =&gt;
 Query
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#tableMetadata"><span class="hs-identifier hs-var">tableMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689204299"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#tableMetadata"><span class="hs-identifier hs-var">tableMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689205804"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-331"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[QualifiedTable] -&gt; AltJ [QualifiedTable]
 forall a. a -&gt; AltJ a
 </span><span class="hs-identifier hs-var">Q.AltJ</span></span><span> </span><span class="annot"><span class="annottext">([QualifiedTable] -&gt; AltJ [QualifiedTable])
@@ -1018,7 +1018,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[QualifiedTable] -&gt; [QualifiedTable]
 forall a. Ord a =&gt; [a] -&gt; [a]
 </span><a href="Data.List.Extended.html#uniques"><span class="hs-identifier hs-var">LE.uniques</span></a></span><span> </span><span class="annot"><span class="annottext">[QualifiedTable]
-</span><a href="#local-6989586621689204013"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689205518"><span class="hs-identifier hs-var">tables</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-332"></span><span>        </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-333"></span><span>  </span><span class="annot"><span class="annottext">HashMap QualifiedTable (DBTableMetadata ('Postgres pgKind))
@@ -1060,7 +1060,7 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(SchemaName, TableName,
   AltJ (DBTableMetadata ('Postgres pgKind)))]
-</span><a href="#local-6989586621689204012"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, TableName,
+</span><a href="#local-6989586621689205517"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, TableName,
    AltJ (DBTableMetadata ('Postgres pgKind)))
   -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
  -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))])
@@ -1070,23 +1070,23 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-336"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689204008"><span class="annot"><span class="annottext">SchemaName
-</span><a href="#local-6989586621689204008"><span class="hs-identifier hs-var">schema</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689204007"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621689204007"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689204006"><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
-</span><a href="#local-6989586621689204006"><span class="hs-identifier hs-var">info</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; QualifiedTable
+</span><span id="line-336"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689205513"><span class="annot"><span class="annottext">SchemaName
+</span><a href="#local-6989586621689205513"><span class="hs-identifier hs-var">schema</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689205512"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689205512"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689205511"><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
+</span><a href="#local-6989586621689205511"><span class="hs-identifier hs-var">info</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; QualifiedTable
 forall a. SchemaName -&gt; a -&gt; QualifiedObject a
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier hs-var">QualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
-</span><a href="#local-6989586621689204008"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621689204007"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
-</span><a href="#local-6989586621689204006"><span class="hs-identifier hs-var">info</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205513"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689205512"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
+</span><a href="#local-6989586621689205511"><span class="hs-identifier hs-var">info</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-337"></span><span>
 </span><span id="line-338"></span><span class="hs-comment">-- | Fetch Postgres metadata for all user functions</span><span>
-</span><span id="line-339"></span><span id="local-6989586621689204277"><span id="local-6989586621689204278"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchFunctionMetadata"><span class="hs-identifier hs-type">fetchFunctionMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204278"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedFunction"><span class="hs-identifier hs-type">QualifiedFunction</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689204278"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#DBFunctionsMetadata"><span class="hs-identifier hs-type">DBFunctionsMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204277"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-339"></span><span id="local-6989586621689205782"><span id="local-6989586621689205783"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchFunctionMetadata"><span class="hs-identifier hs-type">fetchFunctionMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205783"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedFunction"><span class="hs-identifier hs-type">QualifiedFunction</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689205783"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#DBFunctionsMetadata"><span class="hs-identifier hs-type">DBFunctionsMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205782"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-340"></span><span id="fetchFunctionMetadata"><span class="annot"><span class="annottext">fetchFunctionMetadata :: [QualifiedFunction] -&gt; m (DBFunctionsMetadata ('Postgres pgKind))
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchFunctionMetadata"><span class="hs-identifier hs-var hs-var">fetchFunctionMetadata</span></a></span></span><span> </span><span id="local-6989586621689204004"><span class="annot"><span class="annottext">[QualifiedFunction]
-</span><a href="#local-6989586621689204004"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-341"></span><span>  </span><span id="local-6989586621689204003"><span class="annot"><span class="annottext">[(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
-</span><a href="#local-6989586621689204003"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchFunctionMetadata"><span class="hs-identifier hs-var hs-var">fetchFunctionMetadata</span></a></span></span><span> </span><span id="local-6989586621689205509"><span class="annot"><span class="annottext">[QualifiedFunction]
+</span><a href="#local-6989586621689205509"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-341"></span><span>  </span><span id="local-6989586621689205508"><span class="annot"><span class="annottext">[(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
+</span><a href="#local-6989586621689205508"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-342"></span><span>    </span><span class="annot"><span class="annottext">TxE QErr [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
 -&gt; m [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
@@ -1116,7 +1116,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[QualifiedFunction] -&gt; [QualifiedFunction]
 forall a. Ord a =&gt; [a] -&gt; [a]
 </span><a href="Data.List.Extended.html#uniques"><span class="hs-identifier hs-var">LE.uniques</span></a></span><span> </span><span class="annot"><span class="annottext">[QualifiedFunction]
-</span><a href="#local-6989586621689204004"><span class="hs-identifier hs-var">functions</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689205509"><span class="hs-identifier hs-var">functions</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-347"></span><span>        </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-348"></span><span>  </span><span class="annot"><span class="annottext">HashMap QualifiedFunction [PGRawFunctionInfo]
@@ -1152,7 +1152,7 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 -&gt; [(QualifiedFunction, [PGRawFunctionInfo])]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
-</span><a href="#local-6989586621689204003"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
+</span><a href="#local-6989586621689205508"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
   -&gt; (QualifiedFunction, [PGRawFunctionInfo]))
  -&gt; [(QualifiedFunction, [PGRawFunctionInfo])])
 -&gt; ((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
@@ -1160,18 +1160,18 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 -&gt; [(QualifiedFunction, [PGRawFunctionInfo])]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-351"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689204002"><span class="annot"><span class="annottext">SchemaName
-</span><a href="#local-6989586621689204002"><span class="hs-identifier hs-var">schema</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689204001"><span class="annot"><span class="annottext">FunctionName
-</span><a href="#local-6989586621689204001"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689204000"><span class="annot"><span class="annottext">[PGRawFunctionInfo]
-</span><a href="#local-6989586621689204000"><span class="hs-identifier hs-var">infos</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; FunctionName -&gt; QualifiedFunction
+</span><span id="line-351"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689205507"><span class="annot"><span class="annottext">SchemaName
+</span><a href="#local-6989586621689205507"><span class="hs-identifier hs-var">schema</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689205506"><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689205506"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689205505"><span class="annot"><span class="annottext">[PGRawFunctionInfo]
+</span><a href="#local-6989586621689205505"><span class="hs-identifier hs-var">infos</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; FunctionName -&gt; QualifiedFunction
 forall a. SchemaName -&gt; a -&gt; QualifiedObject a
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier hs-var">QualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
-</span><a href="#local-6989586621689204002"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName
-</span><a href="#local-6989586621689204001"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[PGRawFunctionInfo]
-</span><a href="#local-6989586621689204000"><span class="hs-identifier hs-var">infos</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689205507"><span class="hs-identifier hs-var">schema</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689205506"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[PGRawFunctionInfo]
+</span><a href="#local-6989586621689205505"><span class="hs-identifier hs-var">infos</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-352"></span><span>
 </span><span id="line-353"></span><span class="hs-comment">-- | Fetch all scalar types from Postgres</span><span>
-</span><span id="line-354"></span><span id="local-6989586621689204275"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchPgScalars"><span class="hs-identifier hs-type">fetchPgScalars</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689204275"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689204275"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGScalarType"><span class="hs-identifier hs-type">PGScalarType</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-354"></span><span id="local-6989586621689205780"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchPgScalars"><span class="hs-identifier hs-type">fetchPgScalars</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205780"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689205780"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGScalarType"><span class="hs-identifier hs-type">PGScalarType</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-355"></span><span id="fetchPgScalars"><span class="annot"><span class="annottext">fetchPgScalars :: m (HashSet PGScalarType)
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#fetchPgScalars"><span class="hs-identifier hs-var hs-var">fetchPgScalars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-356"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr (HashSet PGScalarType) -&gt; m (HashSet PGScalarType)
@@ -1229,13 +1229,13 @@ forall (m :: * -&gt; *) a r e.
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-366"></span><span>
 </span><span id="line-367"></span><span class="hs-comment">-- | Clean source database after dropping in metadata</span><span>
-</span><span id="line-368"></span><span id="local-6989586621689203999"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-type">postDropSourceHook</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-369"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689203999"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689203999"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689203999"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-368"></span><span id="local-6989586621689205504"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-type">postDropSourceHook</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-369"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205504"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689205504"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689205504"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-370"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html#PGSourceConfig"><span class="hs-identifier hs-type">PGSourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-371"></span><span>  </span><span class="annot"><a href="#local-6989586621689203999"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-371"></span><span>  </span><span class="annot"><a href="#local-6989586621689205504"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-372"></span><span id="postDropSourceHook"><span class="annot"><span class="annottext">postDropSourceHook :: PGSourceConfig -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span id="local-6989586621689203998"><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689203998"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span id="local-6989586621689205503"><span class="annot"><span class="annottext">PGSourceConfig
+</span><a href="#local-6989586621689205503"><span class="hs-identifier hs-var">sourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-373"></span><span>  </span><span class="hs-comment">-- Clean traces of Hasura in source database</span><span>
 </span><span id="line-374"></span><span>  </span><span class="hs-comment">--</span><span>
 </span><span id="line-375"></span><span>  </span><span class="hs-comment">-- There are three type of database we have to consider here, which we</span><span>
@@ -1262,12 +1262,12 @@ forall (m :: * -&gt; *) a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 PGSourceConfig -&gt; TxET QErr m a -&gt; m (Either QErr a)
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#runPgSourceWriteTx"><span class="hs-identifier hs-var">runPgSourceWriteTx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689203998"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET QErr m () -&gt; m (Either QErr ()))
+</span><a href="#local-6989586621689205503"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET QErr m () -&gt; m (Either QErr ()))
 -&gt; TxET QErr m () -&gt; m (Either QErr ())
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-391"></span><span>      </span><span id="local-6989586621689203996"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689203996"><span class="hs-identifier hs-var">hdbMetadataTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; TxET QErr m Bool
+</span><span id="line-391"></span><span>      </span><span id="local-6989586621689205501"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689205501"><span class="hs-identifier hs-var">hdbMetadataTableExist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; TxET QErr m Bool
 forall (m :: * -&gt; *).
 MonadTx m =&gt;
 SchemaName -&gt; TableName -&gt; m Bool
@@ -1289,7 +1289,7 @@ SchemaName -&gt; TableName -&gt; m Bool
 </span><span id="line-404"></span><span>          </span><span class="hs-comment">-- database, and for default databases, we drop only source-related</span><span>
 </span><span id="line-405"></span><span>          </span><span class="hs-comment">-- tables from the database's &quot;hdb_catalog&quot; schema.</span><span>
 </span><span id="line-406"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689203996"><span class="hs-identifier hs-var">hdbMetadataTableExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689205501"><span class="hs-identifier hs-var">hdbMetadataTableExist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-407"></span><span>            </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; Query -&gt; TxET QErr m ()
 forall (m :: * -&gt; *) a e.
 (MonadIO m, FromRes a) =&gt;
@@ -1316,7 +1316,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689203998"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><a href="#local-6989586621689205503"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
 </span><span id="line-417"></span><span>
 </span><span id="line-418"></span><span>  </span><span class="hs-comment">-- Run other drop hooks configured at source creation time</span><span>
 </span><span id="line-419"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; m ()
@@ -1325,5 +1325,5 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig -&gt; IO ()
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscPostDropHook"><span class="hs-identifier hs-var hs-var">_pscPostDropHook</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689203998"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
+</span><a href="#local-6989586621689205503"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
 </span><span id="line-420"></span></pre></body></html>

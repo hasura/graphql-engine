@@ -30,36 +30,36 @@
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span>
 </span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="EnumTableIntegrityError"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-var">EnumTableIntegrityError</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689198322"><span class="annot"><a href="#local-6989586621689198322"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="EnumTableIntegrityError"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-var">EnumTableIntegrityError</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689199827"><span class="annot"><a href="#local-6989586621689199827"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="EnumTablePostgresError"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTablePostgresError"><span class="hs-identifier hs-var">EnumTablePostgresError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableMissingPrimaryKey"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableMissingPrimaryKey"><span class="hs-identifier hs-var">EnumTableMissingPrimaryKey</span></a></span></span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableMultiColumnPrimaryKey"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableMultiColumnPrimaryKey"><span class="hs-identifier hs-var">EnumTableMultiColumnPrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableNonTextualPrimaryKey"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualPrimaryKey"><span class="hs-identifier hs-var">EnumTableNonTextualPrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198322"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableNonTextualPrimaryKey"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualPrimaryKey"><span class="hs-identifier hs-var">EnumTableNonTextualPrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199827"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableNoEnumValues"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNoEnumValues"><span class="hs-identifier hs-var">EnumTableNoEnumValues</span></a></span></span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableInvalidEnumValueNames"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableInvalidEnumValueNames"><span class="hs-identifier hs-var">EnumTableInvalidEnumValueNames</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NE.NonEmpty</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableNonTextualCommentColumn"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualCommentColumn"><span class="hs-identifier hs-var">EnumTableNonTextualCommentColumn</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198322"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableNonTextualCommentColumn"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualCommentColumn"><span class="hs-identifier hs-var">EnumTableNonTextualCommentColumn</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199827"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EnumTableTooManyColumns"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableTooManyColumns"><span class="hs-identifier hs-var">EnumTableTooManyColumns</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-type">fetchAndValidateEnumValues</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689198232"><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689198231"><span class="annot"><a href="#local-6989586621689198231"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-45"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689198231"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689198231"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689199737"><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689199736"><span class="annot"><a href="#local-6989586621689199736"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689199736"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689199736"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html#PGSourceConfig"><span class="hs-identifier hs-type">PGSourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier hs-type">QualifiedTable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-48"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-50"></span><span>  </span><span class="annot"><a href="#local-6989586621689198231"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><a href="#local-6989586621689199736"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span id="fetchAndValidateEnumValues"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: PGSourceConfig
 -&gt; QualifiedTable
 -&gt; Maybe
      (PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind)))
 -&gt; [RawColumnInfo ('Postgres pgKind)]
 -&gt; m (Either QErr EnumValues)
-</span><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var hs-var">fetchAndValidateEnumValues</span></a></span></span><span> </span><span id="local-6989586621689198229"><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689198229"><span class="hs-identifier hs-var">pgSourceConfig</span></a></span></span><span> </span><span id="local-6989586621689198228"><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689198228"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621689198227"><span class="annot"><span class="annottext">Maybe
+</span><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var hs-var">fetchAndValidateEnumValues</span></a></span></span><span> </span><span id="local-6989586621689199734"><span class="annot"><span class="annottext">PGSourceConfig
+</span><a href="#local-6989586621689199734"><span class="hs-identifier hs-var">pgSourceConfig</span></a></span></span><span> </span><span id="local-6989586621689199733"><span class="annot"><span class="annottext">QualifiedTable
+</span><a href="#local-6989586621689199733"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621689199732"><span class="annot"><span class="annottext">Maybe
   (PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind)))
-</span><a href="#local-6989586621689198227"><span class="hs-identifier hs-var">maybePrimaryKey</span></a></span></span><span> </span><span id="local-6989586621689198226"><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621689198226"><span class="hs-identifier hs-var">columnInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689199732"><span class="hs-identifier hs-var">maybePrimaryKey</span></a></span></span><span> </span><span id="local-6989586621689199731"><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
+</span><a href="#local-6989586621689199731"><span class="hs-identifier hs-var">columnInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">ExceptT QErr m EnumValues -&gt; m (Either QErr EnumValues)
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m EnumValues -&gt; m (Either QErr EnumValues))
@@ -81,7 +81,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 -&gt; ExceptT QErr m EnumValues
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; Text
-</span><a href="#local-6989586621689198220"><span class="hs-identifier hs-var">showErrors</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">EnumValues -&gt; ExceptT QErr m EnumValues
+</span><a href="#local-6989586621689199725"><span class="hs-identifier hs-var">showErrors</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">EnumValues -&gt; ExceptT QErr m EnumValues
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either [EnumTableIntegrityError ('Postgres pgKind)] EnumValues
  -&gt; ExceptT QErr m EnumValues)
@@ -110,38 +110,38 @@ forall (n :: * -&gt; *).
 (MonadIO n, MonadBaseControl IO n,
  MonadValidate [EnumTableIntegrityError ('Postgres pgKind)] n) =&gt;
 n EnumValues
-</span><a href="#local-6989586621689198217"><span class="hs-identifier hs-var">fetchAndValidate</span></a></span><span>
+</span><a href="#local-6989586621689199722"><span class="hs-identifier hs-var">fetchAndValidate</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>    </span><span id="local-6989586621689198340"><span class="annot"><a href="#local-6989586621689198217"><span class="hs-identifier hs-type">fetchAndValidate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-56"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689198340"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689198340"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadValidate</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621689198340"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-57"></span><span>      </span><span class="annot"><a href="#local-6989586621689198340"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span></span><span>
-</span><span id="line-58"></span><span>    </span><span id="local-6989586621689198217"><span class="annot"><span class="annottext">fetchAndValidate :: n EnumValues
-</span><a href="#local-6989586621689198217"><span class="hs-identifier hs-var hs-var">fetchAndValidate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-59"></span><span>      </span><span id="local-6989586621689198216"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198216"><span class="hs-identifier hs-var">maybePrimaryKeyColumn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">n (RawColumnInfo ('Postgres pgKind))
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621689199845"><span class="annot"><a href="#local-6989586621689199722"><span class="hs-identifier hs-type">fetchAndValidate</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-56"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689199845"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689199845"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadValidate</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621689199845"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><a href="#local-6989586621689199845"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621689199722"><span class="annot"><span class="annottext">fetchAndValidate :: n EnumValues
+</span><a href="#local-6989586621689199722"><span class="hs-identifier hs-var hs-var">fetchAndValidate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621689199721"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199721"><span class="hs-identifier hs-var">maybePrimaryKeyColumn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">n (RawColumnInfo ('Postgres pgKind))
 -&gt; n (Maybe (RawColumnInfo ('Postgres pgKind)))
 forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; m a -&gt; m (Maybe a)
 </span><span class="hs-identifier hs-var">tolerate</span></span><span> </span><span class="annot"><span class="annottext">n (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198214"><span class="hs-identifier hs-var">validatePrimaryKey</span></a></span><span>
-</span><span id="line-60"></span><span>      </span><span id="local-6989586621689198213"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198213"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199719"><span class="hs-identifier hs-var">validatePrimaryKey</span></a></span><span>
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621689199718"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199718"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; n (Maybe (RawColumnInfo ('Postgres pgKind)))
-</span><a href="#local-6989586621689198212"><span class="hs-identifier hs-var">validateColumns</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198216"><span class="hs-identifier hs-var">maybePrimaryKeyColumn</span></a></span><span>
+</span><a href="#local-6989586621689199717"><span class="hs-identifier hs-var">validateColumns</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199721"><span class="hs-identifier hs-var">maybePrimaryKeyColumn</span></a></span><span>
 </span><span id="line-61"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198216"><span class="hs-identifier hs-var">maybePrimaryKeyColumn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689199721"><span class="hs-identifier hs-var">maybePrimaryKeyColumn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n EnumValues
 forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">refute</span></span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-63"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689198210"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198210"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-64"></span><span>          </span><span id="local-6989586621689198209"><span class="annot"><span class="annottext">Either
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689199715"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199715"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-64"></span><span>          </span><span id="local-6989586621689199714"><span class="annot"><span class="annottext">Either
   QErr
   (Either [EnumTableIntegrityError ('Postgres pgKind)] EnumValues)
-</span><a href="#local-6989586621689198209"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689199714"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-65"></span><span>            </span><span class="annot"><span class="annottext">PGSourceConfig
 -&gt; TxET
      QErr
@@ -154,7 +154,7 @@ forall (m :: * -&gt; *) a.
 (MonadIO m, MonadBaseControl IO m) =&gt;
 PGSourceConfig -&gt; TxET QErr m a -&gt; m (Either QErr a)
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#runPgSourceReadTx"><span class="hs-identifier hs-var">runPgSourceReadTx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
-</span><a href="#local-6989586621689198229"><span class="hs-identifier hs-var">pgSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET
+</span><a href="#local-6989586621689199734"><span class="hs-identifier hs-var">pgSourceConfig</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET
    QErr
    n
    (Either [EnumTableIntegrityError ('Postgres pgKind)] EnumValues)
@@ -214,15 +214,15 @@ QualifiedTable
 -&gt; Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; m EnumValues
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchEnumValuesFromDb"><span class="hs-identifier hs-var">fetchEnumValuesFromDb</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689198228"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198210"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198213"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span><span>
+</span><a href="#local-6989586621689199733"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199715"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199718"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span><span>
 </span><span id="line-68"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either
   QErr
   (Either [EnumTableIntegrityError ('Postgres pgKind)] EnumValues)
-</span><a href="#local-6989586621689198209"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-69"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689198206"><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621689198206"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n EnumValues
+</span><a href="#local-6989586621689199714"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-69"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689199711"><span class="annot"><span class="annottext">QErr
+</span><a href="#local-6989586621689199711"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n EnumValues
 forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">refute</span></span><span> </span><span class="annot"><span class="annottext">([EnumTableIntegrityError ('Postgres pgKind)] -&gt; n EnumValues)
 -&gt; (QErr -&gt; [EnumTableIntegrityError ('Postgres pgKind)])
@@ -247,22 +247,22 @@ forall (b :: BackendType). Text -&gt; EnumTableIntegrityError b
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Text
 </span><a href="Hasura.Base.Error.html#qeError"><span class="hs-identifier hs-var hs-var">qeError</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QErr
-</span><a href="#local-6989586621689198206"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-70"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689198204"><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
-</span><a href="#local-6989586621689198204"><span class="hs-identifier hs-var">vErrs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n EnumValues
+</span><a href="#local-6989586621689199711"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-70"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689199709"><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
+</span><a href="#local-6989586621689199709"><span class="hs-identifier hs-var">vErrs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n EnumValues
 forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">refute</span></span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
-</span><a href="#local-6989586621689198204"><span class="hs-identifier hs-var">vErrs</span></a></span><span>
-</span><span id="line-71"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689198203"><span class="annot"><span class="annottext">EnumValues
-</span><a href="#local-6989586621689198203"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EnumValues -&gt; n EnumValues
+</span><a href="#local-6989586621689199709"><span class="hs-identifier hs-var">vErrs</span></a></span><span>
+</span><span id="line-71"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689199708"><span class="annot"><span class="annottext">EnumValues
+</span><a href="#local-6989586621689199708"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EnumValues -&gt; n EnumValues
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">EnumValues
-</span><a href="#local-6989586621689198203"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><a href="#local-6989586621689199708"><span class="hs-identifier hs-var">r</span></a></span><span>
 </span><span id="line-72"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-73"></span><span>        </span><span id="local-6989586621689198214"><span class="annot"><span class="annottext">validatePrimaryKey :: n (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198214"><span class="hs-identifier hs-var hs-var">validatePrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe
+</span><span id="line-73"></span><span>        </span><span id="local-6989586621689199719"><span class="annot"><span class="annottext">validatePrimaryKey :: n (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199719"><span class="hs-identifier hs-var hs-var">validatePrimaryKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe
   (PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind)))
-</span><a href="#local-6989586621689198227"><span class="hs-identifier hs-var">maybePrimaryKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689199732"><span class="hs-identifier hs-var">maybePrimaryKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-74"></span><span>          </span><span class="annot"><span class="annottext">Maybe
   (PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind)))
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
@@ -271,24 +271,24 @@ forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">refute</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">EnumTableIntegrityError ('Postgres pgKind)
 forall (b :: BackendType). EnumTableIntegrityError b
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableMissingPrimaryKey"><span class="hs-identifier hs-var">EnumTableMissingPrimaryKey</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-75"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689198202"><span class="annot"><span class="annottext">PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198202"><span class="hs-identifier hs-var">primaryKey</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind))
+</span><span id="line-75"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689199707"><span class="annot"><span class="annottext">PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199707"><span class="hs-identifier hs-var">primaryKey</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind))
 -&gt; NESeq (RawColumnInfo ('Postgres pgKind))
 forall (b :: BackendType) a. PrimaryKey b a -&gt; NESeq a
 </span><a href="Hasura.RQL.Types.Table.html#_pkColumns"><span class="hs-identifier hs-var hs-var">_pkColumns</span></a></span><span> </span><span class="annot"><span class="annottext">PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198202"><span class="hs-identifier hs-var">primaryKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-76"></span><span>            </span><span id="local-6989586621689198200"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198200"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="annot"><a href="Data.Sequence.NonEmpty.html#%3A%3C%7C%7C"><span class="hs-operator hs-type">NESeq.:&lt;||</span></a></span><span> </span><span class="annot"><span class="annottext">Seq (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199707"><span class="hs-identifier hs-var">primaryKey</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-76"></span><span>            </span><span id="local-6989586621689199705"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199705"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="annot"><a href="Data.Sequence.NonEmpty.html#%3A%3C%7C%7C"><span class="hs-operator hs-type">NESeq.:&lt;||</span></a></span><span> </span><span class="annot"><span class="annottext">Seq (RawColumnInfo ('Postgres pgKind))
 </span><span class="hs-identifier hs-var">Seq.Empty</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind) -&gt; ScalarType ('Postgres pgKind)
 forall (b :: BackendType). RawColumnInfo b -&gt; ScalarType b
 </span><a href="Hasura.RQL.Types.Column.html#rciType"><span class="hs-identifier hs-var hs-var">rciType</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198200"><span class="hs-identifier hs-var">column</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689199705"><span class="hs-identifier hs-var">column</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-77"></span><span>              </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGText"><span class="hs-identifier hs-var">PGText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
 -&gt; n (RawColumnInfo ('Postgres pgKind))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198200"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><a href="#local-6989586621689199705"><span class="hs-identifier hs-var">column</span></a></span><span>
 </span><span id="line-78"></span><span>              </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
 -&gt; n (RawColumnInfo ('Postgres pgKind))
@@ -298,9 +298,9 @@ forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 forall (b :: BackendType).
 RawColumnInfo b -&gt; EnumTableIntegrityError b
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualPrimaryKey"><span class="hs-identifier hs-var">EnumTableNonTextualPrimaryKey</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198200"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-79"></span><span>            </span><span id="local-6989586621689198195"><span class="annot"><span class="annottext">NESeq (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198195"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
+</span><a href="#local-6989586621689199705"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-79"></span><span>            </span><span id="local-6989586621689199700"><span class="annot"><span class="annottext">NESeq (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199700"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
 -&gt; n (RawColumnInfo ('Postgres pgKind))
 forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">refute</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[PGCol] -&gt; EnumTableIntegrityError ('Postgres pgKind)
@@ -317,40 +317,40 @@ forall (b :: BackendType). RawColumnInfo b -&gt; Column b
 -&gt; [RawColumnInfo ('Postgres pgKind)]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">NESeq (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198195"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689199700"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span>        </span><span id="local-6989586621689198212"><span class="annot"><span class="annottext">validateColumns :: Maybe (RawColumnInfo ('Postgres pgKind))
+</span><span id="line-81"></span><span>        </span><span id="local-6989586621689199717"><span class="annot"><span class="annottext">validateColumns :: Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; n (Maybe (RawColumnInfo ('Postgres pgKind)))
-</span><a href="#local-6989586621689198212"><span class="hs-identifier hs-var hs-var">validateColumns</span></a></span></span><span> </span><span id="local-6989586621689198192"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198192"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-82"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689198191"><span class="annot"><span class="annottext">nonPrimaryKeyColumns :: [RawColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621689198191"><span class="hs-identifier hs-var hs-var">nonPrimaryKeyColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
+</span><a href="#local-6989586621689199717"><span class="hs-identifier hs-var hs-var">validateColumns</span></a></span></span><span> </span><span id="local-6989586621689199697"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199697"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689199696"><span class="annot"><span class="annottext">nonPrimaryKeyColumns :: [RawColumnInfo ('Postgres pgKind)]
+</span><a href="#local-6989586621689199696"><span class="hs-identifier hs-var hs-var">nonPrimaryKeyColumns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
 -&gt; (RawColumnInfo ('Postgres pgKind)
     -&gt; [RawColumnInfo ('Postgres pgKind)])
 -&gt; Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; [RawColumnInfo ('Postgres pgKind)]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621689198226"><span class="hs-identifier hs-var">columnInfos</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199731"><span class="hs-identifier hs-var">columnInfos</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
 -&gt; [RawColumnInfo ('Postgres pgKind)]
 -&gt; [RawColumnInfo ('Postgres pgKind)]
 forall a. Eq a =&gt; a -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">`delete`</span></span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621689198226"><span class="hs-identifier hs-var">columnInfos</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198192"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span><span>
+</span><a href="#local-6989586621689199731"><span class="hs-identifier hs-var">columnInfos</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199697"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span><span>
 </span><span id="line-83"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621689198191"><span class="hs-identifier hs-var">nonPrimaryKeyColumns</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689199696"><span class="hs-identifier hs-var">nonPrimaryKeyColumns</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-84"></span><span>            </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; n (Maybe (RawColumnInfo ('Postgres pgKind)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-85"></span><span>            </span><span class="hs-special">[</span><span id="local-6989586621689198189"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198189"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind) -&gt; ScalarType ('Postgres pgKind)
+</span><span id="line-85"></span><span>            </span><span class="hs-special">[</span><span id="local-6989586621689199694"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199694"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind) -&gt; ScalarType ('Postgres pgKind)
 forall (b :: BackendType). RawColumnInfo b -&gt; ScalarType b
 </span><a href="Hasura.RQL.Types.Column.html#rciType"><span class="hs-identifier hs-var hs-var">rciType</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198189"><span class="hs-identifier hs-var">column</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689199694"><span class="hs-identifier hs-var">column</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-86"></span><span>              </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGText"><span class="hs-identifier hs-var">PGText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; n (Maybe (RawColumnInfo ('Postgres pgKind)))
@@ -364,7 +364,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe (RawColumnInfo ('Postgres pgKind))
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198189"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><a href="#local-6989586621689199694"><span class="hs-identifier hs-var">column</span></a></span><span>
 </span><span id="line-87"></span><span>              </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n ()
 forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
@@ -373,15 +373,15 @@ forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
 forall (b :: BackendType).
 RawColumnInfo b -&gt; EnumTableIntegrityError b
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualCommentColumn"><span class="hs-identifier hs-var">EnumTableNonTextualCommentColumn</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198189"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">n ()
+</span><a href="#local-6989586621689199694"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">n ()
 -&gt; Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; n (Maybe (RawColumnInfo ('Postgres pgKind)))
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><span class="hs-operator hs-var">$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-88"></span><span>            </span><span id="local-6989586621689198186"><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621689198186"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n ()
+</span><span id="line-88"></span><span>            </span><span id="local-6989586621689199691"><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
+</span><a href="#local-6989586621689199691"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; n ()
 forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
 </span><span class="hs-identifier hs-var">dispute</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[PGCol] -&gt; EnumTableIntegrityError ('Postgres pgKind)
 forall (b :: BackendType). [PGCol] -&gt; EnumTableIntegrityError b
@@ -394,7 +394,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind) -&gt; PGCol
 forall (b :: BackendType). RawColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#rciName"><span class="hs-identifier hs-var hs-var">rciName</span></a></span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo ('Postgres pgKind)]
-</span><a href="#local-6989586621689198186"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">n ()
+</span><a href="#local-6989586621689199691"><span class="hs-identifier hs-var">columns</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">n ()
 -&gt; Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; n (Maybe (RawColumnInfo ('Postgres pgKind)))
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
@@ -402,44 +402,44 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621689198220"><span class="hs-identifier hs-type">showErrors</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-91"></span><span>    </span><span id="local-6989586621689198220"><span class="annot"><span class="annottext">showErrors :: [EnumTableIntegrityError ('Postgres pgKind)] -&gt; Text
-</span><a href="#local-6989586621689198220"><span class="hs-identifier hs-var hs-var">showErrors</span></a></span></span><span> </span><span id="local-6989586621689198185"><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
-</span><a href="#local-6989586621689198185"><span class="hs-identifier hs-var">allErrors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="#local-6989586621689199725"><span class="hs-identifier hs-type">showErrors</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621689199725"><span class="annot"><span class="annottext">showErrors :: [EnumTableIntegrityError ('Postgres pgKind)] -&gt; Text
+</span><a href="#local-6989586621689199725"><span class="hs-identifier hs-var hs-var">showErrors</span></a></span></span><span> </span><span id="local-6989586621689199690"><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
+</span><a href="#local-6989586621689199690"><span class="hs-identifier hs-var">allErrors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689198228"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199733"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; cannot be used as an enum &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198183"><span class="hs-identifier hs-var">reasonsMessage</span></a></span><span>
+</span><a href="#local-6989586621689199688"><span class="hs-identifier hs-var">reasonsMessage</span></a></span><span>
 </span><span id="line-93"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>        </span><span id="local-6989586621689198183"><span class="annot"><span class="annottext">reasonsMessage :: Text
-</span><a href="#local-6989586621689198183"><span class="hs-identifier hs-var hs-var">reasonsMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
+</span><span id="line-94"></span><span>        </span><span id="local-6989586621689199688"><span class="annot"><span class="annottext">reasonsMessage :: Text
+</span><a href="#local-6989586621689199688"><span class="hs-identifier hs-var hs-var">reasonsMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
 -&gt; (EnumTableIntegrityError ('Postgres pgKind) -&gt; Text) -&gt; Text
 forall a. [a] -&gt; (a -&gt; Text) -&gt; Text
 </span><a href="Hasura.Server.Utils.html#makeReasonMessage"><span class="hs-identifier hs-var">makeReasonMessage</span></a></span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)]
-</span><a href="#local-6989586621689198185"><span class="hs-identifier hs-var">allErrors</span></a></span><span> </span><span class="annot"><span class="annottext">EnumTableIntegrityError ('Postgres pgKind) -&gt; Text
-</span><a href="#local-6989586621689198181"><span class="hs-identifier hs-var">showOne</span></a></span><span>
+</span><a href="#local-6989586621689199690"><span class="hs-identifier hs-var">allErrors</span></a></span><span> </span><span class="annot"><span class="annottext">EnumTableIntegrityError ('Postgres pgKind) -&gt; Text
+</span><a href="#local-6989586621689199686"><span class="hs-identifier hs-var">showOne</span></a></span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span>        </span><span class="annot"><a href="#local-6989586621689198181"><span class="hs-identifier hs-type">showOne</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198232"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-97"></span><span>        </span><span id="local-6989586621689198181"><span class="annot"><span class="annottext">showOne :: EnumTableIntegrityError ('Postgres pgKind) -&gt; Text
-</span><a href="#local-6989586621689198181"><span class="hs-identifier hs-var hs-var">showOne</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-98"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTablePostgresError"><span class="hs-identifier hs-type">EnumTablePostgresError</span></a></span><span> </span><span id="local-6989586621689198180"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198180"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-96"></span><span>        </span><span class="annot"><a href="#local-6989586621689199686"><span class="hs-identifier hs-type">showOne</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199737"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-97"></span><span>        </span><span id="local-6989586621689199686"><span class="annot"><span class="annottext">showOne :: EnumTableIntegrityError ('Postgres pgKind) -&gt; Text
+</span><a href="#local-6989586621689199686"><span class="hs-identifier hs-var hs-var">showOne</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-98"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTablePostgresError"><span class="hs-identifier hs-type">EnumTablePostgresError</span></a></span><span> </span><span id="local-6989586621689199685"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199685"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;postgres error: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198180"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621689199685"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-99"></span><span>          </span><span class="annot"><span class="annottext">EnumTableIntegrityError ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableMissingPrimaryKey"><span class="hs-identifier hs-var">EnumTableMissingPrimaryKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the table must have a primary key&quot;</span></span><span>
-</span><span id="line-100"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableMultiColumnPrimaryKey"><span class="hs-identifier hs-type">EnumTableMultiColumnPrimaryKey</span></a></span><span> </span><span id="local-6989586621689198179"><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689198179"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-100"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableMultiColumnPrimaryKey"><span class="hs-identifier hs-type">EnumTableMultiColumnPrimaryKey</span></a></span><span> </span><span id="local-6989586621689199684"><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621689199684"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-101"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the table&#8217;s primary key must not span multiple columns (&quot;</span></span><span>
 </span><span id="line-102"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -449,63 +449,63 @@ forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PGCol] -&gt; [PGCol]
 forall a. Ord a =&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">sort</span></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689198179"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689199684"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-103"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;)&quot;</span></span><span>
-</span><span id="line-104"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualPrimaryKey"><span class="hs-identifier hs-type">EnumTableNonTextualPrimaryKey</span></a></span><span> </span><span id="local-6989586621689198176"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198176"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; RawColumnInfo ('Postgres pgKind) -&gt; PGScalarType -&gt; Text
+</span><span id="line-104"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualPrimaryKey"><span class="hs-identifier hs-type">EnumTableNonTextualPrimaryKey</span></a></span><span> </span><span id="local-6989586621689199681"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199681"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; RawColumnInfo ('Postgres pgKind) -&gt; PGScalarType -&gt; Text
 forall (b :: BackendType) t.
 (ToTxt (Column b), ToTxt t, ToTxt (ScalarType b)) =&gt;
 Text -&gt; RawColumnInfo b -&gt; t -&gt; Text
-</span><a href="#local-6989586621689198175"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199680"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;primary key&quot;</span></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198176"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
+</span><a href="#local-6989586621689199681"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGText"><span class="hs-identifier hs-var">PGText</span></a></span><span>
 </span><span id="line-105"></span><span>          </span><span class="annot"><span class="annottext">EnumTableIntegrityError ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNoEnumValues"><span class="hs-identifier hs-var">EnumTableNoEnumValues</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the table must have at least one row&quot;</span></span><span>
-</span><span id="line-106"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableInvalidEnumValueNames"><span class="hs-identifier hs-type">EnumTableInvalidEnumValueNames</span></a></span><span> </span><span id="local-6989586621689198174"><span class="annot"><span class="annottext">NonEmpty Text
-</span><a href="#local-6989586621689198174"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-107"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689198173"><span class="annot"><span class="annottext">pluralString :: Text
-</span><a href="#local-6989586621689198173"><span class="hs-identifier hs-var hs-var">pluralString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-106"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableInvalidEnumValueNames"><span class="hs-identifier hs-type">EnumTableInvalidEnumValueNames</span></a></span><span> </span><span id="local-6989586621689199679"><span class="annot"><span class="annottext">NonEmpty Text
+</span><a href="#local-6989586621689199679"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-107"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689199678"><span class="annot"><span class="annottext">pluralString :: Text
+</span><a href="#local-6989586621689199678"><span class="hs-identifier hs-var hs-var">pluralString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; are not valid GraphQL enum value names&quot;</span></span><span>
-</span><span id="line-108"></span><span>                </span><span id="local-6989586621689198172"><span class="annot"><span class="annottext">valuesString :: Text
-</span><a href="#local-6989586621689198172"><span class="hs-identifier hs-var hs-var">valuesString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NonEmpty Text -&gt; NonEmpty Text
+</span><span id="line-108"></span><span>                </span><span id="local-6989586621689199677"><span class="annot"><span class="annottext">valuesString :: Text
+</span><a href="#local-6989586621689199677"><span class="hs-identifier hs-var hs-var">valuesString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">NonEmpty Text -&gt; NonEmpty Text
 forall a. NonEmpty a -&gt; NonEmpty a
 </span><span class="hs-identifier hs-var">NE.reverse</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmpty Text -&gt; NonEmpty Text
 forall a. Ord a =&gt; NonEmpty a -&gt; NonEmpty a
 </span><span class="hs-identifier hs-var">NE.sort</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty Text
-</span><a href="#local-6989586621689198174"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-109"></span><span>                  </span><span id="local-6989586621689198169"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198169"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">NE.:|</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199679"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-109"></span><span>                  </span><span id="local-6989586621689199674"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199674"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">NE.:|</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;value &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198169"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199674"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is not a valid GraphQL enum value name&quot;</span></span><span>
-</span><span id="line-110"></span><span>                  </span><span id="local-6989586621689198167"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198167"><span class="hs-identifier hs-var">value2</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">NE.:|</span></span><span> </span><span class="hs-special">[</span><span id="local-6989586621689198166"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198166"><span class="hs-identifier hs-var">value1</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-110"></span><span>                  </span><span id="local-6989586621689199672"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199672"><span class="hs-identifier hs-var">value2</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">NE.:|</span></span><span> </span><span class="hs-special">[</span><span id="local-6989586621689199671"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199671"><span class="hs-identifier hs-var">value1</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;values &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198166"><span class="hs-identifier hs-var">value1</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199671"><span class="hs-identifier hs-var">value1</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; and &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198167"><span class="hs-identifier hs-var">value2</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199672"><span class="hs-identifier hs-var">value2</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198173"><span class="hs-identifier hs-var">pluralString</span></a></span><span>
-</span><span id="line-111"></span><span>                  </span><span id="local-6989586621689198165"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198165"><span class="hs-identifier hs-var">lastValue</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">NE.:|</span></span><span> </span><span id="local-6989586621689198164"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689198164"><span class="hs-identifier hs-var">otherValues</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689199678"><span class="hs-identifier hs-var">pluralString</span></a></span><span>
+</span><span id="line-111"></span><span>                  </span><span id="local-6989586621689199670"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199670"><span class="hs-identifier hs-var">lastValue</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-type">NE.:|</span></span><span> </span><span id="local-6989586621689199669"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689199669"><span class="hs-identifier hs-var">otherValues</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-112"></span><span>                    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;values &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -514,33 +514,33 @@ forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Text] -&gt; [Text]
 forall a. [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">reverse</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689198164"><span class="hs-identifier hs-var">otherValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199669"><span class="hs-identifier hs-var">otherValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;, and &quot;</span></span><span>
 </span><span id="line-113"></span><span>                      </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198165"><span class="hs-identifier hs-var">lastValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199670"><span class="hs-identifier hs-var">lastValue</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198173"><span class="hs-identifier hs-var">pluralString</span></a></span><span>
+</span><a href="#local-6989586621689199678"><span class="hs-identifier hs-var">pluralString</span></a></span><span>
 </span><span id="line-114"></span><span>             </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198172"><span class="hs-identifier hs-var">valuesString</span></a></span><span>
-</span><span id="line-115"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualCommentColumn"><span class="hs-identifier hs-type">EnumTableNonTextualCommentColumn</span></a></span><span> </span><span id="local-6989586621689198162"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198162"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; RawColumnInfo ('Postgres pgKind) -&gt; PGScalarType -&gt; Text
+</span><a href="#local-6989586621689199677"><span class="hs-identifier hs-var">valuesString</span></a></span><span>
+</span><span id="line-115"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNonTextualCommentColumn"><span class="hs-identifier hs-type">EnumTableNonTextualCommentColumn</span></a></span><span> </span><span id="local-6989586621689199667"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199667"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; RawColumnInfo ('Postgres pgKind) -&gt; PGScalarType -&gt; Text
 forall (b :: BackendType) t.
 (ToTxt (Column b), ToTxt t, ToTxt (ScalarType b)) =&gt;
 Text -&gt; RawColumnInfo b -&gt; t -&gt; Text
-</span><a href="#local-6989586621689198175"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199680"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;comment column&quot;</span></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198162"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
+</span><a href="#local-6989586621689199667"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGText"><span class="hs-identifier hs-var">PGText</span></a></span><span>
-</span><span id="line-116"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableTooManyColumns"><span class="hs-identifier hs-type">EnumTableTooManyColumns</span></a></span><span> </span><span id="local-6989586621689198161"><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689198161"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-116"></span><span>          </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableTooManyColumns"><span class="hs-identifier hs-type">EnumTableTooManyColumns</span></a></span><span> </span><span id="local-6989586621689199666"><span class="annot"><span class="annottext">[PGCol]
+</span><a href="#local-6989586621689199666"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-117"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the table must have exactly one primary key and optionally one comment column, not &quot;</span></span><span>
 </span><span id="line-118"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -550,7 +550,7 @@ forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PGCol] -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">length</span></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689198161"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689199666"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -562,22 +562,22 @@ forall t (f :: * -&gt; *). (ToTxt t, Foldable f) =&gt; f t -&gt; Text
 </span><a href="Data.Text.Extended.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PGCol] -&gt; [PGCol]
 forall a. Ord a =&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">sort</span></span><span> </span><span class="annot"><span class="annottext">[PGCol]
-</span><a href="#local-6989586621689198161"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689199666"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;)&quot;</span></span><span>
 </span><span id="line-122"></span><span>          </span><span class="hs-keyword">where</span><span>
-</span><span id="line-123"></span><span>            </span><span id="local-6989586621689198175"><span class="annot"><span class="annottext">typeMismatch :: Text -&gt; RawColumnInfo b -&gt; t -&gt; Text
-</span><a href="#local-6989586621689198175"><span class="hs-identifier hs-var hs-var">typeMismatch</span></a></span></span><span> </span><span id="local-6989586621689198158"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198158"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689198157"><span class="annot"><span class="annottext">RawColumnInfo b
-</span><a href="#local-6989586621689198157"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span id="local-6989586621689198156"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689198156"><span class="hs-identifier hs-var">expected</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-123"></span><span>            </span><span id="local-6989586621689199680"><span class="annot"><span class="annottext">typeMismatch :: Text -&gt; RawColumnInfo b -&gt; t -&gt; Text
+</span><a href="#local-6989586621689199680"><span class="hs-identifier hs-var hs-var">typeMismatch</span></a></span></span><span> </span><span id="local-6989586621689199663"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199663"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689199662"><span class="annot"><span class="annottext">RawColumnInfo b
+</span><a href="#local-6989586621689199662"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span id="local-6989586621689199661"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689199661"><span class="hs-identifier hs-var">expected</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-124"></span><span>              </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the table&#8217;s &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198158"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199663"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; (&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -585,14 +585,14 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo b -&gt; Column b
 forall (b :: BackendType). RawColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#rciName"><span class="hs-identifier hs-var hs-var">rciName</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo b
-</span><a href="#local-6989586621689198157"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Column b -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199662"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Column b -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;) must have type &quot;</span></span><span>
 </span><span id="line-125"></span><span>                </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689198156"><span class="hs-identifier hs-var">expected</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689199661"><span class="hs-identifier hs-var">expected</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;, not type &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ScalarType b -&gt; Text
@@ -600,37 +600,37 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo b -&gt; ScalarType b
 forall (b :: BackendType). RawColumnInfo b -&gt; ScalarType b
 </span><a href="Hasura.RQL.Types.Column.html#rciType"><span class="hs-identifier hs-var hs-var">rciType</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo b
-</span><a href="#local-6989586621689198157"><span class="hs-identifier hs-var">colInfo</span></a></span><span>
+</span><a href="#local-6989586621689199662"><span class="hs-identifier hs-var">colInfo</span></a></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchEnumValuesFromDb"><span class="hs-identifier hs-type">fetchEnumValuesFromDb</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-128"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689198324"><span class="annot"><a href="#local-6989586621689198324"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689198326"><span class="annot"><a href="#local-6989586621689198326"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-129"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198326"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadValidate</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198324"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621689198326"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689199829"><span class="annot"><a href="#local-6989586621689199829"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689199831"><span class="annot"><a href="#local-6989586621689199831"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199831"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadValidate</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableIntegrityError"><span class="hs-identifier hs-type">EnumTableIntegrityError</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199829"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621689199831"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-130"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier hs-type">QualifiedTable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198324"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-132"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689198324"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-133"></span><span>  </span><span class="annot"><a href="#local-6989586621689198326"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199829"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-132"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689199829"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><a href="#local-6989586621689199831"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span><span>
 </span><span id="line-134"></span><span id="fetchEnumValuesFromDb"><span class="annot"><span class="annottext">fetchEnumValuesFromDb :: QualifiedTable
 -&gt; RawColumnInfo ('Postgres pgKind)
 -&gt; Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; m EnumValues
-</span><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchEnumValuesFromDb"><span class="hs-identifier hs-var hs-var">fetchEnumValuesFromDb</span></a></span></span><span> </span><span id="local-6989586621689198154"><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689198154"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621689198153"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198153"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span></span><span> </span><span id="local-6989586621689198152"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198152"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-135"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689198151"><span class="annot"><span class="annottext">nullExtr :: Extractor
-</span><a href="#local-6989586621689198151"><span class="hs-identifier hs-var hs-var">nullExtr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe Alias -&gt; Extractor
+</span><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchEnumValuesFromDb"><span class="hs-identifier hs-var hs-var">fetchEnumValuesFromDb</span></a></span></span><span> </span><span id="local-6989586621689199659"><span class="annot"><span class="annottext">QualifiedTable
+</span><a href="#local-6989586621689199659"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621689199658"><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
+</span><a href="#local-6989586621689199658"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span></span><span> </span><span id="local-6989586621689199657"><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
+</span><a href="#local-6989586621689199657"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689199656"><span class="annot"><span class="annottext">nullExtr :: Extractor
+</span><a href="#local-6989586621689199656"><span class="hs-identifier hs-var hs-var">nullExtr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; Maybe Alias -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#Extractor"><span class="hs-identifier hs-var">Extractor</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SENull"><span class="hs-identifier hs-var">SENull</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Alias
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-136"></span><span>      </span><span id="local-6989586621689198148"><span class="annot"><span class="annottext">commentExtr :: Extractor
-</span><a href="#local-6989586621689198148"><span class="hs-identifier hs-var hs-var">commentExtr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Extractor
+</span><span id="line-136"></span><span>      </span><span id="local-6989586621689199653"><span class="annot"><span class="annottext">commentExtr :: Extractor
+</span><a href="#local-6989586621689199653"><span class="hs-identifier hs-var hs-var">commentExtr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Extractor
 -&gt; (RawColumnInfo ('Postgres pgKind) -&gt; Extractor)
 -&gt; Maybe (RawColumnInfo ('Postgres pgKind))
 -&gt; Extractor
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689198151"><span class="hs-identifier hs-var">nullExtr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol -&gt; Extractor
+</span><a href="#local-6989586621689199656"><span class="hs-identifier hs-var">nullExtr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGCol -&gt; Extractor
 forall a. IsIdentifier a =&gt; a -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkExtr"><span class="hs-identifier hs-var">mkExtr</span></a></span><span> </span><span class="annot"><span class="annottext">(PGCol -&gt; Extractor)
 -&gt; (RawColumnInfo ('Postgres pgKind) -&gt; PGCol)
@@ -640,9 +640,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind) -&gt; PGCol
 forall (b :: BackendType). RawColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#rciName"><span class="hs-identifier hs-var hs-var">rciName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (RawColumnInfo ('Postgres pgKind))
-</span><a href="#local-6989586621689198152"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span><span>
-</span><span id="line-137"></span><span>      </span><span id="local-6989586621689198146"><span class="annot"><span class="annottext">query :: Query
-</span><a href="#local-6989586621689198146"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689199657"><span class="hs-identifier hs-var">maybeCommentColumn</span></a></span><span>
+</span><span id="line-137"></span><span>      </span><span id="local-6989586621689199651"><span class="annot"><span class="annottext">query :: Query
+</span><a href="#local-6989586621689199651"><span class="hs-identifier hs-var hs-var">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-138"></span><span>        </span><span class="annot"><span class="annottext">Builder -&gt; Query
 </span><span class="hs-identifier hs-var">Q.fromBuilder</span></span><span> </span><span class="annot"><span class="annottext">(Builder -&gt; Query) -&gt; Builder -&gt; Query
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -659,18 +659,18 @@ forall a. a -&gt; Maybe a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSimpleFromExp"><span class="hs-identifier hs-var">mkSimpleFromExp</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621689198154"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689199659"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-142"></span><span>                </span><span class="annot"><span class="annottext">selExtr :: [Extractor]
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selExtr"><span class="hs-identifier hs-var">selExtr</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">PGCol -&gt; Extractor
 forall a. IsIdentifier a =&gt; a -&gt; Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkExtr"><span class="hs-identifier hs-var">mkExtr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind) -&gt; Column ('Postgres pgKind)
 forall (b :: BackendType). RawColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#rciName"><span class="hs-identifier hs-var hs-var">rciName</span></a></span><span> </span><span class="annot"><span class="annottext">RawColumnInfo ('Postgres pgKind)
-</span><a href="#local-6989586621689198153"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689198148"><span class="hs-identifier hs-var">commentExtr</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689199658"><span class="hs-identifier hs-var">primaryKeyColumn</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689199653"><span class="hs-identifier hs-var">commentExtr</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-143"></span><span>              </span><span class="hs-special">}</span><span>
-</span><span id="line-144"></span><span>  </span><span id="local-6989586621689198139"><span class="annot"><span class="annottext">[(Text, Maybe Text)]
-</span><a href="#local-6989586621689198139"><span class="hs-identifier hs-var">rawEnumValues</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr [(Text, Maybe Text)] -&gt; m [(Text, Maybe Text)]
+</span><span id="line-144"></span><span>  </span><span id="local-6989586621689199644"><span class="annot"><span class="annottext">[(Text, Maybe Text)]
+</span><a href="#local-6989586621689199644"><span class="hs-identifier hs-var">rawEnumValues</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TxE QErr [(Text, Maybe Text)] -&gt; m [(Text, Maybe Text)]
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr [(Text, Maybe Text)] -&gt; m [(Text, Maybe Text)])
 -&gt; TxE QErr [(Text, Maybe Text)] -&gt; m [(Text, Maybe Text)]
@@ -682,22 +682,22 @@ forall (m :: * -&gt; *) a r e.
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
 </span><span class="hs-identifier hs-var">Q.withQE</span></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
-</span><a href="#local-6989586621689198146"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689199651"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-145"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Text, Maybe Text)] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Maybe Text)]
-</span><a href="#local-6989586621689198139"><span class="hs-identifier hs-var">rawEnumValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621689199644"><span class="hs-identifier hs-var">rawEnumValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; m ()
 forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
 </span><span class="hs-identifier hs-var">dispute</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">EnumTableIntegrityError ('Postgres pgKind)
 forall (b :: BackendType). EnumTableIntegrityError b
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableNoEnumValues"><span class="hs-identifier hs-var">EnumTableNoEnumValues</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-146"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689198133"><span class="annot"><span class="annottext">enumValues :: [Either Text (EnumValue, EnumValueInfo)]
-</span><a href="#local-6989586621689198133"><span class="hs-identifier hs-var hs-var">enumValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(((Text, Maybe Text) -&gt; Either Text (EnumValue, EnumValueInfo))
+</span><span id="line-146"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689199638"><span class="annot"><span class="annottext">enumValues :: [Either Text (EnumValue, EnumValueInfo)]
+</span><a href="#local-6989586621689199638"><span class="hs-identifier hs-var hs-var">enumValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(((Text, Maybe Text) -&gt; Either Text (EnumValue, EnumValueInfo))
  -&gt; [(Text, Maybe Text)]
  -&gt; [Either Text (EnumValue, EnumValueInfo)])
 -&gt; [(Text, Maybe Text)]
@@ -708,55 +708,55 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 -&gt; [(Text, Maybe Text)] -&gt; [Either Text (EnumValue, EnumValueInfo)]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Maybe Text)]
-</span><a href="#local-6989586621689198139"><span class="hs-identifier hs-var">rawEnumValues</span></a></span><span> </span><span class="annot"><span class="annottext">(((Text, Maybe Text) -&gt; Either Text (EnumValue, EnumValueInfo))
+</span><a href="#local-6989586621689199644"><span class="hs-identifier hs-var">rawEnumValues</span></a></span><span> </span><span class="annot"><span class="annottext">(((Text, Maybe Text) -&gt; Either Text (EnumValue, EnumValueInfo))
  -&gt; [Either Text (EnumValue, EnumValueInfo)])
 -&gt; ((Text, Maybe Text) -&gt; Either Text (EnumValue, EnumValueInfo))
 -&gt; [Either Text (EnumValue, EnumValueInfo)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-147"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689198131"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198131"><span class="hs-identifier hs-var">enumValueText</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689198130"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689198130"><span class="hs-identifier hs-var">comment</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-147"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689199636"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199636"><span class="hs-identifier hs-var">enumValueText</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689199635"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689199635"><span class="hs-identifier hs-var">comment</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-148"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
-</span><a href="#local-6989586621689198129"><span class="hs-identifier hs-var">mkValidEnumValueName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198131"><span class="hs-identifier hs-var">enumValueText</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689199634"><span class="hs-identifier hs-var">mkValidEnumValueName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199636"><span class="hs-identifier hs-var">enumValueText</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-149"></span><span>            </span><span class="annot"><span class="annottext">Maybe Name
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text (EnumValue, EnumValueInfo)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198131"><span class="hs-identifier hs-var">enumValueText</span></a></span><span>
-</span><span id="line-150"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689198128"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689198128"><span class="hs-identifier hs-var">enumValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(EnumValue, EnumValueInfo)
+</span><a href="#local-6989586621689199636"><span class="hs-identifier hs-var">enumValueText</span></a></span><span>
+</span><span id="line-150"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689199633"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689199633"><span class="hs-identifier hs-var">enumValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(EnumValue, EnumValueInfo)
 -&gt; Either Text (EnumValue, EnumValueInfo)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; EnumValue
 </span><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-var">EnumValue</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689198128"><span class="hs-identifier hs-var">enumValue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; EnumValueInfo
+</span><a href="#local-6989586621689199633"><span class="hs-identifier hs-var">enumValue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; EnumValueInfo
 </span><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-var">EnumValueInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689198130"><span class="hs-identifier hs-var">comment</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-151"></span><span>      </span><span id="local-6989586621689198125"><span class="annot"><span class="annottext">badNames :: [Text]
-</span><a href="#local-6989586621689198125"><span class="hs-identifier hs-var hs-var">badNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Either Text (EnumValue, EnumValueInfo)] -&gt; [Text]
+</span><a href="#local-6989586621689199635"><span class="hs-identifier hs-var">comment</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>      </span><span id="local-6989586621689199630"><span class="annot"><span class="annottext">badNames :: [Text]
+</span><a href="#local-6989586621689199630"><span class="hs-identifier hs-var hs-var">badNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Either Text (EnumValue, EnumValueInfo)] -&gt; [Text]
 forall a b. [Either a b] -&gt; [a]
 </span><span class="hs-identifier hs-var">lefts</span></span><span> </span><span class="annot"><span class="annottext">[Either Text (EnumValue, EnumValueInfo)]
-</span><a href="#local-6989586621689198133"><span class="hs-identifier hs-var">enumValues</span></a></span><span>
-</span><span id="line-152"></span><span>      </span><span id="local-6989586621689198123"><span class="annot"><span class="annottext">validEnums :: [(EnumValue, EnumValueInfo)]
-</span><a href="#local-6989586621689198123"><span class="hs-identifier hs-var hs-var">validEnums</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Either Text (EnumValue, EnumValueInfo)]
+</span><a href="#local-6989586621689199638"><span class="hs-identifier hs-var">enumValues</span></a></span><span>
+</span><span id="line-152"></span><span>      </span><span id="local-6989586621689199628"><span class="annot"><span class="annottext">validEnums :: [(EnumValue, EnumValueInfo)]
+</span><a href="#local-6989586621689199628"><span class="hs-identifier hs-var hs-var">validEnums</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Either Text (EnumValue, EnumValueInfo)]
 -&gt; [(EnumValue, EnumValueInfo)]
 forall a b. [Either a b] -&gt; [b]
 </span><span class="hs-identifier hs-var">rights</span></span><span> </span><span class="annot"><span class="annottext">[Either Text (EnumValue, EnumValueInfo)]
-</span><a href="#local-6989586621689198133"><span class="hs-identifier hs-var">enumValues</span></a></span><span>
+</span><a href="#local-6989586621689199638"><span class="hs-identifier hs-var">enumValues</span></a></span><span>
 </span><span id="line-153"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Maybe (NonEmpty Text)
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">NE.nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689198125"><span class="hs-identifier hs-var">badNames</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-154"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689198120"><span class="annot"><span class="annottext">NonEmpty Text
-</span><a href="#local-6989586621689198120"><span class="hs-identifier hs-var">someBadNames</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; m EnumValues
+</span><a href="#local-6989586621689199630"><span class="hs-identifier hs-var">badNames</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-154"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689199625"><span class="annot"><span class="annottext">NonEmpty Text
+</span><a href="#local-6989586621689199625"><span class="hs-identifier hs-var">someBadNames</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[EnumTableIntegrityError ('Postgres pgKind)] -&gt; m EnumValues
 forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">refute</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">NonEmpty Text -&gt; EnumTableIntegrityError ('Postgres pgKind)
 forall (b :: BackendType).
 NonEmpty Text -&gt; EnumTableIntegrityError b
 </span><a href="Hasura.Backends.Postgres.DDL.Table.html#EnumTableInvalidEnumValueNames"><span class="hs-identifier hs-var">EnumTableInvalidEnumValueNames</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty Text
-</span><a href="#local-6989586621689198120"><span class="hs-identifier hs-var">someBadNames</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689199625"><span class="hs-identifier hs-var">someBadNames</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-155"></span><span>    </span><span class="annot"><span class="annottext">Maybe (NonEmpty Text)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EnumValues -&gt; m EnumValues
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -765,14 +765,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(EnumValue, EnumValueInfo)] -&gt; EnumValues
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">[(EnumValue, EnumValueInfo)]
-</span><a href="#local-6989586621689198123"><span class="hs-identifier hs-var">validEnums</span></a></span><span>
+</span><a href="#local-6989586621689199628"><span class="hs-identifier hs-var">validEnums</span></a></span><span>
 </span><span id="line-156"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-157"></span><span>    </span><span class="hs-comment">-- https://graphql.github.io/graphql-spec/June2018/#EnumValue</span><span>
-</span><span id="line-158"></span><span>    </span><span id="local-6989586621689198129"><span class="annot"><span class="annottext">mkValidEnumValueName :: Text -&gt; Maybe Name
-</span><a href="#local-6989586621689198129"><span class="hs-identifier hs-var hs-var">mkValidEnumValueName</span></a></span></span><span> </span><span id="local-6989586621689198118"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198118"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-158"></span><span>    </span><span id="local-6989586621689199634"><span class="annot"><span class="annottext">mkValidEnumValueName :: Text -&gt; Maybe Name
+</span><a href="#local-6989586621689199634"><span class="hs-identifier hs-var hs-var">mkValidEnumValueName</span></a></span></span><span> </span><span id="local-6989586621689199623"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689199623"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-159"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198118"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Bool
+</span><a href="#local-6989586621689199623"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;true&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
@@ -783,5 +783,5 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-161"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689198118"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689199623"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-162"></span></pre></body></html>
