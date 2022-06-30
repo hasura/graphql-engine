@@ -12,7 +12,6 @@ const HasuraConBanner = (props) => {
       <div className={styles["hasura-con-brand"]}>
         <img className={styles["brand-dark"]} src={hasuraConDark} alt="Hasura Con" />
         <img className={styles["brand-light"]} src={hasuraConLight} alt="Hasura Con" />
-        <div>June 28 - 30, 2022</div>
       </div>
       <div className={styles["hasura-con-space-between"]}>
       <div>
@@ -20,11 +19,11 @@ const HasuraConBanner = (props) => {
           The Hasura User Conference
         </div>
         <div className={styles["hasura-con-title"]}>
-          GraphQL for Everyone
+          New Product Announcements
         </div>
       </div>
       <div className={styles["hasura-con-register"] + " " + styles["hasura-con-register-mobile-hide"]}>
-        Register Now
+        View Recordings
         <ArrowRight />
       </div>
       </div>
