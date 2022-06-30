@@ -116,7 +116,7 @@ mkLocalTestEnvironmentMock _ = do
   maeConfig <- I.newIORef chinookMock
   maeQuery <- I.newIORef Nothing
   maeThreadId <- forkIO $ runMockServer maeConfig maeQuery
-  healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/healthz"
+  healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health"
   pure $ MockAgentEnvironment {..}
 
 -- | Load the agent schema into HGE.

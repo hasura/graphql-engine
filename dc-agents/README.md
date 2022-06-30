@@ -110,6 +110,7 @@ The entry point to the reference agent application is a Fastify HTTP server. Raw
 - `GET /capabilities`, which returns the capabilities of the agent and a schema that describes the type of the configuration expected to be sent on the `X-Hasura-DataConnector-Config` header
 - `GET /schema`, which returns information about the provided _data schema_, its tables and their columns
 - `POST /query`, which receives a query structure to be executed, encoded as the JSON request body, and returns JSON conforming to the schema described by the `/schema` endpoint, and contining the requested fields.
+- `GET /health`, which can be used to either check if the agent is running, or if a particular data source is healthy
 
 The `/schema` and `/query` endpoints require the request to have the `X-Hasura-DataConnector-Config` header set. That header contains configuration information that agent can use to configure itself. For example, the header could contain a connection string to the database, if the agent requires a connection string to know how to connect to a specific database. The header must be a JSON object, but the specific properties that are required are up to the agent to define.
 
@@ -673,3 +674,8 @@ The key point of interest here is in the `where` field where we are comparing be
 #### Type Definitions
 
 The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/index.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.
+
+### Health endpoint
+Agents must expose a `/health` endpoint which must return a 204 No Content HTTP response code if the agent is up and running. This does not mean that the agent is able to connect to any data source it performs queries against, only that the agent is running and can accept requests, even if some of those requests might fail because a dependant service is unavailable.
+
+However, this endpoint can also be used to check whether the ability of the agent to talk to a particular data source is healthy. If the endpoint is sent the `X-Hasura-DataConnector-Config` and `X-Hasura-DataConnector-SourceName` headers, then the agent is expected to check that it can successfully talk to whatever data source is being specified by those headers. If it can do so, then it must return a 204 No Content response code.

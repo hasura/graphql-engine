@@ -37,6 +37,11 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   return queryData(data, request.body);
 });
 
+server.get("/health", async (request, response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "health.request");
+  response.statusCode = 204;
+});
+
 process.on('SIGINT', () => {
   server.log.info("interrupted");
   process.exit(0);

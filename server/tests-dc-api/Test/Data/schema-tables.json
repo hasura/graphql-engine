@@ -383,7 +383,7 @@
         "name": "TrackId",
         "type": "number",
         "nullable": false,
-        "description": "The ID of the playlist"
+        "description": "The ID of the track"
       },
       {
         "name": "Name",
