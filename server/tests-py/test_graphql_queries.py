@@ -117,9 +117,6 @@ class TestGraphQLEmpty:
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicBigquery:
 
-    def test_user_perms(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/user_perms.yaml", transport)
-
     def test_empty_perms(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/empty_perms.yaml", transport)
 
