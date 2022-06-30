@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
+import { canAccessSecuritySettings } from '@/utils/permissions';
 
 type TopNavProps = {
   location: RouteComponentProps<unknown, unknown>['location'];
@@ -21,8 +22,7 @@ const TopNav: React.FC<TopNavProps> = ({ location }) => {
     },
   ];
 
-  // eslint-disable-next-line no-underscore-dangle
-  if (window.__env.consoleId || window.__env.projectID) {
+  if (canAccessSecuritySettings()) {
     sectionsData.push({
       key: 'security',
       link: '/api/security/api_limits',

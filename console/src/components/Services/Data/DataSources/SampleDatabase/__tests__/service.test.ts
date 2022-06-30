@@ -4,7 +4,6 @@ import {
   newSampleDBTrial,
   maskedErrorMessage,
 } from '../service';
-import { ConsoleType } from '../../../../../../Globals';
 
 describe('Test checkNestedFieldValueInErrJson', () => {
   const testCases = [
@@ -673,7 +672,7 @@ describe('maskPostgresError tests', () => {
         maskPostgresError(
           tc.input.errorJson,
           tc.input.getState,
-          tc.input.consoleType as ConsoleType
+          tc.input.consoleType
         )
       );
     });

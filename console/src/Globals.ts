@@ -3,36 +3,125 @@ import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 import { isEmpty } from './components/Common/utils/jsUtils';
-import { Nullable } from './components/Common/utils/tsUtils';
 
-export type ConsoleType = 'oss' | 'cloud' | 'pro' | 'pro-cloud';
+type ConsoleType = 'oss' | 'cloud' | 'pro';
+
+type UUID = string;
+
+type OSSServerEnv = {
+  consoleMode: 'server';
+  consoleType: 'oss';
+  assetsPath: string; // e.g. "https://graphql-engine-cdn.hasura.io/console/assets"
+  consolePath: string; // e.g. "/console"
+  enableTelemetry: boolean;
+  isAdminSecretSet: boolean;
+  serverVersion: string; // e.g. "v2.7.0"
+  urlPrefix: string; // e.g. "/console"
+  cdnAssets: boolean;
+};
+
+type ProServerEnv = {
+  consoleType: 'pro';
+  consoleId: string;
+  consoleMode: 'server';
+  assetsPath: string;
+  consolePath: string;
+  enableTelemetry: boolean;
+  isAdminSecretSet: boolean;
+  serverVersion: string;
+  urlPrefix: string;
+};
+
+type CloudUserRole = 'owner' | 'user';
+
+type CloudServerEnv = {
+  consoleMode: 'server';
+  consoleType: 'cloud';
+  adminSecret: string;
+  assetsPath: string;
+  cloudRootDomain: string; // e.g. "pro.hasura.io"
+  consoleId: string; // e.g. "40d778e7-1324-4500-bf69-5f9e58f70803_console"
+  consolePath: string;
+  dataApiUrl: string; // e.g. "https://rich-jackass-37.hasura.app"
+  eeMode: string;
+  herokuOAuthClientId: UUID;
+  isAdminSecretSet: boolean;
+  luxDataHost: string; // e.g. "data.pro.hasura.io"
+  projectID: UUID;
+  serverVersion: string;
+  tenantID: UUID;
+  urlPrefix: string;
+  userRole: CloudUserRole;
+};
+
+type OSSCliEnv = {
+  consoleMode: 'cli';
+  adminSecret: string;
+  apiHost: string; // e.g. "http://localhost"
+  apiPort: string; // e.g. "9693"
+  assetsPath: string;
+  cliUUID: UUID;
+  consolePath: string;
+  dataApiUrl: string;
+  enableTelemetry: boolean;
+  serverVersion: string;
+  urlPrefix: string;
+};
+
+export type CloudCliEnv = {
+  consoleMode: 'cli';
+  adminSecret: string;
+  apiHost: string;
+  apiPort: string;
+  assetsPath: string;
+  cliUUID: string;
+  consolePath: string;
+  dataApiUrl: string;
+  enableTelemetry: boolean;
+  serverVersion: string;
+  urlPrefix: string;
+  /* NOTE
+     While in CLI mode we are relying on the "pro" key to determine if we are in the pro console or not.
+     We could ask the CLI team to add a consoleType env var so that we can rely on values "cloud" | "pro",
+     like in the server console mode
+  */
+  pro: true;
+  projectId: UUID;
+  isAdminSecretSet: boolean;
+};
+
+type ProCliEnv = CloudCliEnv;
+
+export type EnvVars = {
+  nodeEnv?: string;
+  apiHost?: string;
+  apiPort?: string;
+  dataApiUrl?: string;
+  adminSecret?: string;
+  serverVersion: string;
+  cliUUID?: string;
+  tenantID?: UUID;
+  projectID?: UUID;
+  cloudRootDomain?: string;
+  herokuOAuthClientId?: string;
+  luxDataHost?: string;
+  isAdminSecretSet?: boolean;
+  enableTelemetry?: boolean;
+  consoleType?: ConsoleType;
+  eeMode?: string;
+  consoleId?: string;
+} & (
+  | OSSServerEnv
+  | CloudServerEnv
+  | ProServerEnv
+  | OSSCliEnv
+  | CloudCliEnv
+  | ProCliEnv
+);
 
 declare global {
   interface Window {
-    __env: {
-      nodeEnv: string;
-      apiHost: string;
-      apiPort: string;
-      dataApiUrl: string;
-      urlPrefix: string;
-      adminSecret: string;
-      isAdminSecretSet: boolean;
-      consoleMode: string;
-      enableTelemetry: boolean;
-      assetsPath: string;
-      serverVersion: string;
-      consolePath: string;
-      cliUUID: string;
-      consoleId: Nullable<string>;
-      herokuOAuthClientId: string;
-      tenantID: Nullable<string>;
-      projectID: Nullable<string>;
-      userRole: Nullable<string>;
-      cloudRootDomain: Nullable<string>;
-      luxDataHost: Nullable<string>;
-      consoleType: ConsoleType;
-      eeMode: Nullable<string>;
-    };
+    __env: EnvVars;
   }
   const CONSOLE_ASSET_VERSION: string;
 }
@@ -44,7 +133,7 @@ const isProduction = window.__env?.nodeEnv !== 'development';
 const globals = {
   apiHost: window.__env?.apiHost,
   apiPort: window.__env?.apiPort,
-  dataApiUrl: stripTrailingSlash(window.__env?.dataApiUrl), // overridden below if server mode
+  dataApiUrl: stripTrailingSlash(window.__env?.dataApiUrl || ''), // overridden below if server mode
   urlPrefix: stripTrailingSlash(window.__env?.urlPrefix || '/'), // overridden below if server mode in production
   adminSecret: window.__env?.adminSecret || null, // gets updated after login/logout in server mode
   isAdminSecretSet:
@@ -55,12 +144,12 @@ const globals = {
   enableTelemetry: window.__env?.enableTelemetry,
   telemetryTopic: isProduction ? 'console' : 'console_test',
   assetsPath: window.__env?.assetsPath,
-  serverVersion: window.__env?.serverVersion,
+  serverVersion: window.__env?.serverVersion || '',
   consoleAssetVersion: CONSOLE_ASSET_VERSION, // set during console build
   featuresCompatibility: window.__env?.serverVersion
-    ? getFeaturesCompatibility(window.__env?.serverVersion)
+    ? getFeaturesCompatibility(window.__env?.serverVersion || '')
     : null,
-  cliUUID: window.__env?.cliUUID,
+  cliUUID: window.__env?.cliUUID || '',
   hasuraUUID: '',
   telemetryNotificationShown: false,
   isProduction,
@@ -70,7 +159,7 @@ const globals = {
   cloudDataApiUrl: `${window.location?.protocol}//data.${window.__env?.cloudRootDomain}`,
   luxDataHost: window.__env?.luxDataHost,
   userRole: undefined, // userRole is not applicable for the OSS console
-  consoleType: window.__env?.consoleType,
+  consoleType: window.__env?.consoleType || '',
   eeMode: window.__env?.eeMode === 'true',
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
@@ -83,7 +172,7 @@ if (globals.consoleMode === SERVER_CONSOLE_MODE) {
       let currentUrl = stripTrailingSlash(window.location?.href);
       let slicePath = true;
       if (window.__env?.dataApiUrl) {
-        currentUrl = stripTrailingSlash(window.__env?.dataApiUrl);
+        currentUrl = stripTrailingSlash(window.__env?.dataApiUrl || '');
         slicePath = false;
       }
       const currentPath = stripTrailingSlash(window.location?.pathname);

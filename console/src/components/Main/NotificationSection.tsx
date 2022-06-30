@@ -495,7 +495,7 @@ const HasuraNotifications: React.FC<
   dispatch,
 }) => {
   // eslint-disable-next-line no-underscore-dangle
-  const consoleId = window.__env.consoleId;
+  const consoleId = window.__env?.consoleId;
   const consoleNotificationsLength = consoleNotifications?.length || 0;
   const consoleScope = getConsoleScope(serverVersion, consoleId);
 
