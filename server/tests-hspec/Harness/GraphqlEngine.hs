@@ -39,7 +39,8 @@ where
 
 -------------------------------------------------------------------------------
 
-import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent (forkIO)
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value, object, (.=))
 import Data.Aeson.Types (Pair)
@@ -224,7 +225,7 @@ startServerThread murlPrefixport = do
   (urlPrefix, port, threadId) <-
     case murlPrefixport of
       Just (urlPrefix, port) -> do
-        threadId <- forkIO (forever (threadDelay 1000000)) -- Just wait.
+        threadId <- forkIO (forever (sleep 1)) -- Just wait.
         pure (urlPrefix, port, threadId)
       Nothing -> do
         port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)

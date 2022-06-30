@@ -23,7 +23,7 @@ module Harness.Backend.Postgres
   )
 where
 
-import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -64,8 +64,7 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
             (const (pure ()))
         )
         ( \(_failure :: ExitCodeException) -> do
-            threadDelay
-              Constants.postgresLivenessCheckIntervalMicroseconds
+            sleep Constants.postgresLivenessCheckIntervalSeconds
             loop (attempts - 1)
         )
 

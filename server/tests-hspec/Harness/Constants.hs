@@ -10,10 +10,8 @@ module Harness.Constants
     postgresqlConnectionString,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
-    postgresLivenessCheckIntervalMicroseconds,
     mysqlLivenessCheckAttempts,
     mysqlLivenessCheckIntervalSeconds,
-    mysqlLivenessCheckIntervalMicroseconds,
     mysqlPassword,
     mysqlUser,
     mysqlDb,
@@ -22,7 +20,6 @@ module Harness.Constants
     mysqlConnectInfo,
     sqlserverLivenessCheckAttempts,
     sqlserverLivenessCheckIntervalSeconds,
-    sqlserverLivenessCheckIntervalMicroseconds,
     sqlserverConnectInfo,
     sqlserverDb,
     bigqueryServiceKeyVar,
@@ -30,7 +27,6 @@ module Harness.Constants
     bigqueryDataset,
     httpHealthCheckAttempts,
     httpHealthCheckIntervalSeconds,
-    httpHealthCheckIntervalMicroseconds,
     citusConnectionString,
     citusDb,
     serveOptions,
@@ -140,13 +136,13 @@ dataConnectorDb = "data-connector"
 postgresLivenessCheckAttempts :: Int
 postgresLivenessCheckAttempts = 5
 
-postgresLivenessCheckIntervalSeconds :: Int
+postgresLivenessCheckIntervalSeconds :: DiffTime
 postgresLivenessCheckIntervalSeconds = 1
 
 sqlserverLivenessCheckAttempts :: Int
 sqlserverLivenessCheckAttempts = 5
 
-sqlserverLivenessCheckIntervalSeconds :: Int
+sqlserverLivenessCheckIntervalSeconds :: DiffTime
 sqlserverLivenessCheckIntervalSeconds = 1
 
 -- | SQL Server has strict password requirements, that's why it's not
@@ -157,20 +153,11 @@ sqlserverConnectInfo = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,
 sqlserverDb :: String
 sqlserverDb = "hasura"
 
-sqlserverLivenessCheckIntervalMicroseconds :: Int
-sqlserverLivenessCheckIntervalMicroseconds = 1000 * 1000 * sqlserverLivenessCheckIntervalSeconds
-
-postgresLivenessCheckIntervalMicroseconds :: Int
-postgresLivenessCheckIntervalMicroseconds = 1000 * 1000 * postgresLivenessCheckIntervalSeconds
-
 mysqlLivenessCheckAttempts :: Int
 mysqlLivenessCheckAttempts = 5
 
-mysqlLivenessCheckIntervalSeconds :: Int
+mysqlLivenessCheckIntervalSeconds :: DiffTime
 mysqlLivenessCheckIntervalSeconds = 1
-
-mysqlLivenessCheckIntervalMicroseconds :: Int
-mysqlLivenessCheckIntervalMicroseconds = 1000 * 1000 * mysqlLivenessCheckIntervalSeconds
 
 -- * MySQL
 
@@ -213,11 +200,8 @@ bigqueryDataset = "hasura"
 httpHealthCheckAttempts :: Int
 httpHealthCheckAttempts = 5
 
-httpHealthCheckIntervalSeconds :: Int
+httpHealthCheckIntervalSeconds :: DiffTime
 httpHealthCheckIntervalSeconds = 1
-
-httpHealthCheckIntervalMicroseconds :: Int
-httpHealthCheckIntervalMicroseconds = 1000 * 1000 * httpHealthCheckIntervalSeconds
 
 -- * Server configuration
 

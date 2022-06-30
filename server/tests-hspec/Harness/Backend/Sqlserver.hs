@@ -21,7 +21,7 @@ module Harness.Backend.Sqlserver
   )
 where
 
-import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -59,8 +59,7 @@ livenessCheck = loop Constants.sqlserverLivenessCheckAttempts
             (const (pure ()))
         )
         ( \(_failure :: ExitCodeException) -> do
-            threadDelay
-              Constants.sqlserverLivenessCheckIntervalMicroseconds
+            sleep Constants.sqlserverLivenessCheckIntervalSeconds
             loop (attempts - 1)
         )
 

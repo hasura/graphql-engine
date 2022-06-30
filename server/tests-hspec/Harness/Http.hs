@@ -10,7 +10,7 @@ module Harness.Http
   )
 where
 
-import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Exception
 import Data.Aeson
 import Data.ByteString.Lazy.Char8 qualified as L8
@@ -105,6 +105,6 @@ healthCheck url = loop [] Constants.httpHealthCheckAttempts
       catch
         (getWithStatus [200, 204] url)
         ( \(failure :: Http.HttpException) -> do
-            threadDelay Constants.httpHealthCheckIntervalMicroseconds
+            sleep Constants.httpHealthCheckIntervalSeconds
             loop (failure : failures) (attempts - 1)
         )
