@@ -15,7 +15,6 @@
           collection_name: test_collection
           query_name: query_with_default_arg
 
-
 - description: Call openapi json endpoint
   url: /api/swagger/json
   method: GET
@@ -55,6 +54,7 @@
                   properties:
                     first_name:
                       default: Foo
+                      title: String
                       type: string
                       nullable: true
             description: Query parameters can also be provided in the request body
@@ -68,17 +68,23 @@
                       test_table:
                         items:
                           type: object
+                          description: columns and relationships of "test_table"
+                          nullable: false
                           properties:
                             first_name:
+                              nullable: true
                               title: String
                               type: string
                             last_name:
+                              nullable: true
                               title: String
                               type: string
+                          title: test_table
                         type: array
                         nullable: false
               description: Responses for POST /api/rest/with_default_arg
     components: {}
+
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

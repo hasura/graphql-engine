@@ -55,10 +55,11 @@
                   type: object
                   properties:
                     first_name:
+                      title: String
                       type: string
                       nullable: false
                     new_object:
-                      $ref: '#/components/schemas/test_table_set_input'
+                      $ref: '#/components/schemas/test_table_set_input!'
             description: Query parameters can also be provided in the request body as
               a JSON object
           responses:
@@ -68,32 +69,40 @@
                   schema:
                     properties:
                       update_test_table:
+                        title: test_table_mutation_response
                         type: object
+                        description: response of any mutation on the table "test_table"
+                        nullable: true
                         properties:
                           affected_rows:
+                            nullable: false
                             title: Int
                             type: integer
               description: Responses for POST /api/rest/complex_args
     components:
       schemas:
-        String:
-          type: string
-          nullable: true
-        uuid:
-          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-          type: string
-          nullable: true
-        test_table_set_input:
+        test_table_set_input!:
+          title: test_table_set_input
           type: object
           description: input type for updating data in table "test_table"
           nullable: false
           properties:
             first_name:
-              $ref: '#/components/schemas/String'
+              nullable: true
+              title: String
+              type: string
             last_name:
-              $ref: '#/components/schemas/String'
+              nullable: true
+              title: String
+              type: string
             id:
               $ref: '#/components/schemas/uuid'
+        uuid:
+          title: uuid
+          type: string
+          nullable: true
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

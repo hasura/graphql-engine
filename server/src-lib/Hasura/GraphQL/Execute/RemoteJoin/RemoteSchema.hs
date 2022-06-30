@@ -219,14 +219,20 @@ createArguments variables (RemoteArguments arguments) =
 -- >>> combineValues (Object (fromList [("id", Number 1)]) (Object (fromList [("name", String "foo")])
 -- Object (fromList [("id", Number 1), ("name", String "foo")])
 combineValues ::
-  MonadError QErr m => G.Value RemoteSchemaVariable -> G.Value RemoteSchemaVariable -> m (G.Value RemoteSchemaVariable)
-combineValues (G.VObject l) (G.VObject r) = G.VObject <$> Map.unionWithM combineValues l r
-combineValues (G.VList l) (G.VList r) = pure $ G.VList $ l <> r
-combineValues l r =
-  throw500 $
-    "combineValues: cannot combine values (" <> tshow l <> ") and (" <> tshow r
-      <> "); \
-         \lists can only be merged with lists, objects can only be merged with objects"
+  MonadError QErr m =>
+  G.Name ->
+  G.Value RemoteSchemaVariable ->
+  G.Value RemoteSchemaVariable ->
+  m (G.Value RemoteSchemaVariable)
+combineValues name v1 v2 = case (v1, v2) of
+  (G.VObject l, G.VObject r) -> G.VObject <$> Map.unionWithM combineValues l r
+  (G.VList l, G.VList r) -> pure $ G.VList $ l <> r
+  (l, r) ->
+    throw500 $
+      "combineValues: cannot combine values (" <> tshow l <> ") and (" <> tshow r
+        <> ") for field "
+        <> G.unName name
+        <> "; lists can only be merged with lists, objects can only be merged with objects"
 
 -- | Craft a GraphQL query document from the list of fields.
 fieldsToRequest :: NonEmpty (G.Field G.NoFragments P.Variable) -> GQLReqOutgoing

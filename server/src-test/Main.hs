@@ -4,6 +4,7 @@ module Main (main) where
 
 import Control.Concurrent.ExtendedSpec qualified as ConcurrentExtended
 import Control.Concurrent.MVar
+import Control.Monad.CircularSpec qualified as Circular
 import Control.Natural ((:~>) (..))
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
@@ -106,6 +107,7 @@ main = do
 unitSpecs :: Spec
 unitSpecs = do
   describe "Control.Concurrent.ExtendedSpec" ConcurrentExtended.spec
+  describe "Control.Monad.CircularSpec" Circular.spec
   describe "Data.HashMap.Strict.ExtendedSpec" HashMapExtendedSpec.spec
   describe "Data.NonNegativeInt" NonNegativeIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec

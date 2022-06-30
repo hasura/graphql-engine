@@ -388,6 +388,7 @@ newtype MetadataStorageT m a = MetadataStorageT {unMetadataStorageT :: ExceptT Q
       MonadReader r,
       MonadState s,
       MonadTrans,
+      MonadFix,
       MonadIO,
       MFunctor,
       Tracing.HasReporter,

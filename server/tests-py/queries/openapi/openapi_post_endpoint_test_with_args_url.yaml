@@ -15,7 +15,6 @@
           collection_name: test_collection
           query_name: query_with_args
 
-
 - description: Call openapi json endpoint
   url: /api/swagger/json
   method: GET
@@ -61,9 +60,11 @@
                   properties:
                     first_name:
                       nullable: false
+                      title: String
                       type: string
                     last_name:
                       nullable: false
+                      title: String
                       type: string
                   type: object
             description: Query parameters can also be provided in the request body
@@ -77,18 +78,24 @@
                     properties:
                       test_table:
                         items:
+                          description: columns and relationships of "test_table"
+                          nullable: false
                           properties:
                             first_name:
+                              nullable: true
                               title: String
                               type: string
                             last_name:
+                              nullable: true
                               title: String
                               type: string
+                          title: test_table
                           type: object
                         nullable: false
                         type: array
               description: Responses for POST /api/rest/with_args_url/{first_name}/{last_name}
     components: {}
+
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

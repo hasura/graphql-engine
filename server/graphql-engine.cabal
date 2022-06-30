@@ -387,6 +387,7 @@ library
                      , Control.Arrow.Interpret
                      , Control.Arrow.Trans
                      , Control.Concurrent.Extended
+                     , Control.Monad.Circular
                      , Control.Monad.Stateless
                      , Control.Monad.Trans.Managed
                      , Control.Monad.Unique
@@ -987,6 +988,7 @@ test-suite graphql-engine-tests
   main-is: Main.hs
   other-modules:
     Control.Concurrent.ExtendedSpec
+    Control.Monad.CircularSpec
     Data.HashMap.Strict.ExtendedSpec
     Data.NonNegativeIntSpec
     Data.Parser.CacheControlSpec

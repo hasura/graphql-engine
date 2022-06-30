@@ -66,13 +66,18 @@
                     properties:
                       test_table:
                         items:
+                          description: columns and relationships of "test_table"
+                          nullable: false
                           properties:
                             first_name:
+                              nullable: true
                               title: String
                               type: string
                             last_name:
+                              nullable: true
                               title: String
                               type: string
+                          title: test_table
                           type: object
                         nullable: false
                         type: array
@@ -110,9 +115,11 @@
                   properties:
                     first_name:
                       nullable: false
+                      title: String
                       type: string
                     last_name:
                       nullable: false
+                      title: String
                       type: string
                   type: object
             description: Query parameters can also be provided in the request body
@@ -126,13 +133,18 @@
                     properties:
                       test_table:
                         items:
+                          description: columns and relationships of "test_table"
+                          nullable: false
                           properties:
                             first_name:
+                              nullable: true
                               title: String
                               type: string
                             last_name:
+                              nullable: true
                               title: String
                               type: string
+                          title: test_table
                           type: object
                         nullable: false
                         type: array

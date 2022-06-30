@@ -33,6 +33,9 @@
                     properties:
                       test_table:
                         items:
+                          description: columns and relationships of "test_table"
+                          nullable: false
+                          title: test_table
                           type: object
                         type: array
                         nullable: false

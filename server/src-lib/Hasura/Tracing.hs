@@ -83,7 +83,7 @@ data TraceContext = TraceContext
 -- | The 'TraceT' monad transformer adds the ability to keep track of
 -- the current trace context.
 newtype TraceT m a = TraceT {unTraceT :: ReaderT (TraceContext, Reporter) (WriterT TracingMetadata m) a}
-  deriving (Functor, Applicative, Monad, MonadIO, MonadMask, MonadCatch, MonadThrow, MonadBase b, MonadBaseControl b)
+  deriving (Functor, Applicative, Monad, MonadIO, MonadFix, MonadMask, MonadCatch, MonadThrow, MonadBase b, MonadBaseControl b)
 
 instance MonadTrans TraceT where
   lift = TraceT . lift . lift

@@ -1,9 +1,12 @@
 type: bulk
 args:
+- type: clear_metadata
+  args:
+
 - type: run_sql
   args:
     sql: |
-      create table test_table(
+      create table if not exists test_table(
           first_name text,
           last_name text,
           id UUID NOT NULL DEFAULT gen_random_uuid()
@@ -26,7 +29,7 @@ args:
 - type: run_sql
   args:
     sql: |
-      create table test_table_recurse(
+      create table if not exists test_table_recurse(
           random_data text,
           id UUID NOT NULL DEFAULT gen_random_uuid()
       );

@@ -83,7 +83,7 @@ import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics)
 import Hasura.Server.Middleware (corsMiddleware)
-import Hasura.Server.OpenAPI (serveJSON)
+import Hasura.Server.OpenAPI (buildOpenAPI)
 import Hasura.Server.Rest
 import Hasura.Server.SchemaCacheRef
   ( SchemaCacheRef,
@@ -724,7 +724,7 @@ data HasuraApp = HasuraApp
 mkWaiApp ::
   forall m.
   ( MonadIO m,
-    --     , MonadUnique m
+    MonadFix m,
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
     ConsoleRenderer m,
@@ -882,11 +882,10 @@ mkWaiApp
 httpApp ::
   forall m.
   ( MonadIO m,
-    --     , MonadUnique m
+    MonadFix m,
     MonadBaseControl IO m,
     ConsoleRenderer m,
     HttpLog m,
-    -- , UserAuthentication m
     UserAuthentication (Tracing.TraceT m),
     MonadMetadataApiAuthorization m,
     E.MonadGQLExecutionCheck m,
@@ -1084,7 +1083,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
       mkGetHandler $ do
         onlyAdmin
         sc <- liftIO $ getSchemaCache $ scCacheRef serverCtx
-        json <- serveJSON sc
+        json <- buildOpenAPI sc
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue json) [])
 
   forM_ [Spock.GET, Spock.POST] $ \m -> Spock.hookAny m $ \_ -> do

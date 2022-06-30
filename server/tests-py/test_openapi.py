@@ -5,7 +5,7 @@ from validate import check_query_f, check_query, get_conf_f
 from context import PytestConf
 
 @pytest.mark.parametrize("transport", ['http'])
-@pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.usefixtures('per_method_tests_db_state')
 class TestOpenAPISpec:
 
     @classmethod
