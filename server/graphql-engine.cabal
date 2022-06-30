@@ -1240,6 +1240,7 @@ test-suite tests-hspec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
     Test.BigQuery.ComputedFieldSpec
+    Test.BigQuery.GraphQLQueryBasicSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.SelectSpec
     Test.SerializationSpec
