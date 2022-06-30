@@ -107,7 +107,7 @@ const FormElements = () => {
 };
 
 export const WithReactFormHookNested: Story = () => {
-  const submit = (values: Schema) => {
+  const submit = (values: Record<string, unknown>) => {
     console.log(JSON.stringify(values));
   };
 

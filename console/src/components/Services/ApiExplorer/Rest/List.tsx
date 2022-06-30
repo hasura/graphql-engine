@@ -6,7 +6,7 @@ import { FaEdit, FaTimes } from 'react-icons/fa';
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
-import URLPreview from './Create/URLPreview';
+import URLPreview from './URLPreview';
 import { allowedQueriesCollection } from '../../../../metadata/utils';
 import Button from '../../../Common/Button';
 import { dropRESTEndpoint } from '../../../../metadata/actions';

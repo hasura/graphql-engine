@@ -93,7 +93,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
     },
   });
 
-  const submit = (values: RsToRsSchema) => {
+  const submit = (values: Record<string, unknown>) => {
     const lhs_fields = generateLhsFields(
       values.resultSet as Record<string, unknown>
     );

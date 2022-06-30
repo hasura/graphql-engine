@@ -89,14 +89,14 @@ export const RemoteSchemaToDbForm = ({
     },
   });
 
-  const submit = (values: Schema) => {
-    const field_mapping: Record<string, string> = values.mapping.reduce(
-      (acc, new_value) => {
-        acc[new_value.field] = new_value.column;
-        return acc;
-      },
-      {} as Record<string, string>
-    );
+  const submit = (values: Record<string, unknown>) => {
+    const field_mapping: Record<
+      string,
+      string
+    > = (values as Schema).mapping.reduce((acc, new_value) => {
+      acc[new_value.field] = new_value.column;
+      return acc;
+    }, {} as Record<string, string>);
 
     const metadataArgType = existingRelationshipName
       ? ('update_remote_schema_remote_relationship' as allowedMetadataTypes)

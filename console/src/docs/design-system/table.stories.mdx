@@ -1,58 +1,150 @@
-import { Meta } from '@storybook/addon-docs';
+import { Meta, Canvas } from '@storybook/addon-docs';
 
 <Meta title="Design system/Tables" />
 
-<h1 class="text-xl font-semibold mb-md">Tables</h1>
+# Tables
 
-<h3 class="text-lg text-muted mb-xs">Carded Table</h3>
-<p class="mb-md text-muted mb-0">
-  Boxed table can be used in all content list views to help list and break up
-  data.
-</p>
-<p class="mb-md text-muted mb-sm">
-  These tables should be used in a number of places where we currently use flex
-  grids for lists.
-</p>
+## Carded Table
 
-<p class="mb-md text-muted mb-0">
-  For controls - you'll notice that usually the link to dive the user into an
-  expanded view is found in the first column.
-</p>
-<p class="mb-md text-muted mb-sm">
-  Quick controls (like edit, delete, etc.) can be found in the last column but
-  are only visible on hover (this is to avoid having duplicate action controls
-  persistently present at the same time for every list item).
-</p>
+Boxed table can be used in all content list views to help list and break up data.
 
-<div class="overflow-x-auto border border-gray-300 rounded mb-md">
-  <table class="min-w-full divide-y divide-gray-200 text-left">
-    <thead>
+These tables should be used in a number of places where we currently use flex grids for lists.
+
+For controls - you'll notice that usually the link to dive the user into an expanded view is found in the first column.
+
+Quick controls (like edit, delete, etc.) can be found in the last column but are only visible on hover (this is to avoid having
+duplicate action controls persistently present at the same time for every list item).
+
+<Canvas>
+  <div class="overflow-x-auto border border-gray-300 rounded mb-md">
+    <table class="min-w-full divide-y divide-gray-200 text-left">
+      <thead>
+        <tr>
+          <th
+            scope="col"
+            class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          >
+            Name
+          </th>
+          <th
+            scope="col"
+            class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          >
+            Title
+          </th>
+          <th
+            scope="col"
+            class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          >
+            Email
+          </th>
+          <th
+            scope="col"
+            class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          >
+            Role
+          </th>
+          <th scope="col" class="bg-gray-50 px-sm py-sm w-0"></th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr class="group">
+          <td class="p-sm whitespace-nowrap text-muted">
+            <a href="!#" class="text-secondary">
+              Jane Cooper
+            </a>
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">
+            Regional Paradigm Technician
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">
+            jane.cooper@example.com
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">Admin</td>
+          <td class="p-sm whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
+            <a href="#!" class="text-secondary">
+              Edit
+            </a>
+          </td>
+        </tr>
+        <tr class="group">
+          <td class="p-sm whitespace-nowrap text-muted">
+            <a href="!#" class="text-secondary">
+              Jane Cooper
+            </a>
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">
+            Regional Paradigm Technician
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">
+            jane.cooper@example.com
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">Admin</td>
+          <td class="p-sm whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
+            <a href="#!" class="text-secondary">
+              Edit
+            </a>
+          </td>
+        </tr>
+        <tr class="group">
+          <td class="p-sm whitespace-nowrap text-muted">
+            <a href="!#" class="text-secondary">
+              Jane Cooper
+            </a>
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">
+            Regional Paradigm Technician
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">
+            jane.cooper@example.com
+          </td>
+          <td class="p-sm whitespace-nowrap text-muted">Admin</td>
+          <td class="p-sm whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
+            <a href="!#" class="text-secondary">
+              Edit
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</Canvas>
+
+## Simple Table
+
+Similar table to above's patterns but a little simpler.
+
+Best used for situations like inline forms (which may be inside a card structure).
+
+<Canvas>
+  <table class="min-w-full text-left">
+    <thead class="border-b-2 border-gray-300">
       <tr>
         <th
           scope="col"
-          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
         >
           Name
         </th>
         <th
           scope="col"
-          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
         >
           Title
         </th>
         <th
           scope="col"
-          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
         >
           Email
         </th>
         <th
           scope="col"
-          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+          class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
         >
           Role
         </th>
-        <th scope="col" class="bg-gray-50 px-sm py-sm w-0"></th>
+        <th scope="col" class="bg-transparent px-sm py-xs w-0"></th>
       </tr>
     </thead>
     <tbody class="bg-white divide-y divide-gray-200">
@@ -115,98 +207,4 @@ import { Meta } from '@storybook/addon-docs';
       </tr>
     </tbody>
   </table>
-</div>
-
-<h3 class="text-lg text-muted mb-xs">Simple Table</h3>
-<p class="mb-md text-muted mb-0">
-  Similar table to above's patterns but a little simpler.
-</p>
-<p class="mb-md text-muted mb-sm">
-  Best used for situations like inline forms (which may be inside a card
-  structure).
-</p>
-
-<table class="min-w-full text-left">
-  <thead class="border-b-2 border-gray-300">
-    <tr>
-      <th
-        scope="col"
-        class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
-      >
-        Name
-      </th>
-      <th
-        scope="col"
-        class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
-      >
-        Title
-      </th>
-      <th
-        scope="col"
-        class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
-      >
-        Email
-      </th>
-      <th
-        scope="col"
-        class="bg-transparent px-sm py-xs text-sm font-semibold text-muted uppercase tracking-wider"
-      >
-        Role
-      </th>
-      <th scope="col" class="bg-transparent px-sm py-xs w-0"></th>
-    </tr>
-  </thead>
-  <tbody class="bg-white divide-y divide-gray-200">
-    <tr class="group">
-      <td class="p-sm whitespace-nowrap text-muted">
-        <a href="!#" class="text-secondary">
-          Jane Cooper
-        </a>
-      </td>
-      <td class="p-sm whitespace-nowrap text-muted">
-        Regional Paradigm Technician
-      </td>
-      <td class="p-sm whitespace-nowrap text-muted">jane.cooper@example.com</td>
-      <td class="p-sm whitespace-nowrap text-muted">Admin</td>
-      <td class="p-sm whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
-        <a href="#!" class="text-secondary">
-          Edit
-        </a>
-      </td>
-    </tr>
-    <tr class="group">
-      <td class="p-sm whitespace-nowrap text-muted">
-        <a href="!#" class="text-secondary">
-          Jane Cooper
-        </a>
-      </td>
-      <td class="p-sm whitespace-nowrap text-muted">
-        Regional Paradigm Technician
-      </td>
-      <td class="p-sm whitespace-nowrap text-muted">jane.cooper@example.com</td>
-      <td class="p-sm whitespace-nowrap text-muted">Admin</td>
-      <td class="p-sm whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
-        <a href="#!" class="text-secondary">
-          Edit
-        </a>
-      </td>
-    </tr>
-    <tr class="group">
-      <td class="p-sm whitespace-nowrap text-muted">
-        <a href="!#" class="text-secondary">
-          Jane Cooper
-        </a>
-      </td>
-      <td class="p-sm whitespace-nowrap text-muted">
-        Regional Paradigm Technician
-      </td>
-      <td class="p-sm whitespace-nowrap text-muted">jane.cooper@example.com</td>
-      <td class="p-sm whitespace-nowrap text-muted">Admin</td>
-      <td class="p-sm whitespace-nowrap text-right font-semibold opacity-0 group-hover:opacity-100">
-        <a href="!#" class="text-secondary">
-          Edit
-        </a>
-      </td>
-    </tr>
-  </tbody>
-</table>
+</Canvas>

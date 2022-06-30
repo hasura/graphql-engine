@@ -31,6 +31,9 @@ webpack-stats.json
 *.swp
 .idea/*
 **/.tern-port
+*.iml
+*.ipr
+*.iws
 
 # Hasura stuff
 packages/console-oss/build/

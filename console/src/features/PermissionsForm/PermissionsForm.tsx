@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFormContext } from 'react-hook-form';
+import { FieldValues, useFormContext, UseFormProps } from 'react-hook-form';
 
 import { Form } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
@@ -88,8 +88,8 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
     accessType,
   });
 
-  const handleSubmit = async (formData: FormOutput) => {
-    updatePermissions.submit(formData);
+  const handleSubmit = async (formData: Record<string, unknown>) => {
+    updatePermissions.submit(formData as FormOutput);
     handleClose();
   };
 
@@ -138,7 +138,11 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
   const rowPermissions = queryType === 'update' ? ['pre', 'post'] : [queryType];
 
   return (
-    <Form onSubmit={handleSubmit} schema={schema} options={{ defaultValues }}>
+    <Form
+      onSubmit={handleSubmit}
+      schema={schema}
+      options={{ defaultValues } as UseFormProps<FieldValues>}
+    >
       {() => (
         <div className="bg-white rounded p-md border border-gray-300">
           <div className="pb-4 flex items-center gap-4">

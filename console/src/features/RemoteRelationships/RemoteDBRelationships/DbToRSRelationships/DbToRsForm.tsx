@@ -9,7 +9,7 @@ import { InputField, Form } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { getMetadataQuery, MetadataQueryType } from '@/metadata/queryUtils';
 import { FormElementDbToRs } from './FormElementDbToRs';
-import { DbToRsSchema, schema } from './schema';
+import { schema } from './schema';
 import { refRemoteSchemaSelectorKey } from '../../RemoteSchemaRelationships/components/RefRsSelector';
 import { generateLhsFields } from '../../RemoteSchemaRelationships/utils';
 import { RemoteRelationship } from '../../RemoteSchemaRelationships/types';
@@ -79,7 +79,7 @@ export const DbToRsForm = ({
     relationship: {},
   };
 
-  const submit = (values: DbToRsSchema) => {
+  const submit = (values: Record<string, unknown>) => {
     const lhs_fields = generateLhsFields(
       values.resultSet as Record<string, unknown>
     );

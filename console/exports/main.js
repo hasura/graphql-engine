@@ -57,7 +57,7 @@ export {
   showSuccessNotification,
 } from '../src/components/Services/Common/Notification';
 
-export { default as CreateRestView } from '../src/components/Services/ApiExplorer/Rest/Create/';
+export { default as CreateRestView } from '../src/components/Services/ApiExplorer/Rest/Form/';
 export { default as RestListView } from '../src/components/Services/ApiExplorer/Rest/List';
 export { default as DetailsView } from '../src/components/Services/ApiExplorer/Rest/Details';
 export { default as ApiContainer } from '../src/components/Services/ApiExplorer/Container';
@@ -72,6 +72,9 @@ export {
 export * from './table';
 export { ReactQueryProvider, reactQueryClient } from '../src/lib/reactQuery';
 
-export { FeatureFlags } from '../src/features/FeatureFlags'
+export { FeatureFlags } from '../src/features/FeatureFlags';
 
-export { SampleDBBanner, newSampleDBTrial } from '../src/components/Services/Data/DataSources/SampleDatabase'
+export {
+  SampleDBBanner,
+  newSampleDBTrial,
+} from '../src/components/Services/Data/DataSources/SampleDatabase';

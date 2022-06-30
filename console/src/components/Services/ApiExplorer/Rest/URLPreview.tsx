@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { getCurrentPageHost } from '../utils';
+import { getCurrentPageHost } from './utils';
 
 type URLPreviewProps = {
   urlInput: string;

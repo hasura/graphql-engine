@@ -39,9 +39,9 @@ export const Create = ({ onSuccess }: Props) => {
     },
   });
 
-  const onSubmit = (values: Schema) => {
-    const args = transformFormData(values);
-    setRemoteSchemaName(values.name);
+  const onSubmit = (values: Record<string, unknown>) => {
+    const args = transformFormData(values as Schema);
+    setRemoteSchemaName((values as Schema).name);
 
     mutation.mutate({
       query: { type: 'add_remote_schema', args },

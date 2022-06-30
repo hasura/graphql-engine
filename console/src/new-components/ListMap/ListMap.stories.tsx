@@ -117,8 +117,6 @@ WithNoLabelsAndNoBackground.args = {
   className: 'bg-transparent border-none',
 };
 
-type Schema = z.infer<typeof schema>;
-
 const schema = z.object({
   mapping: z.record(z.string()),
 });
@@ -145,7 +143,7 @@ const FormElements = () => {
 };
 
 export const WithReactFormHookNested: Story = () => {
-  const submit = (values: Schema) => {
+  const submit = (values: Record<string, unknown>) => {
     console.log(JSON.stringify(values));
   };
 

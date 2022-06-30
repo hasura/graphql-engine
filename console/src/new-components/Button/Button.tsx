@@ -6,11 +6,37 @@ type ButtonModes = 'default' | 'destructive' | 'primary';
 type ButtonSize = 'sm' | 'md';
 
 interface ButtonProps extends React.ComponentProps<'button'> {
+  /**
+   * Flag indicating whether the button is disabled
+   */
+  disabled?: boolean;
+  /**
+   * Flag indicating whether the button is in loading state
+   */
   isLoading?: boolean;
+  /**
+   * The button type
+   */
+  type?: 'submit' | 'reset' | 'button';
+  /**
+   * The button mode
+   */
   mode?: ButtonModes;
+  /**
+   * The button size
+   */
   size?: ButtonSize;
+  /**
+   * The button label when in loading state
+   */
   loadingText?: string;
+  /**
+   * The button icon
+   */
   icon?: ReactElement;
+  /**
+   * The button icon position
+   */
   iconPosition?: 'start' | 'end';
 }
 
@@ -34,6 +60,7 @@ const sharedButtonStyle =
 export const Button = (props: ButtonProps) => {
   const {
     mode = 'default',
+    type = 'button',
     size = 'md',
     children,
     icon,
@@ -50,7 +77,7 @@ export const Button = (props: ButtonProps) => {
 
   return (
     <button
-      type="button"
+      type={type}
       className={clsx(
         sharedButtonStyle,
         buttonSizing[buttonSize],

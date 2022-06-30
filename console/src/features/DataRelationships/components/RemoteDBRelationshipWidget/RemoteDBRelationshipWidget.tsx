@@ -83,13 +83,13 @@ export const RemoteDBRelationshipWidget = ({
     },
   });
 
-  const submit = (values: Schema) => {
+  const submit = (values: Record<string, unknown>) => {
     const remote_table: {
       database?: string;
       schema?: string;
       dataset?: string;
       table: string;
-    } = { ...values.destination };
+    } = { ...(values as Schema).destination };
     delete remote_table.database;
 
     const args = {
@@ -102,7 +102,7 @@ export const RemoteDBRelationshipWidget = ({
       name: values.relationshipName,
       definition: {
         to_source: {
-          source: values.destination.database,
+          source: (values as Schema).destination.database,
           table: {
             [getSchemaKey(remote_table as DataTarget)]:
               (remote_table as any).dataset ?? (remote_table as any).schema,

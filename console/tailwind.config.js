@@ -1,11 +1,21 @@
 const colors = require('tailwindcss/colors');
 
 module.exports = {
-  purge: ['./src/**/*.{js,jsx,ts,tsx,html,md,mdx}'],
-  darkMode: false, // or 'media' or 'class'
+  purge: {
+    content: ['./src/**/*.{js,jsx,ts,tsx,html,md,mdx}'],
+    options: {
+      safelist: {
+        standard: [/background$/],
+      },
+    },
+  },
+  darkMode: 'class',
   // jit: true,
   mode: 'jit',
   theme: {
+    fontFamily: {
+      sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
+    },
     extend: {
       colors: {
         current: 'currentColor',
@@ -37,9 +47,6 @@ module.exports = {
         muted: {
           DEFAULT: '#475569',
         },
-      },
-      fontFamily: {
-        sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
       },
       spacing: {
         xs: '0.571rem', // ~9.5 px
