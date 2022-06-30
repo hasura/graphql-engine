@@ -65,10 +65,7 @@ instance BackendSchema 'BigQuery where
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
 
-  -- table arguments
-  tableArguments = defaultTableArgs
-
-  -- indivdual components
+  -- individual components
   columnParser = bqColumnParser
   scalarSelectionArgumentsParser = bqScalarSelectionArgumentsParser
   orderByOperators _sourceInfo = bqOrderByOperators
@@ -76,6 +73,12 @@ instance BackendSchema 'BigQuery where
   countTypeInput = bqCountTypeInput
   aggregateOrderByCountType = BigQuery.IntegerScalarType
   computedField = bqComputedField
+
+instance BackendTableSelectSchema 'BigQuery where
+  tableArguments = defaultTableArgs
+  selectTable = defaultSelectTable
+  selectTableAggregate = defaultSelectTableAggregate
+  tableSelectionSet = defaultTableSelectionSet
 
 ----------------------------------------------------------------
 -- Top level parsers

@@ -21,12 +21,11 @@ import Data.HashMap.Strict.Extended qualified as M
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (commaSeparated, dquote, (<>>))
 import Hasura.Base.Error (QErr)
-import Hasura.GraphQL.Schema.Backend (BackendSchema, MonadBuildSchema, columnParser)
+import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSchema (..), MonadBuildSchema, columnParser)
 import Hasura.GraphQL.Schema.BoolExp (boolExp)
 import Hasura.GraphQL.Schema.Common (Scenario (..), mapField, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.GraphQL.Schema.Select (tableSelectionSet)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tablePermissions, tableUpdateColumns)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, annBoolExpTrue)
@@ -261,7 +260,9 @@ incOp = UpdateOperator {..}
 -- there are columns the user is allowed to update; otherwise returns Nothing.
 updateTable ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
   Scenario ->
@@ -299,6 +300,7 @@ updateTable backendUpdate scenario sourceInfo tableInfo fieldName description = 
 updateTableByPk ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  BackendTableSelectSchema b =>
   -- | backend-specific data needed to perform an update mutation
   P.InputFieldsParser n (BackendUpdate b (UnpreparedValue b)) ->
   Scenario ->

@@ -57,23 +57,25 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
   tCase <- asks getter
   tables :: [Parser 'Output n (SourceName, AB.AnyBackend TableMap)] <-
     catMaybes . concat <$> for (Map.toList sourceCache) \(sourceName, anySourceInfo) ->
-      AB.dispatchAnyBackend @BackendSchema anySourceInfo \(sourceInfo :: SourceInfo b) ->
-        for (Map.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
-          tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
-          selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
-          annotatedFieldsParser <-
-            MaybeT $
-              P.withTypenameCustomization
-                (mkCustomizedTypename (_scTypeNames $ _siCustomization sourceInfo) tCase)
-                (tableSelectionSet sourceInfo tableInfo)
-          pure $
-            annotatedFieldsParser <&> \fields ->
-              ( sourceName,
-                AB.mkAnyBackend $
-                  TableMap $
-                    Map.singleton tableName $
-                      NodeInfo (_siConfiguration sourceInfo) selectPermissions tablePkeyColumns fields
-              )
+      AB.dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
+        anySourceInfo
+        \(sourceInfo :: SourceInfo b) ->
+          for (Map.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
+            tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
+            selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+            annotatedFieldsParser <-
+              MaybeT $
+                P.withTypenameCustomization
+                  (mkCustomizedTypename (_scTypeNames $ _siCustomization sourceInfo) tCase)
+                  (tableSelectionSet sourceInfo tableInfo)
+            pure $
+              annotatedFieldsParser <&> \fields ->
+                ( sourceName,
+                  AB.mkAnyBackend $
+                    TableMap $
+                      Map.singleton tableName $
+                        NodeInfo (_siConfiguration sourceInfo) selectPermissions tablePkeyColumns fields
+                )
   pure $
     Map.fromListWith fuseAnyMaps
       <$> P.selectionSetInterface

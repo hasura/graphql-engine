@@ -55,7 +55,7 @@ where
 import Data.Has (getter)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Hasura.GraphQL.Schema.Backend (MonadBuildSchema)
+import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), MonadBuildSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
 import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
@@ -97,7 +97,9 @@ setFieldNameCase tCase tInfo crf getFieldName tableName =
 --   parsers of the query root and the field parsers of the subscription root
 buildTableQueryAndSubscriptionFields ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
@@ -178,7 +180,9 @@ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx
 
 buildTableStreamingSubscriptionFields ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
@@ -198,6 +202,7 @@ buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo tableIdenti
 buildTableInsertMutationFields ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  BackendTableSelectSchema b =>
   (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
   Scenario ->
   SourceInfo b ->
@@ -246,7 +251,9 @@ buildTableInsertMutationFields backendInsertAction scenario sourceInfo tableName
 -- >   ...
 buildTableUpdateMutationFields ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   -- | an action that builds @BackendUpdate@ with the
   -- backend-specific data needed to perform an update mutation
   ( TableInfo b ->
@@ -285,7 +292,9 @@ buildTableUpdateMutationFields mkBackendUpdate scenario sourceInfo tableName tab
 
 buildTableDeleteMutationFields ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   Scenario ->
   SourceInfo b ->
   TableName b ->

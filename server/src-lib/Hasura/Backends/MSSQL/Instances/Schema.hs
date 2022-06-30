@@ -73,8 +73,6 @@ instance BackendSchema 'MSSQL where
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
 
-  -- table arguments
-  tableArguments = msTableArgs
   mkRelationshipParser = msMkRelationshipParser
 
   -- individual components
@@ -85,6 +83,12 @@ instance BackendSchema 'MSSQL where
   countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
   computedField = msComputedField
+
+instance BackendTableSelectSchema 'MSSQL where
+  tableArguments = msTableArgs
+  selectTable = defaultSelectTable
+  selectTableAggregate = defaultSelectTableAggregate
+  tableSelectionSet = defaultTableSelectionSet
 
 ----------------------------------------------------------------
 

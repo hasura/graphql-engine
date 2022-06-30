@@ -7,11 +7,12 @@
 -- relay-type queries.  All schema with "relay" or "connection" in the name is
 -- used exclusively by relay.
 module Hasura.GraphQL.Schema.Select
-  ( selectTable,
-    selectTableByPk,
-    selectTableAggregate,
+  ( selectTableByPk,
     selectTableConnection,
+    defaultSelectTable,
+    defaultSelectTableAggregate,
     defaultTableArgs,
+    defaultTableSelectionSet,
     tableAggregationFields,
     tableConnectionArgs,
     tableConnectionSelectionSet,
@@ -21,7 +22,6 @@ module Hasura.GraphQL.Schema.Select
     tableLimitArg,
     tableOffsetArg,
     tablePermissionsInfo,
-    tableSelectionSet,
     tableSelectionList,
   )
 where
@@ -87,9 +87,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- >   col1: col1_type
 -- >   col2: col2_type
 -- > }: [table!]!
-selectTable ::
+defaultSelectTable ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, BackendTableSelectSchema b) =>
   SourceInfo b ->
   -- | table info
   TableInfo b ->
@@ -98,10 +98,10 @@ selectTable ::
   -- | field description, if any
   Maybe G.Description ->
   m (Maybe (FieldParser n (SelectExp b)))
-selectTable sourceInfo tableInfo fieldName description = runMaybeT do
+defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   selectionSetParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
-  lift $ memoizeOn 'selectTable (_siName sourceInfo, tableName, fieldName) do
+  lift $ memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
     stringifyNum <- retrieve soStringifyNum
     tableArgsParser <- tableArguments sourceInfo tableInfo
     pure $
@@ -139,7 +139,9 @@ selectTable sourceInfo tableInfo fieldName description = runMaybeT do
 -- > }: table_nameConnection!
 selectTableConnection ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   SourceInfo b ->
   -- | table info
   TableInfo b ->
@@ -189,7 +191,7 @@ selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = r
 -- doesn't have select permissions for.
 selectTableByPk ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, BackendTableSelectSchema b) =>
   SourceInfo b ->
   -- | table info
   TableInfo b ->
@@ -239,9 +241,9 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
 --
 -- Returns Nothing if there's nothing that can be selected with
 -- current permissions.
-selectTableAggregate ::
+defaultSelectTableAggregate ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, BackendTableSelectSchema b) =>
   SourceInfo b ->
   -- | table info
   TableInfo b ->
@@ -250,12 +252,12 @@ selectTableAggregate ::
   -- | field description, if any
   Maybe G.Description ->
   m (Maybe (FieldParser n (AggSelectExp b)))
-selectTableAggregate sourceInfo tableInfo fieldName description = runMaybeT $ do
+defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMaybeT $ do
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   guard $ spiAllowAgg selectPermissions
   xNodesAgg <- hoistMaybe $ nodesAggExtension @b
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
-  lift $ memoizeOn 'selectTableAggregate (_siName sourceInfo, tableName, fieldName) do
+  lift $ memoizeOn 'defaultSelectTableAggregate (_siName sourceInfo, tableName, fieldName) do
     stringifyNum <- retrieve soStringifyNum
     tableGQLName <- getTableGQLName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
@@ -346,13 +348,17 @@ cause errors on the client side, for the following reasons:
 -- >   # remote relationships
 -- >   remote_field: field_type
 -- > }
-tableSelectionSet ::
+defaultTableSelectionSet ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b,
+    Eq (BooleanOperators b (IR.UnpreparedValue b)),
+    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+  ) =>
   SourceInfo b ->
   TableInfo b ->
   m (Maybe (Parser 'Output n (AnnotatedFields b)))
-tableSelectionSet sourceInfo tableInfo = runMaybeT do
+defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
   _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   schemaKind <- lift $ retrieve scSchemaKind
   -- If this check fails, it means we're attempting to build a Relay schema, but
@@ -360,7 +366,7 @@ tableSelectionSet sourceInfo tableInfo = runMaybeT do
   -- incomplete selection set, we fail early and return 'Nothing'. This check
   -- must happen first, since we can't memoize a @Maybe Parser@.
   guard $ isHasuraSchema schemaKind || isJust (relayExtension @b)
-  lift $ memoizeOn 'tableSelectionSet (sourceName, tableName) do
+  lift $ memoizeOn 'defaultTableSelectionSet (sourceName, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectTypename <- P.mkTypename tableGQLName
     let xRelay = relayExtension @b
@@ -404,7 +410,7 @@ tableSelectionSet sourceInfo tableInfo = runMaybeT do
 -- Just a @'nonNullableObjectList' wrapper over @'tableSelectionSet'.
 -- > table_name: [table!]!
 tableSelectionList ::
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchemaBase r m n, BackendTableSelectSchema b) =>
   SourceInfo b ->
   TableInfo b ->
   m (Maybe (Parser 'Output n (AnnotatedFields b)))
@@ -436,7 +442,7 @@ nonNullableObjectList =
 -- > }
 tableConnectionSelectionSet ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  (MonadBuildSchema b r m n, BackendTableSelectSchema b) =>
   SourceInfo b ->
   TableInfo b ->
   m (Maybe (Parser 'Output n (ConnectionFields b)))
@@ -926,7 +932,11 @@ tableAggregationFields sourceInfo tableInfo =
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b,
+    Eq (BooleanOperators b (IR.UnpreparedValue b)),
+    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+  ) =>
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
@@ -1075,7 +1085,11 @@ join) satisfies `p(T)`.
 -- | Field parsers for a table relationship
 relationshipField ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b,
+    Eq (BooleanOperators b (IR.UnpreparedValue b)),
+    Eq (FunctionArgumentExp b (IR.UnpreparedValue b))
+  ) =>
   SourceInfo b ->
   TableName b ->
   RelInfo b ->

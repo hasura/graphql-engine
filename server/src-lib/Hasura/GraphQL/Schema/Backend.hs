@@ -25,6 +25,7 @@
 module Hasura.GraphQL.Schema.Backend
   ( -- * Main Types
     BackendSchema (..),
+    BackendTableSelectSchema (..),
     MonadBuildSchema,
 
     -- * Auxiliary Types
@@ -89,10 +90,7 @@ type MonadBuildSchema b r m n =
 --
 -- See <#modelling Note BackendSchema modelling principles>.
 class
-  ( Backend b,
-    Eq (BooleanOperators b (UnpreparedValue b)),
-    Eq (FunctionArgumentExp b (UnpreparedValue b))
-  ) =>
+  Backend b =>
   BackendSchema (b :: BackendType)
   where
   -- top level parsers
@@ -184,13 +182,6 @@ class
     TableName b ->
     m [FieldParser n (MutationDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 
-  -- table components
-  tableArguments ::
-    MonadBuildSchema b r m n =>
-    SourceInfo b ->
-    TableInfo b ->
-    m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
-
   -- | Make a parser for relationships. Default implementaton elides
   -- relationships altogether.
   mkRelationshipParser ::
@@ -245,6 +236,52 @@ class
     TableName b ->
     TableInfo b ->
     m (Maybe (FieldParser n (AnnotatedField b)))
+
+-- | The public interface for the schema of table queries exposed by a backend.
+--
+-- Remote Schemas and the Relay schema are the chief backend-agnostic clients of
+-- this typeclass.
+--
+-- Some of schema building components in the "Hasura.GraphQL.Schema" namespace
+-- also make use of these methods, ensuring backends expose a consistent schema
+-- regardless of the mode it's referenced.
+--
+-- Default implementations exist for all of these in
+-- 'Hasura.GraphQL.Schema.Select'.
+class Backend b => BackendTableSelectSchema (b :: BackendType) where
+  tableArguments ::
+    MonadBuildSchemaBase r m n =>
+    SourceInfo b ->
+    TableInfo b ->
+    m (InputFieldsParser n (IR.SelectArgsG b (UnpreparedValue b)))
+
+  tableSelectionSet ::
+    MonadBuildSchemaBase r m n =>
+    SourceInfo b ->
+    TableInfo b ->
+    m (Maybe (Parser 'Output n (AnnotatedFields b)))
+
+  selectTable ::
+    MonadBuildSchemaBase r m n =>
+    SourceInfo b ->
+    -- | table info
+    TableInfo b ->
+    -- | field display name
+    G.Name ->
+    -- | field description, if any
+    Maybe G.Description ->
+    m (Maybe (FieldParser n (SelectExp b)))
+
+  selectTableAggregate ::
+    MonadBuildSchemaBase r m n =>
+    SourceInfo b ->
+    -- | table info
+    TableInfo b ->
+    -- | field display name
+    G.Name ->
+    -- | field description, if any
+    Maybe G.Description ->
+    m (Maybe (FieldParser n (AggSelectExp b)))
 
 type ComparisonExp b = OpExpG b (UnpreparedValue b)
 

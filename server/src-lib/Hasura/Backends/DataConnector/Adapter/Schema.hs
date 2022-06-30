@@ -16,7 +16,7 @@ import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Schema.Backend (BackendSchema (..), ComparisonExp, MonadBuildSchema)
+import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSchema (..), ComparisonExp, MonadBuildSchema)
 import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
@@ -55,9 +55,6 @@ instance BackendSchema 'DataConnector where
   nodesAggExtension = Nothing
   streamSubscriptionExtension = Nothing
 
-  -- table arguments
-  tableArguments = tableArgs'
-
   -- individual components
   columnParser = columnParser'
   scalarSelectionArgumentsParser _ = pure Nothing
@@ -70,6 +67,12 @@ instance BackendSchema 'DataConnector where
     error "aggregateOrderByCountType: not implemented for the Data Connector backend."
   computedField =
     error "computedField: not implemented for the Data Connector backend."
+
+instance BackendTableSelectSchema 'DataConnector where
+  tableArguments = tableArgs'
+  selectTable = GS.S.defaultSelectTable
+  selectTableAggregate = GS.S.defaultSelectTableAggregate
+  tableSelectionSet = GS.S.defaultTableSelectionSet
 
 --------------------------------------------------------------------------------
 

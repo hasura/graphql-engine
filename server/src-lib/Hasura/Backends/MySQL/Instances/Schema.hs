@@ -50,7 +50,6 @@ instance BackendSchema 'MySQL where
   buildFunctionRelayQueryFields = buildFunctionRelayQueryFields'
   buildFunctionMutationFields = buildFunctionMutationFields'
   relayExtension = Nothing
-  tableArguments = mysqlTableArgs
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
   columnParser = columnParser'
@@ -60,6 +59,12 @@ instance BackendSchema 'MySQL where
   countTypeInput = mysqlCountTypeInput
   aggregateOrderByCountType = error "aggregateOrderByCountType: MySQL backend does not support this operation yet."
   computedField = error "computedField: MySQL backend does not support this operation yet."
+
+instance BackendTableSelectSchema 'MySQL where
+  tableArguments = mysqlTableArgs
+  selectTable = defaultSelectTable
+  selectTableAggregate = defaultSelectTableAggregate
+  tableSelectionSet = defaultTableSelectionSet
 
 mysqlTableArgs ::
   forall r m n.

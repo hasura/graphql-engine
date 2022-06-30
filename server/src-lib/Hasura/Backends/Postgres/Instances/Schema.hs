@@ -33,6 +33,7 @@ import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
+    BackendTableSelectSchema,
     ComparisonExp,
     MonadBuildSchema,
   )
@@ -72,6 +73,7 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (RolePermInfo (..), TableInfo, UpdPermInfo)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
+import Hasura.SQL.Tag (HasTag)
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -120,6 +122,18 @@ instance PostgresSchema 'Citus where
 -- postgres schema
 
 instance
+  ( PostgresSchema pgKind,
+    Backend ('Postgres pgKind),
+    HasTag ('Postgres pgKind)
+  ) =>
+  BS.BackendTableSelectSchema ('Postgres pgKind)
+  where
+  tableArguments = defaultTableArgs
+  selectTable = defaultSelectTable
+  selectTableAggregate = defaultSelectTableAggregate
+  tableSelectionSet = defaultTableSelectionSet
+
+instance
   ( Backend ('Postgres pgKind),
     PostgresSchema pgKind
   ) =>
@@ -136,8 +150,6 @@ instance
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
   buildFunctionMutationFields = buildFunctionMutationFieldsPG
 
-  -- table components
-  tableArguments = defaultTableArgs
   mkRelationshipParser = GSB.mkDefaultRelationshipParser backendInsertParser ()
 
   -- backend extensions
@@ -177,6 +189,7 @@ backendInsertParser sourceName tableInfo =
 buildTableRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   SourceInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
   TableInfo ('Postgres pgKind) ->
@@ -193,6 +206,7 @@ buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns = 
 
 pgkBuildTableUpdateMutationFields ::
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   Scenario ->
   -- | The source that the table lives in
   SourceInfo ('Postgres pgKind) ->
@@ -219,6 +233,7 @@ pgkBuildTableUpdateMutationFields scenario sourceName tableName tableInfo gqlNam
 buildFunctionRelayQueryFields ::
   forall pgKind m n r.
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   SourceInfo ('Postgres pgKind) ->
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->

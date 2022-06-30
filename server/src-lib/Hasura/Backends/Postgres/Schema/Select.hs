@@ -50,6 +50,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 selectFunction ::
   forall r m n pgKind.
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   -- | source name
   SourceInfo ('Postgres pgKind) ->
   -- | SQL function info
@@ -86,6 +87,7 @@ selectFunction sourceInfo fi@FunctionInfo {..} description = runMaybeT do
 selectFunctionAggregate ::
   forall r m n pgKind.
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   -- | source name
   SourceInfo ('Postgres pgKind) ->
   -- | SQL function info
@@ -131,7 +133,9 @@ selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT 
 
 selectFunctionConnection ::
   forall pgKind r m n.
-  MonadBuildSchema ('Postgres pgKind) r m n =>
+  ( MonadBuildSchema ('Postgres pgKind) r m n,
+    BackendTableSelectSchema ('Postgres pgKind)
+  ) =>
   -- | source name
   SourceInfo ('Postgres pgKind) ->
   -- | SQL function info
@@ -175,6 +179,7 @@ selectFunctionConnection sourceInfo fi@FunctionInfo {..} description pkeyColumns
 computedFieldPG ::
   forall pgKind r m n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   SourceInfo ('Postgres pgKind) ->
   ComputedFieldInfo ('Postgres pgKind) ->
   TableName ('Postgres pgKind) ->
@@ -413,6 +418,7 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
 buildFunctionQueryFieldsPG ::
   forall r m n pgKind.
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   SourceInfo ('Postgres pgKind) ->
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
@@ -441,6 +447,7 @@ buildFunctionQueryFieldsPG sourceInfo functionName functionInfo tableName = do
 buildFunctionMutationFieldsPG ::
   forall r m n pgKind.
   MonadBuildSchema ('Postgres pgKind) r m n =>
+  BackendTableSelectSchema ('Postgres pgKind) =>
   SourceInfo ('Postgres pgKind) ->
   FunctionName ('Postgres pgKind) ->
   FunctionInfo ('Postgres pgKind) ->
