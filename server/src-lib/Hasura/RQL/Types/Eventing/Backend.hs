@@ -5,7 +5,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
-import Data.Set qualified as Set
+import Data.Set.NonEmpty qualified as NE
 import Data.Time.Clock qualified as Time
 import Hasura.Backends.MSSQL.DDL.EventTrigger qualified as MSSQL
 import Hasura.Backends.Postgres.DDL.EventTrigger qualified as PG
@@ -19,7 +19,7 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
-import Hasura.Server.Types
+import Hasura.Server.Types (MaintenanceMode, ServerConfigCtx)
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
@@ -180,7 +180,7 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
   unlockEventsInSource ::
     MonadIO m =>
     SourceConfig b ->
-    Set.Set EventId ->
+    NE.NESet EventId ->
     m (Either QErr Int)
 
   createTableEventTrigger ::
