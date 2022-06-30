@@ -1,0 +1,442 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- Description: Schema cache types related to computed field</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.ComputedField</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier">ComputedFieldFunction</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier">ComputedFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#CustomFunctionNames"><span class="hs-identifier">CustomFunctionNames</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#FunctionTrackedAs"><span class="hs-identifier">FunctionTrackedAs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#cfiDescription"><span class="hs-identifier">cfiDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#cfiFunction"><span class="hs-identifier">cfiFunction</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#cfiName"><span class="hs-identifier">cfiName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#cfiReturnType"><span class="hs-identifier">cfiReturnType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#cfiXComputedFieldInfo"><span class="hs-identifier">cfiXComputedFieldInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#computedFieldNameToText"><span class="hs-identifier">computedFieldNameToText</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#fromComputedField"><span class="hs-identifier">fromComputedField</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#removeComputedFieldsReturningExistingTable"><span class="hs-identifier">removeComputedFieldsReturningExistingTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html"><span class="hs-identifier">Data.Text.NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier">NonEmptyText</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Database.PG.Query</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#FunctionName"><span class="hs-identifier">FunctionName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableName"><span class="hs-identifier">TableName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Incremental.html"><span class="hs-identifier">Hasura.Incremental</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier">Cacheable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span id="local-6989586621689084736"><span id="local-6989586621689084737"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="ComputedFieldName"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-var">ComputedFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldName"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-var">ComputedFieldName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unComputedFieldName"><span class="annot"><span class="annottext">ComputedFieldName -&gt; NonEmptyText
+</span><a href="Hasura.RQL.Types.ComputedField.html#unComputedFieldName"><span class="hs-identifier hs-var hs-var">unComputedFieldName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689084728"><span id="local-6989586621689084730"><span id="local-6989586621689084732"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldName -&gt; ShowS
+[ComputedFieldName] -&gt; ShowS
+ComputedFieldName -&gt; String
+(Int -&gt; ComputedFieldName -&gt; ShowS)
+-&gt; (ComputedFieldName -&gt; String)
+-&gt; ([ComputedFieldName] -&gt; ShowS)
+-&gt; Show ComputedFieldName
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ComputedFieldName] -&gt; ShowS
+$cshowList :: [ComputedFieldName] -&gt; ShowS
+show :: ComputedFieldName -&gt; String
+$cshow :: ComputedFieldName -&gt; String
+showsPrec :: Int -&gt; ComputedFieldName -&gt; ShowS
+$cshowsPrec :: Int -&gt; ComputedFieldName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084723"><span id="local-6989586621689084725"><span class="annot"><span class="annottext">ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+(ComputedFieldName -&gt; ComputedFieldName -&gt; Bool)
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; Bool)
+-&gt; Eq ComputedFieldName
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$c/= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+== :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$c== :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084707"><span id="local-6989586621689084709"><span id="local-6989586621689084711"><span id="local-6989586621689084713"><span id="local-6989586621689084715"><span id="local-6989586621689084717"><span id="local-6989586621689084719"><span class="annot"><span class="annottext">Eq ComputedFieldName
+Eq ComputedFieldName
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; Ordering)
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; Bool)
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; Bool)
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; Bool)
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; Bool)
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName)
+-&gt; (ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName)
+-&gt; Ord ComputedFieldName
+ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+ComputedFieldName -&gt; ComputedFieldName -&gt; Ordering
+ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName
+forall a.
+Eq a
+-&gt; (a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName
+$cmin :: ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName
+max :: ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName
+$cmax :: ComputedFieldName -&gt; ComputedFieldName -&gt; ComputedFieldName
+&gt;= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$c&gt;= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+&gt; :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$c&gt; :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+&lt;= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$c&lt;= :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+&lt; :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$c&lt; :: ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+compare :: ComputedFieldName -&gt; ComputedFieldName -&gt; Ordering
+$ccompare :: ComputedFieldName -&gt; ComputedFieldName -&gt; Ordering
+$cp1Ord :: Eq ComputedFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084704"><span class="annot"><span class="annottext">ComputedFieldName -&gt; ()
+(ComputedFieldName -&gt; ()) -&gt; NFData ComputedFieldName
+forall a. (a -&gt; ()) -&gt; NFData a
+rnf :: ComputedFieldName -&gt; ()
+$crnf :: ComputedFieldName -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084699"><span id="local-6989586621689084701"><span class="annot"><span class="annottext">Value -&gt; Parser [ComputedFieldName]
+Value -&gt; Parser ComputedFieldName
+(Value -&gt; Parser ComputedFieldName)
+-&gt; (Value -&gt; Parser [ComputedFieldName])
+-&gt; FromJSON ComputedFieldName
+forall a.
+(Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
+parseJSONList :: Value -&gt; Parser [ComputedFieldName]
+$cparseJSONList :: Value -&gt; Parser [ComputedFieldName]
+parseJSON :: Value -&gt; Parser ComputedFieldName
+$cparseJSON :: Value -&gt; Parser ComputedFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084690"><span id="local-6989586621689084692"><span id="local-6989586621689084694"><span id="local-6989586621689084696"><span class="annot"><span class="annottext">[ComputedFieldName] -&gt; Encoding
+[ComputedFieldName] -&gt; Value
+ComputedFieldName -&gt; Encoding
+ComputedFieldName -&gt; Value
+(ComputedFieldName -&gt; Value)
+-&gt; (ComputedFieldName -&gt; Encoding)
+-&gt; ([ComputedFieldName] -&gt; Value)
+-&gt; ([ComputedFieldName] -&gt; Encoding)
+-&gt; ToJSON ComputedFieldName
+forall a.
+(a -&gt; Value)
+-&gt; (a -&gt; Encoding)
+-&gt; ([a] -&gt; Value)
+-&gt; ([a] -&gt; Encoding)
+-&gt; ToJSON a
+toEncodingList :: [ComputedFieldName] -&gt; Encoding
+$ctoEncodingList :: [ComputedFieldName] -&gt; Encoding
+toJSONList :: [ComputedFieldName] -&gt; Value
+$ctoJSONList :: [ComputedFieldName] -&gt; Value
+toEncoding :: ComputedFieldName -&gt; Encoding
+$ctoEncoding :: ComputedFieldName -&gt; Encoding
+toJSON :: ComputedFieldName -&gt; Value
+$ctoJSON :: ComputedFieldName -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084685"><span id="local-6989586621689084687"><span class="annot"><span class="annottext">ToJSONKeyFunction [ComputedFieldName]
+ToJSONKeyFunction ComputedFieldName
+ToJSONKeyFunction ComputedFieldName
+-&gt; ToJSONKeyFunction [ComputedFieldName]
+-&gt; ToJSONKey ComputedFieldName
+forall a.
+ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
+toJSONKeyList :: ToJSONKeyFunction [ComputedFieldName]
+$ctoJSONKeyList :: ToJSONKeyFunction [ComputedFieldName]
+toJSONKey :: ToJSONKeyFunction ComputedFieldName
+$ctoJSONKey :: ToJSONKeyFunction ComputedFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084682"><span class="annot"><span class="annottext">ComputedFieldName -&gt; PrepArg
+(ComputedFieldName -&gt; PrepArg) -&gt; ToPrepArg ComputedFieldName
+forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
+toPrepVal :: ComputedFieldName -&gt; PrepArg
+$ctoPrepVal :: ComputedFieldName -&gt; PrepArg
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.ToPrepArg</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084679"><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
+(ComputedFieldName -&gt; Text) -&gt; ToTxt ComputedFieldName
+forall a. (a -&gt; Text) -&gt; ToTxt a
+toTxt :: ComputedFieldName -&gt; Text
+$ctoTxt :: ComputedFieldName -&gt; Text
+</span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084674"><span id="local-6989586621689084676"><span class="annot"><span class="annottext">Int -&gt; ComputedFieldName -&gt; Int
+ComputedFieldName -&gt; Int
+(Int -&gt; ComputedFieldName -&gt; Int)
+-&gt; (ComputedFieldName -&gt; Int) -&gt; Hashable ComputedFieldName
+forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
+hash :: ComputedFieldName -&gt; Int
+$chash :: ComputedFieldName -&gt; Int
+hashWithSalt :: Int -&gt; ComputedFieldName -&gt; Int
+$chashWithSalt :: Int -&gt; ComputedFieldName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084671"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text ComputedFieldName
+(Maybe ByteString -&gt; Either Text ComputedFieldName)
+-&gt; FromCol ComputedFieldName
+forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
+fromCol :: Maybe ByteString -&gt; Either Text ComputedFieldName
+$cfromCol :: Maybe ByteString -&gt; Either Text ComputedFieldName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Q.FromCol</span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ComputedFieldName -&gt; Rep ComputedFieldName x)
+-&gt; (forall x. Rep ComputedFieldName x -&gt; ComputedFieldName)
+-&gt; Generic ComputedFieldName
+forall x. Rep ComputedFieldName x -&gt; ComputedFieldName
+forall x. ComputedFieldName -&gt; Rep ComputedFieldName x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep ComputedFieldName x -&gt; ComputedFieldName
+$cfrom :: forall x. ComputedFieldName -&gt; Rep ComputedFieldName x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084664"><span class="annot"><span class="annottext">Eq ComputedFieldName
+Eq ComputedFieldName
+-&gt; (Accesses -&gt; ComputedFieldName -&gt; ComputedFieldName -&gt; Bool)
+-&gt; Cacheable ComputedFieldName
+Accesses -&gt; ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
+unchanged :: Accesses -&gt; ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$cunchanged :: Accesses -&gt; ComputedFieldName -&gt; ComputedFieldName -&gt; Bool
+$cp1Cacheable :: Eq ComputedFieldName
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#computedFieldNameToText"><span class="hs-identifier hs-type">computedFieldNameToText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-40"></span><span id="computedFieldNameToText"><span class="annot"><span class="annottext">computedFieldNameToText :: ComputedFieldName -&gt; Text
+</span><a href="Hasura.RQL.Types.ComputedField.html#computedFieldNameToText"><span class="hs-identifier hs-var hs-var">computedFieldNameToText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+</span><a href="Data.Text.NonEmpty.html#unNonEmptyText"><span class="hs-identifier hs-var hs-var">unNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; Text)
+-&gt; (ComputedFieldName -&gt; NonEmptyText) -&gt; ComputedFieldName -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; NonEmptyText
+</span><a href="Hasura.RQL.Types.ComputedField.html#unComputedFieldName"><span class="hs-identifier hs-var hs-var">unComputedFieldName</span></a></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#fromComputedField"><span class="hs-identifier hs-type">fromComputedField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span>
+</span><span id="line-43"></span><span id="fromComputedField"><span class="annot"><span class="annottext">fromComputedField :: ComputedFieldName -&gt; FieldName
+</span><a href="Hasura.RQL.Types.ComputedField.html#fromComputedField"><span class="hs-identifier hs-var hs-var">fromComputedField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; FieldName
+</span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; FieldName)
+-&gt; (ComputedFieldName -&gt; Text) -&gt; ComputedFieldName -&gt; FieldName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
+</span><a href="Hasura.RQL.Types.ComputedField.html#computedFieldNameToText"><span class="hs-identifier hs-var">computedFieldNameToText</span></a></span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span id="local-6989586621689084658"><span id="local-6989586621689084659"></span></span><span class="hs-keyword">data</span><span> </span><span id="FunctionTrackedAs"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#FunctionTrackedAs"><span class="hs-identifier hs-var">FunctionTrackedAs</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689084657"><span class="annot"><a href="#local-6989586621689084657"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FTAComputedField"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#FTAComputedField"><span class="hs-identifier hs-var">FTAComputedField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084657"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FTACustomFunction"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#FTACustomFunction"><span class="hs-identifier hs-var">FTACustomFunction</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#CustomFunctionNames"><span class="hs-identifier hs-type">CustomFunctionNames</span></a></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. FunctionTrackedAs b -&gt; Rep (FunctionTrackedAs b) x)
+-&gt; (forall x. Rep (FunctionTrackedAs b) x -&gt; FunctionTrackedAs b)
+-&gt; Generic (FunctionTrackedAs b)
+forall x. Rep (FunctionTrackedAs b) x -&gt; FunctionTrackedAs b
+forall x. FunctionTrackedAs b -&gt; Rep (FunctionTrackedAs b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (FunctionTrackedAs b) x -&gt; FunctionTrackedAs b
+forall (b :: BackendType) x.
+FunctionTrackedAs b -&gt; Rep (FunctionTrackedAs b) x
+$cto :: forall (b :: BackendType) x.
+Rep (FunctionTrackedAs b) x -&gt; FunctionTrackedAs b
+$cfrom :: forall (b :: BackendType) x.
+FunctionTrackedAs b -&gt; Rep (FunctionTrackedAs b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- | The function name and input arguments name for the &quot;args&quot; field parser.</span><span>
+</span><span id="line-51"></span><span class="hs-comment">--</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- &gt; function_name(args: args_name)</span><span>
+</span><span id="line-53"></span><span id="local-6989586621689084650"><span id="local-6989586621689084651"></span></span><span class="hs-keyword">data</span><span> </span><span id="CustomFunctionNames"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#CustomFunctionNames"><span class="hs-identifier hs-var">CustomFunctionNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomFunctionNames"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#CustomFunctionNames"><span class="hs-identifier hs-var">CustomFunctionNames</span></a></span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="cfnFunctionName"><span class="annot"><span class="annottext">CustomFunctionNames -&gt; Name
+</span><a href="Hasura.RQL.Types.ComputedField.html#cfnFunctionName"><span class="hs-identifier hs-var hs-var">cfnFunctionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span id="cfnArgsName"><span class="annot"><span class="annottext">CustomFunctionNames -&gt; Name
+</span><a href="Hasura.RQL.Types.ComputedField.html#cfnArgsName"><span class="hs-identifier hs-var hs-var">cfnArgsName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689084641"><span id="local-6989586621689084643"><span id="local-6989586621689084645"><span class="annot"><span class="annottext">Int -&gt; CustomFunctionNames -&gt; ShowS
+[CustomFunctionNames] -&gt; ShowS
+CustomFunctionNames -&gt; String
+(Int -&gt; CustomFunctionNames -&gt; ShowS)
+-&gt; (CustomFunctionNames -&gt; String)
+-&gt; ([CustomFunctionNames] -&gt; ShowS)
+-&gt; Show CustomFunctionNames
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CustomFunctionNames] -&gt; ShowS
+$cshowList :: [CustomFunctionNames] -&gt; ShowS
+show :: CustomFunctionNames -&gt; String
+$cshow :: CustomFunctionNames -&gt; String
+showsPrec :: Int -&gt; CustomFunctionNames -&gt; ShowS
+$cshowsPrec :: Int -&gt; CustomFunctionNames -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689084637"><span id="local-6989586621689084639"><span class="annot"><span class="annottext">CustomFunctionNames -&gt; CustomFunctionNames -&gt; Bool
+(CustomFunctionNames -&gt; CustomFunctionNames -&gt; Bool)
+-&gt; (CustomFunctionNames -&gt; CustomFunctionNames -&gt; Bool)
+-&gt; Eq CustomFunctionNames
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CustomFunctionNames -&gt; CustomFunctionNames -&gt; Bool
+$c/= :: CustomFunctionNames -&gt; CustomFunctionNames -&gt; Bool
+== :: CustomFunctionNames -&gt; CustomFunctionNames -&gt; Bool
+$c== :: CustomFunctionNames -&gt; CustomFunctionNames -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. CustomFunctionNames -&gt; Rep CustomFunctionNames x)
+-&gt; (forall x. Rep CustomFunctionNames x -&gt; CustomFunctionNames)
+-&gt; Generic CustomFunctionNames
+forall x. Rep CustomFunctionNames x -&gt; CustomFunctionNames
+forall x. CustomFunctionNames -&gt; Rep CustomFunctionNames x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep CustomFunctionNames x -&gt; CustomFunctionNames
+$cfrom :: forall x. CustomFunctionNames -&gt; Rep CustomFunctionNames x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span id="local-6989586621689084628"><span id="local-6989586621689084630"><span id="local-6989586621689084632"><span id="local-6989586621689084634"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084634"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#FunctionTrackedAs"><span class="hs-identifier hs-type">FunctionTrackedAs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084634"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span id="local-6989586621689084623"><span id="local-6989586621689084625"><span id="local-6989586621689084627"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084627"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#FunctionTrackedAs"><span class="hs-identifier hs-type">FunctionTrackedAs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084627"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span id="local-6989586621689084621"><span id="local-6989586621689084622"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldFunction"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-var">ComputedFieldFunction</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689084620"><span class="annot"><a href="#local-6989586621689084620"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldFunction"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-var">ComputedFieldFunction</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cffName"><span class="annot"><span class="annottext">ComputedFieldFunction b -&gt; FunctionName b
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cffName"><span class="hs-identifier hs-var hs-var">_cffName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084620"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span id="_cffInputArgs"><span class="annot"><span class="annottext">ComputedFieldFunction b -&gt; Seq (FunctionArgument b)
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cffInputArgs"><span class="hs-identifier hs-var hs-var">_cffInputArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Seq.Seq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084620"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-66"></span><span>    </span><span id="_cffComputedFieldImplicitArgs"><span class="annot"><span class="annottext">ComputedFieldFunction b -&gt; ComputedFieldImplicitArguments b
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cffComputedFieldImplicitArgs"><span class="hs-identifier hs-var hs-var">_cffComputedFieldImplicitArgs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldImplicitArguments"><span class="hs-identifier hs-type">ComputedFieldImplicitArguments</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084620"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-67"></span><span>    </span><span id="_cffDescription"><span class="annot"><span class="annottext">ComputedFieldFunction b -&gt; Maybe PGDescription
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cffDescription"><span class="hs-identifier hs-var hs-var">_cffDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGDescription"><span class="hs-identifier hs-type">PGDescription</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x.
+ ComputedFieldFunction b -&gt; Rep (ComputedFieldFunction b) x)
+-&gt; (forall x.
+    Rep (ComputedFieldFunction b) x -&gt; ComputedFieldFunction b)
+-&gt; Generic (ComputedFieldFunction b)
+forall x.
+Rep (ComputedFieldFunction b) x -&gt; ComputedFieldFunction b
+forall x.
+ComputedFieldFunction b -&gt; Rep (ComputedFieldFunction b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (ComputedFieldFunction b) x -&gt; ComputedFieldFunction b
+forall (b :: BackendType) x.
+ComputedFieldFunction b -&gt; Rep (ComputedFieldFunction b) x
+$cto :: forall (b :: BackendType) x.
+Rep (ComputedFieldFunction b) x -&gt; ComputedFieldFunction b
+$cfrom :: forall (b :: BackendType) x.
+ComputedFieldFunction b -&gt; Rep (ComputedFieldFunction b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span id="local-6989586621689084606"><span id="local-6989586621689084608"><span id="local-6989586621689084610"><span id="local-6989586621689084612"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084612"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084612"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span id="local-6989586621689084601"><span id="local-6989586621689084603"><span id="local-6989586621689084605"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084605"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084605"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621689084600"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084597"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084600"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084600"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span id="local-6989586621689084596"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084594"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084596"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084596"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span id="local-6989586621689084593"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084589"><span id="local-6989586621689084591"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084593"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084593"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span id="local-6989586621689084588"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084581"><span id="local-6989586621689084583"><span id="local-6989586621689084585"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084588"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084588"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621689084580"><span class="annot"><span class="annottext">toJSON :: ComputedFieldFunction b -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; ComputedFieldFunction b -&gt; Value
+forall a.
+(Generic a, GToJSON' Value Zero (Rep a)) =&gt;
+Options -&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">genericToJSON</span></span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="Hasura.Prelude.html#hasuraJSON"><span class="hs-identifier hs-var">hasuraJSON</span></a></span></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span id="local-6989586621689084575"><span id="local-6989586621689084576"></span></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldInfo"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-var">ComputedFieldInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689084751"><span class="annot"><a href="#local-6989586621689084751"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ComputedFieldInfo"><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-var">ComputedFieldInfo</span></a></span></span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cfiXComputedFieldInfo"><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; XComputedField b
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cfiXComputedFieldInfo"><span class="hs-identifier hs-var hs-var">_cfiXComputedFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#XComputedField"><span class="hs-identifier hs-type">XComputedField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084751"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-86"></span><span>    </span><span id="_cfiName"><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; ComputedFieldName
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cfiName"><span class="hs-identifier hs-var hs-var">_cfiName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>    </span><span id="_cfiFunction"><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; ComputedFieldFunction b
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cfiFunction"><span class="hs-identifier hs-var hs-var">_cfiFunction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084751"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>    </span><span id="_cfiReturnType"><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; ComputedFieldReturn b
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cfiReturnType"><span class="hs-identifier hs-var hs-var">_cfiReturnType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084751"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-89"></span><span>    </span><span id="_cfiDescription"><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; Maybe Text
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cfiDescription"><span class="hs-identifier hs-var hs-var">_cfiDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. ComputedFieldInfo b -&gt; Rep (ComputedFieldInfo b) x)
+-&gt; (forall x. Rep (ComputedFieldInfo b) x -&gt; ComputedFieldInfo b)
+-&gt; Generic (ComputedFieldInfo b)
+forall x. Rep (ComputedFieldInfo b) x -&gt; ComputedFieldInfo b
+forall x. ComputedFieldInfo b -&gt; Rep (ComputedFieldInfo b) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall (b :: BackendType) x.
+Rep (ComputedFieldInfo b) x -&gt; ComputedFieldInfo b
+forall (b :: BackendType) x.
+ComputedFieldInfo b -&gt; Rep (ComputedFieldInfo b) x
+$cto :: forall (b :: BackendType) x.
+Rep (ComputedFieldInfo b) x -&gt; ComputedFieldInfo b
+$cfrom :: forall (b :: BackendType) x.
+ComputedFieldInfo b -&gt; Rep (ComputedFieldInfo b) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span id="local-6989586621689084562"><span id="local-6989586621689084564"><span id="local-6989586621689084566"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084566"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084566"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span id="local-6989586621689084555"><span id="local-6989586621689084557"><span id="local-6989586621689084559"><span id="local-6989586621689084561"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084561"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084561"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span id="local-6989586621689084554"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084552"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084554"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NFData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084554"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621689084551"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084548"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084551"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084551"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span id="local-6989586621689084547"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084543"><span id="local-6989586621689084545"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084547"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084547"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621689084542"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689084535"><span id="local-6989586621689084537"><span id="local-6989586621689084539"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084542"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084542"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-comment">-- spelling out the JSON instance in order to skip the Trees That Grow field</span><span>
+</span><span id="line-105"></span><span>  </span><span id="local-6989586621689084534"><span class="annot"><span class="annottext">toJSON :: ComputedFieldInfo b -&gt; Value
+</span><a href="#local-6989586621689084534"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">XComputedField b
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689084533"><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621689084533"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689084532"><span class="annot"><span class="annottext">ComputedFieldFunction b
+</span><a href="#local-6989586621689084532"><span class="hs-identifier hs-var">func</span></a></span></span><span> </span><span id="local-6989586621689084531"><span class="annot"><span class="annottext">ComputedFieldReturn b
+</span><a href="#local-6989586621689084531"><span class="hs-identifier hs-var">tp</span></a></span></span><span> </span><span id="local-6989586621689084530"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689084530"><span class="hs-identifier hs-var">description</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-106"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ComputedFieldName -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621689084533"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;function&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ComputedFieldFunction b -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldFunction b
+</span><a href="#local-6989586621689084532"><span class="hs-identifier hs-var">func</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;return_type&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ComputedFieldReturn b -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldReturn b
+</span><a href="#local-6989586621689084531"><span class="hs-identifier hs-var">tp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;description&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Text -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Text -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689084530"><span class="hs-identifier hs-var">description</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="hs-special">$(</span><span id="cfiXComputedFieldInfo"><span id="cfiReturnType"><span id="cfiName"><span id="cfiFunction"><span id="cfiDescription"><span id="local-6989586621689084751"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ComputedFieldInfo</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- | Filter computed fields not returning rows of existing table</span><span>
+</span><span id="line-111"></span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#removeComputedFieldsReturningExistingTable"><span class="hs-identifier hs-type">removeComputedFieldsReturningExistingTable</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689084527"><span class="annot"><a href="#local-6989586621689084527"><span class="hs-identifier hs-type">backend</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-113"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084527"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-114"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084527"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689084527"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-116"></span><span id="removeComputedFieldsReturningExistingTable"><span class="annot"><span class="annottext">removeComputedFieldsReturningExistingTable :: [ComputedFieldInfo backend] -&gt; [ComputedFieldInfo backend]
+</span><a href="Hasura.RQL.Types.ComputedField.html#removeComputedFieldsReturningExistingTable"><span class="hs-identifier hs-var hs-var">removeComputedFieldsReturningExistingTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><span class="annottext">(ComputedFieldInfo backend -&gt; Bool)
+-&gt; [ComputedFieldInfo backend] -&gt; [ComputedFieldInfo backend]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool)
+-&gt; (ComputedFieldInfo backend -&gt; Bool)
+-&gt; ComputedFieldInfo backend
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Getting Any (ComputedFieldReturnType backend) (TableName backend)
+-&gt; ComputedFieldReturnType backend -&gt; Bool
+forall s a. Getting Any s a -&gt; s -&gt; Bool
+</span><span class="hs-identifier hs-var">has</span></span><span> </span><span class="annot"><span class="annottext">Getting Any (ComputedFieldReturnType backend) (TableName backend)
+forall (b :: BackendType).
+Prism' (ComputedFieldReturnType b) (TableName b)
+</span><a href="Hasura.RQL.Types.Backend.html#_ReturnsTable"><span class="hs-identifier hs-var">_ReturnsTable</span></a></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldReturnType backend -&gt; Bool)
+-&gt; (ComputedFieldInfo backend -&gt; ComputedFieldReturnType backend)
+-&gt; ComputedFieldInfo backend
+-&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Backend backend =&gt;
+ComputedFieldReturn backend -&gt; ComputedFieldReturnType backend
+forall (b :: BackendType).
+Backend b =&gt;
+ComputedFieldReturn b -&gt; ComputedFieldReturnType b
+</span><a href="Hasura.RQL.Types.Backend.html#computedFieldReturnType"><span class="hs-identifier hs-var">computedFieldReturnType</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689084527"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldReturn backend -&gt; ComputedFieldReturnType backend)
+-&gt; (ComputedFieldInfo backend -&gt; ComputedFieldReturn backend)
+-&gt; ComputedFieldInfo backend
+-&gt; ComputedFieldReturnType backend
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldInfo backend -&gt; ComputedFieldReturn backend
+forall (b :: BackendType).
+ComputedFieldInfo b -&gt; ComputedFieldReturn b
+</span><a href="Hasura.RQL.Types.ComputedField.html#_cfiReturnType"><span class="hs-identifier hs-var hs-var">_cfiReturnType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span></pre></body></html>

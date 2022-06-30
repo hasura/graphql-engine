@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | MSSQL DDL</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Implements the DDL related methods of the</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- for the MSSQL backend, which provides an interface for fetching information about</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- the objects in the database, such as tables, relationships, etc.</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- The actual instance is defined in &quot;Hasura.Backends.MSSQL.Instances.Metadata&quot;.</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MSSQL.DDL</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#buildComputedFieldInfo"><span class="hs-identifier">buildComputedFieldInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#fetchAndValidateEnumValues"><span class="hs-identifier">fetchAndValidateEnumValues</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#buildFunctionInfo"><span class="hs-identifier">buildFunctionInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#updateColumnInEventTrigger"><span class="hs-identifier">updateColumnInEventTrigger</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#parseCollectableType"><span class="hs-identifier">parseCollectableType</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-15"></span><span>    </span><span class="hs-keyword">module</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span class="hs-special">,</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.BoolExp.html"><span class="hs-identifier">Hasura.Backends.MSSQL.DDL.BoolExp</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.Source.html"><span class="hs-identifier">Hasura.Backends.MSSQL.DDL.Source</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">M</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MT</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html"><span class="hs-identifier">Hasura.RQL.Types.ComputedField</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html"><span class="hs-identifier">Hasura.RQL.Types.EventTrigger</span></a></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html"><span class="hs-identifier">Hasura.RQL.Types.Function</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html"><span class="hs-identifier">Hasura.RQL.Types.SourceCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#NamingCase"><span class="hs-identifier">NamingCase</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html"><span class="hs-identifier">Hasura.RQL.Types.Table</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html"><span class="hs-identifier">Hasura.SQL.Types</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span id="local-6989586621689161637"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#buildComputedFieldInfo"><span class="hs-identifier hs-type">buildComputedFieldInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689161637"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-44"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#RawFunctionInfo"><span class="hs-identifier hs-type">RawFunctionInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Comment"><span class="hs-identifier hs-type">Comment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="#local-6989586621689161637"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-50"></span><span id="buildComputedFieldInfo"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName 'MSSQL)
+-&gt; TableName 'MSSQL
+-&gt; HashSet (Column 'MSSQL)
+-&gt; ComputedFieldName
+-&gt; ComputedFieldDefinition 'MSSQL
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Comment
+-&gt; m (ComputedFieldInfo 'MSSQL)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#buildComputedFieldInfo"><span class="hs-identifier hs-var hs-var">buildComputedFieldInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">HashSet (TableName 'MSSQL)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">HashSet (Column 'MSSQL)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldDefinition 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">RawFunctionInfo 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Comment
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (ComputedFieldInfo 'MSSQL)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Computed fields aren't supported for MSSQL sources&quot;</span></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span id="local-6989586621689161634"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-type">fetchAndValidateEnumValues</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689161634"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-58"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="#local-6989586621689161634"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValues"><span class="hs-identifier hs-type">EnumValues</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-60"></span><span id="fetchAndValidateEnumValues"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig 'MSSQL
+-&gt; TableName 'MSSQL
+-&gt; Maybe (PrimaryKey 'MSSQL (RawColumnInfo 'MSSQL))
+-&gt; [RawColumnInfo 'MSSQL]
+-&gt; m (Either QErr EnumValues)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var hs-var">fetchAndValidateEnumValues</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'MSSQL (RawColumnInfo 'MSSQL))
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[RawColumnInfo 'MSSQL]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">ExceptT QErr m EnumValues -&gt; m (Either QErr EnumValues)
+forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m EnumValues -&gt; m (Either QErr EnumValues))
+-&gt; ExceptT QErr m EnumValues -&gt; m (Either QErr EnumValues)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; ExceptT QErr m EnumValues
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Enum tables are not supported for MSSQL sources&quot;</span></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span id="local-6989586621689161632"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#buildFunctionInfo"><span class="hs-identifier hs-type">buildFunctionInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689161632"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SystemDefined"><span class="hs-identifier hs-type">SystemDefined</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsMap"><span class="hs-identifier hs-type">FunctionPermissionsMap</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#RawFunctionInfo"><span class="hs-identifier hs-type">RawFunctionInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="#local-6989586621689161632"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-75"></span><span id="buildFunctionInfo"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
+-&gt; FunctionName 'MSSQL
+-&gt; SystemDefined
+-&gt; FunctionConfig
+-&gt; FunctionPermissionsMap
+-&gt; RawFunctionInfo 'MSSQL
+-&gt; Maybe Text
+-&gt; NamingCase
+-&gt; m (FunctionInfo 'MSSQL, SchemaDependency)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#buildFunctionInfo"><span class="hs-identifier hs-var hs-var">buildFunctionInfo</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceName
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FunctionName 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">SystemDefined
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FunctionConfig
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">FunctionPermissionsMap
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">RawFunctionInfo 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (FunctionInfo 'MSSQL, SchemaDependency)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;SQL Functions are not supported for MSSQL source&quot;</span></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#updateColumnInEventTrigger"><span class="hs-identifier hs-type">updateColumnInEventTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span>
+</span><span id="line-85"></span><span id="updateColumnInEventTrigger"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'MSSQL
+-&gt; Column 'MSSQL
+-&gt; Column 'MSSQL
+-&gt; TableName 'MSSQL
+-&gt; EventTriggerConf 'MSSQL
+-&gt; EventTriggerConf 'MSSQL
+</span><a href="Hasura.Backends.MSSQL.DDL.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var hs-var">updateColumnInEventTrigger</span></a></span></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Column 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Column 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventTriggerConf 'MSSQL -&gt; EventTriggerConf 'MSSQL
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span id="local-6989586621689161630"><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#parseCollectableType"><span class="hs-identifier hs-type">parseCollectableType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689161630"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><a href="#local-6989586621689161630"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-92"></span><span id="parseCollectableType"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType 'MSSQL)
+-&gt; Value -&gt; m (PartialSQLExp 'MSSQL)
+</span><a href="Hasura.Backends.MSSQL.DDL.html#parseCollectableType"><span class="hs-identifier hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span id="local-6989586621689161629"><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+</span><a href="#local-6989586621689161629"><span class="hs-identifier hs-var">collectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621689161627"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689161627"><span class="hs-identifier hs-var">t</span></a></span></span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
+</span><a href="Hasura.Server.Utils.html#isSessionVariable"><span class="hs-identifier hs-var">isSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689161627"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PartialSQLExp 'MSSQL -&gt; m (PartialSQLExp 'MSSQL)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp 'MSSQL -&gt; m (PartialSQLExp 'MSSQL))
+-&gt; PartialSQLExp 'MSSQL -&gt; m (PartialSQLExp 'MSSQL)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+-&gt; SessionVariable -&gt; PartialSQLExp 'MSSQL
+</span><a href="Hasura.Backends.MSSQL.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-var">mkTypedSessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+</span><a href="#local-6989586621689161629"><span class="hs-identifier hs-var">collectableType</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariable -&gt; PartialSQLExp 'MSSQL)
+-&gt; SessionVariable -&gt; PartialSQLExp 'MSSQL
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SessionVariable
+</span><a href="Hasura.Session.html#mkSessionVariable"><span class="hs-identifier hs-var">mkSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689161627"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
+</span><a href="Hasura.Server.Utils.html#isReqUserId"><span class="hs-identifier hs-var">isReqUserId</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689161627"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PartialSQLExp 'MSSQL -&gt; m (PartialSQLExp 'MSSQL)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp 'MSSQL -&gt; m (PartialSQLExp 'MSSQL))
+-&gt; PartialSQLExp 'MSSQL -&gt; m (PartialSQLExp 'MSSQL)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+-&gt; SessionVariable -&gt; PartialSQLExp 'MSSQL
+</span><a href="Hasura.Backends.MSSQL.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-var">mkTypedSessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+</span><a href="#local-6989586621689161629"><span class="hs-identifier hs-var">collectableType</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
+forall a. IsString a =&gt; a
+</span><a href="Hasura.Server.Utils.html#userIdHeader"><span class="hs-identifier hs-var">userIdHeader</span></a></span><span>
+</span><span id="line-96"></span><span>  </span><span id="local-6989586621689161621"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689161621"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+</span><a href="#local-6989586621689161629"><span class="hs-identifier hs-var">collectableType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-type">CollectableTypeScalar</span></a></span><span> </span><span id="local-6989586621689161619"><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689161619"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">Expression -&gt; PartialSQLExp 'MSSQL
+forall (b :: BackendType). SQLExpression b -&gt; PartialSQLExp b
+</span><a href="Hasura.RQL.IR.BoolExp.html#PSESQLExp"><span class="hs-identifier hs-var">PSESQLExp</span></a></span><span> </span><span class="annot"><span class="annottext">(Expression -&gt; PartialSQLExp 'MSSQL)
+-&gt; (Value -&gt; Expression) -&gt; Value -&gt; PartialSQLExp 'MSSQL
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">MT.ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; PartialSQLExp 'MSSQL)
+-&gt; m Value -&gt; m (PartialSQLExp 'MSSQL)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; Value -&gt; m (ScalarValue 'MSSQL)
+forall (m :: * -&gt; *) (b :: BackendType).
+(MonadError QErr m, Backend b) =&gt;
+ColumnType b -&gt; Value -&gt; m (ScalarValue b)
+</span><a href="Hasura.RQL.Types.Column.html#parseScalarValueColumnType"><span class="hs-identifier hs-var">parseScalarValueColumnType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689161619"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689161621"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-type">CollectableTypeArray</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (PartialSQLExp 'MSSQL)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Array types are not supported in MSSQL backend&quot;</span></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-type">mkTypedSessionVar</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span>
+</span><span id="line-106"></span><span id="mkTypedSessionVar"><span class="annot"><span class="annottext">mkTypedSessionVar :: CollectableType (ColumnType 'MSSQL)
+-&gt; SessionVariable -&gt; PartialSQLExp 'MSSQL
+</span><a href="Hasura.Backends.MSSQL.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-var hs-var">mkTypedSessionVar</span></a></span></span><span> </span><span id="local-6989586621689161612"><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+</span><a href="#local-6989586621689161612"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">SessionVarType 'MSSQL -&gt; SessionVariable -&gt; PartialSQLExp 'MSSQL
+forall (b :: BackendType).
+SessionVarType b -&gt; SessionVariable -&gt; PartialSQLExp b
+</span><a href="Hasura.RQL.IR.BoolExp.html#PSESessVar"><span class="hs-identifier hs-var">PSESessVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; ScalarType 'MSSQL
+ColumnType 'MSSQL -&gt; ScalarType
+</span><a href="Hasura.Backends.MSSQL.DDL.html#msColumnTypeToScalarType"><span class="hs-identifier hs-var">msColumnTypeToScalarType</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnType 'MSSQL -&gt; ScalarType)
+-&gt; CollectableType (ColumnType 'MSSQL)
+-&gt; CollectableType ScalarType
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType 'MSSQL)
+</span><a href="#local-6989586621689161612"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.html#msColumnTypeToScalarType"><span class="hs-identifier hs-type">msColumnTypeToScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span>
+</span><span id="line-110"></span><span id="msColumnTypeToScalarType"><span class="annot"><span class="annottext">msColumnTypeToScalarType :: ColumnType 'MSSQL -&gt; ScalarType 'MSSQL
+</span><a href="Hasura.Backends.MSSQL.DDL.html#msColumnTypeToScalarType"><span class="hs-identifier hs-var hs-var">msColumnTypeToScalarType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621689161608"><span class="annot"><span class="annottext">ScalarType 'MSSQL
+</span><a href="#local-6989586621689161608"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType 'MSSQL
+</span><a href="#local-6989586621689161608"><span class="hs-identifier hs-var">scalarType</span></a></span><span>
+</span><span id="line-112"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="annot"><span class="annottext">EnumReference 'MSSQL
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType 'MSSQL
+ScalarType
+</span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TextType"><span class="hs-identifier hs-var">MT.TextType</span></a></span><span>
+</span><span id="line-113"></span></pre></body></html>

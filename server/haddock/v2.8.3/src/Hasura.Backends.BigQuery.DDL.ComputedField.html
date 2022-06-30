@@ -1,0 +1,694 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | BigQuery DDL ComputedField</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">--  Implementation to build 'ComputedFieldInfo' for a BigQuery table from metadata</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.BigQuery.DDL.ComputedField</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#buildComputedFieldInfo"><span class="hs-identifier">buildComputedFieldInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Validate</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MV</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashSet</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HS</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Sequence</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Seq</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.Source.html"><span class="hs-identifier">Hasura.Backends.BigQuery.DDL.Source</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Types.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Instances.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Meta</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html"><span class="hs-identifier">Hasura.Backends.BigQuery.Types</span></a></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html"><span class="hs-identifier">Hasura.RQL.Types.ComputedField</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html"><span class="hs-identifier">Hasura.RQL.Types.Function</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- | Errors that occur when validating and building computed fields.</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">data</span><span> </span><span id="ComputedFieldError"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#ComputedFieldError"><span class="hs-identifier hs-var">ComputedFieldError</span></a></span></span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CFENoArgumentType"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoArgumentType"><span class="hs-identifier hs-var">CFENoArgumentType</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFENotTableValuedFunction"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENotTableValuedFunction"><span class="hs-identifier hs-var">CFENotTableValuedFunction</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFENoInputArguments"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoInputArguments"><span class="hs-identifier hs-var">CFENoInputArguments</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFENoArgumentName"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoArgumentName"><span class="hs-identifier hs-var">CFENoArgumentName</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFEInvalidArgumentName"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEInvalidArgumentName"><span class="hs-identifier hs-var">CFEInvalidArgumentName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFEInvalidColumnName"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEInvalidColumnName"><span class="hs-identifier hs-var">CFEInvalidColumnName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span>
+</span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFEReturnTableNotTracked"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableNotTracked"><span class="hs-identifier hs-var">CFEReturnTableNotTracked</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFENeedReturnTableName"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENeedReturnTableName"><span class="hs-identifier hs-var">CFENeedReturnTableName</span></a></span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFENotRelevantReturnTable"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENotRelevantReturnTable"><span class="hs-identifier hs-var">CFENotRelevantReturnTable</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CFEReturnTableSchemaError"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableSchemaError"><span class="hs-identifier hs-var">CFEReturnTableSchemaError</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#ReturnTableSchemaError"><span class="hs-identifier hs-type">ReturnTableSchemaError</span></a></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- | Errors that occur when validating returning table schema fields</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">data</span><span> </span><span id="ReturnTableSchemaError"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#ReturnTableSchemaError"><span class="hs-identifier hs-var">ReturnTableSchemaError</span></a></span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="RTSENoFieldName"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENoFieldName"><span class="hs-identifier hs-var">RTSENoFieldName</span></a></span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RTSENoType"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENoType"><span class="hs-identifier hs-var">RTSENoType</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RTSENotValidGraphQLName"><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENotValidGraphQLName"><span class="hs-identifier hs-var">RTSENotValidGraphQLName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- | Generate read-able error message</span><span>
+</span><span id="line-47"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#showError"><span class="hs-identifier hs-type">showError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#ComputedFieldError"><span class="hs-identifier hs-type">ComputedFieldError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-48"></span><span id="showError"><span class="annot"><span class="annottext">showError :: FunctionName -&gt; ComputedFieldError -&gt; Text
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#showError"><span class="hs-identifier hs-var hs-var">showError</span></a></span></span><span> </span><span id="local-6989586621689189439"><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689189439"><span class="hs-identifier hs-var">functionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoArgumentType"><span class="hs-identifier hs-type">CFENoArgumentType</span></a></span><span> </span><span id="local-6989586621689189438"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189438"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;argument &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189438"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; has no data type defined in the function &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; FunctionName -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689189439"><span class="hs-identifier hs-var">functionName</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENotTableValuedFunction"><span class="hs-identifier hs-var">CFENotTableValuedFunction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-52"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189435"><span class="hs-identifier hs-var">prefixFunction</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not a TABLE_VALUED_FUNCTION&quot;</span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoInputArguments"><span class="hs-identifier hs-var">CFENoInputArguments</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189435"><span class="hs-identifier hs-var">prefixFunction</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; has no input arguments defined&quot;</span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoArgumentName"><span class="hs-identifier hs-var">CFENoArgumentName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189435"><span class="hs-identifier hs-var">prefixFunction</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; has at least one argument without name&quot;</span></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEInvalidArgumentName"><span class="hs-identifier hs-type">CFEInvalidArgumentName</span></a></span><span> </span><span id="local-6989586621689189434"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189434"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;the argument &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189434"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not one of function &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689189439"><span class="hs-identifier hs-var">functionName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; input arguments&quot;</span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEInvalidColumnName"><span class="hs-identifier hs-type">CFEInvalidColumnName</span></a></span><span> </span><span id="local-6989586621689189433"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189433"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621689189432"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689189432"><span class="hs-identifier hs-var">columnName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;the column &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689189432"><span class="hs-identifier hs-var">columnName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; does not exist in table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableName -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189433"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableNotTracked"><span class="hs-identifier hs-type">CFEReturnTableNotTracked</span></a></span><span> </span><span id="local-6989586621689189431"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189431"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189435"><span class="hs-identifier hs-var">prefixFunction</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; returning set of table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189431"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not tracked&quot;</span></span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENeedReturnTableName"><span class="hs-identifier hs-var">CFENeedReturnTableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-64"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189435"><span class="hs-identifier hs-var">prefixFunction</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not defined with 'RETURNS TABLE'. Expecting return table name.&quot;</span></span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENotRelevantReturnTable"><span class="hs-identifier hs-type">CFENotRelevantReturnTable</span></a></span><span> </span><span id="local-6989586621689189430"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189430"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;return table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189430"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not required as the function &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689189439"><span class="hs-identifier hs-var">functionName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; returns arbitrary column fields&quot;</span></span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableSchemaError"><span class="hs-identifier hs-type">CFEReturnTableSchemaError</span></a></span><span> </span><span id="local-6989586621689189429"><span class="annot"><span class="annottext">ReturnTableSchemaError
+</span><a href="#local-6989586621689189429"><span class="hs-identifier hs-var">returnFieldsError</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ReturnTableSchemaError -&gt; Text
+</span><a href="#local-6989586621689189428"><span class="hs-identifier hs-var">showReturnFieldsError</span></a></span><span> </span><span class="annot"><span class="annottext">ReturnTableSchemaError
+</span><a href="#local-6989586621689189429"><span class="hs-identifier hs-var">returnFieldsError</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><a href="#local-6989586621689189428"><span class="hs-identifier hs-type">showReturnFieldsError</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#ReturnTableSchemaError"><span class="hs-identifier hs-type">ReturnTableSchemaError</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-70"></span><span>    </span><span id="local-6989586621689189428"><span class="annot"><span class="annottext">showReturnFieldsError :: ReturnTableSchemaError -&gt; Text
+</span><a href="#local-6989586621689189428"><span class="hs-identifier hs-var hs-var">showReturnFieldsError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><span class="annottext">ReturnTableSchemaError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENoFieldName"><span class="hs-identifier hs-var">RTSENoFieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;at least one field name is absent&quot;</span></span><span>
+</span><span id="line-72"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENoType"><span class="hs-identifier hs-type">RTSENoType</span></a></span><span> </span><span id="local-6989586621689189427"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189427"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;fieldName &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189427"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; has not type information&quot;</span></span><span>
+</span><span id="line-73"></span><span>      </span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENotValidGraphQLName"><span class="hs-identifier hs-type">RTSENotValidGraphQLName</span></a></span><span> </span><span id="local-6989586621689189426"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189426"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;fieldName &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189426"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is not a valid GraphQL name&quot;</span></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span>    </span><span class="annot"><a href="#local-6989586621689189435"><span class="hs-identifier hs-type">prefixFunction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621689189435"><span class="annot"><span class="annottext">prefixFunction :: Text
+</span><a href="#local-6989586621689189435"><span class="hs-identifier hs-var hs-var">prefixFunction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;function &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; FunctionName -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689189439"><span class="hs-identifier hs-var">functionName</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- | Validate computed field metadata and build field information</span><span>
+</span><span id="line-79"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#buildComputedFieldInfo"><span class="hs-identifier hs-type">buildComputedFieldInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689189425"><span class="annot"><a href="#local-6989586621689189425"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689189425"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldName"><span class="hs-identifier hs-type">ComputedFieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestRoutine"><span class="hs-identifier hs-type">RestRoutine</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Comment"><span class="hs-identifier hs-type">Comment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><a href="#local-6989586621689189425"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span id="buildComputedFieldInfo"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet TableName
+-&gt; TableName
+-&gt; HashSet ColumnName
+-&gt; ComputedFieldName
+-&gt; ComputedFieldDefinition
+-&gt; RestRoutine
+-&gt; Comment
+-&gt; m (ComputedFieldInfo 'BigQuery)
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#buildComputedFieldInfo"><span class="hs-identifier hs-var hs-var">buildComputedFieldInfo</span></a></span></span><span> </span><span id="local-6989586621689189422"><span class="annot"><span class="annottext">HashSet TableName
+</span><a href="#local-6989586621689189422"><span class="hs-identifier hs-var">trackedTables</span></a></span></span><span> </span><span id="local-6989586621689189421"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189421"><span class="hs-identifier hs-var">table</span></a></span></span><span> </span><span id="local-6989586621689189420"><span class="annot"><span class="annottext">HashSet ColumnName
+</span><a href="#local-6989586621689189420"><span class="hs-identifier hs-var">tableColumns</span></a></span></span><span> </span><span id="local-6989586621689189419"><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621689189419"><span class="hs-identifier hs-var">computedField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ComputedFieldDefinition"><span class="hs-identifier hs-type">ComputedFieldDefinition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689189415"><span id="local-6989586621689189416"><span id="local-6989586621689189417"><span class="annot"><span class="annottext">Maybe TableName
+HashMap FunctionArgName ColumnName
+FunctionName
+$sel:_bqcfdArgumentMapping:ComputedFieldDefinition :: ComputedFieldDefinition -&gt; HashMap FunctionArgName ColumnName
+$sel:_bqcfdReturnTable:ComputedFieldDefinition :: ComputedFieldDefinition -&gt; Maybe TableName
+$sel:_bqcfdFunction:ComputedFieldDefinition :: ComputedFieldDefinition -&gt; FunctionName
+_bqcfdArgumentMapping :: HashMap FunctionArgName ColumnName
+_bqcfdReturnTable :: Maybe TableName
+_bqcfdFunction :: FunctionName
+</span><a href="Hasura.Backends.BigQuery.Types.html#%24sel%3A_bqcfdArgumentMapping%3AComputedFieldDefinition"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621689189411"><span class="annot"><span class="annottext">RestRoutine
+</span><a href="#local-6989586621689189411"><span class="hs-identifier hs-var">restRoutine</span></a></span></span><span> </span><span id="local-6989586621689189410"><span class="annot"><span class="annottext">Comment
+</span><a href="#local-6989586621689189410"><span class="hs-identifier hs-var">comment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-91"></span><span>  </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; m (ComputedFieldInfo 'BigQuery))
+-&gt; (ComputedFieldInfo 'BigQuery -&gt; m (ComputedFieldInfo 'BigQuery))
+-&gt; Either [ComputedFieldError] (ComputedFieldInfo 'BigQuery)
+-&gt; m (ComputedFieldInfo 'BigQuery)
+forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
+</span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (ComputedFieldInfo 'BigQuery)
+forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
+</span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m (ComputedFieldInfo 'BigQuery))
+-&gt; ([ComputedFieldError] -&gt; Text)
+-&gt; [ComputedFieldError]
+-&gt; m (ComputedFieldInfo 'BigQuery)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; Text
+</span><a href="#local-6989586621689189405"><span class="hs-identifier hs-var">showErrors</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ComputedFieldInfo 'BigQuery -&gt; m (ComputedFieldInfo 'BigQuery)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either [ComputedFieldError] (ComputedFieldInfo 'BigQuery)
+ -&gt; m (ComputedFieldInfo 'BigQuery))
+-&gt; m (Either [ComputedFieldError] (ComputedFieldInfo 'BigQuery))
+-&gt; m (ComputedFieldInfo 'BigQuery)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">ValidateT [ComputedFieldError] m (ComputedFieldInfo 'BigQuery)
+-&gt; m (Either [ComputedFieldError] (ComputedFieldInfo 'BigQuery))
+forall e (m :: * -&gt; *) a.
+Functor m =&gt;
+ValidateT e m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">MV.runValidateT</span></span><span> </span><span class="annot"><span class="annottext">ValidateT [ComputedFieldError] m (ComputedFieldInfo 'BigQuery)
+forall (n :: * -&gt; *).
+MonadValidate [ComputedFieldError] n =&gt;
+n (ComputedFieldInfo 'BigQuery)
+</span><a href="#local-6989586621689189402"><span class="hs-identifier hs-var">mkComputedFieldInfo</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><a href="#local-6989586621689189402"><span class="hs-identifier hs-type">mkComputedFieldInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-94"></span><span>      </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689189511"><span class="annot"><a href="#local-6989586621689189511"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-95"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">MV.MonadValidate</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#ComputedFieldError"><span class="hs-identifier hs-type">ComputedFieldError</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621689189511"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-96"></span><span>      </span><span class="annot"><a href="#local-6989586621689189511"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621689189402"><span class="annot"><span class="annottext">mkComputedFieldInfo :: n (ComputedFieldInfo 'BigQuery)
+</span><a href="#local-6989586621689189402"><span class="hs-identifier hs-var hs-var">mkComputedFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-98"></span><span>      </span><span class="hs-comment">-- Currently, we only support functions returning set of rows in computed field.</span><span>
+</span><span id="line-99"></span><span>      </span><span class="hs-comment">-- Support for scalar computed fields is being tracked at https://github.com/hasura/graphql-engine/issues/8521.</span><span>
+</span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; n () -&gt; n ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RestRoutine -&gt; RestRoutineType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#%24sel%3AroutineType%3ARestRoutine"><span class="hs-identifier hs-var hs-var">routineType</span></a></span><span> </span><span class="annot"><span class="annottext">RestRoutine
+</span><a href="#local-6989586621689189411"><span class="hs-identifier hs-var">restRoutine</span></a></span><span> </span><span class="annot"><span class="annottext">RestRoutineType -&gt; RestRoutineType -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">RestRoutineType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#TABLE_VALUED_FUNCTION"><span class="hs-identifier hs-var">TABLE_VALUED_FUNCTION</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(n () -&gt; n ()) -&gt; n () -&gt; n ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n ()
+forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
+</span><span class="hs-identifier hs-var">MV.dispute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n ()) -&gt; [ComputedFieldError] -&gt; n ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENotTableValuedFunction"><span class="hs-identifier hs-var">CFENotTableValuedFunction</span></a></span><span>
+</span><span id="line-101"></span><span>      </span><span id="local-6989586621689189397"><span class="annot"><span class="annottext">[RestArgument]
+</span><a href="#local-6989586621689189397"><span class="hs-identifier hs-var">restArguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe [RestArgument] -&gt; n [RestArgument] -&gt; n [RestArgument]
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RestRoutine -&gt; Maybe [RestArgument]
+</span><a href="Hasura.Backends.BigQuery.Meta.html#%24sel%3Aarguments%3ARestRoutine"><span class="hs-identifier hs-var hs-var">arguments</span></a></span><span> </span><span class="annot"><span class="annottext">RestRoutine
+</span><a href="#local-6989586621689189411"><span class="hs-identifier hs-var">restRoutine</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(n [RestArgument] -&gt; n [RestArgument])
+-&gt; n [RestArgument] -&gt; n [RestArgument]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n [RestArgument]
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoInputArguments"><span class="hs-identifier hs-var">CFENoInputArguments</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>      </span><span id="local-6989586621689189393"><span class="annot"><span class="annottext">Seq FunctionArgument
+</span><a href="#local-6989586621689189393"><span class="hs-identifier hs-var">inputArguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[FunctionArgument] -&gt; Seq FunctionArgument
+forall a. [a] -&gt; Seq a
+</span><span class="hs-identifier hs-var">Seq.fromList</span></span><span> </span><span class="annot"><span class="annottext">([FunctionArgument] -&gt; Seq FunctionArgument)
+-&gt; n [FunctionArgument] -&gt; n (Seq FunctionArgument)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[RestArgument]
+-&gt; (RestArgument -&gt; n FunctionArgument) -&gt; n [FunctionArgument]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f (t b)
+</span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">[RestArgument]
+</span><a href="#local-6989586621689189397"><span class="hs-identifier hs-var">restArguments</span></a></span><span> </span><span class="annot"><span class="annottext">RestArgument -&gt; n FunctionArgument
+</span><a href="#local-6989586621689189389"><span class="hs-identifier hs-var">resolveInputArgument</span></a></span><span>
+</span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">[(FunctionArgName, ColumnName)]
+-&gt; ((FunctionArgName, ColumnName) -&gt; n ()) -&gt; n ()
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Foldable t, Applicative f) =&gt;
+t a -&gt; (a -&gt; f b) -&gt; f ()
+</span><span class="hs-identifier hs-var">for_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap FunctionArgName ColumnName
+-&gt; [(FunctionArgName, ColumnName)]
+forall k v. HashMap k v -&gt; [(k, v)]
+</span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap FunctionArgName ColumnName
+</span><a href="#local-6989586621689189415"><span class="hs-identifier hs-var">_bqcfdArgumentMapping</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seq FunctionArgument -&gt; (FunctionArgName, ColumnName) -&gt; n ()
+</span><a href="#local-6989586621689189386"><span class="hs-identifier hs-var">validateArgumentMapping</span></a></span><span> </span><span class="annot"><span class="annottext">Seq FunctionArgument
+</span><a href="#local-6989586621689189393"><span class="hs-identifier hs-var">inputArguments</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689189385"><span class="annot"><span class="annottext">fieldFunction :: ComputedFieldFunction 'BigQuery
+</span><a href="#local-6989586621689189385"><span class="hs-identifier hs-var hs-var">fieldFunction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FunctionName 'BigQuery
+-&gt; Seq (FunctionArgument 'BigQuery)
+-&gt; ComputedFieldImplicitArguments 'BigQuery
+-&gt; Maybe PGDescription
+-&gt; ComputedFieldFunction 'BigQuery
+forall (b :: BackendType).
+FunctionName b
+-&gt; Seq (FunctionArgument b)
+-&gt; ComputedFieldImplicitArguments b
+-&gt; Maybe PGDescription
+-&gt; ComputedFieldFunction b
+</span><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-var">ComputedFieldFunction</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName 'BigQuery
+FunctionName
+</span><a href="#local-6989586621689189417"><span class="hs-identifier hs-var">_bqcfdFunction</span></a></span><span> </span><span class="annot"><span class="annottext">Seq (FunctionArgument 'BigQuery)
+Seq FunctionArgument
+</span><a href="#local-6989586621689189393"><span class="hs-identifier hs-var">inputArguments</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap FunctionArgName ColumnName
+ComputedFieldImplicitArguments 'BigQuery
+</span><a href="#local-6989586621689189415"><span class="hs-identifier hs-var">_bqcfdArgumentMapping</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PGDescription
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-105"></span><span>      </span><span id="local-6989586621689189383"><span class="annot"><span class="annottext">ComputedFieldReturn
+</span><a href="#local-6989586621689189383"><span class="hs-identifier hs-var">fieldReturn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe RestStandardSqlTableType
+-&gt; Maybe TableName -&gt; n ComputedFieldReturn
+</span><a href="#local-6989586621689189382"><span class="hs-identifier hs-var">resolveFunctionReturning</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RestRoutine -&gt; Maybe RestStandardSqlTableType
+</span><a href="Hasura.Backends.BigQuery.Meta.html#%24sel%3AreturnTableType%3ARestRoutine"><span class="hs-identifier hs-var hs-var">returnTableType</span></a></span><span> </span><span class="annot"><span class="annottext">RestRoutine
+</span><a href="#local-6989586621689189411"><span class="hs-identifier hs-var">restRoutine</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe TableName
+</span><a href="#local-6989586621689189416"><span class="hs-identifier hs-var">_bqcfdReturnTable</span></a></span><span>
+</span><span id="line-106"></span><span>      </span><span class="annot"><span class="annottext">ComputedFieldInfo 'BigQuery -&gt; n (ComputedFieldInfo 'BigQuery)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldInfo 'BigQuery -&gt; n (ComputedFieldInfo 'BigQuery))
+-&gt; ComputedFieldInfo 'BigQuery -&gt; n (ComputedFieldInfo 'BigQuery)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">XComputedField 'BigQuery
+-&gt; ComputedFieldName
+-&gt; ComputedFieldFunction 'BigQuery
+-&gt; ComputedFieldReturn 'BigQuery
+-&gt; Maybe Text
+-&gt; ComputedFieldInfo 'BigQuery
+forall (b :: BackendType).
+XComputedField b
+-&gt; ComputedFieldName
+-&gt; ComputedFieldFunction b
+-&gt; ComputedFieldReturn b
+-&gt; Maybe Text
+-&gt; ComputedFieldInfo b
+</span><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-var">ComputedFieldInfo</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621689189419"><span class="hs-identifier hs-var">computedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldFunction 'BigQuery
+</span><a href="#local-6989586621689189385"><span class="hs-identifier hs-var">fieldFunction</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldReturn 'BigQuery
+ComputedFieldReturn
+</span><a href="#local-6989586621689189383"><span class="hs-identifier hs-var">fieldReturn</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; ComputedFieldInfo 'BigQuery)
+-&gt; Maybe Text -&gt; ComputedFieldInfo 'BigQuery
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Comment -&gt; Maybe Text
+</span><a href="Hasura.RQL.Types.Common.html#commentToMaybeText"><span class="hs-identifier hs-var">commentToMaybeText</span></a></span><span> </span><span class="annot"><span class="annottext">Comment
+</span><a href="#local-6989586621689189410"><span class="hs-identifier hs-var">comment</span></a></span><span>
+</span><span id="line-107"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-108"></span><span>        </span><span class="annot"><a href="#local-6989586621689189389"><span class="hs-identifier hs-type">resolveInputArgument</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestArgument"><span class="hs-identifier hs-type">RestArgument</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689189511"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span>
+</span><span id="line-109"></span><span>        </span><span id="local-6989586621689189389"><span class="annot"><span class="annottext">resolveInputArgument :: RestArgument -&gt; n FunctionArgument
+</span><a href="#local-6989586621689189389"><span class="hs-identifier hs-var hs-var">resolveInputArgument</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestArgument"><span class="hs-identifier hs-type">RestArgument</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689189376"><span id="local-6989586621689189377"><span class="annot"><span class="annottext">Maybe Text
+Maybe RestType
+$sel:_raDataType:RestArgument :: RestArgument -&gt; Maybe RestType
+$sel:_raName:RestArgument :: RestArgument -&gt; Maybe Text
+_raDataType :: Maybe RestType
+_raName :: Maybe Text
+</span><a href="Hasura.Backends.BigQuery.Meta.html#%24sel%3A_raDataType%3ARestArgument"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-110"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689189377"><span class="hs-identifier hs-var">_raName</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-111"></span><span>            </span><span class="annot"><span class="annottext">Maybe Text
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n FunctionArgument
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n FunctionArgument)
+-&gt; [ComputedFieldError] -&gt; n FunctionArgument
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoArgumentName"><span class="hs-identifier hs-var">CFENoArgumentName</span></a></span><span>
+</span><span id="line-112"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689189373"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189373"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-113"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689189372"><span class="annot"><span class="annottext">argName :: FunctionArgName
+</span><a href="#local-6989586621689189372"><span class="hs-identifier hs-var hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; FunctionArgName
+</span><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-var">FunctionArgName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189373"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-114"></span><span>              </span><span id="local-6989586621689189370"><span class="annot"><span class="annottext">RestType
+</span><a href="#local-6989586621689189370"><span class="hs-identifier hs-var">restType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe RestType -&gt; n RestType -&gt; n RestType
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RestType
+</span><a href="#local-6989586621689189376"><span class="hs-identifier hs-var">_raDataType</span></a></span><span> </span><span class="annot"><span class="annottext">(n RestType -&gt; n RestType) -&gt; n RestType -&gt; n RestType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n RestType
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n RestType)
+-&gt; [ComputedFieldError] -&gt; n RestType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENoArgumentType"><span class="hs-identifier hs-var">CFENoArgumentType</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189372"><span class="hs-identifier hs-var">argName</span></a></span><span>
+</span><span id="line-115"></span><span>              </span><span class="annot"><span class="annottext">FunctionArgument -&gt; n FunctionArgument
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(FunctionArgument -&gt; n FunctionArgument)
+-&gt; FunctionArgument -&gt; n FunctionArgument
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; ScalarType -&gt; FunctionArgument
+</span><a href="Hasura.Backends.BigQuery.Types.html#FunctionArgument"><span class="hs-identifier hs-var">FunctionArgument</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189372"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RestType -&gt; ScalarType
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTypeToScalarType"><span class="hs-identifier hs-var">restTypeToScalarType</span></a></span><span> </span><span class="annot"><span class="annottext">RestType
+</span><a href="#local-6989586621689189370"><span class="hs-identifier hs-var">restType</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span>        </span><span class="annot"><a href="#local-6989586621689189386"><span class="hs-identifier hs-type">validateArgumentMapping</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Seq</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#FunctionArgument"><span class="hs-identifier hs-type">FunctionArgument</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689189511"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>        </span><span id="local-6989586621689189386"><span class="annot"><span class="annottext">validateArgumentMapping :: Seq FunctionArgument -&gt; (FunctionArgName, ColumnName) -&gt; n ()
+</span><a href="#local-6989586621689189386"><span class="hs-identifier hs-var hs-var">validateArgumentMapping</span></a></span></span><span> </span><span id="local-6989586621689189367"><span class="annot"><span class="annottext">Seq FunctionArgument
+</span><a href="#local-6989586621689189367"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689189366"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189366"><span class="hs-identifier hs-var">functionArgName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689189365"><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689189365"><span class="hs-identifier hs-var">columnName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-119"></span><span>          </span><span class="hs-comment">-- Check if argument is one of function input arguments</span><span>
+</span><span id="line-120"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; n () -&gt; n ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189366"><span class="hs-identifier hs-var">functionArgName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Seq FunctionArgName -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FunctionArgument -&gt; FunctionArgName
+</span><a href="Hasura.Backends.BigQuery.Types.html#%24sel%3A_faName%3AFunctionArgument"><span class="hs-identifier hs-var hs-var">_faName</span></a></span><span> </span><span class="annot"><span class="annottext">(FunctionArgument -&gt; FunctionArgName)
+-&gt; Seq FunctionArgument -&gt; Seq FunctionArgName
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Seq FunctionArgument
+</span><a href="#local-6989586621689189367"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(n () -&gt; n ()) -&gt; n () -&gt; n ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n ()
+forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
+</span><span class="hs-identifier hs-var">MV.dispute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n ()) -&gt; [ComputedFieldError] -&gt; n ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEInvalidArgumentName"><span class="hs-identifier hs-var">CFEInvalidArgumentName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621689189366"><span class="hs-identifier hs-var">functionArgName</span></a></span><span>
+</span><span id="line-121"></span><span>          </span><span class="hs-comment">-- Check if column name exist in list of table columns</span><span>
+</span><span id="line-122"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; n () -&gt; n ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689189365"><span class="hs-identifier hs-var">columnName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; HashSet ColumnName -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><span class="hs-operator hs-var">`HS.member`</span></span><span> </span><span class="annot"><span class="annottext">HashSet ColumnName
+</span><a href="#local-6989586621689189420"><span class="hs-identifier hs-var">tableColumns</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(n () -&gt; n ()) -&gt; n () -&gt; n ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n ()
+forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
+</span><span class="hs-identifier hs-var">MV.dispute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n ()) -&gt; [ComputedFieldError] -&gt; n ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; ColumnName -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEInvalidColumnName"><span class="hs-identifier hs-var">CFEInvalidColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189421"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnName
+</span><a href="#local-6989586621689189365"><span class="hs-identifier hs-var">columnName</span></a></span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span>        </span><span class="annot"><a href="#local-6989586621689189361"><span class="hs-identifier hs-type">resolveReturnSqlFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestStandardSqlField"><span class="hs-identifier hs-type">RestStandardSqlField</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689189511"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-125"></span><span>        </span><span id="local-6989586621689189361"><span class="annot"><span class="annottext">resolveReturnSqlFields :: [RestStandardSqlField] -&gt; n [(ColumnName, Name, ScalarType)]
+</span><a href="#local-6989586621689189361"><span class="hs-identifier hs-var hs-var">resolveReturnSqlFields</span></a></span></span><span> </span><span id="local-6989586621689189360"><span class="annot"><span class="annottext">[RestStandardSqlField]
+</span><a href="#local-6989586621689189360"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-126"></span><span>          </span><span class="annot"><span class="annottext">[RestStandardSqlField]
+-&gt; (RestStandardSqlField -&gt; n (ColumnName, Name, ScalarType))
+-&gt; n [(ColumnName, Name, ScalarType)]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+t a -&gt; (a -&gt; m b) -&gt; m (t b)
+</span><span class="hs-identifier hs-var">forM</span></span><span> </span><span class="annot"><span class="annottext">[RestStandardSqlField]
+</span><a href="#local-6989586621689189360"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="annot"><span class="annottext">((RestStandardSqlField -&gt; n (ColumnName, Name, ScalarType))
+ -&gt; n [(ColumnName, Name, ScalarType)])
+-&gt; (RestStandardSqlField -&gt; n (ColumnName, Name, ScalarType))
+-&gt; n [(ColumnName, Name, ScalarType)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestStandardSqlField"><span class="hs-identifier hs-type">RestStandardSqlField</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689189356"><span id="local-6989586621689189357"><span class="annot"><span class="annottext">Maybe Text
+Maybe RestType
+$sel:_rssType:RestStandardSqlField :: RestStandardSqlField -&gt; Maybe RestType
+$sel:_rssfName:RestStandardSqlField :: RestStandardSqlField -&gt; Maybe Text
+_rssType :: Maybe RestType
+_rssfName :: Maybe Text
+</span><a href="Hasura.Backends.BigQuery.Meta.html#%24sel%3A_rssType%3ARestStandardSqlField"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-127"></span><span>            </span><span id="local-6989586621689189353"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189353"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; n Text -&gt; n Text
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689189357"><span class="hs-identifier hs-var">_rssfName</span></a></span><span> </span><span class="annot"><span class="annottext">(n Text -&gt; n Text) -&gt; n Text -&gt; n Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n Text
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n Text) -&gt; [ComputedFieldError] -&gt; n Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReturnTableSchemaError -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableSchemaError"><span class="hs-identifier hs-var">CFEReturnTableSchemaError</span></a></span><span> </span><span class="annot"><span class="annottext">ReturnTableSchemaError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENoFieldName"><span class="hs-identifier hs-var">RTSENoFieldName</span></a></span><span>
+</span><span id="line-128"></span><span>            </span><span id="local-6989586621689189352"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689189352"><span class="hs-identifier hs-var">fieldGraphQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; n Name -&gt; n Name
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189353"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(n Name -&gt; n Name) -&gt; n Name -&gt; n Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n Name
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n Name) -&gt; [ComputedFieldError] -&gt; n Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReturnTableSchemaError -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableSchemaError"><span class="hs-identifier hs-var">CFEReturnTableSchemaError</span></a></span><span> </span><span class="annot"><span class="annottext">(ReturnTableSchemaError -&gt; ComputedFieldError)
+-&gt; ReturnTableSchemaError -&gt; ComputedFieldError
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ReturnTableSchemaError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENotValidGraphQLName"><span class="hs-identifier hs-var">RTSENotValidGraphQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189353"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><span id="line-129"></span><span>            </span><span id="local-6989586621689189350"><span class="annot"><span class="annottext">RestType
+</span><a href="#local-6989586621689189350"><span class="hs-identifier hs-var">type'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe RestType -&gt; n RestType -&gt; n RestType
+forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RestType
+</span><a href="#local-6989586621689189356"><span class="hs-identifier hs-var">_rssType</span></a></span><span> </span><span class="annot"><span class="annottext">(n RestType -&gt; n RestType) -&gt; n RestType -&gt; n RestType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n RestType
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n RestType)
+-&gt; [ComputedFieldError] -&gt; n RestType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ReturnTableSchemaError -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableSchemaError"><span class="hs-identifier hs-var">CFEReturnTableSchemaError</span></a></span><span> </span><span class="annot"><span class="annottext">(ReturnTableSchemaError -&gt; ComputedFieldError)
+-&gt; ReturnTableSchemaError -&gt; ComputedFieldError
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ReturnTableSchemaError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#RTSENoType"><span class="hs-identifier hs-var">RTSENoType</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189353"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><span id="line-130"></span><span>            </span><span class="annot"><span class="annottext">(ColumnName, Name, ScalarType) -&gt; n (ColumnName, Name, ScalarType)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ColumnName
+</span><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189353"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689189352"><span class="hs-identifier hs-var">fieldGraphQLName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RestType -&gt; ScalarType
+</span><a href="Hasura.Backends.BigQuery.DDL.Source.html#restTypeToScalarType"><span class="hs-identifier hs-var">restTypeToScalarType</span></a></span><span> </span><span class="annot"><span class="annottext">RestType
+</span><a href="#local-6989586621689189350"><span class="hs-identifier hs-var">type'</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span>        </span><span class="annot"><a href="#local-6989586621689189382"><span class="hs-identifier hs-type">resolveFunctionReturning</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-133"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Meta.html#RestStandardSqlTableType"><span class="hs-identifier hs-type">RestStandardSqlTableType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-134"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-135"></span><span>          </span><span class="annot"><a href="#local-6989586621689189511"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ComputedFieldReturn"><span class="hs-identifier hs-type">ComputedFieldReturn</span></a></span><span>
+</span><span id="line-136"></span><span>        </span><span id="local-6989586621689189382"><span class="annot"><span class="annottext">resolveFunctionReturning :: Maybe RestStandardSqlTableType
+-&gt; Maybe TableName -&gt; n ComputedFieldReturn
+</span><a href="#local-6989586621689189382"><span class="hs-identifier hs-var hs-var">resolveFunctionReturning</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe RestStandardSqlTableType
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe TableName
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-137"></span><span>          </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n ComputedFieldReturn
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n ComputedFieldReturn)
+-&gt; [ComputedFieldError] -&gt; n ComputedFieldReturn
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENeedReturnTableName"><span class="hs-identifier hs-var">CFENeedReturnTableName</span></a></span><span>
+</span><span id="line-138"></span><span>        </span><span class="annot"><a href="#local-6989586621689189382"><span class="hs-identifier hs-var">resolveFunctionReturning</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RestStandardSqlTableType
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689189348"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189348"><span class="hs-identifier hs-var">returnTable</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-139"></span><span>          </span><span class="hs-comment">-- Function does not return schema of a table. The return table type should be inferred</span><span>
+</span><span id="line-140"></span><span>          </span><span class="hs-comment">-- from function definition. The user provides returning table name through metadata.</span><span>
+</span><span id="line-141"></span><span>          </span><span class="hs-comment">-- Check if returning table is tracked.</span><span>
+</span><span id="line-142"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189348"><span class="hs-identifier hs-var">returnTable</span></a></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; HashSet TableName -&gt; Bool
+forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
+</span><span class="hs-operator hs-var">`HS.member`</span></span><span> </span><span class="annot"><span class="annottext">HashSet TableName
+</span><a href="#local-6989586621689189422"><span class="hs-identifier hs-var">trackedTables</span></a></span><span>
+</span><span id="line-143"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ComputedFieldReturn -&gt; n ComputedFieldReturn
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName -&gt; ComputedFieldReturn
+</span><a href="Hasura.Backends.BigQuery.Types.html#ReturnExistingTable"><span class="hs-identifier hs-var">ReturnExistingTable</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189348"><span class="hs-identifier hs-var">returnTable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n ComputedFieldReturn
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n ComputedFieldReturn)
+-&gt; [ComputedFieldError] -&gt; n ComputedFieldReturn
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFEReturnTableNotTracked"><span class="hs-identifier hs-var">CFEReturnTableNotTracked</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189348"><span class="hs-identifier hs-var">returnTable</span></a></span><span>
+</span><span id="line-145"></span><span>        </span><span class="annot"><a href="#local-6989586621689189382"><span class="hs-identifier hs-var">resolveFunctionReturning</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689189346"><span class="annot"><span class="annottext">RestStandardSqlTableType
+</span><a href="#local-6989586621689189346"><span class="hs-identifier hs-var">returnFields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe TableName
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-146"></span><span>          </span><span class="hs-comment">-- Return table is not specified and the function returns a schema of a table,</span><span>
+</span><span id="line-147"></span><span>          </span><span class="hs-comment">-- specified as a list of column names and their type.</span><span>
+</span><span id="line-148"></span><span>          </span><span class="annot"><span class="annottext">[(ColumnName, Name, ScalarType)] -&gt; ComputedFieldReturn
+</span><a href="Hasura.Backends.BigQuery.Types.html#ReturnTableSchema"><span class="hs-identifier hs-var">ReturnTableSchema</span></a></span><span> </span><span class="annot"><span class="annottext">([(ColumnName, Name, ScalarType)] -&gt; ComputedFieldReturn)
+-&gt; n [(ColumnName, Name, ScalarType)] -&gt; n ComputedFieldReturn
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[RestStandardSqlField] -&gt; n [(ColumnName, Name, ScalarType)]
+</span><a href="#local-6989586621689189361"><span class="hs-identifier hs-var">resolveReturnSqlFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RestStandardSqlTableType -&gt; [RestStandardSqlField]
+</span><a href="Hasura.Backends.BigQuery.Meta.html#%24sel%3A_rrttColumns%3ARestStandardSqlTableType"><span class="hs-identifier hs-var hs-var">_rrttColumns</span></a></span><span> </span><span class="annot"><span class="annottext">RestStandardSqlTableType
+</span><a href="#local-6989586621689189346"><span class="hs-identifier hs-var">returnFields</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>        </span><span class="annot"><a href="#local-6989586621689189382"><span class="hs-identifier hs-var">resolveFunctionReturning</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">RestStandardSqlTableType
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689189343"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189343"><span class="hs-identifier hs-var">returnTable</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-150"></span><span>          </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; n ComputedFieldReturn
+forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
+</span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">([ComputedFieldError] -&gt; n ComputedFieldReturn)
+-&gt; [ComputedFieldError] -&gt; n ComputedFieldReturn
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldError -&gt; [ComputedFieldError]
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(ComputedFieldError -&gt; [ComputedFieldError])
+-&gt; ComputedFieldError -&gt; [ComputedFieldError]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; ComputedFieldError
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#CFENotRelevantReturnTable"><span class="hs-identifier hs-var">CFENotRelevantReturnTable</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189343"><span class="hs-identifier hs-var">returnTable</span></a></span><span>
+</span><span id="line-151"></span><span>
+</span><span id="line-152"></span><span>    </span><span class="annot"><a href="#local-6989586621689189405"><span class="hs-identifier hs-type">showErrors</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#ComputedFieldError"><span class="hs-identifier hs-type">ComputedFieldError</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621689189405"><span class="annot"><span class="annottext">showErrors :: [ComputedFieldError] -&gt; Text
+</span><a href="#local-6989586621689189405"><span class="hs-identifier hs-var hs-var">showErrors</span></a></span></span><span> </span><span id="local-6989586621689189342"><span class="annot"><span class="annottext">[ComputedFieldError]
+</span><a href="#local-6989586621689189342"><span class="hs-identifier hs-var">allErrors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-154"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;the computed field &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
+</span><a href="#local-6989586621689189419"><span class="hs-identifier hs-var">computedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; cannot be added to table &quot;</span></span><span>
+</span><span id="line-155"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689189421"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text -&gt; Text
+forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; &quot;</span></span><span>
+</span><span id="line-156"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689189341"><span class="hs-identifier hs-var">reasonMessage</span></a></span><span>
+</span><span id="line-157"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-158"></span><span>        </span><span id="local-6989586621689189341"><span class="annot"><span class="annottext">reasonMessage :: Text
+</span><a href="#local-6989586621689189341"><span class="hs-identifier hs-var hs-var">reasonMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError] -&gt; (ComputedFieldError -&gt; Text) -&gt; Text
+forall a. [a] -&gt; (a -&gt; Text) -&gt; Text
+</span><a href="Hasura.Server.Utils.html#makeReasonMessage"><span class="hs-identifier hs-var">makeReasonMessage</span></a></span><span> </span><span class="annot"><span class="annottext">[ComputedFieldError]
+</span><a href="#local-6989586621689189342"><span class="hs-identifier hs-var">allErrors</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FunctionName -&gt; ComputedFieldError -&gt; Text
+</span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#showError"><span class="hs-identifier hs-var">showError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionName
+</span><a href="#local-6989586621689189417"><span class="hs-identifier hs-var">_bqcfdFunction</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span></pre></body></html>
