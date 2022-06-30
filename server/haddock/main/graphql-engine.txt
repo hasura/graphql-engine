@@ -26602,7 +26602,7 @@ IsNullable :: IsNullable
 IsRequired :: IsNullable
 
 -- | Delay between attempts to get job results if the job is incomplete.
-streamDelaySeconds :: Int
+streamDelaySeconds :: DiffTime
 runExecute :: MonadIO m => BigQuerySourceConfig -> Execute RecordSet -> m (Either ExecuteProblem RecordSet)
 executeSelect :: Select -> Execute RecordSet
 
