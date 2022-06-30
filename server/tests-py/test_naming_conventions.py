@@ -46,3 +46,15 @@ class TestDefaultNamingConvention:
     
     def test_default_global_naming_convention(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/default_global_naming_convention.yaml')
+
+@pytest.mark.skipif( not (os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES') is None or
+    not 'graphql-default' in os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES')),
+    reason="This test expects the (naming_convention) experimental feature turned OFF")
+class TestNamingConventionWithoutExperimentalFeature:
+
+    @classmethod
+    def dir(cls):
+        return "queries/naming_conventions"
+    
+    def test_naming_convention_without_feature_turned_on(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/naming_convention_without_feature_turned_on.yaml')

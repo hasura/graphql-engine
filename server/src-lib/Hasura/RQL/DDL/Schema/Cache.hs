@@ -521,6 +521,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           |) (tableCoreInfos `alignTableMap` mapFromL _tpiTable permissions `alignTableMap` eventTriggerInfoMaps)
 
       defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+      isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
 
       -- sql functions
       functionCache <-
@@ -551,7 +552,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                     rawfunctionInfo <- bindErrorA -< handleMultipleFunctions @b qf funcDefs
                                     let metadataPermissions = mapFromL _fpmRole functionPermissions
                                         permissionsMap = mkBooleanPermissionMap FunctionPermissionInfo metadataPermissions orderedRoles
-                                    let !namingConv = getNamingConvention sourceCustomization defaultNC
+                                    let !namingConv = if isNamingConventionEnabled then getNamingConvention sourceCustomization defaultNC else HasuraCase
                                     (functionInfo, dep) <- bindErrorA -< buildFunctionInfo sourceName qf systemDefined config permissionsMap rawfunctionInfo comment namingConv
                                     recordDependencies -< (metadataObject, schemaObject, [dep])
                                     returnA -< functionInfo
@@ -637,6 +638,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       let remoteSchemaCtxMap = M.map (fst . fst) remoteSchemaMap
 
       defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
+      isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
 
       -- sources are build in two steps
       -- first we resolve them, and build the table cache
@@ -645,7 +647,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.keyed
             ( \_ exists ->
                 AB.dispatchAnyBackendArrow @BackendMetadata @BackendEventTrigger
-                  ( proc (backendConfigAndSourceMetadata, (invalidationKeys, defaultNC)) -> do
+                  ( proc (backendConfigAndSourceMetadata, (invalidationKeys, defaultNC, isNamingConventionEnabled)) -> do
                       let sourceMetadata = _bcasmSourceMetadata backendConfigAndSourceMetadata
                           sourceName = _smName sourceMetadata
                           sourceInvalidationsKeys = Inc.selectD #_ikSources invalidationKeys
@@ -655,7 +657,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         Just (source :: ResolvedSource b) -> do
                           let metadataInvalidationKey = Inc.selectD #_ikMetadata invalidationKeys
                               (tableInputs, _, _) = unzip3 $ map mkTableInputs $ OMap.elems $ _smTables sourceMetadata
-                              !namingConv = getNamingConvention (_smCustomization sourceMetadata) defaultNC
+                              !namingConv = if isNamingConventionEnabled then getNamingConvention (_smCustomization sourceMetadata) defaultNC else HasuraCase
                           tablesCoreInfo <-
                             buildTableCache
                               -<
@@ -692,7 +694,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                                   PartiallyResolvedSource sourceMetadata source tablesCoreInfo eventTriggerInfoMaps
                   )
                   -<
-                    (exists, (invalidationKeys, defaultNC))
+                    (exists, (invalidationKeys, defaultNC, isNamingConventionEnabled))
             )
         |) (M.fromList $ OMap.toList backendConfigAndSourceMetadata)
           >-> (\infos -> M.catMaybes infos >- returnA)
