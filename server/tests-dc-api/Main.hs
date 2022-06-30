@@ -12,6 +12,7 @@ import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
 import Test.CapabilitiesSpec qualified
+import Test.HealthSpec qualified
 import Test.Hspec (Spec)
 import Test.Hspec.Core.Runner (runSpec)
 import Test.Hspec.Core.Util (filterPredicate)
@@ -25,6 +26,7 @@ testSourceName = "dc-api-tests"
 
 tests :: Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
 tests api sourceName agentConfig capabilities = do
+  Test.HealthSpec.spec api sourceName agentConfig
   Test.CapabilitiesSpec.spec api agentConfig capabilities
   Test.SchemaSpec.spec api sourceName agentConfig
   Test.QuerySpec.spec api sourceName agentConfig capabilities

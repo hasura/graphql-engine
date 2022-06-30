@@ -107,6 +107,38 @@
           }
         }
       }
+    },
+    "/health": {
+      "get": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-SourceName",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-Config",
+            "required": false,
+            "schema": {
+              "additionalProperties": true,
+              "nullable": false,
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          }
+        }
+      }
     }
   },
   "components": {

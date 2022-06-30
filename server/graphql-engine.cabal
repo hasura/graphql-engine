@@ -1293,6 +1293,7 @@ test-suite tests-dc-api
     , Paths_graphql_engine
     , Test.Data
     , Test.CapabilitiesSpec
+    , Test.HealthSpec
     , Test.QuerySpec
     , Test.QuerySpec.BasicSpec
     , Test.QuerySpec.RelationshipsSpec

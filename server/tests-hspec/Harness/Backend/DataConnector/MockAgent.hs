@@ -223,20 +223,16 @@ mockQueryHandler mcfg mquery _sourceName _cfg query = liftIO $ do
   I.writeIORef mquery (Just query)
   pure $ handler query
 
-type HealthcheckApi =
-  "healthz"
-    :> Get '[JSON] ()
+healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
+healthcheckHandler _sourceName _config = pure NoContent
 
-healthcheckHandler :: Handler ()
-healthcheckHandler = pure ()
-
-dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> Server (API.Api :<|> HealthcheckApi)
-dcMockableServer mcfg mquery = (mockCapabilitiesHandler mcfg :<|> mockSchemaHandler mcfg :<|> mockQueryHandler mcfg mquery) :<|> healthcheckHandler
+dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> Server API.Api
+dcMockableServer mcfg mquery = mockCapabilitiesHandler mcfg :<|> mockSchemaHandler mcfg :<|> mockQueryHandler mcfg mquery :<|> healthcheckHandler
 
 mockAgentPort :: Warp.Port
 mockAgentPort = 65006
 
 runMockServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> IO ()
 runMockServer mcfg mquery = do
-  let app = serve (Proxy :: Proxy (API.Api :<|> HealthcheckApi)) $ dcMockableServer mcfg mquery
+  let app = serve (Proxy :: Proxy API.Api) $ dcMockableServer mcfg mquery
   Warp.run mockAgentPort app

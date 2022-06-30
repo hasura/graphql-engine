@@ -31,20 +31,26 @@ type CapabilitiesApi =
 
 type SchemaApi =
   "schema"
-    :> SourceNameHeader
-    :> ConfigHeader
+    :> SourceNameHeader Required
+    :> ConfigHeader Required
     :> Get '[JSON] V0.SchemaResponse
 
 type QueryApi =
   "query"
-    :> SourceNameHeader
-    :> ConfigHeader
+    :> SourceNameHeader Required
+    :> ConfigHeader Required
     :> ReqBody '[JSON] V0.QueryRequest
     :> Post '[JSON] V0.QueryResponse
 
-type ConfigHeader = Header' '[Required, Strict] "X-Hasura-DataConnector-Config" V0.Config
+type HealthApi =
+  "health"
+    :> SourceNameHeader Optional
+    :> ConfigHeader Optional
+    :> GetNoContent
 
-type SourceNameHeader = Header' '[Required, Strict] "X-Hasura-DataConnector-SourceName" SourceName
+type ConfigHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-Config" V0.Config
+
+type SourceNameHeader optionality = Header' '[optionality, Strict] "X-Hasura-DataConnector-SourceName" SourceName
 
 type SourceName = Text
 
@@ -54,13 +60,15 @@ data Routes mode = Routes
     -- | 'GET /schema'
     _schema :: mode :- SchemaApi,
     -- | 'POST /query'
-    _query :: mode :- QueryApi
+    _query :: mode :- QueryApi,
+    -- | 'GET /health'
+    _health :: mode :- HealthApi
   }
   deriving stock (Generic)
 
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi
+type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> HealthApi
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi
