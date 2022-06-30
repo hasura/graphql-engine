@@ -56,6 +56,7 @@ import Language.GraphQL.Draft.Syntax qualified as G
 insertIntoTable ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  BackendTableSelectSchema b =>
   (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   SourceInfo b ->
@@ -101,7 +102,8 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
 -- different: it only allows selecting columns from the row being inserted.
 insertOneIntoTable ::
   forall b r m n.
-  (MonadBuildSchema b r m n) =>
+  MonadBuildSchema b r m n =>
+  BackendTableSelectSchema b =>
   (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (IR.UnpreparedValue b)))) ->
   Scenario ->
   -- | source of the table
@@ -335,7 +337,9 @@ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms =
 -- to delete several rows from a DB table
 deleteFromTable ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   Scenario ->
   -- | table source
   SourceInfo b ->
@@ -369,6 +373,7 @@ deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT 
 deleteFromTableByPk ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  BackendTableSelectSchema b =>
   Scenario ->
   -- | table source
   SourceInfo b ->
@@ -417,6 +422,7 @@ mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
 mutationSelectionSet ::
   forall b r m n.
   MonadBuildSchema b r m n =>
+  BackendTableSelectSchema b =>
   SourceInfo b ->
   TableInfo b ->
   m (Parser 'Output n (IR.MutFldsG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)))

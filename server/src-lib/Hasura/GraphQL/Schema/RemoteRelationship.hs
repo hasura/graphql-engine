@@ -47,9 +47,11 @@ remoteRelationshipField sourceCache remoteSchemaCache = RemoteRelationshipParser
     guard $ isHasuraSchema queryType
     case _rfiRHS of
       RFISource anyRemoteSourceFieldInfo ->
-        dispatchAnyBackend @BackendSchema anyRemoteSourceFieldInfo \remoteSourceFieldInfo -> do
-          fields <- lift $ remoteRelationshipToSourceField sourceCache remoteSourceFieldInfo
-          pure $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
+        dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
+          anyRemoteSourceFieldInfo
+          \remoteSourceFieldInfo -> do
+            fields <- lift $ remoteRelationshipToSourceField sourceCache remoteSourceFieldInfo
+            pure $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
       RFISchema remoteSchema -> do
         fields <- MaybeT $ remoteRelationshipToSchemaField remoteSchemaCache _rfiLHS remoteSchema
         pure $ pure $ IR.RemoteSchemaField <$> fields
@@ -171,7 +173,10 @@ lookupNestedFieldType parentTypeName remoteSchemaIntrospection (fieldCall :| res
 -- relationship field, hence [FieldParser ...] instead of 'FieldParser'
 remoteRelationshipToSourceField ::
   forall r m n tgt.
-  (MonadBuildSchemaBase r m n, BackendSchema tgt) =>
+  ( MonadBuildSchemaBase r m n,
+    BackendSchema tgt,
+    BackendTableSelectSchema tgt
+  ) =>
   SourceCache ->
   RemoteSourceFieldInfo tgt ->
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]

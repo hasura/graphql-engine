@@ -235,7 +235,9 @@ tableStreamArguments sourceInfo tableInfo = do
 -- | Field parser for a streaming subscription for a table.
 selectStreamTable ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   SourceInfo b ->
   -- | table info
   TableInfo b ->
