@@ -2,8 +2,8 @@
 
 module Hasura.AppSpec (spec) where
 
-import Control.Concurrent (threadDelay)
 import Control.Concurrent.Async qualified as Async
+import Control.Concurrent.Extended (sleep)
 import Control.Exception (throwIO)
 import Hasura.App (newShutdownLatch, shutdownGracefully, shuttingDown, waitForShutdown)
 import Hasura.Prelude
@@ -39,7 +39,8 @@ shutdownLatchSpec = do
   it "allows shutting down a thread" $ do
     latch <- newShutdownLatch
     Async.withAsync (waitForShutdown latch >> return ("shut down" :: String)) $ \async -> do
-      threadDelay 10_000
+      sleep 0.01
+
       pollThrow async
         `shouldReturn` Nothing
       shutdownGracefully latch

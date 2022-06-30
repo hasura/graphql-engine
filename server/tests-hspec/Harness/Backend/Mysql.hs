@@ -20,7 +20,7 @@ module Harness.Backend.Mysql
   )
 where
 
-import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -58,8 +58,7 @@ livenessCheck = loop Constants.mysqlLivenessCheckAttempts
             (const (pure ()))
         )
         ( \(_failure :: ExitCodeException) -> do
-            threadDelay
-              Constants.mysqlLivenessCheckIntervalMicroseconds
+            sleep Constants.httpHealthCheckIntervalSeconds
             loop (attempts - 1)
         )
 

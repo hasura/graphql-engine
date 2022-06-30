@@ -21,7 +21,7 @@ module Hasura.Backends.BigQuery.Execute
 where
 
 import Control.Applicative
-import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson ((.!=), (.:), (.:?), (.=))
@@ -228,7 +228,7 @@ data IsNullable
 -- Constants
 
 -- | Delay between attempts to get job results if the job is incomplete.
-streamDelaySeconds :: Int
+streamDelaySeconds :: DiffTime
 streamDelaySeconds = 1
 
 --------------------------------------------------------------------------------
@@ -402,7 +402,7 @@ streamBigQuery conn bigquery = do
                   Just pageToken' ->
                     loop (pure pageToken') (pure extendedRecordSet)
             Right JobIncomplete {} -> do
-              liftIO (threadDelay (1000 * 1000 * streamDelaySeconds))
+              liftIO (sleep streamDelaySeconds)
               loop pageToken mrecordSet
     Left e -> pure (Left e)
 
@@ -419,7 +419,7 @@ executeBigQuery conn bigquery = do
             Left problem -> pure (Left problem)
             Right (JobComplete _) -> pure (Right ())
             Right JobIncomplete {} -> do
-              liftIO (threadDelay (1000 * 1000 * streamDelaySeconds))
+              liftIO (sleep streamDelaySeconds)
               loop mrecordSet
     Left e -> pure (Left e)
 
