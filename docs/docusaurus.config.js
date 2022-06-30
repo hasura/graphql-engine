@@ -134,7 +134,7 @@ const config = {
       announcementBar: {
         id: 'announcement-bar-3',
         content:
-          '<a target="_blank" rel="noopener noreferrer" href="https://hasura.io/events/hasura-con-2022/">Join us for our annual Hasura user conference, HasuraCon’22</a>',
+          '<a target="_blank" rel="noopener noreferrer" href="https://hasura.io/events/hasura-con-2022/">Check out the product announcements from HasuraCon’22</a>',
         backgroundColor: "#511AAA",
         textColor: '#fff',
       },

@@ -2,8 +2,8 @@
   margin: 40px 0;
   display: grid;
   grid-template-columns: 110px 1fr;
-  grid-gap: 36px;
-  padding: 20px 100px;
+  grid-gap: 32px;
+  padding: 20px 60px;
   background-image: url("@site/static/img/hasura-con-banner-light-bg.svg");
   background-repeat: no-repeat;
   background-size: cover;
@@ -31,7 +31,6 @@
     align-self: center;
     img {
       width: 97px;
-      margin-bottom: 4px;
     }
     .brand-dark {
       display: block;
@@ -98,8 +97,8 @@ html[data-theme='dark'] {
 
 @media (max-width: 1380px) {
   .hasura-con-banner {
-    grid-gap: 100px;
-    padding: 20px 70px;
+    grid-gap: 60px;
+    padding: 20px 45px;
     .hasura-con-title {
       padding-bottom: 8px;
     }
@@ -125,18 +124,20 @@ html[data-theme='dark'] {
     }
     .hasura-con-title {
       padding-bottom: 16px;
+      line-height: 130%;
     }
   }
 }
 @media (max-width: 996px) {
   .hasura-con-banner {
-    padding: 20px 100px;
+    padding: 20px 60px;
+    grid-gap: 60px;
     .hasura-con-space-between {
       display: flex;
     }
   }
 }
-@media (max-width: 800px) {
+@media (max-width: 850px) {
   .hasura-con-banner {
     padding: 20px 40px;
     .hasura-con-space-between {
