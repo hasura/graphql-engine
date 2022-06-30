@@ -8,10 +8,9 @@ import (
 	"os"
 	"strings"
 
-	goyaml "github.com/goccy/go-yaml"
 
 	diffpkg "github.com/hasura/graphql-engine/cli/v2/internal/diff"
-
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/projectmetadata"
 
 	"github.com/aryann/difflib"
@@ -202,7 +201,7 @@ func checkDir(path string) error {
 }
 
 func convertYamlToJsonWithIndent(yamlByt []byte) ([]byte, error) {
-	jsonByt, err := goyaml.YAMLToJSON(yamlByt)
+	jsonByt, err := metadatautil.YAMLToJSON(yamlByt)
 	if err != nil {
 		return nil, fmt.Errorf("cannot convert yaml to json: %w", err)
 	}

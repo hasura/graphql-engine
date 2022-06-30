@@ -10,6 +10,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func BenchmarkYAMLToJSON(b *testing.B) {
+	funcs := []struct {
+		name string
+		f    func([]byte) ([]byte, error)
+	}{
+		{"cuelang/encoding", YAMLToJSON},
+	}
+	for _, f := range funcs {
+		b.Run(f.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				input, err := ioutil.ReadFile("testdata/yaml/t1/metadata.yaml")
+				assert.NoError(b, err)
+				_, err = f.f(input)
+				assert.NoError(b, err)
+			}
+		})
+	}
+}
+
 func Test_resolveTags(t *testing.T) {
 	type args struct {
 		ctx  map[string]string

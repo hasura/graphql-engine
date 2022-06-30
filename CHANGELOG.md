@@ -2,6 +2,8 @@
 
 ## Next release
 
+- cli: fix perfomance regression with large metadata in `metadata apply`
+
 ### Bug fixes and improvements
 
 ## v2.8.2

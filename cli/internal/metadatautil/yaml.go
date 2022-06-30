@@ -6,6 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"cuelang.org/go/cue/cuecontext"
+	"cuelang.org/go/cue/format"
+	cueyaml "cuelang.org/go/encoding/yaml"
+	cuejson "cuelang.org/go/pkg/encoding/json"
 	"gopkg.in/yaml.v3"
 )
 
@@ -135,4 +139,22 @@ func GetIncludeTagFiles(node *yaml.Node, baseDirectory string) ([]string, error)
 	var filenames []string
 	_, err := resolveTags(map[string]string{baseDirectoryKey: baseDirectory}, node, &filenames)
 	return filenames, err
+}
+
+func YAMLToJSON(yamlbs []byte) ([]byte, error) {
+	cueExpr, err := cueyaml.Extract("", yamlbs)
+	if err != nil {
+		return nil, fmt.Errorf("cue extraction error: %w", err)
+	}
+	cueNode, err := format.Node(cueExpr)
+	if err != nil {
+		return nil, fmt.Errorf("cue formatting error: %w", err)
+	}
+
+	cueValue := cuecontext.New().CompileBytes(cueNode)
+	jsonString, err := cuejson.Marshal(cueValue)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(jsonString), nil
 }
