@@ -129,11 +129,11 @@ export const LocalRelationshipWidget = ({
       query: requestBody as MetadataPayloadType,
     });
   };
-  const submit = (values: Schema) => {
+  const submit = (values: Record<string, unknown>) => {
     if (existingRelationshipName) {
-      return renameRelationship(values);
+      return renameRelationship(values as Schema);
     }
-    return createRelationship(values);
+    return createRelationship(values as Schema);
   };
 
   if (isLoading) {

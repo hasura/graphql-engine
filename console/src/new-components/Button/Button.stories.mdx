@@ -1,0 +1,236 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { FiSearch } from 'react-icons/fi';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { Button } from '@/new-components/Button/';
+
+<Meta
+  title="components/Button ✨"
+  component={Button}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+  decorators={[Story => <div className={'p-4'}>{Story()}</div>]}
+  argTypes={{
+    content: {
+      table: {
+        disable: true,
+      },
+    },
+  }}
+/>
+
+# Button
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Button/Button.tsx)
+
+## 🧰 Overview
+
+A component wrapping native `<button>` element ([see MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button)).
+It supports a loading state. The button inner content is added in a dedicated **slot**.
+
+Default CSS display is `block`, provided without padding and margin (displayed here with `padding: 1rem;`).
+
+### Basic usage
+
+```ts
+import { Button } from '@/new-components/Button';
+```
+
+```tsx
+<Button mode={'primary'}>
+  <span>The button label</span>
+</Button>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <Button mode={'primary'}>
+      <span>The button label</span>
+    </Button>
+  </Story>
+</Canvas>
+
+export const Template = args => <Button {...args}>{args.content}</Button>;
+
+export const stories = {
+  'States - Loading': {
+    content: <span>The button label</span>,
+    isLoading: true,
+    loadingText: 'Loading...',
+  },
+  'States - Disabled': {
+    content: <span>The button label</span>,
+    disabled: true,
+  },
+  'Variant - Mode default': {
+    content: <span>Default button</span>,
+    mode: 'default',
+  },
+  'Variant - Mode primary': {
+    content: <span>Primary button</span>,
+    mode: 'primary',
+  },
+  'Variant - Mode destructive': {
+    content: <span>Destructive button</span>,
+    mode: 'destructive',
+  },
+  'Variant - Size sm': {
+    content: <span>Small button</span>,
+    size: 'sm',
+  },
+  'Variant - Size md': {
+    content: <span>Medium button</span>,
+    size: 'md',
+  },
+  'Variant - Icon start': {
+    content: <span>Icon start button</span>,
+    icon: <FiSearch />,
+    iconPosition: 'start',
+  },
+  'Variant - Icon end': {
+    content: <span>Icon end button</span>,
+    icon: <FiSearch />,
+    iconPosition: 'end',
+  },
+  'API playground': {
+    content: <span>The button content</span>,
+  },
+  'Testing - Scalability': {
+    content: (
+      <span>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+        mollit anim id est laborum.
+      </span>
+    ),
+  },
+};
+
+## 🔁 States
+
+### 🔁 Loading
+
+<Canvas>
+  <Story name="States - Loading" args={stories['States - Loading']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🔁 Disabled
+
+<Canvas>
+  <Story name="States - Disabled" args={stories['States - Disabled']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## 🎭 Variants
+
+### 🎭 Mode
+
+<Canvas>
+  <Story
+    name="Variant - Mode"
+    args={{
+      'Variant - Mode default': stories['Variant - Mode default'],
+      'Variant - Mode primary': stories['Variant - Mode primary'],
+      'Variant - Mode destructive': stories['Variant - Mode destructive'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+#### 🚦 Usage
+
+- The default button should be used in the vast majority of circumstances
+- The primary button style should only be used once per page for create / persistent actions, we also shouldn't have
+  any other sizes for the primary button
+- Use destructive variant for destructive actions only
+
+### 🎭 Size
+
+<Canvas>
+  <Story
+    name="Variant - Size"
+    args={{
+      'Variant - Size sm': stories['Variant - Size sm'],
+      'Variant - Size md': stories['Variant - Size md'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+#### 🚦 Usage
+
+- Small is typically used for inline-forms while the large button is used with in coordination.
+
+### 🎭 Icon
+
+<Canvas>
+  <Story
+    name="Variant - Icon"
+    args={{
+      'Variant - Icon start': stories['Variant - Icon start'],
+      'Variant - Icon end': stories['Variant - Icon end'],
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+## 🧪 Testing
+
+### 🧪 Scalability
+
+<Canvas>
+  <Story name="Testing - Scalability" args={stories['Testing - Scalability']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={stories}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

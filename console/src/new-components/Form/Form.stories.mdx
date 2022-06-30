@@ -1,0 +1,516 @@
+import { useRef, useEffect } from 'react';
+import { UseFormReturn } from 'react-hook-form';
+import { DevTool } from '@hookform/devtools';
+import { Canvas, Meta, Story } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
+import { z } from 'zod';
+
+import {
+  Form,
+  InputField,
+  Textarea,
+  Select,
+  Checkbox,
+  Radio,
+  CodeEditorField,
+} from '@/new-components/Form';
+import { Button } from '@/new-components/Button';
+
+<Meta
+  title="components/Forms/Form ✨"
+  component={Form}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+/>
+
+# Form
+
+- [🧰 Overview](#-overview)
+- [💠 Basic usage](#-basic-usage)
+- [💠 Form input default value](#-form-input-default-value)
+- [💠 Manually trigger form validation](#-manually-trigger-form-validation)
+- [💠 Demo with all inputs and form reset](#-demo-with-all-inputs-and-form-reset)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Form/Form.tsx')
+
+## 🧰 Overview
+
+`<Form>` component eases the task of forms creation.
+
+It uses [**React Hook Form**](https://react-hook-form.com/) to
+handle form validation and submission, validation schema is provided by [**Zod**](https://zod.dev/).
+
+- 💡 Use the [`<DevTool>` component](https://react-hook-form.com/dev-tools) to debug the form state.
+- 💡 Use the [**Storybook addon 'Actions'**](https://storybook.js.org/docs/react/essentials/actions) to see submitted values.
+
+### 💠 Basic usage
+
+Import needed components:
+
+```ts
+import { z } from 'zod';
+
+import { Form, InputField } from '@/new-components/Form';
+import { Button } from '@/new-components/Button';
+```
+
+Define the validation schema with [**Zod**](https://zod.dev/) rules, here a mandatory input field is defined:
+
+```ts
+const basicFormValidationSchema = z.object({
+  inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
+});
+```
+
+export const basicFormValidationSchema = z.object({
+  inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
+});
+
+Create the form:
+
+```tsx
+const BasicFormTemplate = () => (
+  <Form
+    // Apply validation schema to the form
+    schema={basicFormValidationSchema}
+    onSubmit={action('onSubmit')}
+  >
+    {({ control }) => (
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold mb-xs">Basic form</h1>
+        <InputField
+          name="inputFieldName"
+          label="The input field label"
+          placeholder="Input field placeholder"
+        />
+        <Button type={'submit'} mode={'primary'}>
+          Submit
+        </Button>
+        {/* Debug form state */}
+        <DevTool control={control} />
+      </div>
+    )}
+  </Form>
+);
+```
+
+- 💡 The `control` prop is provided by [**React Hook Form**](https://react-hook-form.com/api/useform) and is used to access the form state.
+
+export const BasicFormTemplate = () => (
+  <Form
+    // Apply validation schema to the form
+    schema={basicFormValidationSchema}
+    onSubmit={action('onSubmit')}
+  >
+    {({ control }) => (
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold mb-xs">Basic form</h1>
+        <InputField
+          name="inputFieldName"
+          label="The input field label"
+          placeholder="Input field placeholder"
+        />
+        <Button type={'submit'} mode={'primary'}>
+          Submit
+        </Button>
+        {/* Debug form state */}
+        <DevTool control={control} />
+      </div>
+    )}
+  </Form>
+);
+
+<Canvas>
+  <Story name="Basic">{BasicFormTemplate.bind({})}</Story>
+</Canvas>
+
+### 💠 Form input default value
+
+For this demo, we reuse the `basicFormValidationSchema` from [💠 Basic usage](#-basic-usage).
+
+In this example, the form is automatically filled with the `Hello world !` value for the `inputFieldName` input:
+
+```tsx
+const TemplateFormInputDefaultValue = args => (
+  <Form
+    schema={basicFormValidationSchema}
+    options={{
+      defaultValues: {
+        inputFieldName: 'Hello world !',
+      },
+    }}
+    onSubmit={action('onSubmit')}
+  >
+    {({ control }) => (
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold mb-xs">Default value</h1>
+        <InputField
+          name="inputFieldName"
+          label="The input field label"
+          placeholder="Input field placeholder"
+        />
+        <Button type={'submit'} mode={'primary'}>
+          Submit
+        </Button>
+        <DevTool control={control} />
+      </div>
+    )}
+  </Form>
+);
+```
+
+export const TemplateFormInputDefaultValue = args => (
+  <Form
+    schema={basicFormValidationSchema}
+    options={{
+      defaultValues: {
+        inputFieldName: 'Hello world !',
+      },
+    }}
+    onSubmit={action('onSubmit')}
+  >
+    {({ control }) => (
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold mb-xs">Default value</h1>
+        <InputField
+          name="inputFieldName"
+          label="The input field label"
+          placeholder="Input field placeholder"
+        />
+        <Button type={'submit'} mode={'primary'}>
+          Submit
+        </Button>
+        <DevTool control={control} />
+      </div>
+    )}
+  </Form>
+);
+
+<Canvas>
+  <Story name="Form input default value">
+    {TemplateFormInputDefaultValue.bind({})}
+  </Story>
+</Canvas>
+
+### 💠 Manually trigger form validation
+
+For this demo, we reuse the `basicFormValidationSchema` from [💠 Basic usage](#-basic-usage) .
+
+In this example, the form is automatically validated when `args.triggerValidation` is `true` thanks to a
+`useImperativeHandle` hook:
+
+```tsx
+const TemplateManuallyTriggerFormValidation = args => {
+  const formRef = useRef();
+  useEffect(() => {
+    if (args && args.triggerValidation) {
+      // Use useEffect hook to wait for the form to be rendered before triggering validation
+      formRef.current.trigger();
+    }
+  });
+  return (
+    <Form
+      id={'formId'}
+      ref={formRef}
+      schema={basicFormValidationSchema}
+      onSubmit={action('onSubmit')}
+    >
+      {({ control }) => (
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold mb-xs">
+            Manually trigger form validation
+          </h1>
+          <InputField
+            name="inputFieldName"
+            label="The input field label"
+            placeholder="Input field placeholder"
+          />
+          <Button type={'submit'} mode={'primary'}>
+            Submit
+          </Button>
+          {/* Debug form state */}
+          <DevTool control={control} />
+        </div>
+      )}
+    </Form>
+  );
+};
+```
+
+export const TemplateManuallyTriggerFormValidation = args => {
+  const formRef = useRef();
+  useEffect(() => {
+    if (args && args.triggerValidation) {
+      // Use useEffect hook to wait for the form to be rendered before triggering validation
+      formRef.current.trigger();
+    }
+  });
+  return (
+    <Form
+      id={'formId'}
+      ref={formRef}
+      schema={basicFormValidationSchema}
+      onSubmit={action('onSubmit')}
+    >
+      {({ control }) => (
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold mb-xs">
+            Manually trigger form validation
+          </h1>
+          <InputField
+            name="inputFieldName"
+            label="The input field label"
+            placeholder="Input field placeholder"
+          />
+          <Button type={'submit'} mode={'primary'}>
+            Submit
+          </Button>
+          {/* Debug form state */}
+          <DevTool control={control} />
+        </div>
+      )}
+    </Form>
+  );
+};
+
+<Canvas>
+  <Story
+    name="Manually trigger form validation"
+    args={{ triggerValidation: true }}
+  >
+    {TemplateManuallyTriggerFormValidation.bind({})}
+  </Story>
+</Canvas>
+
+### 💠 Manually focus a field
+
+In this example, the form `inputFieldName` field is automatically focused when `args.focus` is `true` thanks to a
+`useImperativeHandle` hook:
+
+```tsx
+const TemplateManuallyFocusField = args => {
+  const formRef = useRef<UseFormReturn>(null);
+  useEffect(() => {
+    if (args && args.focus) {
+      // Use useEffect hook to wait for the form to be rendered before focusing field
+      formRef.current.setFocus('inputFieldName');
+    }
+  });
+  return (
+    <Form
+      id={'formId'}
+      ref={formRef}
+      schema={basicFormValidationSchema}
+      onSubmit={action('onSubmit')}
+    >
+      {({ control }) => (
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold mb-xs">Manually focus field</h1>
+          <InputField
+            name="inputFieldName"
+            label="The input field label"
+            placeholder="Input field placeholder"
+          />
+          <Button type={'submit'} mode={'primary'}>
+            Submit
+          </Button>
+          {/* Debug form state */}
+          <DevTool control={control} />
+        </div>
+      )}
+    </Form>
+  );
+};
+```
+
+export const TemplateManuallyFocusField = args => {
+  const formRef = useRef();
+  useEffect(() => {
+    if (args && args.focus) {
+      // Use useEffect hook to wait for the form to be rendered before before focusing field
+      formRef.current.setFocus('inputFieldName');
+    }
+  });
+  return (
+    <Form
+      id={'formId'}
+      ref={formRef}
+      schema={basicFormValidationSchema}
+      onSubmit={action('onSubmit')}
+    >
+      {({ control }) => (
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold mb-xs">Manually focus field</h1>
+          <InputField
+            name="inputFieldName"
+            label="The input field label"
+            placeholder="Input field placeholder"
+          />
+          <Button type={'submit'} mode={'primary'}>
+            Submit
+          </Button>
+          {/* Debug form state */}
+          <DevTool control={control} />
+        </div>
+      )}
+    </Form>
+  );
+};
+
+<Canvas>
+  <Story name="Manually focus a field" args={{ focus: true }}>
+    {TemplateManuallyFocusField.bind({})}
+  </Story>
+</Canvas>
+
+### 💠 Demo with all inputs and form reset
+
+Validation schema with all inputs mandatory:
+
+```ts
+const allInputsValidationSchema = z.object({
+  inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
+  textareaName: z.string(),
+  selectName: z.enum(['selectValue0', 'selectValue1'], {
+    message: 'Choose between Value 0 & Value 1',
+  }),
+  checkboxNames: z
+    // When nothing is selected, the value is a false boolean
+    .union([z.string().array(), z.boolean()])
+    .refine(
+      value => Array.isArray(value) && value.length > 0,
+      'Choose at least one option'
+    ),
+  radioName: z
+    // When nothing is selected, the value is null
+    .union([z.string(), z.null()])
+    .refine(
+      value => typeof value === 'string' && value.length > 0,
+      'Choose one option'
+    ),
+  codeEditorFieldName: z.string().min(1, { message: 'Mandatory field' }),
+});
+```
+
+export const allInputsValidationSchema = z.object({
+  inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
+  textareaName: z.string(),
+  selectName: z.enum(['selectValue0', 'selectValue1'], {
+    message: 'Choose between Value 0 & Value 1',
+  }),
+  checkboxNames: z
+    // When nothing is selected, the value is a false boolean
+    .union([z.string().array(), z.boolean()])
+    .refine(
+      value => Array.isArray(value) && value.length > 0,
+      'Choose at least one option'
+    ),
+  radioName: z
+    // When nothing is selected, the value is null
+    .union([z.string(), z.null()])
+    .refine(
+      value => typeof value === 'string' && value.length > 0,
+      'Choose one option'
+    ),
+  codeEditorFieldName: z.string().min(1, { message: 'Mandatory field' }),
+});
+
+export const TemplateAllInputs = args => {
+  const formRef = useRef();
+  useEffect(() => {
+    if (args && args.triggerValidation) {
+      formRef.current.trigger();
+    }
+  });
+  return (
+    <Form
+      id={'formId'}
+      ref={formRef}
+      options={{
+        defaultValues: {
+          ...(args && args.defaultValues ? args.defaultValues : {}),
+        },
+        mode: 'onSubmit',
+        reValidateMode: 'onChange',
+      }}
+      schema={allInputsValidationSchema}
+      onSubmit={action('onSubmit')}
+    >
+      {({ control, reset }) => (
+        <div className="space-y-2">
+          <h1 className="text-xl font-semibold mb-xs">Form title</h1>
+          <InputField
+            name="inputFieldName"
+            label="The input field label"
+            placeholder="Input field placeholder"
+          />
+          <Textarea
+            name="textareaName"
+            label="The textarea label"
+            placeholder="Textarea field placeholder"
+          />
+          <Select
+            name="selectName"
+            options={[
+              { value: 'selectValue0', label: 'Select value 0' },
+              {
+                value: 'selectValue1',
+                label: 'Select value 1',
+                disabled: true,
+              },
+              { value: 'selectValue2', label: 'Select value 2' },
+            ]}
+            label="The select label *"
+            placeholder="--Select placeholder--"
+          />
+          <Checkbox
+            name="checkboxNames"
+            label="The checkbox label *"
+            options={[
+              { value: 'checkboxValue0', label: 'Checkbox value 0' },
+              {
+                value: 'checkboxValue1',
+                label: 'Checkbox value 1',
+                disabled: true,
+              },
+              { value: 'checkboxValue2', label: 'Checkbox value 2' },
+            ]}
+            orientation={'horizontal'}
+          />
+          <Radio
+            name="radioName"
+            label="The radio label *"
+            options={[
+              { value: 'radioValue0', label: 'Radio value 0' },
+              {
+                value: 'radioValue1',
+                label: 'Radio value 1',
+                disabled: true,
+              },
+              { value: 'radioValue2', label: 'Radio value 2' },
+            ]}
+            orientation={'horizontal'}
+          />
+          <CodeEditorField
+            name="codeEditorFieldName"
+            label="The code editor label *"
+          />
+          <div className={'flex gap-4'}>
+            <Button type={'button'} onClick={() => reset({})}>
+              Reset
+            </Button>
+            <Button type={'submit'} mode={'primary'}>
+              Submit
+            </Button>
+          </div>
+          <DevTool control={control} />
+        </div>
+      )}
+    </Form>
+  );
+};
+
+<Canvas>
+  <Story name="Demo with all inputs">{TemplateAllInputs.bind({})}</Story>
+</Canvas>

@@ -40,6 +40,7 @@ import './GraphiQL.css';
 import 'graphiql-code-exporter/CodeExporter.css';
 import _push from '../../Data/push';
 import { isQueryValid } from '../Rest/utils';
+import { LS_KEYS, setLSItem } from '@/utils/localStorage';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -166,6 +167,7 @@ class GraphiQLWrapper extends Component {
 
     const routeToREST = gqlProps => () => {
       const { query, schema } = graphiqlContext.state;
+      setLSItem(LS_KEYS.graphiqlQuery, query);
       if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
         dispatch(
           showErrorNotification(

@@ -1,0 +1,280 @@
+import { useRef, useEffect } from 'react';
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { z } from 'zod';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { Select, Form } from '@/new-components/Form';
+
+<Meta
+  title="components/Forms/Select ✨"
+  component={Select}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+/>
+
+# Select
+
+- [🧰 Overview](#-overview)
+- [🔁 States](#-states)
+- [🎭 Variants](#-variants)
+- [⚙️ API](#-api)
+- [🧪 Testing](#-testing)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Form/Select.tsx)
+
+## 🧰 Overview
+
+A component wrapping native `select` element ([see MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/select)),
+its description, hint and error message.
+
+Default CSS display is `block`, provided without padding and margin (displayed here with the `<Form>` padding).
+
+### Basic usage
+
+```ts
+import { Select } from '@/new-components/Form';
+```
+
+The `<Select>` options list has the following structure:
+
+```ts
+const options: SelectItem[] = [
+  { value: 'value0', label: 'Value 0' },
+  { value: 'value1', label: 'Value 1', disabled: true },
+  { value: 'value2', label: 'Value 2' },
+];
+```
+
+export const options = [
+  { value: 'value0', label: 'Value 0' },
+  { value: 'value1', label: 'Value 1', disabled: true },
+  { value: 'value2', label: 'Value 2' },
+];
+
+The `<Select>` component must be wrapped inside a `<Form>` to be usable. It allows to benefit **form validation**
+and to define a **default value**:
+
+```ts
+const validationSchema = z.object({
+  selectName: z.enum(['value0', 'value1']),
+});
+```
+
+export const validationSchema = z.object({
+  selectName: z.enum(['value0', 'value1']),
+});
+
+```tsx
+<Form
+  options={{
+    defaultValues: {
+      selectName: 'value1',
+    },
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
+  }}
+  schema={validationSchema}
+>
+  {() => (
+    <Select
+      name="selectName"
+      options={options}
+      label="The select label"
+      placeholder="--Select an option--"
+    />
+  )}
+</Form>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <Form
+      options={{
+        defaultValues: {
+          selectName: 'value1',
+        },
+        mode: 'onSubmit',
+        reValidateMode: 'onChange',
+      }}
+      schema={validationSchema}
+    >
+      {() => (
+        <Select
+          name="selectName"
+          options={options}
+          label="The select label"
+          placeholder="--Select an option--"
+        />
+      )}
+    </Form>
+  </Story>
+</Canvas>
+
+export const Template = args => {
+  const formRef = useRef();
+  if (args && args.triggerValidation) {
+    useEffect(() => {
+      formRef.current.trigger();
+    });
+  }
+  return (
+    <Form
+      ref={formRef}
+      options={{
+        defaultValues: {
+          ...(args && args.defaultValues ? args.defaultValues : {}),
+        },
+        mode: 'onBlur',
+      }}
+      schema={validationSchema}
+    >
+      {() => <Select {...args} />}
+    </Form>
+  );
+};
+
+export const stories = {
+  'States - With default value': {
+    name: 'selectName',
+    options: options,
+    label: 'With selected value',
+    placeholder: '--Select an option--',
+    defaultValues: {
+      selectName: 'value2',
+    },
+  },
+  'States - Disabled': {
+    name: 'selectName',
+    options: options,
+    label: 'Disabled',
+    placeholder: '--Select an option--',
+    disabled: true,
+  },
+  'States - With error message': {
+    name: 'selectName',
+    options: options,
+    label: 'With error message',
+    placeholder: '--Select an option--',
+    triggerValidation: true,
+  },
+  'Variant - With description': {
+    name: 'selectName',
+    options: options,
+    label: 'Label',
+    description: 'Select description',
+    placeholder: '--Select an option--',
+  },
+  'API playground': {
+    name: 'selectName',
+    options: options,
+    label: 'API playground',
+    placeholder: '--Select an option--',
+  },
+  'Testing - Scalability': {
+    name: 'selectName',
+    options: options,
+    label:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    description:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    placeholder:
+      '--Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.--',
+    tooltip:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+    triggerValidation: true,
+  },
+};
+
+## 🔁 States
+
+### 🔁 With default value
+
+Use `<Form>` options to set default value.
+
+<Canvas>
+  <Story
+    name="States - With default value"
+    args={stories['States - With default value']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🔁 Disabled
+
+<Canvas>
+  <Story name="States - Disabled" args={stories['States - Disabled']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🔁 With error message
+
+Incorrect value is set then `<Form>` validation is automatically triggered.
+
+<Canvas>
+  <Story
+    name="States - With error message"
+    args={stories['States - With error message']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## 🎭 Variants
+
+### 🎭 With description
+
+<Canvas>
+  <Story
+    name="Variant - With description"
+    args={stories['Variant - With description']}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+## ⚙️ API
+
+<Canvas>
+  <Story name="API playground" args={stories['API playground']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>
+
+## 🧪 Testing
+
+### 🧪 Scalability
+
+<Canvas>
+  <Story name="Testing - Scalability" args={stories['Testing - Scalability']}>
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+### 🧪 Snapshot 📸
+
+<Canvas>
+  <Story
+    name="Testing - Snapshot"
+    args={stories}
+    parameters={{
+      chromatic: { disableSnapshot: false },
+    }}
+  >
+    {TemplateStoriesFactory(Template).bind({})}
+  </Story>
+</Canvas>

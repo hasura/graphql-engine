@@ -3,17 +3,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { z } from 'zod';
 import { Form, InputField, InputFieldProps } from '@/new-components/Form';
 
-type FormValues = {
-  title: string;
-};
-
 const renderInputField = (
   props: Omit<InputFieldProps, 'name'>,
   schema: any = z.object({ title: z.string() })
 ) => {
   const onSubmit = jest.fn();
   render(
-    <Form<FormValues>
+    <Form
       onSubmit={args => {
         console.log('AAAA', args);
         onSubmit(args);

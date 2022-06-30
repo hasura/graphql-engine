@@ -1,18 +1,44 @@
 import { ToolTip } from '@/new-components/Tooltip';
 import * as React from 'react';
-import clsx from 'clsx';
 import { FieldError } from 'react-hook-form';
 import { FaExclamationCircle } from 'react-icons/fa';
 
 type FieldWrapperProps = {
+  /**
+   * The field ID
+   */
   id?: string;
+  /**
+   * The field label icon
+   */
   labelIcon?: React.ReactElement;
+  /**
+   * The field label
+   */
   label?: string;
+  /**
+   * The field class
+   */
   className?: string;
+  /**
+   * The field children
+   */
   children: React.ReactNode;
+  /**
+   * The field error
+   */
   error?: FieldError | undefined;
+  /**
+   * The field description
+   */
   description?: string;
+  /**
+   * The field tooltip label
+   */
   tooltip?: string;
+  /**
+   * The field data test id for testing
+   */
   dataTest?: string;
 };
 
@@ -33,11 +59,8 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
     tooltip,
   } = props;
   return (
-    <div>
-      <label
-        htmlFor={id}
-        className={clsx('block text-gray-600 mb-xs', className)}
-      >
+    <div className={className}>
+      <label htmlFor={id} className="block text-gray-600 mb-xs">
         <span className="flex items-center">
           <span className="font-semibold">
             {labelIcon
@@ -54,16 +77,18 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
         ) : null}
       </label>
       <div>{children}</div>
-      {error?.message && (
-        <div
-          role="alert"
-          aria-label={error.message}
-          className="mt-xs text-red-600 flex items-center"
-        >
-          <FaExclamationCircle className="fill-current h-4 mr-xs" />
-          {error.message}
-        </div>
-      )}
+      <div
+        role={error?.message ? 'alert' : ''}
+        aria-label={error?.message || ''}
+        className="text-red-600 flex items-center text-sm mt-1"
+      >
+        <span className="flex items-center">
+          {error?.message && (
+            <FaExclamationCircle className="fill-current h-4 mr-xs" />
+          )}
+          {error?.message}&nbsp;
+        </span>
+      </div>
     </div>
   );
 };

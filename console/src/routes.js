@@ -27,7 +27,7 @@ import { showErrorNotification } from './components/Services/Common/Notification
 import { CLI_CONSOLE_MODE } from './constants';
 import { SupportContainer } from './components/Services/Support/SupportContainer';
 import HelpPage from './components/Services/Support/HelpPage';
-import CreateRestView from './components/Services/ApiExplorer/Rest/Create/';
+import FormRestView from './components/Services/ApiExplorer/Rest/Form';
 import RestListView from './components/Services/ApiExplorer/Rest/List';
 import DetailsView from './components/Services/ApiExplorer/Rest/Details';
 import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
@@ -121,10 +121,10 @@ const routes = store => {
             />
             <Route path="rest">
               <IndexRedirect to="list" />
-              <Route path="create" component={CreateRestView} />
+              <Route path="create" component={FormRestView} />
               <Route path="list" component={RestListView} />
               <Route path="details/:name" component={DetailsView} />
-              <Route path="edit/:name" component={CreateRestView} />
+              <Route path="edit/:name" component={FormRestView} />
             </Route>
           </Route>
 

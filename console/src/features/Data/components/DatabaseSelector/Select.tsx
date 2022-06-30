@@ -1,7 +1,7 @@
-import { FieldWrapper } from '@/new-components/Form';
 import clsx from 'clsx';
 import React from 'react';
 import { FieldError } from 'react-hook-form';
+import { FieldWrapper } from './../../../../new-components/Form/FieldWrapper';
 
 interface TSelect extends React.ComponentProps<'select'> {
   options: string[];
