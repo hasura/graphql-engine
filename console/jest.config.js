@@ -30,6 +30,7 @@ module.exports = {
     window: {
       __env: {
         nodeEnv: 'development',
+        serverVersion: 'v1.0.0',
       },
     },
   },

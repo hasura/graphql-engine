@@ -21,6 +21,6 @@ export const useConsoleConfig = (): ConsoleConfig => {
   return {
     mode: globals.consoleMode as 'server' | 'cli',
     is_admin_secret_set: getEnvVarAsBoolean(globals.isAdminSecretSet),
-    type: getEnvVarAsString(globals.consoleType) ?? 'oss',
+    type: getEnvVarAsString(globals.consoleType ?? '') ?? 'oss',
   };
 };

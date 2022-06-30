@@ -7,6 +7,7 @@ import React, {
   useEffect,
 } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { canAccessReadReplica } from '@/utils/permissions';
 
 import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';
@@ -441,7 +442,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
           {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
             connectDBInputState.dbType
           ) &&
-            (window.__env.consoleId || window.__env.userRole) && (
+            canAccessReadReplica() && (
               <ReadReplicaForm
                 readReplicaState={readReplicasState}
                 readReplicaDispatch={readReplicaDispatch}
@@ -476,7 +477,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         {getSupportedDrivers('connectDbForm.read_replicas.create').includes(
           connectDBInputState.dbType
         ) &&
-          (window.__env.consoleId || window.__env.userRole) && (
+          canAccessReadReplica() && (
             <ReadReplicaForm
               readReplicaState={readReplicasState}
               readReplicaDispatch={readReplicaDispatch}
