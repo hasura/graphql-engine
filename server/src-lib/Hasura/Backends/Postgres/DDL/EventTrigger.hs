@@ -29,7 +29,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
 import Data.Int (Int64)
-import Data.Set qualified as Set
+import Data.Set.NonEmpty qualified as NE
 import Data.Text.Lazy qualified as TL
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as Q
@@ -247,7 +247,7 @@ updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
 unlockEventsInSource ::
   MonadIO m =>
   SourceConfig ('Postgres pgKind) ->
-  Set.Set EventId ->
+  NE.NESet EventId ->
   m (Either QErr Int)
 unlockEventsInSource sourceConfig eventIds =
   liftIO $ runPgSourceWriteTx sourceConfig (unlockEventsTx $ toList eventIds)

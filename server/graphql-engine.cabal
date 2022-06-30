@@ -168,6 +168,7 @@ common lib-depends
                      , monad-loops
                      , monad-validate
                      , mtl
+                     , nonempty-containers
                      , openapi3
                      , optparse-applicative
                      , parsec

@@ -22,7 +22,7 @@ import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.FileEmbed (makeRelativeToProject)
-import Data.Set qualified as Set
+import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated, toTxt)
 import Data.Text.Lazy qualified as LT
@@ -204,7 +204,7 @@ createTableEventTrigger _serverConfigCtx sourceConfig table columns triggerName 
 unlockEventsInSource ::
   MonadIO m =>
   MSSQLSourceConfig ->
-  Set.Set EventId ->
+  NE.NESet EventId ->
   m (Either QErr Int)
 unlockEventsInSource sourceConfig eventIds =
   liftIO $
@@ -474,12 +474,13 @@ unlockEventsTx eventIds = do
   numEvents <-
     singleRowQueryE HGE.defaultMSSQLTxErrorHandler $
       rawUnescapedText . LT.toStrict $
-        -- EventIds as list of VALUES (Eg: ('123-abc'),('456-vgh'), ('234-asd'))
+        -- EventIds as list of VALUES (Eg: ('123-abc'), ('456-vgh'), ('234-asd'))
         let eventIdsValues = generateValuesFromEvents eventIds
          in $(makeRelativeToProject "src-rsr/mssql/mssql_unlock_events.sql.shakespeare" >>= ST.stextFile)
   return numEvents
   where
     generateValuesFromEvents :: [EventId] -> Text
+    -- creates a list of event id's  (('123-abc'), ('456-vgh'), ('234-asd'))
     generateValuesFromEvents events = commaSeparated values
       where
         values = map (\e -> "(" <> toTxt e <> ")") events
