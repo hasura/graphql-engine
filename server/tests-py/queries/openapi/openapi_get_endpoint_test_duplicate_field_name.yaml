@@ -15,7 +15,6 @@
           collection_name: test_collection
           query_name: query_with_duplicate_field_name
 
-
 - description: Call openapi json endpoint
   url: /api/swagger/json
   method: GET
@@ -48,12 +47,17 @@
                     properties:
                       test_table:
                         items:
+                          title: test_table
                           type: object
+                          description: columns and relationships of "test_table"
+                          nullable: false
                           properties:
                             first_name:
+                              nullable: true
                               title: String
                               type: string
                             last_name:
+                              nullable: true
                               title: String
                               type: string
                         type: array

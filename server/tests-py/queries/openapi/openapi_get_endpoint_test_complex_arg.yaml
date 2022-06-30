@@ -15,7 +15,6 @@
           collection_name: test_collection
           query_name: mutation_complex_arg
 
-
 - description: Call openapi json endpoint
   url: /api/swagger/json
   method: GET
@@ -50,7 +49,7 @@
                   properties:
                     objects:
                       items:
-                        $ref: "#/components/schemas/test_table_insert_input"
+                        $ref: '#/components/schemas/test_table_insert_input!'
                       type: array
                       nullable: false
             description: Query parameters can also be provided in the request body as
@@ -62,39 +61,52 @@
                   schema:
                     properties:
                       insert_test_table:
+                        title: test_table_mutation_response
                         type: object
+                        description: response of any mutation on the table "test_table"
+                        nullable: true
                         properties:
                           returning:
                             items:
+                              title: test_table
                               type: object
+                              description: columns and relationships of "test_table"
+                              nullable: false
                               properties:
                                 id:
-                                  pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-                                  title: uuid
-                                  type: string
+                                  $ref: '#/components/schemas/uuid!'
                             type: array
                             nullable: false
               description: Responses for POST /api/rest/complex_arg
     components:
       schemas:
-        String:
-          type: string
-          nullable: true
-        uuid:
-          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-          type: string
-          nullable: true
-        test_table_insert_input:
+        test_table_insert_input!:
+          title: test_table_insert_input
           type: object
           description: input type for inserting data into table "test_table"
           nullable: false
           properties:
             first_name:
-              "$ref": "#/components/schemas/String"
+              nullable: true
+              title: String
+              type: string
             last_name:
-              "$ref": "#/components/schemas/String"
+              nullable: true
+              title: String
+              type: string
             id:
-              "$ref": "#/components/schemas/uuid"
+              $ref: '#/components/schemas/uuid'
+        uuid:
+          title: uuid
+          type: string
+          nullable: true
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        uuid!:
+          title: uuid
+          type: string
+          nullable: false
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

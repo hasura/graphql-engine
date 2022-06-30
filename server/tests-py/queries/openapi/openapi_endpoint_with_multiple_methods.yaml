@@ -19,7 +19,6 @@
           collection_name: test_collection
           query_name: mutation_with_args
 
-
 - description: Call openapi json endpoint
   url: /api/swagger/json
   method: GET
@@ -65,9 +64,11 @@
                   properties:
                     first_name:
                       nullable: false
+                      title: String
                       type: string
                     last_name:
                       nullable: false
+                      title: String
                       type: string
                   type: object
             description: Query parameters can also be provided in the request body
@@ -80,20 +81,25 @@
                   schema:
                     properties:
                       insert_test_table:
+                        description: response of any mutation on the table "test_table"
+                        nullable: true
                         properties:
                           affected_rows:
+                            nullable: false
                             title: Int
                             type: integer
                           returning:
                             items:
+                              description: columns and relationships of "test_table"
+                              nullable: false
                               properties:
                                 id:
-                                  pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-                                  title: uuid
-                                  type: string
+                                  $ref: '#/components/schemas/uuid!'
+                              title: test_table
                               type: object
                             nullable: false
                             type: array
+                        title: test_table_mutation_response
                         type: object
               description: Responses for GET /api/rest/multi_method_endpoint
         put:
@@ -128,9 +134,11 @@
                   properties:
                     first_name:
                       nullable: false
+                      title: String
                       type: string
                     last_name:
                       nullable: false
+                      title: String
                       type: string
                   type: object
             description: Query parameters can also be provided in the request body
@@ -143,20 +151,25 @@
                   schema:
                     properties:
                       insert_test_table:
+                        description: response of any mutation on the table "test_table"
+                        nullable: true
                         properties:
                           affected_rows:
+                            nullable: false
                             title: Int
                             type: integer
                           returning:
                             items:
+                              description: columns and relationships of "test_table"
+                              nullable: false
                               properties:
                                 id:
-                                  pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-                                  title: uuid
-                                  type: string
+                                  $ref: '#/components/schemas/uuid!'
+                              title: test_table
                               type: object
                             nullable: false
                             type: array
+                        title: test_table_mutation_response
                         type: object
               description: Responses for PUT /api/rest/multi_method_endpoint
         post:
@@ -191,9 +204,11 @@
                   properties:
                     first_name:
                       nullable: false
+                      title: String
                       type: string
                     last_name:
                       nullable: false
+                      title: String
                       type: string
                   type: object
             description: Query parameters can also be provided in the request body
@@ -206,20 +221,25 @@
                   schema:
                     properties:
                       insert_test_table:
+                        description: response of any mutation on the table "test_table"
+                        nullable: true
                         properties:
                           affected_rows:
+                            nullable: false
                             title: Int
                             type: integer
                           returning:
                             items:
+                              description: columns and relationships of "test_table"
+                              nullable: false
                               properties:
                                 id:
-                                  pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-                                  title: uuid
-                                  type: string
+                                  $ref: '#/components/schemas/uuid!'
+                              title: test_table
                               type: object
                             nullable: false
                             type: array
+                        title: test_table_mutation_response
                         type: object
               description: Responses for POST /api/rest/multi_method_endpoint
         delete:
@@ -254,9 +274,11 @@
                   properties:
                     first_name:
                       nullable: false
+                      title: String
                       type: string
                     last_name:
                       nullable: false
+                      title: String
                       type: string
                   type: object
             description: Query parameters can also be provided in the request body
@@ -269,20 +291,25 @@
                   schema:
                     properties:
                       insert_test_table:
+                        description: response of any mutation on the table "test_table"
+                        nullable: true
                         properties:
                           affected_rows:
+                            nullable: false
                             title: Int
                             type: integer
                           returning:
                             items:
+                              description: columns and relationships of "test_table"
+                              nullable: false
                               properties:
                                 id:
-                                  pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-                                  title: uuid
-                                  type: string
+                                  $ref: '#/components/schemas/uuid!'
+                              title: test_table
                               type: object
                             nullable: false
                             type: array
+                        title: test_table_mutation_response
                         type: object
               description: Responses for DELETE /api/rest/multi_method_endpoint
         patch:
@@ -317,9 +344,11 @@
                   properties:
                     first_name:
                       nullable: false
+                      title: String
                       type: string
                     last_name:
                       nullable: false
+                      title: String
                       type: string
                   type: object
             description: Query parameters can also be provided in the request body
@@ -332,23 +361,35 @@
                   schema:
                     properties:
                       insert_test_table:
+                        description: response of any mutation on the table "test_table"
+                        nullable: true
                         properties:
                           affected_rows:
+                            nullable: false
                             title: Int
                             type: integer
                           returning:
                             items:
+                              description: columns and relationships of "test_table"
+                              nullable: false
                               properties:
                                 id:
-                                  pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-                                  title: uuid
-                                  type: string
+                                  $ref: '#/components/schemas/uuid!'
+                              title: test_table
                               type: object
                             nullable: false
                             type: array
+                        title: test_table_mutation_response
                         type: object
               description: Responses for PATCH /api/rest/multi_method_endpoint
-    components: {}
+    components:
+      schemas:
+        uuid!:
+          nullable: false
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+          title: uuid
+          type: string
+
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

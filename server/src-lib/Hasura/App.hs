@@ -318,6 +318,7 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
       Applicative,
       Monad,
       MonadIO,
+      MonadFix,
       MonadCatch,
       MonadThrow,
       MonadMask,
@@ -551,6 +552,7 @@ flushLogger = liftIO . FL.flushLogStr . _lcLoggerSet
 runHGEServer ::
   forall m impl.
   ( MonadIO m,
+    MonadFix m,
     MonadMask m,
     MonadStateless IO m,
     LA.Forall (LA.Pure m),
@@ -625,6 +627,7 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
 mkHGEServer ::
   forall m impl.
   ( MonadIO m,
+    MonadFix m,
     MonadMask m,
     MonadStateless IO m,
     LA.Forall (LA.Pure m),

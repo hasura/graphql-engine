@@ -15,7 +15,6 @@
           collection_name: test_collection
           query_name: mutation_recursive_arg
 
-
 - description: Call openapi json endpoint
   url: /api/swagger/json
   method: GET
@@ -49,7 +48,7 @@
                   type: object
                   properties:
                     object:
-                      $ref: '#/components/schemas/test_table_recurse_insert_input'
+                      $ref: '#/components/schemas/test_table_recurse_insert_input!'
             description: Query parameters can also be provided in the request body as
               a JSON object
           responses:
@@ -59,40 +58,49 @@
                   schema:
                     properties:
                       insert_test_table_recurse_one:
+                        title: test_table_recurse
                         type: object
+                        description: columns and relationships of "test_table_recurse"
+                        nullable: true
                         properties:
                           id:
-                            pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-                            title: uuid
-                            type: string
+                            $ref: '#/components/schemas/uuid!'
               description: Responses for POST /api/rest/recurse_arg
     components:
       schemas:
-        test_table_recurse_insert_input:
+        test_table_recurse_insert_input!:
+          title: test_table_recurse_insert_input
           type: object
           description: input type for inserting data into table "test_table_recurse"
           nullable: false
           properties:
             random_data:
-              $ref: '#/components/schemas/String'
+              title: String
+              type: string
+              nullable: true
             id:
               $ref: '#/components/schemas/uuid'
             recurse_rel:
               $ref: '#/components/schemas/test_table_recurse_obj_rel_insert_input'
-        uuid:
-          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
-          type: string
-          nullable: true
-        String:
-          type: string
-          nullable: true
         test_table_recurse_obj_rel_insert_input:
+          title: test_table_recurse_obj_rel_insert_input
           type: object
           description: input type for inserting object relation for remote table "test_table_recurse"
           nullable: true
           properties:
             data:
-              $ref: '#/components/schemas/test_table_recurse_insert_input'
+              $ref: '#/components/schemas/test_table_recurse_insert_input!'
+        uuid:
+          title: uuid
+          type: string
+          nullable: true
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+        uuid!:
+          title: uuid
+          type: string
+          nullable: false
+          pattern: '[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}'
+
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

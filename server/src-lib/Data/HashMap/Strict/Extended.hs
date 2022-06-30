@@ -87,11 +87,11 @@ lhs `isInverseOf` rhs = lhs `invertedBy` rhs && rhs `invertedBy` lhs
 -- | The union of two maps.
 --
 -- If a key occurs in both maps, the provided function (first argument) will be
--- used to compute the result. Unlike 'unionWith', 'unionWithA' performs the
+-- used to compute the result. Unlike 'unionWith', 'unionWithM' performs the
 -- computation in an arbitratry monad.
 unionWithM ::
   (Monad m, Eq k, Hashable k) =>
-  (v -> v -> m v) ->
+  (k -> v -> v -> m v) ->
   HashMap k v ->
   HashMap k v ->
   m (HashMap k v)
@@ -100,7 +100,7 @@ unionWithM f m1 m2 = foldM step m1 (toList m2)
     step m (k, new) = case M.lookup k m of
       Nothing -> pure $ insert k new m
       Just old -> do
-        combined <- f new old
+        combined <- f k new old
         pure $ insert k combined m
 
 -- | Like 'M.unions', but keeping all elements in the result.

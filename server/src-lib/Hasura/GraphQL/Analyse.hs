@@ -2,9 +2,13 @@
 module Hasura.GraphQL.Analyse
   ( -- * Query structure
     Structure (..),
-    Selection (..),
     FieldInfo (..),
+    InputFieldInfo (..),
     VariableInfo (..),
+    ScalarInfo (..),
+    EnumInfo (..),
+    ObjectInfo (..),
+    InputObjectInfo (..),
 
     -- * Analysis
     diagnoseGraphQLQuery,
@@ -12,8 +16,9 @@ module Hasura.GraphQL.Analyse
   )
 where
 
+import Control.Monad.Circular
 import Control.Monad.Writer (Writer, runWriter)
-import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.Extended qualified as Map
 import Data.Sequence ((|>))
 import Data.Text qualified as T
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -21,62 +26,59 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- GraphQL query structure
 
--- | Overall structure of a given query.
+-- | Overall structure of a given query. We extract the tree of fields in the
+-- output, and the graph of input variables.
 data Structure = Structure
-  { _stSelection :: Selection,
+  { _stSelection :: HashMap G.Name FieldInfo,
     _stVariables :: HashMap G.Name VariableInfo
   }
 
-instance Semigroup Structure where
-  Structure s1 v1 <> Structure s2 v2 = Structure (s1 <> s2) (v1 <> v2)
+-- | Information about the type of an output field; whether the base type is an
+-- object or a scalar, we store the correspoding 'GType' to keep track of the
+-- modifiers applied to it (list or non-nullability).
+data FieldInfo
+  = FieldObjectInfo G.GType ObjectInfo
+  | FieldScalarInfo G.GType ScalarInfo
+  | FieldEnumInfo G.GType EnumInfo
 
-instance Monoid Structure where
-  mempty = Structure mempty mempty
-
--- | Represents a selection of fields within a query.
-data Selection = Selection
-  { _seFields :: HashMap G.Name FieldInfo
+data ScalarInfo = ScalarInfo
+  { _siTypeDefinition :: G.ScalarTypeDefinition
   }
 
--- | In case of field collisions, we want to keep the union of all their
--- selections sets. For instance, given:
---
---  >  query MyQuery {
---  >    test {
---  >      a
---  >      b
---  >    }
---  >    test {
---  >      b
---  >      c
---  >    }
---  >  }
---
--- We want to keep a Selection with all three @a@, @b@, and @c@.
-instance Semigroup Selection where
-  Selection s1 <> Selection s2 = Selection $ Map.unionWith combineFields s1 s2
-    where
-      combineFields f1 f2 = f1 {_fiSelection = _fiSelection f1 <> _fiSelection f2}
-
-instance Monoid Selection where
-  mempty = Selection mempty
-
-data FieldInfo = FieldInfo
-  { _fiType :: G.GType,
-    _fiTypeDefinition :: G.TypeDefinition [G.Name] G.InputValueDefinition,
-    _fiSelection :: Maybe Selection
+data EnumInfo = EnumInfo
+  { _eiTypeDefinition :: G.EnumTypeDefinition
   }
 
--- | TODO: document this
+data ObjectInfo = ObjectInfo
+  { _oiTypeDefinition :: G.ObjectTypeDefinition G.InputValueDefinition,
+    _oiSelection :: HashMap G.Name FieldInfo
+  }
+
+-- | Information about a single variable of the query.
 data VariableInfo = VariableInfo
   { _viType :: G.GType,
+    _viTypeInfo :: InputFieldInfo,
     _viDefaultValue :: Maybe (G.Value Void)
   }
 
--------------------------------------------------------------------------------
+-- | Information about the type of an input field; whether the base type is an
+-- object or a scalar, we store the correspoding 'GType' to keep track of the
+-- modifiers applied to it (list or non-nullability).
+data InputFieldInfo
+  = InputFieldScalarInfo ScalarInfo
+  | InputFieldEnumInfo EnumInfo
+  | InputFieldObjectInfo InputObjectInfo
+
+data InputObjectInfo = InputObjectInfo
+  { _ioiTypeDefinition :: G.InputObjectTypeDefinition G.InputValueDefinition,
+    -- | lazy for knot-tying, as we build a graph
+    _ioiFields :: ~(HashMap G.Name (G.GType, InputFieldInfo))
+  }
+
+--------------------------------------------------------------------------------
 -- Analysis
 
 -- | Given the schema's definition, and a query, validate that the query is
@@ -116,60 +118,40 @@ diagnoseGraphQLQuery schema query =
 --   > }
 --
 -- AND an error about "does_not_exist" not existing.
+--
+-- In some cases, however, we might not be able to produce a structure at all,
+-- in which case we return 'Nothing'. This either indicates that something was
+-- fundamentally wrong with the structure of the query (such as not finding an
+-- object at the top level), or that a recoverable error was not caught properly
+-- (see 'withCatchAndRecord').
 analyzeGraphQLQuery ::
   G.SchemaIntrospection ->
   G.TypedOperationDefinition G.NoFragments G.Name ->
-  (Structure, [Text])
-analyzeGraphQLQuery schema G.TypedOperationDefinition {..} = runAnalysis schema $
-  do
-    -- traverse the fields recursively
-    selection <- withCatchAndRecord do
-      let rootTypeName = case _todType of
-            G.OperationTypeQuery -> queryRootName
-            G.OperationTypeMutation -> mutationRootName
-            G.OperationTypeSubscription -> subscriptionRootName
-      rootTypeDefinition <-
-        lookupType rootTypeName
-          `onNothingM` throwDiagnosis (TypeNotFound rootTypeName)
-      analyzeSelectionSet rootTypeDefinition _todSelectionSet
-        `onNothingM` throwDiagnosis NoTopLevelSelection
-    -- collect variables
-    let variables =
-          _todVariableDefinitions <&> \G.VariableDefinition {..} ->
-            (_vdName, VariableInfo _vdType _vdDefaultValue)
-    pure $
-      Structure
-        (fromMaybe mempty selection)
-        (Map.fromList variables)
+  (Maybe Structure, [Text])
+analyzeGraphQLQuery schema G.TypedOperationDefinition {..} = runAnalysis schema do
+  -- analyze the selection
+  selection <- withCatchAndRecord do
+    let rootTypeName = case _todType of
+          G.OperationTypeQuery -> queryRootName
+          G.OperationTypeMutation -> mutationRootName
+          G.OperationTypeSubscription -> subscriptionRootName
+    rootTypeDefinition <-
+      lookupType rootTypeName
+        `onNothingM` throwDiagnosis (TypeNotFound rootTypeName)
+    case rootTypeDefinition of
+      G.TypeDefinitionObject otd ->
+        analyzeObjectSelectionSet otd _todSelectionSet
+      _ ->
+        throwDiagnosis RootTypeNotAnObject
+  -- analyze the variables
+  variables <- analyzeVariables _todVariableDefinitions
+  pure $
+    Structure
+      (fromMaybe mempty selection)
+      variables
 
--- | Check the consistency between the schema information about a type and a
--- selection set (or lack thereof) on that type.
-analyzeSelectionSet ::
-  G.TypeDefinition [G.Name] G.InputValueDefinition ->
-  G.SelectionSet G.NoFragments G.Name ->
-  Analysis (Maybe Selection)
-analyzeSelectionSet typeDef selectionSet = case typeDef of
-  G.TypeDefinitionInputObject iotd -> do
-    -- input objects aren't allowed in selection sets
-    throwDiagnosis $ InputObjectSelectionSet $ G._iotdName iotd
-  G.TypeDefinitionScalar std -> do
-    -- scalars do not admit a selection set
-    unless (null selectionSet) $
-      throwDiagnosis $ ScalarSelectionSet $ G._stdName std
-    pure Nothing
-  G.TypeDefinitionEnum etd -> do
-    -- enums do not admit a selection set
-    unless (null selectionSet) $
-      throwDiagnosis $ EnumSelectionSet $ G._etdName etd
-    pure Nothing
-  G.TypeDefinitionUnion _utd ->
-    -- TODO: implement unions
-    pure Nothing
-  G.TypeDefinitionInterface _itd ->
-    -- TODO: implement interfaces
-    pure Nothing
-  G.TypeDefinitionObject otd ->
-    Just <$> analyzeObjectSelectionSet otd selectionSet
+--------------------------------------------------------------------------------
+-- Selection analysis
 
 -- | Analyze the fields of an object selection set against its definition, and
 -- emit the corresponding 'Selection'. We ignore the fields that fail, and we
@@ -177,34 +159,31 @@ analyzeSelectionSet typeDef selectionSet = case typeDef of
 analyzeObjectSelectionSet ::
   G.ObjectTypeDefinition G.InputValueDefinition ->
   G.SelectionSet G.NoFragments G.Name ->
-  Analysis Selection
+  Analysis (HashMap G.Name FieldInfo)
 analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
-  mconcat . catMaybes <$> for selectionSet analyzeObjectSelection
+  fields <- traverse analyzeSelection selectionSet
+  foldlM (Map.unionWithM mergeFields) mempty $ catMaybes fields
   where
-    analyzeObjectSelection :: G.Selection G.NoFragments G.Name -> Analysis (Maybe Selection)
-    analyzeObjectSelection = \case
-      G.SelectionInlineFragment inlineFrag -> do
-        -- analyze the inline fragment's selection set
-        mconcat <$> for (G._ifSelectionSet inlineFrag) analyzeObjectSelection
-      G.SelectionField (G.Field {..}) ->
-        withField _fName $ withCatchAndRecord do
-          -- attempt to find that field in the object's definition
-          G.FieldDefinition {..} <-
-            findDefinition _fName
-              `onNothing` throwDiagnosis (ObjectFieldNotFound _otdName _fName)
-          -- attempt to find its type in the schema
-          let baseType = G.getBaseType _fldType
-          typeDefinition <-
-            lookupType baseType
-              `onNothingM` throwDiagnosis (TypeNotFound baseType)
-          -- recursively processthe selection set
-          subSelection <- analyzeSelectionSet typeDefinition _fSelectionSet
-          -- TODO: should we check arguments?
-          pure $
-            Selection $
-              Map.singleton
-                (fromMaybe _fName _fAlias)
-                (FieldInfo _fldType typeDefinition subSelection)
+    analyzeSelection :: G.Selection G.NoFragments G.Name -> Analysis (Maybe (HashMap G.Name FieldInfo))
+    analyzeSelection = \case
+      G.SelectionInlineFragment inlineFrag ->
+        mconcat <$> traverse analyzeSelection (G._ifSelectionSet inlineFrag)
+      G.SelectionField field@G.Field {..} ->
+        fmap join $
+          withField _fName $ withCatchAndRecord do
+            -- attempt to find that field in the object's definition
+            G.FieldDefinition {..} <-
+              findDefinition _fName
+                `onNothing` throwDiagnosis (ObjectFieldNotFound _otdName _fName)
+            -- attempt to find its type in the schema
+            let baseType = G.getBaseType _fldType
+            typeDefinition <-
+              lookupType baseType
+                `onNothingM` throwDiagnosis (TypeNotFound baseType)
+            -- attempt to build a corresponding FieldInfo
+            maybeFieldInfo <- analyzeField _fldType typeDefinition field
+            pure $ Map.singleton (fromMaybe _fName _fAlias) <$> maybeFieldInfo
+
     -- Additional hidden fields that are allowed despite not being listed in the
     -- schema.
     systemFields :: [G.FieldDefinition G.InputValueDefinition]
@@ -220,7 +199,132 @@ analyzeObjectSelectionSet (G.ObjectTypeDefinition {..}) selectionSet = do
         (\fieldDef -> G._fldName fieldDef == name)
         (_otdFieldsDefinition <> systemFields)
 
--------------------------------------------------------------------------------
+    -- We collect fields in a @Hashmap Name FieldInfo@; in some cases, we might
+    -- end up with two entries with the same name, in the case where a query
+    -- selects the same field twice; when that happens we attempt to gracefully
+    -- merge the info.
+    mergeFields :: G.Name -> FieldInfo -> FieldInfo -> Analysis FieldInfo
+    mergeFields name field1 field2 = case (field1, field2) of
+      -- both are scalars: we check that they're the same
+      (FieldScalarInfo t1 s1, FieldScalarInfo t2 _) -> do
+        when (t1 /= t2) $
+          throwDiagnosis $ MismatchedFields name t1 t2
+        pure $ FieldScalarInfo t1 s1
+      -- both are enums: we check that they're the same
+      (FieldEnumInfo t1 e1, FieldEnumInfo t2 _) -> do
+        when (t1 /= t2) $
+          throwDiagnosis $ MismatchedFields name t1 t2
+        pure $ FieldEnumInfo t1 e1
+      -- both are objects, we merge their selection sets
+      (FieldObjectInfo t1 o1, FieldObjectInfo t2 o2) -> do
+        when (t1 /= t2) $
+          throwDiagnosis $ MismatchedFields name t1 t2
+        mergedSelection <-
+          Map.unionWithM
+            mergeFields
+            (_oiSelection o1)
+            (_oiSelection o2)
+        pure $ FieldObjectInfo t1 o1 {_oiSelection = mergedSelection}
+      -- they do not match
+      _ ->
+        throwDiagnosis $ MismatchedFields name (getFieldType field1) (getFieldType field2)
+
+    -- Extract the GType of a given field
+    getFieldType = \case
+      FieldEnumInfo t _ -> t
+      FieldScalarInfo t _ -> t
+      FieldObjectInfo t _ -> t
+
+-- | Analyze a given field, and attempt to build a corresponding 'FieldInfo'.
+analyzeField ::
+  G.GType ->
+  G.TypeDefinition [G.Name] G.InputValueDefinition ->
+  G.Field G.NoFragments G.Name ->
+  Analysis (Maybe FieldInfo)
+analyzeField gType typeDefinition G.Field {..} = case typeDefinition of
+  G.TypeDefinitionInputObject iotd -> do
+    -- input objects aren't allowed in selection sets
+    throwDiagnosis $ InputObjectInOutput $ G._iotdName iotd
+  G.TypeDefinitionScalar std -> do
+    -- scalars do not admit a selection set
+    unless (null _fSelectionSet) $
+      throwDiagnosis $ ScalarSelectionSet $ G._stdName std
+    pure $ Just $ FieldScalarInfo gType $ ScalarInfo std
+  G.TypeDefinitionEnum etd -> do
+    -- enums do not admit a selection set
+    unless (null _fSelectionSet) $
+      throwDiagnosis $ EnumSelectionSet $ G._etdName etd
+    pure $ Just $ FieldEnumInfo gType $ EnumInfo etd
+  G.TypeDefinitionUnion _utd ->
+    -- TODO: implement unions
+    pure Nothing
+  G.TypeDefinitionInterface _itd ->
+    -- TODO: implement interfaces
+    pure Nothing
+  G.TypeDefinitionObject otd -> do
+    -- TODO: check field arguments?
+    when (null _fSelectionSet) $
+      throwDiagnosis $ ObjectMissingSelectionSet $ G._otdName otd
+    subselection <- analyzeObjectSelectionSet otd _fSelectionSet
+    pure $
+      Just $
+        FieldObjectInfo gType $
+          ObjectInfo
+            { _oiTypeDefinition = otd,
+              _oiSelection = subselection
+            }
+
+--------------------------------------------------------------------------------
+-- Variables analysis
+
+-- | Analyzes the variables in the given query. This builds the graph of input
+-- types associated with the variable. This process is, like any GraphQL schema
+-- operation, inherently self-recursive, and we use 'CircularT' (a lesser
+-- 'SchemaT') to tie the knot.
+analyzeVariables ::
+  [G.VariableDefinition] ->
+  Analysis (HashMap G.Name VariableInfo)
+analyzeVariables variables = do
+  result <- runCircularT $ for variables \G.VariableDefinition {..} -> do
+    -- TODO: do we want to differentiate field from variable in the error path?
+    withField _vdName $ withCatchAndRecord do
+      let baseType = G.getBaseType _vdType
+      typeDefinition <-
+        lookupType baseType
+          `onNothingM` throwDiagnosis (TypeNotFound baseType)
+      ifInfo <- analyzeInputField baseType typeDefinition
+      pure $ Map.singleton _vdName $ VariableInfo _vdType ifInfo _vdDefaultValue
+  pure $ fold $ catMaybes result
+
+-- | Builds an 'InputFieldInfo' for a given typename.
+--
+-- This function is "memoized" using 'withCircular' to prevent processing the
+-- same type more than once in case the input types are self-recursive.
+analyzeInputField ::
+  G.Name ->
+  G.TypeDefinition [G.Name] G.InputValueDefinition ->
+  CircularT G.Name InputFieldInfo Analysis InputFieldInfo
+analyzeInputField typeName typeDefinition =
+  withCircular typeName $ case typeDefinition of
+    G.TypeDefinitionScalar std ->
+      pure $ InputFieldScalarInfo (ScalarInfo std)
+    G.TypeDefinitionEnum etd ->
+      pure $ InputFieldEnumInfo (EnumInfo etd)
+    G.TypeDefinitionInputObject iotd -> do
+      fields <- for (G._iotdValueDefinitions iotd) \G.InputValueDefinition {..} -> do
+        withField _ivdName $ withCatchAndRecord do
+          let baseType = G.getBaseType _ivdType
+          typeDef <-
+            lookupType baseType
+              `onNothingM` throwDiagnosis (TypeNotFound baseType)
+          info <- analyzeInputField baseType typeDef
+          pure (_ivdName, (_ivdType, info))
+      pure $ InputFieldObjectInfo (InputObjectInfo iotd $ Map.fromList $ catMaybes fields)
+    G.TypeDefinitionObject _otd -> throwDiagnosis $ ObjectInInput typeName
+    G.TypeDefinitionInterface _itd -> throwDiagnosis $ InterfaceInInput typeName
+    G.TypeDefinitionUnion _utd -> throwDiagnosis $ UnionInInput typeName
+
+--------------------------------------------------------------------------------
 -- Internal Analysis monad and helpers
 
 -- | The monad in which we run our analysis.
@@ -245,10 +349,11 @@ newtype Analysis a
       Monad,
       MonadReader (Path, G.SchemaIntrospection),
       MonadWriter [AnalysisError],
-      MonadError AnalysisError
+      MonadError AnalysisError,
+      MonadFix
     )
 
-runAnalysis :: Monoid a => G.SchemaIntrospection -> Analysis a -> (a, [Text])
+runAnalysis :: G.SchemaIntrospection -> Analysis a -> (Maybe a, [Text])
 runAnalysis schema (Analysis a) =
   postProcess $
     runWriter $
@@ -258,37 +363,55 @@ runAnalysis schema (Analysis a) =
     -- if there was an uncaught error, add it to the list
     postProcess = \case
       (Left err, errors) ->
-        postProcess (Right mempty, errors ++ [err])
+        (Nothing, map render $ errors ++ [err])
       (Right result, errors) ->
-        (result, map render errors)
+        (Just result, map render errors)
 
 -- | Look up a type in the schema.
-lookupType :: G.Name -> Analysis (Maybe (G.TypeDefinition [G.Name] G.InputValueDefinition))
+lookupType ::
+  (MonadReader (Path, G.SchemaIntrospection) m) =>
+  G.Name ->
+  m (Maybe (G.TypeDefinition [G.Name] G.InputValueDefinition))
 lookupType name = do
   G.SchemaIntrospection types <- asks snd
   pure $ Map.lookup name types
 
 -- | Add the current field to the error path.
-withField :: G.Name -> Analysis a -> Analysis a
+withField ::
+  (MonadReader (Path, G.SchemaIntrospection) m) =>
+  G.Name ->
+  m a ->
+  m a
 withField name = local $ first (|> G.unName name)
 
 -- | Throws an 'AnalysisError' by combining the given diagnosis with the current
 -- path. This interrupts the computation in the given branch, and must be caught
 -- for the analysis to resume.
-throwDiagnosis :: Diagnosis -> Analysis a
+throwDiagnosis ::
+  ( MonadReader (Path, G.SchemaIntrospection) m,
+    MonadError AnalysisError m
+  ) =>
+  Diagnosis ->
+  m a
 throwDiagnosis d = do
   currentPath <- asks fst
   throwError $ AnalysisError currentPath d
 
 -- | Runs the given computation. if it fails, cacthes the error, records it in
 -- the monad, and return 'Nothing'. This allows for a clean recovery.
-withCatchAndRecord :: Analysis a -> Analysis (Maybe a)
+withCatchAndRecord ::
+  ( MonadReader (Path, G.SchemaIntrospection) m,
+    MonadWriter [AnalysisError] m,
+    MonadError AnalysisError m
+  ) =>
+  m a ->
+  m (Maybe a)
 withCatchAndRecord action =
   fmap Just action `catchError` \e -> do
     tell [e]
     pure Nothing
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Analysis errors
 
 data AnalysisError = AnalysisError
@@ -299,30 +422,45 @@ data AnalysisError = AnalysisError
 type Path = Seq Text
 
 data Diagnosis
-  = NoTopLevelSelection
+  = RootTypeNotAnObject
   | TypeNotFound G.Name
   | EnumSelectionSet G.Name
   | ScalarSelectionSet G.Name
-  | InputObjectSelectionSet G.Name
+  | InputObjectInOutput G.Name
+  | UnionInInput G.Name
+  | ObjectInInput G.Name
+  | InterfaceInInput G.Name
   | ObjectFieldNotFound G.Name G.Name
+  | ObjectMissingSelectionSet G.Name
+  | MismatchedFields G.Name G.GType G.GType
 
 render :: AnalysisError -> Text
 render (AnalysisError path diagnosis) =
   T.intercalate "." (toList path) <> ": " <> case diagnosis of
-    NoTopLevelSelection ->
-      "did not find a valid selection set at the top level"
+    RootTypeNotAnObject ->
+      "the root type is not an object"
     TypeNotFound name ->
       "type '" <> G.unName name <> "' not found in the schema"
     EnumSelectionSet name ->
       "enum '" <> G.unName name <> "' does not accept a selection set"
     ScalarSelectionSet name ->
       "scalar '" <> G.unName name <> "' does not accept a selection set"
-    InputObjectSelectionSet name ->
+    InputObjectInOutput name ->
       "input object '" <> G.unName name <> "' cannot be used for output"
+    UnionInInput name ->
+      "union '" <> G.unName name <> "' cannot be used in an input type"
+    ObjectInInput name ->
+      "object '" <> G.unName name <> "' cannot be used in an input type"
+    InterfaceInInput name ->
+      "interface '" <> G.unName name <> "' cannot be used in an input type"
     ObjectFieldNotFound objName fieldName ->
       "field '" <> G.unName fieldName <> "' not found in object '" <> G.unName objName <> "'"
+    ObjectMissingSelectionSet objName ->
+      "object of type '" <> G.unName objName <> "' must have a selection set"
+    MismatchedFields name type1 type2 ->
+      "field '" <> G.unName name <> "' seen with two different types: " <> tshow type1 <> " and " <> tshow type2
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- GraphQL internals
 
 -- Special type names

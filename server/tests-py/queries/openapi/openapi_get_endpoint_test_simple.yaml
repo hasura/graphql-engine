@@ -15,7 +15,6 @@
           collection_name: test_collection
           query_name: simple_query
 
-
 - description: Call openapi json endpoint
   url: /api/swagger/json
   method: GET
@@ -48,18 +47,24 @@
                     properties:
                       test_table:
                         items:
+                          title: test_table
                           type: object
+                          description: columns and relationships of "test_table"
+                          nullable: false
                           properties:
                             first_name:
+                              nullable: true
                               title: String
                               type: string
                             last_name:
+                              nullable: true
                               title: String
                               type: string
                         type: array
                         nullable: false
               description: Responses for GET /api/rest/simple
     components: {}
+
 - description: Try to remove the endpoint
   url: /v1/query
   status: 200

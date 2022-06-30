@@ -5,11 +5,13 @@
 -- | This module defines all missing instances of third party libraries.
 module Hasura.Base.Instances () where
 
+import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Functor.Product (Product (Pair))
 import Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
+import Data.OpenApi.Declare as D
 import Data.Text qualified as T
 import Data.URL.Template qualified as UT
 import Database.PG.Query qualified as Q
@@ -19,6 +21,13 @@ import System.Cron.Parser qualified as C
 import System.Cron.Types qualified as C
 import Text.Regex.TDFA qualified as TDFA
 import Text.Regex.TDFA.Pattern qualified as TDFA
+
+--------------------------------------------------------------------------------
+-- MonadFix
+
+instance (Monoid d, MonadFix m) => MonadFix (DeclareT d m) where
+  mfix f = DeclareT $ \s -> mfix $ \ ~(_, a) -> runDeclareT (f a) s
+  {-# INLINE mfix #-}
 
 --------------------------------------------------------------------------------
 -- Deepseq
