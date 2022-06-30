@@ -175,7 +175,9 @@ runParse parse =
     reportParseErrors
 
 instance MonadParse Parse where
-  withPath f x = Parse $ withReaderT f $ unParse x
+  -- note we store the pathItems in reverse order, and only reverse them
+  -- when using them in `reportParseErrors`
+  withKey key x = Parse $ local (key :) $ unParse x
   parseErrorWith code text = Parse $ do
     path <- ask
     lift $ throwError $ ParseError {peCode = code, pePath = path, peMessage = text}
@@ -191,4 +193,4 @@ reportParseErrors ::
   ParseError ->
   m a
 reportParseErrors (ParseError {pePath, peMessage, peCode}) =
-  throwError (err400 peCode peMessage) {qePath = pePath}
+  throwError (err400 peCode peMessage) {qePath = reverse pePath}

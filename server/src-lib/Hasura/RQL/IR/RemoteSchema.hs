@@ -40,7 +40,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (longestCommonPrefix)
 import Hasura.GraphQL.Parser.Name as GName
-import Hasura.GraphQL.Parser.Schema (InputValue)
+import Hasura.GraphQL.Parser.Variable (InputValue)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (FieldName)
 import Hasura.RQL.Types.Relationships.ToSchema

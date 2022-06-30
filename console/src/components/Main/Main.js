@@ -51,6 +51,7 @@ import {
   setLoveConsentState,
   setProClickState,
 } from './utils';
+import { isBlockActive } from './Main.utils';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -77,6 +78,56 @@ export const updateRequestHeaders = props => {
       }
     }
   }
+};
+
+const getSettingsSelectedMarker = pathname => {
+  const currentActiveBlock = getPathRoot(pathname);
+
+  if (currentActiveBlock === 'settings') {
+    return <span className={styles.selected} />;
+  }
+
+  return null;
+};
+
+const getSidebarItem = (
+  title,
+  icon,
+  tooltipText,
+  path,
+  appPrefix,
+  pathname,
+  isDefault = false
+) => {
+  const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
+  const block = getPathRoot(path);
+
+  const isCurrentBlockActive = isBlockActive({
+    blockPath: path,
+    isDefaultBlock: isDefault,
+    pathname,
+  });
+
+  const className = isCurrentBlockActive ? styles.navSideBarActive : '';
+
+  return (
+    <OverlayTrigger placement="right" overlay={itemTooltip}>
+      <li>
+        <Link
+          className={className}
+          to={appPrefix + path}
+          data-test={`${title.toLowerCase()}-tab-link`}
+        >
+          <div className={styles.iconCenter} data-test={block}>
+            {React.createElement(icon, {
+              'aria-hidden': true,
+            })}
+          </div>
+          <p>{title}</p>
+        </Link>
+      </li>
+    </OverlayTrigger>
+  );
 };
 
 class Main extends React.Component {
@@ -244,15 +295,15 @@ class Main extends React.Component {
   render() {
     const {
       children,
-      location,
-      migrationModeProgress,
-      currentSchema,
-      serverVersion,
-      metadata,
       console_opts,
+      currentSchema,
       currentSource,
       dispatch,
+      metadata,
+      migrationModeProgress,
+      pathname,
       schemaList,
+      serverVersion,
     } = this.props;
 
     const {
@@ -261,9 +312,6 @@ class Main extends React.Component {
     } = this.state;
 
     const appPrefix = '';
-
-    const currentLocation = location.pathname;
-    const currentActiveBlock = getPathRoot(currentLocation);
 
     const getMainContent = () => {
       let mainContent = null;
@@ -279,16 +327,6 @@ class Main extends React.Component {
         );
       }
       return mainContent;
-    };
-
-    const getSettingsSelectedMarker = () => {
-      let metadataSelectedMarker = null;
-
-      if (currentActiveBlock === 'settings') {
-        metadataSelectedMarker = <span className={styles.selected} />;
-      }
-
-      return metadataSelectedMarker;
     };
 
     const getMetadataStatusIcon = () => {
@@ -334,41 +372,7 @@ class Main extends React.Component {
       return adminSecretHtml;
     };
 
-    const getSidebarItem = (
-      title,
-      icon,
-      tooltipText,
-      path,
-      isDefault = false
-    ) => {
-      const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
-
-      const block = getPathRoot(path);
-
-      return (
-        <OverlayTrigger placement="right" overlay={itemTooltip}>
-          <li>
-            <Link
-              className={
-                currentActiveBlock === block ||
-                (isDefault && currentActiveBlock === '')
-                  ? styles.navSideBarActive
-                  : ''
-              }
-              to={appPrefix + path}
-              data-test={`${title.toLowerCase()}-tab-link`}
-            >
-              <div className={styles.iconCenter} data-test={block}>
-                {React.createElement(icon, {
-                  'aria-hidden': true,
-                })}
-              </div>
-              <p>{title}</p>
-            </Link>
-          </li>
-        </OverlayTrigger>
-      );
-    };
+    const currentActiveBlock = getPathRoot(pathname);
 
     return (
       <div className={styles.container}>
@@ -398,6 +402,8 @@ class Main extends React.Component {
                   FaFlask,
                   tooltips.apiExplorer,
                   '/api/api-explorer',
+                  appPrefix,
+                  pathname,
                   true
                 )}
                 {getSidebarItem(
@@ -408,25 +414,33 @@ class Main extends React.Component {
                     ? schemaList.length
                       ? getSchemaBaseRoute(currentSchema, currentSource)
                       : getDataSourceBaseRoute(currentSource)
-                    : '/data'
+                    : '/data',
+                  appPrefix,
+                  pathname
                 )}
                 {getSidebarItem(
                   'Actions',
                   FaCogs,
                   tooltips.actions,
-                  '/actions/manage/actions'
+                  '/actions/manage/actions',
+                  appPrefix,
+                  pathname
                 )}
                 {getSidebarItem(
                   'Remote Schemas',
                   FaPlug,
                   tooltips.remoteSchema,
-                  '/remote-schemas/manage/schemas'
+                  '/remote-schemas/manage/schemas',
+                  appPrefix,
+                  pathname
                 )}{' '}
                 {getSidebarItem(
                   'Events',
                   FaCloud,
                   tooltips.events,
-                  '/events/data/manage'
+                  '/events/data/manage',
+                  appPrefix,
+                  pathname
                 )}
               </ul>
             </div>
@@ -453,7 +467,7 @@ class Main extends React.Component {
               <Link to="/settings">
                 <div className={styles.headerRightNavbarBtn}>
                   {getMetadataStatusIcon()}
-                  {getSettingsSelectedMarker()}
+                  {getSettingsSelectedMarker(pathname)}
                 </div>
               </Link>
               <Help isSelected={currentActiveBlock === 'support'} />
@@ -496,13 +510,13 @@ const mapStateToProps = (state, ownProps) => {
   return {
     ...state.main,
     header: state.header,
-    pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
     currentSource: state.tables.currentDataSource,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,
     schemaList: state.tables.schemaList,
+    pathname: ownProps.location.pathname,
     inconsistentInheritedRole:
       state.tables.modify.permissionsState.inconsistentInhertiedRole,
   };

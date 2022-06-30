@@ -4,9 +4,9 @@
       - name: getArticles
         query: |
           query getArticles {
-          	articles {
-          		title
-          		id
-          		content
-          	}
+            articles {
+              title
+              id
+              content
+            }
           }

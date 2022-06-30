@@ -13,12 +13,12 @@ import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Convert back from our "live" schema representation into a flat
 -- static set of definitions.
-convertToSchemaIntrospection :: Schema -> G.SchemaIntrospection
+convertToSchemaIntrospection :: Schema origin -> G.SchemaIntrospection
 convertToSchemaIntrospection = G.SchemaIntrospection . fmap convertType . sTypes
 
 -------------------------------------------------------------------------------
 
-convertType :: SomeDefinitionTypeInfo -> G.TypeDefinition [G.Name] G.InputValueDefinition
+convertType :: SomeDefinitionTypeInfo origin -> G.TypeDefinition [G.Name] G.InputValueDefinition
 convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
   TIScalar ->
     G.TypeDefinitionScalar $
@@ -70,7 +70,7 @@ convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
           G._utdMemberTypes = map getDefinitionName possibleTypes
         }
 
-convertEnumValue :: Definition EnumValueInfo -> G.EnumValueDefinition
+convertEnumValue :: Definition origin EnumValueInfo -> G.EnumValueDefinition
 convertEnumValue Definition {..} =
   G.EnumValueDefinition
     { G._evdDescription = dDescription,
@@ -78,7 +78,7 @@ convertEnumValue Definition {..} =
       G._evdDirectives = noDirectives
     }
 
-convertInputField :: Definition InputFieldInfo -> G.InputValueDefinition
+convertInputField :: Definition origin (InputFieldInfo origin) -> G.InputValueDefinition
 convertInputField Definition {..} = case dInfo of
   InputFieldInfo typeInfo defaultValue ->
     G.InputValueDefinition
@@ -89,7 +89,7 @@ convertInputField Definition {..} = case dInfo of
         G._ivdDirectives = noDirectives
       }
 
-convertField :: Definition FieldInfo -> G.FieldDefinition G.InputValueDefinition
+convertField :: Definition origin (FieldInfo origin) -> G.FieldDefinition G.InputValueDefinition
 convertField Definition {..} = case dInfo of
   FieldInfo arguments typeInfo ->
     G.FieldDefinition
@@ -102,7 +102,7 @@ convertField Definition {..} = case dInfo of
 
 -------------------------------------------------------------------------------
 
-getDefinitionName :: Definition a -> G.Name
+getDefinitionName :: Definition origin a -> G.Name
 getDefinitionName = dName
 
 noDirectives :: [G.Directive Void]

@@ -11,12 +11,12 @@ module Test.Parser.Monad
   )
 where
 
-import Data.Aeson.Internal (JSONPath)
+import Data.Aeson.Internal (JSONPathElement)
 import Data.Has (Has (..))
 import Data.Text qualified as T
 import Hasura.Base.Error (Code, QErr)
 import Hasura.GraphQL.Parser.Class (MonadParse (..), MonadSchema (..))
-import Hasura.GraphQL.Parser.Schema (MkTypename (..))
+import Hasura.GraphQL.Parser.Names (MkTypename (..))
 import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaKind (..), SchemaOptions (..), ignoreRemoteRelationship)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (StringifyNumbers (LeaveNumbersAlone))
@@ -142,8 +142,8 @@ instance MonadSchema ParserTestT SchemaTestT where
   memoizeOn _ _ = id
 
 instance MonadParse ParserTestT where
-  withPath :: (JSONPath -> JSONPath) -> ParserTestT a -> ParserTestT a
-  withPath = const id
+  withKey :: JSONPathElement -> ParserTestT a -> ParserTestT a
+  withKey = const id
 
   parseErrorWith :: Code -> Text -> ParserTestT a
   parseErrorWith code text =

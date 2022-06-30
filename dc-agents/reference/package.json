@@ -18,11 +18,12 @@
     "typecheck": "tsc --noEmit",
     "start": "ts-node ./src/index.ts",
     "start-no-typecheck": "ts-node --transpileOnly ./src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-types": "./scripts/generate-types.sh"
   },
   "dependencies": {
+    "@fastify/cors": "^7.0.0",
     "fastify": "^3.29.0",
-    "openapi3-ts": "^2.0.2",
     "pino-pretty": "^8.0.0",
     "xml2js": "^0.4.23"
   },
@@ -30,6 +31,7 @@
     "@tsconfig/node16": "^1.0.2",
     "@types/node": "^16.11.38",
     "@types/xml2js": "^0.4.11",
+    "openapi-typescript-codegen": "^0.23.0",
     "ts-node": "^10.8.1",
     "typescript": "^4.7.3"
   }

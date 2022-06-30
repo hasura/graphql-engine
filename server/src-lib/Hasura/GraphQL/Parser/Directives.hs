@@ -40,6 +40,7 @@ import Hasura.GraphQL.Parser.DirectiveName qualified as Name
 import Hasura.GraphQL.Parser.Internal.Input
 import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 import Type.Reflection (Typeable, typeRep, (:~:) (..))
@@ -67,7 +68,7 @@ import Type.Reflection (Typeable, typeRep, (:~:) (..))
 -- Directives may be "hidden", in which case they won't advertised in the
 -- schema, but silently accepted. This is un-advisable and should only be used
 -- when there's no other way around it.
-directivesInfo :: forall m. MonadParse m => [DirectiveInfo]
+directivesInfo :: forall m origin. MonadParse m => [DirectiveInfo origin]
 directivesInfo = do
   dir <- inclusionDirectives @m <> customDirectives @m
   guard $ dAdvertised dir
@@ -75,13 +76,13 @@ directivesInfo = do
 
 -- | Not exported, only used internally; identical to 'directivesInfo', but also
 -- contains hidden directives.
-allDirectives :: forall m. MonadParse m => [DirectiveInfo]
+allDirectives :: forall m origin. MonadParse m => [DirectiveInfo origin]
 allDirectives = map dDefinition $ inclusionDirectives @m <> customDirectives @m
 
-inclusionDirectives :: forall m. MonadParse m => [Directive m]
+inclusionDirectives :: forall m origin. MonadParse m => [Directive origin m]
 inclusionDirectives = [includeDirective @m, skipDirective @m]
 
-customDirectives :: forall m. MonadParse m => [Directive m]
+customDirectives :: forall m origin. MonadParse m => [Directive origin m]
 customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
 
 -- | Parses directives, given a location. Ensures that all directives are known
@@ -95,9 +96,9 @@ customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
 --     dMap <- parseDirectives customDirectives (DLExecutable EDLQUERY) directives
 --     withDirective dMap cached $ onJust \_ -> tagAsCached
 parseDirectives ::
-  forall m.
+  forall origin m.
   MonadParse m =>
-  [Directive m] ->
+  [Directive origin m] ->
   G.DirectiveLocation ->
   [G.Directive Variable] ->
   m DirectiveMap
@@ -153,7 +154,7 @@ withDirective dmap key callback = callback $ runIdentity <$> DM.lookup key dmap
 
 -- Cached custom directive.
 
-cachedDirective :: forall m. MonadParse m => Directive m
+cachedDirective :: forall m origin. MonadParse m => Directive origin m
 cachedDirective =
   mkDirective
     Name._cached
@@ -163,11 +164,11 @@ cachedDirective =
     (CachedDirective <$> ttlArgument <*> forcedArgument)
   where
     -- Optionally set the cache entry time to live
-    ttlArgument :: InputFieldsParser m Int
+    ttlArgument :: InputFieldsParser origin m Int
     ttlArgument = fieldWithDefault Name._ttl (Just "measured in seconds") (G.VInt 60) $ fromIntegral <$> int
 
     -- Optionally Force a refresh of the cache entry
-    forcedArgument :: InputFieldsParser m Bool
+    forcedArgument :: InputFieldsParser origin m Bool
     forcedArgument = fieldWithDefault Name._refresh (Just "refresh the cache entry") (G.VBoolean False) boolean
 
 data CachedDirective = CachedDirective {cdTtl :: Int, cdRefresh :: Bool}
@@ -177,7 +178,7 @@ cached = DirectiveKey Name._cached
 
 -- Subscription tests custom directive.
 
-multipleRootFieldsDirective :: forall m. MonadParse m => Directive m
+multipleRootFieldsDirective :: MonadParse m => Directive origin m
 multipleRootFieldsDirective =
   mkDirective
     Name.__multiple_top_level_fields
@@ -191,7 +192,7 @@ multipleRootFields = DirectiveKey Name.__multiple_top_level_fields
 
 -- Built-in inclusion directives
 
-skipDirective :: MonadParse m => Directive m
+skipDirective :: MonadParse m => Directive origin m
 skipDirective =
   mkDirective
     Name._skip
@@ -203,7 +204,7 @@ skipDirective =
     ]
     ifArgument
 
-includeDirective :: MonadParse m => Directive m
+includeDirective :: MonadParse m => Directive origin m
 includeDirective =
   mkDirective
     Name._include
@@ -221,20 +222,20 @@ skip = DirectiveKey Name._skip
 include :: DirectiveKey Bool
 include = DirectiveKey Name._include
 
-ifArgument :: MonadParse m => InputFieldsParser m Bool
+ifArgument :: MonadParse m => InputFieldsParser origin m Bool
 ifArgument = field Name._if Nothing boolean
 
 -- Parser type for directives.
 
-data Directive m where
+data Directive origin m where
   Directive ::
-    forall m a.
+    forall origin m a.
     (MonadParse m, Typeable a) =>
-    { dDefinition :: DirectiveInfo,
+    { dDefinition :: DirectiveInfo origin,
       dAdvertised :: Bool,
       dParser :: G.Directive Variable -> m a
     } ->
-    Directive m
+    Directive origin m
 
 data DirectiveKey a where
   DirectiveKey :: Typeable a => G.Name -> DirectiveKey a
@@ -264,17 +265,17 @@ mkDirective ::
   Maybe G.Description ->
   Bool ->
   [G.DirectiveLocation] ->
-  InputFieldsParser m a ->
-  Directive m
+  InputFieldsParser origin m a ->
+  Directive origin m
 mkDirective name description advertised location argsParser =
   Directive
     { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location,
       dAdvertised = advertised,
-      dParser = \(G.Directive _name arguments) -> withPath (++ [Key $ K.fromText $ G.unName name]) $ do
+      dParser = \(G.Directive _name arguments) -> withKey (Key $ K.fromText $ G.unName name) $ do
         for_ (M.keys arguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
             parseError $ name <<> " has no argument named " <>> argumentName
-        withPath (++ [Key $ K.fromText "args"]) $ ifParser argsParser $ GraphQLValue <$> arguments
+        withKey (Key $ K.fromText "args") $ ifParser argsParser $ GraphQLValue <$> arguments
     }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argsParser)

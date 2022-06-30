@@ -12,6 +12,7 @@ import Data.Aeson.KeyMap (fromHashMapText)
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
+import Hasura.Backends.DataConnector.IR.Relationships qualified as IR.R
 import Hasura.Prelude
 import Witch qualified
 
@@ -34,7 +35,7 @@ queryRequestToAPI IR.Q.QueryRequest {..} = do
                   _trRelationships = HashMap.mapKeys Witch.from $ Witch.from <$> relationships
                 }
           )
-            <$> HashMap.toList _qrTableRelationships,
+            <$> HashMap.toList (IR.R.unTableRelationships _qrTableRelationships),
         _qrQuery = query
       }
 

@@ -22,6 +22,7 @@ module Harness.GraphqlEngine
     postWithHeadersStatus,
     clearMetadata,
     postV2Query,
+    postV2Query_,
 
     -- ** Misc.
     setSource,
@@ -38,7 +39,8 @@ where
 
 -------------------------------------------------------------------------------
 
-import Control.Concurrent (forkIO, threadDelay)
+import Control.Concurrent (forkIO)
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Trans.Managed (ManagedT (..), lowerManagedT)
 import Data.Aeson (Value, object, (.=))
 import Data.Aeson.Types (Pair)
@@ -185,6 +187,10 @@ postV2Query :: HasCallStack => Int -> TestEnvironment -> Value -> IO Value
 postV2Query statusCode testEnvironment =
   withFrozenCallStack $ postWithHeadersStatus statusCode testEnvironment "/v2/query" mempty
 
+postV2Query_ :: HasCallStack => TestEnvironment -> Value -> IO ()
+postV2Query_ testEnvironment =
+  withFrozenCallStack $ post_ testEnvironment "/v2/query"
+
 -------------------------------------------------------------------------------
 
 -- HTTP Calls - Misc.
@@ -219,7 +225,7 @@ startServerThread murlPrefixport = do
   (urlPrefix, port, threadId) <-
     case murlPrefixport of
       Just (urlPrefix, port) -> do
-        threadId <- forkIO (forever (threadDelay 1000000)) -- Just wait.
+        threadId <- forkIO (forever (sleep 1)) -- Just wait.
         pure (urlPrefix, port, threadId)
       Nothing -> do
         port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)

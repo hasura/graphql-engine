@@ -19,7 +19,6 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema
   ( BackendScalarType (..),
     BackendScalarValue (..),
-    ManualRelationship (..),
     ScalarType (..),
     ScalarValue (..),
     Table (..),
@@ -71,14 +70,8 @@ spec =
       Context.Context
         { name = Context.Backend Context.BigQuery,
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup =
-            Bigquery.setupWithAdditionalRelationship
-              schema
-              [authorArticles],
-          teardown =
-            Bigquery.teardownWithAdditionalRelationship
-              schema
-              [authorArticles],
+          setup = Bigquery.setup schema,
+          teardown = Bigquery.teardown schema,
           customOptions =
             Just $
               Context.Options
@@ -93,60 +86,26 @@ spec =
 schema :: [Schema.Table]
 schema = [author, article]
 
-authorArticles :: ManualRelationship
-authorArticles =
-  ManualRelationship
-    { relSourceTable = "author",
-      relTargetTable = "article",
-      relSourceColumn = "id",
-      relTargetColumn = "author_id"
-    }
-
 author :: Schema.Table
 author =
   (table "author")
     { tableColumns =
         [ Schema.column "id" Schema.TInt,
           Schema.column "name" Schema.TStr,
-          Schema.column "createdAt" dateTimeType
+          Schema.column "createdAt" Schema.TUTCTime
         ],
       tablePrimaryKey = ["id"],
       tableData =
         [ [ Schema.VInt 1,
             Schema.VStr "Author 1",
-            Schema.VCustomValue $
-              defaultBackendScalarValue
-                { bsvMysql = Schema.quotedValue "2017-09-21 09:39:44",
-                  bsvCitus = Schema.quotedValue "2017-09-21T09:39:44",
-                  bsvMssql = Schema.quotedValue "2017-09-21T09:39:44Z",
-                  bsvPostgres = Schema.quotedValue "2017-09-21T09:39:44",
-                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:39:44"
-                }
+            Schema.parseUTCTimeOrError "2017-09-21 09:39:44"
           ],
           [ Schema.VInt 2,
             Schema.VStr "Author 2",
-            Schema.VCustomValue $
-              defaultBackendScalarValue
-                { bsvMysql = Schema.quotedValue "2017-09-21 09:50:44",
-                  bsvCitus = Schema.quotedValue "2017-09-21T09:50:44",
-                  bsvMssql = Schema.quotedValue "2017-09-21T09:50:44Z",
-                  bsvPostgres = Schema.quotedValue "2017-09-21T09:50:44",
-                  bsvBigQuery = Schema.quotedValue "2017-09-21T09:50:44"
-                }
+            Schema.parseUTCTimeOrError "2017-09-21 09:50:44"
           ]
         ]
     }
-  where
-    dateTimeType :: ScalarType
-    dateTimeType =
-      TCustomType $
-        defaultBackendScalarType
-          { bstMysql = Just "DATETIME",
-            bstMssql = Just "DATETIME",
-            bstCitus = Just "TIMESTAMP",
-            bstPostgres = Just "TIMESTAMP",
-            bstBigQuery = Just "DATETIME"
-          }
 
 article :: Schema.Table
 article =
@@ -157,8 +116,8 @@ article =
           Schema.columnNull "content" textType,
           Schema.columnNull "is_published" bitType,
           Schema.columnNull "published_on" timestampType,
-          Schema.columnNull "author_id" intUnsingedType,
-          Schema.columnNull "co_author_id" intUnsingedType
+          Schema.columnNull "author_id" intUnsignedType,
+          Schema.columnNull "co_author_id" intUnsignedType
         ],
       tablePrimaryKey = ["id"],
       tableReferences = [Schema.Reference "author_id" "author" "id"],
@@ -202,8 +161,8 @@ article =
             bstBigQuery = Just "DATETIME"
           }
 
-    intUnsingedType :: ScalarType
-    intUnsingedType =
+    intUnsignedType :: ScalarType
+    intUnsignedType =
       TCustomType $
         defaultBackendScalarType
           { bstMysql = Just "INT UNSIGNED",
@@ -258,15 +217,15 @@ tests opts = do
 query {
   hasura_article(where: {id: {_eq: 1}}) {
     id
-    author_by_author_id {
+    author_by_author_id_to_id {
       id
-      articles_by_author_id(where: {id: {_eq: 1}}) {
+      articles_by_id_to_author_id(where: {id: {_eq: 1}}) {
          id
-         author_by_author_id {
+         author_by_author_id_to_id {
            id
-           articles_by_author_id(where: {id: {_eq: 1}}) {
+           articles_by_id_to_author_id(where: {id: {_eq: 1}}) {
              id
-             author_by_author_id {
+             author_by_author_id_to_id {
                id
             }
           }
@@ -281,15 +240,15 @@ query {
 data:
   hasura_article:
   - id: 1
-    author_by_author_id:
+    author_by_author_id_to_id:
       id: 1
-      articles_by_author_id:
+      articles_by_id_to_author_id:
       - id: 1
-        author_by_author_id:
+        author_by_author_id_to_id:
           id: 1
-          articles_by_author_id:
+          articles_by_id_to_author_id:
           - id: 1
-            author_by_author_id:
+            author_by_author_id_to_id:
               id: 1
 |]
   -- Equivalent python suite: test_nested_select_query_where
@@ -304,7 +263,7 @@ query {
   hasura_author (where: {name: {_eq: "Author 1"}}) {
     id
     name
-    articles_by_author_id (where: {is_published: {_eq: true}}) {
+    articles_by_id_to_author_id (where: {is_published: {_eq: true}}) {
       id
       title
       content
@@ -318,7 +277,7 @@ data:
   hasura_author:
   - id: 1
     name: Author 1
-    articles_by_author_id:
+    articles_by_id_to_author_id:
     - id: 2
       title: Article 2
       content: Sample article content 2
@@ -331,7 +290,7 @@ data:
 id: 1
 title: Article 1
 content: Sample article content 1
-author_by_author_id:
+author_by_author_id_to_id:
   id: 1
   name: Author 1
 |]
@@ -340,7 +299,7 @@ author_by_author_id:
 id: 2
 title: Article 2
 content: Sample article content 2
-author_by_author_id:
+author_by_author_id_to_id:
   id: 1
   name: Author 1
 |]
@@ -349,7 +308,7 @@ author_by_author_id:
 id: 3
 title: Article 3
 content: Sample article content 3
-author_by_author_id:
+author_by_author_id_to_id:
   id: 2
   name: Author 2
 |]
@@ -363,7 +322,7 @@ query {
     id
     title
     content
-    author_by_author_id {
+    author_by_author_id_to_id {
       id
       name
     }
@@ -382,11 +341,11 @@ query {
           testEnvironment
           [graphql|
 query {
-  hasura_article (where: {author_by_author_id: {name: {_eq: "Author 1"}}} ) {
+  hasura_article (where: {author_by_author_id_to_id: {name: {_eq: "Author 1"}}} ) {
     id
     title
     content
-    author_by_author_id {
+    author_by_author_id_to_id {
       id
       name
     }
@@ -402,7 +361,7 @@ query {
 id: 1
 title: Article 1
 content: Sample article content 1
-author_by_author_id:
+author_by_author_id_to_id:
   id: 1
   name: Author 1
 |],
@@ -410,7 +369,7 @@ author_by_author_id:
 id: 2
 title: Article 2
 content: Sample article content 2
-author_by_author_id:
+author_by_author_id_to_id:
   id: 1
   name: Author 1
 |]

@@ -25,14 +25,12 @@ import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType, incOp)
 import Hasura.Backends.Postgres.SQL.Types as PG hiding (FunctionName, TableName)
 import Hasura.Backends.Postgres.SQL.Value as PG
 import Hasura.Backends.Postgres.Schema.OnConflict
+import Hasura.Backends.Postgres.Schema.Select
 import Hasura.Backends.Postgres.Types.BoolExp
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Backends.Postgres.Types.Insert as PGIR
 import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser hiding (EnumValueInfo, field)
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Internal.Parser hiding (field)
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
     ComparisonExp,
@@ -43,6 +41,17 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation qualified as GSB
+import Hasura.GraphQL.Schema.Parser
+  ( Definition,
+    FieldParser,
+    InputFieldsParser,
+    Kind (..),
+    MonadParse,
+    MonadSchema,
+    Parser,
+    memoize,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Update qualified as SU
@@ -123,9 +132,9 @@ instance
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableUpdateMutationFields = pgkBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
-  buildFunctionQueryFields = GSB.buildFunctionQueryFieldsPG
+  buildFunctionQueryFields = buildFunctionQueryFieldsPG
   buildFunctionRelayQueryFields = pgkBuildFunctionRelayQueryFields
-  buildFunctionMutationFields = GSB.buildFunctionMutationFieldsPG
+  buildFunctionMutationFields = buildFunctionMutationFieldsPG
 
   -- table components
   tableArguments = defaultTableArgs
@@ -252,16 +261,16 @@ columnParser columnType (G.Nullability isNullable) = do
         --
         -- TODO: introduce new dedicated scalars for Postgres column types.
         name <- mkScalarTypeName scalarType
-        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing P.TIScalar
+        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
         pure $
-          Parser
+          P.Parser
             { pType = schemaType,
               pParser =
-                valueToJSON (P.toGraphQLType schemaType) >=> \case
-                  J.Null -> parseError $ "unexpected null value for type " <>> name
+                P.valueToJSON (P.toGraphQLType schemaType) >=> \case
+                  J.Null -> P.parseError $ "unexpected null value for type " <>> name
                   value ->
                     runAesonParser (parsePGValue scalarType) value
-                      `onLeft` (parseErrorWith ParseFailed . qeError)
+                      `onLeft` (P.parseErrorWith ParseFailed . qeError)
             }
     ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
       case nonEmpty (Map.toList enumValues) of
@@ -276,7 +285,7 @@ columnParser columnType (G.Nullability isNullable) = do
       | otherwise = id
     mkEnumValue :: NamingCase -> (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, PGScalarValue)
     mkEnumValue tCase (EnumValue value, EnumValueInfo description) =
-      ( P.Definition (applyEnumValueCase tCase value) (G.Description <$> description) P.EnumValueInfo,
+      ( P.Definition (applyEnumValueCase tCase value) (G.Description <$> description) Nothing P.EnumValueInfo,
         PGValText $ G.unName value
       )
 
@@ -292,7 +301,7 @@ pgScalarSelectionArgumentsParser columnType
     fieldName = Name._path
     description = Just "JSON select path"
     toColExp textValue = case parseJSONPath textValue of
-      Left err -> parseError $ T.pack $ "parse json path error: " ++ err
+      Left err -> P.parseError $ T.pack $ "parse json path error: " ++ err
       Right [] -> pure Nothing
       Right jPaths -> pure $ Just $ PG.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k) = PG.SELit $ K.toText k
@@ -334,7 +343,7 @@ orderByOperators tCase =
         )
       ]
   where
-    define name desc = P.Definition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
 
 comparisonExps ::
   forall pgKind m n r.
@@ -388,7 +397,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
                 tCase
                 collapseIfNull
                 (IR.mkParameter <$> typedParser)
-                (mkListLiteral columnType <$> columnListParser),
+                (mkListParameter columnType <$> columnListParser),
               -- Comparison ops for non Raster types
               guard (isScalarColumnWhere (/= PGRaster) columnType)
                 *> comparisonOperators
@@ -643,6 +652,13 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
         SETyAnn
           (SEArray $ txtEncoder . cvValue <$> columnValues)
           (mkTypeAnn $ CollectableTypeArray $ unsafePGColumnToBackend columnType)
+    mkListParameter :: ColumnType ('Postgres pgKind) -> [ColumnValue ('Postgres pgKind)] -> IR.UnpreparedValue ('Postgres pgKind)
+    mkListParameter columnType columnValues = do
+      let scalarType = unsafePGColumnToBackend columnType
+      IR.UVParameter Nothing $
+        ColumnValue
+          (ColumnScalar $ PG.PGArray scalarType)
+          (PG.PGValArray $ cvValue <$> columnValues)
 
     castExp :: ColumnType ('Postgres pgKind) -> m (Maybe (Parser 'Input n (CastExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
     castExp sourceType = do
@@ -650,21 +666,6 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
             ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
             ColumnScalar PGGeometry -> Just (PGGeometry, PGGeography)
             ColumnScalar PGJSONB -> Just (PGJSONB, PGText)
-            ColumnScalar PGSmallInt -> Just (PGSmallInt, PGText)
-            ColumnScalar PGInteger -> Just (PGInteger, PGText)
-            ColumnScalar PGBigInt -> Just (PGBigInt, PGText)
-            ColumnScalar PGFloat -> Just (PGFloat, PGText)
-            ColumnScalar PGDouble -> Just (PGDouble, PGText)
-            ColumnScalar PGNumeric -> Just (PGNumeric, PGText)
-            ColumnScalar PGMoney -> Just (PGMoney, PGText)
-            ColumnScalar PGBoolean -> Just (PGBoolean, PGText)
-            ColumnScalar PGChar -> Just (PGChar, PGText)
-            ColumnScalar PGDate -> Just (PGDate, PGText)
-            ColumnScalar PGTimeStamp -> Just (PGTimeStamp, PGText)
-            ColumnScalar PGTimeStampTZ -> Just (PGTimeStampTZ, PGText)
-            ColumnScalar PGTimeTZ -> Just (PGTimeTZ, PGText)
-            ColumnScalar PGJSON -> Just (PGJSON, PGText)
-            ColumnScalar PGUUID -> Just (PGUUID, PGText)
             _ -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do

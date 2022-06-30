@@ -155,13 +155,13 @@ keywords:
 
 ## PGCertSettings {#pgcertsettings}
 
-| Key         | Required | Schema                          | Description                                                                                                                                                    |
-|-------------|----------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| sslmode     | true     | `String`                        | The SSL connection mode. See the libpq ssl [support docs](https://www.postgresql.org/docs/9.1/libpq-ssl.html) for more details. |
-| sslrootcert | true     | [FromEnv](#fromenv)             | Environment variable which stores trusted certificate authorities.                                                                                             |
-| sslcert     | true     | [FromEnv](#fromenv)             | Environment variable which stores the client certificate.                                                                                                      |
-| sslkey      | true     | [FromEnv](#fromenv)             | Environment variable which stores the client private key.                                                                                                      |
-| sslpassword | false    | `String` \| [FromEnv](#fromenv) | Password in the case where the sslkey is encrypted.                                                                                                            |
+| Key         | Required | Schema                | Description                                                                                                                                                    |
+|-------------|----------|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| sslmode     | true     | `String`              | The SSL connection mode. See the libpq ssl [support docs](https://www.postgresql.org/docs/9.1/libpq-ssl.html) for more details. |
+| sslrootcert | false    | [FromEnv](#fromenv)   | Environment variable which stores trusted certificate authorities.                                                                                             |
+| sslcert     | false    | [FromEnv](#fromenv)   | Environment variable which stores the client certificate.                                                                                                      |
+| sslkey      | false    | [FromEnv](#fromenv)   | Environment variable which stores the client private key.                                                                                                      |
+| sslpassword | false    | [FromEnv](#fromenv)   | Password in the case where the sslkey is encrypted.                                                                                                            |
 
 ## MsSQLPoolSettings {#mssqlpoolsettings}
 

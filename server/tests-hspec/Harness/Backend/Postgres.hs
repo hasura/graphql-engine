@@ -23,7 +23,7 @@ module Harness.Backend.Postgres
   )
 where
 
-import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.Bool (bool)
@@ -39,7 +39,7 @@ import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (BackendType (Postgres), defaultBackendTypeString, defaultSource)
+import Harness.Test.Context (BackendType (Postgres), defaultBackendTypeString, defaultSchema, defaultSource)
 import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
@@ -64,8 +64,7 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
             (const (pure ()))
         )
         ( \(_failure :: ExitCodeException) -> do
-            threadDelay
-              Constants.postgresLivenessCheckIntervalMicroseconds
+            sleep Constants.postgresLivenessCheckIntervalSeconds
             loop (attempts - 1)
         )
 
@@ -119,7 +118,7 @@ createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableRe
     T.unpack $
       T.unwords
         [ "CREATE TABLE",
-          T.pack Constants.postgresDb <> "." <> tableName,
+          T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
           "(",
           commaSeparated $
             (mkColumn <$> tableColumns)
@@ -170,7 +169,7 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
       wrapIdentifier referenceLocalColumn,
       ")",
       "REFERENCES",
-      referenceTargetTable,
+      T.pack (defaultSchema Postgres) <> "." <> wrapIdentifier referenceTargetTable,
       "(",
       wrapIdentifier referenceTargetColumn,
       ")",
@@ -261,14 +260,18 @@ setup tables (testEnvironment, _) = do
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown tables (testEnvironment, _) = do
-  forFinally_ (reverse tables) $ \table ->
-    finally
-      (Schema.untrackRelationships Postgres table testEnvironment)
-      ( finally
+teardown (reverse -> tables) (testEnvironment, _) = do
+  finally
+    -- Teardown relationships first
+    ( forFinally_ tables $ \table ->
+        Schema.untrackRelationships Postgres table testEnvironment
+    )
+    -- Then teardown tables
+    ( forFinally_ tables $ \table ->
+        finally
           (untrackTable testEnvironment table)
           (dropTable table)
-      )
+    )
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

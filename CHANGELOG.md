@@ -2,10 +2,62 @@
 
 ## Next release
 
+### Behaviour changes
+
+- cli: use 2-spaces indent for graphql content in metadata instead of tabs(#8469)
+
+  Example:
+  <table>
+  <thead>
+    <tr>
+      <th>Old Behaviour<pre>metadata/query_collections.yml</pre></th>
+      <th>New Behaviour<pre>metadata/query_collections.yml</pre></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><pre>
+  - name: allowed-queries
+    definition:
+      queries:
+      - name: getAlbums
+        query: |
+        	query getAlbums {
+        		albums {
+        			id
+        			title
+        		}
+        	}
+      </pre></td>
+      <td><pre>
+  - name: allowed-queries
+    definition:
+      queries:
+      - name: getAlbums
+        query: |
+          query getAlbums {
+            albums {
+              id
+              title
+            }
+          }
+      </pre></td>
+    </tr>
+  </tbody>
+  </table>
+
+
 ### Bug fixes and improvements
 
+- server: fix dropping column from a table that has update permissions (fix #8415)
 - console: Hide TimescaleDB internal schema from data tab
 - console: support naming convention in source customization for postgres DB [CON-297]
+
+## v2.8.2
+
+### Bug fixes and improvements
+
+- server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
 
 ## v2.9.0-beta.1
 
@@ -19,12 +71,16 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 - server: add `*_update_source` API and modify behaviour of `*_add_source` API (See [docs](https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/source/) )
 - server: support limit in BigQuery computed fields (fix #8562)
 - server: improve GraphQL query parsing time and per-query memory allocation
+- server: parameterize array variables in queries and subscriptions
 - console: allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
 - console: add support for computed fields with session arg in permission builder (fix #8321)
 - console: add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)
 - console: introduce new table relationships UI in alpha
 - cli: fix performance regression with large metadata in `metadata apply`
 - cli: fix error reporting in `metadata apply` command (#8280)
+- server: query runtime performance optimizations
+- server: fix bug that had disabled expression-based indexes in Postgress variants (fix Zendesk 5146)
+- server: add optionality to additional postgres-client-cert fields: sslcert, sslkey and sslpassword
 
 ## v2.8.1
 

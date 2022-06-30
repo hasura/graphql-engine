@@ -38,6 +38,7 @@ import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Backend
+import Hasura.Server.Migrate.Version
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 import Text.Shakespeare.Text qualified as ST
@@ -122,7 +123,7 @@ prepareCatalog sourceConfig = mssqlRunReadWrite (_mscExecCtx sourceConfig) do
         initSourceCatalog
         return RETDoNothing
       -- Only 'hdb_catalog' schema defined
-      | not sourceVersionTableExist && not eventLogTableExist -> do
+      | not (sourceVersionTableExist || eventLogTableExist) -> do
         liftMSSQLTx initSourceCatalog
         return RETDoNothing
       | otherwise -> migrateSourceCatalog
@@ -140,7 +141,7 @@ migrateSourceCatalog :: MonadMSSQLTx m => m RecreateEventTriggers
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
-migrateSourceCatalogFrom :: MonadMSSQLTx m => Int -> m RecreateEventTriggers
+migrateSourceCatalogFrom :: MonadMSSQLTx m => CatalogVersion -> m RecreateEventTriggers
 migrateSourceCatalogFrom prevVersion
   | prevVersion == latestSourceCatalogVersion = pure RETDoNothing
   | [] <- neededMigrations =
@@ -157,14 +158,14 @@ migrateSourceCatalogFrom prevVersion
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
 
-sourceMigrations :: [(Int, TxE QErr ())]
+sourceMigrations :: [(CatalogVersion, TxE QErr ())]
 sourceMigrations =
   $( let migrationFromFile from =
-           let to = from + 1
+           let to = succ from
                path = "src-rsr/mssql_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
             in [|multiRowQueryE defaultTxErrorHandler $(makeRelativeToProject path >>= ST.stextFile)|]
 
-         migrationsFromFile = map $ \(from :: Int) ->
+         migrationsFromFile = map $ \from ->
            [|($(TH.lift $ from), $(migrationFromFile from))|]
-      in TH.listE $ migrationsFromFile [1 .. (latestSourceCatalogVersion - 1)]
+      in TH.listE $ migrationsFromFile previousSourceCatalogVersions
    )

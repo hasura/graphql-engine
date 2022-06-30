@@ -6,7 +6,7 @@ export interface ConsoleConfig {
   type: string;
 }
 
-const getEnvVarAsString = (value: string) => {
+export const getEnvVarAsString = (value: string) => {
   if (!value || value === 'undefined') return undefined;
   return value;
 };

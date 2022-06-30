@@ -21,14 +21,6 @@ directory to the linked project.
 
 Check out our `Starter Kit <https://github.com/hasura/github-integration-starter>`__ to see a few example workflows.
 
-.. admonition:: Under preview
-
-   This feature is currently available for preview. Enhancements to it will continue to be made over the coming days.
-   To try it out you can ask for early access to the feature from the Hasura Cloud dashboard.
-
-   Please do share any feedback you may have regarding any improvements or extra capabilities that you would like
-   to see in this feature by raising an issue/discussion on our `GitHub repo <https://github.com/hasura/graphql-engine>`__.
-
 Deployment modes
 ----------------
 

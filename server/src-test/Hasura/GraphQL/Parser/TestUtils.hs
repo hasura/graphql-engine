@@ -9,8 +9,7 @@ where
 import Data.HashMap.Strict qualified as M
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Hasura.GraphQL.Parser.Class.Parse
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Schema.Parser
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -20,7 +19,7 @@ newtype TestMonad a = TestMonad {runTest :: Either Text a}
   deriving (Functor, Applicative, Monad)
 
 instance MonadParse TestMonad where
-  withPath = const id
+  withKey = const id
   parseErrorWith = const $ TestMonad . Left
 
 -- values generation
@@ -38,17 +37,17 @@ fakeInputFieldValue (InputFieldInfo t _) = go t
     go :: forall k. ('Input <: k) => Type k -> G.Value Variable
     go = \case
       TList _ t' -> G.VList [go t', go t']
-      TNamed _ (Definition name _ info) -> case (info, subKind @'Input @k) of
+      TNamed _ (Definition name _ _ info) -> case (info, subKind @'Input @k) of
         (TIScalar, _) -> fakeScalar name
         (TIEnum ei, _) -> G.VEnum $ G.EnumValue $ dName $ NE.head ei
         (TIInputObject (InputObjectInfo oi), _) -> G.VObject $
           M.fromList $ do
-            Definition fieldName _ fieldInfo <- oi
+            Definition fieldName _ _ fieldInfo <- oi
             pure (fieldName, fakeInputFieldValue fieldInfo)
 
 fakeDirective :: DirectiveInfo -> G.Directive Variable
 fakeDirective DirectiveInfo {..} =
   G.Directive diName $
     M.fromList $
-      diArguments <&> \(Definition argName _ argInfo) ->
+      diArguments <&> \(Definition argName _ _ argInfo) ->
         (argName, fakeInputFieldValue argInfo)

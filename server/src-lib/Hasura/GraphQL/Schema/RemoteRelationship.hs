@@ -9,12 +9,11 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
+import Hasura.GraphQL.Schema.Parser (FieldParser, MonadSchema)
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
@@ -177,7 +176,7 @@ remoteRelationshipToSourceField ::
   RemoteSourceFieldInfo tgt ->
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
-  withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
+  P.withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
     sourceInfo <-
       onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
         throw500 $ "source not found " <> dquote _rsfiSource
@@ -194,7 +193,7 @@ remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
               Nothing -> []
               Just selectionSetParser ->
                 pure $
-                  subselection_ fieldName Nothing selectionSetParser <&> \fields ->
+                  P.subselection_ fieldName Nothing selectionSetParser <&> \fields ->
                     IR.SourceRelationshipObject $
                       IR.AnnObjectSelectG fields _rsfiTable $ IR._tpFilter $ tablePermissionsInfo tablePerms
           ArrRel -> do

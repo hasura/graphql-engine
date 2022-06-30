@@ -1,10 +1,9 @@
-import { getValidationSchema } from './connectDB/getValidationSchema';
-import { getUISchema } from './connectDB/getUISchema';
-import { Database } from '..';
+import { Database, Feature } from '..';
 
 export const citus: Database = {
   connectDB: {
-    getUISchema,
-    getValidationSchema,
+    getConfigSchema: async () => {
+      return Feature.NotImplemented;
+    },
   },
 };

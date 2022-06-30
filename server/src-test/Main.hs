@@ -32,16 +32,20 @@ import Hasura.Backends.MSSQL.ErrorSpec qualified as MSSQLErrorSpec
 import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
+import Hasura.Backends.Postgres.Execute.PrepareSpec qualified as PrepareSpec
 import Hasura.Backends.Postgres.Execute.Types
 import Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec qualified as IdentifierUniqueness
+import Hasura.Backends.Postgres.SQL.ValueSpec qualified as ValueSpec
 import Hasura.EventingSpec qualified as EventingSpec
 import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
+import Hasura.GraphQL.Parser.MonadParseTest qualified as MonadParseSpec
 import Hasura.GraphQL.Schema.Build.UpdateSpec qualified as UpdateSpec
 import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
 import Hasura.IncrementalSpec qualified as IncrementalSpec
 import Hasura.Logging
 import Hasura.Metadata.Class
+import Hasura.Metadata.DTO.MetadataDTOSpec qualified as MetadataDTOSpec
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -57,19 +61,16 @@ import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.TableSpec qualified as TableSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
-import Hasura.SQL.WKTSpec qualified as WKTSpec
 import Hasura.Server.Auth.JWTSpec qualified as JWTSpec
-import Hasura.Server.AuthSpec qualified as AuthSpec
 import Hasura.Server.Init
 import Hasura.Server.Migrate
+import Hasura.Server.Migrate.VersionSpec qualified as VersionSpec
 import Hasura.Server.MigrateSpec qualified as MigrateSpec
-import Hasura.Server.TelemetrySpec qualified as TelemetrySpec
 import Hasura.Server.Types
 import Hasura.SessionSpec qualified as SessionSpec
 import Hasura.StreamingSubscriptionSpec qualified as StreamingSubSpec
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
-import Network.HTTP.Client.TransformableSpec qualified as TransformableSpec
 import Options.Applicative
 import System.Environment (getEnvironment)
 import System.Exit (exitFailure)
@@ -109,21 +110,26 @@ unitSpecs = do
   describe "Data.NonNegativeInt" NonNegativeIntSpec.spec
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.JSONPath" JsonPath.spec
-  describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Data.Parser.RemoteRelationshipSpec" RemoteRelationship.spec
+  describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Data.Time" TimeSpec.spec
   describe "Data.Trie" TrieSpec.spec
   describe "Hasura.App" AppSpec.spec
   describe "Hasura.Backends.DataConnector.API.V0" DataConnector.API.V0Spec.spec
   describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
   describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
+  describe "Hasura.Backends.Postgres.Execute.PrepareSpec" PrepareSpec.spec
   describe "Hasura.Backends.Postgres.SQL.Select.IdentifierUniqueness" IdentifierUniqueness.spec
+  describe "Hasura.Backends.Postgres.SQL.ValueSpec" ValueSpec.spec
   describe "Hasura.Eventing" EventingSpec.spec
   describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
   describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
-  describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
+  describe "Hasura.GraphQL.Parser.Monad" MonadParseSpec.spec
   describe "Hasura.GraphQL.Schema.Build.UpdateSpec" UpdateSpec.spec
+  describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
+  describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
+  describe "Hasura.Metadata.DTO.Metadata" MetadataDTOSpec.spec
   describe "Hasura.RQL.IR.SelectSpec" SelectSpec.spec
   describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
   describe "Hasura.RQL.PermissionSpec" PermSpec.spec
@@ -132,14 +138,11 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
   describe "Hasura.RQL.Types.Table" TableSpec.spec
   describe "Hasura.RQL.WebhookTransformsSpec" WebhookTransformsSpec.spec
-  describe "Hasura.SQL.WKT" WKTSpec.spec
-  describe "Hasura.Session" SessionSpec.spec
-  describe "Hasura.Server.Auth" AuthSpec.spec
   describe "Hasura.Server.Auth.JWT" JWTSpec.spec
-  describe "Hasura.Server.Telemetry" TelemetrySpec.spec
-  describe "Network.HTTP.Client.TransformableSpec" TransformableSpec.spec
+  describe "Hasura.Server.Migrate.Version" VersionSpec.spec
+  describe "Hasura.Session" SessionSpec.spec
 
-buildMSSQLSpecs :: IO Spec
+buildMSSQLSpecs :: IO (SpecWith ())
 buildMSSQLSpecs = do
   env <- liftIO getEnvironment
   connStr <- flip onLeft printErrExit $

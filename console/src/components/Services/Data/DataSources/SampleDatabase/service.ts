@@ -6,6 +6,7 @@ import {
   trackConnectButtonClickEvent,
   trackDBConnectionStatusEvent,
   trackAnotherDBConnection,
+  trackLandingOnConnectDBForm,
 } from './serverIO';
 
 export type SampleDBTrial = {
@@ -13,6 +14,7 @@ export type SampleDBTrial = {
   getDatabaseUrl: () => string;
   isExploringSampleDB: (getState: () => any) => boolean;
   track: {
+    landOnConnectDB: () => void;
     tryButton: () => void;
     connectButton: () => void;
     connectionStatus: (
@@ -86,6 +88,11 @@ export const newSampleDBTrial = (options: {
     isExploringSampleDB,
     hasAddedSampleDB,
     track: {
+      landOnConnectDB: () => {
+        if (isActive()) {
+          trackLandingOnConnectDBForm(options.hasuraCloudProjectId);
+        }
+      },
       tryButton: () => {
         if (isActive()) {
           trackTryButtonClickEvent(options.hasuraCloudProjectId);
@@ -160,7 +167,7 @@ export const checkNestedFieldValueInErrJson = (
   return false;
 };
 
-export const maskedErrorMessage = `You're currently connected to a read-only sample database, mutations and changes to data structure are not allowed. Please create or connect your own database to unlock all the features of Hasura.`;
+export const maskedErrorMessage = `You are currently connected to a read-only sample database that is shared by other users. Some features like writing to the table, event triggers and changing the database schema might not be available. Connect your own database to try all the features!`;
 export const maskPostgresError = (
   errorJson: any,
   getState: () => any,

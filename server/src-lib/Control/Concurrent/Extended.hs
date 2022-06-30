@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 module Control.Concurrent.Extended
   ( module Control.Concurrent,
     sleep,
@@ -40,6 +42,8 @@ import Data.Void
 -- separate lib with this if we do the override thing.
 import Hasura.Logging
 import Prelude
+
+{-# HLINT ignore sleep #-}
 
 -- | Like 'Base.threadDelay', but takes a 'DiffTime' instead of an 'Int' microseconds.
 --

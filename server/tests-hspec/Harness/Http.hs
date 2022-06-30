@@ -1,6 +1,7 @@
 -- | Helper functions for HTTP requests.
 module Harness.Http
   ( get_,
+    getWithStatus,
     post,
     postValue,
     postValueWithStatus,
@@ -9,7 +10,7 @@ module Harness.Http
   )
 where
 
-import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Exception
 import Data.Aeson
 import Data.ByteString.Lazy.Char8 qualified as L8
@@ -30,6 +31,14 @@ get_ url = do
   response <- Http.httpNoBody (fromString url)
   unless (Http.getResponseStatusCode response == 200) $
     error ("Non-200 response code from HTTP request: " ++ url)
+
+-- | Performs get, doesn't return the result. Simply throws if there's
+-- not an expected response status code.
+getWithStatus :: HasCallStack => [Int] -> String -> IO ()
+getWithStatus acceptableStatusCodes url = do
+  response <- Http.httpNoBody (fromString url)
+  unless (Http.getResponseStatusCode response `elem` acceptableStatusCodes) $
+    error ("Unexpected response code from HTTP request: " ++ url ++ ". Expected: " ++ show acceptableStatusCodes)
 
 -- | Post the JSON to the given URL, and produces a very descriptive
 -- exception on failure.
@@ -94,8 +103,8 @@ healthCheck url = loop [] Constants.httpHealthCheckAttempts
         )
     loop failures attempts =
       catch
-        (get_ url)
+        (getWithStatus [200, 204] url)
         ( \(failure :: Http.HttpException) -> do
-            threadDelay Constants.httpHealthCheckIntervalMicroseconds
+            sleep Constants.httpHealthCheckIntervalSeconds
             loop (failure : failures) (attempts - 1)
         )

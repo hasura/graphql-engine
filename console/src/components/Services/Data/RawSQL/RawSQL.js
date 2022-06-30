@@ -215,36 +215,38 @@ const RawSQL = ({
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
-      // set track this checkbox true
-      const objects = parseCreateSQL(cleanSql, selectedDriver);
-      if (objects.length) {
-        let allObjectsTrackable = true;
+      // set track this checkbox true if tracking is supported for the driver
+      if (isFeatureSupported('rawSQL.tracking')) {
+        const objects = parseCreateSQL(cleanSql, selectedDriver);
+        if (objects.length) {
+          let allObjectsTrackable = true;
 
-        const trackedObjectNames = allSchemas.map(schema => {
-          return [schema.table_schema, schema.table_name].join('.');
-        });
+          const trackedObjectNames = allSchemas.map(schema => {
+            return [schema.table_schema, schema.table_name].join('.');
+          });
 
-        allObjectsTrackable = objects.every(object => {
-          if (object.type === 'function') {
-            return false;
+          allObjectsTrackable = objects.every(object => {
+            if (object.type === 'function') {
+              return false;
+            }
+
+            const objectName = [object.schema, object.name].join('.');
+
+            if (trackedObjectNames.includes(objectName)) {
+              return false;
+            }
+
+            return true;
+          });
+
+          if (allObjectsTrackable) {
+            dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
+          } else {
+            dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
           }
-
-          const objectName = [object.schema, object.name].join('.');
-
-          if (trackedObjectNames.includes(objectName)) {
-            return false;
-          }
-
-          return true;
-        });
-
-        if (allObjectsTrackable) {
-          dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
         } else {
           dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
         }
-      } else {
-        dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
       }
     };
 
@@ -317,20 +319,18 @@ const RawSQL = ({
 
     return (
       <div className={styles.add_mar_top}>
-        {isFeatureSupported('rawSQL.tracking') && (
-          <label>
-            <input
-              checked={isTableTrackChecked}
-              className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
-              id="track-checkbox"
-              type="checkbox"
-              disabled={checkChangeLang()}
-              onChange={dispatchTrackThis}
-              data-test="raw-sql-track-check"
-            />
-            Track this
-          </label>
-        )}
+        <label>
+          <input
+            checked={isTableTrackChecked}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
+            id="track-checkbox"
+            type="checkbox"
+            disabled={checkChangeLang()}
+            onChange={dispatchTrackThis}
+            data-test="raw-sql-track-check"
+          />
+          Track this
+        </label>
         <Tooltip
           message={
             'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'
@@ -462,7 +462,7 @@ const RawSQL = ({
         <div
           className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
         >
-          {getTrackThisSection()}
+          {isFeatureSupported('rawSQL.tracking') ? getTrackThisSection() : null}
           {getMetadataCascadeSection()}
           {getMigrationSection()}
 

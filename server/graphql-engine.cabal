@@ -504,6 +504,7 @@ library
                      , Hasura.Backends.Postgres.Instances.Transport
                      , Hasura.Backends.Postgres.Instances.Types
                      , Hasura.Backends.Postgres.Schema.OnConflict
+                     , Hasura.Backends.Postgres.Schema.Select
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
                      , Hasura.Backends.Postgres.SQL.IdentifierUniqueness
@@ -599,6 +600,7 @@ library
                      , Hasura.Server.Init.Config
                      , Hasura.Server.Limits
                      , Hasura.Server.Logging
+                     , Hasura.Server.MetadataOpenAPI
                      , Hasura.Server.Migrate
                      , Hasura.Server.Name
                      , Hasura.Server.OpenAPI
@@ -632,6 +634,7 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.SchemaCacheRef
                      , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.Migrate.LatestVersion
                      , Hasura.Server.Migrate.Version
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
@@ -789,8 +792,10 @@ library
                      , Hasura.GraphQL.Parser.Name
                      , Hasura.GraphQL.Parser.Name.Introspection
                      , Hasura.GraphQL.Parser.Name.TypeSystem
+                     , Hasura.GraphQL.Parser.Names
                      , Hasura.GraphQL.Parser.Schema
                      , Hasura.GraphQL.Parser.Schema.Convert
+                     , Hasura.GraphQL.Parser.Variable
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.Action
@@ -803,6 +808,7 @@ library
                      , Hasura.GraphQL.Schema.Mutation
                      , Hasura.GraphQL.Schema.Node
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Parser
                      , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Relay
                      , Hasura.GraphQL.Schema.Remote
@@ -820,6 +826,14 @@ library
                      , Hasura.GraphQL.Transport.WebSocket.Types
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
+
+                     -- Metadata DTOs:
+                     , Hasura.Metadata.DTO.Metadata
+                     , Hasura.Metadata.DTO.MetadataV1
+                     , Hasura.Metadata.DTO.MetadataV2
+                     , Hasura.Metadata.DTO.MetadataV3
+                     , Hasura.Metadata.DTO.Placeholder
+                     , Hasura.Metadata.DTO.Utils
 
                      , Hasura.Eventing.Common
                      , Hasura.Eventing.EventTrigger
@@ -877,6 +891,17 @@ executable graphql-engine
                    , unix
                    , ekg-core
 
+-- The OpenAPI specification for metadata is experimental and incomplete. Please
+-- do not incorporate it into essential workflows at this time.
+executable emit-metadata-openapi
+  import: common-all
+  hs-source-dirs:    src-emit-metadata-openapi
+  main-is:           Main.hs
+  build-depends:     base
+                   , graphql-engine
+                   , aeson-pretty
+                   , bytestring
+
 -- Ideally, we would not always import `lib-depends` here, and we would like to:
 --
 --  if flag(ghci-load-test-with-lib)
@@ -929,6 +954,7 @@ test-suite graphql-engine-tests
     , openapi3
     , optparse-applicative
     , pg-client
+    , postgresql-libpq
     , process
     , QuickCheck
     , safe
@@ -964,14 +990,13 @@ test-suite graphql-engine-tests
     Data.NonNegativeIntSpec
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
-    Data.Parser.URLTemplateSpec
     Data.Parser.RemoteRelationshipSpec
+    Data.Parser.URLTemplateSpec
     Data.Text.RawString
     Data.TimeSpec
     Data.TrieSpec
     Database.MSSQL.TransactionSpec
     Hasura.AppSpec
-    Hasura.Backends.DataConnector.API.V0Spec
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
     Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec
@@ -983,31 +1008,36 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
+    Hasura.Backends.DataConnector.API.V0Spec
+    Hasura.Backends.DataConnector.API.V0Spec
     Hasura.Backends.DataConnector.RQLGenerator
     Hasura.Backends.DataConnector.RQLGenerator.GenAnnSelectG
     Hasura.Backends.DataConnector.RQLGenerator.GenCommon
-    Hasura.Backends.DataConnector.RQLGenerator.GenTablePermG
     Hasura.Backends.DataConnector.RQLGenerator.GenSelectArgsG
     Hasura.Backends.DataConnector.RQLGenerator.GenSelectFromG
+    Hasura.Backends.DataConnector.RQLGenerator.GenTablePermG
     Hasura.Backends.MSSQL.ErrorSpec
     Hasura.Backends.MySQL.DataLoader.ExecuteTests
+    Hasura.Backends.Postgres.Execute.PrepareSpec
     Hasura.Backends.Postgres.RQLGenerator
-    Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
     Hasura.Backends.Postgres.RQLGenerator.GenAnnSelectG
+    Hasura.Backends.Postgres.RQLGenerator.GenAssociatedTypes
     Hasura.Backends.Postgres.RQLGenerator.GenSelectArgsG
     Hasura.Backends.Postgres.RQLGenerator.GenSelectFromG
     Hasura.Backends.Postgres.RQLGenerator.GenTablePermG
     Hasura.Backends.Postgres.SQL.EDSL
     Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec
+    Hasura.Backends.Postgres.SQL.ValueSpec
     Hasura.EventingSpec
     Hasura.Generator.Common
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
+    Hasura.GraphQL.Parser.MonadParseTest
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.RemoteTest
     Hasura.IncrementalSpec
-    Hasura.StreamingSubscriptionSpec
+    Hasura.Metadata.DTO.MetadataDTOSpec
     Hasura.QuickCheck.Instances
     Hasura.RQL.IR.Generator
     Hasura.RQL.IR.SelectSpec
@@ -1021,16 +1051,19 @@ test-suite graphql-engine-tests
     Hasura.Server.Auth.JWTSpec
     Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
+    Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
+    Hasura.StreamingSubscriptionSpec
+    Hasura.StreamingSubscriptionSpec
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Utils
     Test.Autodocodec.Extended
-    Test.Parser.Field
-    Test.Parser.Monad
-    Test.Parser.Internal
     Test.Parser.Expectation
+    Test.Parser.Field
+    Test.Parser.Internal
+    Test.Parser.Monad
     Test.QuickCheck.Extended
 
 test-suite tests-hspec
@@ -1163,16 +1196,19 @@ test-suite tests-hspec
     Harness.Quoter.Yaml
 
  -- Test
+    Test.ArrayParamPermissionSpec
     Test.ArrayRelationshipsSpec
     Test.BasicFieldsSpec
     Test.BackendOnlyPermissionsSpec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
+    Test.DataConnector.MockAgent.BasicQuerySpec
+    Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.QuerySpec
-    Test.DataConnector.QueryMockAgentSpec
     Test.DataConnector.SelectPermissionsSpec
     Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
+    Test.EventTriggersRecreationSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
@@ -1204,11 +1240,12 @@ test-suite tests-hspec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
     Test.BigQuery.ComputedFieldSpec
+    Test.BigQuery.GraphQLQueryBasicSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
-    Test.SQLServer.InsertVarcharColumnSpec
     Test.SelectSpec
     Test.SerializationSpec
     Test.ServiceLivenessSpec
+    Test.SQLServer.InsertVarcharColumnSpec
     Test.ViewsSpec
     Test.WhereSpec
 
@@ -1257,6 +1294,7 @@ test-suite tests-dc-api
     , Paths_graphql_engine
     , Test.Data
     , Test.CapabilitiesSpec
+    , Test.HealthSpec
     , Test.QuerySpec
     , Test.QuerySpec.BasicSpec
     , Test.QuerySpec.RelationshipsSpec

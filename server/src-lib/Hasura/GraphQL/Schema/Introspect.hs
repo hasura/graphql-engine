@@ -15,12 +15,10 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Vector qualified as V
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser (FieldParser, Kind (..), Parser, Schema (..))
-import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
-import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Parser.Name qualified as GName
+import Hasura.GraphQL.Schema.Parser as P
 import Hasura.Prelude
 import Language.GraphQL.Draft.Printer qualified as GP
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -206,7 +204,7 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
   let -- The only directives that we currently expose over introspection are our
       -- statically defined ones.  So, for instance, we don't correctly expose
       -- directives from remote schemas.
-      directives = directivesInfo @P.Parse
+      directives :: [DirectiveInfo] = directivesInfo @P.Parse
       -- The __schema and __type introspection fields
       introspection = [schema @P.Parse, typeIntrospection]
       {-# INLINE introspection #-}
@@ -243,7 +241,6 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
       }
 
 collectTypes ::
-  forall m a.
   (MonadError QErr m, P.HasTypeDefinitions a) =>
   a ->
   m (HashMap G.Name P.SomeDefinitionTypeInfo)
@@ -332,17 +329,17 @@ typeField =
                   J.String "NON_NULL"
                 P.TList P.Nullable _ ->
                   J.String "LIST"
-                P.TNamed P.Nullable (P.Definition _ _ P.TIScalar) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ P.TIScalar) ->
                   J.String "SCALAR"
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIEnum _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIEnum _)) ->
                   J.String "ENUM"
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIInputObject _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInputObject _)) ->
                   J.String "INPUT_OBJECT"
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIObject _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIObject _)) ->
                   J.String "OBJECT"
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIInterface _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInterface _)) ->
                   J.String "INTERFACE"
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIUnion _)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIUnion _)) ->
                   J.String "UNION"
       name :: FieldParser n (SomeType -> J.Value)
       name =
@@ -350,14 +347,14 @@ typeField =
           $> \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition name' _ _) ->
+                P.TNamed P.Nullable (P.Definition name' _ _ _) ->
                   nameAsJSON name'
                 _ -> J.Null
       description :: FieldParser n (SomeType -> J.Value)
       description =
         P.selection_ GName._description Nothing P.string
           $> \case
-            SomeType (P.TNamed _ (P.Definition _ (Just desc) _)) ->
+            SomeType (P.TNamed _ (P.Definition _ (Just desc) _ _)) ->
               J.String (G.unDescription desc)
             _ -> J.Null
       fields :: FieldParser n (SomeType -> J.Value)
@@ -368,9 +365,9 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIObject (P.ObjectInfo fields' _interfaces'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIObject (P.ObjectInfo fields' _interfaces'))) ->
                   J.Array $ V.fromList $ printer <$> fields'
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIInterface (P.InterfaceInfo fields' _objects'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo fields' _objects'))) ->
                   J.Array $ V.fromList $ printer <$> fields'
                 _ -> J.Null
       interfaces :: FieldParser n (SomeType -> J.Value)
@@ -380,7 +377,7 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIObject (P.ObjectInfo _fields' interfaces'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIObject (P.ObjectInfo _fields' interfaces'))) ->
                   J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIInterface <$> interfaces'
                 _ -> J.Null
       possibleTypes :: FieldParser n (SomeType -> J.Value)
@@ -390,9 +387,9 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIInterface (P.InterfaceInfo _fields' objects'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInterface (P.InterfaceInfo _fields' objects'))) ->
                   J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIUnion (P.UnionInfo objects'))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIUnion (P.UnionInfo objects'))) ->
                   J.Array $ V.fromList $ printer . SomeType . P.TNamed P.Nullable . fmap P.TIObject <$> objects'
                 _ -> J.Null
       enumValues :: FieldParser n (SomeType -> J.Value)
@@ -403,7 +400,7 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIEnum vals)) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIEnum vals)) ->
                   J.Array $ V.fromList $ fmap printer $ toList vals
                 _ -> J.Null
       inputFields :: FieldParser n (SomeType -> J.Value)
@@ -413,7 +410,7 @@ typeField =
           \case
             SomeType tp ->
               case tp of
-                P.TNamed P.Nullable (P.Definition _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs))) ->
+                P.TNamed P.Nullable (P.Definition _ _ _ (P.TIInputObject (P.InputObjectInfo fieldDefs))) ->
                   J.Array $ V.fromList $ map printer fieldDefs
                 _ -> J.Null
       -- ofType peels modalities off of types
@@ -560,7 +557,7 @@ typeKind =
         ]
     )
   where
-    mkDefinition name = (P.Definition name Nothing P.EnumValueInfo, ())
+    mkDefinition name = (P.Definition name Nothing Nothing P.EnumValueInfo, ())
 
 {-
 type __Field {

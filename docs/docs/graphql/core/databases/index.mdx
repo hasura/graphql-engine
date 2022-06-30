@@ -12,15 +12,13 @@ slug: index
 
 ## Introduction
 
-The Hasura GraphQL engine automatically generates your GraphQL schema
-and resolvers based on tables/views in your database . **You don't need
-to write a GraphQL schema or resolvers.** See
+The Hasura GraphQL engine automatically generates your GraphQL schema and resolvers based on tables/views in your
+database . **You don't need to write a GraphQL schema or resolvers.** See
 [How Hasura GraphQL engine works](/graphql/core/how-it-works/index.mdx) for more details.
 
-The Hasura console gives you UI tools that speed up your data-modelling
-process, or working with your existing databases. The console also
-automatically generates migrations or metadata files that you can edit
-directly and check into your version control.
+The Hasura console gives you UI tools that speed up your data-modelling process, or working with your existing
+databases. The console also automatically generates migrations or metadata files that you can edit directly and check
+into your version control.
 
 ## Supported databases
 
@@ -34,7 +32,8 @@ Hasura GraphQL engine supports:
 
 ### Feature support
 
-The below matrices show the database wise support for the different GraphQL features under schema, queries, mutations and subscriptions.
+The below matrices show the database wise support for the different GraphQL features under schema, queries, mutations, 
+subscriptions and event triggers.
 
 #### Schema
 
@@ -48,6 +47,7 @@ The below matrices show the database wise support for the different GraphQL feat
 | Computed Fields      | ✅       | ✅    | ❌         | ❌       |
 | Data Validations     | ✅       | ✅    | ✅         | ✅       |
 | Relay Schema         | ✅       | ✅    | ❌         | ❌       |
+| Naming Conventions   | ✅       | ❌    | ❌         | ❌       |
 
 #### Queries
 
@@ -76,14 +76,25 @@ The below matrices show the database wise support for the different GraphQL feat
 
 #### Subscriptions
 
-|                        | Postgres | Citus | SQL Server | BigQuery |
-| ---------------------- | -------- | ----- | ---------- | -------- |
-| Value of Field         | ✅       | ✅    | ✅         | ❌       |
-| Updates to Rows        | ✅       | ✅    | ❌         | ❌       |
-| Value of Derived Field | ✅       | ✅    | ✅         | ❌       |
+|                         | Postgres | Citus | SQL Server | BigQuery |
+| ----------------------- | -------- | ----- | ---------- | -------- |
+| Value of Field          | ✅       | ✅    | ✅         | ❌       |
+| Updates to Rows         | ✅       | ✅    | ❌         | ❌       |
+| Value of Derived Field  | ✅       | ✅    | ✅         | ❌       |
+| Streaming Subscriptions | ✅       | ❌    | ❌         | ❌       |
+
+#### Event Triggers
+
+|        | Postgres | Citus | SQL Server | BigQuery |
+| ------ | -------- | ----- | ---------- | -------- |
+| INSERT | ✅       | ❌    | ✅         | ❌       |
+| UPDATE | ✅       | ❌    | ✅         | ❌       |
+| DELETE | ✅       | ❌    | ✅         | ❌       |
+| MANUAL | ✅       | ❌    | ✅         | ❌       |
 
 :::info Additional Resources
 
-Get Started with Hasura today - [Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
+Get Started with Hasura today -
+[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
 
 :::

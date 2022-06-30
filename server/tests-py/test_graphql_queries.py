@@ -117,9 +117,6 @@ class TestGraphQLEmpty:
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicBigquery:
 
-    def test_user_perms(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/user_perms.yaml", transport)
-
     def test_empty_perms(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/empty_perms.yaml", transport)
 
@@ -651,9 +648,6 @@ class TestGraphQLQueryBoolExpBasicPostgres:
 
     def test_in_sql_identifier_array(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/in_sql_identifier_array.yaml', transport)
-
-    def test_select_cast_test_where_cast_string(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_cast_test_where_cast_string_postgres.yaml', transport)
 
     @classmethod
     def dir(cls):

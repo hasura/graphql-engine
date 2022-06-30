@@ -312,20 +312,20 @@ PGCertSettings
      - ``String``
      - The SSL connection mode. See the libpq ssl `support docs <https://www.postgresql.org/docs/9.1/libpq-ssl.html>` for more details.
    * - sslrootcert
-     - true
+     - false
      - FromEnv_
      - Environment variable which stores trusted certificate authorities.
    * - sslcert
-     - true
+     - false
      - FromEnv_
      - Environment variable which stores the client certificate.
    * - sslkey
-     - true
+     - false
      - FromEnv_
      - Environment variable which stores the client private key.
    * - sslpassword
      - false
-     - ``String`` | FromEnv_
+     - FromEnv_
      - Password in the case where the sslkey is encrypted.
 
 .. _MsSQLPoolSettings:

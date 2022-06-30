@@ -11,6 +11,7 @@ module Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipS
 
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
+import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
@@ -101,8 +102,9 @@ postgresSetup (testEnvironment, localTestEnvironment) = do
 
 postgresTeardown :: (TestEnvironment, ()) -> IO ()
 postgresTeardown (testEnvironment, localTestEnvironment) = do
-  postgresDropPermissions testEnvironment
-  Postgres.teardown schema (testEnvironment, localTestEnvironment)
+  finally
+    (postgresDropPermissions testEnvironment)
+    (Postgres.teardown schema (testEnvironment, localTestEnvironment))
 
 -- No 'article' root fields will be exposed.
 -- This scenario tests, when we want to disable querying a specific table but allow
@@ -135,7 +137,7 @@ args:
     role: user
     permission:
       filter:
-        articles_by_author_id:
+        articles_by_id_to_author_id:
           author_id:
             _eq:  X-Hasura-User-Id
       columns: '*'
@@ -177,8 +179,9 @@ sqlServerSetup (testEnvironment, localTestEnvironment) = do
 
 sqlServerTeardown :: (TestEnvironment, ()) -> IO ()
 sqlServerTeardown (testEnvironment, localTestEnvironment) = do
-  mssqlDropPermissions testEnvironment
-  SQLServer.teardown schema (testEnvironment, localTestEnvironment)
+  finally
+    (mssqlDropPermissions testEnvironment)
+    (SQLServer.teardown schema (testEnvironment, localTestEnvironment))
 
 -- No 'article' root fields will be exposed.
 -- This scenario tests, when we want to disable querying a specific table but allow
@@ -211,7 +214,7 @@ args:
     role: user
     permission:
       filter:
-        articles_by_author_id:
+        articles_by_id_to_author_id:
           author_id:
             _eq:  X-Hasura-User-Id
       columns: '*'
@@ -256,8 +259,8 @@ tests opts = describe "DisableAllRootFieldsRelationshipSpec" $ do
             # we put id=1 restrictions here because we don't assume ordering support
             hasura_author {
               id
-              # the _by_author_id part is necessary to distinguish between multiple foreign key relationships between the same two tables
-              articles_by_author_id{
+              # the _by_id_to_author_id part is necessary to distinguish between multiple foreign key relationships between the same two tables
+              articles_by_id_to_author_id {
                 title
               }
             }
@@ -269,7 +272,7 @@ tests opts = describe "DisableAllRootFieldsRelationshipSpec" $ do
           data:
             hasura_author:
             - id: 1
-              articles_by_author_id:
+              articles_by_id_to_author_id:
                 - title: Article 1
                 - title: Article 3
           |]

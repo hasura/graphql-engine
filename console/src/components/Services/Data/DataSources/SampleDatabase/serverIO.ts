@@ -3,33 +3,30 @@ import { OnboardingSampleDBCohortConfig } from './ReduxState';
 
 // this can later be pulled out as a common lux client for console codebase
 const newLuxClient = () => {
-  const fetchWithOptions = async (
-    query: string,
-    variables: any
-  ): Promise<any> => {
-    try {
-      const response = await fetch(Endpoints.luxDataGraphql, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          query,
-          variables: variables || {},
-        }),
+  const fetchWithOptions = (query: string, variables: any): Promise<any> => {
+    return fetch(Endpoints.luxDataGraphql, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        query,
+        variables: variables || {},
+      }),
+    })
+      .then(response => {
+        return response.json();
+      })
+      .catch(() => {
+        return {
+          errors: [
+            {
+              message: 'unexpected http exception',
+            },
+          ],
+        };
       });
-      const responseJson = await response.json();
-      return responseJson;
-    } catch (e) {
-      return {
-        errors: [
-          {
-            message: 'unexpected http exception',
-          },
-        ],
-      };
-    }
   };
 
   return {
@@ -169,6 +166,37 @@ export const trackAnotherDBConnection = (projectId: string) => {
       trackOnboardingSampleDbCohortActivity (
         error_message: "" 
         event: "event_connected_another_db"
+        project_id: $projectId
+        status: ""
+      ) {
+        status
+      }
+    }
+  `;
+  return luxClient
+    .query(query, { projectId })
+    .then(r => {
+      if (r.errors) {
+        console.error(
+          'failed to track onboarding cohort activity: ',
+          r.errors[0]?.message || 'unexpected'
+        );
+      }
+    })
+    .catch(e => {
+      console.error(
+        'unexpectedly failed to track onboarding cohort activity: ',
+        e.message
+      );
+    });
+};
+
+export const trackLandingOnConnectDBForm = (projectId: string) => {
+  const query = `
+    mutation trackAnotherDBConnection($projectId: uuid!) {
+      trackOnboardingSampleDbCohortActivity (
+        error_message: "" 
+        event: "event_land_connect_db_form"
         project_id: $projectId
         status: ""
       ) {

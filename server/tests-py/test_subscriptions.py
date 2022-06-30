@@ -61,6 +61,17 @@ def init_graphql_ws_conn(hge_ctx, ws_client_graphql_ws, payload = None):
     ev = ws_client_graphql_ws.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
 
+def get_explain_graphql_query_response(hge_ctx, query, variables, user_headers = {}):
+    admin_secret = hge_ctx.hge_key
+    headers = {}
+    if admin_secret is not None:
+        headers['X-Hasura-Admin-Secret'] = admin_secret
+
+    request = { 'query': { 'query': query, 'variables': variables }, 'user': user_headers }
+    status_code, response, _ = hge_ctx.anyq('/v1/graphql/explain', request, headers)
+    assert status_code == 200, (request, status_code, response)
+    return response
+
 class TestSubscriptionCtrl(object):
 
     def test_init_without_payload(self, hge_ctx, ws_client):
@@ -607,7 +618,7 @@ class TestSubscriptionLiveQueriesForGraphQLWS:
 
 @pytest.mark.parametrize("backend", ['mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
-class TestSubscriptionMultiplexing:
+class TestSubscriptionMultiplexingPostgresMSSQL:
 
     @classmethod
     def dir(cls):
@@ -622,7 +633,7 @@ class TestSubscriptionMultiplexing:
                 "X-Hasura-Role":"public",
                 "X-Hasura-User-Id":"1"      # extraneous session variable
         }
-        response = self.get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
+        response = get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
         # The input session variables should be ignored because the only check for the role is
         # if `is_public` is `true`
         assert response["variables"]["session"] == {}, response["variables"]
@@ -632,22 +643,32 @@ class TestSubscriptionMultiplexing:
                 "X-Hasura-User-Id":"1",
                 "X-Hasura-Allowed-Ids":"{1,3,4}" # extraneous session variable
         }
-        response = self.get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
+        response = get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
         # The input session variable should not be ignored because the `user` role can only
         # select those roles where `user_id = X-Hasura-User-Id`
         assert response["variables"]["session"] == {'x-hasura-user-id':"1"}, response["variables"]
 
-    def get_explain_graphql_query_response(self, hge_ctx, query, variables, user_headers = {}):
-        admin_secret = hge_ctx.hge_key
-        headers = {}
-        if admin_secret is not None:
-            headers['X-Hasura-Admin-Secret'] = admin_secret
+# test case for https://github.com/hasura/graphql-engine-mono/issues/3689
+@usefixtures('per_class_tests_db_state')
+class TestSubscriptionMultiplexingPostgres:
 
-        request = { 'query': { 'query': query, 'variables': variables }, 'user': user_headers }
-        status_code, response, _ = hge_ctx.anyq('/v1/graphql/explain', request, headers)
-        assert status_code == 200, (request, status_code, response)
-        return response
+    @classmethod
+    def dir(cls):
+        return 'queries/subscriptions/multiplexing'
 
+    def test_simple_variables_are_parameterized(self, hge_ctx):
+        with open(self.dir() + '/articles_query_simple_variable.yaml') as c:
+            config = yaml.load(c)
+
+        response = get_explain_graphql_query_response(hge_ctx, config['query'], config['variables'], {})
+        assert response["variables"]["synthetic"] == ['1'], response["variables"]
+
+    def test_array_variables_are_parameterized(self, hge_ctx):
+        with open(self.dir() + '/articles_query_array_variable.yaml') as c:
+            config = yaml.load(c)
+
+        response = get_explain_graphql_query_response(hge_ctx, config['query'], config['variables'], {})
+        assert response["variables"]["synthetic"] == ['{1,2,3}'], response["variables"]
 
 @pytest.mark.parametrize("backend", ['postgres'])
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')

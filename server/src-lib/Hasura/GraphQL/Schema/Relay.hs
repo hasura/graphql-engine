@@ -20,14 +20,12 @@ import Data.Text qualified as T
 import Data.Text.Extended
 import Data.These (partitionThese)
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser (Kind (..), Parser)
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Class
-import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Node
+import Hasura.GraphQL.Schema.Parser (Kind (..), Parser, memoizeOn)
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
@@ -147,7 +145,7 @@ nodeField sourceCache = do
             createRootField stringifyNum sourceName tableName nodeValue pKeys
   where
     throwInvalidNodeId :: Text -> n a
-    throwInvalidNodeId t = withPath (++ [Key "args", Key "id"]) $ parseError $ "invalid node id: " <> t
+    throwInvalidNodeId t = P.withKey (Key "args") $ P.withKey (Key "id") $ P.parseError $ "invalid node id: " <> t
 
     parseNodeId :: Text -> n NodeId
     parseNodeId = either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
@@ -214,7 +212,7 @@ nodeField sourceCache = do
         let columnType = ciType columnInfo
         parsedValue <-
           parseScalarValueColumnType columnType columnValue `onLeft` \e ->
-            parseErrorWith ParseFailed $ "value of column " <> ciColumn columnInfo <<> " in node id: " <> qeError e
+            P.parseErrorWith ParseFailed $ "value of column " <> ciColumn columnInfo <<> " in node id: " <> qeError e
         pure $
           IR.BoolFld $
             IR.AVColumn

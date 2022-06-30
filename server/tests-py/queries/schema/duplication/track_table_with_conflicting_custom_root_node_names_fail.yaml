@@ -12,9 +12,9 @@
   url: /v1/query
   status: 500
   response:
-    path: $.args
     code: unexpected
-    error: "found duplicate fields in selection set: user"
+    error: 'found duplicate fields in selection set: user (generated for source default)'
+    path: $.args
   query:
     type: track_table
     version: 2

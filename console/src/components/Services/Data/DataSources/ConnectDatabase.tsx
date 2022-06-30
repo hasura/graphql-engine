@@ -76,6 +76,20 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     source => source.name === editSourceName
   );
 
+  // initialise an instance of sample DB trial and pass it to the connect DB form
+  const sampleDBTrial = newSampleDBTrial({
+    consoleType: globals.consoleType,
+    hasuraCloudProjectId: globals.hasuraCloudProjectId || '',
+    cohortConfig: onboardingSampleDBCohortConfig,
+  });
+
+  // user landed on connect-db page
+  React.useEffect(() => {
+    if (!isEditState && sampleDBTrial && sampleDBTrial.isActive()) {
+      sampleDBTrial.track.landOnConnectDB();
+    }
+  }, [sampleDBTrial, isEditState]);
+
   useEffect(() => {
     if (isEditState && currentSourceInfo) {
       const connectionInfo = currentSourceInfo.configuration?.connection_info;
@@ -407,13 +421,6 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       type: 'RESET_INPUT_STATE',
     });
   };
-
-  // initialise an instance of sample DB trial and pass it to the connect DB form
-  const sampleDBTrial = newSampleDBTrial({
-    consoleType: globals.consoleType,
-    hasuraCloudProjectId: globals.hasuraCloudProjectId || '',
-    cohortConfig: onboardingSampleDBCohortConfig,
-  });
 
   if (isEditState) {
     return (

@@ -1,0 +1,72 @@
+# Based on the template from https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml
+
+version: "3.9"
+
+services:
+  reference-agent:
+    image: "hasura/dc-reference-agent:${HASURA_VERSION}"
+    # build: ./reference
+    ## NOTE: If you want to modify the reference-agent you can use the build config for docker-compose
+
+  postgres:
+    image: "postgres:13"
+    restart: always
+    volumes:
+    - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
+
+  engine:
+    depends_on:
+      - postgres
+      - reference-agent
+    image: "hasura/graphql-engine:${HASURA_VERSION}"
+    # image: "hasura/graphql-engine:${HASURA_VERSION}.ubuntu.amd64" # Intel specific image
+    # image: "hasura/graphql-engine:${HASURA_VERSION}.ubuntu.arm64" # ARM specific image
+    restart: always
+    ports:
+      - 8080:8080
+    environment:
+      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: "postgres://postgres:postgrespassword@postgres:5432/postgres"
+      PG_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: "startup, http-log, webhook-log, websocket-log, query-log"
+
+  replace-metadata:
+    depends_on:
+      - engine
+    image: "curlimages/curl:7.83.1"
+    volumes:
+      - ./metadata:/hasura-metadata
+    command:
+      - 'http://engine:8080/v1/metadata'
+      - '--fail'
+      - '-X'
+      - 'POST'
+      - '-H'
+      - 'Accept: */*'
+      - '-H'
+      - 'Content-Type: application/json'
+      - '--data-binary'
+      - '@/hasura-metadata/metadata-api.json'
+    restart: on-failure
+
+  tests:
+    depends_on:
+      - reference-agent
+    image: "hasura/dc-agent-tests:${HASURA_VERSION}"
+    command: ["tests-dc-api", 'test', '-u', 'http://reference-agent:8100', '-s', '{}']
+    restart: on-failure
+
+  swagger-ui:
+    # TODO: Point at the reference agent
+    image: "swaggerapi/swagger-ui:v4.10.3"
+    volumes:
+      - ./agent.openapi.json:/app/swagger.json
+    ports:
+      - 8300:8080
+
+volumes:
+  db_data:

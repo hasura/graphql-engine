@@ -12,7 +12,8 @@ where
 import Data.Aeson qualified as A
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class.Parse
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Names
+import Hasura.GraphQL.Parser.Variable
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 

@@ -6,12 +6,13 @@ import Control.Monad ((>=>))
 import Data.Aeson.Text (encodeToLazyText)
 import Data.Proxy (Proxy (..))
 import Data.Text.Lazy.IO qualified as Text
-import Hasura.Backends.DataConnector.API (Routes (..), apiClient, openApiSchemaJson)
+import Hasura.Backends.DataConnector.API (Routes (..), apiClient, openApiSchema)
 import Hasura.Backends.DataConnector.API qualified as API
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
 import Test.CapabilitiesSpec qualified
+import Test.HealthSpec qualified
 import Test.Hspec (Spec)
 import Test.Hspec.Core.Runner (runSpec)
 import Test.Hspec.Core.Util (filterPredicate)
@@ -25,6 +26,7 @@ testSourceName = "dc-api-tests"
 
 tests :: Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
 tests api sourceName agentConfig capabilities = do
+  Test.HealthSpec.spec api sourceName agentConfig
   Test.CapabilitiesSpec.spec api agentConfig capabilities
   Test.SchemaSpec.spec api sourceName agentConfig
   Test.QuerySpec.spec api sourceName agentConfig capabilities
@@ -38,7 +40,7 @@ main = do
       agentCapabilities <- getAgentCapabilities api _toAgentCapabilities
       runSpec (tests api testSourceName _toAgentConfig agentCapabilities) (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
     ExportOpenAPISpec ->
-      Text.putStrLn $ encodeToLazyText openApiSchemaJson
+      Text.putStrLn $ encodeToLazyText openApiSchema
 
   pure ()
 

@@ -1,4 +1,4 @@
-import { SchemaResponse, ScalarType } from "../types/schema"
+import { SchemaResponse } from "../types"
 import { Config } from "../config";
 import xml2js from "xml2js"
 import fs from "fs"
@@ -43,13 +43,13 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "ArtistId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Artist primary key identifier"
         },
         {
           name: "Name",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The name of the artist"
         }
@@ -62,19 +62,19 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "AlbumId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Album primary key identifier"
         },
         {
           name: "Title",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The title of the album"
         },
         {
           name: "ArtistId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "The ID of the artist that created this album"
         }
@@ -87,79 +87,79 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "CustomerId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Customer primary key identifier"
         },
         {
           name: "FirstName",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The customer's first name"
         },
         {
           name: "LastName",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The customer's last name"
         },
         {
           name: "Company",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's company name"
         },
         {
           name: "Address",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's address line (street number, street)"
         },
         {
           name: "City",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's address city"
         },
         {
           name: "State",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's address state"
         },
         {
           name: "Country",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's address country"
         },
         {
           name: "PostalCode",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's address postal code"
         },
         {
           name: "Phone",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's phone number"
         },
         {
           name: "Fax",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The customer's fax number"
         },
         {
           name: "Email",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The customer's email address"
         },
         {
           name: "SupportRepId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: true,
           description: "The ID of the Employee who is this customer's support representative"
         }
@@ -172,85 +172,85 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "EmployeeId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Employee primary key identifier"
         },
         {
           name: "FirstName",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The employee's first name"
         },
         {
           name: "LastName",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The employee's last name"
         },
         {
           name: "Title",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's job title"
         },
         {
           name: "BirthDate",
-          type: ScalarType.String, // Ought to be DateTime but we don't have a type for this yet
+          type: "string", // Ought to be DateTime but we don't have a type for this yet
           nullable: true,
           description: "The employee's birth date"
         },
         {
           name: "HireDate",
-          type: ScalarType.String, // Ought to be DateTime but we don't have a type for this yet
+          type: "string", // Ought to be DateTime but we don't have a type for this yet
           nullable: true,
           description: "The employee's birth date"
         },
         {
           name: "Address",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's address line (street number, street)"
         },
         {
           name: "City",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's address city"
         },
         {
           name: "State",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's address state"
         },
         {
           name: "Country",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's address country"
         },
         {
           name: "PostalCode",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's address postal code"
         },
         {
           name: "Phone",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's phone number"
         },
         {
           name: "Fax",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The employee's fax number"
         },
         {
           name: "Email",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The employee's email address"
         },
@@ -263,13 +263,13 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "GenreId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Genre primary key identifier"
         },
         {
           name: "Name",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The name of the genre"
         }
@@ -282,55 +282,55 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "InvoiceId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Invoice primary key identifier"
         },
         {
           name: "CustomerId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "ID of the customer who bought the music"
         },
         {
           name: "InvoiceDate",
-          type: ScalarType.String, // Ought to be DateTime but we don't have a type for this yet
+          type: "string", // Ought to be DateTime but we don't have a type for this yet
           nullable: false,
           description: "Date of the invoice"
         },
         {
           name: "BillingAddress",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The invoice's billing address line (street number, street)"
         },
         {
           name: "BillingCity",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The invoice's billing address city"
         },
         {
           name: "BillingState",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The invoice's billing address state"
         },
         {
           name: "BillingCountry",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The invoice's billing address country"
         },
         {
           name: "BillingPostalCode",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The invoice's billing address postal code"
         },
         {
           name: "Total",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "The total amount due on the invoice"
         },
@@ -343,31 +343,31 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "InvoiceLineId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Invoice Line primary key identifier"
         },
         {
           name: "InvoiceId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "ID of the invoice the line belongs to"
         },
         {
           name: "TrackId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "ID of the music track being purchased"
         },
         {
           name: "UnitPrice",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Price of each individual track unit"
         },
         {
           name: "Quantity",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Quantity of the track purchased"
         },
@@ -380,13 +380,13 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "MediaTypeId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Media Type primary key identifier"
         },
         {
           name: "Name",
-          type: ScalarType.Number,
+          type: "number",
           nullable: true,
           description: "The name of the media type format"
         },
@@ -399,13 +399,13 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "PlaylistId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "Playlist primary key identifier"
         },
         {
           name: "Name",
-          type: ScalarType.Number,
+          type: "number",
           nullable: true,
           description: "The name of the playlist"
         },
@@ -419,13 +419,13 @@ const schema: SchemaResponse = {
     //   columns: [
     //     {
     //       name: "PlaylistId",
-    //       type: ScalarType.Number,
+    //       type: "number",
     //       nullable: false,
     //       description: "The ID of the playlist"
     //     },
     //     {
     //       name: "TrackId",
-    //       type: ScalarType.Number,
+    //       type: "number",
     //       nullable: true,
     //       description: "The ID of the track"
     //     },
@@ -438,55 +438,55 @@ const schema: SchemaResponse = {
       columns: [
         {
           name: "TrackId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
-          description: "The ID of the playlist"
+          description: "The ID of the track"
         },
         {
           name: "Name",
-          type: ScalarType.String,
+          type: "string",
           nullable: false,
           description: "The name of the track"
         },
         {
           name: "AlbumId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: true,
           description: "The ID of the album the track belongs to"
         },
         {
           name: "MediaTypeId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: true,
           description: "The ID of the media type the track is encoded with"
         },
         {
           name: "GenreId",
-          type: ScalarType.Number,
+          type: "number",
           nullable: true,
           description: "The ID of the genre of the track"
         },
         {
           name: "Composer",
-          type: ScalarType.String,
+          type: "string",
           nullable: true,
           description: "The name of the composer of the track"
         },
         {
           name: "Milliseconds",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "The length of the track in milliseconds"
         },
         {
           name: "Bytes",
-          type: ScalarType.Number,
+          type: "number",
           nullable: true,
           description: "The size of the track in bytes"
         },
         {
           name: "UnitPrice",
-          type: ScalarType.Number,
+          type: "number",
           nullable: false,
           description: "The price of the track"
         },

@@ -152,9 +152,8 @@ instance FromJSON SSLMode where
     "verify-full" -> pure VerifyFull
     err -> fail $ "Invalid SSL Mode " <> unpack err
 
-data CertVar
+newtype CertVar
   = CertVar String
-  | CertLiteral String
   deriving (Show, Eq, Generic)
 
 instance Cacheable CertVar
@@ -165,11 +164,9 @@ instance NFData CertVar
 
 instance ToJSON CertVar where
   toJSON (CertVar var) = (object ["from_env" .= var])
-  toJSON (CertLiteral var) = String (T.pack var)
 
 instance FromJSON CertVar where
-  parseJSON (String s) = pure (CertLiteral (T.unpack s))
-  parseJSON x = withObject "CertVar" (\o -> CertVar <$> o .: "from_env") x
+  parseJSON = withObject "CertVar" (\o -> CertVar <$> o .: "from_env")
 
 newtype CertData = CertData {unCert :: Text}
   deriving (Show, Eq, Generic)
@@ -178,16 +175,16 @@ instance ToJSON CertData where
   toJSON = String . unCert
 
 data PGClientCerts p a = PGClientCerts
-  { pgcSslCert :: a,
-    pgcSslKey :: a,
-    pgcSslRootCert :: a,
+  { pgcSslCert :: Maybe a,
+    pgcSslKey :: Maybe a,
+    pgcSslRootCert :: Maybe a,
     pgcSslMode :: SSLMode,
     pgcSslPassword :: Maybe p
   }
   deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
 
 $(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
-$(deriveToJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
+$(deriveToJSON (aesonDrop 3 (fmap toLower)) {omitNothingFields = True} ''PGClientCerts)
 
 instance Bifunctor PGClientCerts where
   bimap f g oldCerts@(PGClientCerts {pgcSslPassword}) =
@@ -196,16 +193,16 @@ instance Bifunctor PGClientCerts where
 
 instance Bifoldable PGClientCerts where
   bifoldMap f g PGClientCerts {..} =
-    let gs = foldMap g [pgcSslCert, pgcSslKey, pgcSslRootCert]
+    let gs = foldMap (foldMap g) [pgcSslCert, pgcSslKey, pgcSslRootCert]
         fs = foldMap f pgcSslPassword
      in gs <> fs
 
 instance Bitraversable PGClientCerts where
   bitraverse f g PGClientCerts {..} =
     PGClientCerts
-      <$> g pgcSslCert
-      <*> g pgcSslKey
-      <*> g pgcSslRootCert
+      <$> traverse g pgcSslCert
+      <*> traverse g pgcSslKey
+      <*> traverse g pgcSslRootCert
       <*> pure pgcSslMode
       <*> traverse f pgcSslPassword
 
