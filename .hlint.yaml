@@ -116,58 +116,58 @@
     imports:
     - package base
     rules:
-    - warn: {lhs: "a == []", rhs: "null a"}
-    - warn: {lhs: "a /= []", rhs: "not (null a)"}
-    - warn: {lhs: "maybe b return a", rhs: "onNothing a b"}
-    - warn: {lhs: "maybe b pure a", rhs: "onNothing a b"}
-    - warn: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
-    - warn: {lhs: "maybe (pure ()) b a", rhs: "onJust a b"}
-    - warn: {lhs: "either b return a", rhs: "onLeft a b"}
-    - warn: {lhs: "either b pure a", rhs: "onLeft a b"}
-    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
-    - warn: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
-    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
-    - warn: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
-    - warn: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
-    - warn: {lhs: "onNothing x (pure y)", rhs: "pure (fromMaybe y x)"}
-    - warn: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
-    - warn: {lhs: "onLeft x (pure . f)", rhs: "pure (either f id x)"}
-    - warn: {lhs: "case x of {Right a -> pure a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
-    - warn: {lhs: "case x of {Left c -> d; Right a -> pure a}", rhs: "onLeft x (\\ c -> d)"}
-    - warn: {lhs: "case x of {Right a -> return a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
-    - warn: {lhs: "case x of {Left c -> d; Right a -> return a}", rhs: "onLeft x (\\ c -> d)"}
-    - warn: {lhs: "case x of {Nothing -> a; Just b -> pure b}", rhs: "onNothing x a"}
-    - warn: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
-    - warn: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
-    - warn: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
-    - warn: {lhs: "if x then pure (); else y", rhs: "unless x y"}
-    - warn: {lhs: "if x then return (); else y", rhs: "unless x y"}
-    - warn: {lhs: "if x then y; else pure ()", rhs: "when x y"}
-    - warn: {lhs: "if x then y; else return ()", rhs: "when x y"}
-    - warn: {lhs: "unless (not x)", rhs: "when x"}
-    - warn: {lhs: "when (not x)", rhs: "unless x"}
+    - error: {lhs: "a == []", rhs: "null a"}
+    - error: {lhs: "a /= []", rhs: "not (null a)"}
+    - error: {lhs: "maybe b return a", rhs: "onNothing a b"}
+    - error: {lhs: "maybe b pure a", rhs: "onNothing a b"}
+    - error: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
+    - error: {lhs: "maybe (pure ()) b a", rhs: "onJust a b"}
+    - error: {lhs: "either b return a", rhs: "onLeft a b"}
+    - error: {lhs: "either b pure a", rhs: "onLeft a b"}
+    - error: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - error: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}
+    - error: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - error: {lhs: "either (f . g) (f . h)", rhs: "f . either g h"}
+    - error: {lhs: "onNothing x (return y)", rhs: "return (fromMaybe y x)"}
+    - error: {lhs: "onNothing x (pure y)", rhs: "pure (fromMaybe y x)"}
+    - error: {lhs: "onLeft x (return . f)", rhs: "return (either f id x)"}
+    - error: {lhs: "onLeft x (pure . f)", rhs: "pure (either f id x)"}
+    - error: {lhs: "case x of {Right a -> pure a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - error: {lhs: "case x of {Left c -> d; Right a -> pure a}", rhs: "onLeft x (\\ c -> d)"}
+    - error: {lhs: "case x of {Right a -> return a; Left c -> d}", rhs: "onLeft x (\\ c -> d)"}
+    - error: {lhs: "case x of {Left c -> d; Right a -> return a}", rhs: "onLeft x (\\ c -> d)"}
+    - error: {lhs: "case x of {Nothing -> a; Just b -> pure b}", rhs: "onNothing x a"}
+    - error: {lhs: "case x of {Just b -> pure b; Nothing -> a}", rhs: "onNothing x a"}
+    - error: {lhs: "case x of {Nothing -> a; Just b -> return b}", rhs: "onNothing x a"}
+    - error: {lhs: "case x of {Just b -> return b; Nothing -> a}", rhs: "onNothing x a"}
+    - error: {lhs: "if x then pure (); else y", rhs: "unless x y"}
+    - error: {lhs: "if x then return (); else y", rhs: "unless x y"}
+    - error: {lhs: "if x then y; else pure ()", rhs: "when x y"}
+    - error: {lhs: "if x then y; else return ()", rhs: "when x y"}
+    - error: {lhs: "unless (not x)", rhs: "when x"}
+    - error: {lhs: "when (not x)", rhs: "unless x"}
     - suggest: {lhs: "not x && not y", rhs: "not (x || y)"}
     - suggest: {lhs: "not x || not y", rhs: "not (x && y)"}
-    - warn: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
-    - warn: {lhs: "map f xs == map f ys",   rhs: "liftEq ((==) `on` f)", note: "This is liable to be faster"}
+    - error: {lhs: "Data.Text.pack (Prelude.show x)", rhs: "Hasura.Prelude.tshow x"}
+    - error: {lhs: "map f xs == map f ys",   rhs: "liftEq ((==) `on` f)", note: "This is liable to be faster"}
     - suggest: {lhs: "fmap f xs == fmap f ys", rhs: "liftEq ((==) `on` f)", note: "This is liable to be faster"}
     # mapKeys:
-    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList . map (first f) . Data.HashMap.Strict.Extended.toList", rhs: "mapKeys f"}
-    - warn: {lhs: "Data.HashMap.Strict.fromList . map (first f) . Data.HashMap.Strict.toList", rhs: "mapKeys f"}
-    - warn: {lhs: "Data.HashMap.Strict.Extended.fromList $ map (first f) $ Data.HashMap.Strict.Extended.toList x", rhs: "mapKeys f x"}
-    - warn: {lhs: "Data.HashMap.Strict.fromList $ map (first f) $ Data.HashMap.Strict.toList x", rhs: "mapKeys f x"}
+    - error: {lhs: "Data.HashMap.Strict.Extended.fromList . map (first f) . Data.HashMap.Strict.Extended.toList", rhs: "mapKeys f"}
+    - error: {lhs: "Data.HashMap.Strict.fromList . map (first f) . Data.HashMap.Strict.toList", rhs: "mapKeys f"}
+    - error: {lhs: "Data.HashMap.Strict.Extended.fromList $ map (first f) $ Data.HashMap.Strict.Extended.toList x", rhs: "mapKeys f x"}
+    - error: {lhs: "Data.HashMap.Strict.fromList $ map (first f) $ Data.HashMap.Strict.toList x", rhs: "mapKeys f x"}
     # MaybeT
-    - warn: {lhs: "MaybeT (pure x)",         rhs: "hoistMaybe x"}
-    - warn: {lhs: "MaybeT (return x)",       rhs: "hoistMaybe x"}
-    - warn: {lhs: "MaybeT (pure Nothing)",   rhs: "Control.Applicative.empty"}
-    - warn: {lhs: "MaybeT (return Nothing)", rhs: "Control.Applicative.empty"}
+    - error: {lhs: "MaybeT (pure x)",         rhs: "hoistMaybe x"}
+    - error: {lhs: "MaybeT (return x)",       rhs: "hoistMaybe x"}
+    - error: {lhs: "MaybeT (pure Nothing)",   rhs: "Control.Applicative.empty"}
+    - error: {lhs: "MaybeT (return Nothing)", rhs: "Control.Applicative.empty"}
     # catMaybes
-    - warn: {lhs: "Data.HashMap.Strict.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
-    - warn: {lhs: "Data.HashMap.Strict.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
-    - warn: {lhs: "Data.HashMap.Strict.InsOrd.mapMaybe id", rhs: "Data.HashMap.Strict.InsOrd.Extended.catMaybes"}
-    - warn: {lhs: "Data.HashMap.Strict.InsOrd.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.InsOrd.Extended.catMaybes"}
-    - warn: {lhs: "Data.IntMap.Strict.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
-    - warn: {lhs: "Data.IntMap.Strict.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
+    - error: {lhs: "Data.HashMap.Strict.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
+    - error: {lhs: "Data.HashMap.Strict.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
+    - error: {lhs: "Data.HashMap.Strict.InsOrd.mapMaybe id", rhs: "Data.HashMap.Strict.InsOrd.Extended.catMaybes"}
+    - error: {lhs: "Data.HashMap.Strict.InsOrd.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.InsOrd.Extended.catMaybes"}
+    - error: {lhs: "Data.IntMap.Strict.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
+    - error: {lhs: "Data.IntMap.Strict.Extended.mapMaybe id", rhs: "Data.HashMap.Strict.Extended.catMaybes"}
 
 - group:
     name: data-text-extended
@@ -175,8 +175,8 @@
     imports:
     - package base
     rules:
-    - warn: {lhs: "Data.Text.intercalate \", \" x", rhs: "commaSeparated x", note: "From Data.Text.Extended"}
-    - warn: {lhs: "Data.Text.Extended.intercalate \", \" x", rhs: "commaSeparated x"}
+    - error: {lhs: "Data.Text.intercalate \", \" x", rhs: "commaSeparated x", note: "From Data.Text.Extended"}
+    - error: {lhs: "Data.Text.Extended.intercalate \", \" x", rhs: "commaSeparated x"}
 
 - group:
     name: mssql-transaction
@@ -184,10 +184,10 @@
     imports:
     - package base
     rules:
-    - warn: {lhs: "Database.MSSQL.runTxE id tx pool", rhs: "Database.MSSQL.runTx tx pool"}
-    - warn: {lhs: "Database.MSSQL.unitQueryE id q", rhs: "Database.MSSQL.unitQuery q"}
-    - warn: {lhs: "Database.MSSQL.singleRowQueryE id tx pool", rhs: "Database.MSSQL.singleRowQuery tx pool"}
-    - warn: {lhs: "Database.MSSQL.multiRowQueryE id tx pool", rhs: "Database.MSSQL.multiRowQuery tx pool"}
+    - error: {lhs: "Database.MSSQL.runTxE id tx pool", rhs: "Database.MSSQL.runTx tx pool"}
+    - error: {lhs: "Database.MSSQL.unitQueryE id q", rhs: "Database.MSSQL.unitQuery q"}
+    - error: {lhs: "Database.MSSQL.singleRowQueryE id tx pool", rhs: "Database.MSSQL.singleRowQuery tx pool"}
+    - error: {lhs: "Database.MSSQL.multiRowQueryE id tx pool", rhs: "Database.MSSQL.multiRowQuery tx pool"}
 
 - group:
     name: unsafe

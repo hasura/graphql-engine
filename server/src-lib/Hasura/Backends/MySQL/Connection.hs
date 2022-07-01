@@ -162,7 +162,7 @@ fetchAllRows r = reverse <$> go [] r
         r' -> go (r' : acc) res
 
 parseTextRows :: [Field] -> [[Maybe ByteString]] -> [[Text]]
-parseTextRows columns rows = map (\(column, row) -> map (MySQL.convert column) row) (zip columns rows)
+parseTextRows columns rows = zipWith (\column row -> map (MySQL.convert column) row) columns rows
 
 withMySQLPool :: (MonadIO m) => Pool Connection -> (Connection -> IO a) -> m a
 withMySQLPool pool = liftIO . withResource pool

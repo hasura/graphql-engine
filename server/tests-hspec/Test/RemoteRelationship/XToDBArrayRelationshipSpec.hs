@@ -453,9 +453,7 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
           orderByFunction = case aa_order_by of
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderArtist orderByArg
-          limitFunction = case aa_limit of
-            Nothing -> Prelude.id
-            Just limitArg -> take limitArg
+          limitFunction = maybe id take aa_limit
       pure $
         artists
           & filter filterFunction
