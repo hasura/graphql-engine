@@ -46,7 +46,6 @@ import Hasura.RQL.Types.Eventing (EventId (..), OpVar (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey (..))
 import Hasura.SQL.Backend
-import Hasura.Server.Migrate.LatestVersion
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -489,11 +488,11 @@ getMaintenanceModeVersionTx :: TxE QErr MaintenanceModeVersion
 getMaintenanceModeVersionTx = do
   catalogVersion <- getSourceCatalogVersion
   if
-      | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
+      | catalogVersion == latestSourceCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
         throw500 $
           "Maintenance mode is only supported with catalog versions: "
-            <> tshow latestCatalogVersionString
+            <> tshow latestSourceCatalogVersion
             <> " but received "
             <> tshow catalogVersion
 
