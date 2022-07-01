@@ -119,8 +119,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
 
     validateConstraint c = do
       let tableConsNames =
-            maybe [] toList $
-              fmap (_cName . _ucConstraint) <$> tciUniqueOrPrimaryKeyConstraints coreInfo
+            maybe [] (toList . fmap (_cName . _ucConstraint)) (tciUniqueOrPrimaryKeyConstraints coreInfo)
       withPathK "constraint" $
         unless (c `elem` tableConsNames) $
           throw400 Unexpected $

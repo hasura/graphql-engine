@@ -1,6 +1,7 @@
 module Control.Monad.CircularSpec (spec) where
 
 import Control.Concurrent
+import Control.Concurrent.Extended (sleep)
 import Control.Monad.Circular
 import Data.HashMap.Strict qualified as Map
 import Data.List (nub)
@@ -25,7 +26,7 @@ runWithTimeLimit action = liftIO do
     putMVar var $! value
   result <-
     foldr1 continueOnFail $ replicate 10 do
-      threadDelay 10000 -- 10ms
+      sleep 0.01
       tryTakeMVar var
   killThread threadId
   pure result

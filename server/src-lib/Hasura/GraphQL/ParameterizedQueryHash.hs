@@ -155,11 +155,14 @@ normalizeSelectionSet = (normalizeSelection =<<)
       J.String _ -> G.VNull
       J.Number _ -> G.VNull
       J.Array l -> G.VList $ jsonToNormalizedGQLVal <$> toList l
-      J.Object vals -> G.VObject $
-        -- FIXME(#3479): THIS WILL CREATE INVALID GRAPHQL OBJECTS
-        Map.fromList $
-          flip map (KM.toList vals) $ \(key, val) ->
-            (G.unsafeMkName (K.toText key), jsonToNormalizedGQLVal val)
+      J.Object vals ->
+        G.VObject $
+          -- FIXME(#3479): THIS WILL CREATE INVALID GRAPHQL OBJECTS
+          Map.fromList
+            [ (name, jsonToNormalizedGQLVal val)
+              | (key, val) <- KM.toList vals,
+                name <- maybeToList (G.mkName (K.toText key))
+            ]
 
     normalizeValue :: G.Value Variable -> G.Value Void
     normalizeValue = \case

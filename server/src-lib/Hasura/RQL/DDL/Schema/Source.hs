@@ -202,7 +202,7 @@ dropSource _schemaCache (DropSource sourceName cascade) sourceInfo = do
   schemaCache <- askSchemaCache
   let remoteDeps = getRemoteDependencies schemaCache sourceName
 
-  when (not cascade && not (null remoteDeps)) $
+  unless (cascade || null remoteDeps) $
     reportDependentObjectsExist remoteDeps
 
   metadataModifier <- execWriterT $ do

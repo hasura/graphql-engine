@@ -575,9 +575,9 @@ transformObjectSelectionSet typename selectionSet = do
           -- This alias is generated in 'getJoinColumnAlias', and is guaranteed
           -- to be a valid GraphQLName.
           columnGraphQLName =
-            G.unsafeMkName $ getFieldNameTxt $ getAliasFieldName columnAlias
+            G.mkName $ getFieldNameTxt $ getAliasFieldName columnAlias
        in ( mkGraphQLField
-              (Just columnGraphQLName)
+              columnGraphQLName
               lhsJoinField
               mempty
               mempty

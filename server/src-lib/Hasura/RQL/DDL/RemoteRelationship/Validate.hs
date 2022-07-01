@@ -120,7 +120,7 @@ validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, intros
       (queryRoot, (mempty, mempty))
       (unRemoteFields $ _trrdRemoteField schema)
   pure $
-    (HM.fromList requiredLHSJoinFields,) $
+    ( HM.fromList requiredLHSJoinFields,
       RemoteSchemaFieldInfo
         { _rrfiName = name,
           _rrfiParamMap = leafParamMap,
@@ -132,6 +132,7 @@ validateToSchemaRelationship schema lhsIdentifier name (remoteSchemaInfo, intros
           _rrfiRemoteSchemaName = remoteSchemaName,
           _rrfiLHSIdentifier = lhsIdentifier
         }
+    )
   where
     getObjTyInfoFromField ::
       RemoteSchemaIntrospection ->

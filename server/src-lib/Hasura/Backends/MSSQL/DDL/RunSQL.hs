@@ -116,7 +116,7 @@ runSQL mssqlRunSQL@MSSQLRunSQL {..} = do
       -- Get indirect dependencies
       indirectDeps <- getIndirectDependenciesFromTableDiff _mrsSource tablesDiff
       -- Report indirect dependencies, if any, when cascade is not set
-      when (not (null indirectDeps) && not _mrsCascade) $ reportDependentObjectsExist indirectDeps
+      unless (null indirectDeps || _mrsCascade) $ reportDependentObjectsExist indirectDeps
 
       metadataUpdater <- execWriterT $ do
         -- Purge all the indirect dependents from state

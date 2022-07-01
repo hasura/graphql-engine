@@ -118,7 +118,7 @@ declareOpenApiSchema = do
   where
     openApiSchema :: (Text, Schema)
     openApiSchema =
-      ("OpenApiSchema",)
+      ( "OpenApiSchema",
         mempty
           { _schemaType = Just OpenApiObject,
             _schemaProperties =
@@ -187,10 +187,11 @@ declareOpenApiSchema = do
             -- _schemaPatternProperties =
             _schemaAdditionalProperties = Just $ AdditionalPropertiesAllowed False
           }
+      )
 
     openApiReference :: (Text, Schema)
     openApiReference =
-      ("OpenApiReference",)
+      ( "OpenApiReference",
         mempty
           { _schemaType = Just OpenApiObject,
             _schemaRequired = ["$ref"],
@@ -198,13 +199,14 @@ declareOpenApiSchema = do
             -- but OpenAPI doesn't support patternProperties ironically, so this is close enough
             _schemaProperties = InsOrdHashMap.fromList [("$ref", Inline mempty {_schemaType = Just OpenApiString, _schemaFormat = Just "uri-reference"})]
           }
+      )
 
     schemaOrReference :: [Referenced Schema]
     schemaOrReference = [Ref . Reference $ fst openApiSchema, Ref . Reference $ fst openApiReference]
 
     openApiDiscriminator :: (Text, Schema)
     openApiDiscriminator =
-      ("OpenApiDiscriminator",)
+      ( "OpenApiDiscriminator",
         mempty
           { _schemaType = Just OpenApiObject,
             _schemaRequired = ["propertyName"],
@@ -214,10 +216,11 @@ declareOpenApiSchema = do
                   ("mapping", Inline mempty {_schemaType = Just OpenApiObject, _schemaAdditionalProperties = Just . AdditionalPropertiesSchema $ Inline mempty {_schemaType = Just OpenApiString}})
                 ]
           }
+      )
 
     openApiExternalDocumentation :: (Text, Schema)
     openApiExternalDocumentation =
-      ("OpenApiExternalDocumentation",)
+      ( "OpenApiExternalDocumentation",
         mempty
           { _schemaType = Just OpenApiObject,
             _schemaRequired = ["url"],
@@ -232,10 +235,11 @@ declareOpenApiSchema = do
             -- _schemaPatternProperties =
             _schemaAdditionalProperties = Just $ AdditionalPropertiesAllowed False
           }
+      )
 
     openApiXml :: (Text, Schema)
     openApiXml =
-      ("OpenApiXml",)
+      ( "OpenApiXml",
         mempty
           { _schemaType = Just OpenApiObject,
             _schemaProperties =
@@ -252,6 +256,7 @@ declareOpenApiSchema = do
             -- _schemaPatternProperties =
             _schemaAdditionalProperties = Just $ AdditionalPropertiesAllowed False
           }
+      )
 
 -- | Rewrites the config schema internal refs to the form that openapi3 expects when it deserialized them
 --
