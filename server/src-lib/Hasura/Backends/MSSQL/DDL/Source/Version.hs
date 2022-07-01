@@ -19,7 +19,7 @@ import Hasura.Prelude
 import Hasura.Server.Migrate.Version
 
 latestSourceCatalogVersion :: CatalogVersion
-latestSourceCatalogVersion = CatalogVersion 1
+latestSourceCatalogVersion = CatalogVersion 2
 
 latestSourceCatalogVersionText :: Text
 latestSourceCatalogVersionText = tshow latestSourceCatalogVersion
@@ -28,10 +28,23 @@ previousSourceCatalogVersions :: [CatalogVersion]
 previousSourceCatalogVersions = [CatalogVersion 1 .. pred latestSourceCatalogVersion]
 
 setSourceCatalogVersion :: MonadMSSQLTx m => CatalogVersion -> m ()
-setSourceCatalogVersion (CatalogVersion version) =
-  liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler setSourceCatalogVersionQuery
+setSourceCatalogVersion (CatalogVersion version) = liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler setSourceCatalogVersionQuery
   where
-    setSourceCatalogVersionQuery = [ODBC.sql| INSERT INTO hdb_catalog.hdb_source_catalog_version(version, upgraded_on) VALUES ($version, SYSDATETIMEOFFSET()) |]
+    setSourceCatalogVersionQuery =
+      [ODBC.sql| 
+        BEGIN TRANSACTION
+          IF EXISTS (select 1 from hdb_catalog.hdb_source_catalog_version WITH (UPDLOCK,SERIALIZABLE))
+              BEGIN
+                  UPDATE hdb_catalog.hdb_source_catalog_version
+                  SET version = $version,  upgraded_on = SYSDATETIMEOFFSET()
+              END
+          ELSE
+              BEGIN
+                  INSERT INTO hdb_catalog.hdb_source_catalog_version (version, upgraded_on)
+                  values ($version, SYSDATETIMEOFFSET())
+              END
+        COMMIT TRANSACTION
+      |]
 setSourceCatalogVersion CatalogVersion08 =
   throw500 "Cannot set the source catalog version to an unstable version."
 
