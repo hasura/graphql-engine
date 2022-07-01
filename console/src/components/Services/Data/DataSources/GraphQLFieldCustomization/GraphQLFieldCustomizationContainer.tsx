@@ -1,10 +1,10 @@
 import React, { Dispatch } from 'react';
 import { ConnectDBActions } from '../state';
+import { GraphQLFieldCustomization } from './GraphQLFieldCustomization';
 import {
   CustomizationFieldName,
-  GraphQLFieldCustomization,
   GraphQLFieldCustomizationProps,
-} from './GraphQLFieldCustomization';
+} from './types';
 
 type GraphQLFieldCustomizationContainerProps = Omit<
   GraphQLFieldCustomizationProps,

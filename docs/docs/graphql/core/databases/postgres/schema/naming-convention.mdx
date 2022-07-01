@@ -13,6 +13,7 @@ keywords:
 ---
 
 import Tabs from '@theme/Tabs';
+import Thumbnail from "@site/src/components/Thumbnail";
 import TabItem from '@theme/TabItem';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
@@ -153,19 +154,26 @@ For the above schema, a sample GraphQL query will look like the following with t
 `}
 />
 
-## Set default naming convention for all sources {#pg-default-naming-convention}
+## Set default naming convention for all database sources {#pg-default-naming-convention}
 
-For setting the default naming convention for all sources, set the environment variable
+For setting the default naming convention for all database sources, set the environment variable
 `HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION` to one of `hasura-default` or `graphql-default`.
 
 This means any database source will follow this naming convention unless explicitly set to something else.
 
-## Set naming convention for a particular source {#pg-source-naming-convention}
+## Set naming convention for a particular database source {#pg-source-naming-convention}
 
 <Tabs className="api-tabs">
   <TabItem value="console" label="Console">
 
-  Console support will be added soon.
+  Currently setting the database naming convention is only allowed at the time of connecting your database. 
+  Head to the `Data -> Manage -> Connect Database` page. Under the `GraphQL Field Customization` section you can 
+  choose the naming convention of your choice. 
+  
+  <Thumbnail
+    src="/img/graphql/core/schema/naming-convention.png"
+    alt="Naming Convention"
+  />
 
   </TabItem>
   <TabItem value="cli" label="CLI">

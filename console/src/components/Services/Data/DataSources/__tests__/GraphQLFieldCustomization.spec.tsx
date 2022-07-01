@@ -1,10 +1,11 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { GraphQLFieldCustomization } from '../GraphQLFieldCustomization/GraphQLFieldCustomization';
+import { renderWithClient } from '../../../../../hooks/__tests__/common/decorator';
 
 describe('component GraphQLFieldCustomization', () => {
   it('renders', () => {
-    render(<GraphQLFieldCustomization onChange={() => null} />);
+    renderWithClient(<GraphQLFieldCustomization onChange={() => null} />);
 
     fireEvent.click(screen.getByText('GraphQL Field Customization'));
 
@@ -21,7 +22,7 @@ describe('component GraphQLFieldCustomization', () => {
   });
 
   it('passes props', () => {
-    render(
+    renderWithClient(
       <GraphQLFieldCustomization
         rootFields={{
           namespace: 'name',
@@ -53,7 +54,7 @@ describe('component GraphQLFieldCustomization', () => {
   describe('when the user provides the values', () => {
     it('calls the on change callback', () => {
       const onChange = jest.fn();
-      render(<GraphQLFieldCustomization onChange={onChange} />);
+      renderWithClient(<GraphQLFieldCustomization onChange={onChange} />);
 
       fireEvent.click(screen.getByText('GraphQL Field Customization'));
 

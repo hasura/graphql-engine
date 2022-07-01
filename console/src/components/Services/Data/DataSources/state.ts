@@ -10,7 +10,7 @@ import {
   SSLConfigOptions,
   IsolationLevelOptions,
   GraphQLFieldCustomization,
-  namingConventionOptions,
+  NamingConventionOptions,
 } from '../../../../metadata/types';
 
 export const connectionTypes = {
@@ -260,7 +260,7 @@ export type ConnectDBActions =
   | { type: 'RESET_INPUT_STATE' }
   | {
       type: 'UPDATE_CUSTOMIZATION_NAMING_CONVENTION';
-      data: namingConventionOptions;
+      data: NamingConventionOptions;
     }
   | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_NAMESPACE'; data: string }
   | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_PREFIX'; data: string }

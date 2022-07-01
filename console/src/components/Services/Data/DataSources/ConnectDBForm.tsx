@@ -137,7 +137,6 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
       changeConnectionType(driverToLabel[value].defaultConnection);
     }
   };
-
   return (
     <>
       <div className={styles.connect_form_layout}>
@@ -447,15 +446,14 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           TODO: remove the edit state condition when the BE issue is solved
           https://github.com/hasura/graphql-engine-mono/issues/4700
         */}
-        {!isEditState && (
-          <GraphQLFieldCustomizationContainer
-            rootFields={connectionDBState.customization?.rootFields}
-            typeNames={connectionDBState.customization?.typeNames}
-            namingConvention={connectionDBState.customization?.namingConvention}
-            connectionDBStateDispatch={connectionDBStateDispatch}
-            connectionDBState={connectionDBState}
-          />
-        )}
+
+        <GraphQLFieldCustomizationContainer
+          rootFields={connectionDBState.customization?.rootFields}
+          typeNames={connectionDBState.customization?.typeNames}
+          namingConvention={connectionDBState.customization?.namingConvention}
+          connectionDBStateDispatch={connectionDBStateDispatch}
+          connectionDBState={connectionDBState}
+        />
       </div>
       <hr className={styles.line_width} />
     </>

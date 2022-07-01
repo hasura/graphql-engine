@@ -4,7 +4,7 @@ import React from 'react';
 interface CardRadioGroupItem<T> {
   value: T;
   title: string;
-  body: string;
+  body: string | React.ReactNode;
 }
 
 interface CardRadioGroupProps<T> {
@@ -58,7 +58,7 @@ export const CardRadioGroup = <T extends string = string>(
               <label
                 htmlFor={`radio-select-${iValue}`}
                 className={clsx(
-                  'mb-sm font-semibold',
+                  'mb-sm font-semibold mt-0.5',
                   disabled ? 'cursor-not-allowed' : 'cursor-pointer'
                 )}
               >
