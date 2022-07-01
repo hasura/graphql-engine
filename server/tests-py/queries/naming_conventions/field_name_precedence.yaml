@@ -57,7 +57,7 @@
       table: author_local
       source: pg1
       configuration:
-        custom_name: author_details
+        custom_name: authorDetails
         custom_root_fields:
           select_by_pk: author_detail
           insert_one: add_author
@@ -79,7 +79,7 @@
   status: 200
   response:
     data:
-      author_details:
+      authorDetails:
       - id: 1
         name: 'Author 1'
         __typename: AuthorDetails
@@ -96,7 +96,7 @@
   query:
     query: |
       query {
-        author_details {
+        authorDetails {
           id
           name
           __typename

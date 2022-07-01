@@ -49,6 +49,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix name transformation bug in `graphql-default` naming convention (fixes #8640 partially)
 - server: changes to the Rest Endpoints OpenAPI specification:
     - the nullability of items in the output is now always correctly reported
     - scalars other than UUID are more consistently inlined
