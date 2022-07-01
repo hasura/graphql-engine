@@ -20,6 +20,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
+import Data.Text.Lazy qualified as LT
 import Database.MSSQL.Transaction
 import Database.MSSQL.Transaction qualified as Tx
 import Database.ODBC.SQLServer
@@ -158,12 +159,13 @@ migrateSourceCatalogFrom prevVersion
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
 
-sourceMigrations :: [(CatalogVersion, TxE QErr ())]
+sourceMigrations :: [(CatalogVersion, TxE QErr [Text])]
 sourceMigrations =
   $( let migrationFromFile from =
            let to = succ from
-               path = "src-rsr/mssql_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
-            in [|multiRowQueryE defaultTxErrorHandler $(makeRelativeToProject path >>= ST.stextFile)|]
+               path = "src-rsr/mssql/mssql_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
+            in do
+                 [|(multiRowQueryE HGE.defaultMSSQLTxErrorHandler $ rawUnescapedText . LT.toStrict $ $(makeRelativeToProject path >>= ST.stextFile))|]
 
          migrationsFromFile = map $ \from ->
            [|($(TH.lift $ from), $(migrationFromFile from))|]

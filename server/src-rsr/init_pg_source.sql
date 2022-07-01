@@ -65,6 +65,9 @@ CREATE TABLE hdb_catalog.event_invocation_logs
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log (id)
 );
 
+/* This index improves the performance of deletes by event_id, so that if somebody
+tries to delete an event from the hdb_catalog.event_log along with the invocation log
+it will be faster with an index compared to without an index. */
 CREATE INDEX ON hdb_catalog.event_invocation_logs (event_id);
 
 CREATE OR REPLACE FUNCTION

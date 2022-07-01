@@ -8,7 +8,10 @@ CREATE TABLE hdb_catalog.event_log
   id UNIQUEIDENTIFIER DEFAULT newid() PRIMARY KEY,
   schema_name NVARCHAR(MAX) NOT NULL,
   table_name NVARCHAR(MAX) NOT NULL,
-  trigger_name NVARCHAR(MAX) NOT NULL,
+  /* The maximum key length for a nonclustered index is 1700 bytes. 
+     Hence marking the 'n' for NVARCHAR as 850
+   */
+  trigger_name NVARCHAR(850) NOT NULL,
   payload NVARCHAR(MAX) NOT NULL,
   delivered BIT NOT NULL DEFAULT 0,
   error BIT NOT NULL DEFAULT 0,
@@ -19,15 +22,18 @@ CREATE TABLE hdb_catalog.event_log
   archived BIT NOT NULL DEFAULT 0
 );
 
+/* This powers `archiveEvents` */
+CREATE INDEX event_log_archive_events ON hdb_catalog.event_log (trigger_name);
+
 /* This index powers `fetchEvents` */
 CREATE INDEX event_log_fetch_events
-  ON hdb_catalog.event_log (created_at)
+  ON hdb_catalog.event_log (locked asc, next_retry_at asc, created_at)
   WHERE delivered = 0
     AND error = 0
     AND archived = 0;
 
 CREATE TABLE hdb_catalog.event_invocation_logs (
-  id UNIQUEIDENTIFIER NOT NULL DEFAULT newid(),
+  id UNIQUEIDENTIFIER NOT NULL DEFAULT newid() PRIMARY KEY,
   event_id UNIQUEIDENTIFIER NOT NULL,
   status INTEGER,
   request NVARCHAR(MAX),
@@ -36,3 +42,8 @@ CREATE TABLE hdb_catalog.event_invocation_logs (
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.event_log(id)
 );
+
+/* This index improves the performance of deletes by event_id, so that if somebody
+tries to delete an event from the hdb_catalog.event_log along with the invocation log
+it will be faster with an index compared to without an index. */
+CREATE INDEX fetch_event_invocation_logs ON hdb_catalog.event_invocation_logs (event_id);
