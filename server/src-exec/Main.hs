@@ -39,8 +39,8 @@ main =
       runApp env args
     (\(ExitException _code msg) -> BC.putStrLn msg >> Sys.exitFailure)
 
-runApp :: Env.Environment -> HGEOptions Hasura -> IO ()
-runApp env (HGEOptionsG rci metadataDbUrl hgeCmd) = do
+runApp :: Env.Environment -> HGEOptions (ServeOptions Hasura) -> IO ()
+runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
   initTime <- liftIO getCurrentTime
   globalCtx@GlobalCtx {..} <- initGlobalCtx env metadataDbUrl rci
   let (maybeDefaultPgConnInfo, maybeRetries) = _gcDefaultPostgresConnInfo

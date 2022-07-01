@@ -5,12 +5,10 @@
 module Hasura.Server.Init.Config
   ( API (..),
     DowngradeOptions (..),
-    Env,
     FromEnv (..),
-    HGECommand,
-    HGECommandG (..),
-    HGEOptions,
-    HGEOptionsG (..),
+    HGECommand (..),
+    HGEOptions (..),
+    HGEOptionsRaw (..),
     KeepAliveDelay (..),
     OptionalInterval (..),
     PostgresConnInfo (..),
@@ -18,8 +16,6 @@ module Hasura.Server.Init.Config
     PostgresRawConnInfo (..),
     RawAuthHook,
     RawConnParams (..),
-    RawHGECommand,
-    RawHGEOptions,
     RawServeOptions (..),
     ResponseInternalErrorsConfig (..),
     ServeOptions (..),
@@ -42,6 +38,8 @@ module Hasura.Server.Init.Config
     shouldIncludeInternal,
   )
 where
+
+--------------------------------------------------------------------------------
 
 import Data.Aeson
 import Data.Aeson qualified as J
@@ -69,6 +67,8 @@ import Hasura.Server.Utils
 import Hasura.Session
 import Network.Wai.Handler.Warp (HostPreference)
 import Network.WebSockets qualified as WS
+
+--------------------------------------------------------------------------------
 
 data RawConnParams = RawConnParams
   { rcpStripes :: !(Maybe Int),
@@ -122,33 +122,7 @@ $( J.deriveJSON
 
 instance Hashable API
 
-{- Note: [Experimental features]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The graphql-engine accepts a list of experimental features that can be
-enabled at the startup. Experimental features are a way to introduce
-new, but not stable features to our users in a manner in which they have
-the choice to enable or disable a certain feature(s).
-
-The objective of an experimental feature should be that when the feature is disabled,
-the graphql-engine should work the same way as it worked before adding the said feature.
-
-The experimental feature's flag is `--experimental-features` and the corresponding
-environment variable is `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` which expects a comma-seperated
-value.
-
-When an experimental feature is stable enough i.e. it's stable through multiple non-beta releases
-then we make the feature not experimental i.e. it will always be enabled. Note that when we do this
-we still have to support parsing of the experimental feature because users of the previous version
-will have it enabled and when they upgrade an error should not be thrown at the startup. For example:
-
-The inherited roles was an experimental feature when introduced and it was enabled by
-setting `--experimental-features` to `inherited_roles` and then it was decided to make the inherited roles
-a stable feature, so it was removed as an experimental feature but the code was modified such that
-`--experimental-features inherited_roles` to not throw an error.
-
--}
-
+-- | The Serve Command options accumulated from the arg parser and env.
 data RawServeOptions impl = RawServeOptions
   { rsoPort :: Maybe Int,
     rsoHost :: Maybe HostPreference,
@@ -196,6 +170,8 @@ data RawServeOptions impl = RawServeOptions
     rsoDefaultNamingConvention :: Maybe NamingCase
   }
 
+--------------------------------------------------------------------------------
+
 -- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
 -- errors in the response to the client.
 -- See the github comment https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705 for more details.
@@ -227,6 +203,11 @@ $(J.deriveJSON hasuraJSON ''WSConnectionInitTimeout)
 defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
 defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: Int)
 
+--------------------------------------------------------------------------------
+
+-- | The final Serve Command options accummulated from the Arg Parser
+-- and the Environment, fully processed and ready to apply when
+-- running the server.
 data ServeOptions impl = ServeOptions
   { soPort :: Int,
     soHost :: HostPreference,
@@ -269,18 +250,32 @@ data ServeOptions impl = ServeOptions
     soDefaultNamingConvention :: Maybe NamingCase
   }
 
+-- | The Downgrade Command options. These are only sourced from the
+-- Arg Parser and are used directly in 'Hasura.Server.Migrate'.
 data DowngradeOptions = DowngradeOptions
   { dgoTargetVersion :: !Text,
     dgoDryRun :: !Bool
   }
   deriving (Show, Eq)
 
+-- | Postgres connection info tupled with a retry count.
+--
+-- The @a@ here is one of the following:
+-- 1. 'Maybe PostgresRawConnInfo'
+-- 2. 'Maybe UrlConf'
+-- 3. 'Maybe Text'
+-- 4. 'Maybe DatabaseUrl' where 'DatabaseUrl' is an alias for 'Text'
+--
+-- If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
+-- processed your arg parser results.
 data PostgresConnInfo a = PostgresConnInfo
   { _pciDatabaseConn :: !a,
     _pciRetries :: !(Maybe Int)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
+-- | Structured Postgres connection information as provided by the arg
+-- parser or env vars.
 data PostgresRawConnDetails = PostgresRawConnDetails
   { connHost :: !String,
     connPort :: !Int,
@@ -291,6 +286,10 @@ data PostgresRawConnDetails = PostgresRawConnDetails
   }
   deriving (Eq, Read, Show)
 
+$(J.deriveJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True} ''PostgresRawConnDetails)
+
+-- | Postgres Connection info can come in the form of a templated URI
+-- string or structured data.
 data PostgresRawConnInfo
   = PGConnDatabaseUrl !URLTemplate
   | PGConnDetails !PostgresRawConnDetails
@@ -314,7 +313,11 @@ rawConnDetailsToUrlText PostgresRawConnDetails {..} =
       <> connDatabase
       <> maybe "" ("?options=" <>) connOptions
 
-data HGECommandG a
+-- | The HGE Arg parser Command choices.
+--
+-- This is polymorphic so that we can pack either 'RawServeOptions' or
+-- 'RawProServeOptions' in it.
+data HGECommand a
   = HCServe !a
   | HCExport
   | HCClean
@@ -322,24 +325,19 @@ data HGECommandG a
   | HCDowngrade !DowngradeOptions
   deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True} ''PostgresRawConnDetails)
-
-type HGECommand impl = HGECommandG (ServeOptions impl)
-
-type RawHGECommand impl = HGECommandG (RawServeOptions impl)
-
-data HGEOptionsG a b = HGEOptionsG
-  { hoDatabaseUrl :: !(PostgresConnInfo a),
-    hoMetadataDbUrl :: !(Maybe String),
-    hoCommand :: !(HGECommandG b)
+-- | HGE Options from the arg parser and the env.
+data HGEOptionsRaw impl = HGEOptionsRaw
+  { horDatabaseUrl :: !(PostgresConnInfo (Maybe PostgresRawConnInfo)),
+    horMetadataDbUrl :: !(Maybe String),
+    horCommand :: !(HGECommand impl)
   }
-  deriving (Show, Eq)
 
-type RawHGEOptions impl = HGEOptionsG (Maybe PostgresRawConnInfo) (RawServeOptions impl)
-
-type HGEOptions impl = HGEOptionsG (Maybe UrlConf) (ServeOptions impl)
-
-type Env = [(String, String)]
+-- | The final processed HGE options.
+data HGEOptions impl = HGEOptions
+  { hoDatabaseUrl :: !(PostgresConnInfo (Maybe UrlConf)),
+    hoMetadataDbUrl :: !(Maybe String),
+    hoCommand :: !(HGECommand impl)
+  }
 
 readHookType :: String -> Either String AuthHookType
 readHookType tyS =
@@ -358,7 +356,7 @@ parseStrAsBool t
     falseVals = ["false", "f", "no", "n"]
 
     errMsg =
-      " Not a valid boolean text. " ++ "True values are "
+      " Not a valid boolean text. True values are "
         ++ show truthVals
         ++ " and  False values are "
         ++ show falseVals
@@ -381,6 +379,33 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
 
 readDefaultNamingCase :: String -> Either String NamingCase
 readDefaultNamingCase = parseNamingConventionFromText . T.pack
+
+{- Note: [Experimental features]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The graphql-engine accepts a list of experimental features that can be
+enabled at the startup. Experimental features are a way to introduce
+new, but not stable features to our users in a manner in which they have
+the choice to enable or disable a certain feature(s).
+
+The objective of an experimental feature should be that when the feature is disabled,
+the graphql-engine should work the same way as it worked before adding the said feature.
+
+The experimental feature's flag is `--experimental-features` and the corresponding
+environment variable is `HASURA_GRAPHQL_EXPERIMENTAL_FEATURES` which expects a comma-seperated
+value.
+
+When an experimental feature is stable enough i.e. it's stable through multiple non-beta releases
+then we make the feature not experimental i.e. it will always be enabled. Note that when we do this
+we still have to support parsing of the experimental feature because users of the previous version
+will have it enabled and when they upgrade an error should not be thrown at the startup. For example:
+
+The inherited roles was an experimental feature when introduced and it was enabled by
+setting `--experimental-features` to `inherited_roles` and then it was decided to make the inherited roles
+a stable feature, so it was removed as an experimental feature but the code was modified such that
+`--experimental-features inherited_roles` to not throw an error.
+
+-}
 
 readExperimentalFeatures :: String -> Either String [ExperimentalFeature]
 readExperimentalFeatures = mapM readAPI . T.splitOn "," . T.pack
@@ -487,7 +512,7 @@ instance FromEnv URLTemplate where
 instance FromEnv NonNegativeInt where
   fromEnv = readNonNegativeInt
 
-type WithEnv a = ReaderT Env (ExceptT String Identity) a
+type WithEnv a = ReaderT [(String, String)] (ExceptT String Identity) a
 
-runWithEnv :: Env -> WithEnv a -> Either String a
+runWithEnv :: [(String, String)] -> WithEnv a -> Either String a
 runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env

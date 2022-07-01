@@ -175,7 +175,7 @@ throwErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
 throwErrJExit :: (A.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
 throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
 
-parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
+parseHGECommand :: EnabledLogTypes impl => Parser (HGECommand (RawServeOptions impl))
 parseHGECommand =
   subparser
     ( command
@@ -212,7 +212,7 @@ parseHGECommand =
           )
     )
 
-parseArgs :: EnabledLogTypes impl => IO (HGEOptions impl)
+parseArgs :: EnabledLogTypes impl => IO (HGEOptions (ServeOptions impl))
 parseArgs = do
   rawHGEOpts <- execParser opts
   env <- getEnvironment
@@ -227,7 +227,7 @@ parseArgs = do
             <> footerDoc (Just mainCmdFooter)
         )
     hgeOpts =
-      HGEOptionsG <$> parsePostgresConnInfo
+      HGEOptionsRaw <$> parsePostgresConnInfo
         <*> parseMetadataDbUrl
         <*> parseHGECommand
 
