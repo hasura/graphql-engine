@@ -578,8 +578,11 @@
           },
           "primary_key": {
             "description": "The primary key of the table",
+            "items": {
+              "type": "string"
+            },
             "nullable": true,
-            "type": "string"
+            "type": "array"
           }
         },
         "required": [

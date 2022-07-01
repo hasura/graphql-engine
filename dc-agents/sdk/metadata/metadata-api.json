@@ -187,7 +187,47 @@
               ]
             },
             {
-              "table": "Playlist"
+              "table": "Playlist",
+              "array_relationships": [
+                {
+                  "name": "PlaylistTracks",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "PlaylistTrack",
+                      "column_mapping": {
+                        "PlaylistId": "PlaylistId"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "table": "PlaylistTrack",
+              "object_relationships": [
+                {
+                  "name": "Playlist",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Playlist",
+                      "column_mapping": {
+                        "PlaylistId": "PlaylistId"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "Track",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Track",
+                      "column_mapping": {
+                        "TrackId": "TrackId"
+                      }
+                    }
+                  }
+                }
+              ]
             },
             {
               "table": "Track",
@@ -232,6 +272,17 @@
                   "using": {
                     "manual_configuration": {
                       "remote_table": "InvoiceLine",
+                      "column_mapping": {
+                        "TrackId": "TrackId"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "PlaylistTracks",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "PlaylistTrack",
                       "column_mapping": {
                         "TrackId": "TrackId"
                       }

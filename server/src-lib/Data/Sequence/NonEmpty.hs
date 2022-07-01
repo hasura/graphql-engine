@@ -12,6 +12,7 @@ module Data.Sequence.NonEmpty
     head,
     tail,
     toSeq,
+    fromSeq,
     toNonEmpty,
   )
 where

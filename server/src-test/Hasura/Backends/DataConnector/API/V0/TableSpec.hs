@@ -5,7 +5,7 @@ module Hasura.Backends.DataConnector.API.V0.TableSpec (spec, genTableName, genTa
 
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
-import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnInfo)
+import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnInfo, genColumnName)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen
@@ -33,13 +33,13 @@ spec = do
         ( TableInfo
             (TableName "my_table_name")
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
-            (Just "id")
+            (Just [ColumnName "id"])
             (Just "my description")
         )
         [aesonQQ|
           { "name": "my_table_name",
             "columns": [{"name": "id", "type": "string", "nullable": false}],
-            "primary_key": "id",
+            "primary_key": ["id"],
             "description": "my description"
           }
         |]
@@ -53,5 +53,5 @@ genTableInfo =
   TableInfo
     <$> genTableName
     <*> Gen.list (linear 0 5) genColumnInfo
-    <*> Gen.maybe (text (linear 0 10) unicode)
+    <*> Gen.maybe (Gen.list (linear 0 5) genColumnName)
     <*> Gen.maybe (text (linear 0 20) unicode)

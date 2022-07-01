@@ -20,6 +20,6 @@ export type TableInfo = {
   /**
    * The primary key of the table
    */
-  primary_key?: string | null;
+  primary_key?: Array<string> | null;
 };
 

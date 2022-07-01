@@ -38,7 +38,7 @@ const schema: SchemaResponse = {
   tables: [
     {
       name: "Artist",
-      primary_key: "ArtistId",
+      primary_key: ["ArtistId"],
       description: "Collection of artists of music",
       columns: [
         {
@@ -57,7 +57,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "Album",
-      primary_key: "AlbumId",
+      primary_key: ["AlbumId"],
       description: "Collection of music albums created by artists",
       columns: [
         {
@@ -82,7 +82,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "Customer",
-      primary_key: "CustomerId",
+      primary_key: ["CustomerId"],
       description: "Collection of customers who can buy tracks",
       columns: [
         {
@@ -167,7 +167,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "Employee",
-      primary_key: "EmployeeId",
+      primary_key: ["EmployeeId"],
       description: "Collection of employees who work for the business",
       columns: [
         {
@@ -258,7 +258,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "Genre",
-      primary_key: "GenreId",
+      primary_key: ["GenreId"],
       description: "Genres of music",
       columns: [
         {
@@ -277,7 +277,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "Invoice",
-      primary_key: "InvoiceId",
+      primary_key: ["InvoiceId"],
       description: "Collection of invoices of music purchases by a customer",
       columns: [
         {
@@ -338,7 +338,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "InvoiceLine",
-      primary_key: "InvoiceLineId",
+      primary_key: ["InvoiceLineId"],
       description: "Collection of track purchasing line items of invoices",
       columns: [
         {
@@ -375,7 +375,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "MediaType",
-      primary_key: "MediaTypeId",
+      primary_key: ["MediaTypeId"],
       description: "Collection of media types that tracks can be encoded in",
       columns: [
         {
@@ -394,7 +394,7 @@ const schema: SchemaResponse = {
     },
     {
       name: "Playlist",
-      primary_key: "PlaylistId",
+      primary_key: ["PlaylistId"],
       description: "Collection of playlists",
       columns: [
         {
@@ -411,29 +411,28 @@ const schema: SchemaResponse = {
         },
       ]
     },
-    // We don't support composite primary keys yet :(
-    // {
-    //   name: "PlaylistTrack",
-    //   primary_key: ["PlaylistId", "TrackId"],
-    //   description: "Associations between playlists and tracks",
-    //   columns: [
-    //     {
-    //       name: "PlaylistId",
-    //       type: "number",
-    //       nullable: false,
-    //       description: "The ID of the playlist"
-    //     },
-    //     {
-    //       name: "TrackId",
-    //       type: "number",
-    //       nullable: true,
-    //       description: "The ID of the track"
-    //     },
-    //   ]
-    // },
+    {
+      name: "PlaylistTrack",
+      primary_key: ["PlaylistId", "TrackId"],
+      description: "Associations between playlists and tracks",
+      columns: [
+        {
+          name: "PlaylistId",
+          type: "number",
+          nullable: false,
+          description: "The ID of the playlist"
+        },
+        {
+          name: "TrackId",
+          type: "number",
+          nullable: true,
+          description: "The ID of the track"
+        },
+      ]
+    },
     {
       name: "Track",
-      primary_key: "TrackId",
+      primary_key: ["TrackId"],
       description: "Collection of music tracks",
       columns: [
         {
