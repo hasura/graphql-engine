@@ -138,18 +138,17 @@ withEnvJwtConf jVal envVar =
   maybe (considerEnv envVar) returnJust jVal
 
 mkHGEOptions ::
-  L.EnabledLogTypes impl => RawHGEOptions impl -> WithEnv (HGEOptions impl)
-mkHGEOptions (HGEOptionsG rawDbUrl rawMetadataDbUrl rawCmd) =
-  HGEOptionsG <$> dbUrl <*> metadataDbUrl <*> cmd
-  where
-    dbUrl = processPostgresConnInfo rawDbUrl
-    metadataDbUrl = withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
-    cmd = case rawCmd of
-      HCServe rso -> HCServe <$> mkServeOptions rso
-      HCExport -> return HCExport
-      HCClean -> return HCClean
-      HCVersion -> return HCVersion
-      HCDowngrade tgt -> return (HCDowngrade tgt)
+  L.EnabledLogTypes impl => HGEOptionsRaw (RawServeOptions impl) -> WithEnv (HGEOptions (ServeOptions impl))
+mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
+  dbUrl <- processPostgresConnInfo rawDbUrl
+  metadataDbUrl <- withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
+  cmd <- case rawCmd of
+    HCServe rso -> HCServe <$> mkServeOptions rso
+    HCExport -> pure HCExport
+    HCClean -> pure HCClean
+    HCVersion -> pure HCVersion
+    HCDowngrade tgt -> pure (HCDowngrade tgt)
+  pure $ HGEOptions dbUrl metadataDbUrl cmd
 
 processPostgresConnInfo ::
   PostgresConnInfo (Maybe PostgresRawConnInfo) ->
