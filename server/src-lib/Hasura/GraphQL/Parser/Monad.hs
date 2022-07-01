@@ -161,7 +161,7 @@ newtype instance ParserById m '(p, a) = ParserById (p m a)
 -- query parsing
 
 newtype Parse a = Parse
-  { unParse :: ReaderT JSONPath (Except ParseError) a
+  { unParse :: Except ParseError a
   }
   deriving (Functor, Applicative, Monad)
 
@@ -171,16 +171,13 @@ runParse ::
   m a
 runParse parse =
   onLeft
-    (runExcept <<< flip runReaderT [] <<< unParse $ parse)
+    (runExcept <<< unParse $ parse)
     reportParseErrors
 
 instance MonadParse Parse where
-  -- note we store the pathItems in reverse order, and only reverse them
-  -- when using them in `reportParseErrors`
-  withKey key x = Parse $ local (key :) $ unParse x
+  withKey key = Parse . withExceptT (\pe -> pe {pePath = key : pePath pe}) . unParse
   parseErrorWith code text = Parse $ do
-    path <- ask
-    lift $ throwError $ ParseError {peCode = code, pePath = path, peMessage = text}
+    throwError $ ParseError {peCode = code, pePath = [], peMessage = text}
 
 data ParseError = ParseError
   { pePath :: JSONPath,
@@ -193,4 +190,4 @@ reportParseErrors ::
   ParseError ->
   m a
 reportParseErrors (ParseError {pePath, peMessage, peCode}) =
-  throwError (err400 peCode peMessage) {qePath = reverse pePath}
+  throwError (err400 peCode peMessage) {qePath = pePath}
