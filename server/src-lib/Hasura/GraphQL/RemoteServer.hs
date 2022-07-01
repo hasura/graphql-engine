@@ -281,7 +281,7 @@ introspectionQuery =
        eitherResult <- TH.runIO $ J.eitherDecodeFileStrict fp
        either fail TH.lift $ do
          r@GQLReq {..} <- eitherResult
-         op <- left show $ getSingleOperation r
+         op <- left (T.unpack . showQErr) $ getSingleOperation r
          pure GQLReq {_grQuery = op, ..}
    )
 

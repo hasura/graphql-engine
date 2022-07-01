@@ -1000,6 +1000,7 @@ test-suite graphql-engine-tests
     Data.TrieSpec
     Database.MSSQL.TransactionSpec
     Hasura.AppSpec
+    Hasura.Base.Error.TestInstances
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
     Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec

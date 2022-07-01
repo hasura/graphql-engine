@@ -12,6 +12,8 @@ import Control.Lens ((.~))
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.HashMap.Strict qualified as Map
+import Data.Text qualified as T
+import Data.Text.IO qualified as T
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Database.PG.Query qualified as Q
@@ -19,6 +21,7 @@ import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Subscription (MultiplexedQuery (MultiplexedQuery))
 import Hasura.Backends.Postgres.Instances.Transport ()
 import Hasura.Backends.Postgres.SQL.Value (TxtEncodedVal (TELit))
+import Hasura.Base.Error (showQErr)
 import Hasura.GraphQL.Execute.Subscription.Options (mkSubscriptionsOptions)
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Execute.Subscription.Poll.Common
@@ -50,7 +53,7 @@ buildStreamingSubscriptionsSpec :: IO Spec
 buildStreamingSubscriptionsSpec = do
   env <- getEnvironment
 
-  pgUrlText :: Text <- flip onLeft printErrExit $
+  pgUrlText :: Text <- flip onLeft (printErrExit . T.pack) $
     runWithEnv env $ do
       let envVar = fst databaseUrlEnv
       maybeV <- considerEnv envVar
@@ -116,11 +119,11 @@ streamingSubscriptionPollingSpec srcConfig = do
           False
 
   let setup = do
-        runPgSourceWriteTx srcConfig setupDDLTx >>= (`onLeft` (printErrExit . show))
-        runPgSourceWriteTx srcConfig setupValueTx >>= (`onLeft` (printErrExit . show))
+        runPgSourceWriteTx srcConfig setupDDLTx >>= (`onLeft` (printErrExit . showQErr))
+        runPgSourceWriteTx srcConfig setupValueTx >>= (`onLeft` (printErrExit . showQErr))
 
       teardown =
-        runPgSourceWriteTx srcConfig teardownDDLTx >>= (`onLeft` (printErrExit . show))
+        runPgSourceWriteTx srcConfig teardownDDLTx >>= (`onLeft` (printErrExit . showQErr))
 
   runIO setup
 
@@ -403,5 +406,5 @@ streamingSubscriptionPollingSpec srcConfig = do
 
   runIO teardown
 
-printErrExit :: String -> IO a
-printErrExit = (*> exitFailure) . putStrLn
+printErrExit :: Text -> IO a
+printErrExit = (*> exitFailure) . T.putStrLn

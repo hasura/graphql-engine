@@ -5,6 +5,9 @@ module Hasura.Base.Error
     QErr (..),
     QErrExtra (..),
     encodeJSONPath,
+    overrideQErrStatus,
+    prefixQErr,
+    showQErr,
     encodeQErr,
     encodeGQLErr,
     noInternalQErrEnc,
@@ -54,6 +57,8 @@ import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.Types
 import Data.Text qualified as T
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Encoding qualified as TL
 import Database.PG.Query qualified as Q
 import Hasura.Prelude
 import Network.HTTP.Types qualified as HTTP
@@ -149,13 +154,13 @@ instance ToJSON Code where
     ValidationFailed -> "validation-failed"
 
 data QErr = QErr
-  { qePath :: !JSONPath,
-    qeStatus :: !HTTP.Status,
-    qeError :: !Text,
-    qeCode :: !Code,
-    qeInternal :: !(Maybe QErrExtra)
+  { qePath :: JSONPath,
+    qeStatus :: HTTP.Status,
+    qeError :: Text,
+    qeCode :: Code,
+    qeInternal :: Maybe QErrExtra
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 -- | Extra context for a QErr, which can either be information from an internal
 -- error (e.g. from Postgres, or from a network operation timing out), or
@@ -163,9 +168,9 @@ data QErr = QErr
 -- webhook error response may provide additional context in the `extensions`
 -- key.
 data QErrExtra
-  = ExtraExtensions !Value
-  | ExtraInternal !Value
-  deriving (Show, Eq)
+  = ExtraExtensions Value
+  | ExtraInternal Value
+  deriving (Eq)
 
 instance ToJSON QErrExtra where
   toJSON = \case
@@ -189,6 +194,18 @@ instance ToJSON QErr where
           "error" .= msg,
           "code" .= code
         ]
+
+-- | Overrides the status and code of a QErr while retaining all other fields.
+overrideQErrStatus :: HTTP.Status -> Code -> QErr -> QErr
+overrideQErrStatus newStatus newCode err = err {qeStatus = newStatus, qeCode = newCode}
+
+-- | Prefixes the message of a QErr while retaining all other fields.
+prefixQErr :: Text -> QErr -> QErr
+prefixQErr prefix err = err {qeError = prefix <> qeError err}
+
+-- Temporary function until we have a better one in place.
+showQErr :: QErr -> Text
+showQErr = TL.toStrict . TL.decodeUtf8 . encode
 
 noInternalQErrEnc :: QErr -> Value
 noInternalQErrEnc (QErr jPath _ msg code _) =
@@ -256,14 +273,16 @@ instance Q.FromPGConnErr QErr where
     | "private key file" `T.isInfixOf` (Q.getConnErr c) =
       err500 PostgresError "private-key error"
   fromPGConnErr c =
-    let e = err500 PostgresError "connection error"
-     in e {qeInternal = Just $ ExtraInternal $ toJSON c}
+    (err500 PostgresError "connection error")
+      { qeInternal = Just $ ExtraInternal $ toJSON c
+      }
 
 -- Postgres Transaction error
 instance Q.FromPGTxErr QErr where
   fromPGTxErr txe =
-    let e = err500 PostgresError "postgres tx error"
-     in e {qeInternal = Just $ ExtraInternal $ toJSON txe}
+    (err500 PostgresError "postgres tx error")
+      { qeInternal = Just $ ExtraInternal $ toJSON txe
+      }
 
 err400 :: Code -> Text -> QErr
 err400 c t = QErr [] HTTP.status400 t c Nothing

@@ -1,5 +1,6 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Hasura.Backends.Postgres.Execute.PrepareSpec
   ( spec,
@@ -17,6 +18,7 @@ import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types (PGScalarType (..))
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Base.Error (QErr)
+import Hasura.Base.Error.TestInstances ()
 import Hasura.GraphQL.Parser.Variable (VariableInfo (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnType (..), ColumnValue (..))
@@ -28,7 +30,7 @@ import Hasura.Session
     mkRoleNameSafe,
     mkSessionVariablesText,
   )
-import Language.GraphQL.Draft.Syntax qualified as G
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Hspec (Expectation, Spec, describe, it, shouldBe)
 import Prelude
 
@@ -73,7 +75,7 @@ spec = do
           prepareWithoutPlan userInfo (UVLiteral x) `yields` x
 
   describe "UVParameter" do
-    let vi = VIRequired (G.unsafeMkName "foo")
+    let vi = VIRequired [G.name|foo|]
     let cv = ColumnValue (ColumnScalar @('Postgres 'Vanilla) PGInteger) (PGValInteger 3)
 
     describe "prepareWithPlan" do

@@ -6,6 +6,7 @@ module Hasura.SQL.WKTSpec
 where
 
 import Data.Either (isLeft)
+import Hasura.Base.Error.TestInstances ()
 import Hasura.Prelude
 import Hasura.SQL.GeoJSON qualified as G
 import Hasura.SQL.WKT
