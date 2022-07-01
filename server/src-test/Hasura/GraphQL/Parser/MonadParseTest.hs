@@ -2,6 +2,7 @@ module Hasura.GraphQL.Parser.MonadParseTest (spec) where
 
 import Data.Aeson.Internal
 import Hasura.Base.Error
+import Hasura.Base.Error.TestInstances ()
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Monad
 import Hasura.Prelude

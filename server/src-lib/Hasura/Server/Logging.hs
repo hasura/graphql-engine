@@ -70,7 +70,7 @@ data StartupLog = StartupLog
     slKind :: !Text,
     slInfo :: !Value
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance ToJSON StartupLog where
   toJSON (StartupLog _ k info) =
@@ -87,7 +87,7 @@ data PGLog = PGLog
   { plLogLevel :: !LogLevel,
     plMessage :: !Text
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance ToJSON PGLog where
   toJSON (PGLog _ msg) =
@@ -102,7 +102,7 @@ data MetadataLog = MetadataLog
     mlMessage :: !Text,
     mlInfo :: !Value
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance ToJSON MetadataLog where
   toJSON (MetadataLog _ msg infoVal) =
@@ -129,7 +129,6 @@ data WebHookLog = WebHookLog
     whlResponse :: !(Maybe Text),
     whlMessage :: !(Maybe Text)
   }
-  deriving (Show)
 
 instance ToEngineLog WebHookLog Hasura where
   toEngineLog webHookLog =
@@ -155,7 +154,7 @@ data GQLQueryOperationSuccessLog = GQLQueryOperationSuccessLog
     gqolRequestSize :: !Int64,
     gqolParameterizedQueryHash :: !ParameterizedQueryHash
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''GQLQueryOperationSuccessLog)
 
@@ -164,14 +163,14 @@ data GQLQueryOperationErrorLog = GQLQueryOperationErrorLog
   { gqelQuery :: !GH.GQLReqUnparsed,
     gqelError :: !QErr
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(deriveToJSON hasuraJSON ''GQLQueryOperationErrorLog)
 
 data GQLBatchQueryOperationLog
   = GQLQueryOperationSuccess !GQLQueryOperationSuccessLog
   | GQLQueryOperationError !GQLQueryOperationErrorLog
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance ToJSON GQLBatchQueryOperationLog where
   toJSON = \case
@@ -188,7 +187,7 @@ data RequestMode
     RequestModeNonBatchable
   | -- | the execution of this request failed
     RequestModeError
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance ToJSON RequestMode where
   toJSON = \case
@@ -201,7 +200,7 @@ data CommonHttpLogMetadata = CommonHttpLogMetadata
   { _chlmRequestMode :: !RequestMode,
     _chlmBatchOperationLog :: !(Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog))
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 -- | The http-log metadata attached to HTTP requests running in the monad 'm', split into a
 -- common portion that is present regardless of 'm', and a monad-specific one defined in the
@@ -227,7 +226,7 @@ emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, e
 
 -- See Note [Disable query printing for metadata queries]
 data MetadataQueryLoggingMode = MetadataQueryLoggingEnabled | MetadataQueryLoggingDisabled
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance FromJSON MetadataQueryLoggingMode where
   parseJSON =
@@ -247,7 +246,7 @@ data LoggingSettings = LoggingSettings
     -- See Note [Disable query printing for metadata queries]
     _lsMetadataQueryLoggingMode :: MetadataQueryLoggingMode
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 {- Note [Disable query printing when query-log is disabled]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -364,7 +363,7 @@ data HttpInfoLog = HttpInfoLog
     -- | all the request headers
     hlHeaders :: ![HTTP.Header]
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance ToJSON HttpInfoLog where
   toJSON (HttpInfoLog st met src path hv compressTypeM _) =
@@ -391,35 +390,35 @@ data OperationLog = OperationLog
     olError :: !(Maybe QErr),
     olRequestMode :: !RequestMode
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''OperationLog)
 
 -- | @BatchOperationSuccessLog@ contains the information required for a single
 --   successful operation in a batch request for OSS. This type is a subset of the @GQLQueryOperationSuccessLog@
 data BatchOperationSuccessLog = BatchOperationSuccessLog
-  { bolQuery :: !(Maybe Value),
-    bolResponseSize :: !Int64,
-    bolQueryExecutionTime :: !Seconds
+  { _bolQuery :: !(Maybe Value),
+    _bolResponseSize :: !Int64,
+    _bolQueryExecutionTime :: !Seconds
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''BatchOperationSuccessLog)
 
 -- | @BatchOperationSuccessLog@ contains the information required for a single
 --   erroneous operation in a batch request for OSS. This type is a subset of the @GQLQueryOperationErrorLog@
 data BatchOperationErrorLog = BatchOperationErrorLog
-  { belQuery :: !(Maybe Value),
-    belError :: !QErr
+  { _belQuery :: !(Maybe Value),
+    _belError :: !QErr
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''BatchOperationErrorLog)
 
 data BatchOperationLog
   = BatchOperationSuccess !BatchOperationSuccessLog
   | BatchOperationError !BatchOperationErrorLog
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance ToJSON BatchOperationLog where
   toJSON = \case
@@ -432,7 +431,7 @@ data HttpLogContext = HttpLogContext
     hlcRequestId :: !RequestId,
     hlcBatchedOperations :: !(Maybe (NE.NonEmpty BatchOperationLog))
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''HttpLogContext)
 

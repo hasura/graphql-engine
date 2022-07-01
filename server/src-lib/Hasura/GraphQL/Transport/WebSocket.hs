@@ -104,7 +104,7 @@ data OpDetail
   | ODQueryErr !QErr
   | ODCompleted
   | ODStopped
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $( J.deriveToJSON
      J.defaultOptions
@@ -122,7 +122,7 @@ data OperationDetails = OperationDetails
     _odQuery :: !(Maybe GQLReqUnparsed),
     _odParameterizedQueryHash :: !(Maybe ParameterizedQueryHash)
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(J.deriveToJSON hasuraJSON ''OperationDetails)
 
@@ -132,7 +132,7 @@ data WSEvent
   | EConnErr !ConnErrMsg
   | EOperation !OperationDetails
   | EClosed
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $( J.deriveToJSON
      J.defaultOptions
@@ -147,7 +147,7 @@ data WsConnInfo = WsConnInfo
     _wsciTokenExpiry :: !(Maybe TC.UTCTime),
     _wsciMsg :: !(Maybe Text)
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(J.deriveToJSON hasuraJSON ''WsConnInfo)
 
@@ -156,7 +156,7 @@ data WSLogInfo = WSLogInfo
     _wsliConnectionInfo :: !WsConnInfo,
     _wsliEvent :: !WSEvent
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 $(J.deriveToJSON hasuraJSON ''WSLogInfo)
 

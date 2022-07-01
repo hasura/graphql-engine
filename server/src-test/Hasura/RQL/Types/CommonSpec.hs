@@ -4,6 +4,7 @@ import Control.Arrow.Extended
 import Control.Monad.Trans.Writer
 import Data.Text qualified as Text
 import Hasura.Base.Error
+import Hasura.Base.Error.TestInstances ()
 import Hasura.Prelude
 import Hasura.QuickCheck.Instances ()
 import Hasura.RQL.Types.Common

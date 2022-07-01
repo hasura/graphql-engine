@@ -8,6 +8,7 @@ import Data.HashSet qualified as Set
 import Data.List.NonEmpty qualified as NE
 import Data.Text.NonEmpty (nonEmptyText)
 import Hasura.Base.Error
+import Hasura.Base.Error.TestInstances ()
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.LegacyCatalog (parseLegacyRemoteRelationshipDefinition)
 import Hasura.RQL.Types.Common

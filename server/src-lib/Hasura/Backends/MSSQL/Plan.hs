@@ -43,6 +43,7 @@ import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
+import Network.HTTP.Types qualified as HTTP
 
 --------------------------------------------------------------------------------
 -- Top-level planner
@@ -88,9 +89,8 @@ runIrWrappingRoot ::
   MonadError QErr m =>
   FromIr Select ->
   m Select
-runIrWrappingRoot selectAction = do
-  runFromIr selectAction
-    `onLeft` (throw400 NotSupported . tshow)
+runIrWrappingRoot selectAction =
+  runFromIr selectAction `onLeft` (throwError . overrideQErrStatus HTTP.status400 NotSupported)
 
 -- | Prepare a value without any query planning; we just execute the
 -- query with the values embedded.

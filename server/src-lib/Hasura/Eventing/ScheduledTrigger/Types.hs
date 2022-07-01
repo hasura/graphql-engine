@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Eventing.ScheduledTrigger.Types
-  ( CronTriggerStats (CronTriggerStats, ctsMaxScheduledTime, ctsName),
+  ( CronTriggerStats (CronTriggerStats, _ctsMaxScheduledTime, _ctsName),
     RetryContext (RetryContext, _rctxConf),
     ScheduledEventOp (..),
     ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime, sewpRequestTransform, sewpResponseTransform),
@@ -22,24 +22,24 @@ import Hasura.RQL.Types.ScheduledTrigger
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance L.ToEngineLog ScheduledTriggerInternalErr L.Hasura where
   toEngineLog (ScheduledTriggerInternalErr qerr) =
     (L.LevelError, L.scheduledTriggerLogType, J.toJSON qerr)
 
 data CronTriggerStats = CronTriggerStats
-  { ctsName :: !TriggerName,
-    ctsUpcomingEventsCount :: !Int,
-    ctsMaxScheduledTime :: !UTCTime
+  { _ctsName :: !TriggerName,
+    _ctsUpcomingEventsCount :: !Int,
+    _ctsMaxScheduledTime :: !UTCTime
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 data RetryContext = RetryContext
   { _rctxTries :: !Int,
     _rctxConf :: !STRetryConf
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 data ScheduledEventWebhookPayload = ScheduledEventWebhookPayload
   { sewpId :: !EventId,

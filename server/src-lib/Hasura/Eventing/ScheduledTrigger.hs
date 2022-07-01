@@ -181,17 +181,13 @@ runCronEventsGenerator logger getSC = do
             <$> mapM (withCronTrigger cronTriggersCache) deprivedCronTriggerStats
         insertCronEventsFor cronTriggersForHydrationWithStats
 
-      onLeft eitherRes $
-        L.unLogger logger
-          . ScheduledTriggerInternalErr
-          . err500 Unexpected
-          . tshow
+      onLeft eitherRes $ L.unLogger logger . ScheduledTriggerInternalErr
 
     -- See discussion: https://github.com/hasura/graphql-engine-mono/issues/1001
     liftIO $ sleep (minutes 1)
   where
     withCronTrigger cronTriggerCache cronTriggerStat = do
-      case Map.lookup (ctsName cronTriggerStat) cronTriggerCache of
+      case Map.lookup (_ctsName cronTriggerStat) cronTriggerCache of
         Nothing -> do
           L.unLogger logger $
             ScheduledTriggerInternalErr $
@@ -207,7 +203,7 @@ insertCronEventsFor ::
   m ()
 insertCronEventsFor cronTriggersWithStats = do
   let scheduledEvents = flip concatMap cronTriggersWithStats $ \(cti, stats) ->
-        generateCronEventsFrom (ctsMaxScheduledTime stats) cti
+        generateCronEventsFrom (_ctsMaxScheduledTime stats) cti
   case scheduledEvents of
     [] -> pure ()
     events -> insertCronEvents events

@@ -72,7 +72,7 @@ fetchUndeliveredEvents sourceConfig sourceName triggerNames maintenanceMode fetc
         pure $ fmap (fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize) maintenanceModeVersion
       MaintenanceModeDisabled -> pure $ Right $ fetchEvents sourceName triggerNames fetchBatchSize
   case fetchEventsTxE of
-    Left err -> throw500 $ "something went wrong while fetching events: " <> tshow err
+    Left err -> throwError $ prefixQErr "something went wrong while fetching events: " err
     Right fetchEventsTx ->
       liftEitherM $
         liftIO $

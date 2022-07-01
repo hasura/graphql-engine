@@ -4,6 +4,7 @@ import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Base.Error (Code (ParseFailed), QErr (..), runAesonParser)
+import Hasura.Base.Error.TestInstances ()
 import Hasura.Prelude
 import Network.HTTP.Types qualified as HTTP
 import Test.Hspec

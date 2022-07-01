@@ -207,7 +207,7 @@ data ErrorState = ErrorState
   { _esLastErrorSeen :: !(Maybe QErr),
     _esLastMetadataVersion :: !(Maybe MetadataResourceVersion)
   }
-  deriving (Show, Eq)
+  deriving (Eq)
 
 -- NOTE: The ErrorState type is to be used mainly for the `listener` method below.
 --       This will help prevent logging the same error with the same MetadataResourceVersion

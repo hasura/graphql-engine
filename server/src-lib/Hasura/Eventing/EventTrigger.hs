@@ -87,7 +87,7 @@ import System.Metrics.Gauge qualified as EKG.Gauge
 
 newtype EventInternalErr
   = EventInternalErr QErr
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance L.ToEngineLog EventInternalErr L.Hasura where
   toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, J.toJSON qerr)
