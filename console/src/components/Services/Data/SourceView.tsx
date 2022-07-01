@@ -117,6 +117,15 @@ const SourceView: React.FC<Props> = props => {
     dispatch(deleteSchema(schema, successCb));
   };
 
+  const toggleHideSchema = () => {
+    const x = document.getElementById("schema-list-view");
+    if (x?.style.display === "none") {
+      x.style.display = "block";
+    } else {
+      x!.style.display = "none";
+    }
+  }
+
   return (
     <div style={{ paddingTop: '20px', paddingLeft: '15px' }}>
       <Helmet title="Source - Data | Hasura" />
@@ -144,6 +153,16 @@ const SourceView: React.FC<Props> = props => {
       </div>
       <div>
         <hr className="my-md" />
+        {schemaList.length ?
+          <div className="my-md">
+            <Button
+              color="white"
+              size="xs"
+              onClick={toggleHideSchema}
+            >
+              Hide/Show
+            </Button>
+          </div> : null}
         <div id="schema-list-view" className="space-y-sm">
           {schemaList.length ? (
             schemaList.map((schema, key: number) => {
