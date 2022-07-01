@@ -628,7 +628,6 @@ export const mergeDataBigQuery = (
         table_schema: table.table_schema,
       })
     );
-    console.log(metadataTable);
     const remoteRelationships: Table['remote_relationships'] = (
       metadataTable?.remote_relationships ?? []
     ).map(({ definition, name }) => ({

@@ -22,6 +22,7 @@ import {
   escapeTableColumns,
   escapeTableName,
   findTable,
+  getQualifiedTableDef,
 } from '../../../../dataSources';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getDownQueryComments } from '../../../../utils/migration/utils';
@@ -62,7 +63,7 @@ const trackAllItems = (sql, isMigration, migrationName, source, driver) => (
     if (type === 'function') {
       req = getTrackFunctionQuery(name, schema, source, {}, driver);
     } else {
-      const tableDef = { name, schema };
+      const tableDef = getQualifiedTableDef({ name, schema }, driver);
       const { allSchemas } = getState().tables;
       const table = findTable(allSchemas, tableDef);
       req = getTrackTableQuery({
