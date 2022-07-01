@@ -76,35 +76,40 @@ transformGQLSuffixWith f suffix = fromMaybe suffix (G.mkNameSuffix (f (G.unNameS
 identifierToList :: GQLNameIdentifier -> [Text]
 identifierToList (Identifier pref suffs) = (G.unName pref) : (map G.unNameSuffix suffs)
 
--- | To @camelCase for Data.Text@
-wordCase :: Text -> Text
-wordCase = T.toTitle
-
--- | To @camelCase for Data.Text@
+-- | To @snake_case@ for @Data.Text@
+--
+-- >>> toSnakeT ["my","random","text","list"]
+-- "my_random_text_list"
 toSnakeT :: [Text] -> Text
 toSnakeT = T.concat . intersperse "_"
 
--- | To @camelCase for Data.Text@
+-- | To @PascalCase@ for @Data.Text@
+--
+-- >>> toPascalT ["my","random","text","list"]
+-- "MyRandomTextList"
 toPascalT :: [Text] -> Text
-toPascalT = T.concat . map wordCase
+toPascalT = T.concat . map upperFirstChar
 
--- | To @camelCase for Data.Text@
+-- | To @camelCase@ for @Data.Text@
+--
+-- >>> toCamelT ["my","random","text","list"]
+-- "myRandomTextList"
 toCamelT :: [Text] -> Text
 toCamelT ([]) = ""
-toCamelT ((x : xs)) = (lowerFirstChar x) <> T.concat (map wordCase xs)
+toCamelT ((x : xs)) = (lowerFirstChar x) <> T.concat (map upperFirstChar xs)
 
--- | To @camelCase for GQLNameIdentifier@
+-- | To @snake_case@ for @GQLNameIdentifier@
 toSnakeG :: GQLNameIdentifier -> G.Name
 toSnakeG (Identifier pref suff) = G.addSuffixes pref (map (transformGQLSuffixWith ("_" <>)) suff)
 
--- | To @camelCase for GQLNameIdentifier@
+-- | To @PascalCase@ for @GQLNameIdentifier@
 toPascalG :: GQLNameIdentifier -> G.Name
-toPascalG (Identifier pref suff) = G.addSuffixes pref (map (transformGQLSuffixWith wordCase) suff)
+toPascalG (Identifier pref suff) = G.addSuffixes pref (map (transformGQLSuffixWith upperFirstChar) suff)
 
--- | To @camelCase for GQLNameIdentifier@
+-- | To @camelCase@ for @GQLNameIdentifier@
 toCamelG :: GQLNameIdentifier -> G.Name
 toCamelG (Identifier pref []) = pref
-toCamelG (Identifier x xs) = G.addSuffixes (transformNameWith lowerFirstChar x) (map (transformGQLSuffixWith wordCase) xs)
+toCamelG (Identifier x xs) = G.addSuffixes (transformNameWith lowerFirstChar x) (map (transformGQLSuffixWith upperFirstChar) xs)
 
 -- @fromSnake@ is used in splitting the schema/table names separated by @_@
 -- For global naming conventions:
@@ -136,3 +141,7 @@ snakeToCamel = toCamelT . fromSnake
 -- | An internal helper function to lowercase the first character
 lowerFirstChar :: Text -> Text
 lowerFirstChar t = T.toLower (T.take 1 t) <> T.drop 1 t
+
+-- | An internal helper function to uppercase the first character
+upperFirstChar :: Text -> Text
+upperFirstChar t = T.toUpper (T.take 1 t) <> T.drop 1 t
