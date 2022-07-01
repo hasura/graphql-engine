@@ -42,8 +42,8 @@
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[TyVarBndr]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe Kind
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689190471"><span class="annot"><span class="annottext">[Con]
-</span><a href="#local-6989586621689190471"><span class="hs-identifier hs-var">cons</span></a></span></span><span> </span><span class="annot"><span class="annottext">[DerivClause]
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689190971"><span class="annot"><span class="annottext">[Con]
+</span><a href="#local-6989586621689190971"><span class="hs-identifier hs-var">cons</span></a></span></span><span> </span><span class="annot"><span class="annottext">[DerivClause]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Q Info
 </span><span class="hs-identifier hs-var">reify</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BackendType</span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">[[BackendConstructor]] -&gt; [BackendConstructor]
@@ -57,45 +57,45 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">[Con]
-</span><a href="#local-6989586621689190471"><span class="hs-identifier hs-var">cons</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689190466"><span class="annot"><span class="annottext">Con
-</span><a href="#local-6989586621689190466"><span class="hs-identifier hs-var">con</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689190971"><span class="hs-identifier hs-var">cons</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689190966"><span class="annot"><span class="annottext">Con
+</span><a href="#local-6989586621689190966"><span class="hs-identifier hs-var">con</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-42"></span><span>    </span><span class="hs-comment">-- We pattern match in the monad to rely on 'fail'.</span><span>
-</span><span id="line-43"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">NormalC</span></span><span> </span><span id="local-6989586621689190464"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190464"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689190463"><span class="annot"><span class="annottext">[BangType]
-</span><a href="#local-6989586621689190463"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Con -&gt; Q Con
+</span><span id="line-43"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">NormalC</span></span><span> </span><span id="local-6989586621689190964"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689190964"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689190963"><span class="annot"><span class="annottext">[BangType]
+</span><a href="#local-6989586621689190963"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Con -&gt; Q Con
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Con
-</span><a href="#local-6989586621689190466"><span class="hs-identifier hs-var">con</span></a></span><span>
-</span><span id="line-44"></span><span>    </span><span id="local-6989586621689190462"><span class="annot"><span class="annottext">[[Name]]
-</span><a href="#local-6989586621689190462"><span class="hs-identifier hs-var">argsConstructors</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[BangType] -&gt; (BangType -&gt; Q [Name]) -&gt; Q [[Name]]
+</span><a href="#local-6989586621689190966"><span class="hs-identifier hs-var">con</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621689190962"><span class="annot"><span class="annottext">[[Name]]
+</span><a href="#local-6989586621689190962"><span class="hs-identifier hs-var">argsConstructors</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[BangType] -&gt; (BangType -&gt; Q [Name]) -&gt; Q [[Name]]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="annot"><span class="annottext">[BangType]
-</span><a href="#local-6989586621689190463"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bang
-</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689190461"><span class="annot"><span class="annottext">Kind
-</span><a href="#local-6989586621689190461"><span class="hs-identifier hs-var">arg</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-45"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">ConT</span></span><span> </span><span id="local-6989586621689190459"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190459"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Kind -&gt; Q Kind
+</span><a href="#local-6989586621689190963"><span class="hs-identifier hs-var">args</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bang
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689190961"><span class="annot"><span class="annottext">Kind
+</span><a href="#local-6989586621689190961"><span class="hs-identifier hs-var">arg</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">ConT</span></span><span> </span><span id="local-6989586621689190959"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689190959"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Kind -&gt; Q Kind
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Kind
-</span><a href="#local-6989586621689190461"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><a href="#local-6989586621689190961"><span class="hs-identifier hs-var">arg</span></a></span><span>
 </span><span id="line-46"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">TyConI</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DataD</span></span><span> </span><span class="annot"><span class="annottext">Cxt
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[TyVarBndr]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe Kind
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689190458"><span class="annot"><span class="annottext">[Con]
-</span><a href="#local-6989586621689190458"><span class="hs-identifier hs-var">argCons</span></a></span></span><span> </span><span class="annot"><span class="annottext">[DerivClause]
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689190958"><span class="annot"><span class="annottext">[Con]
+</span><a href="#local-6989586621689190958"><span class="hs-identifier hs-var">argCons</span></a></span></span><span> </span><span class="annot"><span class="annottext">[DerivClause]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Q Info
 </span><span class="hs-identifier hs-var">reify</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190459"><span class="hs-identifier hs-var">argName</span></a></span><span>
+</span><a href="#local-6989586621689190959"><span class="hs-identifier hs-var">argName</span></a></span><span>
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">[Name] -&gt; Q [Name]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190457"><span class="hs-identifier hs-var">argCon</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NormalC</span></span><span> </span><span id="local-6989586621689190457"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190457"><span class="hs-identifier hs-var">argCon</span></a></span></span><span> </span><span class="annot"><span class="annottext">[BangType]
+</span><a href="#local-6989586621689190957"><span class="hs-identifier hs-var">argCon</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NormalC</span></span><span> </span><span id="local-6989586621689190957"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689190957"><span class="hs-identifier hs-var">argCon</span></a></span></span><span> </span><span class="annot"><span class="annottext">[BangType]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Con]
-</span><a href="#local-6989586621689190458"><span class="hs-identifier hs-var">argCons</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689190958"><span class="hs-identifier hs-var">argCons</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">[BackendConstructor] -&gt; Q [BackendConstructor]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">([BackendConstructor] -&gt; Q [BackendConstructor])
@@ -104,7 +104,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">([Name] -&gt; BackendConstructor) -&gt; [[Name]] -&gt; [BackendConstructor]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190464"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; BackendConstructor
+</span><a href="#local-6989586621689190964"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; BackendConstructor
 forall a. a -&gt; [a] -&gt; NonEmpty a
 </span><span class="hs-operator hs-var">:|</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([[Name]] -&gt; [BackendConstructor])
 -&gt; [[Name]] -&gt; [BackendConstructor]
@@ -114,18 +114,18 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a.
 (Traversable t, Applicative f) =&gt;
 t (f a) -&gt; f (t a)
 </span><span class="hs-identifier hs-var">sequenceA</span></span><span> </span><span class="annot"><span class="annottext">[[Name]]
-</span><a href="#local-6989586621689190462"><span class="hs-identifier hs-var">argsConstructors</span></a></span><span>
+</span><a href="#local-6989586621689190962"><span class="hs-identifier hs-var">argsConstructors</span></a></span><span>
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span class="hs-comment">-- | Associates a value in the 'Q' monad to each backend @Name@.</span><span>
-</span><span id="line-51"></span><span id="local-6989586621689190488"><span class="annot"><a href="Hasura.SQL.TH.html#forEachBackend"><span class="hs-identifier hs-type">forEachBackend</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.TH.html#BackendConstructor"><span class="hs-identifier hs-type">BackendConstructor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><a href="#local-6989586621689190488"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689190488"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-51"></span><span id="local-6989586621689190988"><span class="annot"><a href="Hasura.SQL.TH.html#forEachBackend"><span class="hs-identifier hs-type">forEachBackend</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.TH.html#BackendConstructor"><span class="hs-identifier hs-type">BackendConstructor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><a href="#local-6989586621689190988"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689190988"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
 </span><span id="line-52"></span><span id="forEachBackend"><span class="annot"><span class="annottext">forEachBackend :: (BackendConstructor -&gt; Q a) -&gt; Q [a]
-</span><a href="Hasura.SQL.TH.html#forEachBackend"><span class="hs-identifier hs-var hs-var">forEachBackend</span></a></span></span><span> </span><span id="local-6989586621689190454"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q a
-</span><a href="#local-6989586621689190454"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(BackendConstructor -&gt; Q a) -&gt; [BackendConstructor] -&gt; Q [a]
+</span><a href="Hasura.SQL.TH.html#forEachBackend"><span class="hs-identifier hs-var hs-var">forEachBackend</span></a></span></span><span> </span><span id="local-6989586621689190954"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q a
+</span><a href="#local-6989586621689190954"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(BackendConstructor -&gt; Q a) -&gt; [BackendConstructor] -&gt; Q [a]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">BackendConstructor -&gt; Q a
-</span><a href="#local-6989586621689190454"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">([BackendConstructor] -&gt; Q [a]) -&gt; Q [BackendConstructor] -&gt; Q [a]
+</span><a href="#local-6989586621689190954"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">([BackendConstructor] -&gt; Q [a]) -&gt; Q [BackendConstructor] -&gt; Q [a]
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">Q [BackendConstructor]
 </span><a href="Hasura.SQL.TH.html#backendConstructors"><span class="hs-identifier hs-var">backendConstructors</span></a></span><span>
@@ -134,8 +134,8 @@ forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span id="line-55"></span><span class="hs-comment">--   getBackendValue [&quot;Postgres&quot;, &quot;Vanilla&quot;] = [| Postgres Vanilla |]</span><span>
 </span><span id="line-56"></span><span class="annot"><a href="Hasura.SQL.TH.html#getBackendValue"><span class="hs-identifier hs-type">getBackendValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.TH.html#BackendConstructor"><span class="hs-identifier hs-type">BackendConstructor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-57"></span><span id="getBackendValue"><span class="annot"><span class="annottext">getBackendValue :: BackendConstructor -&gt; Exp
-</span><a href="Hasura.SQL.TH.html#getBackendValue"><span class="hs-identifier hs-var hs-var">getBackendValue</span></a></span></span><span> </span><span id="local-6989586621689190451"><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190451"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Exp -&gt; Exp) -&gt; NonEmpty Exp -&gt; Exp
+</span><a href="Hasura.SQL.TH.html#getBackendValue"><span class="hs-identifier hs-var hs-var">getBackendValue</span></a></span></span><span> </span><span id="local-6989586621689190951"><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190951"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Exp -&gt; Exp) -&gt; NonEmpty Exp -&gt; Exp
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; a -&gt; a) -&gt; t a -&gt; a
 </span><span class="hs-identifier hs-var">foldl1</span></span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty Exp -&gt; Exp) -&gt; NonEmpty Exp -&gt; Exp
@@ -144,14 +144,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">ConE</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Exp) -&gt; BackendConstructor -&gt; NonEmpty Exp
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190451"><span class="hs-identifier hs-var">backend</span></a></span><span>
+</span><a href="#local-6989586621689190951"><span class="hs-identifier hs-var">backend</span></a></span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-comment">-- | Associates to a backend the promoted type level value.</span><span>
 </span><span id="line-60"></span><span class="hs-comment">--   getBackendValue [&quot;Postgres&quot;, &quot;Vanilla&quot;] = [t| ('Postgres 'Vanilla) |]</span><span>
 </span><span id="line-61"></span><span class="annot"><a href="Hasura.SQL.TH.html#getBackendTypeValue"><span class="hs-identifier hs-type">getBackendTypeValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.TH.html#BackendConstructor"><span class="hs-identifier hs-type">BackendConstructor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
 </span><span id="line-62"></span><span id="getBackendTypeValue"><span class="annot"><span class="annottext">getBackendTypeValue :: BackendConstructor -&gt; Kind
-</span><a href="Hasura.SQL.TH.html#getBackendTypeValue"><span class="hs-identifier hs-var hs-var">getBackendTypeValue</span></a></span></span><span> </span><span id="local-6989586621689190447"><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190447"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Kind -&gt; Kind
+</span><a href="Hasura.SQL.TH.html#getBackendTypeValue"><span class="hs-identifier hs-var hs-var">getBackendTypeValue</span></a></span></span><span> </span><span id="local-6989586621689190947"><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190947"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Kind -&gt; Kind
 </span><span class="hs-identifier hs-var">ParensT</span></span><span> </span><span class="annot"><span class="annottext">(Kind -&gt; Kind) -&gt; Kind -&gt; Kind
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Kind -&gt; Kind -&gt; Kind) -&gt; NonEmpty Kind -&gt; Kind
@@ -163,20 +163,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">PromotedT</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Kind) -&gt; BackendConstructor -&gt; NonEmpty Kind
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190447"><span class="hs-identifier hs-var">backend</span></a></span><span>
+</span><a href="#local-6989586621689190947"><span class="hs-identifier hs-var">backend</span></a></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="hs-comment">-- | Associates to a backend the Name of its corresponding tag.</span><span>
 </span><span id="line-65"></span><span class="annot"><a href="Hasura.SQL.TH.html#getBackendTagName"><span class="hs-identifier hs-type">getBackendTagName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.TH.html#BackendConstructor"><span class="hs-identifier hs-type">BackendConstructor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span>
 </span><span id="line-66"></span><span id="getBackendTagName"><span class="annot"><span class="annottext">getBackendTagName :: BackendConstructor -&gt; Name
-</span><a href="Hasura.SQL.TH.html#getBackendTagName"><span class="hs-identifier hs-var hs-var">getBackendTagName</span></a></span></span><span> </span><span id="local-6989586621689190443"><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190443"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
+</span><a href="Hasura.SQL.TH.html#getBackendTagName"><span class="hs-identifier hs-var hs-var">getBackendTagName</span></a></span></span><span> </span><span id="local-6989586621689190943"><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190943"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Name) -&gt; String -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; String) -&gt; BackendConstructor -&gt; String
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; String
 </span><span class="hs-identifier hs-var">nameBase</span></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190443"><span class="hs-identifier hs-var">backend</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><a href="#local-6989586621689190943"><span class="hs-identifier hs-var">backend</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Tag&quot;</span></span><span>
@@ -184,15 +184,15 @@ forall a. [a] -&gt; [a] -&gt; [a]
 </span><span id="line-68"></span><span class="hs-comment">-- | Associates to a backend the Name of its corresponding 'AnyBackend' constructor.</span><span>
 </span><span id="line-69"></span><span class="annot"><a href="Hasura.SQL.TH.html#getBackendValueName"><span class="hs-identifier hs-type">getBackendValueName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.TH.html#BackendConstructor"><span class="hs-identifier hs-type">BackendConstructor</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span>
 </span><span id="line-70"></span><span id="getBackendValueName"><span class="annot"><span class="annottext">getBackendValueName :: BackendConstructor -&gt; Name
-</span><a href="Hasura.SQL.TH.html#getBackendValueName"><span class="hs-identifier hs-var hs-var">getBackendValueName</span></a></span></span><span> </span><span id="local-6989586621689190440"><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190440"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
+</span><a href="Hasura.SQL.TH.html#getBackendValueName"><span class="hs-identifier hs-var hs-var">getBackendValueName</span></a></span></span><span> </span><span id="local-6989586621689190940"><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190940"><span class="hs-identifier hs-var">backend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Name) -&gt; String -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; String) -&gt; BackendConstructor -&gt; String
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; String
 </span><span class="hs-identifier hs-var">nameBase</span></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190440"><span class="hs-identifier hs-var">backend</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><a href="#local-6989586621689190940"><span class="hs-identifier hs-var">backend</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Value&quot;</span></span><span>
@@ -215,71 +215,71 @@ forall a. [a] -&gt; [a] -&gt; [a]
 -&gt; (BackendConstructor -&gt; Q Exp)
 -&gt; Maybe (Q Exp)
 -&gt; Q Exp
-</span><a href="Hasura.SQL.TH.html#backendCase"><span class="hs-identifier hs-var hs-var">backendCase</span></a></span></span><span> </span><span id="local-6989586621689190439"><span class="annot"><span class="annottext">Q Exp
-</span><a href="#local-6989586621689190439"><span class="hs-identifier hs-var">caseExp</span></a></span></span><span> </span><span id="local-6989586621689190438"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Pat
-</span><a href="#local-6989586621689190438"><span class="hs-identifier hs-var">toPat</span></a></span></span><span> </span><span id="local-6989586621689190437"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Exp
-</span><a href="#local-6989586621689190437"><span class="hs-identifier hs-var">toBody</span></a></span></span><span> </span><span id="local-6989586621689190436"><span class="annot"><span class="annottext">Maybe (Q Exp)
-</span><a href="#local-6989586621689190436"><span class="hs-identifier hs-var">defaultCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621689190435"><span class="annot"><span class="annottext">Exp
-</span><a href="#local-6989586621689190435"><span class="hs-identifier hs-var">cexp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Q Exp
-</span><a href="#local-6989586621689190439"><span class="hs-identifier hs-var">caseExp</span></a></span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621689190434"><span class="annot"><span class="annottext">[Match]
-</span><a href="#local-6989586621689190434"><span class="hs-identifier hs-var">matches</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(BackendConstructor -&gt; Q Match) -&gt; Q [Match]
+</span><a href="Hasura.SQL.TH.html#backendCase"><span class="hs-identifier hs-var hs-var">backendCase</span></a></span></span><span> </span><span id="local-6989586621689190939"><span class="annot"><span class="annottext">Q Exp
+</span><a href="#local-6989586621689190939"><span class="hs-identifier hs-var">caseExp</span></a></span></span><span> </span><span id="local-6989586621689190938"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Pat
+</span><a href="#local-6989586621689190938"><span class="hs-identifier hs-var">toPat</span></a></span></span><span> </span><span id="local-6989586621689190937"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Exp
+</span><a href="#local-6989586621689190937"><span class="hs-identifier hs-var">toBody</span></a></span></span><span> </span><span id="local-6989586621689190936"><span class="annot"><span class="annottext">Maybe (Q Exp)
+</span><a href="#local-6989586621689190936"><span class="hs-identifier hs-var">defaultCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621689190935"><span class="annot"><span class="annottext">Exp
+</span><a href="#local-6989586621689190935"><span class="hs-identifier hs-var">cexp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Q Exp
+</span><a href="#local-6989586621689190939"><span class="hs-identifier hs-var">caseExp</span></a></span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621689190934"><span class="annot"><span class="annottext">[Match]
+</span><a href="#local-6989586621689190934"><span class="hs-identifier hs-var">matches</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(BackendConstructor -&gt; Q Match) -&gt; Q [Match]
 forall a. (BackendConstructor -&gt; Q a) -&gt; Q [a]
-</span><a href="Hasura.SQL.TH.html#forEachBackend"><span class="hs-identifier hs-var">forEachBackend</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689190433"><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190433"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621689190432"><span class="annot"><span class="annottext">Pat
-</span><a href="#local-6989586621689190432"><span class="hs-identifier hs-var">pat</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Pat
-</span><a href="#local-6989586621689190438"><span class="hs-identifier hs-var">toPat</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190433"><span class="hs-identifier hs-var">b</span></a></span><span>
-</span><span id="line-89"></span><span>    </span><span id="local-6989586621689190431"><span class="annot"><span class="annottext">Exp
-</span><a href="#local-6989586621689190431"><span class="hs-identifier hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Exp
-</span><a href="#local-6989586621689190437"><span class="hs-identifier hs-var">toBody</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190433"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="Hasura.SQL.TH.html#forEachBackend"><span class="hs-identifier hs-var">forEachBackend</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689190933"><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190933"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621689190932"><span class="annot"><span class="annottext">Pat
+</span><a href="#local-6989586621689190932"><span class="hs-identifier hs-var">pat</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Pat
+</span><a href="#local-6989586621689190938"><span class="hs-identifier hs-var">toPat</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190933"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621689190931"><span class="annot"><span class="annottext">Exp
+</span><a href="#local-6989586621689190931"><span class="hs-identifier hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Exp
+</span><a href="#local-6989586621689190937"><span class="hs-identifier hs-var">toBody</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190933"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-90"></span><span>    </span><span class="annot"><span class="annottext">Match -&gt; Q Match
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Match -&gt; Q Match) -&gt; Match -&gt; Q Match
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Pat -&gt; Body -&gt; [Dec] -&gt; Match
 </span><span class="hs-identifier hs-var">Match</span></span><span> </span><span class="annot"><span class="annottext">Pat
-</span><a href="#local-6989586621689190432"><span class="hs-identifier hs-var">pat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Body
+</span><a href="#local-6989586621689190932"><span class="hs-identifier hs-var">pat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Body
 </span><span class="hs-identifier hs-var">NormalB</span></span><span> </span><span class="annot"><span class="annottext">Exp
-</span><a href="#local-6989586621689190431"><span class="hs-identifier hs-var">body</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-91"></span><span>  </span><span id="local-6989586621689190428"><span class="annot"><span class="annottext">[Match]
-</span><a href="#local-6989586621689190428"><span class="hs-identifier hs-var">allMatches</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Q Exp)
-</span><a href="#local-6989586621689190436"><span class="hs-identifier hs-var">defaultCase</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689190931"><span class="hs-identifier hs-var">body</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621689190928"><span class="annot"><span class="annottext">[Match]
+</span><a href="#local-6989586621689190928"><span class="hs-identifier hs-var">allMatches</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Q Exp)
+</span><a href="#local-6989586621689190936"><span class="hs-identifier hs-var">defaultCase</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">Maybe (Q Exp)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Match] -&gt; Q [Match]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">[Match]
-</span><a href="#local-6989586621689190434"><span class="hs-identifier hs-var">matches</span></a></span><span>
-</span><span id="line-93"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689190427"><span class="annot"><span class="annottext">Q Exp
-</span><a href="#local-6989586621689190427"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-94"></span><span>      </span><span id="local-6989586621689190426"><span class="annot"><span class="annottext">Body
-</span><a href="#local-6989586621689190426"><span class="hs-identifier hs-var">defaultBody</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Body
+</span><a href="#local-6989586621689190934"><span class="hs-identifier hs-var">matches</span></a></span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689190927"><span class="annot"><span class="annottext">Q Exp
+</span><a href="#local-6989586621689190927"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-94"></span><span>      </span><span id="local-6989586621689190926"><span class="annot"><span class="annottext">Body
+</span><a href="#local-6989586621689190926"><span class="hs-identifier hs-var">defaultBody</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Body
 </span><span class="hs-identifier hs-var">NormalB</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Body) -&gt; Q Exp -&gt; Q Body
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Q Exp
-</span><a href="#local-6989586621689190427"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689190927"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">[Match] -&gt; Q [Match]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">([Match] -&gt; Q [Match]) -&gt; [Match] -&gt; Q [Match]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Match]
-</span><a href="#local-6989586621689190434"><span class="hs-identifier hs-var">matches</span></a></span><span> </span><span class="annot"><span class="annottext">[Match] -&gt; [Match] -&gt; [Match]
+</span><a href="#local-6989586621689190934"><span class="hs-identifier hs-var">matches</span></a></span><span> </span><span class="annot"><span class="annottext">[Match] -&gt; [Match] -&gt; [Match]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Pat -&gt; Body -&gt; [Dec] -&gt; Match
 </span><span class="hs-identifier hs-var">Match</span></span><span> </span><span class="annot"><span class="annottext">Pat
 </span><span class="hs-identifier hs-var">WildP</span></span><span> </span><span class="annot"><span class="annottext">Body
-</span><a href="#local-6989586621689190426"><span class="hs-identifier hs-var">defaultBody</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689190926"><span class="hs-identifier hs-var">defaultBody</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">]</span><span>
 </span><span id="line-96"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Exp -&gt; [Match] -&gt; Exp
 </span><span class="hs-identifier hs-var">CaseE</span></span><span> </span><span class="annot"><span class="annottext">Exp
-</span><a href="#local-6989586621689190435"><span class="hs-identifier hs-var">cexp</span></a></span><span> </span><span class="annot"><span class="annottext">[Match]
-</span><a href="#local-6989586621689190428"><span class="hs-identifier hs-var">allMatches</span></a></span><span>
+</span><a href="#local-6989586621689190935"><span class="hs-identifier hs-var">cexp</span></a></span><span> </span><span class="annot"><span class="annottext">[Match]
+</span><a href="#local-6989586621689190928"><span class="hs-identifier hs-var">allMatches</span></a></span><span>
 </span><span id="line-97"></span><span>
 </span><span id="line-98"></span><span class="hs-comment">-- | Creates a data type in which there's one constructor per backend. While</span><span>
 </span><span id="line-99"></span><span class="hs-comment">-- this only returns one declaration, it nonetheless returns a @[Dec]@ as it's</span><span>
@@ -299,16 +299,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; (BackendConstructor -&gt; Q Con)
 -&gt; [Name]
 -&gt; Q [Dec]
-</span><a href="Hasura.SQL.TH.html#backendData"><span class="hs-identifier hs-var hs-var">backendData</span></a></span></span><span> </span><span id="local-6989586621689190423"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190423"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689190422"><span class="annot"><span class="annottext">[TyVarBndr]
-</span><a href="#local-6989586621689190422"><span class="hs-identifier hs-var">tVars</span></a></span></span><span> </span><span id="local-6989586621689190421"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Con
-</span><a href="#local-6989586621689190421"><span class="hs-identifier hs-var">mkCon</span></a></span></span><span> </span><span id="local-6989586621689190420"><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621689190420"><span class="hs-identifier hs-var">derivs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-112"></span><span>  </span><span id="local-6989586621689190419"><span class="annot"><span class="annottext">[Con]
-</span><a href="#local-6989586621689190419"><span class="hs-identifier hs-var">constructors</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(BackendConstructor -&gt; Q Con) -&gt; Q [Con]
+</span><a href="Hasura.SQL.TH.html#backendData"><span class="hs-identifier hs-var hs-var">backendData</span></a></span></span><span> </span><span id="local-6989586621689190923"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689190923"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689190922"><span class="annot"><span class="annottext">[TyVarBndr]
+</span><a href="#local-6989586621689190922"><span class="hs-identifier hs-var">tVars</span></a></span></span><span> </span><span id="local-6989586621689190921"><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Con
+</span><a href="#local-6989586621689190921"><span class="hs-identifier hs-var">mkCon</span></a></span></span><span> </span><span id="local-6989586621689190920"><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621689190920"><span class="hs-identifier hs-var">derivs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-112"></span><span>  </span><span id="local-6989586621689190919"><span class="annot"><span class="annottext">[Con]
+</span><a href="#local-6989586621689190919"><span class="hs-identifier hs-var">constructors</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(BackendConstructor -&gt; Q Con) -&gt; Q [Con]
 forall a. (BackendConstructor -&gt; Q a) -&gt; Q [a]
 </span><a href="Hasura.SQL.TH.html#forEachBackend"><span class="hs-identifier hs-var">forEachBackend</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConstructor -&gt; Q Con
-</span><a href="#local-6989586621689190421"><span class="hs-identifier hs-var">mkCon</span></a></span><span>
+</span><a href="#local-6989586621689190921"><span class="hs-identifier hs-var">mkCon</span></a></span><span>
 </span><span id="line-113"></span><span>  </span><span class="annot"><span class="annottext">[Dec] -&gt; Q [Dec]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Cxt
@@ -319,11 +319,11 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; [DerivClause]
 -&gt; Dec
 </span><span class="hs-identifier hs-var">DataD</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190423"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">[TyVarBndr]
-</span><a href="#local-6989586621689190422"><span class="hs-identifier hs-var">tVars</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Kind
+</span><a href="#local-6989586621689190923"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">[TyVarBndr]
+</span><a href="#local-6989586621689190922"><span class="hs-identifier hs-var">tVars</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Kind
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">[Con]
-</span><a href="#local-6989586621689190419"><span class="hs-identifier hs-var">constructors</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe DerivStrategy -&gt; Cxt -&gt; DerivClause
+</span><a href="#local-6989586621689190919"><span class="hs-identifier hs-var">constructors</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe DerivStrategy -&gt; Cxt -&gt; DerivClause
 </span><span class="hs-identifier hs-var">DerivClause</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DerivStrategy -&gt; Maybe DerivStrategy
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">DerivStrategy
@@ -333,7 +333,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Kind
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621689190420"><span class="hs-identifier hs-var">derivs</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689190920"><span class="hs-identifier hs-var">derivs</span></a></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- | Generates a case expression that applies a function @f@ to each possible value</span><span>
 </span><span id="line-116"></span><span class="hs-comment">-- of an 'AnyBackend' @e@:</span><span>
@@ -351,25 +351,25 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span id="line-128"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-129"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-130"></span><span id="mkDispatch"><span class="annot"><span class="annottext">mkDispatch :: Name -&gt; Name -&gt; Q Exp
-</span><a href="Hasura.SQL.TH.html#mkDispatch"><span class="hs-identifier hs-var hs-var">mkDispatch</span></a></span></span><span> </span><span id="local-6989586621689190416"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190416"><span class="hs-identifier hs-var">func</span></a></span></span><span> </span><span id="local-6989586621689190415"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190415"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-131"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689190414"><span class="annot"><span class="annottext">fE :: Q Exp
-</span><a href="#local-6989586621689190414"><span class="hs-identifier hs-var hs-var">fE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
+</span><a href="Hasura.SQL.TH.html#mkDispatch"><span class="hs-identifier hs-var hs-var">mkDispatch</span></a></span></span><span> </span><span id="local-6989586621689190916"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689190916"><span class="hs-identifier hs-var">func</span></a></span></span><span> </span><span id="local-6989586621689190915"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689190915"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689190914"><span class="annot"><span class="annottext">fE :: Q Exp
+</span><a href="#local-6989586621689190914"><span class="hs-identifier hs-var hs-var">fE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190416"><span class="hs-identifier hs-var">func</span></a></span><span>
-</span><span id="line-132"></span><span>      </span><span id="local-6989586621689190412"><span class="annot"><span class="annottext">vE :: Q Exp
-</span><a href="#local-6989586621689190412"><span class="hs-identifier hs-var hs-var">vE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
+</span><a href="#local-6989586621689190916"><span class="hs-identifier hs-var">func</span></a></span><span>
+</span><span id="line-132"></span><span>      </span><span id="local-6989586621689190912"><span class="annot"><span class="annottext">vE :: Q Exp
+</span><a href="#local-6989586621689190912"><span class="hs-identifier hs-var hs-var">vE</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689190415"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689190915"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-133"></span><span>  </span><span class="annot"><span class="annottext">Q Exp
 -&gt; (BackendConstructor -&gt; Q Pat)
 -&gt; (BackendConstructor -&gt; Q Exp)
@@ -378,15 +378,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.SQL.TH.html#backendCase"><span class="hs-identifier hs-var">backendCase</span></a></span><span>
 </span><span id="line-134"></span><span>    </span><span class="hs-special">[|</span><span class="">$vE</span><span class="hs-special">|]</span><span>
 </span><span id="line-135"></span><span>    </span><span class="hs-comment">-- the pattern for a backend</span><span>
-</span><span id="line-136"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689190411"><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190411"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Pat -&gt; Q Pat
+</span><span id="line-136"></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689190911"><span class="annot"><span class="annottext">BackendConstructor
+</span><a href="#local-6989586621689190911"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Pat -&gt; Q Pat
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Pat -&gt; Q Pat) -&gt; Pat -&gt; Q Pat
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Pat] -&gt; Pat
 </span><span class="hs-identifier hs-var">ConP</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BackendConstructor -&gt; Name
 </span><a href="Hasura.SQL.TH.html#getBackendValueName"><span class="hs-identifier hs-var">getBackendValueName</span></a></span><span> </span><span class="annot"><span class="annottext">BackendConstructor
-</span><a href="#local-6989586621689190411"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; Pat
+</span><a href="#local-6989586621689190911"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; Pat
 </span><span class="hs-identifier hs-var">VarP</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Pat) -&gt; Name -&gt; Pat
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Name

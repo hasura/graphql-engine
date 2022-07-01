@@ -45,26 +45,26 @@
 </span><span id="line-45"></span><span class="hs-comment">-- The generated top-level nodes of this table will be like `users_address`,</span><span>
 </span><span id="line-46"></span><span class="hs-comment">-- `insert_users_address` etc</span><span>
 </span><span id="line-47"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-type">getTableGQLName</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-48"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278097"><span class="annot"><a href="#local-6989586621689278097"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278096"><span class="annot"><a href="#local-6989586621689278096"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278097"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278096"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-50"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278097"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-51"></span><span>  </span><span class="annot"><a href="#local-6989586621689278096"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278612"><span class="annot"><a href="#local-6989586621689278612"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278611"><span class="annot"><a href="#local-6989586621689278611"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278612"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278611"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-50"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278612"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="#local-6989586621689278611"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
 </span><span id="line-52"></span><span id="getTableGQLName"><span class="annot"><span class="annottext">getTableGQLName :: TableInfo b -&gt; m Name
-</span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var hs-var">getTableGQLName</span></a></span></span><span> </span><span id="local-6989586621689277964"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277964"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-53"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689277963"><span class="annot"><span class="annottext">coreInfo :: TableCoreInfo b
-</span><a href="#local-6989586621689277963"><span class="hs-identifier hs-var hs-var">coreInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfo b
+</span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var hs-var">getTableGQLName</span></a></span></span><span> </span><span id="local-6989586621689278479"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278479"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689278478"><span class="annot"><span class="annottext">coreInfo :: TableCoreInfo b
+</span><a href="#local-6989586621689278478"><span class="hs-identifier hs-var hs-var">coreInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfo b
 forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277964"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-54"></span><span>      </span><span id="local-6989586621689277961"><span class="annot"><span class="annottext">tableName :: TableName b
-</span><a href="#local-6989586621689277961"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; TableName b
+</span><a href="#local-6989586621689278479"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-54"></span><span>      </span><span id="local-6989586621689278476"><span class="annot"><span class="annottext">tableName :: TableName b
+</span><a href="#local-6989586621689278476"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; TableName b
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#_tciName"><span class="hs-identifier hs-var hs-var">_tciName</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689277963"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
-</span><span id="line-55"></span><span>      </span><span id="local-6989586621689277959"><span class="annot"><span class="annottext">tableCustomName :: Maybe Name
-</span><a href="#local-6989586621689277959"><span class="hs-identifier hs-var hs-var">tableCustomName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableConfig b -&gt; Maybe Name
+</span><a href="#local-6989586621689278478"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621689278474"><span class="annot"><span class="annottext">tableCustomName :: Maybe Name
+</span><a href="#local-6989586621689278474"><span class="hs-identifier hs-var hs-var">tableCustomName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableConfig b -&gt; Maybe Name
 forall (b :: BackendType). TableConfig b -&gt; Maybe Name
 </span><a href="Hasura.RQL.Types.Table.html#_tcCustomName"><span class="hs-identifier hs-var hs-var">_tcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">(TableConfig b -&gt; Maybe Name) -&gt; TableConfig b -&gt; Maybe Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -72,17 +72,17 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; TableConfig b
 </span><a href="Hasura.RQL.Types.Table.html#_tciCustomConfig"><span class="hs-identifier hs-var hs-var">_tciCustomConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689277963"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
+</span><a href="#local-6989586621689278478"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
 </span><span id="line-56"></span><span>  </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689277959"><span class="hs-identifier hs-var">tableCustomName</span></a></span><span>
+</span><a href="#local-6989586621689278474"><span class="hs-identifier hs-var">tableCustomName</span></a></span><span>
 </span><span id="line-57"></span><span>    </span><span class="annot"><span class="annottext">Maybe Name -&gt; Either QErr Name -&gt; Either QErr Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; Either QErr Name
 forall (b :: BackendType).
 Backend b =&gt;
 TableName b -&gt; Either QErr Name
-</span><a href="Hasura.RQL.Types.Backend.html#tableGraphQLName"><span class="hs-identifier hs-var">tableGraphQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689278097"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689277961"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="Hasura.RQL.Types.Backend.html#tableGraphQLName"><span class="hs-identifier hs-var">tableGraphQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689278612"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689278476"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">Either QErr Name -&gt; (QErr -&gt; m Name) -&gt; m Name
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
@@ -94,26 +94,26 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span id="line-60"></span><span class="hs-comment">-- | similar to @getTableGQLName@ but returns table name as a list with name pieces</span><span>
 </span><span id="line-61"></span><span class="hs-comment">--   instead of concatenating schema and table name together.</span><span>
 </span><span id="line-62"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#getTableIdentifierName"><span class="hs-identifier hs-type">getTableIdentifierName</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689277952"><span class="annot"><a href="#local-6989586621689277952"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689277951"><span class="annot"><a href="#local-6989586621689277951"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277952"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277951"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277952"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-66"></span><span>  </span><span class="annot"><a href="#local-6989586621689277951"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278467"><span class="annot"><a href="#local-6989586621689278467"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278466"><span class="annot"><a href="#local-6989586621689278466"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278467"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278466"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278467"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-66"></span><span>  </span><span class="annot"><a href="#local-6989586621689278466"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span id="getTableIdentifierName"><span class="annot"><span class="annottext">getTableIdentifierName :: TableInfo b -&gt; m GQLNameIdentifier
-</span><a href="Hasura.GraphQL.Schema.Table.html#getTableIdentifierName"><span class="hs-identifier hs-var hs-var">getTableIdentifierName</span></a></span></span><span> </span><span id="local-6989586621689277950"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277950"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-68"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689277949"><span class="annot"><span class="annottext">coreInfo :: TableCoreInfo b
-</span><a href="#local-6989586621689277949"><span class="hs-identifier hs-var hs-var">coreInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfo b
+</span><a href="Hasura.GraphQL.Schema.Table.html#getTableIdentifierName"><span class="hs-identifier hs-var hs-var">getTableIdentifierName</span></a></span></span><span> </span><span id="local-6989586621689278465"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278465"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689278464"><span class="annot"><span class="annottext">coreInfo :: TableCoreInfo b
+</span><a href="#local-6989586621689278464"><span class="hs-identifier hs-var hs-var">coreInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableCoreInfo b
 forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277950"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-69"></span><span>      </span><span id="local-6989586621689277948"><span class="annot"><span class="annottext">tableName :: TableName b
-</span><a href="#local-6989586621689277948"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; TableName b
+</span><a href="#local-6989586621689278465"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-69"></span><span>      </span><span id="local-6989586621689278463"><span class="annot"><span class="annottext">tableName :: TableName b
+</span><a href="#local-6989586621689278463"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b -&gt; TableName b
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#_tciName"><span class="hs-identifier hs-var hs-var">_tciName</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689277949"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
-</span><span id="line-70"></span><span>      </span><span id="local-6989586621689277947"><span class="annot"><span class="annottext">tableCustomName :: Maybe Name
-</span><a href="#local-6989586621689277947"><span class="hs-identifier hs-var hs-var">tableCustomName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableConfig b -&gt; Maybe Name
+</span><a href="#local-6989586621689278464"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
+</span><span id="line-70"></span><span>      </span><span id="local-6989586621689278462"><span class="annot"><span class="annottext">tableCustomName :: Maybe Name
+</span><a href="#local-6989586621689278462"><span class="hs-identifier hs-var hs-var">tableCustomName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableConfig b -&gt; Maybe Name
 forall (b :: BackendType). TableConfig b -&gt; Maybe Name
 </span><a href="Hasura.RQL.Types.Table.html#_tcCustomName"><span class="hs-identifier hs-var hs-var">_tcCustomName</span></a></span><span> </span><span class="annot"><span class="annottext">(TableConfig b -&gt; Maybe Name) -&gt; TableConfig b -&gt; Maybe Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -121,7 +121,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; TableConfig b
 </span><a href="Hasura.RQL.Types.Table.html#_tciCustomConfig"><span class="hs-identifier hs-var hs-var">_tciCustomConfig</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
-</span><a href="#local-6989586621689277949"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
+</span><a href="#local-6989586621689278464"><span class="hs-identifier hs-var">coreInfo</span></a></span><span>
 </span><span id="line-71"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">m GQLNameIdentifier
 -&gt; (Name -&gt; m GQLNameIdentifier)
 -&gt; Maybe Name
@@ -137,8 +137,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType).
 Backend b =&gt;
 TableName b -&gt; Either QErr GQLNameIdentifier
-</span><a href="Hasura.RQL.Types.Backend.html#getTableIdentifier"><span class="hs-identifier hs-var">getTableIdentifier</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689277952"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689277948"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.RQL.Types.Backend.html#getTableIdentifier"><span class="hs-identifier hs-var">getTableIdentifier</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689278467"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689278463"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; m GQLNameIdentifier
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(GQLNameIdentifier -&gt; m GQLNameIdentifier)
@@ -147,7 +147,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; [NameSuffix] -&gt; GQLNameIdentifier
 </span><a href="Data.Text.Casing.html#Identifier"><span class="hs-operator hs-var">`Identifier`</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689277947"><span class="hs-identifier hs-var">tableCustomName</span></a></span><span>
+</span><a href="#local-6989586621689278462"><span class="hs-identifier hs-var">tableCustomName</span></a></span><span>
 </span><span id="line-75"></span><span>
 </span><span id="line-76"></span><span class="hs-comment">-- | Table select columns enum</span><span>
 </span><span id="line-77"></span><span class="hs-comment">--</span><span>
@@ -158,45 +158,45 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-82"></span><span class="hs-comment">-- Return Nothing if there's no column the current user has &quot;select&quot;</span><span>
 </span><span id="line-83"></span><span class="hs-comment">-- permissions for.</span><span>
 </span><span id="line-84"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumnsEnum"><span class="hs-identifier hs-type">tableSelectColumnsEnum</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689277941"><span class="annot"><a href="#local-6989586621689277941"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689277940"><span class="annot"><a href="#local-6989586621689277940"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689277939"><span class="annot"><a href="#local-6989586621689277939"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689277938"><span class="annot"><a href="#local-6989586621689277938"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-86"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277941"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277940"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277939"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277938"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-87"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277941"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-88"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277941"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-89"></span><span>  </span><span class="annot"><a href="#local-6989586621689277939"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277938"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277941"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278456"><span class="annot"><a href="#local-6989586621689278456"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278455"><span class="annot"><a href="#local-6989586621689278455"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278454"><span class="annot"><a href="#local-6989586621689278454"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689278453"><span class="annot"><a href="#local-6989586621689278453"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-86"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278456"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278455"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278454"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278453"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278456"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-88"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278456"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><a href="#local-6989586621689278454"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278453"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278456"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span id="tableSelectColumnsEnum"><span class="annot"><span class="annottext">tableSelectColumnsEnum :: SourceInfo b
 -&gt; TableInfo b -&gt; m (Maybe (Parser 'Both n (Column b)))
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumnsEnum"><span class="hs-identifier hs-var hs-var">tableSelectColumnsEnum</span></a></span></span><span> </span><span id="local-6989586621689277937"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689277937"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689277936"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277936"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-91"></span><span>  </span><span id="local-6989586621689277935"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277935"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m Name
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumnsEnum"><span class="hs-identifier hs-var hs-var">tableSelectColumnsEnum</span></a></span></span><span> </span><span id="local-6989586621689278452"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689278452"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689278451"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278451"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621689278450"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278450"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m Name
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m Name
-</span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689277941"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277936"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-92"></span><span>  </span><span id="local-6989586621689277934"><span class="annot"><span class="annottext">[ColumnInfo b]
-</span><a href="#local-6989586621689277934"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableInfo b -&gt; m [ColumnInfo b]
+</span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689278456"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278451"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621689278449"><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689278449"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableInfo b -&gt; m [ColumnInfo b]
 forall (b :: BackendType) r (m :: * -&gt; *).
 (Backend b, MonadError QErr m, MonadReader r m, Has RoleName r) =&gt;
 SourceInfo b -&gt; TableInfo b -&gt; m [ColumnInfo b]
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumns"><span class="hs-identifier hs-var">tableSelectColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689277937"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277936"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621689277933"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277933"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
+</span><a href="#local-6989586621689278452"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278451"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621689278448"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278448"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
 forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Parser.Names.html#mkTypename"><span class="hs-identifier hs-var">P.mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; m Name) -&gt; Name -&gt; m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277935"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689278450"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__select_column"><span class="hs-identifier hs-var">Name.__select_column</span></a></span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689277930"><span class="annot"><span class="annottext">description :: Maybe Description
-</span><a href="#local-6989586621689277930"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689278445"><span class="annot"><span class="annottext">description :: Maybe Description
+</span><a href="#local-6989586621689278445"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
@@ -213,7 +213,7 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableName b
 forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277936"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278451"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-98"></span><span>  </span><span class="annot"><span class="annottext">Maybe (Parser 'Both n (Column b))
 -&gt; m (Maybe (Parser 'Both n (Column b)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -234,8 +234,8 @@ Name
 -&gt; NonEmpty (Definition origin EnumValueInfo, a)
 -&gt; Parser origin 'Both m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#enum"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277933"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689277930"><span class="hs-identifier hs-var">description</span></a></span><span>
+</span><a href="#local-6989586621689278448"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689278445"><span class="hs-identifier hs-var">description</span></a></span><span>
 </span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">(NonEmpty (Definition MetadataObjId EnumValueInfo, Column b)
  -&gt; Parser 'Both n (Column b))
 -&gt; Maybe
@@ -249,26 +249,26 @@ forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">nonEmpty</span></span><span>
 </span><span id="line-101"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Definition MetadataObjId EnumValueInfo
 forall origin. Name -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621689277923"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Definition MetadataObjId EnumValueInfo)
+</span><a href="#local-6989586621689278438"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Definition MetadataObjId EnumValueInfo)
 -&gt; Name -&gt; Definition MetadataObjId EnumValueInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Name
 forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277921"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689278436"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-102"></span><span>            </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277921"><span class="hs-identifier hs-var">column</span></a></span><span>
+</span><a href="#local-6989586621689278436"><span class="hs-identifier hs-var">column</span></a></span><span>
 </span><span id="line-103"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-104"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689277921"><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277921"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
-</span><a href="#local-6989586621689277934"><span class="hs-identifier hs-var">columns</span></a></span><span>
+</span><span id="line-104"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689278436"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689278436"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689278449"><span class="hs-identifier hs-var">columns</span></a></span><span>
 </span><span id="line-105"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-107"></span><span>    </span><span id="local-6989586621689277923"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621689277923"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621689277919"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277919"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-107"></span><span>    </span><span id="local-6989586621689278438"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
+</span><a href="#local-6989586621689278438"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621689278434"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278434"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-108"></span><span>      </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Maybe origin
@@ -278,7 +278,7 @@ forall origin a.
 Name
 -&gt; Maybe Description -&gt; Maybe origin -&gt; a -&gt; Definition origin a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277919"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689278434"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
 -&gt; Description -&gt; Maybe Description
@@ -296,46 +296,46 @@ forall a. Maybe a
 </span><span id="line-113"></span><span class="hs-comment">-- table. Used for conflict resolution in &quot;insert&quot; mutations, among</span><span>
 </span><span id="line-114"></span><span class="hs-comment">-- others. Maps to the table_update_column object.</span><span>
 </span><span id="line-115"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumnsEnum"><span class="hs-identifier hs-type">tableUpdateColumnsEnum</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278052"><span class="annot"><a href="#local-6989586621689278052"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278051"><span class="annot"><a href="#local-6989586621689278051"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278050"><span class="annot"><a href="#local-6989586621689278050"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689278049"><span class="annot"><a href="#local-6989586621689278049"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-117"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278052"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278051"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278050"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278049"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-118"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278052"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-119"></span><span>  </span><span class="annot"><a href="#local-6989586621689278050"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278049"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278052"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278567"><span class="annot"><a href="#local-6989586621689278567"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278566"><span class="annot"><a href="#local-6989586621689278566"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278565"><span class="annot"><a href="#local-6989586621689278565"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689278564"><span class="annot"><a href="#local-6989586621689278564"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278567"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278566"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278565"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278564"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-118"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278567"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-119"></span><span>  </span><span class="annot"><a href="#local-6989586621689278565"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278564"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278567"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span id="tableUpdateColumnsEnum"><span class="annot"><span class="annottext">tableUpdateColumnsEnum :: TableInfo b -&gt; m (Maybe (Parser 'Both n (Column b)))
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumnsEnum"><span class="hs-identifier hs-var hs-var">tableUpdateColumnsEnum</span></a></span></span><span> </span><span id="local-6989586621689277916"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277916"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-121"></span><span>  </span><span id="local-6989586621689277915"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277915"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m Name
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumnsEnum"><span class="hs-identifier hs-var hs-var">tableUpdateColumnsEnum</span></a></span></span><span> </span><span id="local-6989586621689278431"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278431"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-121"></span><span>  </span><span id="local-6989586621689278430"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278430"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m Name
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277916"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621689277914"><span class="annot"><span class="annottext">[ColumnInfo b]
-</span><a href="#local-6989586621689277914"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m [ColumnInfo b]
+</span><a href="#local-6989586621689278431"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621689278429"><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689278429"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m [ColumnInfo b]
 forall (b :: BackendType) r (m :: * -&gt; *).
 (Backend b, MonadError QErr m, MonadReader r m, Has RoleName r) =&gt;
 TableInfo b -&gt; m [ColumnInfo b]
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumns"><span class="hs-identifier hs-var">tableUpdateColumns</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277916"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-123"></span><span>  </span><span id="local-6989586621689277913"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277913"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
+</span><a href="#local-6989586621689278431"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-123"></span><span>  </span><span id="local-6989586621689278428"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278428"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
 forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Parser.Names.html#mkTypename"><span class="hs-identifier hs-var">P.mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; m Name) -&gt; Name -&gt; m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277915"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689278430"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__update_column"><span class="hs-identifier hs-var">Name.__update_column</span></a></span><span>
-</span><span id="line-124"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689277911"><span class="annot"><span class="annottext">tableName :: TableName b
-</span><a href="#local-6989586621689277911"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableName b
+</span><span id="line-124"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689278426"><span class="annot"><span class="annottext">tableName :: TableName b
+</span><a href="#local-6989586621689278426"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableName b
 forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277916"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-125"></span><span>      </span><span id="local-6989586621689277910"><span class="annot"><span class="annottext">enumDesc :: Maybe Description
-</span><a href="#local-6989586621689277910"><span class="hs-identifier hs-var hs-var">enumDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689278431"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-125"></span><span>      </span><span id="local-6989586621689278425"><span class="annot"><span class="annottext">enumDesc :: Maybe Description
+</span><a href="#local-6989586621689278425"><span class="hs-identifier hs-var hs-var">enumDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
 -&gt; Description -&gt; Maybe Description
@@ -347,27 +347,27 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;update columns of table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableName b -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689277911"><span class="hs-identifier hs-var">tableName</span></a></span><span>
-</span><span id="line-126"></span><span>      </span><span id="local-6989586621689277909"><span class="annot"><span class="annottext">enumValues :: [(Definition MetadataObjId EnumValueInfo, Column b)]
-</span><a href="#local-6989586621689277909"><span class="hs-identifier hs-var hs-var">enumValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-127"></span><span>        </span><span id="local-6989586621689277908"><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277908"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
-</span><a href="#local-6989586621689277914"><span class="hs-identifier hs-var">columns</span></a></span><span>
+</span><a href="#local-6989586621689278426"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><span id="line-126"></span><span>      </span><span id="local-6989586621689278424"><span class="annot"><span class="annottext">enumValues :: [(Definition MetadataObjId EnumValueInfo, Column b)]
+</span><a href="#local-6989586621689278424"><span class="hs-identifier hs-var hs-var">enumValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-127"></span><span>        </span><span id="local-6989586621689278423"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689278423"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689278429"><span class="hs-identifier hs-var">columns</span></a></span><span>
 </span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">(Definition MetadataObjId EnumValueInfo, Column b)
 -&gt; [(Definition MetadataObjId EnumValueInfo, Column b)]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Definition MetadataObjId EnumValueInfo
 forall origin. Name -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621689277907"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Definition MetadataObjId EnumValueInfo)
+</span><a href="#local-6989586621689278422"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Definition MetadataObjId EnumValueInfo)
 -&gt; Name -&gt; Definition MetadataObjId EnumValueInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Name
 forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277908"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
+</span><a href="#local-6989586621689278423"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277908"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689278423"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-129"></span><span>  </span><span class="annot"><span class="annottext">Maybe (Parser 'Both n (Column b))
 -&gt; m (Maybe (Parser 'Both n (Column b)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -387,8 +387,8 @@ Name
 -&gt; NonEmpty (Definition origin EnumValueInfo, a)
 -&gt; Parser origin 'Both m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#enum"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277913"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689277910"><span class="hs-identifier hs-var">enumDesc</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmpty (Definition MetadataObjId EnumValueInfo, Column b)
+</span><a href="#local-6989586621689278428"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689278425"><span class="hs-identifier hs-var">enumDesc</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmpty (Definition MetadataObjId EnumValueInfo, Column b)
  -&gt; Parser 'Both n (Column b))
 -&gt; Maybe
      (NonEmpty (Definition MetadataObjId EnumValueInfo, Column b))
@@ -399,11 +399,11 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
      (NonEmpty (Definition MetadataObjId EnumValueInfo, Column b))
 forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><span class="hs-identifier hs-var">nonEmpty</span></span><span> </span><span class="annot"><span class="annottext">[(Definition MetadataObjId EnumValueInfo, Column b)]
-</span><a href="#local-6989586621689277909"><span class="hs-identifier hs-var">enumValues</span></a></span><span>
+</span><a href="#local-6989586621689278424"><span class="hs-identifier hs-var">enumValues</span></a></span><span>
 </span><span id="line-130"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-131"></span><span>    </span><span id="local-6989586621689277907"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621689277907"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621689277906"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277906"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621689278422"><span class="annot"><span class="annottext">define :: Name -&gt; Definition origin EnumValueInfo
+</span><a href="#local-6989586621689278422"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621689278421"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278421"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
 -&gt; Maybe origin
 -&gt; EnumValueInfo
@@ -412,7 +412,7 @@ forall origin a.
 Name
 -&gt; Maybe Description -&gt; Maybe origin -&gt; a -&gt; Definition origin a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277906"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689278421"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
 -&gt; Description -&gt; Maybe Description
@@ -427,25 +427,25 @@ forall a. Maybe a
 </span><span id="line-133"></span><span class="hs-comment">-- If there's no column for which the current user has &quot;update&quot;</span><span>
 </span><span id="line-134"></span><span class="hs-comment">-- permissions, this functions returns an enum that only contains a</span><span>
 </span><span id="line-135"></span><span class="hs-comment">-- placeholder, so as to still allow this type to exist in the schema.</span><span>
-</span><span id="line-136"></span><span id="local-6989586621689277902"><span id="local-6989586621689277903"><span id="local-6989586621689277904"><span id="local-6989586621689277905"><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#updateColumnsPlaceholderParser"><span class="hs-identifier hs-type">updateColumnsPlaceholderParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277905"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277904"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277903"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277902"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277905"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-139"></span><span>  </span><span class="annot"><a href="#local-6989586621689277903"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277902"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277905"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-136"></span><span id="local-6989586621689278417"><span id="local-6989586621689278418"><span id="local-6989586621689278419"><span id="local-6989586621689278420"><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#updateColumnsPlaceholderParser"><span class="hs-identifier hs-type">updateColumnsPlaceholderParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278420"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278419"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278418"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278417"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278420"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="#local-6989586621689278418"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278417"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278420"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-140"></span><span id="updateColumnsPlaceholderParser"><span class="annot"><span class="annottext">updateColumnsPlaceholderParser :: TableInfo backend -&gt; m (Parser 'Both n (Maybe (Column backend)))
-</span><a href="Hasura.GraphQL.Schema.Table.html#updateColumnsPlaceholderParser"><span class="hs-identifier hs-var hs-var">updateColumnsPlaceholderParser</span></a></span></span><span> </span><span id="local-6989586621689277901"><span class="annot"><span class="annottext">TableInfo backend
-</span><a href="#local-6989586621689277901"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-141"></span><span>  </span><span id="local-6989586621689277900"><span class="annot"><span class="annottext">Maybe (Parser MetadataObjId 'Both n (Column backend))
-</span><a href="#local-6989586621689277900"><span class="hs-identifier hs-var">maybeEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo backend
+</span><a href="Hasura.GraphQL.Schema.Table.html#updateColumnsPlaceholderParser"><span class="hs-identifier hs-var hs-var">updateColumnsPlaceholderParser</span></a></span></span><span> </span><span id="local-6989586621689278416"><span class="annot"><span class="annottext">TableInfo backend
+</span><a href="#local-6989586621689278416"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-141"></span><span>  </span><span id="local-6989586621689278415"><span class="annot"><span class="annottext">Maybe (Parser MetadataObjId 'Both n (Column backend))
+</span><a href="#local-6989586621689278415"><span class="hs-identifier hs-var">maybeEnum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo backend
 -&gt; m (Maybe (Parser MetadataObjId 'Both n (Column backend)))
 forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 TableInfo b -&gt; m (Maybe (Parser 'Both n (Column b)))
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumnsEnum"><span class="hs-identifier hs-var">tableUpdateColumnsEnum</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo backend
-</span><a href="#local-6989586621689277901"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278416"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-142"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (Parser MetadataObjId 'Both n (Column backend))
-</span><a href="#local-6989586621689277900"><span class="hs-identifier hs-var">maybeEnum</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-143"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689277899"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Column backend)
-</span><a href="#local-6989586621689277899"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (Maybe (Column backend))
+</span><a href="#local-6989586621689278415"><span class="hs-identifier hs-var">maybeEnum</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689278414"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Column backend)
+</span><a href="#local-6989586621689278414"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (Maybe (Column backend))
 -&gt; m (Parser 'Both n (Maybe (Column backend)))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Parser 'Both n (Maybe (Column backend))
@@ -460,25 +460,25 @@ forall a. a -&gt; Maybe a
 -&gt; Parser 'Both n (Maybe (Column backend))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (Column backend)
-</span><a href="#local-6989586621689277899"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689278414"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">Maybe (Parser MetadataObjId 'Both n (Column backend))
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-145"></span><span>      </span><span id="local-6989586621689277898"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277898"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo backend -&gt; m Name
+</span><span id="line-145"></span><span>      </span><span id="local-6989586621689278413"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278413"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo backend -&gt; m Name
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo backend
-</span><a href="#local-6989586621689277901"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-146"></span><span>      </span><span id="local-6989586621689277897"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277897"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
+</span><a href="#local-6989586621689278416"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-146"></span><span>      </span><span id="local-6989586621689278412"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689278412"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
 forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Parser.Names.html#mkTypename"><span class="hs-identifier hs-var">P.mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; m Name) -&gt; Name -&gt; m Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277898"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+</span><a href="#local-6989586621689278413"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__update_column"><span class="hs-identifier hs-var">Name.__update_column</span></a></span><span>
@@ -503,7 +503,7 @@ Name
 -&gt; NonEmpty (Definition origin EnumValueInfo, a)
 -&gt; Parser origin 'Both m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#enum"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689277897"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+</span><a href="#local-6989586621689278412"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
 -&gt; Description -&gt; Maybe Description
@@ -517,7 +517,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">TableInfo backend -&gt; TableName backend
 forall (b :: BackendType). TableInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo backend
-</span><a href="#local-6989586621689277901"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableName backend -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689278416"><span class="hs-identifier hs-var">tableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableName backend -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; (current role has no relevant permissions)&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NonEmpty
@@ -559,15 +559,15 @@ forall a. Maybe a
 </span><span id="line-152"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-153"></span><span>
 </span><span id="line-154"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tablePermissions"><span class="hs-identifier hs-type">tablePermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-155"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278030"><span class="annot"><a href="#local-6989586621689278030"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278032"><span class="annot"><a href="#local-6989586621689278032"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278031"><span class="annot"><a href="#local-6989586621689278031"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-156"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278032"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278031"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278032"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278030"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621689278031"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278030"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278545"><span class="annot"><a href="#local-6989586621689278545"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278547"><span class="annot"><a href="#local-6989586621689278547"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278546"><span class="annot"><a href="#local-6989586621689278546"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-156"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278547"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278546"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278547"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278545"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-158"></span><span>  </span><span class="annot"><a href="#local-6989586621689278546"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278545"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span id="tablePermissions"><span class="annot"><span class="annottext">tablePermissions :: TableInfo b -&gt; m (RolePermInfo b)
-</span><a href="Hasura.GraphQL.Schema.Table.html#tablePermissions"><span class="hs-identifier hs-var hs-var">tablePermissions</span></a></span></span><span> </span><span id="local-6989586621689277894"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277894"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-160"></span><span>  </span><span id="local-6989586621689277893"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689277893"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; RoleName) -&gt; m RoleName
+</span><a href="Hasura.GraphQL.Schema.Table.html#tablePermissions"><span class="hs-identifier hs-var hs-var">tablePermissions</span></a></span></span><span> </span><span id="local-6989586621689278409"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278409"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621689278408"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689278408"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; RoleName) -&gt; m RoleName
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; RoleName
 forall a t. Has a t =&gt; t -&gt; a
@@ -581,17 +581,17 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType).
 RoleName -&gt; TableInfo b -&gt; RolePermInfo b
 </span><a href="Hasura.RQL.Types.Table.html#getRolePermInfo"><span class="hs-identifier hs-var">getRolePermInfo</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689277893"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277894"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278408"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278409"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-162"></span><span>
 </span><span id="line-163"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-type">tableSelectPermissions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-164"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278023"><span class="annot"><a href="#local-6989586621689278023"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278025"><span class="annot"><a href="#local-6989586621689278025"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278024"><span class="annot"><a href="#local-6989586621689278024"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-165"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278025"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278024"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278025"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-166"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278023"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-167"></span><span>  </span><span class="annot"><a href="#local-6989586621689278024"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#SelPermInfo"><span class="hs-identifier hs-type">SelPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278023"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278538"><span class="annot"><a href="#local-6989586621689278538"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278540"><span class="annot"><a href="#local-6989586621689278540"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278539"><span class="annot"><a href="#local-6989586621689278539"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-165"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278540"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278539"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278540"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-166"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278538"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-167"></span><span>  </span><span class="annot"><a href="#local-6989586621689278539"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#SelPermInfo"><span class="hs-identifier hs-type">SelPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278538"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span id="tableSelectPermissions"><span class="annot"><span class="annottext">tableSelectPermissions :: TableInfo b -&gt; m (Maybe (SelPermInfo b))
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var hs-var">tableSelectPermissions</span></a></span></span><span> </span><span id="local-6989586621689277889"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277889"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (SelPermInfo b)
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var hs-var">tableSelectPermissions</span></a></span></span><span> </span><span id="local-6989586621689278404"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278404"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (SelPermInfo b)
 forall (b :: BackendType). RolePermInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="Hasura.RQL.Types.Table.html#_permSel"><span class="hs-identifier hs-var hs-var">_permSel</span></a></span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (SelPermInfo b))
 -&gt; m (RolePermInfo b) -&gt; m (Maybe (SelPermInfo b))
@@ -601,24 +601,24 @@ forall (b :: BackendType) r (m :: * -&gt; *).
 (MonadReader r m, Has RoleName r) =&gt;
 TableInfo b -&gt; m (RolePermInfo b)
 </span><a href="Hasura.GraphQL.Schema.Table.html#tablePermissions"><span class="hs-identifier hs-var">tablePermissions</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277889"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278404"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-169"></span><span>
 </span><span id="line-170"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableSelectFields"><span class="hs-identifier hs-type">tableSelectFields</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-171"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689277992"><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689277990"><span class="annot"><a href="#local-6989586621689277990"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689277991"><span class="annot"><a href="#local-6989586621689277991"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-172"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-173"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277991"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-174"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689277990"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277991"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-175"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277990"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-171"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278507"><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278505"><span class="annot"><a href="#local-6989586621689278505"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278506"><span class="annot"><a href="#local-6989586621689278506"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-173"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278506"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-174"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278505"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278506"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-175"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278505"><span class="hs-identifier hs-type">r</span></a></span><span>
 </span><span id="line-176"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-177"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-178"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-179"></span><span>  </span><span class="annot"><a href="#local-6989586621689277991"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-177"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-178"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-179"></span><span>  </span><span class="annot"><a href="#local-6989586621689278506"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-180"></span><span id="tableSelectFields"><span class="annot"><span class="annottext">tableSelectFields :: SourceInfo b -&gt; TableInfo b -&gt; m [FieldInfo b]
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectFields"><span class="hs-identifier hs-var hs-var">tableSelectFields</span></a></span></span><span> </span><span id="local-6989586621689277887"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689277887"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689277886"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277886"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-181"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689277885"><span class="annot"><span class="annottext">tableFields :: FieldInfoMap (FieldInfo b)
-</span><a href="#local-6989586621689277885"><span class="hs-identifier hs-var hs-var">tableFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectFields"><span class="hs-identifier hs-var hs-var">tableSelectFields</span></a></span></span><span> </span><span id="local-6989586621689278402"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689278402"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689278401"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278401"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-181"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689278400"><span class="annot"><span class="annottext">tableFields :: FieldInfoMap (FieldInfo b)
+</span><a href="#local-6989586621689278400"><span class="hs-identifier hs-var hs-var">tableFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
 -&gt; FieldInfoMap (FieldInfo b)
 forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
@@ -634,38 +634,38 @@ forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 -&gt; TableInfo b -&gt; FieldInfoMap (FieldInfo b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277886"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-182"></span><span>  </span><span id="local-6989586621689277883"><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
-</span><a href="#local-6989586621689277883"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m (Maybe (SelPermInfo b))
+</span><a href="#local-6989586621689278401"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-182"></span><span>  </span><span id="local-6989586621689278398"><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
+</span><a href="#local-6989586621689278398"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m (Maybe (SelPermInfo b))
 forall (b :: BackendType) r (m :: * -&gt; *).
 (MonadReader r m, Has RoleName r) =&gt;
 TableInfo b -&gt; m (Maybe (SelPermInfo b))
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277886"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278401"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-183"></span><span>  </span><span class="annot"><span class="annottext">(FieldInfo b -&gt; m Bool) -&gt; [FieldInfo b] -&gt; m [FieldInfo b]
 forall (m :: * -&gt; *) a.
 Applicative m =&gt;
 (a -&gt; m Bool) -&gt; [a] -&gt; m [a]
 </span><span class="hs-identifier hs-var">filterM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (SelPermInfo b) -&gt; FieldInfo b -&gt; m Bool
-</span><a href="#local-6989586621689277881"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
-</span><a href="#local-6989586621689277883"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; m [FieldInfo b])
+</span><a href="#local-6989586621689278396"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
+</span><a href="#local-6989586621689278398"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; m [FieldInfo b])
 -&gt; [FieldInfo b] -&gt; m [FieldInfo b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b) -&gt; [FieldInfo b]
 forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">Map.elems</span></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
-</span><a href="#local-6989586621689277885"><span class="hs-identifier hs-var">tableFields</span></a></span><span>
+</span><a href="#local-6989586621689278400"><span class="hs-identifier hs-var">tableFields</span></a></span><span>
 </span><span id="line-184"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-185"></span><span>    </span><span id="local-6989586621689277881"><span class="annot"><span class="annottext">canBeSelected :: Maybe (SelPermInfo b) -&gt; FieldInfo b -&gt; m Bool
-</span><a href="#local-6989586621689277881"><span class="hs-identifier hs-var hs-var">canBeSelected</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
+</span><span id="line-185"></span><span>    </span><span id="local-6989586621689278396"><span class="annot"><span class="annottext">canBeSelected :: Maybe (SelPermInfo b) -&gt; FieldInfo b -&gt; m Bool
+</span><a href="#local-6989586621689278396"><span class="hs-identifier hs-var hs-var">canBeSelected</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">FieldInfo b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m Bool
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-186"></span><span>    </span><span class="annot"><a href="#local-6989586621689277881"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689277879"><span class="annot"><span class="annottext">SelPermInfo b
-</span><a href="#local-6989586621689277879"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span id="local-6989586621689277877"><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277877"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-186"></span><span>    </span><span class="annot"><a href="#local-6989586621689278396"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689278394"><span class="annot"><span class="annottext">SelPermInfo b
+</span><a href="#local-6989586621689278394"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span id="local-6989586621689278392"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689278392"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-187"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; m Bool
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; m Bool) -&gt; Bool -&gt; m Bool
@@ -677,28 +677,28 @@ forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
 </span><span class="hs-identifier hs-var">Map.member</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277877"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SelPermInfo b
+</span><a href="#local-6989586621689278392"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SelPermInfo b
 -&gt; HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 forall (b :: BackendType).
 SelPermInfo b
 -&gt; HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="Hasura.RQL.Types.Table.html#spiCols"><span class="hs-identifier hs-var hs-var">spiCols</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b
-</span><a href="#local-6989586621689277879"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-188"></span><span>    </span><span class="annot"><a href="#local-6989586621689277881"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
-</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span id="local-6989586621689277873"><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621689277873"><span class="hs-identifier hs-var">relationshipInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-189"></span><span>      </span><span id="local-6989586621689277872"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277872"><span class="hs-identifier hs-var">tableInfo'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableName b -&gt; m (TableInfo b)
+</span><a href="#local-6989586621689278394"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-188"></span><span>    </span><span class="annot"><a href="#local-6989586621689278396"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span id="local-6989586621689278388"><span class="annot"><span class="annottext">RelInfo b
+</span><a href="#local-6989586621689278388"><span class="hs-identifier hs-var">relationshipInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-189"></span><span>      </span><span id="local-6989586621689278387"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278387"><span class="hs-identifier hs-var">tableInfo'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableName b -&gt; m (TableInfo b)
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 SourceInfo b -&gt; TableName b -&gt; m (TableInfo b)
 </span><a href="Hasura.GraphQL.Schema.Common.html#askTableInfo"><span class="hs-identifier hs-var">askTableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689277887"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">(TableName b -&gt; m (TableInfo b)) -&gt; TableName b -&gt; m (TableInfo b)
+</span><a href="#local-6989586621689278402"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">(TableName b -&gt; m (TableInfo b)) -&gt; TableName b -&gt; m (TableInfo b)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RelInfo b -&gt; TableName b
 forall (b :: BackendType). RelInfo b -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#riRTable"><span class="hs-identifier hs-var hs-var">riRTable</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo b
-</span><a href="#local-6989586621689277873"><span class="hs-identifier hs-var">relationshipInfo</span></a></span><span>
+</span><a href="#local-6989586621689278388"><span class="hs-identifier hs-var">relationshipInfo</span></a></span><span>
 </span><span id="line-190"></span><span>      </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b) -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (SelPermInfo b) -&gt; Bool)
@@ -708,20 +708,20 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (b :: BackendType) r (m :: * -&gt; *).
 (MonadReader r m, Has RoleName r) =&gt;
 TableInfo b -&gt; m (Maybe (SelPermInfo b))
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277872"><span class="hs-identifier hs-var">tableInfo'</span></a></span><span>
-</span><span id="line-191"></span><span>    </span><span class="annot"><a href="#local-6989586621689277881"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689277868"><span class="annot"><span class="annottext">SelPermInfo b
-</span><a href="#local-6989586621689277868"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIComputedField"><span class="hs-identifier hs-type">FIComputedField</span></a></span><span> </span><span id="local-6989586621689277866"><span class="annot"><span class="annottext">ComputedFieldInfo b
-</span><a href="#local-6989586621689277866"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278387"><span class="hs-identifier hs-var">tableInfo'</span></a></span><span>
+</span><span id="line-191"></span><span>    </span><span class="annot"><a href="#local-6989586621689278396"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689278383"><span class="annot"><span class="annottext">SelPermInfo b
+</span><a href="#local-6989586621689278383"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIComputedField"><span class="hs-identifier hs-type">FIComputedField</span></a></span><span> </span><span id="local-6989586621689278381"><span class="annot"><span class="annottext">ComputedFieldInfo b
+</span><a href="#local-6989586621689278381"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-192"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ComputedFieldReturn b -&gt; ComputedFieldReturnType b
 forall (b :: BackendType).
 Backend b =&gt;
 ComputedFieldReturn b -&gt; ComputedFieldReturnType b
-</span><a href="Hasura.RQL.Types.Backend.html#computedFieldReturnType"><span class="hs-identifier hs-var">computedFieldReturnType</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; ComputedFieldReturn b
+</span><a href="Hasura.RQL.Types.Backend.html#computedFieldReturnType"><span class="hs-identifier hs-var">computedFieldReturnType</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; ComputedFieldReturn b
 forall (b :: BackendType).
 ComputedFieldInfo b -&gt; ComputedFieldReturn b
 </span><a href="Hasura.RQL.Types.ComputedField.html#_cfiReturnType"><span class="hs-identifier hs-var hs-var">_cfiReturnType</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldInfo b
-</span><a href="#local-6989586621689277866"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689278381"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-193"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ReturnsScalar"><span class="hs-identifier hs-type">ReturnsScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-194"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; m Bool
@@ -736,7 +736,7 @@ forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
 </span><span class="hs-identifier hs-var">Map.member</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ComputedFieldInfo b -&gt; ComputedFieldName
 forall (b :: BackendType). ComputedFieldInfo b -&gt; ComputedFieldName
 </span><a href="Hasura.RQL.Types.ComputedField.html#_cfiName"><span class="hs-identifier hs-var hs-var">_cfiName</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldInfo b
-</span><a href="#local-6989586621689277866"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(HashMap
+</span><a href="#local-6989586621689278381"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(HashMap
    ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
  -&gt; Bool)
 -&gt; HashMap
@@ -751,17 +751,17 @@ SelPermInfo b
 -&gt; HashMap
      ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="Hasura.RQL.Types.Table.html#spiComputedFields"><span class="hs-identifier hs-var hs-var">spiComputedFields</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b
-</span><a href="#local-6989586621689277868"><span class="hs-identifier hs-var">permissions</span></a></span><span>
-</span><span id="line-195"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ReturnsTable"><span class="hs-identifier hs-type">ReturnsTable</span></a></span><span> </span><span id="local-6989586621689277859"><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689277859"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-196"></span><span>          </span><span id="local-6989586621689277858"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277858"><span class="hs-identifier hs-var">tableInfo'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableName b -&gt; m (TableInfo b)
+</span><a href="#local-6989586621689278383"><span class="hs-identifier hs-var">permissions</span></a></span><span>
+</span><span id="line-195"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ReturnsTable"><span class="hs-identifier hs-type">ReturnsTable</span></a></span><span> </span><span id="local-6989586621689278374"><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689278374"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-196"></span><span>          </span><span id="local-6989586621689278373"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278373"><span class="hs-identifier hs-var">tableInfo'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableName b -&gt; m (TableInfo b)
 forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 SourceInfo b -&gt; TableName b -&gt; m (TableInfo b)
 </span><a href="Hasura.GraphQL.Schema.Common.html#askTableInfo"><span class="hs-identifier hs-var">askTableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689277887"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
-</span><a href="#local-6989586621689277859"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><a href="#local-6989586621689278402"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689278374"><span class="hs-identifier hs-var">tableName</span></a></span><span>
 </span><span id="line-197"></span><span>          </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b) -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">(Maybe (SelPermInfo b) -&gt; Bool)
@@ -771,14 +771,14 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (b :: BackendType) r (m :: * -&gt; *).
 (MonadReader r m, Has RoleName r) =&gt;
 TableInfo b -&gt; m (Maybe (SelPermInfo b))
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689277992"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277858"><span class="hs-identifier hs-var">tableInfo'</span></a></span><span>
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689278507"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278373"><span class="hs-identifier hs-var">tableInfo'</span></a></span><span>
 </span><span id="line-198"></span><span>        </span><span class="annot"><span class="annottext">ComputedFieldReturnType b
 </span><a href="Hasura.RQL.Types.Backend.html#ReturnsOthers"><span class="hs-identifier hs-var">ReturnsOthers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m Bool
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-199"></span><span>    </span><span class="annot"><a href="#local-6989586621689277881"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
+</span><span id="line-199"></span><span>    </span><span class="annot"><a href="#local-6989586621689278396"><span class="hs-identifier hs-var">canBeSelected</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRemoteRelationship"><span class="hs-identifier hs-type">FIRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField b)
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; m Bool
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -786,16 +786,16 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-200"></span><span>
 </span><span id="line-201"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableColumns"><span class="hs-identifier hs-type">tableColumns</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-202"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689277984"><span class="annot"><a href="#local-6989586621689277984"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277984"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689277984"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-202"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278499"><span class="annot"><a href="#local-6989586621689278499"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278499"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278499"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-203"></span><span id="tableColumns"><span class="annot"><span class="annottext">tableColumns :: TableInfo b -&gt; [ColumnInfo b]
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableColumns"><span class="hs-identifier hs-var hs-var">tableColumns</span></a></span></span><span> </span><span id="local-6989586621689277855"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277855"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableColumns"><span class="hs-identifier hs-var hs-var">tableColumns</span></a></span></span><span> </span><span id="local-6989586621689278370"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278370"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-204"></span><span>  </span><span class="annot"><span class="annottext">(FieldInfo b -&gt; Maybe (ColumnInfo b))
 -&gt; [FieldInfo b] -&gt; [ColumnInfo b]
 forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">FieldInfo b -&gt; Maybe (ColumnInfo b)
 forall (b :: BackendType). FieldInfo b -&gt; Maybe (ColumnInfo b)
-</span><a href="#local-6989586621689277853"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; [ColumnInfo b])
+</span><a href="#local-6989586621689278368"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; [ColumnInfo b])
 -&gt; (TableInfo b -&gt; [FieldInfo b]) -&gt; TableInfo b -&gt; [ColumnInfo b]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HashMap FieldName (FieldInfo b) -&gt; [FieldInfo b]
@@ -820,15 +820,15 @@ forall (b :: BackendType). TableInfo b -&gt; TableCoreInfo b
 </span><a href="Hasura.RQL.Types.Table.html#_tiCoreInfo"><span class="hs-identifier hs-var hs-var">_tiCoreInfo</span></a></span><span> </span><span class="annot"><span class="annottext">(TableInfo b -&gt; [ColumnInfo b]) -&gt; TableInfo b -&gt; [ColumnInfo b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277855"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278370"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-205"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-206"></span><span>    </span><span id="local-6989586621689277853"><span class="annot"><span class="annottext">columnInfo :: FieldInfo b -&gt; Maybe (ColumnInfo b)
-</span><a href="#local-6989586621689277853"><span class="hs-identifier hs-var hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span id="local-6989586621689277852"><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277852"><span class="hs-identifier hs-var">ci</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Maybe (ColumnInfo b)
+</span><span id="line-206"></span><span>    </span><span id="local-6989586621689278368"><span class="annot"><span class="annottext">columnInfo :: FieldInfo b -&gt; Maybe (ColumnInfo b)
+</span><a href="#local-6989586621689278368"><span class="hs-identifier hs-var hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span id="local-6989586621689278367"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689278367"><span class="hs-identifier hs-var">ci</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Maybe (ColumnInfo b)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277852"><span class="hs-identifier hs-var">ci</span></a></span><span>
-</span><span id="line-207"></span><span>    </span><span class="annot"><a href="#local-6989586621689277853"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfo b
+</span><a href="#local-6989586621689278367"><span class="hs-identifier hs-var">ci</span></a></span><span>
+</span><span id="line-207"></span><span>    </span><span class="annot"><a href="#local-6989586621689278368"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfo b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (ColumnInfo b)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
@@ -836,25 +836,25 @@ forall a. Maybe a
 </span><span id="line-209"></span><span class="hs-comment">-- | Get the columns of a table that my be selected under the given select</span><span>
 </span><span id="line-210"></span><span class="hs-comment">-- permissions.</span><span>
 </span><span id="line-211"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumns"><span class="hs-identifier hs-type">tableSelectColumns</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-212"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278094"><span class="annot"><a href="#local-6989586621689278094"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278092"><span class="annot"><a href="#local-6989586621689278092"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278093"><span class="annot"><a href="#local-6989586621689278093"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-213"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278094"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-214"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278093"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-215"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278092"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278093"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-216"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278092"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-212"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278609"><span class="annot"><a href="#local-6989586621689278609"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278607"><span class="annot"><a href="#local-6989586621689278607"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278608"><span class="annot"><a href="#local-6989586621689278608"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-213"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278609"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-214"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278608"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-215"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278607"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278608"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278607"><span class="hs-identifier hs-type">r</span></a></span><span>
 </span><span id="line-217"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278094"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-219"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278094"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-220"></span><span>  </span><span class="annot"><a href="#local-6989586621689278093"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278094"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-218"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-219"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278609"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-220"></span><span>  </span><span class="annot"><a href="#local-6989586621689278608"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278609"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-221"></span><span id="tableSelectColumns"><span class="annot"><span class="annottext">tableSelectColumns :: SourceInfo b -&gt; TableInfo b -&gt; m [ColumnInfo b]
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumns"><span class="hs-identifier hs-var hs-var">tableSelectColumns</span></a></span></span><span> </span><span id="local-6989586621689277851"><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689277851"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689277850"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277850"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumns"><span class="hs-identifier hs-var hs-var">tableSelectColumns</span></a></span></span><span> </span><span id="local-6989586621689278366"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689278366"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689278365"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278365"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-222"></span><span>  </span><span class="annot"><span class="annottext">(FieldInfo b -&gt; Maybe (ColumnInfo b))
 -&gt; [FieldInfo b] -&gt; [ColumnInfo b]
 forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">FieldInfo b -&gt; Maybe (ColumnInfo b)
 forall (b :: BackendType). FieldInfo b -&gt; Maybe (ColumnInfo b)
-</span><a href="#local-6989586621689277849"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; [ColumnInfo b])
+</span><a href="#local-6989586621689278364"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">([FieldInfo b] -&gt; [ColumnInfo b])
 -&gt; m [FieldInfo b] -&gt; m [ColumnInfo b]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableInfo b -&gt; m [FieldInfo b]
@@ -862,16 +862,16 @@ forall (b :: BackendType) r (m :: * -&gt; *).
 (Backend b, MonadError QErr m, MonadReader r m, Has RoleName r) =&gt;
 SourceInfo b -&gt; TableInfo b -&gt; m [FieldInfo b]
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectFields"><span class="hs-identifier hs-var">tableSelectFields</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
-</span><a href="#local-6989586621689277851"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277850"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278366"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278365"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-223"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-224"></span><span>    </span><span id="local-6989586621689277849"><span class="annot"><span class="annottext">columnInfo :: FieldInfo b -&gt; Maybe (ColumnInfo b)
-</span><a href="#local-6989586621689277849"><span class="hs-identifier hs-var hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span id="local-6989586621689277848"><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277848"><span class="hs-identifier hs-var">ci</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Maybe (ColumnInfo b)
+</span><span id="line-224"></span><span>    </span><span id="local-6989586621689278364"><span class="annot"><span class="annottext">columnInfo :: FieldInfo b -&gt; Maybe (ColumnInfo b)
+</span><a href="#local-6989586621689278364"><span class="hs-identifier hs-var hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span id="local-6989586621689278363"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689278363"><span class="hs-identifier hs-var">ci</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Maybe (ColumnInfo b)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277848"><span class="hs-identifier hs-var">ci</span></a></span><span>
-</span><span id="line-225"></span><span>    </span><span class="annot"><a href="#local-6989586621689277849"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfo b
+</span><a href="#local-6989586621689278363"><span class="hs-identifier hs-var">ci</span></a></span><span>
+</span><span id="line-225"></span><span>    </span><span class="annot"><a href="#local-6989586621689278364"><span class="hs-identifier hs-var">columnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfo b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (ColumnInfo b)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
@@ -879,19 +879,19 @@ forall a. Maybe a
 </span><span id="line-227"></span><span class="hs-comment">-- | Get the columns of a table that my be updated under the given update</span><span>
 </span><span id="line-228"></span><span class="hs-comment">-- permissions.</span><span>
 </span><span id="line-229"></span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumns"><span class="hs-identifier hs-type">tableUpdateColumns</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-230"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278059"><span class="annot"><a href="#local-6989586621689278059"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278057"><span class="annot"><a href="#local-6989586621689278057"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278058"><span class="annot"><a href="#local-6989586621689278058"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-231"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278059"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-232"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278058"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-233"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278057"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278058"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-234"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278057"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-230"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689278574"><span class="annot"><a href="#local-6989586621689278574"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689278572"><span class="annot"><a href="#local-6989586621689278572"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689278573"><span class="annot"><a href="#local-6989586621689278573"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-231"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278574"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-232"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278573"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-233"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689278572"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278573"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-234"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278572"><span class="hs-identifier hs-type">r</span></a></span><span>
 </span><span id="line-235"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-236"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278059"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-237"></span><span>  </span><span class="annot"><a href="#local-6989586621689278058"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278059"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-236"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278574"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-237"></span><span>  </span><span class="annot"><a href="#local-6989586621689278573"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278574"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-238"></span><span id="tableUpdateColumns"><span class="annot"><span class="annottext">tableUpdateColumns :: TableInfo b -&gt; m [ColumnInfo b]
-</span><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumns"><span class="hs-identifier hs-var hs-var">tableUpdateColumns</span></a></span></span><span> </span><span id="local-6989586621689277847"><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277847"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-239"></span><span>  </span><span id="local-6989586621689277846"><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
-</span><a href="#local-6989586621689277846"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (UpdPermInfo b)
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableUpdateColumns"><span class="hs-identifier hs-var hs-var">tableUpdateColumns</span></a></span></span><span> </span><span id="local-6989586621689278362"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689278362"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-239"></span><span>  </span><span id="local-6989586621689278361"><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
+</span><a href="#local-6989586621689278361"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">RolePermInfo b -&gt; Maybe (UpdPermInfo b)
 forall (b :: BackendType). RolePermInfo b -&gt; Maybe (UpdPermInfo b)
 </span><a href="Hasura.RQL.Types.Table.html#_permUpd"><span class="hs-identifier hs-var hs-var">_permUpd</span></a></span><span> </span><span class="annot"><span class="annottext">(RolePermInfo b -&gt; Maybe (UpdPermInfo b))
 -&gt; m (RolePermInfo b) -&gt; m (Maybe (UpdPermInfo b))
@@ -901,7 +901,7 @@ forall (b :: BackendType) r (m :: * -&gt; *).
 (MonadReader r m, Has RoleName r) =&gt;
 TableInfo b -&gt; m (RolePermInfo b)
 </span><a href="Hasura.GraphQL.Schema.Table.html#tablePermissions"><span class="hs-identifier hs-var">tablePermissions</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277847"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278362"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-240"></span><span>  </span><span class="annot"><span class="annottext">[ColumnInfo b] -&gt; m [ColumnInfo b]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">([ColumnInfo b] -&gt; m [ColumnInfo b])
@@ -910,54 +910,54 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; Bool) -&gt; [ColumnInfo b] -&gt; [ColumnInfo b]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b) -&gt; ColumnInfo b -&gt; Bool
-</span><a href="#local-6989586621689277844"><span class="hs-identifier hs-var">isUpdatable</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
-</span><a href="#local-6989586621689277846"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ColumnInfo b] -&gt; [ColumnInfo b])
+</span><a href="#local-6989586621689278359"><span class="hs-identifier hs-var">isUpdatable</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
+</span><a href="#local-6989586621689278361"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ColumnInfo b] -&gt; [ColumnInfo b])
 -&gt; [ColumnInfo b] -&gt; [ColumnInfo b]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; [ColumnInfo b]
 forall (b :: BackendType). TableInfo b -&gt; [ColumnInfo b]
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableColumns"><span class="hs-identifier hs-var">tableColumns</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
-</span><a href="#local-6989586621689277847"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621689278362"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-241"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-242"></span><span>    </span><span class="annot"><a href="#local-6989586621689277844"><span class="hs-identifier hs-type">isUpdatable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278059"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278059"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
-</span><span id="line-243"></span><span>    </span><span id="local-6989586621689277844"><span class="annot"><span class="annottext">isUpdatable :: Maybe (UpdPermInfo b) -&gt; ColumnInfo b -&gt; Bool
-</span><a href="#local-6989586621689277844"><span class="hs-identifier hs-var hs-var">isUpdatable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689277843"><span class="annot"><span class="annottext">UpdPermInfo b
-</span><a href="#local-6989586621689277843"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689277842"><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277842"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689277841"><span class="hs-identifier hs-var">columnIsUpdatable</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span id="line-242"></span><span>    </span><span class="annot"><a href="#local-6989586621689278359"><span class="hs-identifier hs-type">isUpdatable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#UpdPermInfo"><span class="hs-identifier hs-type">UpdPermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278574"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689278574"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-243"></span><span>    </span><span id="local-6989586621689278359"><span class="annot"><span class="annottext">isUpdatable :: Maybe (UpdPermInfo b) -&gt; ColumnInfo b -&gt; Bool
+</span><a href="#local-6989586621689278359"><span class="hs-identifier hs-var hs-var">isUpdatable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689278358"><span class="annot"><span class="annottext">UpdPermInfo b
+</span><a href="#local-6989586621689278358"><span class="hs-identifier hs-var">permissions</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689278357"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689278357"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689278356"><span class="hs-identifier hs-var">columnIsUpdatable</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689277839"><span class="hs-identifier hs-var">columnIsPermitted</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689278354"><span class="hs-identifier hs-var">columnIsPermitted</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689277838"><span class="hs-identifier hs-var">columnHasNoPreset</span></a></span><span>
+</span><a href="#local-6989586621689278353"><span class="hs-identifier hs-var">columnHasNoPreset</span></a></span><span>
 </span><span id="line-244"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-245"></span><span>        </span><span id="local-6989586621689277841"><span class="annot"><span class="annottext">columnIsUpdatable :: Bool
-</span><a href="#local-6989586621689277841"><span class="hs-identifier hs-var hs-var">columnIsUpdatable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnMutability -&gt; Bool
+</span><span id="line-245"></span><span>        </span><span id="local-6989586621689278356"><span class="annot"><span class="annottext">columnIsUpdatable :: Bool
+</span><a href="#local-6989586621689278356"><span class="hs-identifier hs-var hs-var">columnIsUpdatable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnMutability -&gt; Bool
 </span><a href="Hasura.RQL.Types.Column.html#_cmIsUpdatable"><span class="hs-identifier hs-var hs-var">_cmIsUpdatable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnMutability
 forall (b :: BackendType). ColumnInfo b -&gt; ColumnMutability
 </span><a href="Hasura.RQL.Types.Column.html#ciMutability"><span class="hs-identifier hs-var hs-var">ciMutability</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277842"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-246"></span><span>        </span><span id="local-6989586621689277839"><span class="annot"><span class="annottext">columnIsPermitted :: Bool
-</span><a href="#local-6989586621689277839"><span class="hs-identifier hs-var hs-var">columnIsPermitted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Column b -&gt; HashSet (Column b) -&gt; Bool
+</span><a href="#local-6989586621689278357"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-246"></span><span>        </span><span id="local-6989586621689278354"><span class="annot"><span class="annottext">columnIsPermitted :: Bool
+</span><a href="#local-6989586621689278354"><span class="hs-identifier hs-var hs-var">columnIsPermitted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Column b -&gt; HashSet (Column b) -&gt; Bool
 forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.member</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277842"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdPermInfo b -&gt; HashSet (Column b)
+</span><a href="#local-6989586621689278357"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdPermInfo b -&gt; HashSet (Column b)
 forall (b :: BackendType). UpdPermInfo b -&gt; HashSet (Column b)
 </span><a href="Hasura.RQL.Types.Table.html#upiCols"><span class="hs-identifier hs-var hs-var">upiCols</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo b
-</span><a href="#local-6989586621689277843"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-247"></span><span>        </span><span id="local-6989586621689277838"><span class="annot"><span class="annottext">columnHasNoPreset :: Bool
-</span><a href="#local-6989586621689277838"><span class="hs-identifier hs-var hs-var">columnHasNoPreset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><a href="#local-6989586621689278358"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-247"></span><span>        </span><span id="local-6989586621689278353"><span class="annot"><span class="annottext">columnHasNoPreset :: Bool
+</span><a href="#local-6989586621689278353"><span class="hs-identifier hs-var hs-var">columnHasNoPreset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Column b -&gt; HashMap (Column b) (PartialSQLExp b) -&gt; Bool
 forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
 </span><span class="hs-identifier hs-var">Map.member</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Column b
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
-</span><a href="#local-6989586621689277842"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdPermInfo b -&gt; HashMap (Column b) (PartialSQLExp b)
+</span><a href="#local-6989586621689278357"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UpdPermInfo b -&gt; HashMap (Column b) (PartialSQLExp b)
 forall (b :: BackendType). UpdPermInfo b -&gt; PreSetColsPartial b
 </span><a href="Hasura.RQL.Types.Table.html#upiSet"><span class="hs-identifier hs-var hs-var">upiSet</span></a></span><span> </span><span class="annot"><span class="annottext">UpdPermInfo b
-</span><a href="#local-6989586621689277843"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-248"></span><span>    </span><span class="annot"><a href="#local-6989586621689277844"><span class="hs-identifier hs-var">isUpdatable</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
+</span><a href="#local-6989586621689278358"><span class="hs-identifier hs-var">permissions</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-248"></span><span>    </span><span class="annot"><a href="#local-6989586621689278359"><span class="hs-identifier hs-var">isUpdatable</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (UpdPermInfo b)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>

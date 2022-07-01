@@ -28,7 +28,7 @@
 </span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_uiLatest"><span class="annot"><span class="annottext">UpdateInfo -&gt; Version
 </span><a href="Hasura.Server.CheckUpdates.html#_uiLatest"><span class="hs-identifier hs-var hs-var">_uiLatest</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Version.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689171480"><span id="local-6989586621689171482"><span id="local-6989586621689171484"><span class="annot"><span class="annottext">Int -&gt; UpdateInfo -&gt; ShowS
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689171980"><span id="local-6989586621689171982"><span id="local-6989586621689171984"><span class="annot"><span class="annottext">Int -&gt; UpdateInfo -&gt; ShowS
 [UpdateInfo] -&gt; ShowS
 UpdateInfo -&gt; String
 (Int -&gt; UpdateInfo -&gt; ShowS)
@@ -47,30 +47,30 @@ $cshowsPrec :: Int -&gt; UpdateInfo -&gt; ShowS
 </span><span id="line-31"></span><span>
 </span><span id="line-32"></span><span class="hs-comment">-- note that this is erroneous and should drop three characters or use</span><span>
 </span><span id="line-33"></span><span class="hs-comment">-- aesonPrefix, but needs to remain like this for backwards compatibility</span><span>
-</span><span id="line-34"></span><span class="hs-special">$(</span><span id="local-6989586621689171467"><span id="local-6989586621689171469"><span id="local-6989586621689171471"><span id="local-6989586621689171473"><span id="local-6989586621689171475"><span id="local-6989586621689171477"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">A.aesonDrop</span><span> </span><span class="hs-number">2</span><span> </span><span class="hs-identifier">A.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UpdateInfo</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-special">$(</span><span id="local-6989586621689171967"><span id="local-6989586621689171969"><span id="local-6989586621689171971"><span id="local-6989586621689171973"><span id="local-6989586621689171975"><span id="local-6989586621689171977"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">A.aesonDrop</span><span> </span><span class="hs-number">2</span><span> </span><span class="hs-identifier">A.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UpdateInfo</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span id="local-6989586621689171460"><span id="local-6989586621689171461"><span class="annot"><a href="Hasura.Server.CheckUpdates.html#checkForUpdates"><span class="hs-identifier hs-type">checkForUpdates</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#LoggerCtx"><span class="hs-identifier hs-type">LoggerCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689171461"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689171460"><span class="hs-identifier hs-type">void</span></a></span></span></span><span>
+</span><span id="line-36"></span><span id="local-6989586621689171960"><span id="local-6989586621689171961"><span class="annot"><a href="Hasura.Server.CheckUpdates.html#checkForUpdates"><span class="hs-identifier hs-type">checkForUpdates</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#LoggerCtx"><span class="hs-identifier hs-type">LoggerCtx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689171961"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689171960"><span class="hs-identifier hs-type">void</span></a></span></span></span><span>
 </span><span id="line-37"></span><span id="checkForUpdates"><span class="annot"><span class="annottext">checkForUpdates :: LoggerCtx a -&gt; Manager -&gt; IO void
-</span><a href="Hasura.Server.CheckUpdates.html#checkForUpdates"><span class="hs-identifier hs-var hs-var">checkForUpdates</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#LoggerCtx"><span class="hs-identifier hs-type">LoggerCtx</span></a></span><span> </span><span id="local-6989586621689171458"><span class="annot"><span class="annottext">LoggerSet
-</span><a href="#local-6989586621689171458"><span class="hs-identifier hs-var">loggerSet</span></a></span></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Server.CheckUpdates.html#checkForUpdates"><span class="hs-identifier hs-var hs-var">checkForUpdates</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#LoggerCtx"><span class="hs-identifier hs-type">LoggerCtx</span></a></span><span> </span><span id="local-6989586621689171958"><span class="annot"><span class="annottext">LoggerSet
+</span><a href="#local-6989586621689171958"><span class="hs-identifier hs-var">loggerSet</span></a></span></span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">IO FormattedTime
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">HashSet (EngineLogType a)
-</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689171457"><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689171457"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-38"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689171456"><span class="annot"><span class="annottext">options :: Options
-</span><a href="#local-6989586621689171456"><span class="hs-identifier hs-var hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Manager -&gt; [Header] -&gt; Options
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689171957"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689171957"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689171956"><span class="annot"><span class="annottext">options :: Options
+</span><a href="#local-6989586621689171956"><span class="hs-identifier hs-var hs-var">options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Manager -&gt; [Header] -&gt; Options
 </span><a href="Hasura.HTTP.html#wreqOptions"><span class="hs-identifier hs-var">wreqOptions</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689171457"><span class="hs-identifier hs-var">manager</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-39"></span><span>  </span><span id="local-6989586621689171454"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689171454"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Text
-</span><a href="#local-6989586621689171453"><span class="hs-identifier hs-var">getUrl</span></a></span><span>
+</span><a href="#local-6989586621689171957"><span class="hs-identifier hs-var">manager</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621689171954"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689171954"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Text
+</span><a href="#local-6989586621689171953"><span class="hs-identifier hs-var">getUrl</span></a></span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">IO () -&gt; IO void
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO void) -&gt; IO () -&gt; IO void
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-41"></span><span>    </span><span id="local-6989586621689171451"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
-</span><a href="#local-6989586621689171451"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Response ByteString)
+</span><span id="line-41"></span><span>    </span><span id="local-6989586621689171951"><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+</span><a href="#local-6989586621689171951"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Response ByteString)
 -&gt; IO (Either HttpException (Response ByteString))
 forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
 </span><span class="hs-identifier hs-var">try</span></span><span> </span><span class="annot"><span class="annottext">(IO (Response ByteString)
@@ -80,26 +80,26 @@ forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Options -&gt; String -&gt; IO (Response ByteString)
 </span><span class="hs-identifier hs-var">Wreq.getWith</span></span><span> </span><span class="annot"><span class="annottext">Options
-</span><a href="#local-6989586621689171456"><span class="hs-identifier hs-var">options</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; IO (Response ByteString))
+</span><a href="#local-6989586621689171956"><span class="hs-identifier hs-var">options</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; IO (Response ByteString))
 -&gt; String -&gt; IO (Response ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689171454"><span class="hs-identifier hs-var">url</span></a></span><span>
+</span><a href="#local-6989586621689171954"><span class="hs-identifier hs-var">url</span></a></span><span>
 </span><span id="line-42"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
-</span><a href="#local-6989586621689171451"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-43"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689171448"><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689171448"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; IO ()
-</span><a href="#local-6989586621689171447"><span class="hs-identifier hs-var">ignoreHttpErr</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689171448"><span class="hs-identifier hs-var">ex</span></a></span><span>
-</span><span id="line-44"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689171446"><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689171446"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-45"></span><span>        </span><span class="annot"><a href="Hasura.Server.CheckUpdates.html#UpdateInfo"><span class="hs-identifier hs-type">UpdateInfo</span></a></span><span> </span><span id="local-6989586621689171445"><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689171445"><span class="hs-identifier hs-var">latestVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO UpdateInfo
-</span><a href="#local-6989586621689171444"><span class="hs-identifier hs-var">decodeResp</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; IO UpdateInfo) -&gt; ByteString -&gt; IO UpdateInfo
+</span><a href="#local-6989586621689171951"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689171948"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689171948"><span class="hs-identifier hs-var">ex</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; IO ()
+</span><a href="#local-6989586621689171947"><span class="hs-identifier hs-var">ignoreHttpErr</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689171948"><span class="hs-identifier hs-var">ex</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689171946"><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689171946"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-45"></span><span>        </span><span class="annot"><a href="Hasura.Server.CheckUpdates.html#UpdateInfo"><span class="hs-identifier hs-type">UpdateInfo</span></a></span><span> </span><span id="local-6989586621689171945"><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689171945"><span class="hs-identifier hs-var">latestVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; IO UpdateInfo
+</span><a href="#local-6989586621689171944"><span class="hs-identifier hs-var">decodeResp</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; IO UpdateInfo) -&gt; ByteString -&gt; IO UpdateInfo
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response ByteString
-</span><a href="#local-6989586621689171446"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689171946"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
 -&gt; Getting ByteString (Response ByteString) ByteString
 -&gt; ByteString
 forall s a. s -&gt; Getting a s a -&gt; a
@@ -110,7 +110,7 @@ Lens (Response body0) (Response body1) body0 body1
 </span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; IO () -&gt; IO ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689171445"><span class="hs-identifier hs-var">latestVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Version -&gt; Bool
+</span><a href="#local-6989586621689171945"><span class="hs-identifier hs-var">latestVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Version -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var">currentVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; IO ()) -&gt; IO () -&gt; IO ()
@@ -118,7 +118,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-47"></span><span>          </span><span class="annot"><span class="annottext">LoggerSet -&gt; LogStr -&gt; IO ()
 </span><span class="hs-identifier hs-var">FL.pushLogStrLn</span></span><span> </span><span class="annot"><span class="annottext">LoggerSet
-</span><a href="#local-6989586621689171458"><span class="hs-identifier hs-var">loggerSet</span></a></span><span> </span><span class="annot"><span class="annottext">(LogStr -&gt; IO ()) -&gt; LogStr -&gt; IO ()
+</span><a href="#local-6989586621689171958"><span class="hs-identifier hs-var">loggerSet</span></a></span><span> </span><span class="annot"><span class="annottext">(LogStr -&gt; IO ()) -&gt; LogStr -&gt; IO ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; LogStr
 forall msg. ToLogStr msg =&gt; msg -&gt; LogStr
@@ -126,8 +126,8 @@ forall msg. ToLogStr msg =&gt; msg -&gt; LogStr
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Version -&gt; Text
 forall a. ToText a =&gt; a -&gt; Text
-</span><a href="#local-6989586621689171437"><span class="hs-identifier hs-var">updateMsg</span></a></span><span> </span><span class="annot"><span class="annottext">Version
-</span><a href="#local-6989586621689171445"><span class="hs-identifier hs-var">latestVersion</span></a></span><span>
+</span><a href="#local-6989586621689171937"><span class="hs-identifier hs-var">updateMsg</span></a></span><span> </span><span class="annot"><span class="annottext">Version
+</span><a href="#local-6989586621689171945"><span class="hs-identifier hs-var">latestVersion</span></a></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">C.sleep</span></a></span><span> </span><span class="annot"><span class="annottext">(DiffTime -&gt; IO ()) -&gt; DiffTime -&gt; IO ()
@@ -136,26 +136,26 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Data.Time.Clock.Units.html#days"><span class="hs-identifier hs-var hs-var">days</span></a></span><span> </span><span class="annot"><span class="annottext">Days
 </span><span class="hs-number">1</span></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621689171437"><span class="annot"><span class="annottext">updateMsg :: a -&gt; Text
-</span><a href="#local-6989586621689171437"><span class="hs-identifier hs-var hs-var">updateMsg</span></a></span></span><span> </span><span id="local-6989586621689171434"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689171434"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621689171937"><span class="annot"><span class="annottext">updateMsg :: a -&gt; Text
+</span><a href="#local-6989586621689171937"><span class="hs-identifier hs-var hs-var">updateMsg</span></a></span></span><span> </span><span id="local-6989586621689171934"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689171934"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Update: A new version is available: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Text
 forall a. ToText a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">toText</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689171434"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621689171453"><span class="annot"><span class="annottext">getUrl :: IO Text
-</span><a href="#local-6989586621689171453"><span class="hs-identifier hs-var hs-var">getUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-53"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689171433"><span class="annot"><span class="annottext">buildUrl :: Text -&gt; Text
-</span><a href="#local-6989586621689171433"><span class="hs-identifier hs-var hs-var">buildUrl</span></a></span></span><span> </span><span id="local-6989586621689171432"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689171432"><span class="hs-identifier hs-var">agent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689171934"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621689171953"><span class="annot"><span class="annottext">getUrl :: IO Text
+</span><a href="#local-6989586621689171953"><span class="hs-identifier hs-var hs-var">getUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-53"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689171933"><span class="annot"><span class="annottext">buildUrl :: Text -&gt; Text
+</span><a href="#local-6989586621689171933"><span class="hs-identifier hs-var hs-var">buildUrl</span></a></span></span><span> </span><span id="local-6989586621689171932"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689171932"><span class="hs-identifier hs-var">agent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-54"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;https://releases.hasura.io/graphql-engine?agent=&quot;</span></span><span>
 </span><span id="line-55"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689171432"><span class="hs-identifier hs-var">agent</span></a></span><span>
+</span><a href="#local-6989586621689171932"><span class="hs-identifier hs-var">agent</span></a></span><span>
 </span><span id="line-56"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -167,34 +167,34 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. ToText a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">toText</span></span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.Server.Version.html#currentVersion"><span class="hs-identifier hs-var">currentVersion</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-58"></span><span>      </span><span id="local-6989586621689171430"><span class="annot"><span class="annottext">Maybe CI
-</span><a href="#local-6989586621689171430"><span class="hs-identifier hs-var">ciM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe CI)
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621689171930"><span class="annot"><span class="annottext">Maybe CI
+</span><a href="#local-6989586621689171930"><span class="hs-identifier hs-var">ciM</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Maybe CI)
 </span><span class="hs-identifier hs-var">CI.getCI</span></span><span>
 </span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; IO Text
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; IO Text) -&gt; (Text -&gt; Text) -&gt; Text -&gt; IO Text
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
-</span><a href="#local-6989586621689171433"><span class="hs-identifier hs-var">buildUrl</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; IO Text) -&gt; Text -&gt; IO Text
+</span><a href="#local-6989586621689171933"><span class="hs-identifier hs-var">buildUrl</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; IO Text) -&gt; Text -&gt; IO Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe CI
-</span><a href="#local-6989586621689171430"><span class="hs-identifier hs-var">ciM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689171930"><span class="hs-identifier hs-var">ciM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">Maybe CI
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;server&quot;</span></span><span>
-</span><span id="line-61"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689171427"><span class="annot"><span class="annottext">CI
-</span><a href="#local-6989586621689171427"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-61"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689171927"><span class="annot"><span class="annottext">CI
+</span><a href="#local-6989586621689171927"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;server-&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toLower</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CI -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">CI
-</span><a href="#local-6989586621689171427"><span class="hs-identifier hs-var">ci</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689171927"><span class="hs-identifier hs-var">ci</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span>    </span><span class="hs-comment">-- ignoring if there is any error in response and returning the current version</span><span>
-</span><span id="line-64"></span><span>    </span><span id="local-6989586621689171444"><span class="annot"><span class="annottext">decodeResp :: ByteString -&gt; IO UpdateInfo
-</span><a href="#local-6989586621689171444"><span class="hs-identifier hs-var hs-var">decodeResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateInfo -&gt; IO UpdateInfo
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621689171944"><span class="annot"><span class="annottext">decodeResp :: ByteString -&gt; IO UpdateInfo
+</span><a href="#local-6989586621689171944"><span class="hs-identifier hs-var hs-var">decodeResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UpdateInfo -&gt; IO UpdateInfo
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(UpdateInfo -&gt; IO UpdateInfo)
 -&gt; (ByteString -&gt; UpdateInfo) -&gt; ByteString -&gt; IO UpdateInfo
@@ -212,9 +212,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a. FromJSON a =&gt; ByteString -&gt; Either String a
 </span><span class="hs-identifier hs-var">A.eitherDecode</span></span><span>
 </span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621689171447"><span class="hs-identifier hs-type">ignoreHttpErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621689171447"><span class="annot"><span class="annottext">ignoreHttpErr :: HttpException -&gt; IO ()
-</span><a href="#local-6989586621689171447"><span class="hs-identifier hs-var hs-var">ignoreHttpErr</span></a></span></span><span> </span><span class="annot"><span class="annottext">HttpException
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="#local-6989586621689171947"><span class="hs-identifier hs-type">ignoreHttpErr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621689171947"><span class="annot"><span class="annottext">ignoreHttpErr :: HttpException -&gt; IO ()
+</span><a href="#local-6989586621689171947"><span class="hs-identifier hs-var hs-var">ignoreHttpErr</span></a></span></span><span> </span><span class="annot"><span class="annottext">HttpException
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">() -&gt; IO ()
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
