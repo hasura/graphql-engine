@@ -1,5 +1,5 @@
-import { CustomizationFieldName } from '../GraphQLFieldCustomization/GraphQLFieldCustomization';
 import { getActionType } from '../GraphQLFieldCustomization/GraphQLFieldCustomizationContainer';
+import { CustomizationFieldName } from '../GraphQLFieldCustomization/types';
 
 describe('getActionType', () => {
   const tests = [

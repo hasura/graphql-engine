@@ -56,7 +56,7 @@
     - objects now have a title and, when available, the same description as in the GraphQL schema
 - server: fix dropping column from a table that has update permissions (fix #8415)
 - console: Hide TimescaleDB internal schema from data tab
-- console: support naming convention in source customization for postgres DB [CON-297]
+- console: support naming conventions under GraphQL customizations while connecting postgres DB
 
 ## v2.8.3
 

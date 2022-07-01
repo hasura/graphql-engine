@@ -1010,7 +1010,7 @@ export type IsolationLevelOptions =
   | 'repeatable-read'
   | 'serializable';
 
-export type namingConventionOptions = 'hasura-default' | 'graphql-default';
+export type NamingConventionOptions = 'hasura-default' | 'graphql-default';
 
 export interface SSLConfigOptions {
   sslmode?: SSLModeOptions;
@@ -1054,7 +1054,7 @@ export type GraphQLFieldCustomization = {
     prefix?: string;
     suffix?: string;
   };
-  namingConvention?: namingConventionOptions;
+  namingConvention?: NamingConventionOptions;
 };
 
 export interface SourceConnectionInfo {
