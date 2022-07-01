@@ -29197,6 +29197,8 @@ GRAPHQL :: API
 PGDUMP :: API
 DEVELOPER :: API
 CONFIG :: API
+
+-- | The Serve Command options accumulated from the arg parser and env.
 data RawServeOptions impl
 RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe TxIsolation -> Maybe AdminSecretHash -> RawAuthHook -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> Bool -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe Milliseconds -> Bool -> Bool -> Maybe Int -> Maybe Bool -> Bool -> Maybe Milliseconds -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe Int -> Bool -> Maybe NamingCase -> RawServeOptions impl
 [rsoPort] :: RawServeOptions impl -> Maybe Int
@@ -29259,6 +29261,10 @@ newtype WSConnectionInitTimeout
 WSConnectionInitTimeout :: Seconds -> WSConnectionInitTimeout
 [unWSConnectionInitTimeout] :: WSConnectionInitTimeout -> Seconds
 defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
+
+-- | The final Serve Command options accummulated from the Arg Parser and
+--   the Environment, fully processed and ready to apply when running the
+--   server.
 data ServeOptions impl
 ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Bool -> StringifyNumbers -> Bool -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Maybe Int -> Maybe Milliseconds -> OptionalInterval -> RemoteSchemaPermsCtx -> ConnectionOptions -> KeepAliveDelay -> FunctionPermissionsCtx -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> NonNegativeInt -> Bool -> Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> Maybe NamingCase -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Int
@@ -29300,14 +29306,29 @@ ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet Ad
 [soReadOnlyMode] :: ServeOptions impl -> ReadOnlyMode
 [soEnableMetadataQueryLogging] :: ServeOptions impl -> MetadataQueryLoggingMode
 [soDefaultNamingConvention] :: ServeOptions impl -> Maybe NamingCase
+
+-- | The Downgrade Command options. These are only sourced from the Arg
+--   Parser and are used directly in <a>Migrate</a>.
 data DowngradeOptions
 DowngradeOptions :: !Text -> !Bool -> DowngradeOptions
 [dgoTargetVersion] :: DowngradeOptions -> !Text
 [dgoDryRun] :: DowngradeOptions -> !Bool
+
+-- | Postgres connection info tupled with a retry count.
+--   
+--   The <tt>a</tt> here is one of the following: 1. 'Maybe
+--   PostgresRawConnInfo' 2. 'Maybe UrlConf' 3. 'Maybe Text' 4. 'Maybe
+--   DatabaseUrl' where <tt>DatabaseUrl</tt> is an alias for <a>Text</a>
+--   
+--   If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
+--   processed your arg parser results.
 data PostgresConnInfo a
 PostgresConnInfo :: !a -> !Maybe Int -> PostgresConnInfo a
 [_pciDatabaseConn] :: PostgresConnInfo a -> !a
 [_pciRetries] :: PostgresConnInfo a -> !Maybe Int
+
+-- | Structured Postgres connection information as provided by the arg
+--   parser or env vars.
 data PostgresRawConnDetails
 PostgresRawConnDetails :: !String -> !Int -> !String -> !String -> !String -> !Maybe String -> PostgresRawConnDetails
 [connHost] :: PostgresRawConnDetails -> !String
@@ -29316,27 +29337,39 @@ PostgresRawConnDetails :: !String -> !Int -> !String -> !String -> !String -> !M
 [connPassword] :: PostgresRawConnDetails -> !String
 [connDatabase] :: PostgresRawConnDetails -> !String
 [connOptions] :: PostgresRawConnDetails -> !Maybe String
+
+-- | Postgres Connection info can come in the form of a templated URI
+--   string or structured data.
 data PostgresRawConnInfo
 PGConnDatabaseUrl :: !URLTemplate -> PostgresRawConnInfo
 PGConnDetails :: !PostgresRawConnDetails -> PostgresRawConnInfo
 rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
 rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
-data HGECommandG a
-HCServe :: !a -> HGECommandG a
-HCExport :: HGECommandG a
-HCClean :: HGECommandG a
-HCVersion :: HGECommandG a
-HCDowngrade :: !DowngradeOptions -> HGECommandG a
-type HGECommand impl = HGECommandG (ServeOptions impl)
-type RawHGECommand impl = HGECommandG (RawServeOptions impl)
-data HGEOptionsG a b
-HGEOptionsG :: !PostgresConnInfo a -> !Maybe String -> !HGECommandG b -> HGEOptionsG a b
-[hoDatabaseUrl] :: HGEOptionsG a b -> !PostgresConnInfo a
-[hoMetadataDbUrl] :: HGEOptionsG a b -> !Maybe String
-[hoCommand] :: HGEOptionsG a b -> !HGECommandG b
-type RawHGEOptions impl = HGEOptionsG (Maybe PostgresRawConnInfo) (RawServeOptions impl)
-type HGEOptions impl = HGEOptionsG (Maybe UrlConf) (ServeOptions impl)
-type Env = [(String, String)]
+
+-- | The HGE Arg parser Command choices.
+--   
+--   This is polymorphic so that we can pack either <a>RawServeOptions</a>
+--   or <tt>RawProServeOptions</tt> in it.
+data HGECommand a
+HCServe :: !a -> HGECommand a
+HCExport :: HGECommand a
+HCClean :: HGECommand a
+HCVersion :: HGECommand a
+HCDowngrade :: !DowngradeOptions -> HGECommand a
+
+-- | HGE Options from the arg parser and the env.
+data HGEOptionsRaw impl
+HGEOptionsRaw :: !PostgresConnInfo (Maybe PostgresRawConnInfo) -> !Maybe String -> !HGECommand impl -> HGEOptionsRaw impl
+[horDatabaseUrl] :: HGEOptionsRaw impl -> !PostgresConnInfo (Maybe PostgresRawConnInfo)
+[horMetadataDbUrl] :: HGEOptionsRaw impl -> !Maybe String
+[horCommand] :: HGEOptionsRaw impl -> !HGECommand impl
+
+-- | The final processed HGE options.
+data HGEOptions impl
+HGEOptions :: !PostgresConnInfo (Maybe UrlConf) -> !Maybe String -> !HGECommand impl -> HGEOptions impl
+[hoDatabaseUrl] :: HGEOptions impl -> !PostgresConnInfo (Maybe UrlConf)
+[hoMetadataDbUrl] :: HGEOptions impl -> !Maybe String
+[hoCommand] :: HGEOptions impl -> !HGECommand impl
 readHookType :: String -> Either String AuthHookType
 parseStrAsBool :: String -> Either String Bool
 readNonNegativeInt :: String -> Either String NonNegativeInt
@@ -29346,10 +29379,12 @@ readExperimentalFeatures :: String -> Either String [ExperimentalFeature]
 readLogLevel :: String -> Either String LogLevel
 class FromEnv a
 fromEnv :: FromEnv a => String -> Either String a
-type WithEnv a = ReaderT Env (ExceptT String Identity) a
-runWithEnv :: Env -> WithEnv a -> Either String a
-instance (GHC.Classes.Eq a, GHC.Classes.Eq b) => GHC.Classes.Eq (Hasura.Server.Init.Config.HGEOptionsG a b)
-instance (GHC.Show.Show a, GHC.Show.Show b) => GHC.Show.Show (Hasura.Server.Init.Config.HGEOptionsG a b)
+type WithEnv a = ReaderT [(String, String)] (ExceptT String Identity) a
+runWithEnv :: [(String, String)] -> WithEnv a -> Either String a
+instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnInfo
+instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnInfo
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Server.Init.Config.HGECommand a)
+instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.HGECommand a)
 instance Hasura.Server.Init.Config.FromEnv Data.Time.Clock.Internal.NominalDiffTime.NominalDiffTime
 instance Hasura.Server.Init.Config.FromEnv GHC.Base.String
 instance Hasura.Server.Init.Config.FromEnv Data.Streaming.Network.Internal.HostPreference
@@ -29386,10 +29421,6 @@ instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.PostgresCon
 instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnDetails
 instance GHC.Read.Read Hasura.Server.Init.Config.PostgresRawConnDetails
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnDetails
-instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnInfo
-instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnInfo
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Server.Init.Config.HGECommandG a)
-instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.HGECommandG a)
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
@@ -29440,7 +29471,7 @@ withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
 withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
 withEnvBool :: Bool -> String -> WithEnv Bool
 withEnvJwtConf :: Maybe JWTConfig -> String -> WithEnv (Maybe JWTConfig)
-mkHGEOptions :: EnabledLogTypes impl => RawHGEOptions impl -> WithEnv (HGEOptions impl)
+mkHGEOptions :: EnabledLogTypes impl => HGEOptionsRaw (RawServeOptions impl) -> WithEnv (HGEOptions (ServeOptions impl))
 processPostgresConnInfo :: PostgresConnInfo (Maybe PostgresRawConnInfo) -> WithEnv (PostgresConnInfo (Maybe UrlConf))
 rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv (Maybe UrlConf)
 mkServeOptions :: EnabledLogTypes impl => RawServeOptions impl -> WithEnv (ServeOptions impl)
@@ -31122,8 +31153,8 @@ ExitException :: !ExitCode -> !ByteString -> ExitException
 [eeMessage] :: ExitException -> !ByteString
 throwErrExit :: MonadIO m => forall a. ExitCode -> String -> m a
 throwErrJExit :: (ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
-parseHGECommand :: EnabledLogTypes impl => Parser (RawHGECommand impl)
-parseArgs :: EnabledLogTypes impl => IO (HGEOptions impl)
+parseHGECommand :: EnabledLogTypes impl => Parser (HGECommand (RawServeOptions impl))
+parseArgs :: EnabledLogTypes impl => IO (HGEOptions (ServeOptions impl))
 printJSON :: (ToJSON a, MonadIO m) => a -> m ()
 printYaml :: (ToJSON a, MonadIO m) => a -> m ()
 mkPGLogger :: Logger Hasura -> PGLogger

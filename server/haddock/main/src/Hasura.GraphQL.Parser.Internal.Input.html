@@ -34,11 +34,11 @@
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span class="hs-comment">-- ure that out on its own, so we have to be explicit to give</span><span>
 </span><span id="line-36"></span><span class="hs-comment">-- it a little help.</span><span>
-</span><span id="line-37"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#inputParserInput"><span class="hs-identifier hs-type">inputParserInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689185914"><span class="annot"><a href="#local-6989586621689185914"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185914"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#ParserInput"><span class="hs-identifier hs-type">ParserInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185914"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:~:</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#inputParserInput"><span class="hs-identifier hs-type">inputParserInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689184484"><span class="annot"><a href="#local-6989586621689184484"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184484"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#ParserInput"><span class="hs-identifier hs-type">ParserInput</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184484"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">:~:</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span>
 </span><span id="line-38"></span><span id="inputParserInput"><span class="annot"><span class="annottext">inputParserInput :: ParserInput k :~: InputValue Variable
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#inputParserInput"><span class="hs-identifier hs-var hs-var">inputParserInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">('Input &lt;: k) =&gt; 'Input :&lt;: k
 forall (k1 :: Kind) (k2 :: Kind). (k1 &lt;: k2) =&gt; k1 :&lt;: k2
-</span><a href="Hasura.GraphQL.Parser.Schema.html#subKind"><span class="hs-identifier hs-var">subKind</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689185914"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="annot"><span class="annottext">'Input :&lt;: k
+</span><a href="Hasura.GraphQL.Parser.Schema.html#subKind"><span class="hs-identifier hs-var">subKind</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689184484"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="annot"><span class="annottext">'Input :&lt;: k
 </span><a href="Hasura.GraphQL.Parser.Schema.html#KRefl"><span class="hs-identifier hs-var">KRefl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ParserInput k :~: InputValue Variable
 forall k (a :: k). a :~: a
 </span><span class="hs-identifier hs-var">Refl</span></span><span class="hs-special">;</span><span> </span><span class="annot"><span class="annottext">'Input :&lt;: k
@@ -46,7 +46,7 @@ forall k (a :: k). a :~: a
 forall k (a :: k). a :~: a
 </span><span class="hs-identifier hs-var">Refl</span></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#pInputParser"><span class="hs-identifier hs-type">pInputParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689185823"><span class="annot"><a href="#local-6989586621689185823"><span class="hs-identifier hs-type">origin</span></a></span></span><span> </span><span id="local-6989586621689185824"><span class="annot"><a href="#local-6989586621689185824"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621689185822"><span class="annot"><a href="#local-6989586621689185822"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689185821"><span class="annot"><a href="#local-6989586621689185821"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185824"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185823"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185824"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185822"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185821"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689185822"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185821"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-40"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#pInputParser"><span class="hs-identifier hs-type">pInputParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689184393"><span class="annot"><a href="#local-6989586621689184393"><span class="hs-identifier hs-type">origin</span></a></span></span><span> </span><span id="local-6989586621689184394"><span class="annot"><a href="#local-6989586621689184394"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621689184392"><span class="annot"><a href="#local-6989586621689184392"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689184391"><span class="annot"><a href="#local-6989586621689184391"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184394"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184393"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184394"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184392"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184391"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689184392"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184391"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-41"></span><span id="pInputParser"><span class="annot"><span class="annottext">pInputParser :: Parser origin k m a -&gt; InputValue Variable -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#pInputParser"><span class="hs-identifier hs-var hs-var">pInputParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ParserInput k :~: InputValue Variable)
 -&gt; ((ParserInput k ~ InputValue Variable) =&gt;
@@ -59,7 +59,7 @@ forall k (a :: k) (b :: k) r. (a :~: b) -&gt; ((a ~ b) =&gt; r) -&gt; r
 forall (k :: Kind).
 ('Input &lt;: k) =&gt;
 ParserInput k :~: InputValue Variable
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#inputParserInput"><span class="hs-identifier hs-var">inputParserInput</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689185824"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ParserInput k ~ InputValue Variable) =&gt;
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#inputParserInput"><span class="hs-identifier hs-var">inputParserInput</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689184394"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ParserInput k ~ InputValue Variable) =&gt;
 Parser origin k m a -&gt; InputValue Variable -&gt; m a
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; ParserInput k -&gt; m a
@@ -69,19 +69,19 @@ Parser origin k m a -&gt; ParserInput k -&gt; m a
 </span><span id="line-44"></span><span class="hs-comment">-- 'field', 'fieldWithDefault', or 'fieldOptional', combine several together</span><span>
 </span><span id="line-45"></span><span class="hs-comment">-- with the 'Applicative' instance, and finish it off using 'object' to turn it</span><span>
 </span><span id="line-46"></span><span class="hs-comment">-- into a 'Parser'.</span><span>
-</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="InputFieldsParser"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-var">InputFieldsParser</span></a></span></span><span> </span><span id="local-6989586621689185866"><span class="annot"><a href="#local-6989586621689185866"><span class="hs-identifier hs-type">origin</span></a></span></span><span> </span><span id="local-6989586621689185865"><span class="annot"><a href="#local-6989586621689185865"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689185864"><span class="annot"><a href="#local-6989586621689185864"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InputFieldsParser"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-var">InputFieldsParser</span></a></span></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">data</span><span> </span><span id="InputFieldsParser"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-var">InputFieldsParser</span></a></span></span><span> </span><span id="local-6989586621689184436"><span class="annot"><a href="#local-6989586621689184436"><span class="hs-identifier hs-type">origin</span></a></span></span><span> </span><span id="local-6989586621689184435"><span class="annot"><a href="#local-6989586621689184435"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689184434"><span class="annot"><a href="#local-6989586621689184434"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InputFieldsParser"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-var">InputFieldsParser</span></a></span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-comment">-- Note: this is isomorphic to</span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-comment">--     Compose ((,) [Definition (FieldInfo k)])</span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-comment">--             (ReaderT (HashMap Name (FieldInput k)) m) a</span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-comment">-- but working with that type sucks.</span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ifDefinitions"><span class="annot"><span class="annottext">InputFieldsParser origin m a
 -&gt; [Definition origin (InputFieldInfo origin)]
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifDefinitions"><span class="hs-identifier hs-var hs-var">ifDefinitions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185866"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185866"><span class="hs-identifier hs-type">origin</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifDefinitions"><span class="hs-identifier hs-var hs-var">ifDefinitions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184436"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184436"><span class="hs-identifier hs-type">origin</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-53"></span><span>    </span><span id="ifParser"><span class="annot"><span class="annottext">InputFieldsParser origin m a
 -&gt; HashMap Name (InputValue Variable) -&gt; m a
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var hs-var">ifParser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689185865"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185864"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var hs-var">ifParser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689184435"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184434"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689185681"><span id="local-6989586621689185683"><span class="annot"><span class="annottext">a -&gt; InputFieldsParser origin m b -&gt; InputFieldsParser origin m a
+</span><span id="line-55"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689184251"><span id="local-6989586621689184253"><span class="annot"><span class="annottext">a -&gt; InputFieldsParser origin m b -&gt; InputFieldsParser origin m a
 (a -&gt; b)
 -&gt; InputFieldsParser origin m a -&gt; InputFieldsParser origin m b
 (forall a b.
@@ -117,10 +117,10 @@ Functor m =&gt;
 -&gt; InputFieldsParser origin m a -&gt; InputFieldsParser origin m b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span id="local-6989586621689185678"><span id="local-6989586621689185679"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689185669"><span id="local-6989586621689185671"><span id="local-6989586621689185673"><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="annot"><a href="#local-6989586621689185679"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185678"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185679"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621689185667"><span class="annot"><span class="annottext">pure :: a -&gt; InputFieldsParser origin m a
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">pure</span></span></span><span> </span><span id="local-6989586621689185666"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689185666"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
+</span><span id="line-57"></span><span id="local-6989586621689184248"><span id="local-6989586621689184249"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689184239"><span id="local-6989586621689184241"><span id="local-6989586621689184243"><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="annot"><a href="#local-6989586621689184249"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184248"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184249"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621689184237"><span class="annot"><span class="annottext">pure :: a -&gt; InputFieldsParser origin m a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">pure</span></span></span><span> </span><span id="local-6989586621689184236"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689184236"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
 -&gt; (HashMap Name (InputValue Variable) -&gt; m a)
 -&gt; InputFieldsParser origin m a
 forall origin (m :: * -&gt; *) a.
@@ -135,12 +135,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; m a
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689185666"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621689185664"><span class="annot"><span class="annottext">InputFieldsParser origin m (a -&gt; b)
-</span><a href="#local-6989586621689185664"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689185663"><span class="annot"><span class="annottext">&lt;*&gt; :: InputFieldsParser origin m (a -&gt; b)
+</span><a href="#local-6989586621689184236"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621689184234"><span class="annot"><span class="annottext">InputFieldsParser origin m (a -&gt; b)
+</span><a href="#local-6989586621689184234"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689184233"><span class="annot"><span class="annottext">&lt;*&gt; :: InputFieldsParser origin m (a -&gt; b)
 -&gt; InputFieldsParser origin m a -&gt; InputFieldsParser origin m b
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;*&gt;</span></span></span><span> </span><span id="local-6989586621689185662"><span class="annot"><span class="annottext">InputFieldsParser origin m a
-</span><a href="#local-6989586621689185662"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;*&gt;</span></span></span><span> </span><span id="local-6989586621689184232"><span class="annot"><span class="annottext">InputFieldsParser origin m a
+</span><a href="#local-6989586621689184232"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-60"></span><span>    </span><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
 -&gt; (HashMap Name (InputValue Variable) -&gt; m b)
 -&gt; InputFieldsParser origin m b
@@ -155,7 +155,7 @@ forall origin (m :: * -&gt; *) a.
 InputFieldsParser origin m a
 -&gt; [Definition origin (InputFieldInfo origin)]
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifDefinitions"><span class="hs-identifier hs-var hs-var">ifDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser origin m (a -&gt; b)
-</span><a href="#local-6989586621689185664"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
+</span><a href="#local-6989586621689184234"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition origin (InputFieldInfo origin)]
 -&gt; [Definition origin (InputFieldInfo origin)]
 -&gt; [Definition origin (InputFieldInfo origin)]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -165,7 +165,7 @@ forall origin (m :: * -&gt; *) a.
 InputFieldsParser origin m a
 -&gt; [Definition origin (InputFieldInfo origin)]
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifDefinitions"><span class="hs-identifier hs-var hs-var">ifDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser origin m a
-</span><a href="#local-6989586621689185662"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689184232"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(m (a -&gt; b) -&gt; m a -&gt; m b)
 -&gt; (HashMap Name (InputValue Variable) -&gt; m (a -&gt; b))
 -&gt; (HashMap Name (InputValue Variable) -&gt; m a)
@@ -182,13 +182,13 @@ forall origin (m :: * -&gt; *) a.
 InputFieldsParser origin m a
 -&gt; HashMap Name (InputValue Variable) -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var hs-var">ifParser</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser origin m (a -&gt; b)
-</span><a href="#local-6989586621689185664"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InputFieldsParser origin m a
+</span><a href="#local-6989586621689184234"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InputFieldsParser origin m a
 -&gt; HashMap Name (InputValue Variable) -&gt; m a
 forall origin (m :: * -&gt; *) a.
 InputFieldsParser origin m a
 -&gt; HashMap Name (InputValue Variable) -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var hs-var">ifParser</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser origin m a
-</span><a href="#local-6989586621689185662"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><a href="#local-6989586621689184232"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="hs-comment">{- Note [When are fields optional?]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -350,20 +350,20 @@ the use of `fieldOptional` above. -}</span><span>
 </span><span id="line-221"></span><span class="hs-comment">-- | Creates a parser for an input field. For nullable value parsers, if an</span><span>
 </span><span id="line-222"></span><span class="hs-comment">-- input field is omitted, the provided parser /will be called/ with a value of</span><span>
 </span><span id="line-223"></span><span class="hs-comment">-- `null`.</span><span>
-</span><span id="line-224"></span><span id="local-6989586621689185657"><span id="local-6989586621689185658"><span id="local-6989586621689185659"><span id="local-6989586621689185660"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#field"><span class="hs-identifier hs-type">field</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-225"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185660"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185659"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-224"></span><span id="local-6989586621689184227"><span id="local-6989586621689184228"><span id="local-6989586621689184229"><span id="local-6989586621689184230"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#field"><span class="hs-identifier hs-type">field</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-225"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184230"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184229"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-226"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-227"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-228"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185658"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185659"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185660"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185657"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-229"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185658"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185660"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185657"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-228"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184228"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184229"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184227"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-229"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184228"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184227"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
 </span><span id="line-230"></span><span id="field"><span class="annot"><span class="annottext">field :: Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m a
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#field"><span class="hs-identifier hs-var hs-var">field</span></a></span></span><span> </span><span id="local-6989586621689185656"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185656"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689185655"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185655"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689185654"><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185654"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#field"><span class="hs-identifier hs-var hs-var">field</span></a></span></span><span> </span><span id="local-6989586621689184226"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184226"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689184225"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184225"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689184224"><span class="annot"><span class="annottext">Parser origin k m a
+</span><a href="#local-6989586621689184224"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-231"></span><span>  </span><span class="annot"><span class="annottext">InputFieldsParser :: forall origin (m :: * -&gt; *) a.
 [Definition origin (InputFieldInfo origin)]
 -&gt; (HashMap Name (InputValue Variable) -&gt; m a)
@@ -379,8 +379,8 @@ forall origin a.
 Name
 -&gt; Maybe Description -&gt; Maybe origin -&gt; a -&gt; Definition origin a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185656"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185655"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
+</span><a href="#local-6989586621689184226"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184225"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(InputFieldInfo origin
  -&gt; Definition origin (InputFieldInfo origin))
@@ -395,12 +395,12 @@ Type origin k -&gt; Maybe (Value Void) -&gt; InputFieldInfo origin
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var hs-var">pType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185654"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621689184224"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-233"></span><span>      </span><span class="annot"><span class="annottext">ifParser :: HashMap Name (InputValue Variable) -&gt; m a
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var">ifParser</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689185650"><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
-</span><a href="#local-6989586621689185650"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JSONPathElement -&gt; m a -&gt; m a
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var">ifParser</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689184220"><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
+</span><a href="#local-6989586621689184220"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JSONPathElement -&gt; m a -&gt; m a
 forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 JSONPathElement -&gt; m a -&gt; m a
@@ -408,9 +408,9 @@ JSONPathElement -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">Key</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185656"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-234"></span><span>        </span><span id="local-6989586621689185645"><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185645"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689184226"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-234"></span><span>        </span><span id="local-6989586621689184215"><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184215"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-235"></span><span>          </span><span class="annot"><span class="annottext">Maybe (InputValue Variable)
 -&gt; m (InputValue Variable) -&gt; m (InputValue Variable)
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
@@ -419,12 +419,12 @@ forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 -&gt; Maybe (InputValue Variable)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185656"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
-</span><a href="#local-6989586621689185650"><span class="hs-identifier hs-var">values</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (InputValue Variable)
+</span><a href="#local-6989586621689184226"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
+</span><a href="#local-6989586621689184220"><span class="hs-identifier hs-var">values</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (InputValue Variable)
 -&gt; Maybe (InputValue Variable) -&gt; Maybe (InputValue Variable)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (InputValue Variable)
-</span><a href="#local-6989586621689185641"><span class="hs-identifier hs-var">nullableDefault</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (InputValue Variable) -&gt; m (InputValue Variable))
+</span><a href="#local-6989586621689184211"><span class="hs-identifier hs-var">nullableDefault</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (InputValue Variable) -&gt; m (InputValue Variable))
 -&gt; m (InputValue Variable) -&gt; m (InputValue Variable)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -434,25 +434,25 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;missing required field &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185656"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689184226"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-237"></span><span>        </span><span class="annot"><span class="annottext">Parser origin k m a -&gt; InputValue Variable -&gt; m a
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 ('Input &lt;: k) =&gt;
 Parser origin k m a -&gt; InputValue Variable -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#pInputParser"><span class="hs-identifier hs-var">pInputParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185654"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185645"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689184224"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184215"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-238"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-239"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-240"></span><span>    </span><span class="hs-comment">-- nullable fields just have an implicit default value of `null`</span><span>
-</span><span id="line-241"></span><span>    </span><span id="local-6989586621689185641"><span class="annot"><span class="annottext">nullableDefault :: Maybe (InputValue Variable)
-</span><a href="#local-6989586621689185641"><span class="hs-identifier hs-var hs-var">nullableDefault</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; Nullability
+</span><span id="line-241"></span><span>    </span><span id="local-6989586621689184211"><span class="annot"><span class="annottext">nullableDefault :: Maybe (InputValue Variable)
+</span><a href="#local-6989586621689184211"><span class="hs-identifier hs-var hs-var">nullableDefault</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; Nullability
 forall origin (k :: Kind). Type origin k -&gt; Nullability
 </span><a href="Hasura.GraphQL.Parser.Schema.html#typeNullability"><span class="hs-identifier hs-var">typeNullability</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser origin k m a -&gt; Type origin k
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var hs-var">pType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185654"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689184224"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-242"></span><span>      </span><span class="annot"><span class="annottext">Nullability
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Nullable"><span class="hs-identifier hs-var">Nullable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InputValue Variable -&gt; Maybe (InputValue Variable)
 forall a. a -&gt; Maybe a
@@ -474,20 +474,20 @@ forall a. Maybe a
 </span><span id="line-250"></span><span class="hs-comment">--</span><span>
 </span><span id="line-251"></span><span class="hs-comment">-- If you want a field with a default value of @null@, use 'field' with a</span><span>
 </span><span id="line-252"></span><span class="hs-comment">-- nullable value parser, instead.</span><span>
-</span><span id="line-253"></span><span id="local-6989586621689185631"><span id="local-6989586621689185632"><span id="local-6989586621689185633"><span id="local-6989586621689185634"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldOptional"><span class="hs-identifier hs-type">fieldOptional</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-254"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185634"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185633"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-253"></span><span id="local-6989586621689184201"><span id="local-6989586621689184202"><span id="local-6989586621689184203"><span id="local-6989586621689184204"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldOptional"><span class="hs-identifier hs-type">fieldOptional</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-254"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184204"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184203"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-255"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-256"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-257"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185632"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185633"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185634"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185631"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-258"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185632"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185634"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689185631"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-257"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184202"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184203"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184204"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184201"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-258"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184202"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184204"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689184201"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-259"></span><span id="fieldOptional"><span class="annot"><span class="annottext">fieldOptional :: Name
 -&gt; Maybe Description
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m (Maybe a)
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldOptional"><span class="hs-identifier hs-var hs-var">fieldOptional</span></a></span></span><span> </span><span id="local-6989586621689185630"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185630"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689185629"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185629"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689185628"><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185628"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldOptional"><span class="hs-identifier hs-var hs-var">fieldOptional</span></a></span></span><span> </span><span id="local-6989586621689184200"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184200"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689184199"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184199"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689184198"><span class="annot"><span class="annottext">Parser origin k m a
+</span><a href="#local-6989586621689184198"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-260"></span><span>  </span><span class="annot"><span class="annottext">InputFieldsParser :: forall origin (m :: * -&gt; *) a.
 [Definition origin (InputFieldInfo origin)]
 -&gt; (HashMap Name (InputValue Variable) -&gt; m a)
@@ -504,8 +504,8 @@ forall origin a.
 Name
 -&gt; Maybe Description -&gt; Maybe origin -&gt; a -&gt; Definition origin a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185630"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185629"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
+</span><a href="#local-6989586621689184200"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184199"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(InputFieldInfo origin
  -&gt; Definition origin (InputFieldInfo origin))
@@ -525,7 +525,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var hs-var">pType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185628"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621689184198"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-264"></span><span>        </span><span class="hs-special">]</span><span class="hs-special">,</span><span>
@@ -536,7 +536,7 @@ forall a. Maybe a
 -&gt; Maybe (InputValue Variable)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185630"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689184200"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-267"></span><span>          </span><span class="annot"><span class="annottext">(HashMap Name (InputValue Variable) -&gt; Maybe (InputValue Variable))
 -&gt; (Maybe (InputValue Variable) -&gt; m (Maybe a))
 -&gt; HashMap Name (InputValue Variable)
@@ -552,7 +552,7 @@ JSONPathElement -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">Key</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185630"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689184200"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-268"></span><span>            </span><span class="annot"><span class="annottext">(m (Maybe a) -&gt; m (Maybe a))
 -&gt; (Maybe (InputValue Variable) -&gt; m (Maybe a))
 -&gt; Maybe (InputValue Variable)
@@ -568,7 +568,7 @@ forall origin (k :: Kind) (m :: * -&gt; *) a.
 ('Input &lt;: k) =&gt;
 Parser origin k m a -&gt; InputValue Variable -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#pInputParser"><span class="hs-identifier hs-var">pInputParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185628"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m a)
+</span><a href="#local-6989586621689184198"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m a)
 -&gt; (InputValue Variable -&gt; m (InputValue Variable))
 -&gt; InputValue Variable
 -&gt; m a
@@ -580,11 +580,11 @@ forall (m :: * -&gt; *).
 MonadParse m =&gt;
 GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#peelVariable"><span class="hs-identifier hs-var">peelVariable</span></a></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689185621"><span class="hs-identifier hs-var">expectedType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689184191"><span class="hs-identifier hs-var">expectedType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-269"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-270"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-271"></span><span>    </span><span id="local-6989586621689185621"><span class="annot"><span class="annottext">expectedType :: GType
-</span><a href="#local-6989586621689185621"><span class="hs-identifier hs-var hs-var">expectedType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; GType
+</span><span id="line-271"></span><span>    </span><span id="local-6989586621689184191"><span class="annot"><span class="annottext">expectedType :: GType
+</span><a href="#local-6989586621689184191"><span class="hs-identifier hs-var hs-var">expectedType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; GType
 forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">(Type origin k -&gt; GType) -&gt; Type origin k -&gt; GType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -596,29 +596,29 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var hs-var">pType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185628"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><a href="#local-6989586621689184198"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-272"></span><span>
 </span><span id="line-273"></span><span class="hs-comment">-- | Creates a parser for an input field with the given default value. The</span><span>
 </span><span id="line-274"></span><span class="hs-comment">-- resulting field will always be optional, even if the underlying parser</span><span>
 </span><span id="line-275"></span><span class="hs-comment">-- rejects `null` values. The underlying parser is always called.</span><span>
-</span><span id="line-276"></span><span id="local-6989586621689185616"><span id="local-6989586621689185617"><span id="local-6989586621689185618"><span id="local-6989586621689185619"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldWithDefault"><span class="hs-identifier hs-type">fieldWithDefault</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-277"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185619"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185618"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-276"></span><span id="local-6989586621689184186"><span id="local-6989586621689184187"><span id="local-6989586621689184188"><span id="local-6989586621689184189"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldWithDefault"><span class="hs-identifier hs-type">fieldWithDefault</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-277"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184189"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184188"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-278"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-279"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-280"></span><span>  </span><span class="hs-comment">-- | default value</span><span>
 </span><span id="line-281"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-282"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185617"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185618"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185619"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185616"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-283"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185617"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185619"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185616"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-282"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184187"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184188"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184189"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184186"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-283"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184187"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184189"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184186"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
 </span><span id="line-284"></span><span id="fieldWithDefault"><span class="annot"><span class="annottext">fieldWithDefault :: Name
 -&gt; Maybe Description
 -&gt; Value Void
 -&gt; Parser origin k m a
 -&gt; InputFieldsParser origin m a
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldWithDefault"><span class="hs-identifier hs-var hs-var">fieldWithDefault</span></a></span></span><span> </span><span id="local-6989586621689185615"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185615"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689185614"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185614"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689185613"><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689185613"><span class="hs-identifier hs-var">defaultValue</span></a></span></span><span> </span><span id="local-6989586621689185612"><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185612"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#fieldWithDefault"><span class="hs-identifier hs-var hs-var">fieldWithDefault</span></a></span></span><span> </span><span id="local-6989586621689184185"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184185"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689184184"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184184"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689184183"><span class="annot"><span class="annottext">Value Void
+</span><a href="#local-6989586621689184183"><span class="hs-identifier hs-var">defaultValue</span></a></span></span><span> </span><span id="local-6989586621689184182"><span class="annot"><span class="annottext">Parser origin k m a
+</span><a href="#local-6989586621689184182"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-285"></span><span>  </span><span class="annot"><span class="annottext">InputFieldsParser :: forall origin (m :: * -&gt; *) a.
 [Definition origin (InputFieldInfo origin)]
 -&gt; (HashMap Name (InputValue Variable) -&gt; m a)
@@ -634,8 +634,8 @@ forall origin a.
 Name
 -&gt; Maybe Description -&gt; Maybe origin -&gt; a -&gt; Definition origin a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185615"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185614"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
+</span><a href="#local-6989586621689184185"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184184"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(InputFieldInfo origin
  -&gt; Definition origin (InputFieldInfo origin))
@@ -650,10 +650,10 @@ Type origin k -&gt; Maybe (Value Void) -&gt; InputFieldInfo origin
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var hs-var">pType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185612"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value Void -&gt; Maybe (Value Void)
+</span><a href="#local-6989586621689184182"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value Void -&gt; Maybe (Value Void)
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689185613"><span class="hs-identifier hs-var">defaultValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689184183"><span class="hs-identifier hs-var">defaultValue</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-287"></span><span>      </span><span class="annot"><span class="annottext">ifParser :: HashMap Name (InputValue Variable) -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var">ifParser</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-288"></span><span>        </span><span class="annot"><span class="annottext">Name
@@ -661,7 +661,7 @@ forall a. a -&gt; Maybe a
 -&gt; Maybe (InputValue Variable)
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185615"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689184185"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-289"></span><span>          </span><span class="annot"><span class="annottext">(HashMap Name (InputValue Variable) -&gt; Maybe (InputValue Variable))
 -&gt; (Maybe (InputValue Variable) -&gt; m a)
 -&gt; HashMap Name (InputValue Variable)
@@ -677,35 +677,35 @@ JSONPathElement -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">Key</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185615"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a)
+</span><a href="#local-6989586621689184185"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a)
 -&gt; (Maybe (InputValue Variable) -&gt; m a)
 -&gt; Maybe (InputValue Variable)
 -&gt; m a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-290"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689185611"><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185611"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
+</span><span id="line-290"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689184181"><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184181"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 forall (m :: * -&gt; *).
 MonadParse m =&gt;
 Bool -&gt; GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#peelVariableWith"><span class="hs-identifier hs-var">peelVariableWith</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689185609"><span class="hs-identifier hs-var">expectedType</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185611"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">m (InputValue Variable) -&gt; (InputValue Variable -&gt; m a) -&gt; m a
+</span><a href="#local-6989586621689184179"><span class="hs-identifier hs-var">expectedType</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184181"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">m (InputValue Variable) -&gt; (InputValue Variable -&gt; m a) -&gt; m a
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a -&gt; InputValue Variable -&gt; m a
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 ('Input &lt;: k) =&gt;
 Parser origin k m a -&gt; InputValue Variable -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#pInputParser"><span class="hs-identifier hs-var">pInputParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185612"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><a href="#local-6989586621689184182"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-291"></span><span>            </span><span class="annot"><span class="annottext">Maybe (InputValue Variable)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Parser origin k m a -&gt; InputValue Variable -&gt; m a
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 ('Input &lt;: k) =&gt;
 Parser origin k m a -&gt; InputValue Variable -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#pInputParser"><span class="hs-identifier hs-var">pInputParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185612"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m a) -&gt; InputValue Variable -&gt; m a
+</span><a href="#local-6989586621689184182"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m a) -&gt; InputValue Variable -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; InputValue Variable
 forall v. Value v -&gt; InputValue v
@@ -715,11 +715,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Value Variable
 forall var. Value Void -&gt; Value var
 </span><span class="hs-identifier hs-var">literal</span></span><span> </span><span class="annot"><span class="annottext">Value Void
-</span><a href="#local-6989586621689185613"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
+</span><a href="#local-6989586621689184183"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
 </span><span id="line-292"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-293"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-294"></span><span>    </span><span id="local-6989586621689185609"><span class="annot"><span class="annottext">expectedType :: GType
-</span><a href="#local-6989586621689185609"><span class="hs-identifier hs-var hs-var">expectedType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; GType
+</span><span id="line-294"></span><span>    </span><span id="local-6989586621689184179"><span class="annot"><span class="annottext">expectedType :: GType
+</span><a href="#local-6989586621689184179"><span class="hs-identifier hs-var hs-var">expectedType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin k -&gt; GType
 forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">(Type origin k -&gt; GType) -&gt; Type origin k -&gt; GType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -727,31 +727,31 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var hs-var">pType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185612"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><a href="#local-6989586621689184182"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-295"></span><span>
 </span><span id="line-296"></span><span class="hs-comment">-- -----------------------------------------------------------------------------</span><span>
 </span><span id="line-297"></span><span class="hs-comment">-- combinators</span><span>
 </span><span id="line-298"></span><span>
-</span><span id="line-299"></span><span id="local-6989586621689185605"><span id="local-6989586621689185606"><span id="local-6989586621689185607"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#enum"><span class="hs-identifier hs-type">enum</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-300"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185607"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-299"></span><span id="local-6989586621689184175"><span id="local-6989586621689184176"><span id="local-6989586621689184177"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#enum"><span class="hs-identifier hs-type">enum</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-300"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184177"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-301"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-302"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-303"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185606"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621689185605"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-304"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185606"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185607"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185605"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-303"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184176"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621689184175"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-304"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184176"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Both"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184177"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184175"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
 </span><span id="line-305"></span><span id="enum"><span class="annot"><span class="annottext">enum :: Name
 -&gt; Maybe Description
 -&gt; NonEmpty (Definition origin EnumValueInfo, a)
 -&gt; Parser origin 'Both m a
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#enum"><span class="hs-identifier hs-var hs-var">enum</span></a></span></span><span> </span><span id="local-6989586621689185604"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185604"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689185603"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185603"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689185602"><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo, a)
-</span><a href="#local-6989586621689185602"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#enum"><span class="hs-identifier hs-var hs-var">enum</span></a></span></span><span> </span><span id="local-6989586621689184174"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184174"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689184173"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184173"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689184172"><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo, a)
+</span><a href="#local-6989586621689184172"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-306"></span><span>  </span><span class="annot"><span class="annottext">Parser :: forall origin (k :: Kind) (m :: * -&gt; *) a.
 Type origin k -&gt; (ParserInput k -&gt; m a) -&gt; Parser origin k m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span>
 </span><span id="line-307"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">pType :: Type origin 'Both
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var">pType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin 'Both
-</span><a href="#local-6989586621689185600"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689184170"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-308"></span><span>      </span><span class="annot"><span class="annottext">pParser :: ParserInput 'Both -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pParser"><span class="hs-identifier hs-var">pParser</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-309"></span><span>        </span><span class="annot"><span class="annottext">GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
@@ -761,37 +761,37 @@ GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#peelVariable"><span class="hs-identifier hs-var">peelVariable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type origin 'Both -&gt; GType
 forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type origin 'Both
-</span><a href="#local-6989586621689185600"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m (InputValue Variable))
+</span><a href="#local-6989586621689184170"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m (InputValue Variable))
 -&gt; (InputValue Variable -&gt; m a) -&gt; InputValue Variable -&gt; m a
 forall (m :: * -&gt; *) a b c.
 Monad m =&gt;
 (a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
 </span><span class="hs-operator hs-var">&gt;=&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-310"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.String</span></span><span> </span><span id="local-6989586621689185596"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689185596"><span class="hs-identifier hs-var">stringValue</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-311"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689185595"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185595"><span class="hs-identifier hs-var">enumValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><span id="line-310"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.String</span></span><span> </span><span id="local-6989586621689184166"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689184166"><span class="hs-identifier hs-var">stringValue</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-311"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689184165"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184165"><span class="hs-identifier hs-var">enumValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689185596"><span class="hs-identifier hs-var">stringValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m a
-</span><a href="#local-6989586621689185593"><span class="hs-identifier hs-var">validate</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185595"><span class="hs-identifier hs-var">enumValue</span></a></span><span>
-</span><span id="line-312"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">VEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EnumValue</span></span><span> </span><span id="local-6989586621689185590"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185590"><span class="hs-identifier hs-var">enumValue</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m a
-</span><a href="#local-6989586621689185593"><span class="hs-identifier hs-var">validate</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185590"><span class="hs-identifier hs-var">enumValue</span></a></span><span>
-</span><span id="line-313"></span><span>          </span><span id="local-6989586621689185589"><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185589"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; InputValue Variable -&gt; m a
+</span><a href="#local-6989586621689184166"><span class="hs-identifier hs-var">stringValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m a
+</span><a href="#local-6989586621689184163"><span class="hs-identifier hs-var">validate</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184165"><span class="hs-identifier hs-var">enumValue</span></a></span><span>
+</span><span id="line-312"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">VEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">EnumValue</span></span><span> </span><span id="local-6989586621689184160"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184160"><span class="hs-identifier hs-var">enumValue</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m a
+</span><a href="#local-6989586621689184163"><span class="hs-identifier hs-var">validate</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184160"><span class="hs-identifier hs-var">enumValue</span></a></span><span>
+</span><span id="line-313"></span><span>          </span><span id="local-6989586621689184159"><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184159"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; InputValue Variable -&gt; m a
 forall n (m :: * -&gt; *) a.
 (HasName n, MonadParse m) =&gt;
 n -&gt; Text -&gt; InputValue Variable -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#typeMismatch"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185604"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689184174"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;an enum value&quot;</span></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185589"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><a href="#local-6989586621689184159"><span class="hs-identifier hs-var">other</span></a></span><span>
 </span><span id="line-314"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-315"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-316"></span><span>    </span><span id="local-6989586621689185600"><span class="annot"><span class="annottext">schemaType :: Type origin 'Both
-</span><a href="#local-6989586621689185600"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Nullability
+</span><span id="line-316"></span><span>    </span><span id="local-6989586621689184170"><span class="annot"><span class="annottext">schemaType :: Type origin 'Both
+</span><a href="#local-6989586621689184170"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Nullability
 -&gt; Definition origin (TypeInfo origin 'Both) -&gt; Type origin 'Both
 forall origin (k :: Kind).
 Nullability
@@ -809,8 +809,8 @@ forall origin a.
 Name
 -&gt; Maybe Description -&gt; Maybe origin -&gt; a -&gt; Definition origin a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185604"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185603"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
+</span><a href="#local-6989586621689184174"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184173"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(TypeInfo origin 'Both
  -&gt; Definition origin (TypeInfo origin 'Both))
@@ -830,9 +830,9 @@ forall a b. (a, b) -&gt; a
 -&gt; NonEmpty (Definition origin EnumValueInfo)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo, a)
-</span><a href="#local-6989586621689185602"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-317"></span><span>    </span><span id="local-6989586621689185583"><span class="annot"><span class="annottext">valuesMap :: HashMap Name a
-</span><a href="#local-6989586621689185583"><span class="hs-identifier hs-var hs-var">valuesMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name, a)] -&gt; HashMap Name a
+</span><a href="#local-6989586621689184172"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-317"></span><span>    </span><span id="local-6989586621689184153"><span class="annot"><span class="annottext">valuesMap :: HashMap Name a
+</span><a href="#local-6989586621689184153"><span class="hs-identifier hs-var hs-var">valuesMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Name, a)] -&gt; HashMap Name a
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Name, a)] -&gt; HashMap Name a) -&gt; [(Name, a)] -&gt; HashMap Name a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -872,17 +872,17 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [(Definition origin EnumValueInfo, a)]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo, a)
-</span><a href="#local-6989586621689185602"><span class="hs-identifier hs-var">values</span></a></span><span>
-</span><span id="line-318"></span><span>    </span><span id="local-6989586621689185593"><span class="annot"><span class="annottext">validate :: Name -&gt; m a
-</span><a href="#local-6989586621689185593"><span class="hs-identifier hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621689185577"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185577"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689184172"><span class="hs-identifier hs-var">values</span></a></span><span>
+</span><span id="line-318"></span><span>    </span><span id="local-6989586621689184163"><span class="annot"><span class="annottext">validate :: Name -&gt; m a
+</span><a href="#local-6989586621689184163"><span class="hs-identifier hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621689184147"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184147"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-319"></span><span>      </span><span class="annot"><span class="annottext">Maybe a -&gt; m a -&gt; m a
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; HashMap Name a -&gt; Maybe a
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185577"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name a
-</span><a href="#local-6989586621689185583"><span class="hs-identifier hs-var">valuesMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a) -&gt; m a -&gt; m a
+</span><a href="#local-6989586621689184147"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name a
+</span><a href="#local-6989586621689184153"><span class="hs-identifier hs-var">valuesMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a) -&gt; m a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-320"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; m a
@@ -918,7 +918,7 @@ forall a b. (a, b) -&gt; a
 -&gt; NonEmpty (Definition origin EnumValueInfo, a) -&gt; NonEmpty Text
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition origin EnumValueInfo, a)
-</span><a href="#local-6989586621689185602"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689184172"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-323"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -926,13 +926,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-324"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185604"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689184174"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;, but found &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
 forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185577"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689184147"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-325"></span><span>
 </span><span id="line-326"></span><span class="hs-comment">-- -----------------------------------------------------------------------------</span><span>
 </span><span id="line-327"></span><span class="hs-comment">-- helpers</span><span>
@@ -941,26 +941,26 @@ forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><span id="line-330"></span><span class="hs-comment">-- that `fieldName` isn't empty, which sadly can't be done at the type level.</span><span>
 </span><span id="line-331"></span><span class="hs-comment">-- This would prevent the creation of an object with no fields, which is against</span><span>
 </span><span id="line-332"></span><span class="hs-comment">-- the spec.</span><span>
-</span><span id="line-333"></span><span id="local-6989586621689185572"><span id="local-6989586621689185573"><span id="local-6989586621689185574"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#object"><span class="hs-identifier hs-type">object</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-334"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185574"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-333"></span><span id="local-6989586621689184142"><span id="local-6989586621689184143"><span id="local-6989586621689184144"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#object"><span class="hs-identifier hs-type">object</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-334"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184144"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-335"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-336"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-337"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185573"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185574"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185572"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-338"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185573"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185574"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185572"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-337"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184143"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184144"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184142"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-338"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184143"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184144"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184142"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
 </span><span id="line-339"></span><span id="object"><span class="annot"><span class="annottext">object :: Name
 -&gt; Maybe Description
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Input m a
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#object"><span class="hs-identifier hs-var hs-var">object</span></a></span></span><span> </span><span id="local-6989586621689185571"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185571"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689185570"><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185570"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689185569"><span class="annot"><span class="annottext">InputFieldsParser origin m a
-</span><a href="#local-6989586621689185569"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#object"><span class="hs-identifier hs-var hs-var">object</span></a></span></span><span> </span><span id="local-6989586621689184141"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184141"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689184140"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184140"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span id="local-6989586621689184139"><span class="annot"><span class="annottext">InputFieldsParser origin m a
+</span><a href="#local-6989586621689184139"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-340"></span><span>  </span><span class="annot"><span class="annottext">Parser :: forall origin (k :: Kind) (m :: * -&gt; *) a.
 Type origin k -&gt; (ParserInput k -&gt; m a) -&gt; Parser origin k m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span>
 </span><span id="line-341"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">pType :: Type origin 'Input
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var">pType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin 'Input
-</span><a href="#local-6989586621689185568"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689184138"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-342"></span><span>      </span><span class="annot"><span class="annottext">pParser :: ParserInput 'Input -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pParser"><span class="hs-identifier hs-var">pParser</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-343"></span><span>        </span><span class="annot"><span class="annottext">GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
@@ -970,15 +970,15 @@ GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#peelVariable"><span class="hs-identifier hs-var">peelVariable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type origin 'Input -&gt; GType
 forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type origin 'Input
-</span><a href="#local-6989586621689185568"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m (InputValue Variable))
+</span><a href="#local-6989586621689184138"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m (InputValue Variable))
 -&gt; (InputValue Variable -&gt; m a) -&gt; InputValue Variable -&gt; m a
 forall (m :: * -&gt; *) a b c.
 Monad m =&gt;
 (a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
 </span><span class="hs-operator hs-var">&gt;=&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-344"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">VObject</span></span><span> </span><span id="local-6989586621689185566"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621689185566"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable) -&gt; m a
-</span><a href="#local-6989586621689185565"><span class="hs-identifier hs-var">parseFields</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (InputValue Variable) -&gt; m a)
+</span><span id="line-344"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">VObject</span></span><span> </span><span id="local-6989586621689184136"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
+</span><a href="#local-6989586621689184136"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable) -&gt; m a
+</span><a href="#local-6989586621689184135"><span class="hs-identifier hs-var">parseFields</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (InputValue Variable) -&gt; m a)
 -&gt; HashMap Name (InputValue Variable) -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; InputValue Variable
@@ -988,11 +988,11 @@ forall v. Value v -&gt; InputValue v
 -&gt; HashMap Name (InputValue Variable)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621689185566"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-345"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.Object</span></span><span> </span><span id="local-6989586621689185563"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689185563"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-346"></span><span>            </span><span id="local-6989586621689185562"><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
-</span><a href="#local-6989586621689185562"><span class="hs-identifier hs-var">translatedFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689184136"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><span id="line-345"></span><span>          </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.Object</span></span><span> </span><span id="local-6989586621689184133"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689184133"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-346"></span><span>            </span><span id="local-6989586621689184132"><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
+</span><a href="#local-6989586621689184132"><span class="hs-identifier hs-var">translatedFields</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-347"></span><span>              </span><span class="annot"><span class="annottext">[(Name, InputValue Variable)] -&gt; HashMap Name (InputValue Variable)
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Name, InputValue Variable)]
@@ -1009,15 +1009,15 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><span class="hs-identifier hs-var">KM.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689185563"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Text
-</span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span id="local-6989586621689185558"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689185558"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689185557"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689185557"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-348"></span><span>                </span><span id="local-6989586621689185556"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185556"><span class="hs-identifier hs-var">name'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689184133"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Text
+</span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span id="local-6989586621689184128"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689184128"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689184127"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689184127"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-348"></span><span>                </span><span id="local-6989586621689184126"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184126"><span class="hs-identifier hs-var">name'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-349"></span><span>                  </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689185558"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><a href="#local-6989586621689184128"><span class="hs-identifier hs-var">key</span></a></span><span>
 </span><span id="line-350"></span><span>                    </span><span class="annot"><span class="annottext">Maybe Name -&gt; m Name -&gt; m Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Name
@@ -1027,33 +1027,33 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;variable value contains object with key &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689185558"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689184128"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;, which is not a legal GraphQL name&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-352"></span><span>                </span><span class="annot"><span class="annottext">(Name, InputValue Variable) -&gt; m (Name, InputValue Variable)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185556"><span class="hs-identifier hs-var">name'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; InputValue Variable
+</span><a href="#local-6989586621689184126"><span class="hs-identifier hs-var">name'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; InputValue Variable
 forall v. Value -&gt; InputValue v
 </span><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-var">JSONValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689185557"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689184127"><span class="hs-identifier hs-var">val</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-353"></span><span>            </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable) -&gt; m a
-</span><a href="#local-6989586621689185565"><span class="hs-identifier hs-var">parseFields</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
-</span><a href="#local-6989586621689185562"><span class="hs-identifier hs-var">translatedFields</span></a></span><span>
-</span><span id="line-354"></span><span>          </span><span id="local-6989586621689185555"><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185555"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; InputValue Variable -&gt; m a
+</span><a href="#local-6989586621689184135"><span class="hs-identifier hs-var">parseFields</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
+</span><a href="#local-6989586621689184132"><span class="hs-identifier hs-var">translatedFields</span></a></span><span>
+</span><span id="line-354"></span><span>          </span><span id="local-6989586621689184125"><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184125"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text -&gt; InputValue Variable -&gt; m a
 forall n (m :: * -&gt; *) a.
 (HasName n, MonadParse m) =&gt;
 n -&gt; Text -&gt; InputValue Variable -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#typeMismatch"><span class="hs-identifier hs-var">typeMismatch</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185571"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689184141"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;an object&quot;</span></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185555"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><a href="#local-6989586621689184125"><span class="hs-identifier hs-var">other</span></a></span><span>
 </span><span id="line-355"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-356"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-357"></span><span>    </span><span id="local-6989586621689185568"><span class="annot"><span class="annottext">schemaType :: Type origin 'Input
-</span><a href="#local-6989586621689185568"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-357"></span><span>    </span><span id="local-6989586621689184138"><span class="annot"><span class="annottext">schemaType :: Type origin 'Input
+</span><a href="#local-6989586621689184138"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-358"></span><span>      </span><span class="annot"><span class="annottext">Nullability
 -&gt; Definition origin (TypeInfo origin 'Input) -&gt; Type origin 'Input
 forall origin (k :: Kind).
@@ -1073,8 +1073,8 @@ forall origin a.
 Name
 -&gt; Maybe Description -&gt; Maybe origin -&gt; a -&gt; Definition origin a
 </span><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-var">Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185571"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
-</span><a href="#local-6989586621689185570"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
+</span><a href="#local-6989586621689184141"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689184140"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe origin
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">(TypeInfo origin 'Input
  -&gt; Definition origin (TypeInfo origin 'Input))
@@ -1095,9 +1095,9 @@ forall origin (m :: * -&gt; *) a.
 InputFieldsParser origin m a
 -&gt; [Definition origin (InputFieldInfo origin)]
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifDefinitions"><span class="hs-identifier hs-var hs-var">ifDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser origin m a
-</span><a href="#local-6989586621689185569"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-361"></span><span>    </span><span id="local-6989586621689185552"><span class="annot"><span class="annottext">fieldNames :: HashSet Name
-</span><a href="#local-6989586621689185552"><span class="hs-identifier hs-var hs-var">fieldNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
+</span><a href="#local-6989586621689184139"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-361"></span><span>    </span><span id="local-6989586621689184122"><span class="annot"><span class="annottext">fieldNames :: HashSet Name
+</span><a href="#local-6989586621689184122"><span class="hs-identifier hs-var hs-var">fieldNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; HashSet Name
 forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">S.fromList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Definition origin (InputFieldInfo origin) -&gt; Name
 forall origin a. Definition origin a -&gt; Name
@@ -1110,10 +1110,10 @@ forall origin (m :: * -&gt; *) a.
 InputFieldsParser origin m a
 -&gt; [Definition origin (InputFieldInfo origin)]
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifDefinitions"><span class="hs-identifier hs-var hs-var">ifDefinitions</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser origin m a
-</span><a href="#local-6989586621689185569"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-362"></span><span>    </span><span id="local-6989586621689185565"><span class="annot"><span class="annottext">parseFields :: HashMap Name (InputValue Variable) -&gt; m a
-</span><a href="#local-6989586621689185565"><span class="hs-identifier hs-var hs-var">parseFields</span></a></span></span><span> </span><span id="local-6989586621689185550"><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
-</span><a href="#local-6989586621689185550"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689184139"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-362"></span><span>    </span><span id="local-6989586621689184135"><span class="annot"><span class="annottext">parseFields :: HashMap Name (InputValue Variable) -&gt; m a
+</span><a href="#local-6989586621689184135"><span class="hs-identifier hs-var hs-var">parseFields</span></a></span></span><span> </span><span id="local-6989586621689184120"><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
+</span><a href="#local-6989586621689184120"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-363"></span><span>      </span><span class="hs-comment">-- check for extraneous fields here, since the InputFieldsParser just</span><span>
 </span><span id="line-364"></span><span>      </span><span class="hs-comment">-- handles parsing the fields it cares about</span><span>
 </span><span id="line-365"></span><span>      </span><span class="annot"><span class="annottext">[Name] -&gt; (Name -&gt; m ()) -&gt; m ()
@@ -1123,15 +1123,15 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><span class="hs-identifier hs-var">for_</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable) -&gt; [Name]
 forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">M.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
-</span><a href="#local-6989586621689185550"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689185547"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185547"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689184120"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689184117"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689184117"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-366"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185547"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; HashSet Name -&gt; Bool
+</span><a href="#local-6989586621689184117"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; HashSet Name -&gt; Bool
 forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
 </span><span class="hs-operator hs-var">`S.member`</span></span><span> </span><span class="annot"><span class="annottext">HashSet Name
-</span><a href="#local-6989586621689185552"><span class="hs-identifier hs-var">fieldNames</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621689184122"><span class="hs-identifier hs-var">fieldNames</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-367"></span><span>          </span><span class="annot"><span class="annottext">JSONPathElement -&gt; m () -&gt; m ()
@@ -1142,7 +1142,7 @@ JSONPathElement -&gt; m a -&gt; m a
 </span><span class="hs-identifier hs-var">Key</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Key
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><span class="hs-identifier hs-var hs-var">unName</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185547"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621689184117"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-368"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; m ()
@@ -1155,7 +1155,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185547"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689184117"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found in type: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -1163,20 +1163,20 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#squote"><span class="hs-identifier hs-var">squote</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689185571"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689184141"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-369"></span><span>      </span><span class="annot"><span class="annottext">InputFieldsParser origin m a
 -&gt; HashMap Name (InputValue Variable) -&gt; m a
 forall origin (m :: * -&gt; *) a.
 InputFieldsParser origin m a
 -&gt; HashMap Name (InputValue Variable) -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Input.html#ifParser"><span class="hs-identifier hs-var hs-var">ifParser</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser origin m a
-</span><a href="#local-6989586621689185569"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
-</span><a href="#local-6989586621689185550"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><a href="#local-6989586621689184139"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (InputValue Variable)
+</span><a href="#local-6989586621689184120"><span class="hs-identifier hs-var">fields</span></a></span><span>
 </span><span id="line-370"></span><span>
-</span><span id="line-371"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#list"><span class="hs-identifier hs-type">list</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689185542"><span class="annot"><a href="#local-6989586621689185542"><span class="hs-identifier hs-type">origin</span></a></span></span><span> </span><span id="local-6989586621689185541"><span class="annot"><a href="#local-6989586621689185541"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621689185540"><span class="annot"><a href="#local-6989586621689185540"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689185539"><span class="annot"><a href="#local-6989586621689185539"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185540"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185541"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185542"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185541"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185540"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185539"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185542"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185541"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689185540"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689185539"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-371"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Input.html#list"><span class="hs-identifier hs-type">list</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689184112"><span class="annot"><a href="#local-6989586621689184112"><span class="hs-identifier hs-type">origin</span></a></span></span><span> </span><span id="local-6989586621689184111"><span class="annot"><a href="#local-6989586621689184111"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span id="local-6989586621689184110"><span class="annot"><a href="#local-6989586621689184110"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689184109"><span class="annot"><a href="#local-6989586621689184109"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184110"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Input"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#%3C%3A"><span class="hs-operator hs-type">&lt;:</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184111"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184112"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184111"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184110"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184109"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184112"><span class="hs-identifier hs-type">origin</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184111"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689184110"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689184109"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-372"></span><span id="list"><span class="annot"><span class="annottext">list :: Parser origin k m a -&gt; Parser origin k m [a]
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#list"><span class="hs-identifier hs-var hs-var">list</span></a></span></span><span> </span><span id="local-6989586621689185538"><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185538"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#list"><span class="hs-identifier hs-var hs-var">list</span></a></span></span><span> </span><span id="local-6989586621689184108"><span class="annot"><span class="annottext">Parser origin k m a
+</span><a href="#local-6989586621689184108"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-373"></span><span>  </span><span class="annot"><span class="annottext">(ParserInput k :~: InputValue Variable)
 -&gt; ((ParserInput k ~ InputValue Variable) =&gt; Parser origin k m [a])
 -&gt; Parser origin k m [a]
@@ -1186,13 +1186,13 @@ forall k (a :: k) (b :: k) r. (a :~: b) -&gt; ((a ~ b) =&gt; r) -&gt; r
 forall (k :: Kind).
 ('Input &lt;: k) =&gt;
 ParserInput k :~: InputValue Variable
-</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#inputParserInput"><span class="hs-identifier hs-var">inputParserInput</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689185541"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.GraphQL.Parser.Internal.Input.html#inputParserInput"><span class="hs-identifier hs-var">inputParserInput</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689184111"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-375"></span><span>    </span><span class="annot"><span class="annottext">Parser :: forall origin (k :: Kind) (m :: * -&gt; *) a.
 Type origin k -&gt; (ParserInput k -&gt; m a) -&gt; Parser origin k m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span>
 </span><span id="line-376"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">pType :: Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var">pType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type origin k
-</span><a href="#local-6989586621689185537"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689184107"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-377"></span><span>        </span><span class="annot"><span class="annottext">pParser :: ParserInput k -&gt; m [a]
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pParser"><span class="hs-identifier hs-var">pParser</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-378"></span><span>          </span><span class="annot"><span class="annottext">GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
@@ -1202,14 +1202,14 @@ GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#peelVariable"><span class="hs-identifier hs-var">peelVariable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type origin k -&gt; GType
 forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type origin k
-</span><a href="#local-6989586621689185537"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m (InputValue Variable))
+</span><a href="#local-6989586621689184107"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; m (InputValue Variable))
 -&gt; (InputValue Variable -&gt; m [a]) -&gt; InputValue Variable -&gt; m [a]
 forall (m :: * -&gt; *) a b c.
 Monad m =&gt;
 (a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
 </span><span class="hs-operator hs-var">&gt;=&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-379"></span><span>            </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">VList</span></span><span> </span><span id="local-6989586621689185535"><span class="annot"><span class="annottext">[Value Variable]
-</span><a href="#local-6989586621689185535"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(Int, Value Variable)] -&gt; ((Int, Value Variable) -&gt; m a) -&gt; m [a]
+</span><span id="line-379"></span><span>            </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">VList</span></span><span> </span><span id="local-6989586621689184105"><span class="annot"><span class="annottext">[Value Variable]
+</span><a href="#local-6989586621689184105"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(Int, Value Variable)] -&gt; ((Int, Value Variable) -&gt; m a) -&gt; m [a]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
@@ -1217,29 +1217,29 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 forall a b. [a] -&gt; [b] -&gt; [(a, b)]
 </span><span class="hs-identifier hs-var">zip</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">..</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">[Value Variable]
-</span><a href="#local-6989586621689185535"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689185534"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689185534"><span class="hs-identifier hs-var">index</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689185533"><span class="annot"><span class="annottext">Value Variable
-</span><a href="#local-6989586621689185533"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689184105"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689184104"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689184104"><span class="hs-identifier hs-var">index</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689184103"><span class="annot"><span class="annottext">Value Variable
+</span><a href="#local-6989586621689184103"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-380"></span><span>              </span><span class="annot"><span class="annottext">JSONPathElement -&gt; m a -&gt; m a
 forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 JSONPathElement -&gt; m a -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Class.Parse.html#withKey"><span class="hs-identifier hs-var">withKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
 </span><span class="hs-identifier hs-var">Index</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689185534"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a) -&gt; m a -&gt; m a
+</span><a href="#local-6989586621689184104"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a) -&gt; m a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a -&gt; ParserInput k -&gt; m a
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; ParserInput k -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pParser"><span class="hs-identifier hs-var hs-var">pParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185538"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(ParserInput k -&gt; m a) -&gt; ParserInput k -&gt; m a
+</span><a href="#local-6989586621689184108"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(ParserInput k -&gt; m a) -&gt; ParserInput k -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; InputValue Variable
 forall v. Value v -&gt; InputValue v
 </span><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-var">GraphQLValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value Variable
-</span><a href="#local-6989586621689185533"><span class="hs-identifier hs-var">value</span></a></span><span>
-</span><span id="line-381"></span><span>            </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.Array</span></span><span> </span><span id="local-6989586621689185530"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689185530"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(Int, Value)] -&gt; ((Int, Value) -&gt; m a) -&gt; m [a]
+</span><a href="#local-6989586621689184103"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><span id="line-381"></span><span>            </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.Array</span></span><span> </span><span id="local-6989586621689184100"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689184100"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(Int, Value)] -&gt; ((Int, Value) -&gt; m a) -&gt; m [a]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
@@ -1251,27 +1251,27 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Array -&gt; [Value]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689185530"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689185529"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689185529"><span class="hs-identifier hs-var">index</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689185528"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689185528"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689184100"><span class="hs-identifier hs-var">values</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689184099"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689184099"><span class="hs-identifier hs-var">index</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689184098"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689184098"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-382"></span><span>              </span><span class="annot"><span class="annottext">JSONPathElement -&gt; m a -&gt; m a
 forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 JSONPathElement -&gt; m a -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Class.Parse.html#withKey"><span class="hs-identifier hs-var">withKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
 </span><span class="hs-identifier hs-var">Index</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689185529"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a) -&gt; m a -&gt; m a
+</span><a href="#local-6989586621689184099"><span class="hs-identifier hs-var">index</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m a -&gt; m a) -&gt; m a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a -&gt; ParserInput k -&gt; m a
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; ParserInput k -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pParser"><span class="hs-identifier hs-var hs-var">pParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185538"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(ParserInput k -&gt; m a) -&gt; ParserInput k -&gt; m a
+</span><a href="#local-6989586621689184108"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">(ParserInput k -&gt; m a) -&gt; ParserInput k -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; InputValue Variable
 forall v. Value -&gt; InputValue v
 </span><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-var">JSONValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689185528"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689184098"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-383"></span><span>            </span><span class="hs-comment">-- List Input Coercion</span><span>
 </span><span id="line-384"></span><span>            </span><span class="hs-comment">--</span><span>
 </span><span id="line-385"></span><span>            </span><span class="hs-comment">-- According to section 3.11 of the GraphQL spec: iff the value</span><span>
@@ -1293,8 +1293,8 @@ forall (m :: * -&gt; *) a. MonadParse m =&gt; Text -&gt; m a
 forall (m :: * -&gt; *) a. MonadParse m =&gt; Text -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Class.Parse.html#parseError"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expected a list, but found null&quot;</span></span><span>
-</span><span id="line-396"></span><span>            </span><span id="local-6989586621689185526"><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689185526"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(a -&gt; [a]) -&gt; m a -&gt; m [a]
+</span><span id="line-396"></span><span>            </span><span id="local-6989586621689184096"><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184096"><span class="hs-identifier hs-var">other</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(a -&gt; [a]) -&gt; m a -&gt; m [a]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; [a]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -1312,13 +1312,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; ParserInput k -&gt; m a
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pParser"><span class="hs-identifier hs-var hs-var">pParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185538"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689184108"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
 ParserInput k
-</span><a href="#local-6989586621689185526"><span class="hs-identifier hs-var">other</span></a></span><span>
+</span><a href="#local-6989586621689184096"><span class="hs-identifier hs-var">other</span></a></span><span>
 </span><span id="line-397"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-398"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-399"></span><span>    </span><span id="local-6989586621689185537"><span class="annot"><span class="annottext">schemaType :: Type origin k
-</span><a href="#local-6989586621689185537"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Nullability -&gt; Type origin k -&gt; Type origin k
+</span><span id="line-399"></span><span>    </span><span id="local-6989586621689184107"><span class="annot"><span class="annottext">schemaType :: Type origin k
+</span><a href="#local-6989586621689184107"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Nullability -&gt; Type origin k -&gt; Type origin k
 forall origin (k :: Kind).
 Nullability -&gt; Type origin k -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Schema.html#TList"><span class="hs-identifier hs-var">TList</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
@@ -1328,5 +1328,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall origin (k :: Kind) (m :: * -&gt; *) a.
 Parser origin k m a -&gt; Type origin k
 </span><a href="Hasura.GraphQL.Parser.Internal.Types.html#pType"><span class="hs-identifier hs-var hs-var">pType</span></a></span><span> </span><span class="annot"><span class="annottext">Parser origin k m a
-</span><a href="#local-6989586621689185538"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><a href="#local-6989586621689184108"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-400"></span></pre></body></html>
