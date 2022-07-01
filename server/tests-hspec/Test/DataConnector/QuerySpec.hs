@@ -79,6 +79,22 @@ tables:
             remote_table: Album
             column_mapping:
               ArtistId: ArtistId
+  - table: Playlist
+  - table: PlaylistTrack
+    object_relationships:
+      - name: Playlist
+        using:
+          manual_configuration:
+            remote_table: Playlist
+            column_mapping:
+              PlaylistId: PlaylistId
+      - name: Track
+        using:
+          manual_configuration:
+            remote_table: Track
+            column_mapping:
+              TrackId: TrackId
+  - table: Track
 configuration: {}
 |]
 
@@ -114,24 +130,24 @@ tests opts = describe "Queries" $ do
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums(limit: 3, order_by: {id: asc}) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums(limit: 3, order_by: {id: asc}) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums:
-    - id: 1
-      title: For Those About To Rock We Salute You
-    - id: 2
-      title: Balls to the Wall
-    - id: 3
-      title: Restless and Wild
-|]
+          data:
+            albums:
+              - id: 1
+                title: For Those About To Rock We Salute You
+              - id: 2
+                title: Balls to the Wall
+              - id: 3
+                title: Restless and Wild
+        |]
 
     it "works with a primary key" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -139,20 +155,20 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums_by_pk(id: 1) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums_by_pk(id: 1) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums_by_pk:
-    - id: 1
-      title: "For Those About To Rock We Salute You"
-|]
+          data:
+            albums_by_pk:
+              - id: 1
+                title: "For Those About To Rock We Salute You"
+        |]
 
     it "works with non existent primary key" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -160,18 +176,45 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums_by_pk(id: 999999) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums_by_pk(id: 999999) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums_by_pk: []
-|]
+          data:
+            albums_by_pk: []
+        |]
+
+    it "works with a composite primary key" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getAlbum {
+                  PlaylistTrack_by_pk(PlaylistId: 1, TrackId: 2) {
+                    Playlist {
+                      Name
+                    }
+                    Track {
+                      Name
+                    }
+                  }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            PlaylistTrack_by_pk:
+              - Playlist:
+                  Name: "Music"
+                Track:
+                  Name: "Balls to the Wall"
+        |]
 
   it "works with pagination" $ \(testEnvironment, _) ->
     shouldReturnYaml
@@ -179,20 +222,20 @@ data:
       ( GraphqlEngine.postGraphql
           testEnvironment
           [graphql|
-query getAlbum {
-  albums (limit: 3, offset: 2) {
-    id
-  }
-}
-|]
+            query getAlbum {
+              albums (limit: 3, offset: 2) {
+                id
+              }
+            }
+          |]
       )
       [yaml|
-data:
-  albums:
-    - id: 3
-    - id: 4
-    - id: 5
-|]
+        data:
+          albums:
+            - id: 3
+            - id: 4
+            - id: 5
+      |]
 
   describe "Array Relationships" $ do
     it "joins on album id" $ \(testEnvironment, _) ->
@@ -201,26 +244,26 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getArtist {
-  artists_by_pk(id: 1) {
-    id
-    name
-    albums {
-      title
-    }
-  }
-}
-|]
+              query getArtist {
+                artists_by_pk(id: 1) {
+                  id
+                  name
+                  albums {
+                    title
+                  }
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  artists_by_pk:
-    - name: AC/DC
-      id: 1
-      albums:
-        - title: For Those About To Rock We Salute You
-        - title: Let There Be Rock
-|]
+          data:
+            artists_by_pk:
+              - name: AC/DC
+                id: 1
+                albums:
+                  - title: For Those About To Rock We Salute You
+                  - title: Let There Be Rock
+        |]
 
   describe "Object Relationships" $ do
     it "joins on artist id" $ \(testEnvironment, _) ->
@@ -229,25 +272,25 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums_by_pk(id: 1) {
-    id
-    title
-    artist {
-      name
-    }
-  }
-}
-|]
+              query getAlbum {
+                albums_by_pk(id: 1) {
+                  id
+                  title
+                  artist {
+                    name
+                  }
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums_by_pk:
-    - id: 1
-      title: "For Those About To Rock We Salute You"
-      artist:
-        name: "AC/DC"
-|]
+          data:
+            albums_by_pk:
+              - id: 1
+                title: "For Those About To Rock We Salute You"
+                artist:
+                  name: "AC/DC"
+        |]
 
   describe "Where Clause Tests" $ do
     it "works with '_in' predicate" $ \(testEnvironment, _) ->
@@ -256,24 +299,24 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums(where: {id: {_in: [1, 3, 5]}}) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums(where: {id: {_in: [1, 3, 5]}}) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums:
-  - id: 1
-    title: For Those About To Rock We Salute You
-  - id: 3
-    title: Restless and Wild
-  - id: 5
-    title: Big Ones
-|]
+          data:
+            albums:
+            - id: 1
+              title: For Those About To Rock We Salute You
+            - id: 3
+              title: Restless and Wild
+            - id: 5
+              title: Big Ones
+        |]
 
     it "works with '_nin' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -281,22 +324,22 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums(where: {id: {_in: [1, 3, 5]}, title: {_nin: ["Big Ones"]}}) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums(where: {id: {_in: [1, 3, 5]}, title: {_nin: ["Big Ones"]}}) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums:
-  - id: 1
-    title: For Those About To Rock We Salute You
-  - id: 3
-    title: Restless and Wild
-|]
+          data:
+            albums:
+            - id: 1
+              title: For Those About To Rock We Salute You
+            - id: 3
+              title: Restless and Wild
+        |]
 
     it "works with '_eq' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -304,20 +347,20 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums(where: {id: {_eq: 1}}) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums(where: {id: {_eq: 1}}) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums:
-    - id: 1
-      title: For Those About To Rock We Salute You
-|]
+          data:
+            albums:
+              - id: 1
+                title: For Those About To Rock We Salute You
+        |]
 
     it "works with '_neq' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -325,22 +368,22 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums(where: {id: {_neq: 2, _in: [1, 2, 3]}}) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums(where: {id: {_neq: 2, _in: [1, 2, 3]}}) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums:
-    - id: 1
-      title: For Those About To Rock We Salute You
-    - id: 3
-      title: Restless and Wild
-|]
+          data:
+            albums:
+              - id: 1
+                title: For Those About To Rock We Salute You
+              - id: 3
+                title: Restless and Wild
+        |]
 
     it "works with '_lt' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -348,20 +391,20 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getAlbum {
-  albums(where: {id: {_lt: 2}}) {
-    id
-    title
-  }
-}
-|]
+              query getAlbum {
+                albums(where: {id: {_lt: 2}}) {
+                  id
+                  title
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  albums:
-    - id: 1
-      title: For Those About To Rock We Salute You
-|]
+          data:
+            albums:
+              - id: 1
+                title: For Those About To Rock We Salute You
+        |]
 
     it "works with '_lte' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -369,22 +412,22 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getArtists {
-  artists(where: {id: {_lte: 2}}) {
-    id
-    name
-  }
-}
-|]
+              query getArtists {
+                artists(where: {id: {_lte: 2}}) {
+                  id
+                  name
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  artists:
-    - id: 1
-      name: AC/DC
-    - id: 2
-      name: Accept
-|]
+          data:
+            artists:
+              - id: 1
+                name: AC/DC
+              - id: 2
+                name: Accept
+        |]
 
     it "works with '_gt' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -392,20 +435,20 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getArtists {
-  artists(where: {id: {_gt: 274}}) {
-    id
-    name
-  }
-}
-|]
+              query getArtists {
+                artists(where: {id: {_gt: 274}}) {
+                  id
+                  name
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  artists:
-    - id: 275
-      name: Philip Glass Ensemble
-|]
+          data:
+            artists:
+              - id: 275
+                name: Philip Glass Ensemble
+        |]
 
     it "works with '_gte' predicate" $ \(testEnvironment, _) ->
       shouldReturnYaml
@@ -413,19 +456,19 @@ data:
         ( GraphqlEngine.postGraphql
             testEnvironment
             [graphql|
-query getArtists {
-  artists(where: {id: {_gte: 274}}) {
-    id
-    name
-  }
-}
-|]
+              query getArtists {
+                artists(where: {id: {_gte: 274}}) {
+                  id
+                  name
+                }
+              }
+            |]
         )
         [yaml|
-data:
-  artists:
-    - id: 274
-      name: Nash Ensemble
-    - id: 275
-      name: Philip Glass Ensemble
-|]
+          data:
+            artists:
+              - id: 274
+                name: Nash Ensemble
+              - id: 275
+                name: Philip Glass Ensemble
+        |]

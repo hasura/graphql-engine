@@ -8,6 +8,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
@@ -114,6 +115,7 @@ resolveDatabaseMetadata' ::
 resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {..}}) customization =
   let tables = Map.fromList $ do
         API.TableInfo {..} <- srTables
+        let primaryKeyColumns = Seq.fromList $ coerce <$> fromMaybe [] dtiPrimaryKey
         let meta =
               RQL.T.T.DBTableMetadata
                 { _ptmiOid = OID 0,
@@ -129,7 +131,7 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
                           -- TODO: Add Column Mutability to the 'TableInfo'
                           rciMutability = RQL.T.C.ColumnMutability False False
                         },
-                  _ptmiPrimaryKey = dtiPrimaryKey <&> \key -> RQL.T.T.PrimaryKey (RQL.T.T.Constraint () (OID 0)) (NESeq.singleton (coerce key)),
+                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint () (OID 0)) <$> NESeq.fromSeq primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = mempty,
                   _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,

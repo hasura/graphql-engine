@@ -66,7 +66,7 @@ schema =
                       API.dciDescription = Just "The name of the artist"
                     }
                 ],
-              API.dtiPrimaryKey = Just "ArtistId",
+              API.dtiPrimaryKey = Just [API.ColumnName "ArtistId"],
               API.dtiDescription = Just "Collection of artists of music"
             },
           API.TableInfo
@@ -91,7 +91,7 @@ schema =
                       API.dciDescription = Just "The ID of the artist that created the album"
                     }
                 ],
-              API.dtiPrimaryKey = Just "AlbumId",
+              API.dtiPrimaryKey = Just [API.ColumnName "AlbumId"],
               API.dtiDescription = Just "Collection of music albums created by artists"
             },
           API.TableInfo
@@ -110,7 +110,7 @@ schema =
                       API.dciDescription = Just "The name of the genre"
                     }
                 ],
-              API.dtiPrimaryKey = Just "GenreId",
+              API.dtiPrimaryKey = Just [API.ColumnName "GenreId"],
               API.dtiDescription = Just "Genres of music"
             },
           API.TableInfo
@@ -129,7 +129,7 @@ schema =
                       API.dciDescription = Just "The name of the media type format"
                     }
                 ],
-              API.dtiPrimaryKey = Just "MediaTypeId",
+              API.dtiPrimaryKey = Just [API.ColumnName "MediaTypeId"],
               API.dtiDescription = Just "Collection of media types that tracks can be encoded in"
             },
           API.TableInfo
@@ -190,7 +190,7 @@ schema =
                       API.dciDescription = Just "The price of the track"
                     }
                 ],
-              API.dtiPrimaryKey = Just "TrackId",
+              API.dtiPrimaryKey = Just [API.ColumnName "TrackId"],
               API.dtiDescription = Just "Collection of music tracks"
             }
         ]

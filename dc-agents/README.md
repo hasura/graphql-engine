@@ -165,39 +165,46 @@ The `GET /schema` endpoint is called whenever the metadata is (re)loaded by `gra
 {
   "tables": [
     {
-      "name": "artists",
-      "primary_key": "id",
+      "name": "Artist",
+      "primary_key": ["ArtistId"],
+      "description": "Collection of artists of music",
       "columns": [
         {
-          "name": "id",
-          "type": "string",
-          "nullable": false
+          "name": "ArtistId",
+          "type": "number",
+          "nullable": false,
+          "description": "Artist primary key identifier"
         },
         {
-          "name": "name",
+          "name": "Name",
           "type": "string",
-          "nullable": false
+          "nullable": true,
+          "description": "The name of the artist"
         }
       ]
     },
     {
-      "name": "albums",
-      "primary_key": "id",
+      "name": "Album",
+      "primary_key": ["AlbumId"],
+      "description": "Collection of music albums created by artists",
       "columns": [
         {
-          "name": "id",
-          "type": "string",
-          "nullable": false
+          "name": "AlbumId",
+          "type": "number",
+          "nullable": false,
+          "description": "Album primary key identifier"
         },
         {
-          "name": "title",
+          "name": "Title",
           "type": "string",
-          "nullable": false
+          "nullable": false,
+          "description": "The title of the album"
         },
         {
-          "name": "artist_id",
-          "type": "string",
-          "nullable": false
+          "name": "ArtistId",
+          "type": "number",
+          "nullable": false,
+          "description": "The ID of the artist that created this album"
         }
       ]
     }

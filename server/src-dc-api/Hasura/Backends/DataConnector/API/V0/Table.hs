@@ -38,7 +38,7 @@ instance HasCodec TableName where
 data TableInfo = TableInfo
   { dtiName :: TableName,
     dtiColumns :: [API.V0.ColumnInfo],
-    dtiPrimaryKey :: Maybe Text,
+    dtiPrimaryKey :: Maybe [API.V0.ColumnName],
     dtiDescription :: Maybe Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
