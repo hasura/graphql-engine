@@ -43,7 +43,7 @@ package graphql-engine
 source-repository-package
   type: git
   location: https://github.com/hasura/kriti-lang.git
-  tag: v0.3.1
+  tag: v0.3.2
 
 source-repository-package
   type: git
