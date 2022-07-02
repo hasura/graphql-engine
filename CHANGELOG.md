@@ -55,6 +55,7 @@
     - scalars other than UUID are more consistently inlined
     - objects now have a title and, when available, the same description as in the GraphQL schema
 - server: fix dropping column from a table that has update permissions (fix #8415)
+- server: bump Kriti package version to support optional variable lookup in string interpolation (fixes #8574)
 - console: Hide TimescaleDB internal schema from data tab
 - console: support naming conventions under GraphQL customizations while connecting postgres DB
 
