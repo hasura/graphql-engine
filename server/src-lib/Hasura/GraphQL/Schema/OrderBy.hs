@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.OrderBy
 where
 
 import Data.Has
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
@@ -99,7 +100,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
                 otherTableOrderBy <- join <$> P.fieldOptional fieldName Nothing (P.nullable otherTableParser)
                 pure $ fmap (map $ fmap $ IR.AOCObjectRelation relationshipInfo newPerms) otherTableOrderBy
             ArrRel -> do
-              let aggregateFieldName = fieldName <> Name.__aggregate
+              let aggregateFieldName = applyFieldNameCaseIdentifier tCase $ C.fromTuple (fieldName, [G.convertNameToSuffix Name._aggregate])
               aggregationParser <- lift $ orderByAggregation sourceInfo remoteTableInfo
               pure $ do
                 aggregationOrderBy <- join <$> P.fieldOptional aggregateFieldName Nothing (P.nullable aggregationParser)
@@ -123,7 +124,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
                   (orderByOperator @b tCase sourceInfo)
                   <&> fmap (pure . mkOrderByItemG @b (IR.AOCComputedField computedFieldOrderBy)) . join
             ReturnsTable table -> do
-              let aggregateFieldName = fieldName <> Name.__aggregate
+              let aggregateFieldName = applyFieldNameCaseIdentifier tCase $ C.fromTuple (fieldName, [G.convertNameToSuffix Name._aggregate])
               tableInfo' <- askTableInfo sourceInfo table
               perms <- MaybeT $ tableSelectPermissions tableInfo'
               let newPerms = fmap partialSQLExpToUnpreparedValue <$> spiFilter perms
@@ -238,7 +239,7 @@ orderByOperator' ::
   Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
 orderByOperator' tCase sourceInfo =
   let (sourcePrefix, orderOperators) = orderByOperators @b sourceInfo tCase
-   in P.nullable $ P.enum (applyFieldNameCaseCust tCase sourcePrefix) (Just "column ordering options") $ orderOperators
+   in P.nullable $ P.enum (applyTypeNameCaseCust tCase sourcePrefix) (Just "column ordering options") $ orderOperators
 
 mkOrderByItemG :: forall b a. a -> (BasicOrderType b, NullsOrderType b) -> IR.OrderByItemG b a
 mkOrderByItemG column (orderType, nullsOrder) =

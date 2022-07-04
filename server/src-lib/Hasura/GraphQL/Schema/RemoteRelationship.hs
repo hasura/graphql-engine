@@ -7,6 +7,7 @@ import Control.Lens
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.List.NonEmpty qualified as NE
+import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
@@ -29,7 +30,7 @@ import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase (..), mkCustomizedTypename)
+import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -182,6 +183,7 @@ remoteRelationshipToSourceField ::
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
   P.withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
+    tCase <- asks getter
     sourceInfo <-
       onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
         throw500 $ "source not found " <> dquote _rsfiSource
@@ -202,7 +204,7 @@ remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
                     IR.SourceRelationshipObject $
                       IR.AnnObjectSelectG fields _rsfiTable $ IR._tpFilter $ tablePermissionsInfo tablePerms
           ArrRel -> do
-            let aggFieldName = fieldName <> Name.__aggregate
+            let aggFieldName = applyFieldNameCaseIdentifier tCase $ C.fromTuple (fieldName, [G.convertNameToSuffix Name._aggregate])
             selectionSetParser <- selectTable sourceInfo tableInfo fieldName Nothing
             aggSelectionSetParser <- selectTableAggregate sourceInfo tableInfo aggFieldName Nothing
             pure $

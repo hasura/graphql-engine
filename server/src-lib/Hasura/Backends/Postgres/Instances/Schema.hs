@@ -338,22 +338,22 @@ orderByOperators ::
 orderByOperators tCase =
   (Name._order_by,) $
     NE.fromList
-      [ ( define (applyFieldNameCaseCust tCase Name._asc) "in ascending order, nulls last",
+      [ ( define (applyEnumValueCase tCase Name._asc) "in ascending order, nulls last",
           (PG.OTAsc, PG.NLast)
         ),
-        ( define (applyFieldNameCaseCust tCase Name._asc_nulls_first) "in ascending order, nulls first",
+        ( define (applyEnumValueCase tCase Name._asc_nulls_first) "in ascending order, nulls first",
           (PG.OTAsc, PG.NFirst)
         ),
-        ( define (applyFieldNameCaseCust tCase Name._asc_nulls_last) "in ascending order, nulls last",
+        ( define (applyEnumValueCase tCase Name._asc_nulls_last) "in ascending order, nulls last",
           (PG.OTAsc, PG.NLast)
         ),
-        ( define (applyFieldNameCaseCust tCase Name._desc) "in descending order, nulls first",
+        ( define (applyEnumValueCase tCase Name._desc) "in descending order, nulls first",
           (PG.OTDesc, PG.NFirst)
         ),
-        ( define (applyFieldNameCaseCust tCase Name._desc_nulls_first) "in descending order, nulls first",
+        ( define (applyEnumValueCase tCase Name._desc_nulls_first) "in descending order, nulls first",
           (PG.OTDesc, PG.NFirst)
         ),
-        ( define (applyFieldNameCaseCust tCase Name._desc_nulls_last) "in descending order, nulls last",
+        ( define (applyEnumValueCase tCase Name._desc_nulls_last) "in descending order, nulls last",
           (PG.OTDesc, PG.NLast)
         )
       ]
@@ -388,8 +388,8 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
   lqueryParser <- columnParser (ColumnScalar PGLquery) (G.Nullability False)
   -- `ltxtquery` represents a full-text-search-like pattern for matching `ltree` values.
   ltxtqueryParser <- columnParser (ColumnScalar PGLtxtquery) (G.Nullability False)
-  maybeCastParser <- castExp columnType
   tCase <- asks getter
+  maybeCastParser <- castExp columnType tCase
   let name = applyTypeNameCaseCust tCase $ P.getName typedParser <> Name.__comparison_exp
       desc =
         G.Description $
@@ -675,8 +675,8 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
           (ColumnScalar $ PG.PGArray scalarType)
           (PG.PGValArray $ cvValue <$> columnValues)
 
-    castExp :: ColumnType ('Postgres pgKind) -> m (Maybe (Parser 'Input n (CastExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
-    castExp sourceType = do
+    castExp :: ColumnType ('Postgres pgKind) -> NamingCase -> m (Maybe (Parser 'Input n (CastExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
+    castExp sourceType tCase = do
       let maybeScalars = case sourceType of
             ColumnScalar PGGeography -> Just (PGGeography, PGGeometry)
             ColumnScalar PGGeometry -> Just (PGGeometry, PGGeography)
@@ -684,10 +684,11 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
             _ -> Nothing
 
       forM maybeScalars $ \(sourceScalar, targetScalar) -> do
-        sourceName <- mkScalarTypeName sourceScalar <&> (<> Name.__cast_exp)
+        scalarTypeName <- C.fromName <$> mkScalarTypeName sourceScalar
         targetName <- mkScalarTypeName targetScalar
         targetOpExps <- comparisonExps $ ColumnScalar targetScalar
         let field = P.fieldOptional targetName Nothing $ (targetScalar,) <$> targetOpExps
+            sourceName = applyTypeNameCaseIdentifier tCase (scalarTypeName <> (C.fromTuple $$(G.litGQLIdentifier ["cast", "exp"])))
         pure $ P.object sourceName Nothing $ M.fromList . maybeToList <$> field
 
 geographyWithinDistanceInput ::
