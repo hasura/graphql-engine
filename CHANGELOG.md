@@ -49,6 +49,8 @@
 
 ### Bug fixes and improvements
 
+
+- server: Create missing SQL triggers, if any, while reloading metadata and startup.
 - server: fix name transformation bug in `graphql-default` naming convention (fixes #8640 partially)
 - server: changes to the Rest Endpoints OpenAPI specification:
     - the nullability of items in the output is now always correctly reported

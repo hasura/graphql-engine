@@ -15,9 +15,11 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     unlockEventsInSource,
     getMaintenanceModeVersion,
     qualifyTableName,
+    createMissingSQLTriggers,
   )
 where
 
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
@@ -185,7 +187,7 @@ dropDanglingSQLTrigger sourceConfig triggerName table ops =
         traverse_ (dropTriggerOp triggerName (tableSchema table)) ops
 
 createTableEventTrigger ::
-  (MonadIO m) =>
+  MonadIO m =>
   ServerConfigCtx ->
   MSSQLSourceConfig ->
   TableName ->
@@ -197,8 +199,50 @@ createTableEventTrigger ::
 createTableEventTrigger _serverConfigCtx sourceConfig table columns triggerName opsDefinition primaryKeyMaybe = do
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
-      dropTriggerQ triggerName (tableSchema table)
       mkAllTriggersQ triggerName table columns opsDefinition primaryKeyMaybe
+
+createMissingSQLTriggers ::
+  ( MonadIO m,
+    MonadError QErr m,
+    MonadBaseControl IO m
+  ) =>
+  MSSQLSourceConfig ->
+  TableName ->
+  ([ColumnInfo 'MSSQL], Maybe (PrimaryKey 'MSSQL (ColumnInfo 'MSSQL))) ->
+  TriggerName ->
+  TriggerOpsDef 'MSSQL ->
+  m ()
+createMissingSQLTriggers sourceConfig table@(TableName tableNameText (SchemaName schemaText)) (allCols, primaryKeyMaybe) triggerName opsDefinition = do
+  liftEitherM $
+    runMSSQLSourceWriteTx sourceConfig $ do
+      onJust (tdInsert opsDefinition) (doesSQLTriggerExist INSERT)
+      onJust (tdUpdate opsDefinition) (doesSQLTriggerExist UPDATE)
+      onJust (tdDelete opsDefinition) (doesSQLTriggerExist DELETE)
+  where
+    doesSQLTriggerExist op opSpec = do
+      let triggerNameWithOp = "notify_hasura_" <> triggerNameToTxt triggerName <> "_" <> tshow op
+      doesOpTriggerExist <-
+        liftMSSQLTx $
+          singleRowQueryE
+            HGE.defaultMSSQLTxErrorHandler
+            [ODBC.sql|
+               SELECT CASE WHEN EXISTS
+                 ( SELECT 1
+                   FROM sys.triggers tr
+                   INNER join sys.tables tb on tr.parent_id = tb.object_id
+                   INNER join sys.schemas s on tb.schema_id = s.schema_id
+                   WHERE tb.name = $tableNameText AND tr.name = $triggerNameWithOp AND s.name = $schemaText
+                 )
+               THEN CAST(1 AS BIT)
+               ELSE CAST(0 AS BIT)
+               END;
+             |]
+      unless doesOpTriggerExist $ do
+        case op of
+          INSERT -> mkInsertTriggerQ triggerName table allCols opSpec
+          UPDATE -> mkUpdateTriggerQ triggerName table allCols primaryKeyMaybe opSpec
+          DELETE -> mkDeleteTriggerQ triggerName table allCols opSpec
+          MANUAL -> pure ()
 
 unlockEventsInSource ::
   MonadIO m =>

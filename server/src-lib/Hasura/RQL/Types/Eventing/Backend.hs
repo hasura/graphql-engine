@@ -19,7 +19,7 @@ import Hasura.RQL.Types.Eventing
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
-import Hasura.Server.Types (MaintenanceMode, ServerConfigCtx)
+import Hasura.Server.Types (HasServerConfigCtx, MaintenanceMode, ServerConfigCtx)
 import Hasura.Session (UserInfo)
 import Hasura.Tracing qualified as Tracing
 
@@ -30,7 +30,7 @@ import Hasura.Tracing qualified as Tracing
 class Backend b => BackendEventTrigger (b :: BackendType) where
   -- | insertManualEvent inserts the specified event in the event log table,
   --   note that this method should also set the trace context and session
-  --   variables in the source database context (if available)
+  --   variables in the source database context (if available).
   insertManualEvent ::
     (MonadIO m, MonadError QErr m) =>
     SourceConfig b ->
@@ -183,6 +183,18 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
     NE.NESet EventId ->
     m (Either QErr Int)
 
+  -- | @createMissingSQLTriggers@ checks in the source whether all the triggers
+  --   exist according to the event trigger's specification. If any SQL trigger doesn't
+  --   exist then it will create it.
+  createMissingSQLTriggers ::
+    (MonadIO m, MonadError QErr m, MonadBaseControl IO m, Backend b, HasServerConfigCtx m) =>
+    SourceConfig b ->
+    TableName b ->
+    ([ColumnInfo b], Maybe (PrimaryKey b (ColumnInfo b))) ->
+    TriggerName ->
+    TriggerOpsDef b ->
+    m ()
+
   createTableEventTrigger ::
     (MonadBaseControl IO m, MonadIO m, MonadError QErr m) =>
     ServerConfigCtx ->
@@ -220,6 +232,7 @@ instance BackendEventTrigger ('Postgres 'Vanilla) where
   redeliverEvent = PG.redeliverEvent
   unlockEventsInSource = PG.unlockEventsInSource
   createTableEventTrigger = PG.createTableEventTrigger
+  createMissingSQLTriggers = PG.createMissingSQLTriggers
 
 instance BackendEventTrigger ('Postgres 'Citus) where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
@@ -234,6 +247,7 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for Citus sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for Citus sources"
+  createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
 
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent = MSSQL.insertManualEvent
@@ -248,6 +262,7 @@ instance BackendEventTrigger 'MSSQL where
   unlockEventsInSource = MSSQL.unlockEventsInSource
   dropDanglingSQLTrigger = MSSQL.dropDanglingSQLTrigger
   createTableEventTrigger = MSSQL.createTableEventTrigger
+  createMissingSQLTriggers = MSSQL.createMissingSQLTriggers
 
 instance BackendEventTrigger 'BigQuery where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
@@ -262,6 +277,7 @@ instance BackendEventTrigger 'BigQuery where
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for BigQuery sources"
+  createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for BigQuery sources"
 
 instance BackendEventTrigger 'MySQL where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
@@ -276,6 +292,7 @@ instance BackendEventTrigger 'MySQL where
   redeliverEvent _ _ = throw400 NotSupported "Event triggers are not supported for MySQL sources"
   unlockEventsInSource _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
   createTableEventTrigger _ _ _ _ _ _ _ = runExceptT $ throw400 NotSupported "Event triggers are not supported for MySQL sources"
+  createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for MySQL sources"
 
 --------------------------------------------------------------------------------
 
@@ -308,3 +325,4 @@ instance BackendEventTrigger 'DataConnector where
     runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
   createTableEventTrigger _ _ _ _ _ _ _ =
     runExceptT $ throw400 NotSupported "Event triggers are not supported for the Data Connector backend."
+  createMissingSQLTriggers _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Data Connector backend."
