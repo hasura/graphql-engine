@@ -61,8 +61,8 @@ import Hasura.Server.Types
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
----------------------------------import Hasura.RQL.Types.Metadata.Object (MetadataObjId)
-----------------------------------------------
+-------------------------------------------------------------------------------
+
 -- Building contexts
 
 -- | Builds the full GraphQL context for a given query type.
