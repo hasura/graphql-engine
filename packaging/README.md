@@ -21,5 +21,5 @@ This acts as base image for building `hasura/graphql-engine` image.
 
 It is generally published with format `hasura/graphql-engine-base:<SHA256>.<OS>.<ARCH>` where
 - `<SHA256>` is the `sha256sum` of the dockerfile used to build the image
-- `OS` is the operating system. It could be any of these values: `debian`, `ubuntu`, `centos`
+- `OS` is the operating system. It could be any of these values: `debian`, `ubuntu`
 - `ARCH` is the architecture. It could be any of these values: `amd64`, `arm64`
