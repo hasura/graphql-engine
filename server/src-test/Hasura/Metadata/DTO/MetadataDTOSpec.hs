@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Metadata.DTO.MetadataDTOSpec (spec) where
 
@@ -12,6 +13,7 @@ import Data.Aeson
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.Aeson.Types (parseEither)
 import Data.Either (isLeft, isRight)
+import Data.FileEmbed (makeRelativeToProject, strToExp)
 import Hasura.Metadata.DTO.Metadata (MetadataDTO (..))
 import Hasura.Metadata.DTO.MetadataV1 (MetadataV1 (..))
 import Hasura.Metadata.DTO.MetadataV2 (MetadataV2 (..))
@@ -113,10 +115,8 @@ emptyMetadataV1 =
 
 getMetadataFixture :: IO (Either String Value)
 getMetadataFixture = do
+  let filePath = $(strToExp =<< makeRelativeToProject "../cli/internal/metadatautil/testdata/json/t2/metadata.json")
   -- Round-trip fixture data through the server's old serialization so that we
   -- will get consistent results on the next round-trip.
-  metadata <-
-    eitherDecodeFileStrict'
-      "cli/internal/metadatautil/testdata/json/t2/metadata.json" ::
-      IO (Either String Metadata)
+  metadata <- eitherDecodeFileStrict' filePath :: IO (Either String Metadata)
   return $ toJSON <$> metadata
