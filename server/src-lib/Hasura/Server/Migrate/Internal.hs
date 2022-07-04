@@ -22,7 +22,7 @@ import Hasura.Server.Migrate.Version
 
 -- | The old 0.8 catalog version is non-integral, so the version has always been
 -- stored as a string.
-getCatalogVersion :: Q.TxE QErr CatalogVersion
+getCatalogVersion :: Q.TxE QErr MetadataCatalogVersion
 getCatalogVersion = do
   versionText <-
     runIdentity . Q.getRow

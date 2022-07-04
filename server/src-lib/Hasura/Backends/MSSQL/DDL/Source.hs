@@ -39,7 +39,6 @@ import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.Backend
-import Hasura.Server.Migrate.Version
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 import Text.Shakespeare.Text qualified as ST
@@ -142,15 +141,15 @@ migrateSourceCatalog :: MonadMSSQLTx m => m RecreateEventTriggers
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
-migrateSourceCatalogFrom :: MonadMSSQLTx m => CatalogVersion -> m RecreateEventTriggers
+migrateSourceCatalogFrom :: MonadMSSQLTx m => SourceCatalogVersion -> m RecreateEventTriggers
 migrateSourceCatalogFrom prevVersion
   | prevVersion == latestSourceCatalogVersion = pure RETDoNothing
   | [] <- neededMigrations =
     throw400 NotSupported $
       "Expected source catalog version <= "
-        <> latestSourceCatalogVersionText
+        <> tshow latestSourceCatalogVersion
         <> ", but the current version is "
-        <> (tshow prevVersion)
+        <> tshow prevVersion
   | otherwise = do
     liftMSSQLTx $ traverse_ snd neededMigrations
     setSourceCatalogVersion latestSourceCatalogVersion
@@ -159,7 +158,7 @@ migrateSourceCatalogFrom prevVersion
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
 
-sourceMigrations :: [(CatalogVersion, TxE QErr [Text])]
+sourceMigrations :: [(SourceCatalogVersion, TxE QErr [Text])]
 sourceMigrations =
   $( let migrationFromFile from =
            let to = succ from

@@ -315,10 +315,10 @@ getMaintenanceModeVersionTx = liftTx $ do
   -- the previous version and the current version will change depending
   -- upon between which versions we need to support maintenance mode
   if
-      | catalogVersion == CatalogVersion 40 -> pure PreviousMMVersion
+      | catalogVersion == MetadataCatalogVersion 40 -> pure PreviousMMVersion
       -- The catalog is migrated to the 43rd version for a source
       -- which was initialised by a v1 graphql-engine instance (See @initSource@).
-      | catalogVersion == CatalogVersion 43 -> pure CurrentMMVersion
+      | catalogVersion == MetadataCatalogVersion 43 -> pure CurrentMMVersion
       | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
         throw500 $

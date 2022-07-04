@@ -1,37 +1,47 @@
-module Hasura.Server.Migrate.Version (CatalogVersion (..)) where
+module Hasura.Server.Migrate.Version
+  ( MetadataCatalogVersion (..),
+    SourceCatalogVersion (..),
+  )
+where
 
 import Data.List (isPrefixOf)
 import Hasura.Prelude
+import Hasura.SQL.Backend (BackendType)
 import Language.Haskell.TH.Lift (Lift)
 
 -- | Represents the catalog version. This is stored in the database and then
 -- compared with the latest version on startup.
-data CatalogVersion
+data MetadataCatalogVersion
   = -- | A typical catalog version.
-    CatalogVersion Int
+    MetadataCatalogVersion Int
   | -- | Maintained for compatibility with catalog version 0.8.
-    CatalogVersion08
+    MetadataCatalogVersion08
   deriving stock (Eq, Lift)
 
-instance Ord CatalogVersion where
+instance Ord MetadataCatalogVersion where
   compare = compare `on` toFloat
     where
-      toFloat :: CatalogVersion -> Float
-      toFloat (CatalogVersion v) = fromIntegral v
-      toFloat CatalogVersion08 = 0.8
+      toFloat :: MetadataCatalogVersion -> Float
+      toFloat (MetadataCatalogVersion v) = fromIntegral v
+      toFloat MetadataCatalogVersion08 = 0.8
 
-instance Enum CatalogVersion where
-  toEnum = CatalogVersion
-  fromEnum (CatalogVersion v) = v
-  fromEnum CatalogVersion08 = error "Cannot enumerate unstable catalog versions."
+instance Enum MetadataCatalogVersion where
+  toEnum = MetadataCatalogVersion
+  fromEnum (MetadataCatalogVersion v) = v
+  fromEnum MetadataCatalogVersion08 = error "Cannot enumerate unstable catalog versions."
 
-instance Show CatalogVersion where
-  show (CatalogVersion v) = show v
-  show CatalogVersion08 = "0.8"
+instance Show MetadataCatalogVersion where
+  show (MetadataCatalogVersion v) = show v
+  show MetadataCatalogVersion08 = "0.8"
 
-instance Read CatalogVersion where
+instance Read MetadataCatalogVersion where
   readsPrec prec s
     | "0.8" `isPrefixOf` s =
-      [(CatalogVersion08, drop 3 s)]
+      [(MetadataCatalogVersion08, drop 3 s)]
     | otherwise =
-      map (first CatalogVersion) $ filter ((>= 0) . fst) $ readsPrec @Int prec s
+      map (first MetadataCatalogVersion) $ filter ((>= 0) . fst) $ readsPrec @Int prec s
+
+-- | This is the source catalog version, used when deciding whether to (re-)create event triggers.
+newtype SourceCatalogVersion (backend :: BackendType) = SourceCatalogVersion Int
+  deriving newtype (Eq, Enum, Show, Read)
+  deriving stock (Lift)

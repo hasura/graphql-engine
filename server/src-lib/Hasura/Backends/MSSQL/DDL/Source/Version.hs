@@ -1,8 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Hasura.Backends.MSSQL.DDL.Source.Version
-  ( latestSourceCatalogVersion,
-    latestSourceCatalogVersionText,
+  ( SourceCatalogVersion,
+    initialSourceCatalogVersion,
+    latestSourceCatalogVersion,
     previousSourceCatalogVersions,
     setSourceCatalogVersion,
     getSourceCatalogVersion,
@@ -14,24 +15,27 @@ import Database.ODBC.SQLServer
 import Database.ODBC.TH qualified as ODBC
 import Hasura.Backends.MSSQL.Connection (MonadMSSQLTx (..))
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
-import Hasura.Base.Error
 import Hasura.Prelude
-import Hasura.Server.Migrate.Version
+import Hasura.SQL.Backend (BackendType (MSSQL))
+import Hasura.Server.Migrate.Version qualified as Version
 
-latestSourceCatalogVersion :: CatalogVersion
-latestSourceCatalogVersion = CatalogVersion 2
+type SourceCatalogVersion = Version.SourceCatalogVersion 'MSSQL
 
-latestSourceCatalogVersionText :: Text
-latestSourceCatalogVersionText = tshow latestSourceCatalogVersion
+initialSourceCatalogVersion :: SourceCatalogVersion
+initialSourceCatalogVersion = Version.SourceCatalogVersion 1
 
-previousSourceCatalogVersions :: [CatalogVersion]
-previousSourceCatalogVersions = [CatalogVersion 1 .. pred latestSourceCatalogVersion]
+latestSourceCatalogVersion :: SourceCatalogVersion
+latestSourceCatalogVersion = Version.SourceCatalogVersion 2
 
-setSourceCatalogVersion :: MonadMSSQLTx m => CatalogVersion -> m ()
-setSourceCatalogVersion (CatalogVersion version) = liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler setSourceCatalogVersionQuery
+previousSourceCatalogVersions :: [SourceCatalogVersion]
+previousSourceCatalogVersions = [initialSourceCatalogVersion .. pred latestSourceCatalogVersion]
+
+setSourceCatalogVersion :: MonadMSSQLTx m => SourceCatalogVersion -> m ()
+setSourceCatalogVersion (Version.SourceCatalogVersion version) =
+  liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler setSourceCatalogVersionQuery
   where
     setSourceCatalogVersionQuery =
-      [ODBC.sql| 
+      [ODBC.sql|
         BEGIN TRANSACTION
           IF EXISTS (select 1 from hdb_catalog.hdb_source_catalog_version WITH (UPDLOCK,SERIALIZABLE))
               BEGIN
@@ -45,9 +49,8 @@ setSourceCatalogVersion (CatalogVersion version) = liftMSSQLTx $ unitQueryE HGE.
               END
         COMMIT TRANSACTION
       |]
-setSourceCatalogVersion CatalogVersion08 =
-  throw500 "Cannot set the source catalog version to an unstable version."
 
-getSourceCatalogVersion :: MonadMSSQLTx m => m CatalogVersion
+getSourceCatalogVersion :: MonadMSSQLTx m => m SourceCatalogVersion
 getSourceCatalogVersion =
-  CatalogVersion <$> liftMSSQLTx (singleRowQueryE HGE.defaultMSSQLTxErrorHandler [ODBC.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |])
+  Version.SourceCatalogVersion
+    <$> liftMSSQLTx (singleRowQueryE HGE.defaultMSSQLTxErrorHandler [ODBC.sql| SELECT version FROM hdb_catalog.hdb_source_catalog_version |])
