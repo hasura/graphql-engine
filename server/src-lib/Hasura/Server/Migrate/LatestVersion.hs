@@ -18,11 +18,11 @@ import Language.Haskell.TH.Syntax qualified as TH
 -- | The current catalog schema version. We store this in a file
 -- because we want to append the current verson to the catalog_versions file
 -- when tagging a new release, in @tag-release.sh@.
-latestCatalogVersion :: CatalogVersion
+latestCatalogVersion :: MetadataCatalogVersion
 latestCatalogVersion =
   $( do
        let s = $(makeRelativeToProject "src-rsr/catalog_version.txt" >>= embedStringFile)
-       TH.lift (read s :: CatalogVersion)
+       TH.lift (read s :: MetadataCatalogVersion)
    )
 
 latestCatalogVersionString :: Text
