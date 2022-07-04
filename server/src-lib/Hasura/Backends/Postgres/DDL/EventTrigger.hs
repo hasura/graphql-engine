@@ -11,6 +11,7 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     redeliverEvent,
     dropTriggerAndArchiveEvents,
     createTableEventTrigger,
+    createMissingSQLTriggers,
     dropTriggerQ,
     dropDanglingSQLTrigger,
     mkAllTriggersQ,
@@ -183,6 +184,45 @@ dropTriggerAndArchiveEvents sourceConfig triggerName _table =
       runPgSourceWriteTx sourceConfig $ do
         dropTriggerQ triggerName
         archiveEvents triggerName
+
+createMissingSQLTriggers ::
+  ( MonadIO m,
+    MonadError QErr m,
+    MonadBaseControl IO m,
+    HasServerConfigCtx m,
+    Backend ('Postgres pgKind)
+  ) =>
+  PGSourceConfig ->
+  TableName ('Postgres pgKind) ->
+  ([(ColumnInfo ('Postgres pgKind))], Maybe (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))) ->
+  TriggerName ->
+  TriggerOpsDef ('Postgres pgKind) ->
+  m ()
+createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefinition = do
+  serverConfigCtx <- askServerConfigCtx
+  liftEitherM $
+    runPgSourceWriteTx sourceConfig $ do
+      onJust (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
+      onJust (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
+      onJust (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
+  where
+    doesSQLTriggerExist serverConfigCtx op opSpec = do
+      let opTriggerName = pgTriggerName op triggerName
+      doesOpTriggerFunctionExist <-
+        runIdentity . Q.getRow
+          <$> Q.withQE
+            defaultTxErrorHandler
+            [Q.sql|
+                 SELECT EXISTS
+                   ( SELECT 1
+                     FROM pg_proc
+                     WHERE proname = $1
+                   )
+              |]
+            (Identity opTriggerName)
+            True
+      unless doesOpTriggerFunctionExist $
+        flip runReaderT serverConfigCtx $ mkTrigger triggerName table allCols op opSpec
 
 createTableEventTrigger ::
   (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) =>

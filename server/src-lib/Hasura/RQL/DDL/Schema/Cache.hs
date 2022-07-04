@@ -407,11 +407,12 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
     -- impl notes (swann):
     --
-    -- as our cache invalidation key (in a sense) we use the number of event triggers
-    -- present, rerunning catalog init when this changes. this is correct, because we
-    -- only care about the transition from zero event triggers to nonzero (not
-    -- necessarily one, as Anon has observed, because replace_metadata can add multiple
-    -- event triggers in one go)
+    -- as our cache invalidation key, we use the fact of the availability of event triggers
+    -- present, rerunning catalog init when this changes. i.e we invalidate the cache and
+    -- rebuild it with the catalog only when there is at least one event trigger present.
+    -- This is correct, because we only care about the transition from zero event triggers
+    -- to nonzero (not necessarily one, as Anon has observed, because replace_metadata can
+    -- add multiple event triggers in one go)
     --
     -- a future optimisation would be to cache, on a per-source basis, whether or not
     -- the event catalog itself exists, and to then trigger catalog init when an event
@@ -428,11 +429,11 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadError QErr m,
         MonadBaseControl IO m
       ) =>
-      (Proxy b, Int, SourceConfig b) `arr` RecreateEventTriggers
-    initCatalogIfNeeded = Inc.cache proc (Proxy, numEventTriggers, sourceConfig) -> do
+      (Proxy b, Bool, SourceConfig b) `arr` RecreateEventTriggers
+    initCatalogIfNeeded = Inc.cache proc (Proxy, atleastOneTrigger, sourceConfig) -> do
       arrM id
         -< do
-          if numEventTriggers > 0
+          if atleastOneTrigger
             then do
               maintenanceMode <- _sccMaintenanceMode <$> askServerConfigCtx
               eventingMode <- _sccEventingMode <$> askServerConfigCtx
@@ -674,7 +675,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                               numEventTriggers = sum $ map (length . snd) eventTriggers
                               sourceConfig = _rsConfig source
 
-                          recreateEventTriggers <- initCatalogIfNeeded -< (Proxy :: Proxy b, numEventTriggers, sourceConfig)
+                          recreateEventTriggers <- initCatalogIfNeeded -< (Proxy :: Proxy b, numEventTriggers > 0, sourceConfig)
 
                           let alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
                               alignTableMap = M.intersectionWith (,)
@@ -1023,14 +1024,14 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         RecreateEventTriggers
       )
         `arr` (EventTriggerInfoMap b)
-    buildTableEventTriggers = proc (sourceName, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey, recreateEventTriggers) ->
+    buildTableEventTriggers = proc (sourceName, sourceConfig, tableInfo, eventTriggerConfs, metadataInvalidationKey, migrationRecreateEventTriggers) ->
       buildInfoMap (etcName . (^. _6)) (mkEventTriggerMetadataObject @b) buildEventTrigger
         -<
-          (tableInfo, map (metadataInvalidationKey,sourceName,sourceConfig,_tciName tableInfo,recreateEventTriggers,) eventTriggerConfs)
+          (tableInfo, map (metadataInvalidationKey,sourceName,sourceConfig,_tciName tableInfo,migrationRecreateEventTriggers,) eventTriggerConfs)
       where
-        buildEventTrigger = proc (tableInfo, (metadataInvalidationKey, source, sourceConfig, table, recreateEventTriggers, eventTriggerConf)) -> do
+        buildEventTrigger = proc (tableInfo, (metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)) -> do
           let triggerName = etcName eventTriggerConf
-              metadataObject = mkEventTriggerMetadataObject @b (metadataInvalidationKey, source, sourceConfig, table, recreateEventTriggers, eventTriggerConf)
+              metadataObject = mkEventTriggerMetadataObject @b (metadataInvalidationKey, source, sourceConfig, table, migrationRecreateEventTriggers, eventTriggerConf)
               schemaObjectId =
                 SOSourceObj source $
                   AB.mkAnyBackend $
@@ -1049,16 +1050,56 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                   modifyErrA
                     ( do
                         (info, dependencies) <- bindErrorA -< buildEventTriggerInfo @b env source table eventTriggerConf
-                        recreateTriggerIfNeeded
-                          -<
-                            ( table,
-                              (_tciFieldInfoMap tableInfo),
-                              triggerName,
-                              etcDefinition eventTriggerConf,
-                              sourceConfig,
-                              (_tciPrimaryKey tableInfo),
-                              recreateEventTriggers <> reloadMetadataRecreateEventTrigger
-                            )
+                        serverConfigCtx <- bindA -< askServerConfigCtx
+                        let isCatalogUpdate =
+                              case buildReason of
+                                CatalogUpdate _ -> True
+                                CatalogSync -> False
+                            tableColumns = M.elems $ _tciFieldInfoMap tableInfo
+                        if ( _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled
+                               && _sccReadOnlyMode serverConfigCtx == ReadOnlyModeDisabled
+                           )
+                          then do
+                            bindA
+                              -<
+                                when (reloadMetadataRecreateEventTrigger == RETRecreate) $
+                                  -- This is the case when the user sets `recreate_event_triggers`
+                                  -- to `true` in `reload_metadata`, in this case, we recreate
+                                  -- the SQL trigger by force, even if it may not be necessary
+                                  liftEitherM $
+                                    createTableEventTrigger
+                                      @b
+                                      serverConfigCtx
+                                      sourceConfig
+                                      table
+                                      tableColumns
+                                      triggerName
+                                      (etcDefinition eventTriggerConf)
+                                      (_tciPrimaryKey tableInfo)
+                            if isCatalogUpdate || migrationRecreateEventTriggers == RETRecreate
+                              then do
+                                recreateTriggerIfNeeded
+                                  -<
+                                    ( table,
+                                      tableColumns,
+                                      triggerName,
+                                      etcDefinition eventTriggerConf,
+                                      sourceConfig,
+                                      (_tciPrimaryKey tableInfo)
+                                    )
+                                -- We check if the SQL triggers for the event triggers
+                                -- are present. If any SQL triggers are missing, those are
+                                -- created.
+                                bindA
+                                  -<
+                                    createMissingSQLTriggers
+                                      sourceConfig
+                                      table
+                                      (tableColumns, _tciPrimaryKey tableInfo)
+                                      triggerName
+                                      (etcDefinition eventTriggerConf)
+                              else bindA -< pure ()
+                          else bindA -< pure ()
                         recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                         returnA -< info
                     )
@@ -1073,38 +1114,25 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.cache
             proc
               ( tableName,
-                tableFieldInfoMap,
+                tableColumns,
                 triggerName,
                 triggerDefinition,
                 sourceConfig,
-                primaryKey,
-                recreateEventTriggers
+                primaryKey
                 )
             -> do
               bindA
                 -< do
-                  let tableColumns = M.elems tableFieldInfoMap
-                  buildReason <- ask
                   serverConfigCtx <- askServerConfigCtx
-                  let isCatalogUpdate =
-                        case buildReason of
-                          CatalogUpdate _ -> True
-                          CatalogSync -> False
-                  -- we don't modify the existing event trigger definitions in the maintenance mode or in read-only mode
-                  when
-                    ( (isCatalogUpdate || recreateEventTriggers == RETRecreate)
-                        && _sccMaintenanceMode serverConfigCtx == MaintenanceModeDisabled
-                        && _sccReadOnlyMode serverConfigCtx == ReadOnlyModeDisabled
-                    )
-                    $ liftEitherM $
-                      createTableEventTrigger
-                        serverConfigCtx
-                        sourceConfig
-                        tableName
-                        tableColumns
-                        triggerName
-                        triggerDefinition
-                        primaryKey
+                  liftEitherM $
+                    createTableEventTrigger @b
+                      serverConfigCtx
+                      sourceConfig
+                      tableName
+                      tableColumns
+                      triggerName
+                      triggerDefinition
+                      primaryKey
 
     buildCronTriggers ::
       ( ArrowChoice arr,
