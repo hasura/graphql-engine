@@ -82,7 +82,7 @@ def validate_event(hge_ctx,
     assert ev['op'] == operation, ev
     validate_session_variables(hge_ctx, ev, session_variables)
     assert ev['data'] == exp_ev_data, ev
-    assert ev_full['body']['delivery_info']['current_retry'] == retry 
+    assert ev_full['body']['delivery_info']['current_retry'] == retry
 
 # Make some assertions on a single event recorded by webhook. Waits up to 3
 # seconds by default for an event to appear
@@ -125,12 +125,12 @@ def check_events(hge_ctx,
         ev_full = evts_webhook.get_event(get_timeout)
         ev_payload_data = ev_full['body']['event']['data']
         events_payloads_webhook.append((ev_payload_data, ev_full))
-    
+
     # If there are still some events present in queue after we get the expected number
     # of events, then it means some stray events got generated.
     if (not evts_webhook.is_queue_empty()):
         assert False, "expected number of event payload not equal to the actual number of event payload generated"
-    
+
     # Check if the payload we get from event webhook is present in the expected datas
     # If no such data is present, then error else validate the data.
     for (ev_payload_data, ev_full) in events_payloads_webhook:
@@ -393,7 +393,6 @@ Response body:
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp_resp_hdrs, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
-    print(headers)
     assert_response_code(url, query, code, exp_code, resp, body)
 
     if exp_response:
@@ -403,7 +402,6 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp
 
 def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_code, allowed_responses, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
-    print(headers)
     assert_response_code(url, query, code, exp_code, resp, body)
 
     if isinstance(allowed_responses, list) and len(allowed_responses) > 0:
