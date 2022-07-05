@@ -106,7 +106,7 @@ args:
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "non-matching X-Hasura-Allowed-Ids should return []" $ \testEnvironment -> do
+  it "non-matching X-Hasura-Allowed-Ids should return no data" $ \testEnvironment -> do
     let userHeaders = [("X-Hasura-Role", "user"), ("X-Hasura-Allowed-Ids", "{}")]
     shouldReturnYaml
       opts
