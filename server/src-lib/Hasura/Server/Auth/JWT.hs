@@ -59,9 +59,9 @@ import Control.Exception.Lifted (try)
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.JWT qualified as Jose
+import Data.Aeson (JSONPath)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
-import Data.Aeson.Internal (JSONPath)
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH qualified as J
@@ -77,7 +77,7 @@ import Data.IORef (IORef, readIORef, writeIORef)
 import Data.Map.Strict qualified as M
 import Data.Parser.CacheControl
 import Data.Parser.Expires
-import Data.Parser.JSONPath (parseJSONPath)
+import Data.Parser.JSONPath (encodeJSONPath, parseJSONPath)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Time.Clock
@@ -174,7 +174,7 @@ data JWTCustomClaimsMapValueG v
 
 instance (J.FromJSON v) => J.FromJSON (JWTCustomClaimsMapValueG v) where
   parseJSON (J.Object obj) = do
-    path <- obj J..: "path" >>= (either fail pure . parseJSONPath)
+    path <- obj J..: "path" >>= (either (fail . T.unpack) pure . parseJSONPath)
     defaultVal <- obj J..:? "default" >>= pure
     pure $ JWTCustomClaimsMapJSONPath path defaultVal
   parseJSON v = JWTCustomClaimsMapStatic <$> J.parseJSON v
@@ -247,7 +247,7 @@ data JWTNamespace
   deriving (Show, Eq)
 
 instance J.ToJSON JWTNamespace where
-  toJSON (ClaimNsPath nsPath) = J.String . T.pack $ encodeJSONPath nsPath
+  toJSON (ClaimNsPath nsPath) = J.String $ encodeJSONPath nsPath
   toJSON (ClaimNs ns) = J.String ns
 
 data JWTClaims
@@ -696,10 +696,9 @@ parseClaimsMap claimsSet jcxClaims = do
     claimsNotFound namespace =
       throw400 JWTInvalidClaims $ case namespace of
         ClaimNsPath path ->
-          T.pack $
-            "claims not found at claims_namespace_path: '"
-              <> encodeJSONPath path
-              <> "'"
+          "claims not found at claims_namespace_path: '"
+            <> encodeJSONPath path
+            <> "'"
         ClaimNs ns -> "claims key: '" <> ns <> "' not found"
 
     parseObjectFromString namespace claimsFmt jVal =
@@ -714,7 +713,7 @@ parseClaimsMap claimsSet jcxClaims = do
       where
         strngfyErr v =
           let claimsLocation = case namespace of
-                ClaimNsPath path -> T.pack $ "claims_namespace_path " <> encodeJSONPath path
+                ClaimNsPath path -> "claims_namespace_path " <> encodeJSONPath path
                 ClaimNs ns -> "claims_namespace " <> ns
            in "expecting stringified json at: '"
                 <> claimsLocation
@@ -829,7 +828,7 @@ instance J.FromJSON JWTConfig where
 
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
 
-      failJSONPathParsing err = fail $ "invalid JSON path claims_namespace_path error: " ++ err
+      failJSONPathParsing err = fail . T.unpack $ "invalid JSON path claims_namespace_path error: " <> err
 
 -- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
 parseHasuraClaims :: forall m. (MonadError QErr m) => ClaimsMap -> m HasuraClaims

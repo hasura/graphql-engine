@@ -14,6 +14,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Parser.JSONPath
+import Data.Text qualified as T
 import Hasura.Base.Error
 import Hasura.GraphQL.Transport.HTTP.Protocol (ReqsText)
 import Hasura.Logging
@@ -621,7 +622,7 @@ mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "fixme") . mkRoleName
 
 mkJSONPathE :: Text -> JSONPath
-mkJSONPathE = either error id . parseJSONPath
+mkJSONPathE = either (error . T.unpack) id . parseJSONPath
 
 newtype NoReporter a = NoReporter {runNoReporter :: IO a}
   deriving newtype (Functor, Applicative, Monad, MonadIO, MonadBase IO, MonadBaseControl IO)

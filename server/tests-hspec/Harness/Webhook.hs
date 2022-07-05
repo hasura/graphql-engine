@@ -11,6 +11,7 @@ import Control.Exception.Safe (bracket)
 import Control.Monad.IO.Class (liftIO)
 import Data.Aeson qualified as Aeson
 import Data.Parser.JSONPath (parseJSONPath)
+import Data.Text qualified as T
 import Harness.Http qualified as Http
 import Harness.TestEnvironment (Server (..), serverUrl)
 import Hasura.Base.Error (iResultToMaybe)
@@ -56,7 +57,7 @@ run = do
           let jsonBody = Aeson.decode body
           let eventDataPayload =
                 -- Only extract the data payload from the request body
-                let mkJSONPathE = either error id . parseJSONPath
+                let mkJSONPathE = either (error . T.unpack) id . parseJSONPath
                     eventJSONPath = mkJSONPathE "$.event.data"
                  in iResultToMaybe =<< executeJSONPath eventJSONPath <$> jsonBody
           liftIO $
