@@ -56,13 +56,12 @@ class TestOpenAPISpec:
 
     def test_inconsistent_schema_openAPI(self, hge_ctx, transport):
         # export metadata and create a backup
-        st_code, backup_metadata = hge_ctx.v1q(
+        backup_metadata = hge_ctx.v1q(
             q = {
                 "type": "export_metadata",
                 "args": {}
             }
         )
-        assert st_code == 200, backup_metadata
 
         new_metadata = backup_metadata.copy()
 
@@ -92,7 +91,7 @@ class TestOpenAPISpec:
         new_metadata["rest_endpoints"] = res_endpoint
 
         # apply inconsistent metadata
-        st_code, resp = hge_ctx.v1q(
+        hge_ctx.v1q(
             q={
                 "type": "replace_metadata",
                 "version": 2,
@@ -102,16 +101,14 @@ class TestOpenAPISpec:
                 }
             }
         )
-        assert st_code == 200, resp
 
         # check openAPI schema
         check_query_f(hge_ctx, self.dir() + '/openapi_inconsistent_schema.yaml', transport)
 
         # revert to old metadata
-        st_code, resp = hge_ctx.v1q(
+        hge_ctx.v1q(
             q={
                 "type": "replace_metadata",
                 "args": backup_metadata
             }
         )
-        assert st_code == 200, resp

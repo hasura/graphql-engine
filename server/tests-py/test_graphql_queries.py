@@ -382,8 +382,7 @@ class TestGraphQLQueryBasicPostgres:
         check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
 
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
-        assert st_code == 400, resp
+        resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
         assert resp['error'] == "Expecting object { table, columns }."
 
     def test_select_query_author_pk(self, hge_ctx, transport):
@@ -426,8 +425,7 @@ class TestGraphQLQueryBasicCitus:
         check_query_f(hge_ctx, self.dir() + "/select_query_disaster_functions.yaml", transport)
 
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml')
-        assert st_code == 400, resp
+        resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
         assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
 
     @classmethod
@@ -670,8 +668,7 @@ class TestGraphQLQueryBoolExpBasicMSSQL:
         check_query_f(hge_ctx, self.dir() + '/select_bools_mssql.yaml', transport)
 
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship_mssql.yaml')
-        assert st_code == 400, resp
+        resp = hge_ctx.v1metadataq_f(self.dir() + '/setup_invalid_fkey_relationship_mssql.yaml', expected_status_code = 400)
         assert resp['error'] == "Error when parsing command create_array_relationship.\nSee our documentation at https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/index.html#metadata-apis.\nInternal error message: Expecting object { table, columns }."
 
     @classmethod
@@ -788,8 +785,7 @@ class TestGraphQLInheritedRolesSchema:
             "type": "export_metadata",
             "args": {}
         }
-        st_code, resp = hge_ctx.v1q(export_metadata_query)
-        assert st_code == 200, resp
+        resp = hge_ctx.v1q(export_metadata_query)
         circular_roles_metadata = [
             {
                 "role_name": "intermediate_circular_role_1",
@@ -821,8 +817,7 @@ class TestGraphQLInheritedRolesSchema:
                 "metadata": resp
             }
         }
-        st_code, resp = hge_ctx.v1q(import_metadata_query)
-        assert st_code == 400, resp
+        resp = hge_ctx.v1q(import_metadata_query, expected_status_code = 400)
         assert resp['error'] == '''found cycle(s) in roles: ["circular_role","intermediate_circular_role_2","intermediate_circular_role_1","circular_role"]'''
 
     def test_explicit_metadata_permission_should_override_role_inheritance(self, hge_ctx, transport):
@@ -1272,13 +1267,11 @@ class TestGraphQLExplainPostgresMSSQLMySQL:
 
     def test_simple_query_as_admin(self, hge_ctx, backend):
         q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
-        st_code, resp = hge_ctx.v1GraphqlExplain(q)
-        assert st_code == 200, resp
+        hge_ctx.v1GraphqlExplain(q)
 
     def test_simple_query_as_user(self, hge_ctx, backend):
         q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
-        st_code, resp = hge_ctx.v1GraphqlExplain(q, {"x-hasura-role": "random_user"})
-        assert st_code == 400, resp
+        hge_ctx.v1GraphqlExplain(q, {"x-hasura-role": "random_user"}, expected_status_code = 400)
 
     @pytest.mark.parametrize("backend", ['postgres', 'mssql', 'mysql'])
     def test_simple_query(self, hge_ctx, backend):
@@ -1502,8 +1495,7 @@ class TestGraphQLQueryFunctionPermissions:
         check_query_f(hge_ctx, self.dir() + 'get_articles_without_permission_configured.yaml')
 
     def test_access_function_with_permission_configured(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + 'add_function_permission_get_articles.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1metadataq_f(self.dir() + 'add_function_permission_get_articles.yaml')
         check_query_f(hge_ctx, self.dir() + 'get_articles_with_permission_configured.yaml')
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])

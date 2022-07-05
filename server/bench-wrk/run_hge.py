@@ -200,7 +200,7 @@ class HGE:
 
     def v1q(self, q, exp_status=200):
         resp = requests.post(self.url + '/v1/query', json.dumps(q), headers=self.admin_auth_headers())
-        assert resp.status_code == exp_status, (resp.status_code, resp.json())
+        assert resp.status_code == exp_status, f'Expected {resp.status_code} to be {exp_status}. Response:\n{json.dumps(resp, indent=2)}'
         return resp.json()
 
     def graphql_q(self, query, variables={}, exp_status = 200):

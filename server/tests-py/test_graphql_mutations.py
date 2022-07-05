@@ -96,11 +96,9 @@ class TestGraphQLInsertIdentityColumn:
             }
         }
         if hge_ctx.pg_version >= 100000:
-            st_code, resp = hge_ctx.v1q(setup_q)
-            assert st_code == 200, resp
+            hge_ctx.v1q(setup_q)
             yield
-            st_code, resp = hge_ctx.v1q(teardown_q)
-            assert st_code == 200, resp
+            hge_ctx.v1q(teardown_q)
         else:
             pytest.skip("Identity columns are not supported in Postgres version < 10")
 
@@ -648,8 +646,7 @@ class TestGraphqlDeleteConstraintsMSSQL:
     # where 1B29035F changes with each call.
     # This makes it hard to write an equality-based test for it, so we just check the error code.
     def test_author_delete_foreign_key_violation(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1graphql_f(self.dir() + '/author_foreign_key_violation_mssql.yaml')
-        assert st_code == 200, resp
+        resp = hge_ctx.v1graphql_f(self.dir() + '/author_foreign_key_violation_mssql.yaml')
         assert len(resp['errors']) == 1, resp
 
     @classmethod
@@ -824,18 +821,14 @@ class TestGraphQLMutationFunctions:
     # Ensure select permissions on the corresponding SETOF table apply to
     # the return set of the mutation field backed by the tracked function.
     def test_functions_as_mutations_permissions(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/create_function_permission_add_to_score.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1metadataq_f(self.dir() + '/create_function_permission_add_to_score.yaml')
         check_query_f(hge_ctx, self.dir() + '/function_as_mutations_permissions.yaml', transport)
-        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score.yaml')
 
     def test_single_row_function_as_mutation(self, hge_ctx, transport):
-        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/create_function_permission_add_to_score_by_user_id.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1metadataq_f(self.dir() + '/create_function_permission_add_to_score_by_user_id.yaml')
         check_query_f(hge_ctx, self.dir() + '/single_row_function_as_mutation.yaml', transport)
-        st_code, resp = hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score_by_user_id.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1metadataq_f(self.dir() + '/drop_function_permission_add_to_score_by_user_id.yaml')
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_mutation_fixtures

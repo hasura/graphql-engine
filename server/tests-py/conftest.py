@@ -2,14 +2,11 @@ import pytest
 import time
 from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf, GraphQLWSClient
 import threading
-from auth_webhook_server import create_server, stop_server
 import random
 from datetime import datetime
 import sys
 import os
 from collections import OrderedDict
-from validate import assert_response_code
-import json
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -564,6 +561,8 @@ def db_state_context(request, hge_ctx):
                 request, hge_ctx, 'setup_files', setup, 'teardown_files',
                 teardown, schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
             )
+        else:
+            raise NotImplementedError('Invalid API version.')
     else:
         # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
         db_context = db_context_with_schema_common_new (
@@ -652,10 +651,11 @@ def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_
     if check_file_exists:
         for o in [setup_files, teardown_files]:
             run_on_elem_or_list(assert_file_exists, o)
-    def v1q_f(f):
-        if os.path.isfile(f):
-            st_code, resp = hge_ctx.v1q_f(f)
-            assert st_code == 200, f'Expected {st_code} to be 200. Response:\n{json.dumps(resp, indent=2)}'
+
+    def v1q_f(filepath):
+        if os.path.isfile(filepath):
+            return hge_ctx.v1q_f(filepath)
+
     if not skip_setup:
         run_on_elem_or_list(v1q_f, setup_files)
     yield
@@ -669,10 +669,11 @@ def setup_and_teardown_v2q(request, hge_ctx, setup_files, teardown_files, check_
     if check_file_exists:
         for o in [setup_files, teardown_files]:
             run_on_elem_or_list(assert_file_exists, o)
-    def v2q_f(f):
-        if os.path.isfile(f):
-            st_code, resp = hge_ctx.v2q_f(f)
-            assert st_code == 200, f'Expected {st_code} to be 200. Response:\n{json.dumps(resp, indent=2)}'
+
+    def v2q_f(filepath):
+        if os.path.isfile(filepath):
+            return hge_ctx.v2q_f(filepath)
+
     if not skip_setup:
         run_on_elem_or_list(v2q_f, setup_files)
     yield
@@ -691,22 +692,29 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
             run_on_elem_or_list(assert_file_exists, o)
     def v2q_f(f):
         if os.path.isfile(f):
-            st_code, resp = hge_ctx.v2q_f(f)
-            if st_code != 200:
-                run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
-            assert_response_code('/v2/query', f, st_code, 200, resp)
+            try:
+                hge_ctx.v2q_f(f)
+            except AssertionError:
+                try:
+                    run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+                except:
+                    pass
+                raise
     def metadataq_f(f):
         if os.path.isfile(f):
-            st_code, resp = hge_ctx.v1metadataq_f(f)
-            if st_code != 200:
-                # drop the sql setup, if the metadata calls fail
-                run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
-                run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
-            assert_response_code('/v1/metadata', f, st_code, 200, resp)
+            try:
+                hge_ctx.v1metadataq_f(f)
+            except AssertionError:
+                try:
+                    # drop the sql setup, if the metadata calls fail
+                    run_on_elem_or_list(v2q_f, sql_schema_teardown_file)
+                    run_on_elem_or_list(pre_post_metadataq_f, post_teardown_file)
+                except:
+                    pass
+                raise
     def pre_post_metadataq_f(f):
         if os.path.isfile(f):
-            st_code, resp = hge_ctx.v1metadataq_f(f)
-            assert_response_code('/v1/metadata', f, st_code, 200, resp)
+            hge_ctx.v1metadataq_f(f)
     if not skip_setup:
         run_on_elem_or_list(pre_post_metadataq_f, pre_setup_file)
         run_on_elem_or_list(v2q_f, sql_schema_setup_file)

@@ -28,14 +28,12 @@ class TestLogging():
     success_query = {'query': 'query { hello {code name} }'}
 
     def _teardown(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
         # setup some tables
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
 
         try:
             # make a successful query
@@ -70,7 +68,7 @@ class TestLogging():
                 'args': {
                         "table": {
                             "name": "hdb_function",
-                            "schema": "hdb_catalog" 
+                            "schema": "hdb_catalog"
                         },
                         "columns": ["function_name", "function_schema", "is_system_defined"],
                         "where": { "function_schema": "public" }
@@ -223,14 +221,12 @@ class TestWebsocketLogging():
     query_id = 'successful-ws-log-test'
 
     def _teardown(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
         # setup some tables
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
 
         try:
             # make a successful websocket query

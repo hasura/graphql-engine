@@ -4,9 +4,7 @@ import pytest
 from datetime import datetime,timedelta
 from croniter import croniter
 from validate import validate_event_webhook,validate_event_headers
-from queue import Empty
 import json
-import time
 from utils import until_asserts_pass
 
 # The create and delete tests should ideally go in setup and teardown YAML files,
@@ -77,8 +75,7 @@ class TestScheduledEvent(object):
                 }
             ]
         }
-        st, resp = hge_ctx.v1q(query)
-        assert st == 200,resp
+        resp = hge_ctx.v1q(query)
         assert len(resp) == 3, resp
         # ensuring that valid event_id is returned for all requests
         assert all(['event_id' in r for r in resp]), resp
@@ -103,8 +100,7 @@ class TestScheduledEvent(object):
                 '''
             }
         }
-        st, resp = hge_ctx.v1q(query)
-        assert st == 200, resp
+        resp = hge_ctx.v1q(query)
         db_created_at = resp['result'][1][0]
         validate_event_webhook(event_success['path'],'/test')
         validate_event_headers(event_success['headers'],{"header-key":"header-value"})
@@ -122,8 +118,7 @@ class TestScheduledEvent(object):
                     "sql":"select status,tries from hdb_catalog.hdb_scheduled_events order by status desc"
                 }
             }
-            st, resp = hge_ctx.v1q(query)
-            assert st == 200, resp
+            resp = hge_ctx.v1q(query)
             scheduled_event_statuses = resp['result']
             # 3 scheduled events have been created
             # one should be dead because the timestamp was past the tolerance limit
@@ -164,17 +159,16 @@ class TestCronTrigger(object):
                 "include_in_metadata":True
             }
         }
-        cron_st_code,cron_st_resp = hge_ctx.v1q(cron_st_api_query)
+        resp = hge_ctx.v1q(cron_st_api_query)
         TestCronTrigger.init_time = datetime.utcnow()
         # the cron events will be generated based on the current time, they
         # will not be exactly the same though(the server now and now here)
-        assert cron_st_code == 200,cron_st_resp
-        assert cron_st_resp['message'] == 'success'
+        assert resp['message'] == 'success'
 
     def test_check_generated_cron_scheduled_events(self,hge_ctx):
         expected_schedule_timestamps = []
         iter = croniter(self.cron_schedule,self.init_time)
-        for i in range(100):
+        for _ in range(100):
             expected_schedule_timestamps.append(iter.next(datetime))
         # Get timestamps in UTC from the db to compare it with
         # the croniter generated timestamps
@@ -188,8 +182,7 @@ class TestCronTrigger(object):
                 "sql":sql.format(self.cron_trigger_name)
             }
         }
-        st,resp = hge_ctx.v1q(q)
-        assert st == 200,resp
+        resp = hge_ctx.v1q(q)
         ts_resp = resp['result'][1:]
         assert len(ts_resp) == 100
         # 100 scheduled events are generated in a single batch when the
@@ -203,7 +196,7 @@ class TestCronTrigger(object):
     def test_update_existing_cron_trigger(self,hge_ctx):
         expected_schedule_timestamps = []
         iter = croniter(self.cron_schedule,datetime.utcnow())
-        for i in range(100):
+        for _ in range(100):
             expected_schedule_timestamps.append(iter.next(datetime))
         q = {
             "type":"create_cron_trigger",
@@ -222,11 +215,9 @@ class TestCronTrigger(object):
                 "replace":True
             }
         }
-        st,resp = hge_ctx.v1q(q)
-        assert st == 200, resp
+        hge_ctx.v1q(q)
 
-        st, resp = hge_ctx.v1q({'type': 'export_metadata', 'args': {}})
-        assert st == 200,resp
+        resp = hge_ctx.v1q({'type': 'export_metadata', 'args': {}})
 
         all_cron_triggers = resp['cron_triggers']
         for cron_trigger in all_cron_triggers:
@@ -250,8 +241,7 @@ class TestCronTrigger(object):
                 "sql":sql.format(self.cron_trigger_name)
             }
         }
-        st,resp = hge_ctx.v1q(q)
-        assert st == 200,resp
+        resp = hge_ctx.v1q(q)
         ts_resp = resp['result'][1:]
         assert len(ts_resp) == 100
         actual_schedule_timestamps = []
@@ -277,8 +267,7 @@ class TestCronTrigger(object):
                 "include_in_metadata":False
             }
         }
-        st,resp = hge_ctx.v1q(q)
-        assert st == 200, resp
+        hge_ctx.v1q(q)
         # The maximum timeout is set to 75s because, the cron timestamps
         # that are generated will start from the next minute, suppose
         # the cron schedule is "* * * * *" and the time the cron trigger
@@ -299,8 +288,7 @@ class TestCronTrigger(object):
             "type": "get_cron_triggers",
             "args": {}
         }
-        st, resp = hge_ctx.v1metadataq(q)
-        assert st == 200, resp
+        resp = hge_ctx.v1metadataq(q)
         respDict = json.loads(json.dumps(resp))
         assert respDict['cron_triggers'] == [
             {
@@ -354,8 +342,7 @@ class TestCronTrigger(object):
             "type": "export_metadata",
             "args": {}
         }
-        st, resp = hge_ctx.v1q(q)
-        assert st == 200, resp
+        resp = hge_ctx.v1q(q)
         respDict = json.loads(json.dumps(resp))
         # Only the cron triggers with `include_in_metadata` set to `True`
         # should be exported
@@ -382,7 +369,7 @@ class TestCronTrigger(object):
                 "metadata": resp
             }
         }
-        st, resp = hge_ctx.v1q(q)
+        resp = hge_ctx.v1q(q)
         sql = '''
         select count(1) as count
         from hdb_catalog.hdb_cron_events
@@ -394,8 +381,7 @@ class TestCronTrigger(object):
                 "sql": sql.format(self.cron_trigger_name)
             }
         }
-        st, resp = hge_ctx.v1q(run_sql_query)
-        assert st == 200, resp
+        resp = hge_ctx.v1q(run_sql_query)
         count_resp = resp['result'][1][0]
         # Check if the future cron events are created for
         # for a cron trigger while imported from the metadata
@@ -418,8 +404,7 @@ class TestCronTrigger(object):
                 "include_in_metadata":False
             }
         }
-        st, resp = hge_ctx.v1q(q)
-        assert st == 400, dict(resp)
+        resp = hge_ctx.v1q(q, expected_status_code = 400)
         assert dict(resp) == {
             "code": "already-exists",
             "error": 'cron trigger with name: test_cron_trigger already exists',
@@ -444,5 +429,4 @@ class TestCronTrigger(object):
                 }
             ]
         }
-        st,resp = hge_ctx.v1q(q)
-        assert st == 200,resp
+        hge_ctx.v1q(q)

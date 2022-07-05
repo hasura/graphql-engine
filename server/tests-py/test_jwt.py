@@ -121,11 +121,9 @@ class TestJWTExpirySkew():
     @pytest.fixture(scope='class')
     def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
 class TestJWTBasic():
@@ -392,11 +390,9 @@ class TestJWTBasic():
     @pytest.fixture(scope='class')
     def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
 
 def gen_rsa_key():
@@ -518,11 +514,9 @@ class TestJwtAudienceCheck():
     @pytest.fixture(scope='class')
     def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
 class TestJwtIssuerCheck():
@@ -600,8 +594,6 @@ class TestJwtIssuerCheck():
     @pytest.fixture(scope='class')
     def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
