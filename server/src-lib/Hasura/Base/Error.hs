@@ -4,7 +4,6 @@ module Hasura.Base.Error
   ( Code (..),
     QErr (..),
     QErrExtra (..),
-    encodeJSONPath,
     overrideQErrStatus,
     prefixQErr,
     showQErr,
@@ -56,6 +55,7 @@ import Data.Aeson
 import Data.Aeson.Internal
 import Data.Aeson.Key qualified as K
 import Data.Aeson.Types
+import Data.Parser.JSONPath (encodeJSONPath)
 import Data.Text qualified as T
 import Data.Text.Lazy qualified as TL
 import Data.Text.Lazy.Encoding qualified as TL
@@ -241,24 +241,6 @@ encodeGQLErr includeInternal (QErr jPath _ msg code maybeExtra) =
 encodeQErr :: Bool -> QErr -> Value
 encodeQErr True = toJSON
 encodeQErr _ = noInternalQErrEnc
-
-encodeJSONPath :: JSONPath -> String
-encodeJSONPath = format "$"
-  where
-    format pfx [] = pfx
-    format pfx (Index idx : parts) = format (pfx ++ "[" ++ show idx ++ "]") parts
-    format pfx (Key key : parts) = format (pfx ++ formatKey (K.toText key)) parts
-
-    formatKey key
-      | specialChars sKey = "['" ++ sKey ++ "']"
-      | otherwise = "." ++ sKey
-      where
-        sKey = T.unpack key
-        specialChars [] = True
-        -- first char must not be number
-        specialChars (c : xs) =
-          notElem c (alphabet ++ "_")
-            || any (`notElem` (alphaNumerics ++ "_-")) xs
 
 -- Postgres Connection Errors
 instance Q.FromPGConnErr QErr where

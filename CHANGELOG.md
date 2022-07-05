@@ -4,6 +4,15 @@
 
 ### Behaviour changes
 
+- server: When providing a JSON path in a JWT claims map, you can now use
+  double-quotes as well as single-quotes. Escaped characters in strings will now
+  be honored appropriately, in the same way as JSON.
+
+- server: in certain error messages, JSON paths will use double-quotes instead
+  of single-quotes to represent field access.
+
+  For example, instead of `$.args['$set']`, you will see `$.args["$set"]`.
+
 - cli: use 2-spaces indent for graphql content in metadata instead of tabs(#8469)
 
   Example:

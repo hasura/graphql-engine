@@ -18,7 +18,6 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.Extended qualified as M
 import Data.List.NonEmpty qualified as NE
 import Data.Parser.JSONPath
-import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType, incOp)
@@ -316,7 +315,7 @@ pgScalarSelectionArgumentsParser columnType
     fieldName = Name._path
     description = Just "JSON select path"
     toColExp textValue = case parseJSONPath textValue of
-      Left err -> P.parseError $ T.pack $ "parse json path error: " ++ err
+      Left err -> P.parseError $ "parse json path error: " <> err
       Right [] -> pure Nothing
       Right jPaths -> pure $ Just $ PG.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k) = PG.SELit $ K.toText k

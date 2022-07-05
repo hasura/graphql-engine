@@ -24,9 +24,9 @@ if 'claims_map' not in hge_jwt_conf:
 # The following claims_map is assumed to be set
 # {
 #     "claims_map": {
-#         "x-hasura-user-id": {"path":"$.['https://myapp.com/jwt/claims'].user.id"}
-#         "x-hasura-allowed-roles": {"$.['https://myapp.com/jwt/claims'].role.allowed","default":["user","editor"]}
-#         "x-hasura-default-role": {"$.['https://myapp.com/jwt/claims'].role.default","default":"user"}
+#         "x-hasura-user-id": {"path":"$.["https://myapp.com/jwt/claims"].user.id"}
+#         "x-hasura-allowed-roles": {"$.["https://myapp.com/jwt/claims"].role.allowed","default":["user","editor"]}
+#         "x-hasura-default-role": {"$.["https://myapp.com/jwt/claims"].role.default","default":"user"}
 #     }
 # }
 
