@@ -263,7 +263,7 @@ This means, for example, that if `teardown.yaml` untracks a table, and `schema_t
 
 **Test suite naming convention**
 The current convention is to indicate the backend(s) tests can be run against in the class name. For example:
-   * `TestGraphQLQueryBasicMySQL` for tests that can only be run on MySQL
+   * `TestGraphQLQueryBasicMSSQL` for tests that can only be run against a SQL Server backend
    * `TestGraphQLQueryBasicCommon` for tests that can be run against more than one backend
    * If a test class doesn't have a suffix specifying the backend, nor does its name end in `Common`, then it is likely a test written pre-v2.0 that
      can only be run on Postgres

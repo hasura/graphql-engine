@@ -20,6 +20,7 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
       - [Teardown action](#teardown-action)
     - [Writing tests](#writing-tests)
   - [Debugging](#debugging)
+    - [Using GHCI](#using-ghci)
   - [Style guide](#style-guide)
     - [Stick to Simple Haskell](#stick-to-simple-haskell)
     - [Write small, atomic, autonomous specs](#write-small-atomic-autonomous-specs)
@@ -305,10 +306,10 @@ spec :: SpecWith TestEnvironment
 spec =
   Context.run
     [ Context.Context
-        { name = Context.Backend Context.MySQL,
+        { name = Context.Backend Context.SQLServer,
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Mysql.setup schema,
--         teardown = Mysql.teardown schema,
+          setup = SqlServer.setup schema,
+-         teardown = SqlServer.teardown schema,
 +         teardown = const $ pure (),
           customOptions = Nothing
         }]
