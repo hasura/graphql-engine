@@ -376,7 +376,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/json-response":
             resp, status = self.json_response()
             self._send_response(status, resp)
-        
+
         elif req_path == "/custom-scalar-array-response":
             resp, status = self.custom_scalar_array_response()
             self._send_response(status, resp)
@@ -610,13 +610,13 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
     def null_response(self):
         response = None
         return response, HTTPStatus.OK
-    
+
     def json_response(self):
         response = {
             'foo': 'bar'
         }
         return response, HTTPStatus.OK
-    
+
     def custom_scalar_array_response(self):
         response = [{
             'foo': 'bar'
@@ -832,11 +832,10 @@ class HGECtx:
             self.version = result.stdout.decode('utf-8').strip()
         if self.is_default_backend and not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
-              st_code, resp = self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
+              self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:
               self.teardown()
               raise HGECtxError(repr(e))
-          assert st_code == 200, resp
 
         # Postgres version
         if self.is_default_backend:
@@ -901,7 +900,7 @@ class HGECtx:
         conn.close()
         return res
 
-    def execute_query(self, q, url_path, headers = {}):
+    def execute_query(self, q, url_path, headers = {}, expected_status_code = 200):
         h = headers.copy()
         if self.hge_key is not None:
             h['X-Hasura-Admin-Secret'] = self.hge_key
@@ -914,26 +913,29 @@ class HGECtx:
         # properties in the graphql spec properly
         # Don't assume `resp` is JSON object
         resp_obj = {} if resp.status_code == 500 else resp.json(object_pairs_hook=OrderedDict)
-        return resp.status_code, resp_obj
+        if expected_status_code:
+            assert \
+                resp.status_code == expected_status_code, \
+                f'Expected {resp.status_code} to be {expected_status_code}. Response:\n{json.dumps(resp_obj, indent=2)}'
+        return resp_obj
 
+    def v1q(self, q, headers = {}, expected_status_code = 200):
+        return self.execute_query(q, "/v1/query", headers, expected_status_code)
 
-    def v1q(self, q, headers = {}):
-        return self.execute_query(q, "/v1/query", headers)
-
-    def v1q_f(self, fn):
-        with open(fn) as f:
+    def v1q_f(self, filepath, headers = {}, expected_status_code = 200):
+        with open(filepath) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
-            return self.v1q(yml.load(f))
+            return self.v1q(yml.load(f), headers, expected_status_code)
 
-    def v2q(self, q, headers = {}):
-        return self.execute_query(q, "/v2/query", headers)
+    def v2q(self, q, headers = {}, expected_status_code = 200):
+        return self.execute_query(q, "/v2/query", headers, expected_status_code)
 
-    def v2q_f(self, fn):
-        with open(fn) as f:
+    def v2q_f(self, filepath, headers = {}, expected_status_code = 200):
+        with open(filepath) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
-            return self.v2q(yml.load(f))
+            return self.v2q(yml.load(f), headers, expected_status_code)
 
     def backend_suffix(self, filename):
         if self.is_default_backend:
@@ -941,23 +943,23 @@ class HGECtx:
         else:
             return filename + "_" + self.backend
 
-    def v1metadataq(self, q, headers = {}):
-        return self.execute_query(q, "/v1/metadata", headers)
+    def v1metadataq(self, q, headers = {}, expected_status_code = 200):
+        return self.execute_query(q, "/v1/metadata", headers, expected_status_code)
 
-    def v1metadataq_f(self, fn):
-        with open(fn) as f:
+    def v1metadataq_f(self, filepath, headers = {}, expected_status_code = 200):
+        with open(filepath) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
-            return self.v1metadataq(yml.load(f))
+            return self.v1metadataq(yml.load(f), headers, expected_status_code)
 
-    def v1graphqlq(self, q, headers = {}):
-        return self.execute_query(q, "/v1/graphql", headers)
+    def v1graphqlq(self, q, headers = {}, expected_status_code = 200):
+        return self.execute_query(q, "/v1/graphql", headers, expected_status_code)
 
-    def v1graphql_f(self, fn):
-        with open(fn) as f:
+    def v1graphql_f(self, filepath, headers = {}, expected_status_code = 200):
+        with open(filepath) as f:
             # NOTE: preserve ordering with ruamel
             yml = yaml.YAML()
-            return self.v1graphqlq(yml.load(f))
+            return self.v1graphqlq(yml.load(f), headers, expected_status_code)
 
     def teardown(self):
         self.http.close()
@@ -968,13 +970,5 @@ class HGECtx:
         self.ws_client_relay.teardown()
         self.ws_client_graphql_ws.teardown()
 
-    def v1GraphqlExplain(self, q, hdrs=None):
-        headers = {}
-
-        if hdrs != None:
-            headers = hdrs
-        if self.hge_key != None:
-            headers['X-Hasura-Admin-Secret'] = self.hge_key
-
-        resp = self.http.post(self.hge_url + '/v1/graphql/explain', json=q, headers=headers)
-        return resp.status_code, resp.json()
+    def v1GraphqlExplain(self, q, headers = {}, expected_status_code = 200):
+        return self.execute_query(q, '/v1/graphql/explain', headers, expected_status_code)

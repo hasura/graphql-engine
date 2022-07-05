@@ -24,7 +24,7 @@ class TestAllowlistQueries:
 
     def test_query_non_allowlist(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_non_allowlist.yaml', transport)
-    
+
     def test_query_user_fragment(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_user_fragment.yaml', transport)
 
@@ -44,101 +44,82 @@ class TestAllowlistQueries:
 
 
 def export_metadata(hge_ctx):
-    st, resp = hge_ctx.v1metadataq({
+    resp = hge_ctx.v1metadataq({
         'type': 'export_metadata',
         'version': 2,
         'args': {}
     })
-    assert st == 200, resp
     return resp["metadata"]
 
 def assert_allowlist_metadata(hge_ctx, expected):
     metadata = export_metadata(hge_ctx)
     assert metadata.get("allowlist") == expected
 
-def replace_allowlist_metadata_unchecked(hge_ctx, base_metadata, allowlist):
+def replace_allowlist_metadata_with_check(hge_ctx, base_metadata, allowlist, expected_status_code):
     metadata = dict(base_metadata)
     metadata["allowlist"] = allowlist
-    st, resp = hge_ctx.v1metadataq({
+    return hge_ctx.v1metadataq({
         'type': 'replace_metadata',
         'version': 2,
         'args': {
             'metadata': metadata
         }
-    })
-    return st, resp
+    }, expected_status_code = expected_status_code)
 
 def replace_allowlist_metadata(hge_ctx, base_metadata, allowlist):
-    st, resp = replace_allowlist_metadata_unchecked(hge_ctx, base_metadata, allowlist)
-    assert st == 200, resp
+    return replace_allowlist_metadata_with_check(hge_ctx, base_metadata, allowlist, expected_status_code = 200)
 
 def fail_replace_allowlist_metadata(hge_ctx, base_metadata, allowlist, expected_error):
-    st, resp = replace_allowlist_metadata_unchecked(hge_ctx, base_metadata, allowlist)
-    assert st == 400
+    resp = replace_allowlist_metadata_with_check(hge_ctx, base_metadata, allowlist, expected_status_code = 400)
     assert resp == expected_error
 
-def add_collection_to_allowlist_unchecked(hge_ctx, args):
+def add_collection_to_allowlist_with_check(hge_ctx, args, expected_status_code):
     payload = {
         "type": "add_collection_to_allowlist",
         "args": args,
     }
-    return hge_ctx.v1metadataq(payload)
-    assert st == 200, resp
+    return hge_ctx.v1metadataq(payload, expected_status_code = expected_status_code)
 
 def add_collection_to_allowlist(hge_ctx, args):
-    st, resp = add_collection_to_allowlist_unchecked(hge_ctx, args)
-    assert st == 200, resp
+    return add_collection_to_allowlist_with_check(hge_ctx, args, expected_status_code = 200)
 
 def fail_add_collection_to_allowlist(hge_ctx, args, expected_error):
-    st, resp = add_collection_to_allowlist_unchecked(hge_ctx, args)
-    assert st == 400
+    resp = add_collection_to_allowlist_with_check(hge_ctx, args, expected_status_code = 400)
     assert resp == expected_error
 
-def update_scope_of_collection_in_allowlist(hge_ctx, args):
+def update_scope_of_collection_in_allowlist_with_check(hge_ctx, args, expected_status_code):
     payload = {
         "type": "update_scope_of_collection_in_allowlist",
         "args": args,
     }
-    st, resp = hge_ctx.v1metadataq(payload)
-    assert st == 200, resp
-
-def update_scope_of_collection_in_allowlist_unchecked(hge_ctx, args):
-    payload = {
-        "type": "update_scope_of_collection_in_allowlist",
-        "args": args,
-    }
-    return hge_ctx.v1metadataq(payload)
+    return hge_ctx.v1metadataq(payload, expected_status_code = expected_status_code)
 
 def update_scope_of_collection_in_allowlist(hge_ctx, args):
-    st, resp = update_scope_of_collection_in_allowlist_unchecked(hge_ctx, args)
-    assert st == 200, resp
+    update_scope_of_collection_in_allowlist_with_check(hge_ctx, args, expected_status_code = 200)
 
 def fail_update_scope_of_collection_in_allowlist(hge_ctx, args, expected_error):
-    st, resp = update_scope_of_collection_in_allowlist_unchecked(hge_ctx, args)
-    assert st == 400
+    resp = update_scope_of_collection_in_allowlist_with_check(hge_ctx, args, expected_status_code = 400)
     assert resp == expected_error
 
-def drop_collection_from_allowlist_unchecked(hge_ctx, args):
+def drop_collection_from_allowlist_with_check(hge_ctx, args, expected_status_code):
     payload = {
         "type": "drop_collection_from_allowlist",
         "args": args
     }
-    return hge_ctx.v1metadataq(payload)
+    return hge_ctx.v1metadataq(payload, expected_status_code = expected_status_code)
 
 def drop_collection_from_allowlist(hge_ctx, args):
-    st, resp = drop_collection_from_allowlist_unchecked(hge_ctx, args)
-    assert st == 200, resp
+    return drop_collection_from_allowlist_with_check(hge_ctx, args, expected_status_code = 200)
 
 def fail_drop_collection_from_allowlist(hge_ctx, args, expected_error):
-    st, resp = drop_collection_from_allowlist_unchecked(hge_ctx, args)
-    assert st == 400
+    resp = drop_collection_from_allowlist_with_check(hge_ctx, args, expected_status_code = 400)
     assert resp == expected_error
 
 @pytest.fixture(scope="function")
 def clean_allowlist(hge_ctx):
     yield
-    drop_collection_from_allowlist_unchecked(hge_ctx, {"collection": "collection_1"})
-    drop_collection_from_allowlist_unchecked(hge_ctx, {"collection": "collection_2"})
+    drop_collection_from_allowlist_with_check(hge_ctx, {"collection": "collection_1"}, expected_status_code = None)
+    drop_collection_from_allowlist_with_check(hge_ctx, {"collection": "collection_2"}, expected_status_code = None)
 
 @usefixtures('clean_allowlist', 'per_class_tests_db_state')
 class TestAllowlistMetadata:
@@ -382,14 +363,13 @@ class TestAllowlistMetadata:
         add_collection_to_allowlist(hge_ctx, orig)
         assert_allowlist_metadata(hge_ctx, [orig])
 
-        st, resp = add_collection_to_allowlist_unchecked(hge_ctx, {
+        resp = add_collection_to_allowlist(hge_ctx, {
             "collection": "collection_1",
             "scope": {
                 "global": False,
                 "roles": ["foo"]
             }
         })
-        assert st == 200, resp
         assert resp == {
             "message": 'collection "collection_1" already exists in the allowlist, scope ignored; to change scope, use update_scope_of_collection_in_allowlist'
         }
@@ -405,13 +385,12 @@ class TestAllowlistMetadata:
         add_collection_to_allowlist(hge_ctx, orig2)
         assert_allowlist_metadata(hge_ctx, [orig, orig2])
 
-        st, resp = add_collection_to_allowlist_unchecked(hge_ctx, {
+        resp = add_collection_to_allowlist(hge_ctx, {
             "collection": "collection_2",
             "scope": {
                 "global": True
             }
         })
-        assert st == 200, resp
         assert resp == {
             "message": 'collection "collection_2" already exists in the allowlist, scope ignored; to change scope, use update_scope_of_collection_in_allowlist'
         }

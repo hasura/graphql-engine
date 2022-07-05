@@ -454,8 +454,7 @@ class TestStreamingSubscription:
         articles_to_insert = []
         for i in range(10):
             articles_to_insert.append({"id": i + 1, "title": "Article title {}".format(i + 1)})
-        st_code, resp = insert_many(hge_ctx, {"schema": "hge_tests", "name": "articles"}, articles_to_insert)
-        assert st_code == 200, resp
+        insert_many(hge_ctx, {"schema": "hge_tests", "name": "articles"}, articles_to_insert)
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
         subscrPayload = { 'query': query, 'variables': { 'batch_size': 2 } }

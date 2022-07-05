@@ -30,8 +30,7 @@ def insert_many(hge_ctx, table, rows, returning=[], headers = {}):
             "returning": returning
         }
     }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
+    return hge_ctx.v1q(q, headers = headers)
 
 
 def update(hge_ctx, table, where_exp, set_exp, headers = {}):
@@ -43,8 +42,7 @@ def update(hge_ctx, table, where_exp, set_exp, headers = {}):
             "$set": set_exp
         }
     }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
+    return hge_ctx.v1q(q, headers = headers)
 
 
 def delete(hge_ctx, table, where_exp, headers = {}):
@@ -55,5 +53,4 @@ def delete(hge_ctx, table, where_exp, headers = {}):
             "where": where_exp
         }
     }
-    st_code, resp = hge_ctx.v1q(q, headers = headers)
-    return st_code, resp
+    return hge_ctx.v1q(q, headers = headers)

@@ -1,10 +1,8 @@
 import json
-import threading
 from urllib.parse import urlparse
 
 import websocket
 import pytest
-from validate import check_query
 from context import PytestConf
 
 if not PytestConf.config.getoption("--test-ws-init-cookie"):
@@ -23,11 +21,9 @@ class TestWebsocketInitCookie():
 
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/person_table.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/person_table.yaml')
         yield
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
+        hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
 
     def _send_query(self, hge_ctx):
         ws_url = url(hge_ctx)

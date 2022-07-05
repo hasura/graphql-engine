@@ -25,16 +25,14 @@ class TestInconsistentObjects():
             test = yaml.load(c)
 
         # setup
-        st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['setup'])))
-        assert st_code == 200, resp
+        resp = hge_ctx.v1q(json.loads(json.dumps(test['setup'])))
 
         try:
             # exec sql to cause inconsistentancy
-            sql_res = hge_ctx.sql(test['sql'])
+            hge_ctx.sql(test['sql'])
 
             # reload metadata
-            st_code, resp = hge_ctx.v1q(q=self.reload_metadata)
-            assert st_code == 200, resp
+            resp = hge_ctx.v1q(q=self.reload_metadata)
             # check inconsistent objects
             incons_objs_test = test['inconsistent_objects']
             incons_objs_resp = resp['inconsistent_objects']
@@ -47,32 +45,28 @@ class TestInconsistentObjects():
             })
 
             # export metadata
-            st_code, export = hge_ctx.v1q(q=self.export_metadata)
-            assert st_code == 200, export
+            export = hge_ctx.v1q(q=self.export_metadata)
 
             # apply metadata
-            st_code, resp = hge_ctx.v1q(
+            hge_ctx.v1q(
                 q={
                     "type": "replace_metadata",
                     "args": export
-                }
+                },
+                expected_status_code = 400
             )
-            assert st_code == 400, resp
 
         finally:
             # drop inconsistent objects
-            st_code, resp = hge_ctx.v1q(q=self.drop_inconsistent_metadata)
-            assert st_code == 200, resp
+            hge_ctx.v1q(q=self.drop_inconsistent_metadata)
 
             # reload metadata
-            st_code, resp = hge_ctx.v1q(q=self.reload_metadata)
-            assert st_code == 200, resp
+            resp = hge_ctx.v1q(q=self.reload_metadata)
             # check inconsistent objects
             assert resp['is_consistent'] == True, resp
 
             # teardown
-            st_code, resp = hge_ctx.v1q(json.loads(json.dumps(test['teardown'])))
-            assert st_code == 200, resp
+            hge_ctx.v1q(json.loads(json.dumps(test['teardown'])))
 
     @classmethod
     def dir(cls):

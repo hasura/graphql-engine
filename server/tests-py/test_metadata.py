@@ -1,4 +1,3 @@
-import ruamel.yaml as yaml
 from validate import check_query_f
 import pytest
 import os
@@ -47,16 +46,15 @@ class TestMetadata:
                       '/replace_metadata_allow_inconsistent.yaml')
 
     def test_replace_metadata_disallow_inconsistent_metadata(self, hge_ctx):
-        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert st_code == 200, resp
+        resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
         default_source_config = {}
         default_source = list(filter(lambda source: (source["name"] == "default"), resp["sources"]))
         if default_source:
             default_source_config = default_source[0]["configuration"]
         else:
             assert False, "default source config not found"
-            return
-        st_code, resp = hge_ctx.v1metadataq({
+        resp = hge_ctx.v1metadataq(
+            {
                "type": "replace_metadata",
                "version": 2,
                "args": {
@@ -116,8 +114,9 @@ class TestMetadata:
                    ]
                  }
                }
-             })
-        assert st_code == 400, resp
+             },
+            expected_status_code = 400
+        )
         assert resp == {
             "internal": [
                 {
@@ -139,16 +138,14 @@ class TestMetadata:
     """Test that missing "kind" key in metadata source defaults to "postgres".
     Regression test for https://github.com/hasura/graphql-engine-mono/issues/4501"""
     def test_replace_metadata_default_kind(self, hge_ctx):
-        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert st_code == 200, resp
+        resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
         default_source_config = {}
         default_source = list(filter(lambda source: (source["name"] == "default"), resp["sources"]))
         if default_source:
             default_source_config = default_source[0]["configuration"]
         else:
             assert False, "default source config not found"
-            return
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
                "type": "replace_metadata",
                "version": 2,
                "args": {
@@ -164,9 +161,7 @@ class TestMetadata:
                  }
                }
              })
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert st_code == 200, resp
+        resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
         assert resp["sources"][0]["kind"] == "postgres"
 
     def test_dump_internal_state(self, hge_ctx):
@@ -176,7 +171,7 @@ class TestMetadata:
         check_query_f(hge_ctx, self.dir() + '/pg_add_source.yaml')
 
     def test_pg_add_source_with_replace_config(self, hge_ctx):
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
               "type": "pg_add_source",
               "args": {
                 "name": "pg1",
@@ -189,8 +184,7 @@ class TestMetadata:
                 }
               }
             })
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
               "type": "pg_add_source",
               "args": {
                 "name": "pg1",
@@ -209,20 +203,18 @@ class TestMetadata:
                 "replace_configuration": True
               }
             })
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert st_code == 200, resp
+        resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
         assert resp["sources"][1]["customization"]["root_fields"]["namespace"] == "some_namespace"
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
               "type": "pg_drop_source",
               "args": {
                 "name": "pg1"
               }
             })
-        assert st_code == 200, resp
 
     def test_pg_update_unknown_source(self, hge_ctx):
-        st_code, resp = hge_ctx.v1metadataq({
+        resp = hge_ctx.v1metadataq(
+            {
               "type": "pg_update_source",
               "args": {
                 "name": "pg-not-previously-added",
@@ -234,12 +226,13 @@ class TestMetadata:
                   }
                 }
               }
-            })
-        assert st_code == 400, resp
+            },
+            expected_status_code = 400
+        )
         assert resp["error"] == "source with name \"pg-not-previously-added\" does not exist"
 
     def test_pg_update_source(self, hge_ctx):
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
               "type": "pg_add_source",
               "args": {
                 "name": "pg1",
@@ -255,8 +248,7 @@ class TestMetadata:
                 }
               }
             })
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
               "type": "pg_update_source",
               "args": {
                 "name": "pg1",
@@ -267,12 +259,10 @@ class TestMetadata:
                 }
               }
             })
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert st_code == 200, resp
+        resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
         assert resp["sources"][1]["customization"]["root_fields"]["namespace"] == "some_namespace"
         assert resp["sources"][1]["configuration"]["connection_info"]["pool_settings"]["max_connections"] == 10
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
               "type": "pg_update_source",
               "args": {
                 "name": "pg1",
@@ -288,18 +278,15 @@ class TestMetadata:
                 }
               }
             })
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
-        assert st_code == 200, resp
+        resp = hge_ctx.v1metadataq({"type": "export_metadata", "args": {}})
         assert resp["sources"][1]["customization"]["root_fields"]["namespace"] == "some_namespace"
         assert resp["sources"][1]["configuration"]["connection_info"]["pool_settings"]["max_connections"] == 50
-        st_code, resp = hge_ctx.v1metadataq({
+        hge_ctx.v1metadataq({
               "type": "pg_drop_source",
               "args": {
                 "name": "pg1"
               }
             })
-        assert st_code == 200, resp
 
     @pytest.mark.skipif(
         os.getenv('HASURA_GRAPHQL_PG_SOURCE_URL_1') != 'postgresql://gql_test@localhost:5432/pg_source_1',
@@ -362,8 +349,8 @@ class TestMetadata:
         if hge_ctx.hge_key is not None:
             headers['x-hasura-admin-secret'] = hge_ctx.hge_key
 
-        st, resp, _ = hge_ctx.anyq(url, query, headers)
-        assert st == 200, resp
+        status_code, resp, _ = hge_ctx.anyq(url, query, headers)
+        assert status_code == 200, f'Expected {status_code} to be 200. Response:\n{resp}'
 
         fn_name = 'search_authors_s1'
         fn_description = 'this function helps fetch articles based on the title'

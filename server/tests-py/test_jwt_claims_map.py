@@ -200,11 +200,9 @@ class TestJWTClaimsMapBasic():
     @pytest.fixture(scope='class')
     def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
 # The values of 'x-hasura-allowed-roles' and 'x-hasura-default-role' has
 # been set in the JWT config
@@ -284,8 +282,6 @@ class TestJWTClaimsMapWithStaticHasuraClaimsMapValues():
     @pytest.fixture(scope='class')
     def setup(self, request, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
