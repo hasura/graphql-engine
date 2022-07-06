@@ -158,6 +158,7 @@ data TableCustomRootFields = TableCustomRootFields
   { _tcrfSelect :: CustomRootField,
     _tcrfSelectByPk :: CustomRootField,
     _tcrfSelectAggregate :: CustomRootField,
+    _tcrfSelectStream :: CustomRootField,
     _tcrfInsert :: CustomRootField,
     _tcrfInsertOne :: CustomRootField,
     _tcrfUpdate :: CustomRootField,
@@ -179,6 +180,7 @@ instance ToJSON TableCustomRootFields where
         [ "select" .= _tcrfSelect,
           "select_by_pk" .= _tcrfSelectByPk,
           "select_aggregate" .= _tcrfSelectAggregate,
+          "select_stream" .= _tcrfSelectStream,
           "insert" .= _tcrfInsert,
           "insert_one" .= _tcrfInsertOne,
           "update" .= _tcrfUpdate,
@@ -194,6 +196,7 @@ instance FromJSON TableCustomRootFields where
         <$> (obj .:? "select" .!= defaultCustomRootField)
         <*> (obj .:? "select_by_pk" .!= defaultCustomRootField)
         <*> (obj .:? "select_aggregate" .!= defaultCustomRootField)
+        <*> (obj .:? "select_stream" .!= defaultCustomRootField)
         <*> (obj .:? "insert" .!= defaultCustomRootField)
         <*> (obj .:? "insert_one" .!= defaultCustomRootField)
         <*> (obj .:? "update" .!= defaultCustomRootField)
@@ -214,6 +217,7 @@ emptyCustomRootFields =
   TableCustomRootFields
     { _tcrfSelect = defaultCustomRootField,
       _tcrfSelectByPk = defaultCustomRootField,
+      _tcrfSelectStream = defaultCustomRootField,
       _tcrfSelectAggregate = defaultCustomRootField,
       _tcrfInsert = defaultCustomRootField,
       _tcrfInsertOne = defaultCustomRootField,
@@ -224,10 +228,11 @@ emptyCustomRootFields =
     }
 
 getAllCustomRootFields :: TableCustomRootFields -> [CustomRootField]
-getAllCustomRootFields (TableCustomRootFields select selectByPk selectAgg insert insertOne update updateByPk delete deleteByPk) =
+getAllCustomRootFields (TableCustomRootFields select selectByPk selectAgg selectStream insert insertOne update updateByPk delete deleteByPk) =
   [ select,
     selectByPk,
     selectAgg,
+    selectStream,
     insert,
     insertOne,
     update,

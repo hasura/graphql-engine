@@ -2,6 +2,8 @@
 
 ## Next release
 
+- server: Add support to customize the root field for streaming subscriptions (fixes #8618)
+
 ### Behaviour changes
 
 - server: When providing a JSON path in a JWT claims map, you can now use
@@ -82,8 +84,8 @@
 
   During the execution of `metadata apply` command, the YAML metadata is
   converted into JSON format because the server API accepts metadata in JSON
-  format. For large metadata(> ~20k LOC), due to a recent change this conversion was 
-  taking upwards of 2 minutes of time, increasing exponentially with metadata size.  
+  format. For large metadata(> ~20k LOC), due to a recent change this conversion was
+  taking upwards of 2 minutes of time, increasing exponentially with metadata size.
   With the changes in this release, the performance regression has been fixed.
   Following is a benchmark comparison of time taken for YAML to JSON conversion
   before and after the changes for different metadata sizes:
