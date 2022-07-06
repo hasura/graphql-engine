@@ -1,48 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ApiRequest from './ApiRequest/ApiRequest';
-import ApiResponse from './ApiResponse/ApiResponse';
 
 class ApiRequestWrapper extends Component {
   render() {
-    const styles = require('./ApiExplorer.scss');
-
     const getAPIRequestDetailsSection = () => {
       return null;
     };
 
-    const getAPIResponseSection = () => {
-      let apiResponseSection = null;
-
-      if (this.props.request.bodyType !== 'graphql') {
-        apiResponseSection = (
-          <ApiResponse
-            {...this.props.explorerData}
-            categoryType={this.props.details.category}
-            showHelpBulb={
-              this.props.request.showHelpBulb
-                ? this.props.request.showHelpBulb
-                : false
-            }
-            url={this.props.request.url}
-          />
-        );
-      }
-
-      return apiResponseSection;
-    };
-
     return (
-      <div
-        id="apiRequestBlock"
-        className={
-          styles.padd_left +
-          ' ' +
-          styles.padd_right +
-          ' ' +
-          styles.ApiRequestWrapperVH
-        }
-      >
+      <div id="apiRequestBlock" className="px-md h-full w-full">
         {getAPIRequestDetailsSection()}
 
         <ApiRequest
@@ -67,8 +34,6 @@ class ApiRequestWrapper extends Component {
           consoleUrl={this.props.consoleUrl}
           serverConfig={this.props.serverConfig}
         />
-
-        {getAPIResponseSection()}
       </div>
     );
   }

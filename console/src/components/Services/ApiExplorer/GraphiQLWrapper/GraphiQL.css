@@ -1709,6 +1709,7 @@ span.CodeMirror-selectedtext {
   font-size: 14px;
   margin: -15px -15px 12px 0;
   position: relative;
+  font-weight: 400;
 }
 
 .graphiql-container .search-box:before {
@@ -1725,6 +1726,10 @@ span.CodeMirror-selectedtext {
   -ms-user-select: none;
   user-select: none;
 }
+
+/* .graphiql-container .search-box .search-box-icon {
+  font-weight: 100 !important;
+} */
 
 .graphiql-container .search-box .search-box-clear {
   background-color: #d0d0d0;
@@ -2183,4 +2188,8 @@ li.CodeMirror-hint-active {
 
 .color_green {
   color: #047857 !important;
+}
+
+.graphiql-explorer-node > span > svg {
+  margin-left: 0px !important;
 }

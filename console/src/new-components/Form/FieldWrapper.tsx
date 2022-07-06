@@ -73,7 +73,7 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
           {tooltip ? <ToolTip message={tooltip} /> : null}
         </span>
         {description ? (
-          <span className="text-gray-600 mb-xs">{description}</span>
+          <span className="text-gray-600 mb-xs font-normal">{description}</span>
         ) : null}
       </label>
       <div>{children}</div>

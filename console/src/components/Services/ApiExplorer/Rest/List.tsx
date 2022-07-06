@@ -15,8 +15,6 @@ import Landing from './Landing';
 import { badgeSort } from './utils';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 
-import styles from './RESTStyles.scss';
-
 const ListComponent: React.FC<Props> = ({
   restEndpoints,
   queryCollections,
@@ -43,15 +41,11 @@ const ListComponent: React.FC<Props> = ({
   };
 
   return (
-    <div
-      className={`container-fluid ${styles.rest_add_padding_left} ${styles.padd_top}`}
-    >
-      <div className={`${styles.display_flex} ${styles.marginBottom}`}>
-        <h2 className={`${styles.headerText} ${styles.display_inline}`}>
-          REST Endpoints
-        </h2>
+    <div className="pl-md pt-md pr-md">
+      <div className="flex">
+        <h2 className="text-xl font-bold">REST Endpoints</h2>
       </div>
-      <div className={`${styles.subHeader} ${styles.padd_top}`}>
+      <div className="pt-md">
         Create endpoints from GraphQL queries using{' '}
         <Link to="/api/api-explorer">GraphiQL</Link>.
         <div className="w-8/12 mt-sm">
@@ -82,7 +76,7 @@ const ListComponent: React.FC<Props> = ({
             <th className="px-sm py-xs text-left text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
               Methods
             </th>
-            <th className="px-sm py-xs text-right text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
+            <th className="px-sm py-xs float-right text-sm bg-gray-50 font-semibold text-gray-600 uppercase tracking-wider">
               Modify
             </th>
           </thead>
@@ -110,7 +104,7 @@ const ListComponent: React.FC<Props> = ({
 
                   {/* Endpoint */}
                   <td className="px-sm py-xs align-top">
-                    <div className={styles.rest_list_left_content}>
+                    <div className="flex flex-col w-3/4">
                       <URLPreview urlInput={endpoint.url} />
                       <CollapsibleToggle
                         title="GraphQL Request"
@@ -139,7 +133,7 @@ const ListComponent: React.FC<Props> = ({
                   </td>
 
                   {/* Modify Column */}
-                  <td className="px-sm py-xs align-top text-right">
+                  <td className="px-sm py-xs align-top float-right">
                     <Button
                       size="sm"
                       onClick={onClickDelete(

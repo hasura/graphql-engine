@@ -5,8 +5,6 @@ import { HeaderState } from './state';
 import Input from './Input';
 import PreviewTable from './PreviewTable';
 
-import styles from '../RESTStyles.scss';
-
 type UpdateHeaderValues = (
   index: number
 ) => (e: ChangeEvent<HTMLInputElement>) => void;
@@ -22,10 +20,10 @@ type HeaderComponentProps = {
 const requestHeadersHeadings = [
   {
     content: '',
-    className: styles.rest_preview_table_sm_width,
+    className: 'w-2/12',
   },
-  { content: 'Key' },
-  { content: 'Value' },
+  { content: 'Key', className: 'p-md' },
+  { content: 'Value', className: 'p-md' },
   { content: '' },
 ];
 
@@ -38,7 +36,7 @@ const Headers: React.FC<HeaderComponentProps> = ({
 }) => {
   if (!headerState || !headerState.length) {
     return (
-      <div className={styles.rest_empty_container}>
+      <div className="w-full pt-md flex justify-center items-center font-lg font-bold">
         Click on the &apos;Add Header&apos; to add some Request Headers
       </div>
     );
@@ -48,10 +46,10 @@ const Headers: React.FC<HeaderComponentProps> = ({
     <PreviewTable headings={requestHeadersHeadings}>
       {headerState.map(header => (
         <tr
-          className={styles.rest_preview_table_row}
+          className="p-md border-b border-gray-300 mb-md"
           key={`rest-header-${header.index}`}
         >
-          <td className={styles.text_center}>
+          <td className="p-md">
             <input
               type="checkbox"
               value={header.key}
@@ -86,7 +84,7 @@ const Headers: React.FC<HeaderComponentProps> = ({
           </td>
           <td>
             <div
-              className={styles.rest_preview_clear_btn}
+              className="ml-xs cursor-pointer"
               onClick={onClickRemove(header.index)}
             >
               <FaTimesCircle />

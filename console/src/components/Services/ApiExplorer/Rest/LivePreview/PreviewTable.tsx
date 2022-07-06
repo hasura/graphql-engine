@@ -1,7 +1,5 @@
 import React from 'react';
 
-import styles from '../RESTStyles.scss';
-
 type PreviewTableProps = {
   headings: {
     content: string;
@@ -10,8 +8,8 @@ type PreviewTableProps = {
 };
 
 const PreviewTable: React.FC<PreviewTableProps> = ({ headings, children }) => (
-  <table className={styles.rest_preview_table}>
-    <tr className={styles.rest_preview_table_row}>
+  <table className="w-full border-collapse mb-md">
+    <tr className="border-b border-gray-300">
       {headings.map(heading => (
         <th className={heading?.className}>{heading.content}</th>
       ))}

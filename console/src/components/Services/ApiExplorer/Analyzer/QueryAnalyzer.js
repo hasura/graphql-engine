@@ -1,10 +1,10 @@
 import React from 'react';
-import { ImCopy } from 'react-icons/im';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 import sqlFormatter from 'sql-formatter';
 import hljs from 'highlight.js';
 import RootFields from './RootFields';
+import { ImCopy } from 'react-icons/im';
 
 export default class QueryAnalyser extends React.Component {
   constructor() {
@@ -13,7 +13,30 @@ export default class QueryAnalyser extends React.Component {
     this.state = {
       analyseData: [],
       activeNode: 0,
+      previouslyCopied: null,
     };
+  }
+
+  copyToClip(type, text) {
+    try {
+      navigator.clipboard.writeText(text).then(() => {
+        this.setState(
+          {
+            previouslyCopied: type,
+          },
+          () =>
+            // This variable decides if a "Copied!" message should be shown.
+            // Awaiting 2 seconds to highlight this for the user
+            setTimeout(() => {
+              this.setState({
+                previouslyCopied: null,
+              });
+            }, 2000)
+        );
+      });
+    } catch (error) {
+      alert(`failed to copy`);
+    }
   }
 
   componentDidMount() {
@@ -34,26 +57,29 @@ export default class QueryAnalyser extends React.Component {
         this.props.clearAnalyse();
       });
   }
+
   render() {
     const { show, clearAnalyse } = this.props;
     return (
       <Modal
-        className="modalWrapper"
-        overlayClassName="myOverlayClass"
+        className="flex flex-col p-10 rounded-xl w-full z-[101]"
+        overlayClassName="fixed top-0 left-0 right-0 bottom-6 bg-white bg-opacity-75 z-[101]"
         isOpen={show && this.state.analyseData.length > 0}
       >
-        <div className="modalHeader">
-          <div className="modalTitle">Query Analysis</div>
-          <div className="modalClose">
-            <button onClick={clearAnalyse} className="form-control">
+        <div className="bg-[#43495a] border-b border-gray-200 py-sm px-md flex justify-between">
+          <div className="font-xl font-bold text-[#ffc627]">Query Analysis</div>
+          <div className="text-[#ccc] font-bold">
+            <button onClick={clearAnalyse} className="">
               x
             </button>
           </div>
         </div>
-        <div className="modalBody">
-          <div className="wd25">
-            <div className="topLevelNodesWrapper">
-              <div className="title">Top level nodes</div>
+        <div className="flex min-h-full bg-white border border-gray-500">
+          <div className="w-1/4 border border-gray-500">
+            <div className="h-8/12">
+              <div className="p-md pr-0 font-bold text-lg bg-[#fff3d5] text-[#767e93] mb-md">
+                Top level nodes
+              </div>
               <RootFields
                 data={this.state.analyseData}
                 activeNode={this.state.activeNode}
@@ -61,23 +87,29 @@ export default class QueryAnalyser extends React.Component {
               />
             </div>
           </div>
-          <div className="wd75">
-            <div className="analysisWrapper">
-              <div className="plansWrapper">
-                <div className="plansTitle">Generated SQL</div>
-                <div className="codeBlock">
-                  <div className="copyGenerated">
-                    <div className="copyTooltip">
-                      <span className="tooltiptext" id="copySql">
-                        Copy
-                      </span>
-                      <ImCopy
-                        onClick={this.copyToClip.bind(this, 'sql', 'copySql')}
-                        onMouseLeave={this.resetCopy.bind(this, 'copySql')}
-                      />
-                    </div>
-                  </div>
-                  <pre>
+          <div className="w-3/4 z-100 bg-white">
+            <div className="w-full">
+              <div className="p-md pt-0">
+                <div className="text-[#767e93] font-bold py-sm">
+                  Generated SQL
+                </div>
+                <div className="w-full overflow-y-scroll h-[calc(30vh)] mb-sm">
+                  <button
+                    onClick={() =>
+                      this.copyToClip(
+                        'sql',
+                        sqlFormatter.format(
+                          this.state.analyseData[this.state.activeNode].sql,
+                          { language: 'sql' }
+                        )
+                      )
+                    }
+                    className="cursor-pointer rounded-sm bg-gray-50 p-1 absolute right-24 mt-2"
+                  >
+                    <ImCopy className="mr-sm" />
+                    {this.state.previouslyCopied === 'sql' ? 'Copied!' : 'Copy'}
+                  </button>
+                  <pre className="bg-[#fdf9ed]">
                     <code
                       dangerouslySetInnerHTML={{
                         __html:
@@ -95,30 +127,39 @@ export default class QueryAnalyser extends React.Component {
                   </pre>
                 </div>
               </div>
-              <div className="plansWrapper">
-                <div className="plansTitle">Execution Plan</div>
-                <div className="codeBlock">
-                  <div className="copyGenerated">
-                    <div className="copyTooltip">
-                      <span className="tooltiptext" id="copyPlan">
-                        Copy
-                      </span>
-                      <ImCopy
-                        onClick={this.copyToClip.bind(this, 'plan', 'copyPlan')}
-                        onMouseLeave={this.resetCopy.bind(this, 'copyPlan')}
-                      />
-                    </div>
+              <div className="p-md pt-0">
+                <div>
+                  <div className="text-[#767e93] font-bold py-md pt-0">
+                    Execution Plan
                   </div>
-                  <pre>
-                    <code>
-                      {this.state.activeNode >= 0 &&
-                      this.state.analyseData.length > 0
-                        ? this.state.analyseData[
-                            this.state.activeNode
-                          ].plan.join('\n')
-                        : ''}
-                    </code>
-                  </pre>
+                  <div className="w-full h-[calc(30vh)] overflow-y-scroll mb-sm">
+                    <pre className="bg-[#fdf9ed]">
+                      <button
+                        onClick={() =>
+                          this.copyToClip(
+                            'plan',
+                            this.state.analyseData[
+                              this.state.activeNode
+                            ].plan.join('\n')
+                          )
+                        }
+                        className="cursor-pointer rounded-sm bg-gray-50 p-1 absolute right-24"
+                      >
+                        <ImCopy className="mr-sm" />
+                        {this.state.previouslyCopied === 'plan'
+                          ? 'Copied!'
+                          : 'Copy'}
+                      </button>
+                      <code>
+                        {this.state.activeNode >= 0 &&
+                        this.state.analyseData.length > 0
+                          ? this.state.analyseData[
+                              this.state.activeNode
+                            ].plan.join('\n')
+                          : ''}
+                      </code>
+                    </pre>
+                  </div>
                 </div>
               </div>
             </div>
@@ -133,40 +174,6 @@ export default class QueryAnalyser extends React.Component {
       this.setState({ activeNode: parseInt(nodeKey, 10) });
     }
   };
-  copyToClip(type, id) {
-    let text = '';
-    if (this.state.analyseData.length > 0) {
-      if (type === 'sql') {
-        text = sqlFormatter.format(
-          this.state.analyseData[this.state.activeNode].sql,
-          { language: 'sql' }
-        );
-      } else {
-        text = this.state.analyseData[this.state.activeNode].plan.join('\n');
-      }
-    }
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-      const successful = document.execCommand('copy');
-      const tooltip = document.getElementById(id);
-      tooltip.innerHTML = 'Copied';
-      if (!successful) {
-        throw new Error('Copy was unsuccessful');
-      }
-    } catch (err) {
-      alert('Oops, unable to copy - ' + err);
-    }
-    document.body.removeChild(textArea);
-  }
-  resetCopy(id) {
-    const tooltip = document.getElementById(id);
-    tooltip.innerHTML = 'Copy';
-  }
 }
 
 QueryAnalyser.propTypes = {

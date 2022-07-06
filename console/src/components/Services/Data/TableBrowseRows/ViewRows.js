@@ -1093,10 +1093,10 @@ const ViewRows = props => {
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
-      <div className="ml-0 mt-md">
+      <div className="w-fit ml-0 mt-md">
         {getSelectedRowsSection()}
-        <div className="w-full">
-          <div className="">{renderTableBody()}</div>
+        <div>
+          <div>{renderTableBody()}</div>
           <br />
           <br />
           <div>{getChildComponent()}</div>

@@ -1,9 +1,7 @@
 import React from 'react';
 
-import styles from '../RESTStyles.scss';
-
 const Input: React.FC<React.ComponentProps<'input'>> = props => (
-  <input className={styles.rest_preview_input} {...props} />
+  <input className="text-base  bg-transparent border-0 w-full" {...props} />
 );
 
 export default Input;

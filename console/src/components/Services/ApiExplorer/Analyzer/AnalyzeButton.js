@@ -27,16 +27,14 @@ export default class AnalyzeButton extends React.Component {
 
     let options = null;
     if (hasOptions && optionsOpen) {
-      const highlight = this.state.highlight;
       const validOperations = operations.filter(isValidGraphQLOperation);
       if (validOperations.length) {
         options = (
-          <ul className="execute-options">
+          <ul>
             {validOperations.map(operation => {
               return (
                 <li
                   key={operation.name ? operation.name.value : '*'}
-                  className={operation === highlight ? 'selected' : null}
                   onMouseOver={() => this.setState({ highlight: operation })}
                   onFocus={() => this.setState({ highlight: operation })}
                   onMouseOut={() => this.setState({ highlight: null })}
@@ -57,7 +55,7 @@ export default class AnalyzeButton extends React.Component {
     }
 
     return (
-      <span className="analyse-button-wrap">
+      <span className="relative">
         <GraphiQL.Button
           onClick={this.handleAnalyseClick.bind(this)}
           onMouseDown={onMouseDown}

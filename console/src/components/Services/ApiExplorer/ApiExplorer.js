@@ -24,7 +24,6 @@ class ApiExplorer extends Component {
       loading,
     } = this.props;
 
-    const styles = require('./ApiExplorer.scss');
     const consoleUrl =
       window.location.protocol +
       '//' +
@@ -32,9 +31,9 @@ class ApiExplorer extends Component {
       globals.urlPrefix;
 
     return (
-      <div className={'container-fluid ' + styles.padd_remove}>
+      <div className="p-0">
         <Helmet title="API Explorer | Hasura" />
-        <div className={styles.apiExplorerWrapper}>
+        <div>
           <ApiRequestWrapper
             dispatch={this.props.dispatch}
             credentials={credentials}
