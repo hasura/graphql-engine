@@ -1,6 +1,6 @@
-This note is in [Hasura.GraphQL.Parser.Variable](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Variable.hs#L19).
+This note is in [Hasura.GraphQL.Parser.Variable](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Variable.hs#L22).
 It is referenced at:
-  - line 73 of [Hasura.GraphQL.Parser.Variable](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Variable.hs#L73)
+  - line 76 of [Hasura.GraphQL.Parser.Variable](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Variable.hs#L76)
 
 # Parsing variable values
 

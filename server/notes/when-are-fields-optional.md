@@ -1,6 +1,6 @@
-This note is in [Hasura.GraphQL.Parser.Internal.Input](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Input.hs#L64).
+This note is in [Hasura.GraphQL.Parser.Internal.Input](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Input.hs#L77).
 It is referenced at:
-  - line 71 of [Hasura.GraphQL.Parser.Internal.TypeChecking](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/TypeChecking.hs#L71)
+  - line 76 of [Hasura.GraphQL.Parser.Internal.TypeChecking](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/TypeChecking.hs#L76)
 
 # When are fields optional?
 
