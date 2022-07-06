@@ -187,6 +187,8 @@ fi
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
+export DEFAULT_HASURA_EXPERIMENTAL_FEATURES=streaming_subscriptions
+export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
 export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 export ACTION_WEBHOOK_HANDLER="http://127.0.0.1:5593"
 
@@ -730,7 +732,7 @@ naming-conventions)
 	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py::TestNamingConventionWithoutExperimentalFeature
 
 	kill_hge_servers
-	
+
 	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=naming_convention
 	run_hge_with_args serve
 	wait_for_port 8080
@@ -751,7 +753,7 @@ naming-conventions)
 	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_naming_conventions.py::TestDefaultNamingConvention
 
 	unset HASURA_GRAPHQL_ADMIN_SECRET
-	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
 	unset HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION
 
 	kill_hge_servers
@@ -760,7 +762,6 @@ naming-conventions)
 streaming-subscriptions)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH STREAMING SUBSCRIPTIONS #########################>\n"
 
-  export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="streaming_subscriptions"
   export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
   run_hge_with_args serve
@@ -1274,7 +1275,7 @@ backend-mssql)
 	# start naming conventions test (failure for other than postgres backend)
 	echo -e "\n$(time_elapsed): <########## TEST NAMING CONVENTIONS WITH SQL SERVER BACKEND ###########################################>\n"
 	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -k TestNamingConventionsFailure --backend mssql
-	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES=$DEFAULT_HASURA_EXPERIMENTAL_FEATURES
 	# end naming conventions test
 
 	kill_hge_servers

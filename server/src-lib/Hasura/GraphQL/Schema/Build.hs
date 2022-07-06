@@ -193,7 +193,7 @@ buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo tableIdenti
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner : " <>> tableName
   selectStreamName <-
-    mkRootFieldName $ setFieldNameCase tCase tableInfo (_tcrfSelect customRootFields) mkSelectStreamField tableIdentifier
+    mkRootFieldName $ setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
   catMaybes
     <$> sequenceA
       [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceInfo tableInfo selectStreamName selectDesc
