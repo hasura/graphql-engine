@@ -22,11 +22,14 @@ module Hasura.GraphQL.Parser.Internal.Scalars
   )
 where
 
+import Control.Monad ((>=>))
 import Data.Aeson qualified as A
 import Data.Aeson.Types qualified as A
 import Data.Int (Int32, Int64)
 import Data.Scientific (Scientific)
 import Data.Scientific qualified as S
+import Data.Text (Text)
+import Data.Text qualified as Text
 import Data.Text.Read (decimal)
 import Data.UUID qualified as UUID
 import Hasura.Backends.Postgres.SQL.Value
@@ -37,9 +40,14 @@ import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
-import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Language.GraphQL.Draft.Syntax hiding (Definition)
+import Prelude
+
+-- Disable custom prelude warnings in preparation for extracting this module into a separate package.
+{-# ANN module ("HLint: ignore Use onLeft" :: String) #-}
+
+{-# ANN module ("HLint: ignore Use tshow" :: String) #-}
 
 --------------------------------------------------------------------------------
 -- Built-in scalars
@@ -74,12 +82,12 @@ string = mkScalar stringScalar Nothing \case
 identifier :: MonadParse m => Parser origin 'Both m Text
 identifier = mkScalar idScalar Nothing \case
   GraphQLValue (VString s) -> pure s
-  GraphQLValue (VInt i) -> pure $ tshow i
+  GraphQLValue (VInt i) -> pure . Text.pack $ show i
   JSONValue (A.String s) -> pure s
   JSONValue (A.Number n) -> parseScientific n
   v -> typeMismatch idScalar "a String or a 32-bit integer" v
   where
-    parseScientific = convertWith $ fmap (tshow @Int) . scientificToInteger
+    parseScientific = convertWith $ fmap (Text.pack . show @Int) . scientificToInteger
 
 --------------------------------------------------------------------------------
 -- Custom scalars
@@ -188,4 +196,4 @@ convertWith ::
   MonadParse m =>
   (a -> A.Parser b) ->
   (a -> m b)
-convertWith f x = runAesonParser f x `onLeft` (parseErrorWith ParseFailed . qeError)
+convertWith f x = either (parseErrorWith ParseFailed . qeError) pure $ runAesonParser f x

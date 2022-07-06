@@ -1,8 +1,6 @@
 module Data.Parser.JSONPath
   ( encodeJSONPath,
     parseJSONPath,
-    JSONPathElement (..),
-    JSONPath,
   )
 where
 

@@ -13,13 +13,24 @@ module Hasura.GraphQL.Parser.Internal.Parser
   )
 where
 
+import Control.Arrow ((&&&))
+import Control.Monad (unless, when, (>=>))
+import Control.Monad.Except (MonadError)
 import Data.Aeson qualified as A
 import Data.Aeson.Key qualified as K
-import Data.HashMap.Strict.Extended qualified as M
+import Data.Aeson.Types (JSONPathElement (Key))
+import Data.Foldable (for_, toList)
+import Data.Function ((&))
+import Data.Functor ((<&>))
+import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
-import Data.Parser.JSONPath
+import Data.Hashable (Hashable)
+import Data.Maybe qualified as Maybe
+import Data.Text (Text)
 import Data.Text.Extended
+import Data.Traversable (for)
 import Data.Type.Equality
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class.Parse
@@ -31,9 +42,9 @@ import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Prelude
 
 infixl 1 `bind`
 
@@ -168,10 +179,10 @@ safeSelectionSet printOrigin name desc fields
     duplicates = M.filter ((> 1) . length) namesOrigins
     uniques = S.toList . S.fromList
     printEntry (fieldName, originsM) =
-      let origins = uniques $ catMaybes originsM
+      let origins = uniques $ Maybe.catMaybes originsM
        in if
               | null origins -> unName fieldName
-              | any isNothing originsM ->
+              | any Maybe.isNothing originsM ->
                 unName fieldName <> " (generated for " <> commaSeparated (map printOrigin origins)
                   <> " and of unknown origin)"
               | otherwise ->
@@ -237,7 +248,7 @@ selectionSetObject name description parsers implementsInterfaces =
       parsers
         & map (\FieldParser {fDefinition, fParser} -> (getName fDefinition, fParser))
         & M.fromList
-    interfaces = mapMaybe (getInterfaceInfo . pType) implementsInterfaces
+    interfaces = Maybe.mapMaybe (getInterfaceInfo . pType) implementsInterfaces
     parsedInterfaceNames = fmap getName interfaces
 
 selectionSetInterface ::
@@ -268,7 +279,7 @@ selectionSetInterface name description fields objectImplementations =
       -- fragments on the other types.
     }
   where
-    objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
+    objects = Maybe.catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
 
 selectionSetUnion ::
   (MonadParse n, Traversable t) =>
@@ -286,7 +297,7 @@ selectionSetUnion name description objectImplementations =
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
   where
-    objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
+    objects = Maybe.catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
 
 -- | Builds a 'FieldParser' for a field that does not take a subselection set,
 -- i.e. a field that returns a scalar or enum. The field’s type is taken from

@@ -8,9 +8,9 @@ module Hasura.GraphQL.Parser.Class
 where
 
 import Hasura.GraphQL.Parser.Class.Parse
-import Hasura.Prelude
 import Language.Haskell.TH qualified as TH
 import Type.Reflection (Typeable)
+import Prelude
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~

@@ -621,7 +621,7 @@ fakeAuthHook = AuthHookG "http://fake" AHTGet
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "fixme") . mkRoleName
 
-mkJSONPathE :: Text -> JSONPath
+mkJSONPathE :: Text -> J.JSONPath
 mkJSONPathE = either (error . T.unpack) id . parseJSONPath
 
 newtype NoReporter a = NoReporter {runNoReporter :: IO a}

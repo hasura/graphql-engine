@@ -9,13 +9,18 @@ module Hasura.GraphQL.Parser.Internal.TypeChecking
   )
 where
 
+import Control.Arrow ((>>>))
+import Control.Monad (unless)
 import Data.Aeson qualified as A
+import Data.Function (on)
+import Data.Text (Text)
 import Data.Text.Extended
+import Data.Void (absurd)
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Variable
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax hiding (Definition)
+import Prelude
 
 -- | Peeling a variable.
 --

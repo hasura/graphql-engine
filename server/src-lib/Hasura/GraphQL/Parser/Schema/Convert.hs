@@ -5,9 +5,11 @@ module Hasura.GraphQL.Parser.Schema.Convert
   )
 where
 
+import Data.List.NonEmpty qualified as NonEmpty
+import Data.Void (Void)
 import Hasura.GraphQL.Parser.Schema
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
+import Prelude
 
 -------------------------------------------------------------------------------
 
@@ -33,7 +35,7 @@ convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
         { G._etdDescription = dDescription,
           G._etdName = dName,
           G._etdDirectives = noDirectives,
-          G._etdValueDefinitions = map convertEnumValue $ toList enumInfo
+          G._etdValueDefinitions = map convertEnumValue $ NonEmpty.toList enumInfo
         }
   TIInputObject (InputObjectInfo values) ->
     G.TypeDefinitionInputObject $

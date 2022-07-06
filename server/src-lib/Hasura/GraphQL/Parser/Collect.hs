@@ -11,13 +11,16 @@ module Hasura.GraphQL.Parser.Collect
   )
 where
 
+import Control.Monad (foldM, unless)
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Maybe (fromMaybe)
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Variable
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax
+import Prelude
 
 -- | Collects the effective set of fields queried by a selection set by
 -- flattening fragments and merging duplicate fields.
