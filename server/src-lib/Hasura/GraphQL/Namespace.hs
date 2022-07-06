@@ -88,6 +88,7 @@ customizeNamespace ::
   P.MkTypename ->
   [FieldParser n a] ->
   [FieldParser n (NamespacedField a)]
+customizeNamespace (Just _) _ _ [] = [] -- The nampespace doesn't contain any Field parsers, so returning empty list
 customizeNamespace (Just namespace) fromParsedSelection mkNamespaceTypename fieldParsers =
   -- Source or remote schema has a namespace field so wrap the parsers
   -- in a new namespace field parser.

@@ -58,7 +58,7 @@
 
 ### Bug fixes and improvements
 
-
+- server: fix namespace visibility during introspection (fix #8434)
 - server: Create missing SQL triggers, if any, while reloading metadata and startup.
 - server: fix name transformation bug in `graphql-default` naming convention (fixes #8640 partially)
 - server: changes to the Rest Endpoints OpenAPI specification:
