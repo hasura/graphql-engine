@@ -28,8 +28,6 @@ import {
 import Spinner from '../../../../Common/Spinner/Spinner';
 import CollapsibleToggle from './CollapsibleToggle';
 
-import styles from '../RESTStyles.scss';
-
 interface EndpointState extends RestEndpointEntry {
   currentQuery: string;
 }
@@ -229,9 +227,9 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   ]);
 
   return (
-    <div className={styles.rest_live_layout}>
-      <h3 className={styles.rest_live_header}>Preview Request</h3>
-      <div className={styles.rest_preview_req_header_layout}>
+    <div className="flex flex-col pb-md text-center">
+      <h3 className="text-lg font-bold">Preview Request</h3>
+      <div className="my-md w-full">
         <CollapsibleToggle
           title="Request Headers"
           state={headerState}
@@ -244,17 +242,14 @@ const LivePreview: React.FC<LivePreviewProps> = ({
             updateValueText={updateHeaderValueText}
             toggleActiveState={updateActiveStateForHeader}
           />
-          <Button
-            size="sm"
-            onClick={onClickAddHeader}
-            className={styles.float_right}
-          >
-            <FaPlusCircle className={styles.icon_margin} />
+          <Button size="sm" onClick={onClickAddHeader} className="float-right">
+            <FaPlusCircle className="mr-xs" />
             Add Header
           </Button>
         </CollapsibleToggle>
       </div>
-      <div className={styles.rest_preview_req_var_layout}>
+      <p>here</p>
+      <div className="w-full">
         <CollapsibleToggle
           title="Request Variables"
           state={variableState}
@@ -266,27 +261,27 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           />
         </CollapsibleToggle>
       </div>
-      <div className={styles.rest_preview_req_var_layout}>
+      <div className="mb-sm w-full">
         <hr className="my-md" />
         <Button
           size="sm"
           onClick={runQuery}
           color="yellow"
-          className={styles.float_right}
+          className="float-right"
         >
-          <FaPlay className={styles.icon_margin} />
+          <FaPlay className="mr-xs" />
           Run Request
         </Button>
       </div>
-      <div className={styles.rest_preview_show_response}>
+      <div className="w-full">
         {progressState.isLoading ? <Spinner /> : null}
         {progressState?.data && (
-          <pre className={styles.live_preview_pre}>
+          <pre className="h-[200] overflow-scroll text-left">
             {JSON.stringify(progressState.data, null, 4)}
           </pre>
         )}
         {progressState?.error && (
-          <div className={styles.rest_preview_error_display}>
+          <div className="w-full border border-gray-500 rounded-sm p-sm pt-md">
             <b>Error Message: </b> {progressState?.error?.message}
             <div>
               <b>Error Status code: </b>

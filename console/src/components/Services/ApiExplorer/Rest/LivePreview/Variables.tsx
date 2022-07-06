@@ -5,8 +5,6 @@ import Input from './Input';
 import PreviewTable from './PreviewTable';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
-import styles from '../RESTStyles.scss';
-
 type VariableComponentProps = {
   updateVariableValue: (
     name: string
@@ -15,8 +13,8 @@ type VariableComponentProps = {
 };
 
 const requestVariablesHeadings = [
-  { content: 'Name', className: styles.rest_preview_w20 },
-  { content: 'Type' },
+  { content: 'Name', className: 'w-1/5 p-md text-center' },
+  { content: 'Type', className: 'p-md text-center' },
   { content: 'Value' },
 ];
 
@@ -26,7 +24,7 @@ const Variables: React.FC<VariableComponentProps> = ({
 }) => {
   if (!variablesState || !variablesState.length) {
     return (
-      <div className={styles.rest_empty_container}>
+      <div className="w-full pt-sm flex justify-center items-center text-base font-bold text-center">
         This query doesn&apos;t require any request variables
       </div>
     );
@@ -35,11 +33,8 @@ const Variables: React.FC<VariableComponentProps> = ({
   return (
     <PreviewTable headings={requestVariablesHeadings}>
       {variablesState.map(v => (
-        <tr
-          className={styles.rest_preview_table_row}
-          key={`rest-var-${v.name}`}
-        >
-          <td className={styles.text_center}>
+        <tr className="border-b border-gray-300" key={`rest-var-${v.name}`}>
+          <td className="">
             <b>{v.name}</b>
           </td>
           <td>

@@ -36,7 +36,6 @@ import snippets from './snippets';
 import globals from '../../../../Globals';
 
 import 'graphiql/graphiql.css';
-import './GraphiQL.css';
 import 'graphiql-code-exporter/CodeExporter.css';
 import _push from '../../Data/push';
 import { isQueryValid } from '../Rest/utils';
@@ -190,26 +189,32 @@ class GraphiQLWrapper extends Component {
     const renderGraphiqlFooter = responseTime &&
       responseTrackingId === requestTrackingId && (
         <GraphiQL.Footer>
-          <div className="graphiql_footer">
-            <span className="graphiql_footer_label">Response Time</span>
-            <span className="graphiql_footer_value">{responseTime} ms</span>
+          <div className="flex items-center sticky bottom-0 w-full z-[100] p-sm bg-[#eeeeee]">
+            <span className="text-xs text-[#777777] font-semibold mr-sm uppercase">
+              Response Time
+            </span>
+            <span className="text-sm text-black mr-md">{responseTime} ms</span>
             {responseSize && (
               <>
-                <span className="graphiql_footer_label">Response Size</span>
-                <span className="graphiql_footer_value">
+                <span className="text-xs text-[#777777] mr-sm uppercase font-semibold">
+                  Response Size
+                </span>
+                <span className="text-sm text-black mr-md">
                   {responseSize} bytes
                 </span>
               </>
             )}
             {isResponseCached && (
               <>
-                <span className="graphiql_footer_label">Cached</span>
+                <span className="text-xs text-[#777777] font-semibold mr-sm uppercase">
+                  Cached
+                </span>
                 <ToolTip
                   message="This query response was cached using the @cached directive"
                   placement="top"
-                  tooltipStyle="graphiql_footer_icon"
+                  tooltipStyle="text-[#777] ml-sm mr-xs"
                 />
-                <FaCheckCircle className="color_green" />
+                <FaCheckCircle className="text-[#008000]" />
               </>
             )}
           </div>
@@ -308,9 +313,7 @@ class GraphiQLWrapper extends Component {
 
     return (
       <GraphiQLErrorBoundary>
-        <div
-          className={`react-container-graphql w-full h-full border mt-md overflow-hidden rounded border-gray-300`}
-        >
+        <div className="w-full h-full border mt-md overflow-hidden rounded border-gray-300">
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
             endpoint={getGraphQLEndpoint(mode)}

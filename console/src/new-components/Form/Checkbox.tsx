@@ -90,7 +90,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
               <label
                 htmlFor={componentId}
                 className={clsx(
-                  'cursor-pointer m-0 ml-xs',
+                  'cursor-pointer m-0 ml-xs font-normal',
                   disabled || optionDisabled
                     ? 'text-gray-500 cursor-not-allowed'
                     : ''

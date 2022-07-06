@@ -24,12 +24,15 @@ const RootFields: React.FC<RootFieldsProps> = ({
         analysis.field && (
           // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
           <li
-            className={i === activeNode ? 'active' : ''}
+            className={i === activeNode ? 'text-[#fd9540] cursor-pointer' : ''}
             key={i}
             data-key={i}
             onClick={onClick}
           >
-            <FaTable className="text-sm mr-2" aria-hidden="true" />
+            <FaTable
+              className="text-sm ml-md mr-2 hover:text-[#fd9540]"
+              aria-hidden="true"
+            />
             {analysis.field}
           </li>
         )

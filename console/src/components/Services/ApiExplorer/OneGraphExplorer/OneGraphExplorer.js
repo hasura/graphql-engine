@@ -14,10 +14,8 @@ import {
 import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
-
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
-import styles from '../ApiExplorer.scss';
 import Spinner from '../../../Common/Spinner/Spinner';
 import {
   showErrorNotification,
@@ -139,7 +137,7 @@ class OneGraphExplorer extends React.Component {
               `We are not able to render GraphiQL Explorer and Docs.
               You should still be able to try out your API from the GraphiQL Editor.`,
               null,
-              <p style={{ paddingTop: '10px', margin: '0' }}>
+              <p className="pt-sm m-0">
                 Please report an issue on our{' '}
                 <a
                   target="_blank"
@@ -260,10 +258,7 @@ class OneGraphExplorer extends React.Component {
         <div className="gqlexplorer">
           {this.props.loading ? (
             <div
-              className={`${styles.height100} ${styles.display_flex}`}
-              style={{
-                width: explorerWidth,
-              }}
+              className={`h-full flex w-[${String(explorerWidth) || '300'}px]`}
             >
               <Spinner />
             </div>
