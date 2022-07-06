@@ -161,6 +161,52 @@
         }
       }
 
+- description: Create user role
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_create_select_permission
+    args:
+      table: author_local
+      role: user
+      permission:
+        columns: '*'
+        filter: {}
+      source: pg1
+  response:
+    message: success
+
+- description: Check namespace visibility
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: user
+  status: 200
+  response:
+    errors:
+    - extensions:
+        code: validation-failed
+        path: $.selectionSet.s2
+      message: "field \"s2\" not found in type: 'query_root'"
+
+  query:
+    query: |
+      query MyQuery {
+        s2 {
+          __typename
+        }
+      }
+
+- description: Drop user role
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_drop_select_permission
+    args:
+      role: user
+      source: pg1
+      table: author_local
+  response:
+    message: success
 
 - description: untrack table 1
   url: /v1/metadata
