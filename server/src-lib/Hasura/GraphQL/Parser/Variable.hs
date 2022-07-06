@@ -6,15 +6,18 @@ module Hasura.GraphQL.Parser.Variable
 where
 
 import Data.Aeson qualified as J
+import Data.Hashable (Hashable)
+import Data.Void (Void)
+import GHC.Generics (Generic)
 import Hasura.GraphQL.Parser.Names
 import Hasura.Incremental (Cacheable)
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax
   ( GType (..),
     Name (..),
     Value (..),
   )
 import Language.Haskell.TH.Lift qualified as TH
+import Prelude
 
 {- Note [Parsing variable values]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

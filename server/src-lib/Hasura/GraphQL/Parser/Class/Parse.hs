@@ -5,9 +5,10 @@ module Hasura.GraphQL.Parser.Class.Parse
   )
 where
 
-import Data.Parser.JSONPath
+import Data.Aeson.Types (JSONPathElement)
+import Data.Text (Text)
 import Hasura.Base.Error
-import Hasura.Prelude
+import Prelude
 
 -- | A class that provides functionality for parsing GraphQL queries, i.e.
 -- running a fully-constructed 'Parser'.

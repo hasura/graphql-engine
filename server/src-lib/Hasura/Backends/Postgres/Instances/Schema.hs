@@ -13,6 +13,7 @@ where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
+import Data.Aeson.Types (JSONPathElement (..))
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.Extended qualified as M

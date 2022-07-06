@@ -7,10 +7,11 @@ module Hasura.GraphQL.Parser.Names
 where
 
 import Control.Lens
+import Control.Monad.Reader (MonadReader, asks, local)
 import Data.Has
 import Data.Monoid
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax (Name (..))
+import Prelude
 
 class HasName a where
   getName :: a -> Name

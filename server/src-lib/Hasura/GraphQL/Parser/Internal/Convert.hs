@@ -10,18 +10,26 @@ module Hasura.GraphQL.Parser.Internal.Convert
   )
 where
 
+import Control.Monad.Except (MonadError, throwError)
 import Data.Aeson qualified as A
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict qualified as M
 import Data.Int (Int64)
 import Data.Scientific (toBoundedInteger)
+import Data.Text (Text)
 import Data.Text.Extended
+import Data.Traversable (for)
+import Data.Vector qualified as V
+import Data.Void (Void, absurd)
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Variable
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
+import Prelude
+
+-- Disable custom prelude warnings in preparation for extracting this module into a separate package.
+{-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
 
 valueToJSON :: MonadParse m => G.GType -> InputValue Variable -> m A.Value
 valueToJSON expectedType inputVal = do
@@ -53,13 +61,11 @@ jsonToGraphQL = \case
   A.Number val -> case toBoundedInteger val of
     Just intVal -> pure $ G.VInt $ fromIntegral @Int64 intVal
     Nothing -> pure $ G.VFloat val
-  A.Array vals -> G.VList <$> traverse jsonToGraphQL (toList vals)
+  A.Array vals -> G.VList <$> traverse jsonToGraphQL (V.toList vals)
   A.Object vals ->
     G.VObject . M.fromList <$> for (KM.toList vals) \(K.toText -> key, val) -> do
-      graphQLName <-
-        G.mkName key
-          `onNothing` throwError
-            ( "variable value contains an object with key "
-                <> key <<> ", which is not a legal GraphQL name"
-            )
+      graphQLName <- maybe (invalidName key) pure $ G.mkName key
       (graphQLName,) <$> jsonToGraphQL val
+  where
+    invalidName key =
+      throwError $ "variable value contains an object with key " <> key <<> ", which is not a legal GraphQL name"

@@ -25,15 +25,20 @@ module Hasura.GraphQL.Parser.Directives
   )
 where
 
+import Control.Monad (guard, unless)
+import Control.Monad.Identity (Identity (..))
 import Data.Aeson.Key qualified as K
+import Data.Aeson.Types (JSONPathElement (Key))
 import Data.Dependent.Map qualified as DM
 import Data.Dependent.Sum (DSum (..))
+import Data.Foldable (for_)
 import Data.GADT.Compare.Extended
-import Data.HashMap.Strict.Extended qualified as M
+import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
-import Data.List.Extended (duplicates)
-import Data.Parser.JSONPath
+import Data.List qualified as L
+import Data.Maybe (catMaybes)
 import Data.Text.Extended
+import Data.Traversable (for)
 import Data.Typeable (eqT)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.DirectiveName qualified as Name
@@ -41,9 +46,12 @@ import Hasura.GraphQL.Parser.Internal.Input
 import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 import Type.Reflection (Typeable, typeRep, (:~:) (..))
+import Prelude
+
+-- Disable custom prelude warnings in preparation for extracting this module into a separate package.
+{-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
 
 -- | Returns the schema information for all supported directives, for each of
 -- which a @DirectiveDefinition@ will be inserted into the schema.
@@ -108,13 +116,13 @@ parseDirectives directiveParsers location givenDirectives = do
       let name = G._dName directive
       -- check the directive has a matching definition
       DirectiveInfo {diLocations} <-
-        find (\di -> diName di == name) (allDirectives @m)
-          `onNothing` parseError ("directive " <> name <<> " is not defined in the schema")
+        maybe (parseError ("directive " <> name <<> " is not defined in the schema")) pure $
+          L.find (\di -> diName di == name) (allDirectives @m)
       -- check that it is allowed at the current location
       unless (location `elem` diLocations) $
         parseError $ "directive " <> name <<> " is not allowed on " <> humanReadable location
       -- if we are expecting to parse it now, create a dmap entry
-      case find (\d -> diName (dDefinition d) == name) directiveParsers of
+      case L.find (\d -> diName (dDefinition d) == name) directiveParsers of
         Nothing -> pure Nothing
         Just (Directive {dParser}) -> do
           result <- dParser directive
@@ -144,6 +152,7 @@ parseDirectives directiveParsers location givenDirectives = do
       G.DLTypeSystem G.TSDLENUM_VALUE -> "an enum value definition"
       G.DLTypeSystem G.TSDLINPUT_OBJECT -> "an input object definition"
       G.DLTypeSystem G.TSDLINPUT_FIELD_DEFINITION -> "an input field definition"
+    duplicates = S.fromList . M.keys . M.filter (> 1) . M.fromListWith (+) . map (,1 :: Int)
 
 withDirective ::
   DirectiveMap ->

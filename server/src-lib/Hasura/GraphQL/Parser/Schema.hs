@@ -46,15 +46,23 @@ module Hasura.GraphQL.Parser.Schema
 where
 
 import Control.Lens
+import Control.Monad.Except (ExceptT, MonadError (..), runExcept)
+import Control.Monad.Reader (MonadReader (..), ReaderT (..))
+import Control.Monad.State.Strict (MonadState (..), StateT, execStateT)
+import Data.Foldable (traverse_)
+import Data.Function (on)
 import Data.Functor.Classes
-import Data.HashMap.Strict.Extended qualified as Map
+import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as Map
 import Data.Hashable (Hashable (..))
 import Data.List qualified as List
+import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Extended
+import Data.Void (Void)
+import GHC.Generics (Generic)
 import Hasura.GraphQL.Parser.Names
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax
   ( Description (..),
     DirectiveLocation (..),
@@ -63,6 +71,7 @@ import Language.GraphQL.Draft.Syntax
     Value (..),
   )
 import Language.GraphQL.Draft.Syntax qualified as G
+import Prelude
 
 -- | GraphQL types are divided into two classes: input types and output types.
 -- The GraphQL spec does not use the word “kind” to describe these classes, but

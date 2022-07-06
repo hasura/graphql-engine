@@ -8,20 +8,27 @@ module Hasura.GraphQL.Parser.Monad
   )
 where
 
+import Control.Arrow ((<<<))
 import Control.Monad.Except
+import Control.Monad.Reader (MonadReader, ReaderT, mapReaderT)
+import Control.Monad.State.Strict (MonadState (..), StateT, evalStateT)
+import Data.Aeson (JSONPath)
 import Data.Dependent.Map (DMap)
 import Data.Dependent.Map qualified as DM
 import Data.GADT.Compare.Extended
 import Data.IORef
 import Data.Kind qualified as K
-import Data.Parser.JSONPath
 import Data.Proxy (Proxy (..))
+import Data.Text (Text)
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
-import Hasura.Prelude
 import Language.Haskell.TH qualified as TH
 import System.IO.Unsafe (unsafeInterleaveIO)
 import Type.Reflection (Typeable, typeRep, (:~:) (..))
+import Prelude
+
+-- Disable custom prelude warnings in preparation for extracting this module into a separate package.
+{-# ANN module ("HLint: ignore Use onLeft" :: String) #-}
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction
@@ -170,9 +177,7 @@ runParse ::
   Parse a ->
   m a
 runParse parse =
-  onLeft
-    (runExcept <<< unParse $ parse)
-    reportParseErrors
+  either reportParseErrors pure (runExcept <<< unParse $ parse)
 
 instance MonadParse Parse where
   withKey key = Parse . withExceptT (\pe -> pe {pePath = key : pePath pe}) . unParse

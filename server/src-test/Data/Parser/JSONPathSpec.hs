@@ -1,6 +1,8 @@
 module Data.Parser.JSONPathSpec (spec) where
 
+import Data.Aeson (JSONPath)
 import Data.Aeson.Key qualified as K
+import Data.Aeson.Types (JSONPathElement (..))
 import Data.Parser.JSONPath
 import Data.Text qualified as T
 import Hasura.Prelude
