@@ -1,0 +1,410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | Provides utilities to convert a runtime schema back to a static</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- intrsospection schema.</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Parser.Schema.Convert</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertToSchemaIntrospection"><span class="hs-identifier">convertToSchemaIntrospection</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html"><span class="hs-identifier">Hasura.GraphQL.Parser.Schema</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- | Convert back from our &quot;live&quot; schema representation into a flat</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- static set of definitions.</span><span>
+</span><span id="line-16"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertToSchemaIntrospection"><span class="hs-identifier hs-type">convertToSchemaIntrospection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Schema"><span class="hs-identifier hs-type">Schema</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.SchemaIntrospection</span></span><span>
+</span><span id="line-17"></span><span id="convertToSchemaIntrospection"><span class="annot"><span class="annottext">convertToSchemaIntrospection :: Schema -&gt; SchemaIntrospection
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertToSchemaIntrospection"><span class="hs-identifier hs-var hs-var">convertToSchemaIntrospection</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Name (TypeDefinition [Name] InputValueDefinition)
+-&gt; SchemaIntrospection
+</span><span class="hs-identifier hs-var">G.SchemaIntrospection</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (TypeDefinition [Name] InputValueDefinition)
+ -&gt; SchemaIntrospection)
+-&gt; (Schema
+    -&gt; HashMap Name (TypeDefinition [Name] InputValueDefinition))
+-&gt; Schema
+-&gt; SchemaIntrospection
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(SomeDefinitionTypeInfo
+ -&gt; TypeDefinition [Name] InputValueDefinition)
+-&gt; HashMap Name SomeDefinitionTypeInfo
+-&gt; HashMap Name (TypeDefinition [Name] InputValueDefinition)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">SomeDefinitionTypeInfo
+-&gt; TypeDefinition [Name] InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertType"><span class="hs-identifier hs-var">convertType</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Name SomeDefinitionTypeInfo
+ -&gt; HashMap Name (TypeDefinition [Name] InputValueDefinition))
+-&gt; (Schema -&gt; HashMap Name SomeDefinitionTypeInfo)
+-&gt; Schema
+-&gt; HashMap Name (TypeDefinition [Name] InputValueDefinition)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Schema -&gt; HashMap Name SomeDefinitionTypeInfo
+</span><a href="Hasura.GraphQL.Parser.Schema.html#sTypes"><span class="hs-identifier hs-var hs-var">sTypes</span></a></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertType"><span class="hs-identifier hs-type">convertType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeDefinitionTypeInfo"><span class="hs-identifier hs-type">SomeDefinitionTypeInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.TypeDefinition</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span>
+</span><span id="line-22"></span><span id="convertType"><span class="annot"><span class="annottext">convertType :: SomeDefinitionTypeInfo
+-&gt; TypeDefinition [Name] InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertType"><span class="hs-identifier hs-var hs-var">convertType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#SomeDefinitionTypeInfo"><span class="hs-identifier hs-type">SomeDefinitionTypeInfo</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689075454"><span id="local-6989586621689075455"><span id="local-6989586621689075456"><span class="annot"><span class="annottext">Maybe Description
+Name
+TypeInfo k
+dInfo :: forall a. Definition a -&gt; a
+dDescription :: forall a. Definition a -&gt; Maybe Description
+dName :: forall a. Definition a -&gt; Name
+dInfo :: TypeInfo k
+dDescription :: Maybe Description
+dName :: Name
+</span><a href="Hasura.GraphQL.Parser.Schema.html#dInfo"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">TypeInfo k
+</span><a href="#local-6989586621689075454"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-23"></span><span>  </span><span class="annot"><span class="annottext">TypeInfo k
+</span><a href="Hasura.GraphQL.Parser.Schema.html#TIScalar"><span class="hs-identifier hs-var">TIScalar</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><span class="annottext">ScalarTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition
+forall possibleTypes inputType.
+ScalarTypeDefinition -&gt; TypeDefinition possibleTypes inputType
+</span><span class="hs-identifier hs-var">G.TypeDefinitionScalar</span></span><span> </span><span class="annot"><span class="annottext">(ScalarTypeDefinition
+ -&gt; TypeDefinition [Name] InputValueDefinition)
+-&gt; ScalarTypeDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-25"></span><span>      </span><span class="annot"><span class="annottext">ScalarTypeDefinition :: Maybe Description
+-&gt; Name -&gt; [Directive Void] -&gt; ScalarTypeDefinition
+</span><span class="hs-identifier hs-type">G.ScalarTypeDefinition</span></span><span>
+</span><span id="line-26"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_stdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._stdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075455"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>          </span><span class="annot"><span class="annottext">_stdName :: Name
+</span><span class="hs-identifier hs-var">G._stdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075456"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>          </span><span class="annot"><span class="annottext">_stdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._stdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span>
+</span><span id="line-29"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-30"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIEnum"><span class="hs-identifier hs-type">TIEnum</span></a></span><span> </span><span id="local-6989586621689075442"><span class="annot"><span class="annottext">NonEmpty (Definition EnumValueInfo)
+</span><a href="#local-6989586621689075442"><span class="hs-identifier hs-var">enumInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">EnumTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition
+forall possibleTypes inputType.
+EnumTypeDefinition -&gt; TypeDefinition possibleTypes inputType
+</span><span class="hs-identifier hs-var">G.TypeDefinitionEnum</span></span><span> </span><span class="annot"><span class="annottext">(EnumTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition)
+-&gt; EnumTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-32"></span><span>      </span><span class="annot"><span class="annottext">EnumTypeDefinition :: Maybe Description
+-&gt; Name
+-&gt; [Directive Void]
+-&gt; [EnumValueDefinition]
+-&gt; EnumTypeDefinition
+</span><span class="hs-identifier hs-type">G.EnumTypeDefinition</span></span><span>
+</span><span id="line-33"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_etdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._etdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075455"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>          </span><span class="annot"><span class="annottext">_etdName :: Name
+</span><span class="hs-identifier hs-var">G._etdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075456"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>          </span><span class="annot"><span class="annottext">_etdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._etdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>          </span><span class="annot"><span class="annottext">_etdValueDefinitions :: [EnumValueDefinition]
+</span><span class="hs-identifier hs-var">G._etdValueDefinitions</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition EnumValueInfo -&gt; EnumValueDefinition)
+-&gt; [Definition EnumValueInfo] -&gt; [EnumValueDefinition]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition EnumValueInfo -&gt; EnumValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertEnumValue"><span class="hs-identifier hs-var">convertEnumValue</span></a></span><span> </span><span class="annot"><span class="annottext">([Definition EnumValueInfo] -&gt; [EnumValueDefinition])
+-&gt; [Definition EnumValueInfo] -&gt; [EnumValueDefinition]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition EnumValueInfo) -&gt; [Definition EnumValueInfo]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty (Definition EnumValueInfo)
+</span><a href="#local-6989586621689075442"><span class="hs-identifier hs-var">enumInfo</span></a></span><span>
+</span><span id="line-37"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInputObject"><span class="hs-identifier hs-type">TIInputObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputObjectInfo"><span class="hs-identifier hs-type">InputObjectInfo</span></a></span><span> </span><span id="local-6989586621689075431"><span class="annot"><span class="annottext">[Definition InputFieldInfo]
+</span><a href="#local-6989586621689075431"><span class="hs-identifier hs-var">values</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">InputObjectTypeDefinition InputValueDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall possibleTypes inputType.
+InputObjectTypeDefinition inputType
+-&gt; TypeDefinition possibleTypes inputType
+</span><span class="hs-identifier hs-var">G.TypeDefinitionInputObject</span></span><span> </span><span class="annot"><span class="annottext">(InputObjectTypeDefinition InputValueDefinition
+ -&gt; TypeDefinition [Name] InputValueDefinition)
+-&gt; InputObjectTypeDefinition InputValueDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">InputObjectTypeDefinition :: forall inputType.
+Maybe Description
+-&gt; Name
+-&gt; [Directive Void]
+-&gt; [inputType]
+-&gt; InputObjectTypeDefinition inputType
+</span><span class="hs-identifier hs-type">G.InputObjectTypeDefinition</span></span><span>
+</span><span id="line-41"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_iotdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._iotdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075455"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>          </span><span class="annot"><span class="annottext">_iotdName :: Name
+</span><span class="hs-identifier hs-var">G._iotdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075456"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>          </span><span class="annot"><span class="annottext">_iotdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._iotdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>          </span><span class="annot"><span class="annottext">_iotdValueDefinitions :: [InputValueDefinition]
+</span><span class="hs-identifier hs-var">G._iotdValueDefinitions</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition InputFieldInfo -&gt; InputValueDefinition)
+-&gt; [Definition InputFieldInfo] -&gt; [InputValueDefinition]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition InputFieldInfo -&gt; InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-var">convertInputField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition InputFieldInfo]
+</span><a href="#local-6989586621689075431"><span class="hs-identifier hs-var">values</span></a></span><span>
+</span><span id="line-45"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIObject"><span class="hs-identifier hs-type">TIObject</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#ObjectInfo"><span class="hs-identifier hs-type">ObjectInfo</span></a></span><span> </span><span id="local-6989586621689075421"><span class="annot"><span class="annottext">[Definition FieldInfo]
+</span><a href="#local-6989586621689075421"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621689075420"><span class="annot"><span class="annottext">[Definition InterfaceInfo]
+</span><a href="#local-6989586621689075420"><span class="hs-identifier hs-var">interfaces</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">ObjectTypeDefinition InputValueDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall possibleTypes inputType.
+ObjectTypeDefinition inputType
+-&gt; TypeDefinition possibleTypes inputType
+</span><span class="hs-identifier hs-var">G.TypeDefinitionObject</span></span><span> </span><span class="annot"><span class="annottext">(ObjectTypeDefinition InputValueDefinition
+ -&gt; TypeDefinition [Name] InputValueDefinition)
+-&gt; ObjectTypeDefinition InputValueDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="annottext">ObjectTypeDefinition :: forall inputType.
+Maybe Description
+-&gt; Name
+-&gt; [Name]
+-&gt; [Directive Void]
+-&gt; [FieldDefinition inputType]
+-&gt; ObjectTypeDefinition inputType
+</span><span class="hs-identifier hs-type">G.ObjectTypeDefinition</span></span><span>
+</span><span id="line-49"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_otdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._otdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075455"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-50"></span><span>          </span><span class="annot"><span class="annottext">_otdName :: Name
+</span><span class="hs-identifier hs-var">G._otdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075456"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>          </span><span class="annot"><span class="annottext">_otdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._otdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>          </span><span class="annot"><span class="annottext">_otdImplementsInterfaces :: [Name]
+</span><span class="hs-identifier hs-var">G._otdImplementsInterfaces</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition InterfaceInfo -&gt; Name)
+-&gt; [Definition InterfaceInfo] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition InterfaceInfo -&gt; Name
+forall a. Definition a -&gt; Name
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var">getDefinitionName</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition InterfaceInfo]
+</span><a href="#local-6989586621689075420"><span class="hs-identifier hs-var">interfaces</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>          </span><span class="annot"><span class="annottext">_otdFieldsDefinition :: [FieldDefinition InputValueDefinition]
+</span><span class="hs-identifier hs-var">G._otdFieldsDefinition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition FieldInfo -&gt; FieldDefinition InputValueDefinition)
+-&gt; [Definition FieldInfo] -&gt; [FieldDefinition InputValueDefinition]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition FieldInfo -&gt; FieldDefinition InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-var">convertField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition FieldInfo]
+</span><a href="#local-6989586621689075421"><span class="hs-identifier hs-var">fields</span></a></span><span>
+</span><span id="line-54"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-55"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIInterface"><span class="hs-identifier hs-type">TIInterface</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InterfaceInfo"><span class="hs-identifier hs-type">InterfaceInfo</span></a></span><span> </span><span id="local-6989586621689075408"><span class="annot"><span class="annottext">[Definition FieldInfo]
+</span><a href="#local-6989586621689075408"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span id="local-6989586621689075407"><span class="annot"><span class="annottext">[Definition ObjectInfo]
+</span><a href="#local-6989586621689075407"><span class="hs-identifier hs-var">possibleTypes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">InterfaceTypeDefinition [Name] InputValueDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall possibleTypes inputType.
+InterfaceTypeDefinition possibleTypes inputType
+-&gt; TypeDefinition possibleTypes inputType
+</span><span class="hs-identifier hs-var">G.TypeDefinitionInterface</span></span><span> </span><span class="annot"><span class="annottext">(InterfaceTypeDefinition [Name] InputValueDefinition
+ -&gt; TypeDefinition [Name] InputValueDefinition)
+-&gt; InterfaceTypeDefinition [Name] InputValueDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-57"></span><span>      </span><span class="annot"><span class="annottext">InterfaceTypeDefinition :: forall possibleTypes inputType.
+Maybe Description
+-&gt; Name
+-&gt; [Directive Void]
+-&gt; [FieldDefinition inputType]
+-&gt; possibleTypes
+-&gt; InterfaceTypeDefinition possibleTypes inputType
+</span><span class="hs-identifier hs-type">G.InterfaceTypeDefinition</span></span><span>
+</span><span id="line-58"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_itdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._itdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075455"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>          </span><span class="annot"><span class="annottext">_itdName :: Name
+</span><span class="hs-identifier hs-var">G._itdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075456"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">_itdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._itdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">_itdFieldsDefinition :: [FieldDefinition InputValueDefinition]
+</span><span class="hs-identifier hs-var">G._itdFieldsDefinition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition FieldInfo -&gt; FieldDefinition InputValueDefinition)
+-&gt; [Definition FieldInfo] -&gt; [FieldDefinition InputValueDefinition]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition FieldInfo -&gt; FieldDefinition InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-var">convertField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition FieldInfo]
+</span><a href="#local-6989586621689075408"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">_itdPossibleTypes :: [Name]
+</span><span class="hs-identifier hs-var">G._itdPossibleTypes</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition ObjectInfo -&gt; Name)
+-&gt; [Definition ObjectInfo] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition ObjectInfo -&gt; Name
+forall a. Definition a -&gt; Name
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var">getDefinitionName</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition ObjectInfo]
+</span><a href="#local-6989586621689075407"><span class="hs-identifier hs-var">possibleTypes</span></a></span><span>
+</span><span id="line-63"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#TIUnion"><span class="hs-identifier hs-type">TIUnion</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#UnionInfo"><span class="hs-identifier hs-type">UnionInfo</span></a></span><span> </span><span id="local-6989586621689075397"><span class="annot"><span class="annottext">[Definition ObjectInfo]
+</span><a href="#local-6989586621689075397"><span class="hs-identifier hs-var">possibleTypes</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><span class="annottext">UnionTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition
+forall possibleTypes inputType.
+UnionTypeDefinition -&gt; TypeDefinition possibleTypes inputType
+</span><span class="hs-identifier hs-var">G.TypeDefinitionUnion</span></span><span> </span><span class="annot"><span class="annottext">(UnionTypeDefinition -&gt; TypeDefinition [Name] InputValueDefinition)
+-&gt; UnionTypeDefinition
+-&gt; TypeDefinition [Name] InputValueDefinition
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">UnionTypeDefinition :: Maybe Description
+-&gt; Name -&gt; [Directive Void] -&gt; [Name] -&gt; UnionTypeDefinition
+</span><span class="hs-identifier hs-type">G.UnionTypeDefinition</span></span><span>
+</span><span id="line-67"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_utdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._utdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075455"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-68"></span><span>          </span><span class="annot"><span class="annottext">_utdName :: Name
+</span><span class="hs-identifier hs-var">G._utdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075456"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-69"></span><span>          </span><span class="annot"><span class="annottext">_utdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._utdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">_utdMemberTypes :: [Name]
+</span><span class="hs-identifier hs-var">G._utdMemberTypes</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition ObjectInfo -&gt; Name)
+-&gt; [Definition ObjectInfo] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition ObjectInfo -&gt; Name
+forall a. Definition a -&gt; Name
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var">getDefinitionName</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition ObjectInfo]
+</span><a href="#local-6989586621689075397"><span class="hs-identifier hs-var">possibleTypes</span></a></span><span>
+</span><span id="line-71"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertEnumValue"><span class="hs-identifier hs-type">convertEnumValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.EnumValueDefinition</span></span><span>
+</span><span id="line-74"></span><span id="convertEnumValue"><span class="annot"><span class="annottext">convertEnumValue :: Definition EnumValueInfo -&gt; EnumValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertEnumValue"><span class="hs-identifier hs-var hs-var">convertEnumValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689075388"><span id="local-6989586621689075389"><span id="local-6989586621689075390"><span class="annot"><span class="annottext">Maybe Description
+Name
+EnumValueInfo
+dInfo :: EnumValueInfo
+dDescription :: Maybe Description
+dName :: Name
+dInfo :: forall a. Definition a -&gt; a
+dDescription :: forall a. Definition a -&gt; Maybe Description
+dName :: forall a. Definition a -&gt; Name
+</span><a href="#local-6989586621689075388"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">EnumValueDefinition :: Maybe Description
+-&gt; EnumValue -&gt; [Directive Void] -&gt; EnumValueDefinition
+</span><span class="hs-identifier hs-type">G.EnumValueDefinition</span></span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_evdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._evdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075389"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-77"></span><span>      </span><span class="annot"><span class="annottext">_evdName :: EnumValue
+</span><span class="hs-identifier hs-var">G._evdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; EnumValue
+</span><span class="hs-identifier hs-var">G.EnumValue</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075390"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">_evdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._evdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-type">convertInputField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span>
+</span><span id="line-82"></span><span id="convertInputField"><span class="annot"><span class="annottext">convertInputField :: Definition InputFieldInfo -&gt; InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-var hs-var">convertInputField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689075380"><span id="local-6989586621689075381"><span id="local-6989586621689075382"><span class="annot"><span class="annottext">Maybe Description
+Name
+InputFieldInfo
+dInfo :: InputFieldInfo
+dDescription :: Maybe Description
+dName :: Name
+dInfo :: forall a. Definition a -&gt; a
+dDescription :: forall a. Definition a -&gt; Maybe Description
+dName :: forall a. Definition a -&gt; Name
+</span><a href="#local-6989586621689075380"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">InputFieldInfo
+</span><a href="#local-6989586621689075380"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#InputFieldInfo"><span class="hs-identifier hs-type">InputFieldInfo</span></a></span><span> </span><span id="local-6989586621689075378"><span class="annot"><span class="annottext">Type k
+</span><a href="#local-6989586621689075378"><span class="hs-identifier hs-var">typeInfo</span></a></span></span><span> </span><span id="local-6989586621689075377"><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621689075377"><span class="hs-identifier hs-var">defaultValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">InputValueDefinition :: Maybe Description
+-&gt; Name
+-&gt; GType
+-&gt; Maybe (Value Void)
+-&gt; [Directive Void]
+-&gt; InputValueDefinition
+</span><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span>
+</span><span id="line-85"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_ivdDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._ivdDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075381"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">_ivdName :: Name
+</span><span class="hs-identifier hs-var">G._ivdName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075382"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">_ivdType :: GType
+</span><span class="hs-identifier hs-var">G._ivdType</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type k -&gt; GType
+forall (k :: Kind). Type k -&gt; GType
+</span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type k
+</span><a href="#local-6989586621689075378"><span class="hs-identifier hs-var">typeInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">_ivdDefaultValue :: Maybe (Value Void)
+</span><span class="hs-identifier hs-var">G._ivdDefaultValue</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Value Void)
+</span><a href="#local-6989586621689075377"><span class="hs-identifier hs-var">defaultValue</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-89"></span><span>        </span><span class="annot"><span class="annottext">_ivdDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._ivdDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span>
+</span><span id="line-90"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-type">convertField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.InputValueDefinition</span></span><span>
+</span><span id="line-93"></span><span id="convertField"><span class="annot"><span class="annottext">convertField :: Definition FieldInfo -&gt; FieldDefinition InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertField"><span class="hs-identifier hs-var hs-var">convertField</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689075367"><span id="local-6989586621689075368"><span id="local-6989586621689075369"><span class="annot"><span class="annottext">Maybe Description
+Name
+FieldInfo
+dInfo :: FieldInfo
+dDescription :: Maybe Description
+dName :: Name
+dInfo :: forall a. Definition a -&gt; a
+dDescription :: forall a. Definition a -&gt; Maybe Description
+dName :: forall a. Definition a -&gt; Name
+</span><a href="#local-6989586621689075367"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo
+</span><a href="#local-6989586621689075367"><span class="hs-identifier hs-var">dInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span id="local-6989586621689075365"><span class="annot"><span class="annottext">[Definition InputFieldInfo]
+</span><a href="#local-6989586621689075365"><span class="hs-identifier hs-var">arguments</span></a></span></span><span> </span><span id="local-6989586621689075364"><span class="annot"><span class="annottext">Type k
+</span><a href="#local-6989586621689075364"><span class="hs-identifier hs-var">typeInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">FieldDefinition :: forall inputType.
+Maybe Description
+-&gt; Name
+-&gt; ArgumentsDefinition inputType
+-&gt; GType
+-&gt; [Directive Void]
+-&gt; FieldDefinition inputType
+</span><span class="hs-identifier hs-type">G.FieldDefinition</span></span><span>
+</span><span id="line-96"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_fldDescription :: Maybe Description
+</span><span class="hs-identifier hs-var">G._fldDescription</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689075368"><span class="hs-identifier hs-var">dDescription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>        </span><span class="annot"><span class="annottext">_fldName :: Name
+</span><span class="hs-identifier hs-var">G._fldName</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689075369"><span class="hs-identifier hs-var">dName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>        </span><span class="annot"><span class="annottext">_fldArgumentsDefinition :: [InputValueDefinition]
+</span><span class="hs-identifier hs-var">G._fldArgumentsDefinition</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definition InputFieldInfo -&gt; InputValueDefinition)
+-&gt; [Definition InputFieldInfo] -&gt; [InputValueDefinition]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Definition InputFieldInfo -&gt; InputValueDefinition
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#convertInputField"><span class="hs-identifier hs-var">convertInputField</span></a></span><span> </span><span class="annot"><span class="annottext">[Definition InputFieldInfo]
+</span><a href="#local-6989586621689075365"><span class="hs-identifier hs-var">arguments</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">_fldType :: GType
+</span><span class="hs-identifier hs-var">G._fldType</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type k -&gt; GType
+forall (k :: Kind). Type k -&gt; GType
+</span><a href="Hasura.GraphQL.Parser.Schema.html#toGraphQLType"><span class="hs-identifier hs-var">toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type k
+</span><a href="#local-6989586621689075364"><span class="hs-identifier hs-var">typeInfo</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">_fldDirectives :: [Directive Void]
+</span><span class="hs-identifier hs-var">G._fldDirectives</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var">noDirectives</span></a></span><span>
+</span><span id="line-101"></span><span>      </span><span class="hs-special">}</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span id="local-6989586621689075357"><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-type">getDefinitionName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.html#Definition"><span class="hs-identifier hs-type">Definition</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689075357"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span><span>
+</span><span id="line-106"></span><span id="getDefinitionName"><span class="annot"><span class="annottext">getDefinitionName :: Definition a -&gt; Name
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#getDefinitionName"><span class="hs-identifier hs-var hs-var">getDefinitionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Definition a -&gt; Name
+forall a. Definition a -&gt; Name
+</span><a href="Hasura.GraphQL.Parser.Schema.html#dName"><span class="hs-identifier hs-var hs-var">dName</span></a></span><span>
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-type">noDirectives</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.Directive</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span class="hs-special">]</span><span>
+</span><span id="line-109"></span><span id="noDirectives"><span class="annot"><span class="annottext">noDirectives :: [Directive Void]
+</span><a href="Hasura.GraphQL.Parser.Schema.Convert.html#noDirectives"><span class="hs-identifier hs-var hs-var">noDirectives</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-110"></span></pre></body></html>
