@@ -2,8 +2,6 @@
 
 ## Next release
 
-- server: Add support to customize the root field for streaming subscriptions (fixes #8618)
-
 ### Behaviour changes
 
 - server: When providing a JSON path in a JWT claims map, you can now use
@@ -75,6 +73,12 @@
   - Debian graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use a ubuntu base instead of debian.
   - Debian flavour of images (`hasura/graphql-engine:<VERSION>.debian`) are still published to Docker Hub.
   - Centos flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
+
+## v2.8.4
+
+### Bug fixes and improvements
+
+- server: Add support to customize the root field for streaming subscriptions (fixes #8618)
 
 ## v2.8.3
 
