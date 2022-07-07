@@ -44,6 +44,7 @@ fakeInputFieldValue (InputFieldInfo t _) = go t
           M.fromList $ do
             Definition fieldName _ _ fieldInfo <- oi
             pure (fieldName, fakeInputFieldValue fieldInfo)
+        _ -> error "fakeInputFieldValue: non-exhaustive. FIXME"
 
 fakeDirective :: DirectiveInfo -> G.Directive Variable
 fakeDirective DirectiveInfo {..} =

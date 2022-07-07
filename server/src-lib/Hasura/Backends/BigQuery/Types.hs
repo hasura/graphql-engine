@@ -948,7 +948,7 @@ data ComputedFieldDefinition = ComputedFieldDefinition
     -- | A mapping context to determine argument value from table column
     _bqcfdArgumentMapping :: HashMap FunctionArgName ColumnName
   }
-  deriving (Eq, Show, Generic, Data, Lift, Ord)
+  deriving (Eq, Show, Generic, Data, Ord)
 
 instance Hashable ComputedFieldDefinition
 

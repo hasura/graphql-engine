@@ -21,10 +21,10 @@ response:
   - extensions:
       code: constraint-violation
       internal:
-        query: "INSERT INTO [dbo].[article] ([title], [content], [author_id]) OUTPUT\
-          \ INSERTED.[title], INSERTED.[content], INSERTED.[id], INSERTED.[author_id]\
-          \ INTO #inserted([title], [content], [id], [author_id]) VALUES ( (N'some\
-          \ title'), (N'some content'), 1 )"
+        query: "INSERT INTO [dbo].[article] ([author_id], [title], [content]) OUTPUT\
+          \ INSERTED.[id], INSERTED.[author_id], INSERTED.[title], INSERTED.[content]\
+          \ INTO #inserted([id], [author_id], [title], [content]) VALUES ( 1, (N'some\
+          \ title'), (N'some content') )"
       path: $
     message: Integrity constraint violation. [Microsoft][ODBC Driver 17 for SQL Server][SQL
       Server]The INSERT statement conflicted with the FOREIGN KEY constraint "article_author_fk".

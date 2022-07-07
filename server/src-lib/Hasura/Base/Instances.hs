@@ -8,7 +8,7 @@ module Hasura.Base.Instances () where
 import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Functor.Product (Product (Pair))
-import Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
+import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.OpenApi.Declare as D

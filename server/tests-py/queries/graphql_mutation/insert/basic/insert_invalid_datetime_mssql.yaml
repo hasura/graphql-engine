@@ -18,18 +18,18 @@ response:
       code: data-exception
       internal:
         query: "INSERT INTO [dbo].[test_types] ([c52_datetime]) OUTPUT INSERTED.[c6_real],\
-          \ INSERTED.[c47_smallmoney], INSERTED.[c11_varchar_3], INSERTED.[c52_datetime],\
-          \ INSERTED.[c58_hierarchyid], INSERTED.[c12_char_4], INSERTED.[c4_decimal],\
-          \ INSERTED.[c49_tinyint], INSERTED.[c51_real], INSERTED.[c45_money], INSERTED.[c48_bit],\
-          \ INSERTED.[c44_xml], INSERTED.[c5_numeric], INSERTED.[c_pkey], INSERTED.[c55_smalldatetime],\
-          \ INSERTED.[c50_float], INSERTED.[c7_double_precision], INSERTED.[c13_text],\
-          \ INSERTED.[c54_datetimeoffset], INSERTED.[c59_uniqueidentifier], INSERTED.[c2_integer],\
-          \ INSERTED.[c53_datetime2], INSERTED.[c16_date], INSERTED.[c17_time], INSERTED.[c1_smallint]\
-          \ INTO #inserted([c6_real], [c47_smallmoney], [c11_varchar_3], [c52_datetime],\
-          \ [c58_hierarchyid], [c12_char_4], [c4_decimal], [c49_tinyint], [c51_real],\
-          \ [c45_money], [c48_bit], [c44_xml], [c5_numeric], [c_pkey], [c55_smalldatetime],\
-          \ [c50_float], [c7_double_precision], [c13_text], [c54_datetimeoffset],\
-          \ [c59_uniqueidentifier], [c2_integer], [c53_datetime2], [c16_date], [c17_time],\
+          \ INSERTED.[c11_varchar_3], INSERTED.[c58_hierarchyid], INSERTED.[c45_money],\
+          \ INSERTED.[c51_real], INSERTED.[c5_numeric], INSERTED.[c13_text], INSERTED.[c54_datetimeoffset],\
+          \ INSERTED.[c2_integer], INSERTED.[c16_date], INSERTED.[c52_datetime], INSERTED.[c47_smallmoney],\
+          \ INSERTED.[c12_char_4], INSERTED.[c49_tinyint], INSERTED.[c4_decimal],\
+          \ INSERTED.[c48_bit], INSERTED.[c44_xml], INSERTED.[c_pkey], INSERTED.[c55_smalldatetime],\
+          \ INSERTED.[c50_float], INSERTED.[c7_double_precision], INSERTED.[c59_uniqueidentifier],\
+          \ INSERTED.[c53_datetime2], INSERTED.[c17_time], INSERTED.[c1_smallint]\
+          \ INTO #inserted([c6_real], [c11_varchar_3], [c58_hierarchyid], [c45_money],\
+          \ [c51_real], [c5_numeric], [c13_text], [c54_datetimeoffset], [c2_integer],\
+          \ [c16_date], [c52_datetime], [c47_smallmoney], [c12_char_4], [c49_tinyint],\
+          \ [c4_decimal], [c48_bit], [c44_xml], [c_pkey], [c55_smalldatetime], [c50_float],\
+          \ [c7_double_precision], [c59_uniqueidentifier], [c53_datetime2], [c17_time],\
           \ [c1_smallint]) VALUES ( (N'invalid_datetime') )"
       path: $
     message: Data exception. Invalid datetime format. [Microsoft][ODBC Driver 17 for
