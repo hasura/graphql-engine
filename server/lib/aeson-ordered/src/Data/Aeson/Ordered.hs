@@ -3,6 +3,7 @@
 -- | A version of aeson that parses with key order preserved.
 --
 -- Copyright:
+--              (c) 2022 Hasura Inc.
 --              (c) 2011-2016 Bryan O'Sullivan
 --              (c) 2011 MailRank, Inc.
 module Data.Aeson.Ordered
@@ -28,7 +29,7 @@ module Data.Aeson.Ordered
   )
 where
 
-import Control.Applicative hiding (empty)
+import Control.Applicative ()
 import Control.Lens (prism)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
@@ -41,14 +42,19 @@ import Data.Attoparsec.ByteString.Char8 qualified as A8
 import Data.Bifunctor (bimap, second)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as L
-import Data.Data (Typeable)
+import Data.Data (Data, Typeable)
+import Data.Functor (($>))
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Hashable (Hashable (..))
+import Data.List (foldl')
 import Data.Scientific (Scientific)
+import Data.String (IsString)
+import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Vector (Vector)
 import Data.Vector qualified as V
-import Hasura.Prelude hiding (empty, first, second)
+import GHC.Generics (Generic)
 
 --------------------------------------------------------------------------------
 -- Copied constants from aeson

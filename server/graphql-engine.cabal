@@ -139,6 +139,7 @@ common lib-depends
   build-depends:       Spock-core
                      , aeson
                      , aeson-casing
+                     , aeson-ordered
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
                      , autodocodec
@@ -393,7 +394,6 @@ library
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.KeyMap.Extended
-                     , Data.Aeson.Ordered
                      , Data.Environment
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.Multi
