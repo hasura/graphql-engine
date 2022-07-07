@@ -225,7 +225,8 @@ cabal build exe:graphql-engine -f profiling --enable-profiling
 ### Create Pull Request
 
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
-- If you changed the versions of any dependencies, run `cabal new-freeze` to update the freeze file.
+- If you changed the versions of any dependencies, run
+  `scripts/cabal-freeze-update.sh --all` to update the freeze file.
 - Create a pull request from your forked repo to the main repo.
 - Every pull request will automatically build and run the tests.
 
