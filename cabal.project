@@ -96,3 +96,5 @@ source-repository-package
   location: https://github.com/hasura/text.git
   tag: 874c3164fadf39a83382359d2b6ce941a3e134da
 
+packages: server/lib/*/*.cabal
+

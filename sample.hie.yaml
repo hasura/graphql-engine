@@ -10,4 +10,8 @@ cradle:
       component: "graphql-engine:bench:cache"
     - path: "server/tests-hspec"
       component: "graphql-engine:test:tests-hspec"
+    - path: "server/src-emit-metadata-openapi"
+      component: "graphql-engine:exe:emit-metadata-openapi"
+    - path: "server/lib/aeson-ordered/src"
+      component: "lib:aeson-ordered"
 
