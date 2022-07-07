@@ -19,7 +19,7 @@ where
 
 import Control.Monad.Unique
 import Data.Dependent.Map qualified as DM
-import Data.GADT.Compare
+import "some" Data.GADT.Compare
 import Data.HashMap.Strict qualified as M
 import Data.Kind
 import Data.Proxy (Proxy (..))

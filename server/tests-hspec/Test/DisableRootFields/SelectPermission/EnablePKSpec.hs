@@ -157,8 +157,8 @@ internal:
     comment:
     permission:
       query_root_fields:
-      - select_by_pk
       - select
+      - select_by_pk
       allow_aggregations: false
       computed_fields: []
       columns:

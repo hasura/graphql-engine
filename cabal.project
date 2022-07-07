@@ -21,6 +21,7 @@ with-compiler: ghc-8.10.7
 jobs: $ncpus
 
 packages: server
+packages: server/lib/*/*.cabal
 
 package *
   -- NOTE: this gets applied to both local (hasura) packages and dependencies,
@@ -96,5 +97,21 @@ source-repository-package
   location: https://github.com/hasura/text.git
   tag: 874c3164fadf39a83382359d2b6ce941a3e134da
 
-packages: server/lib/*/*.cabal
+-------- GHC 9.2 SPOCK-RELATED FORKS
+-- NOTE: jberryman is a Spock maintainer now
+-- see discussion: https://hasurahq.slack.com/archives/C03263T1L9W/p1649087218167979
+
+-- This is an unreleased version of "Spock-core"
+source-repository-package
+  type: git
+  location: https://github.com/agrafix/Spock.git
+  tag: efc06e4b4e91f63579d04eb15ec850cf7a5ebccf
+  subdir: Spock-core
+
+-- This is an unreleased version of "reroute-core", needed for "Spock-core"
+source-repository-package
+  type: git
+  location: https://github.com/agrafix/Spock.git
+  tag: efc06e4b4e91f63579d04eb15ec850cf7a5ebccf
+  subdir: reroute
 

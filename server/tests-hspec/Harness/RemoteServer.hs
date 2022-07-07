@@ -21,7 +21,8 @@ import Data.Morpheus.Types
     QUERY,
     Resolver,
     RootResolver (..),
-    Undefined (..),
+    Undefined,
+    defaultRootResolver,
   )
 import Harness.Http qualified as Http
 import Harness.TestEnvironment (Server (..), serverUrl)
@@ -151,7 +152,9 @@ generateInterpreter ::
   mutation (Resolver MUTATION () IO) ->
   Interpreter
 generateInterpreter queryResolver mutationResolver =
-  Interpreter $ Morpheus.interpreter $ RootResolver queryResolver mutationResolver Undefined
+  Interpreter $
+    Morpheus.interpreter $
+      defaultRootResolver {queryResolver, mutationResolver}
 
 -- | This function is similar to 'generateInterpreter', but only expects a
 -- resolver for queries. The resulting 'Interpreter' only supports queries, and
@@ -161,7 +164,8 @@ generateQueryInterpreter ::
   RootResolverConstraint IO () query Undefined Undefined =>
   query (Resolver QUERY () IO) ->
   Interpreter
-generateQueryInterpreter queryResolver = generateInterpreter queryResolver Undefined
+generateQueryInterpreter queryResolver =
+  Interpreter $ Morpheus.interpreter $ defaultRootResolver {queryResolver}
 
 -- | Extracts the full GraphQL endpoint URL from a given remote server's 'Server'.
 --

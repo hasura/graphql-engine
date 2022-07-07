@@ -8,7 +8,7 @@ module Data.GADT.Compare.Extended
   )
 where
 
-import Data.GADT.Compare
+import "some" Data.GADT.Compare
 import Type.Reflection
 import Prelude
 

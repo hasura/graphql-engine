@@ -8,9 +8,6 @@ package *
     -- of module-level parallelism for dependencies:
     -- TODO: tune me
     -j2
-    -- Limit heap size to 15G, to maintain some breathing room given
-    -- the 16G of available memory on the current "XXLarge" instance
-    +RTS -M15000m -RTS
     -- For performance, with `-j`:
     +RTS -A64m -n2m -RTS
 

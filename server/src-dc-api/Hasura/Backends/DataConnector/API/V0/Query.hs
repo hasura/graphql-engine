@@ -44,15 +44,6 @@ data QueryRequest = QueryRequest
     _qrQuery :: Query
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryRequest
-
-instance HasCodec QueryRequest where
-  codec =
-    object "QueryRequest" $
-      QueryRequest
-        <$> requiredField "table" "The name of the table to query" .= _qrTable
-        <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request" .= _qrTableRelationships
-        <*> requiredField "query" "The details of the query against the table" .= _qrQuery
 
 -- | The details of a query against a table
 data Query = Query
@@ -63,7 +54,20 @@ data Query = Query
     _qOrderBy :: Maybe (NonEmpty API.V0.OrderBy)
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Query
+
+data RelationshipField = RelationshipField
+  { _rfRelationship :: API.V0.RelationshipName,
+    _rfQuery :: Query
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+-- | A serializable field targeted by a 'Query'.
+data Field
+  = ColumnField (ValueWrapper "column" API.V0.ColumnName)
+  | RelField RelationshipField
+  deriving stock (Eq, Ord, Show, Generic, Data)
+
+$(makePrisms ''Field)
 
 instance HasCodec Query where
   codec =
@@ -75,11 +79,11 @@ instance HasCodec Query where
         <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate" .= _qWhere
         <*> optionalFieldOrNull "order_by" "Optionally order the results by the value of one or more fields" .= _qOrderBy
 
-data RelationshipField = RelationshipField
-  { _rfRelationship :: API.V0.RelationshipName,
-    _rfQuery :: Query
-  }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+deriving via (Autodocodec Query) instance FromJSON Query
+
+deriving via (Autodocodec Query) instance ToJSON Query
+
+deriving via (Autodocodec Query) instance ToSchema Query
 
 instance HasObjectCodec RelationshipField where
   objectCodec =
@@ -87,13 +91,19 @@ instance HasObjectCodec RelationshipField where
       <$> requiredField "relationship" "The name of the relationship to follow for the subquery" .= _rfRelationship
       <*> requiredField "query" "Relationship query" .= _rfQuery
 
--- | A serializable field targeted by a 'Query'.
-data Field
-  = ColumnField (ValueWrapper "column" API.V0.ColumnName)
-  | RelField RelationshipField
-  deriving stock (Eq, Ord, Show, Generic, Data)
+instance HasCodec QueryRequest where
+  codec =
+    object "QueryRequest" $
+      QueryRequest
+        <$> requiredField "table" "The name of the table to query" .= _qrTable
+        <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request" .= _qrTableRelationships
+        <*> requiredField "query" "The details of the query against the table" .= _qrQuery
 
-$(makePrisms ''Field)
+deriving via (Autodocodec QueryRequest) instance FromJSON QueryRequest
+
+deriving via (Autodocodec QueryRequest) instance ToJSON QueryRequest
+
+deriving via (Autodocodec QueryRequest) instance ToSchema QueryRequest
 
 instance HasCodec Field where
   codec =
