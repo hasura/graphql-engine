@@ -373,6 +373,7 @@ instance Arbitrary TableCustomRootFields where
         <*> arbitrary
         <*> arbitrary
         <*> arbitrary
+        <*> arbitrary
     )
       `suchThat` allFieldNamesAreUnique
     where

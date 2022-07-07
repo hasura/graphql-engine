@@ -2,9 +2,13 @@
 
 ## Next release
 
-- cli: fix perfomance regression with large metadata in `metadata apply`
+### Bug fixes and improvements
+
+## v2.8.4
 
 ### Bug fixes and improvements
+
+- server: Add support to customize the root field for streaming subscriptions (fixes #8618)
 
 ## v2.8.3
 
@@ -14,8 +18,8 @@
 
   During the execution of `metadata apply` command, the YAML metadata is
   converted into JSON format because the server API accepts metadata in JSON
-  format. For large metadata(> ~20k LOC), due to a recent change this conversion was 
-  taking upwards of 2 minutes of time, increasing exponentially with metadata size.  
+  format. For large metadata(> ~20k LOC), due to a recent change this conversion was
+  taking upwards of 2 minutes of time, increasing exponentially with metadata size.
   With the changes in this release, the performance regression has been fixed.
   Following is a benchmark comparison of time taken for YAML to JSON conversion
   before and after the changes for different metadata sizes:

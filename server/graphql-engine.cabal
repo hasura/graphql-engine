@@ -1137,6 +1137,7 @@ test-suite tests-hspec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.DC.QuerySpec
+    Test.CustomRootFieldsSpec
     Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
     Test.HelloWorldSpec
