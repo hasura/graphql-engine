@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Testing nested relationships.
---
--- Original inspiration for this module Test.is <https://github.com/hasura/graphql-engine-mono/blob/08caf7df10cad0aea0916327736147a0a8f808d1/server/tests-py/queries/graphql_query/mysql/nested_select_query_deep.yaml>
 module Test.NestedRelationshipsSpec (spec) where
 
 import Data.Aeson (Value)
@@ -204,8 +202,6 @@ article =
 --------------------------------------------------------------------------------
 -- Tests
 
--- Equivalent python suite: test_nested_select_query_deep
--- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L280
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Deep nested select with where" $ \testEnvironment ->
@@ -251,8 +247,7 @@ data:
             author_by_author_id_to_id:
               id: 1
 |]
-  -- Equivalent python suite: test_nested_select_query_where
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L283
+
   it "Nested select with where condition" $ \testEnvironment ->
     shouldReturnYaml
       opts
@@ -282,8 +277,7 @@ data:
       title: Article 2
       content: Sample article content 2
 |]
-  -- Equivalent python suite: test_nested_select_query_article_author
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L277
+
   it "Nested select on article" $ \testEnvironment -> do
     let articleOne =
           [yaml|
@@ -332,8 +326,7 @@ query {
 |]
       )
       (combinationsObject response (map fromObject [articleOne, articleTwo, articleThree]))
-  -- Equivalent python suite: test_nested_select_query_where_on_relationship
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L286
+
   it "Nested select on article with where condition" $ \testEnvironment ->
     shouldReturnOneOfYaml
       opts

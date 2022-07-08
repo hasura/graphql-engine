@@ -111,8 +111,7 @@ data:
   - name: Author 1
     id: 1
 |]
-  -- Equivalent python suite: test_select_query_where
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L274
+
   it "Where Name=Author2" \testEnvironment ->
     shouldReturnYaml
       opts

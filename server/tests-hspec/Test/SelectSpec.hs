@@ -94,8 +94,6 @@ author =
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = describe "SelectSpec" $ do
-  -- Equivalent python suite: test_select_query_author_quoted_col
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L259
   it "works with simple object query" $ \testEnvironment -> do
     let authorOne, authorTwo :: Value
         authorOne =
@@ -125,8 +123,6 @@ query {
       )
       (combinationsObject responseAuthor (map fromObject [authorOne, authorTwo]))
 
-  -- Equivalent python suite: test_select_placeholder_err
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L307
   it "fails when placehold query is used with schemas present" $ \testEnvironment ->
     shouldReturnYaml
       opts
