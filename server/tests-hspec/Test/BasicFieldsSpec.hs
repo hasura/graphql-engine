@@ -113,8 +113,6 @@ data:
   - name: Author 2
     id: 2
 |]
-  -- Equivalent python suite: test_select_query_author
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L254
   it "Use operationName" $ \testEnvironment ->
     shouldReturnYaml
       opts
@@ -144,8 +142,7 @@ data:
   - name: Author 2
     id: 2
 |]
-  -- Equivalent python suite: test_select_query_col_not_present_err
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L292
+
   it "Missing field" $ \testEnvironment -> do
     shouldReturnYaml
       opts
@@ -169,8 +166,7 @@ errors:
   message: |-
     field "notPresentCol" not found in type: 'hasura_author'
 |]
-  -- Equivalent python suite: test_select_query_non_tracked_table
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L289
+
   it "Missing table" $ \testEnvironment ->
     shouldReturnYaml
       opts

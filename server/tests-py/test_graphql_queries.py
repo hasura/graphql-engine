@@ -46,43 +46,6 @@ class TestGraphQLQueryBasicBigquery:
     def test_select_query_all_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_query_all_types.yaml", transport)
 
-    # relational queries
-    def test_select_query_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
-
-    def test_select_query_author_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
-
-    def test_select_query_author_quoted_col(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
-
-    def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
-
-    def test_select_query_author_with_include_directive(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
-
-    def test_select_query_where(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml', transport)
-
-    def test_nested_select_query_article_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml', transport)
-
-    def test_nested_select_query_deep(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_query_deep.yaml', transport)
-
-    def test_nested_select_query_where(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml', transport)
-
-    def test_nested_select_query_where_on_relationship(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author_where_on_relationship.yaml', transport)
-
-    def test_select_query_non_tracked_table(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_non_tracked_table_err.yaml", transport)
-
-    def test_select_query_col_not_present_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
-
     # batching # works only with http, not with websocket
     def test_select_query_batching(self, hge_ctx, transport):
         if transport == 'http':
@@ -160,63 +123,12 @@ class TestGraphQLQueryBoolExpSearchBigquery:
 @pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicPostgresMSSQLCitus:
-    # This also exercises support for multiple operations in a document:
-    def test_select_query_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
-
-    def test_select_query_author_v1(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_v1alpha1.yaml', transport)
-
-    def test_select_query_author_quoted_col(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_col_quoted.yaml', transport)
-
-    def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
-
-    def test_select_query_author_with_include_directive(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
-
-    def test_select_query_author_with_skip_include_directive(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_include_directives.yaml', transport)
-
-    def test_select_query_author_with_wrong_directive_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_wrong_directive_err.yaml', transport)
-
-    def test_select_query_where(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_where.yaml', transport)
-
-    def test_nested_select_query_article_author(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml', transport)
-
-    def test_nested_select_query_deep(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_query_deep.yaml', transport)
-
-    def test_nested_select_query_where(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_where_query_author_article.yaml', transport)
-
-    def test_nested_select_query_where_on_relationship(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author_where_on_relationship.yaml', transport)
-
-    def test_select_query_non_tracked_table(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_non_tracked_table_err.yaml", transport)
-
-    def test_select_query_col_not_present_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/select_query_author_col_not_present_err.yaml", transport)
 
     def test_select_query_multiple_columns_arr_fkey(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_multiple_columns_arr_fkey.yaml", transport)
 
     def test_select_query_multiple_columns_obj_fkey(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/select_multiple_columns_obj_fkey.yaml", transport)
-
-    def test_select_query_author_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
-
-    def test_select_query_author_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
-
-    def test_select_placeholder_err(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_placeholder_err.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -241,12 +153,6 @@ class TestGraphQLQueryBasicMSSQL:
 
     def test_nodes_aggregates_conditions_mssql(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/nodes_aggregates_conditions_mssql.yaml", transport)
-
-    def test_select_query_author_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
-
-    def test_select_query_author_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
 
     def test_author_with_permission(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/author_with_permission_mssql.yaml', transport)
@@ -297,12 +203,6 @@ class TestGraphQLQueryBasicPostgres:
     def test_create_invalid_fkey_relationship(self, hge_ctx, transport):
         resp = hge_ctx.v1q_f(self.dir() + '/setup_invalid_fkey_relationship.yaml', expected_status_code = 400)
         assert resp['error'] == "Expecting object { table, columns }."
-
-    def test_select_query_author_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey.yaml', transport)
-
-    def test_select_query_author_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/select_query_author_by_pkey_null.yaml', transport)
 
     @classmethod
     def dir(cls):

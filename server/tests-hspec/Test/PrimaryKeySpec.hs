@@ -72,8 +72,6 @@ author =
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = describe "PrimaryKeySpec" $ do
-  -- Equivalent python suite: test_select_query_author_pk
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L301
   it "works with primary key" $ \testEnvironment ->
     shouldReturnYaml
       opts
@@ -93,8 +91,7 @@ data:
     id: 1
     name: Author 1
 |]
-  -- Equivalent python suite: test_select_query_author_pk_null
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L304
+
   it "works with non existent primary key" $ \testEnvironment ->
     shouldReturnYaml
       opts

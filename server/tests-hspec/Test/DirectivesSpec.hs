@@ -109,8 +109,6 @@ query QueryParams {includeId, skipId} =
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
   it "Skip id field conditionally" \testEnvironment ->
     shouldReturnOneOfYaml
       opts
@@ -119,8 +117,7 @@ tests opts = do
           (query QueryParams {includeId = False, skipId = False})
       )
       (combinationsObjectUsingValue authorResponse authorNames)
-  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
+
   it "Skip id field conditionally, includeId=true" \testEnvironment ->
     shouldReturnOneOfYaml
       opts
@@ -129,8 +126,7 @@ tests opts = do
           (query QueryParams {includeId = True, skipId = False})
       )
       (combinationsObjectUsingValue authorResponse authorNameIds)
-  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
+
   it "Skip id field conditionally, skipId=true" \testEnvironment ->
     shouldReturnOneOfYaml
       opts
@@ -139,8 +135,7 @@ tests opts = do
           (query QueryParams {includeId = False, skipId = True})
       )
       (combinationsObjectUsingValue authorResponse authorNames)
-  -- Equivalent python suite: test_select_query_author_with_skip_include_directive
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L268
+
   it "Skip id field conditionally, skipId=true, includeId=true" \testEnvironment ->
     shouldReturnOneOfYaml
       opts
@@ -149,8 +144,7 @@ tests opts = do
           (query QueryParams {includeId = True, skipId = True})
       )
       (combinationsObjectUsingValue authorResponse authorNames)
-  -- Equivalent python suite: test_select_query_author_with_skip_directive
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L262
+
   it "Author with skip id" \testEnvironment ->
     shouldReturnOneOfYaml
       opts
@@ -171,8 +165,6 @@ variables:
       )
       (combinationsObjectUsingValue authorResponse authorNames)
 
-  -- Equivalent python suite: test_select_query_author_with_skip_directive
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L262
   it "Author with skip name" \testEnvironment ->
     shouldReturnOneOfYaml
       opts
@@ -192,8 +184,7 @@ variables:
 |]
       )
       (combinationsObjectUsingValue authorResponse authorIds)
-  -- Equivalent python suite: test_select_query_author_with_wrong_directive_err
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L271
+
   it "Rejects unknown directives" \testEnvironment ->
     shouldReturnYaml
       opts
@@ -260,8 +251,7 @@ errors:
     code: validation-failed
   message: directive "include" is not allowed on a query
 |]
-  -- Equivalent python suite: test_select_query_author_with_include_directive
-  -- https://github.com/hasura/graphql-engine/blob/369d1ab2f119634b0e27e9ed353fa3d08c22d3fb/server/tests-py/test_graphql_queries.py#L265
+
   it "works with includeId as True includeName as False" \testEnvironment ->
     shouldReturnOneOfYaml
       opts

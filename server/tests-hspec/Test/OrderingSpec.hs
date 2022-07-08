@@ -53,10 +53,6 @@ author =
 --------------------------------------------------------------------------------
 -- Tests
 
--- Added equivalents from <https://github.com/hasura/graphql-engine-mono/blob/ee524e94caf6405ce0ae39edfe161dadd223d60f/server/tests-py/queries/graphql_query/mysql/select_query_author_order_by.yaml#L1>
--- That includes order by {text,id} {desc,asc}
---
-
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
   it "Order by id ascending" $ \testEnvironment ->
