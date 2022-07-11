@@ -580,6 +580,7 @@ library
                      , Hasura.Backends.DataConnector.IR.Scalar.Type
                      , Hasura.Backends.DataConnector.IR.Scalar.Value
                      , Hasura.Backends.DataConnector.IR.Table
+                     , Hasura.Backends.DataConnector.Logging
                      , Hasura.Backends.DataConnector.Plan
                      , Hasura.Backends.DataConnector.Schema.Column
                      , Hasura.Backends.DataConnector.Schema.Table

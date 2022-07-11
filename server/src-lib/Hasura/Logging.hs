@@ -17,6 +17,7 @@ module Hasura.Logging
     Logger (..),
     LogLevel (..),
     mkLogger,
+    nullLogger,
     LoggerCtx (..),
     mkLoggerCtx,
     cleanLoggerCtx,
@@ -36,10 +37,13 @@ import Control.Monad.Trans.Control
 import Control.Monad.Trans.Managed (ManagedT (..), allocate)
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
+import Data.Aeson.Types qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.HashSet qualified as Set
+import Data.Map.Strict (Map)
+import Data.Map.Strict qualified as Map
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Time.Clock qualified as Time
@@ -47,6 +51,7 @@ import Data.Time.Format qualified as Format
 import Data.Time.LocalTime qualified as Time
 import Hasura.Prelude
 import System.Log.FastLogger qualified as FL
+import Witch qualified
 
 newtype FormattedTime = FormattedTime {_unFormattedTime :: Text}
   deriving (Show, Eq, J.ToJSON)
@@ -71,14 +76,15 @@ data instance EngineLogType Hasura
   | ELTStartup
   | ELTLivequeryPollerLog
   | ELTActionHandler
+  | ELTDataConnectorLog
   | -- internal log types
     ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
 
 instance Hashable (EngineLogType Hasura)
 
-instance J.ToJSON (EngineLogType Hasura) where
-  toJSON = \case
+instance Witch.From (EngineLogType Hasura) Text where
+  from = \case
     ELTHttpLog -> "http-log"
     ELTWebsocketLog -> "websocket-log"
     ELTWebhookLog -> "webhook-log"
@@ -86,21 +92,25 @@ instance J.ToJSON (EngineLogType Hasura) where
     ELTStartup -> "startup"
     ELTLivequeryPollerLog -> "livequery-poller-log"
     ELTActionHandler -> "action-handler-log"
-    ELTInternal t -> J.toJSON t
+    ELTDataConnectorLog -> "data-connector-log"
+    ELTInternal t -> Witch.from t
+
+instance J.ToJSON (EngineLogType Hasura) where
+  toJSON = J.String . Witch.into @Text
 
 instance J.FromJSON (EngineLogType Hasura) where
-  parseJSON = J.withText "log-type" $ \s -> case T.toLower $ T.strip s of
-    "startup" -> return ELTStartup
-    "http-log" -> return ELTHttpLog
-    "webhook-log" -> return ELTWebhookLog
-    "websocket-log" -> return ELTWebsocketLog
-    "query-log" -> return ELTQueryLog
-    "livequery-poller-log" -> return ELTLivequeryPollerLog
-    "action-handler-log" -> return ELTActionHandler
-    _ ->
-      fail $
-        "Valid list of comma-separated log types: "
-          <> BLC.unpack (J.encode userAllowedLogTypes)
+  parseJSON = J.withText "log-type" $ \s ->
+    let logTypeText = T.toLower $ T.strip s
+        logTypeMaybe = Map.lookup logTypeText allowedLogTypeMapping
+     in logTypeMaybe `onNothing` failure
+    where
+      allowedLogTypeMapping :: Map Text (EngineLogType Hasura)
+      allowedLogTypeMapping =
+        Map.fromList $ (\lt -> (Witch.into @Text lt, lt)) <$> userAllowedLogTypes
+
+      failure :: J.Parser (EngineLogType Hasura)
+      failure =
+        fail $ "Valid list of comma-separated log types: " <> BLC.unpack (J.encode userAllowedLogTypes)
 
 data InternalLogTypes
   = -- | mostly for debug logs - see @debugT@, @debugBS@ and @debugLBS@ functions
@@ -120,8 +130,8 @@ data InternalLogTypes
 
 instance Hashable InternalLogTypes
 
-instance J.ToJSON InternalLogTypes where
-  toJSON = \case
+instance Witch.From InternalLogTypes Text where
+  from = \case
     ILTUnstructured -> "unstructured"
     ILTEventTrigger -> "event-trigger"
     ILTScheduledTrigger -> "scheduled-trigger"
@@ -132,6 +142,9 @@ instance J.ToJSON InternalLogTypes where
     ILTTelemetry -> "telemetry-log"
     ILTSchemaSyncThread -> "schema-sync-thread"
     ILTSourceCatalogMigration -> "source-catalog-migration"
+
+instance J.ToJSON InternalLogTypes where
+  toJSON = J.String . Witch.into @Text
 
 -- the default enabled log-types
 defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType Hasura)
@@ -161,7 +174,9 @@ userAllowedLogTypes =
     ELTWebhookLog,
     ELTWebsocketLog,
     ELTQueryLog,
-    ELTLivequeryPollerLog
+    ELTLivequeryPollerLog,
+    ELTActionHandler,
+    ELTDataConnectorLog
   ]
 
 data LogLevel
@@ -284,6 +299,9 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logge
   let (logLevel, logTy, logDet) = toEngineLog l
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
     liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
+
+nullLogger :: Logger Hasura
+nullLogger = Logger \_ -> pure ()
 
 eventTriggerLogType :: EngineLogType Hasura
 eventTriggerLogType = ELTInternal ILTEventTrigger

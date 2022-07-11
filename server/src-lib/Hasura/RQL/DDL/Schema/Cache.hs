@@ -368,7 +368,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (|
         withRecordInconsistency
-          ( liftEitherA <<< bindA -< resolveSourceConfig @b sourceName sourceConfig backendKind backendConfig env
+          ( liftEitherA <<< bindA -< resolveSourceConfig @b logger sourceName sourceConfig backendKind backendConfig env
           )
         |) metadataObj
 

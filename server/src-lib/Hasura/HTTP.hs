@@ -8,10 +8,13 @@ module Hasura.HTTP
     addHttpResponseHeaders,
     getHTTPExceptionStatus,
     serializeHTTPExceptionMessage,
+    serializeHTTPExceptionMessageForDebugging,
+    serializeServantClientErrorMessage,
+    serializeServantClientErrorMessageForDebugging,
   )
 where
 
-import Control.Exception (fromException)
+import Control.Exception (Exception (..), fromException)
 import Control.Lens hiding ((.=))
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
@@ -20,13 +23,16 @@ import Data.HashMap.Strict qualified as M
 import Data.Text qualified as T
 import Data.Text.Conversions (UTF8 (..), convertText)
 import Data.Text.Encoding qualified as TE
+import Data.Text.Encoding.Error qualified as TE
 import Hasura.Prelude
 import Hasura.Server.Utils (redactSensitiveHeader)
 import Hasura.Server.Version (currentVersion)
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.Restricted qualified as Restricted
+import Network.HTTP.Media qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.Wreq qualified as Wreq
+import Servant.Client qualified as Servant
 
 hdrsToText :: [HTTP.Header] -> [(Text, Text)]
 hdrsToText hdrs =
@@ -98,6 +104,35 @@ serializeHTTPExceptionMessage (HttpException (HTTP.HttpExceptionRequest _ httpEx
     _ -> "unexpected"
 serializeHTTPExceptionMessage (HttpException (HTTP.InvalidUrlException url reason)) = T.pack $ "URL: " <> url <> " is invalid because " <> reason
 
+serializeHTTPExceptionMessageForDebugging :: HTTP.HttpException -> Text
+serializeHTTPExceptionMessageForDebugging = \case
+  HTTP.HttpExceptionRequest _ err -> case err of
+    HTTP.StatusCodeException response _ -> "response status code indicated failure" <> (tshow . HTTP.statusCode $ HTTP.responseStatus response)
+    HTTP.TooManyRedirects redirects -> "too many redirects: " <> tshow (length redirects) <> " redirects"
+    HTTP.OverlongHeaders -> "overlong headers"
+    HTTP.ResponseTimeout -> "response timeout"
+    HTTP.ConnectionTimeout -> "connection timeout"
+    HTTP.ConnectionFailure exn -> "connection failure: " <> serializeExceptionForDebugging exn
+    HTTP.InvalidStatusLine statusLine -> "invalid status line: " <> fromUtf8 statusLine
+    HTTP.InvalidHeader header -> "invalid header: " <> fromUtf8 header
+    HTTP.InvalidRequestHeader requestHeader -> "invalid request header: " <> fromUtf8 requestHeader
+    HTTP.InternalException exn -> "internal error: " <> serializeExceptionForDebugging exn
+    HTTP.ProxyConnectException proxyHost port status -> "proxy connection to " <> fromUtf8 proxyHost <> ":" <> tshow port <> " returned response with status code that indicated failure: " <> tshow (HTTP.statusCode status)
+    HTTP.NoResponseDataReceived -> "no response data received"
+    HTTP.TlsNotSupported -> "TLS not supported"
+    HTTP.WrongRequestBodyStreamSize expected actual -> "wrong request body stream size. expected: " <> tshow expected <> ", actual: " <> tshow actual
+    HTTP.ResponseBodyTooShort expected actual -> "response body too short. expected: " <> tshow expected <> ", actual: " <> tshow actual
+    HTTP.InvalidChunkHeaders -> "invalid chunk headers"
+    HTTP.IncompleteHeaders -> "incomplete headers"
+    HTTP.InvalidDestinationHost host -> "invalid destination host: " <> fromUtf8 host
+    HTTP.HttpZlibException exn -> "HTTP zlib error: " <> serializeExceptionForDebugging exn
+    HTTP.InvalidProxyEnvironmentVariable name value -> "invalid proxy environment variable: " <> name <> "=" <> value
+    HTTP.ConnectionClosed -> "connection closed"
+    HTTP.InvalidProxySettings err' -> "invalid proxy settings: " <> err'
+  HTTP.InvalidUrlException url' reason -> "invalid url: " <> T.pack url' <> "; reason: " <> T.pack reason
+  where
+    fromUtf8 = TE.decodeUtf8With TE.lenientDecode
+
 encodeHTTPRequestJSON :: HTTP.Request -> J.Value
 encodeHTTPRequestJSON request =
   J.Object $
@@ -139,3 +174,21 @@ data HttpResponse a = HttpResponse
 
 addHttpResponseHeaders :: HTTP.ResponseHeaders -> HttpResponse a -> HttpResponse a
 addHttpResponseHeaders newHeaders (HttpResponse b h) = HttpResponse b (newHeaders <> h)
+
+serializeServantClientErrorMessage :: Servant.ClientError -> Text
+serializeServantClientErrorMessage = \case
+  Servant.FailureResponse _ response -> "response status code indicated failure: " <> (tshow . HTTP.statusCode $ Servant.responseStatusCode response)
+  Servant.DecodeFailure decodeErrorText _ -> "unable to decode the response, " <> decodeErrorText
+  Servant.UnsupportedContentType mediaType _ -> "unsupported content type in response: " <> TE.decodeUtf8With TE.lenientDecode (HTTP.renderHeader mediaType)
+  Servant.InvalidContentTypeHeader _ -> "invalid content type in response"
+  Servant.ConnectionError _ -> "connection error"
+
+serializeServantClientErrorMessageForDebugging :: Servant.ClientError -> Text
+serializeServantClientErrorMessageForDebugging = \case
+  Servant.ConnectionError exn -> case fromException exn of
+    Just httpException -> serializeHTTPExceptionMessageForDebugging httpException
+    Nothing -> "error in the connection: " <> serializeExceptionForDebugging exn
+  other -> serializeServantClientErrorMessage other
+
+serializeExceptionForDebugging :: Exception e => e -> Text
+serializeExceptionForDebugging = T.pack . displayException
