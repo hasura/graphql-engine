@@ -125,7 +125,7 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```json
 {
   "capabilities": {
-    "relationships": true
+    "relationships": {}
   },
   "configSchemas": {
     "configSchema": {
@@ -436,7 +436,7 @@ query {
 }
 ```
 
-This will generate the following JSON query if `relationships` is set to `true`:
+This will generate the following JSON query if the agent supports relationships:
 
 ```json
 {
