@@ -7,6 +7,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Environment qualified as Env
 import Hasura.Base.Error
+import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
@@ -57,6 +58,7 @@ class
   -- creates a connection pool (and other related parameters) in the process
   resolveSourceConfig ::
     (MonadIO m, MonadResolveSource m) =>
+    Logger Hasura ->
     SourceName ->
     SourceConnConfiguration b ->
     BackendSourceKind b ->

@@ -32,6 +32,7 @@ import Hasura.Backends.MSSQL.Meta
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
 import Hasura.Backends.MSSQL.Types
 import Hasura.Base.Error
+import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Common
@@ -45,13 +46,14 @@ import Text.Shakespeare.Text qualified as ST
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
+  Logger Hasura ->
   SourceName ->
   MSSQLConnConfiguration ->
   BackendSourceKind 'MSSQL ->
   BackendConfig 'MSSQL ->
   Env.Environment ->
   m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig name config _backendKind _backendConfig _env = runExceptT do
+resolveSourceConfig _logger name config _backendKind _backendConfig _env = runExceptT do
   sourceResolver <- getMSSQLSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 

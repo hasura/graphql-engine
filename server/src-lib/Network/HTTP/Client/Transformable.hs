@@ -2,6 +2,7 @@ module Network.HTTP.Client.Transformable
   ( Request,
     mkRequestThrow,
     mkRequestEither,
+    tryFromClientRequest,
     url,
     Network.HTTP.Client.Transformable.method,
     headers,
@@ -131,6 +132,22 @@ mkRequestEither urlTxt =
     \someExc -> case fromException @Client.HttpException someExc of
       Just httpExc -> httpExc
       Nothing -> impureThrow someExc
+
+-- | Creates a 'Request', converting it from a 'Client.Request'. This only
+-- supports requests that use a Strict/Lazy ByteString as a request body
+-- and will fail with all other body types.
+--
+-- NOTE: You should avoid creating 'Client.Request's and use the 'mk'
+-- functions to create 'Request's. This is for if a framework hands you
+-- a precreated 'Client.Request' and you don't have a choice.
+tryFromClientRequest :: Client.Request -> Either Text Request
+tryFromClientRequest req = case Client.requestBody req of
+  Client.RequestBodyLBS lbs -> Right $ Request req (Just lbs)
+  Client.RequestBodyBS bs -> Right $ Request req (Just $ BL.fromStrict bs)
+  Client.RequestBodyBuilder _ _ -> Left "Unsupported body: Builder"
+  Client.RequestBodyStream _ _ -> Left "Unsupported body: Stream"
+  Client.RequestBodyStreamChunked _ -> Left "Unsupported body: Stream Chunked"
+  Client.RequestBodyIO _ -> Left "Unsupported body: IO"
 
 -- | Url is 'materialized view' into `Request` consisting of
 -- concatenation of `host`, `port`, `queryParams`, and `path` in the

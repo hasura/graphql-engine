@@ -17,6 +17,7 @@ module Hasura.Tracing
     tracedHttpRequest,
     injectEventContext,
     extractEventContext,
+    word64ToHex,
   )
 where
 

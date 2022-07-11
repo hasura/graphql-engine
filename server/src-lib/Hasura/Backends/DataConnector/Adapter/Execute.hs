@@ -26,14 +26,16 @@ import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.AnyBackend (mkAnyBackend)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Session
+import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
+import Servant.Client.Generic (genericClient)
 
 --------------------------------------------------------------------------------
 
 instance BackendExecute 'DataConnector where
   type PreparedQuery 'DataConnector = IR.Q.QueryRequest
   type MultiplexedQuery 'DataConnector = Void
-  type ExecutionMonad 'DataConnector = Tracing.TraceT (ExceptT QErr IO)
+  type ExecutionMonad 'DataConnector = AgentClientT (Tracing.TraceT (ExceptT QErr IO))
 
   mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir = do
     queryRequest <- DC.mkPlan _uiSession sourceConfig ir
@@ -70,12 +72,12 @@ toExplainPlan :: GQL.RootFieldAlias -> IR.Q.QueryRequest -> ExplainPlan
 toExplainPlan fieldName queryRequest =
   ExplainPlan fieldName (Just "") (Just [TE.decodeUtf8 $ BL.toStrict $ J.encode $ queryRequest])
 
-buildAction :: RQL.SourceName -> DC.SourceConfig -> IR.Q.QueryRequest -> Tracing.TraceT (ExceptT QErr IO) EncJSON
+buildAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> DC.SourceConfig -> IR.Q.QueryRequest -> AgentClientT m EncJSON
 buildAction sourceName DC.SourceConfig {..} queryRequest = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
   when (DC.queryHasRelations queryRequest && isNothing (API.cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
-  API.Routes {..} <- liftIO $ client @(Tracing.TraceT (ExceptT QErr IO)) _scManager _scEndpoint
+  let API.Routes {..} = genericClient
   case IR.queryRequestToAPI queryRequest of
     Right queryRequest' -> do
       queryResponse <- _query (toTxt sourceName) _scConfig queryRequest'

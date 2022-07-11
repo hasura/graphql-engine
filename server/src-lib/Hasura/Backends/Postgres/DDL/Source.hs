@@ -71,13 +71,14 @@ instance ToMetadataFetchQuery 'Citus where
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
+  Logger Hasura ->
   SourceName ->
   PostgresConnConfiguration ->
   BackendSourceKind ('Postgres pgKind) ->
   BackendConfig ('Postgres pgKind) ->
   Env.Environment ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig name config _backendKind _backendConfig _env = runExceptT do
+resolveSourceConfig _logger name config _backendKind _backendConfig _env = runExceptT do
   sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 

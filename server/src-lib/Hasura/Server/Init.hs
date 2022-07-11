@@ -26,6 +26,7 @@ import Hasura.Base.Error
 import Hasura.Cache.Bounded qualified as Cache (CacheSize, parseCacheSize)
 import Hasura.Eventing.EventTrigger (defaultFetchBatchSize)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.Logging (defaultEnabledEngineLogTypes, userAllowedLogTypes)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
@@ -51,6 +52,7 @@ import Network.Wai.Handler.Warp (HostPreference)
 import Network.WebSockets qualified as WS
 import Options.Applicative
 import Text.PrettyPrint.ANSI.Leijen qualified as PP
+import Witch qualified
 
 {- Note [ReadOnly Mode]
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -728,9 +730,16 @@ enabledLogsEnv :: (String, String)
 enabledLogsEnv =
   ( "HASURA_GRAPHQL_ENABLED_LOG_TYPES",
     "Comma separated list of enabled log types "
-      <> "(default: startup,http-log,webhook-log,websocket-log)"
-      <> "(all: startup,http-log,webhook-log,websocket-log,query-log)"
+      <> "(default: "
+      <> defaultLogTypes
+      <> ")"
+      <> "(all: "
+      <> allAllowedLogTypes
+      <> ")"
   )
+  where
+    defaultLogTypes = T.unpack . T.intercalate "," $ Witch.into @Text <$> Set.toList defaultEnabledEngineLogTypes
+    allAllowedLogTypes = T.unpack . T.intercalate "," $ Witch.into @Text <$> userAllowedLogTypes
 
 logLevelEnv :: (String, String)
 logLevelEnv =

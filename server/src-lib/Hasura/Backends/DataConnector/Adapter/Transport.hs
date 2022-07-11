@@ -8,7 +8,8 @@ import Control.Exception.Safe (throwIO)
 import Data.Aeson qualified as J
 import Data.Text.Extended ((<>>))
 import Hasura.Backends.DataConnector.Adapter.Execute ()
-import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig)
+import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
+import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), AgentClientT, runAgentClientT)
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.Plan qualified as DC
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
@@ -18,7 +19,7 @@ import Hasura.GraphQL.Logging qualified as HGL
 import Hasura.GraphQL.Namespace (RootFieldAlias)
 import Hasura.GraphQL.Transport.Backend (BackendTransport (..))
 import Hasura.GraphQL.Transport.HTTP.Protocol (GQLReqUnparsed)
-import Hasura.Logging (Hasura, Logger)
+import Hasura.Logging (Hasura, Logger, nullLogger)
 import Hasura.Prelude
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Server.Types (RequestId)
@@ -49,14 +50,15 @@ runDBQuery' ::
   UserInfo ->
   Logger Hasura ->
   SourceConfig ->
-  Tracing.TraceT (ExceptT QErr IO) a ->
+  AgentClientT (Tracing.TraceT (ExceptT QErr IO)) a ->
   Maybe IR.Q.QueryRequest ->
   m (DiffTime, a)
-runDBQuery' requestId query fieldName _userInfo logger _sourceConfig action queryRequest = do
+runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action queryRequest = do
   void $ HGL.logQueryLog logger $ mkQueryLog query fieldName queryRequest requestId
   withElapsedTime
     . Tracing.trace ("Data Connector backend query for root field " <>> fieldName)
     . Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)
+    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager)
     $ action
 
 mkQueryLog ::
@@ -76,9 +78,9 @@ runDBQueryExplain' ::
   (MonadIO m, MonadError QErr m) =>
   DBStepInfo 'DataConnector ->
   m EncJSON
-runDBQueryExplain' (DBStepInfo _ _ _ action) =
-  liftEitherM $
-    liftIO $
-      runExceptT $
-        Tracing.runTraceTWithReporter Tracing.noReporter "explain" $
-          action
+runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action) =
+  liftEitherM . liftIO
+    . runExceptT
+    . Tracing.runTraceTWithReporter Tracing.noReporter "explain"
+    . flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager)
+    $ action

@@ -21,6 +21,7 @@ import Hasura.Backends.BigQuery.Meta
 import Hasura.Backends.BigQuery.Source
 import Hasura.Backends.BigQuery.Types
 import Hasura.Base.Error
+import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Column
@@ -41,13 +42,14 @@ defaultRetryBaseDelay = 500000
 
 resolveSourceConfig ::
   MonadIO m =>
+  Logger Hasura ->
   SourceName ->
   BigQueryConnSourceConfig ->
   BackendSourceKind 'BigQuery ->
   BackendConfig 'BigQuery ->
   Env.Environment ->
   m (Either QErr BigQuerySourceConfig)
-resolveSourceConfig _name BigQueryConnSourceConfig {..} _backendKind _backendConfig env = runExceptT $ do
+resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _backendConfig env = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e

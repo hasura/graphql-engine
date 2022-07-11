@@ -12,10 +12,9 @@ import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
-import Hasura.Backends.DataConnector.API (Routes (_capabilities))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
-import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
+import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Name qualified as IR.N
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
@@ -23,6 +22,7 @@ import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
 import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw500, withPathK)
+import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (OpExpG (..), PartialSQLExp (..), RootOrCurrent (..), RootOrCurrentColumn (..))
 import Hasura.RQL.Types.Column qualified as RQL.T.C
@@ -38,10 +38,11 @@ import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
-import Hasura.Tracing (TraceT, noReporter, runTraceTWithReporter)
+import Hasura.Tracing (noReporter, runTraceTWithReporter)
 import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client qualified as HTTP
-import Servant.Client (AsClientT)
+import Servant.Client.Core.HasClient ((//))
+import Servant.Client.Generic (genericClient)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
@@ -60,26 +61,33 @@ instance BackendMetadata 'DataConnector where
 
 resolveSourceConfig' ::
   MonadIO m =>
+  Logger Hasura ->
   SourceName ->
   DC.ConnSourceConfig ->
   BackendSourceKind 'DataConnector ->
   DC.DataConnectorBackendConfig ->
   Environment ->
   m (Either QErr DC.SourceConfig)
-resolveSourceConfig' sourceName (DC.ConnSourceConfig config) (DataConnectorKind dataConnectorName) backendConfig _ = runExceptT do
+resolveSourceConfig' logger sourceName (DC.ConnSourceConfig config) (DataConnectorKind dataConnectorName) backendConfig _ = runExceptT do
   DC.DataConnectorOptions {..} <-
     OMap.lookup dataConnectorName backendConfig
       `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
   manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
-  routes@API.Routes {..} <- liftIO $ Agent.Client.client manager _dcoUri
 
   -- TODO: capabilities applies to all sources for an agent.
   -- We should be able to call it once per agent and store it in the SchemaCache
-  API.CapabilitiesResponse {crCapabilities} <- runTraceTWithReporter noReporter "capabilities" _capabilities
+  API.CapabilitiesResponse {..} <-
+    runTraceTWithReporter noReporter "capabilities"
+      . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
+      $ genericClient // API._capabilities
 
-  schemaResponse <- runTraceTWithReporter noReporter "resolve source" $ do
-    validateConfiguration routes sourceName dataConnectorName config
-    _schema (toTxt sourceName) config
+  validateConfiguration sourceName dataConnectorName crConfigSchemaResponse config
+
+  schemaResponse <-
+    runTraceTWithReporter noReporter "resolve source"
+      . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
+      $ (genericClient // API._schema) (toTxt sourceName) config
+
   pure
     DC.SourceConfig
       { _scEndpoint = _dcoUri,
@@ -91,15 +99,14 @@ resolveSourceConfig' sourceName (DC.ConnSourceConfig config) (DataConnectorKind 
       }
 
 validateConfiguration ::
-  MonadIO m =>
-  API.Routes (AsClientT (TraceT (ExceptT QErr m))) ->
+  MonadError QErr m =>
   SourceName ->
   DC.DataConnectorName ->
+  API.ConfigSchemaResponse ->
   API.Config ->
-  TraceT (ExceptT QErr m) ()
-validateConfiguration API.Routes {..} sourceName dataConnectorName config = do
-  API.CapabilitiesResponse {crConfigSchemaResponse} <- _capabilities
-  let errors = API.validateConfigAgainstConfigSchema crConfigSchemaResponse config
+  m ()
+validateConfiguration sourceName dataConnectorName configSchema config = do
+  let errors = API.validateConfigAgainstConfigSchema configSchema config
   unless (null errors) $
     let errorsText = Text.unlines (("- " <>) . Text.pack <$> errors)
      in throw400
