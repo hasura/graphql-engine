@@ -42,11 +42,6 @@
   {%- endif %}
 {%- endmacro %}
 
-{% block linktags %}
-{{ super() }}
-  <link rel="canonical" href="https://hasura.io/docs/latest/{{ pagename }}{{ file_suffix }}" />
-{% endblock %}
-
 {% block extrahead %}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex" />
