@@ -44,8 +44,13 @@ export default class QueryAnalyser extends React.Component {
     this.props
       .analyzeFetcher(analyseQuery.query, dispatch)
       .then(data => {
+        // todo: unsure if this guard is necessary. Replaces previous guard that would silently return
+        // this was previously necessary as the analyze fetcher would handle errors without throwing
         if (!data) {
-          return;
+          console.error(
+            'Missing data from analyze result. This should never happen.'
+          );
+          throw new Error('Missing data from analyze result.');
         }
         this.setState({
           analyseData: Array.isArray(data) ? data : [data],
@@ -53,7 +58,7 @@ export default class QueryAnalyser extends React.Component {
         });
       })
       .catch(e => {
-        alert(`Unable to fetch: ${e.message}.`);
+        alert(`Unable to fetch: ${e?.message ?? ''}`);
         this.props.clearAnalyse();
       });
   }

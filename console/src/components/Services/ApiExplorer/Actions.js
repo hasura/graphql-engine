@@ -292,6 +292,8 @@ const analyzeFetcher = (headers, mode) => {
           error = 'Analyze query error';
         }
         dispatch(showErrorNotification(error));
+        // forward error for handling downstream.
+        throw error;
       });
   };
 };
