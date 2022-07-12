@@ -20,7 +20,7 @@
       customization:
         root_fields:
           prefix: test
-          suffix: Query
+          suffix: query
         naming_convention: graphql-default
 
 - description: create table 1
@@ -57,7 +57,7 @@
   status: 200
   response:
     data:
-      testauthorLocalQuery:
+      testAuthorLocalQuery:
       - id: 1
         name: 'Author 1'
         __typename: AuthorLocal
@@ -67,7 +67,7 @@
   query:
     query: |
       query {
-        testauthorLocalQuery {
+        testAuthorLocalQuery {
           id
           name
           __typename
@@ -89,7 +89,7 @@
   query:
     query: |
       query {
-        a: testauthorLocalQuery {
+        a: testAuthorLocalQuery {
           b: id
           c: name
           d: __typename
@@ -101,14 +101,14 @@
   status: 200
   response:
     data:
-      testauthorLocalByPkQuery:
+      testAuthorLocalByPkQuery:
         id: 1
         name: 'Author 1'
         __typename: AuthorLocal
   query:
     query: |
       query {
-        testauthorLocalByPkQuery(id: 1) {
+        testAuthorLocalByPkQuery(id: 1) {
           id
           name
           __typename
@@ -120,7 +120,7 @@
   status: 200
   response:
     data:
-      testauthorLocalAggregateQuery:
+      testAuthorLocalAggregateQuery:
         __typename: AuthorLocalAggregate
         aggregate:
           __typename: AuthorLocalAggregateFields
@@ -128,7 +128,7 @@
   query:
     query: |
       query MyQuery {
-        testauthorLocalAggregateQuery(where: {name: {_eq: "Author 2"}}) {
+        testAuthorLocalAggregateQuery(where: {name: {_eq: "Author 2"}}) {
           __typename
           aggregate {
             __typename
@@ -142,7 +142,7 @@
   status: 200
   response:
     data:
-      testinsertAuthorLocalQuery:
+      testInsertAuthorLocalQuery:
         __typename: AuthorLocalMutationResponse
         returning:
         - __typename: AuthorLocal
@@ -151,7 +151,7 @@
   query:
     query: |
       mutation MyMutation {
-        testinsertAuthorLocalQuery(objects: {name: "Author 3", id: 3}) {
+        testInsertAuthorLocalQuery(objects: {name: "Author 3", id: 3}) {
           __typename
           returning {
             __typename
@@ -166,17 +166,51 @@
   status: 200
   response:
     data:
-      testdeleteAuthorLocalByPkQuery:
+      testDeleteAuthorLocalByPkQuery:
         __typename: AuthorLocal
         id: 3
         name: Author 3
   query:
     query: |
       mutation MyMutation {
-        testdeleteAuthorLocalByPkQuery(id: 3) {
+        testDeleteAuthorLocalByPkQuery(id: 3) {
           __typename
           id
           name
+        }
+      }
+
+- description: PG update source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_update_source
+    args:
+      name: pg1
+      customization:
+        root_fields:
+          prefix: Test
+          suffix: query
+        naming_convention: graphql-default
+
+- description: Lookup by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      TestAuthorLocalByPkQuery:
+        id: 1
+        name: 'Author 1'
+        __typename: AuthorLocal
+  query:
+    query: |
+      query {
+        TestAuthorLocalByPkQuery(id: 1) {
+          id
+          name
+          __typename
         }
       }
 

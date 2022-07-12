@@ -47,6 +47,7 @@ import Control.Lens
 import Data.Aeson qualified as J
 import Data.Aeson.Extended
 import Data.Has
+import Data.List.NonEmpty qualified as NE
 import Data.Monoid
 import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier (..))
@@ -121,20 +122,20 @@ parseNamingConventionFromText "graphql-default" = Right GraphqlCase
 parseNamingConventionFromText _ = Left "naming_convention can either be \"hasura-default\" or \"graphql-default\""
 
 mkCustomizedTypename :: Maybe SourceTypeCustomization -> NamingCase -> MkTypename
-mkCustomizedTypename stc tCase = MkTypename ((applyTypeNameCaseCust tCase) . (applyTypeCust stc))
+mkCustomizedTypename stc tCase = MkTypename ((applyTypeNameCaseCust tCase) . (applyTypeCust stc tCase))
 
-mkCustomizedFieldName :: Maybe RootFieldsCustomization -> MkRootFieldName
-mkCustomizedFieldName rtc = MkRootFieldName (applyFieldCust rtc)
+mkCustomizedFieldName :: Maybe RootFieldsCustomization -> NamingCase -> MkRootFieldName
+mkCustomizedFieldName rtc tCase = MkRootFieldName (applyFieldCust rtc tCase)
 
 -- | apply prefix and suffix to type name according to the source customization
-applyTypeCust :: Maybe SourceTypeCustomization -> (G.Name -> G.Name)
-applyTypeCust Nothing = id
-applyTypeCust (Just SourceTypeCustomization {..}) = applyPrefixSuffix _stcPrefix _stcSuffix
+applyTypeCust :: Maybe SourceTypeCustomization -> NamingCase -> (G.Name -> G.Name)
+applyTypeCust Nothing _ = id
+applyTypeCust (Just SourceTypeCustomization {..}) tCase = applyPrefixSuffix _stcPrefix _stcSuffix tCase True
 
 -- | apply prefix and suffix to field name according to the source customization
-applyFieldCust :: Maybe RootFieldsCustomization -> (G.Name -> G.Name)
-applyFieldCust Nothing = id
-applyFieldCust (Just RootFieldsCustomization {..}) = applyPrefixSuffix _rootfcPrefix _rootfcSuffix
+applyFieldCust :: Maybe RootFieldsCustomization -> NamingCase -> (G.Name -> G.Name)
+applyFieldCust Nothing _ = id
+applyFieldCust (Just RootFieldsCustomization {..}) tCase = applyPrefixSuffix _rootfcPrefix _rootfcSuffix tCase False
 
 -- | apply naming convention to type name
 applyTypeNameCaseCust :: NamingCase -> G.Name -> G.Name
@@ -188,11 +189,20 @@ applyEnumValueCase tCase v = case tCase of
   GraphqlCase -> C.transformNameWith (T.toUpper) v
 
 -- | append/prepend the suffix/prefix in the graphql name
-applyPrefixSuffix :: Maybe G.Name -> Maybe G.Name -> G.Name -> G.Name
-applyPrefixSuffix Nothing Nothing name = name
-applyPrefixSuffix (Just prefix) Nothing name = prefix <> name
-applyPrefixSuffix Nothing (Just suffix) name = name <> suffix
-applyPrefixSuffix (Just prefix) (Just suffix) name = prefix <> name <> suffix
+applyPrefixSuffix :: Maybe G.Name -> Maybe G.Name -> NamingCase -> Bool -> G.Name -> G.Name
+applyPrefixSuffix Nothing Nothing tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [name]
+applyPrefixSuffix (Just prefix) Nothing tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [prefix, name]
+applyPrefixSuffix Nothing (Just suffix) tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [name, suffix]
+applyPrefixSuffix (Just prefix) (Just suffix) tCase isTypeName name = concatPrefixSuffix tCase isTypeName $ NE.fromList [prefix, name, suffix]
+
+concatPrefixSuffix :: NamingCase -> Bool -> NonEmpty G.Name -> G.Name
+concatPrefixSuffix (HasuraCase) _ neList = sconcat neList
+concatPrefixSuffix (GraphqlCase) isTypeName neList =
+  if isTypeName
+    then C.toPascalG prefixSuffixGQLIdent
+    else C.transformPrefixAndSuffixAndConcat prefixSuffixGQLIdent id C.upperFirstChar
+  where
+    prefixSuffixGQLIdent = C.fromNonEmptyList neList
 
 data SourceCustomization = SourceCustomization
   { _scRootFields :: !(Maybe RootFieldsCustomization),
@@ -262,7 +272,7 @@ withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defa
         HasuraCase -> pure HasuraCase
 
   withTypenameCustomization (mkCustomizedTypename _scTypeNames tCase)
-    . withRootFieldNameCustomization (mkCustomizedFieldName _scRootFields)
+    . withRootFieldNameCustomization (mkCustomizedFieldName _scRootFields tCase)
     . withNamingCaseCustomization tCase
     $ m
 
