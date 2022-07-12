@@ -40,6 +40,7 @@ import Data.These (These (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Schema (buildGQLContext)
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging
 import Hasura.Metadata.Class

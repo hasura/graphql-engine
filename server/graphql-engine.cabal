@@ -646,6 +646,7 @@ library
                      , Hasura.RQL.Types.Allowlist
                      , Hasura.RQL.Types.ApiLimit
                      , Hasura.RQL.Types.Backend
+                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
                      , Hasura.RQL.Types.ComputedField
@@ -655,10 +656,9 @@ library
                      , Hasura.RQL.Types.EventTrigger
                      , Hasura.RQL.Types.Eventing
                      , Hasura.RQL.Types.Eventing.Backend
-                     , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Function
+                     , Hasura.RQL.Types.GraphqlSchemaIntrospection
                      , Hasura.RQL.Types.Instances
-                     , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.Metadata.Backend
                      , Hasura.RQL.Types.Metadata.Instances
@@ -673,6 +673,8 @@ library
                      , Hasura.RQL.Types.Relationships.ToSource
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.ResultCustomization
+                     , Hasura.RQL.Types.Roles
+                     , Hasura.RQL.Types.Roles.Internal
                      , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCache.Build
@@ -681,8 +683,6 @@ library
                      , Hasura.RQL.Types.SourceCustomization
                      , Hasura.RQL.Types.Subscription
                      , Hasura.RQL.Types.Table
-                     , Hasura.RQL.Types.Roles
-                     , Hasura.RQL.Types.Roles.Internal
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.ApiLimit
                      , Hasura.RQL.DDL.ComputedField
@@ -809,6 +809,7 @@ library
                      , Hasura.GraphQL.Schema.Instances
                      , Hasura.GraphQL.Schema.Introspect
                      , Hasura.GraphQL.Schema.Mutation
+                     , Hasura.GraphQL.Schema.NamingCase
                      , Hasura.GraphQL.Schema.Node
                      , Hasura.GraphQL.Schema.OrderBy
                      , Hasura.GraphQL.Schema.Parser
@@ -819,6 +820,7 @@ library
                      , Hasura.GraphQL.Schema.Select
                      , Hasura.GraphQL.Schema.SubscriptionStream
                      , Hasura.GraphQL.Schema.Table
+                     , Hasura.GraphQL.Schema.Typename
                      , Hasura.GraphQL.Schema.Update
                      , Hasura.GraphQL.Transport.Backend
                      , Hasura.GraphQL.Transport.HTTP

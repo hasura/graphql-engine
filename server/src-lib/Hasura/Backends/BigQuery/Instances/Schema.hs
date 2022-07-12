@@ -18,6 +18,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -29,6 +30,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -40,7 +42,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Source (SourceInfo)
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -162,7 +163,7 @@ bqBuildFunctionMutationFields _ _ _ _ =
 -- Individual components
 
 bqColumnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'BigQuery ->
   G.Nullability ->
   m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
@@ -392,7 +393,7 @@ bqCountTypeInput = \case
 
 geographyWithinDistanceInput ::
   forall m n r.
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r, Has NamingCase r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   m (Parser 'Input n (DWithinGeogOp (IR.UnpreparedValue 'BigQuery)))
 geographyWithinDistanceInput = do
   geographyParser <- columnParser (ColumnScalar BigQuery.GeographyScalarType) (G.Nullability False)
@@ -442,7 +443,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
       selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
       guard $ Map.member _cfiName $ spiComputedFields selectPermissions
       objectTypeName <-
-        P.mkTypename =<< do
+        mkTypename =<< do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
           pure $ computedFieldGQLName <> Name.__ <> Name.__fields
       selectionSetParser <- do
@@ -487,7 +488,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
                 <> _cfiName <<> " defined on table " <>> tableName
 
       objectName <-
-        P.mkTypename =<< do
+        mkTypename =<< do
           computedFieldGQLName <- textToName $ computedFieldNameToText _cfiName
           tableGQLName <- getTableGQLName @'BigQuery tableInfo
           pure $ computedFieldGQLName <> Name.__ <> tableGQLName <> Name.__args

@@ -38,6 +38,7 @@ import Hasura.GraphQL.Context
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common (textToName)
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Incremental qualified as Inc
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache.Common
@@ -53,7 +54,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase, applyFieldNameCaseCust)
+import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend

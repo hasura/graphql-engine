@@ -13,11 +13,13 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser (FieldParser, MonadSchema)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (withTypenameCustomization)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteRelationship.Validate
@@ -182,7 +184,7 @@ remoteRelationshipToSourceField ::
   RemoteSourceFieldInfo tgt ->
   m [FieldParser n (IR.RemoteSourceSelect (IR.RemoteRelationshipField IR.UnpreparedValue) IR.UnpreparedValue tgt)]
 remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
-  P.withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
+  withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
     tCase <- asks getter
     sourceInfo <-
       onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $

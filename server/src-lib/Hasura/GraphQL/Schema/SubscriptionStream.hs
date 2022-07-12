@@ -14,6 +14,7 @@ import Hasura.Base.Error (QErr)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -22,6 +23,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select (tablePermissionsInfo, tableSelectionList, tableWhereArg)
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectColumns, tableSelectPermissions)
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
@@ -29,7 +31,7 @@ import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase, applyFieldNameCaseCust, applyTypeNameCaseCust)
+import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust, applyTypeNameCaseCust)
 import Hasura.RQL.Types.Subscription
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -55,11 +57,11 @@ cursorBatchSizeArg tCase =
 -- > }
 cursorOrderingArgParser ::
   forall n m r.
-  (MonadSchema n m, Has P.MkTypename r, Has NamingCase r, MonadReader r m) =>
+  (MonadSchema n m, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
   m (Parser 'Both n CursorOrdering)
 cursorOrderingArgParser = do
   tCase <- asks getter
-  enumName <- P.mkTypename $ applyTypeNameCaseCust tCase Name._cursor_ordering
+  enumName <- mkTypename $ applyTypeNameCaseCust tCase Name._cursor_ordering
   let description =
         Just $
           G.Description $
@@ -81,7 +83,7 @@ cursorOrderingArgParser = do
 -- > ordering: cursor_ordering
 cursorOrderingArg ::
   forall n m r.
-  (MonadSchema n m, Has P.MkTypename r, Has NamingCase r, MonadReader r m) =>
+  (MonadSchema n m, Has MkTypename r, Has NamingCase r, MonadReader r m) =>
   m (InputFieldsParser n (Maybe CursorOrdering))
 cursorOrderingArg = do
   cursorOrderingParser' <- cursorOrderingArgParser
@@ -92,7 +94,7 @@ cursorOrderingArg = do
 -- > column_name: column_type
 streamColumnParserArg ::
   forall b n m r.
-  (BackendSchema b, MonadSchema n m, Has P.MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   ColumnInfo b ->
   m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
 streamColumnParserArg colInfo = do
@@ -114,7 +116,7 @@ streamColumnParserArg colInfo = do
 -- > }
 streamColumnValueParser ::
   forall b n m r.
-  (BackendSchema b, MonadSchema n m, Has P.MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   SourceInfo b ->
   G.Name ->
   [ColumnInfo b] ->
@@ -123,7 +125,7 @@ streamColumnValueParser sourceInfo tableGQLName colInfos =
   memoizeOn 'streamColumnValueParser (_siName sourceInfo, tableGQLName) $ do
     tCase <- asks getter
     columnVals <- sequenceA <$> traverse streamColumnParserArg colInfos
-    objName <- P.mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_value_input
+    objName <- mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_value_input
     pure do
       let description = G.Description $ "Initial value of the column from where the streaming should start"
       P.object objName (Just description) columnVals <&> catMaybes
@@ -134,7 +136,7 @@ streamColumnValueParserArg ::
   forall b n m r.
   ( BackendSchema b,
     MonadSchema n m,
-    Has P.MkTypename r,
+    Has MkTypename r,
     MonadReader r m,
     MonadError QErr m,
     Has NamingCase r
@@ -155,7 +157,7 @@ streamColumnValueParserArg sourceInfo tableGQLName colInfos = do
 -- >
 tableStreamColumnArg ::
   forall n m r b.
-  (BackendSchema b, MonadSchema n m, Has P.MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
+  (BackendSchema b, MonadSchema n m, Has MkTypename r, MonadReader r m, MonadError QErr m, Has NamingCase r) =>
   SourceInfo b ->
   G.Name ->
   [ColumnInfo b] ->
@@ -185,7 +187,7 @@ tableStreamCursorExp sourceInfo tableInfo =
     tCase <- asks getter
     tableGQLName <- getTableGQLName tableInfo
     columnInfos <- tableSelectColumns sourceInfo tableInfo
-    objName <- P.mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_input
+    objName <- mkTypename $ tableGQLName <> applyTypeNameCaseCust tCase Name.__stream_cursor_input
     let description =
           G.Description $ "Streaming cursor of the table " <>> tableGQLName
     columnParsers <- tableStreamColumnArg sourceInfo tableGQLName columnInfos

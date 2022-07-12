@@ -16,6 +16,7 @@ import Data.Aeson qualified as J
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Hasura.GraphQL.Schema.Parser as P
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -85,7 +86,7 @@ customizeNamespace ::
   (MonadParse n) =>
   Maybe G.Name ->
   (G.Name -> P.ParsedSelection a -> a) ->
-  P.MkTypename ->
+  MkTypename ->
   [FieldParser n a] ->
   [FieldParser n (NamespacedField a)]
 customizeNamespace (Just _) _ _ [] = [] -- The nampespace doesn't contain any Field parsers, so returning empty list

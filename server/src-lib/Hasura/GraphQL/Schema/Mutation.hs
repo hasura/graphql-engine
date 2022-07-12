@@ -28,6 +28,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -168,7 +169,7 @@ tableFieldsInput sourceInfo tableInfo =
   memoizeOn 'tableFieldsInput (_siName sourceInfo, tableName) do
     tableGQLName <- getTableGQLName tableInfo
     objectFields <- traverse mkFieldParser (Map.elems allFields)
-    objectName <- P.mkTypename $ tableGQLName <> Name.__insert_input
+    objectName <- mkTypename $ tableGQLName <> Name.__insert_input
     let objectDesc = G.Description $ "input type for inserting data into table " <>> tableName
     pure $ P.object objectName (Just objectDesc) $ coalesceFields objectFields
   where
@@ -261,7 +262,7 @@ objectRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ d
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
-    inputName <- P.mkTypename $ tableGQLName <> Name.__obj_rel_insert_input
+    inputName <- mkTypename $ tableGQLName <> Name.__obj_rel_insert_input
     let objectName = Name._data
         inputDesc = G.Description $ "input type for inserting object relation for remote table " <>> tableName
         inputParser = do
@@ -294,7 +295,7 @@ arrayRelationshipInput backendInsertAction sourceInfo tableInfo = runMaybeT $ do
     tableGQLName <- getTableGQLName tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
     backendInsertParser <- backendInsertAction sourceInfo tableInfo
-    inputName <- P.mkTypename $ tableGQLName <> Name.__arr_rel_insert_input
+    inputName <- mkTypename $ tableGQLName <> Name.__arr_rel_insert_input
     let objectsName = Name._data
         inputDesc = G.Description $ "input type for inserting array relation for remote table " <>> tableName
         inputParser = do
@@ -435,7 +436,7 @@ mutationSelectionSet sourceInfo tableInfo =
       let returningName = Name._returning
           returningDesc = "data from the rows affected by the mutation"
       pure $ IR.MRet <$> P.subselection_ returningName (Just returningDesc) tableSet
-    selectionName <- P.mkTypename $ tableGQLName <> Name.__mutation_response
+    selectionName <- mkTypename $ tableGQLName <> Name.__mutation_response
     let affectedRowsName = Name._affected_rows
         affectedRowsDesc = "number of rows affected by the mutation"
         selectionDesc = G.Description $ "response of any mutation on the table " <>> tableName

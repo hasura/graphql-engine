@@ -26,6 +26,7 @@ import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Parser as P
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.IR.Root qualified as IR

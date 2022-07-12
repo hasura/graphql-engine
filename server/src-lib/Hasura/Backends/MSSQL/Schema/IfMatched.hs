@@ -27,6 +27,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -76,7 +77,7 @@ ifMatchedObjectParser sourceInfo tableInfo = runMaybeT do
   lift do
     updateColumnsEnum <- updateColumnsPlaceholderParser tableInfo
     tableGQLName <- getTableGQLName tableInfo
-    objectName <- P.mkTypename $ tableGQLName <> Name.__if_matched
+    objectName <- mkTypename $ tableGQLName <> Name.__if_matched
     let _imColumnPresets = partialSQLExpToUnpreparedValue <$> upiSet updatePerms
         updateFilter = fmap partialSQLExpToUnpreparedValue <$> upiFilter updatePerms
         objectDesc = G.Description $ "upsert condition type for table " <>> tableInfoName tableInfo
@@ -115,7 +116,7 @@ tableInsertMatchColumnsEnum ::
 tableInsertMatchColumnsEnum sourceInfo tableInfo = do
   tableGQLName <- getTableGQLName @'MSSQL tableInfo
   columns <- tableSelectColumns sourceInfo tableInfo
-  enumName <- P.mkTypename $ tableGQLName <> Name.__insert_match_column
+  enumName <- mkTypename $ tableGQLName <> Name.__insert_match_column
   let description =
         Just $
           G.Description $

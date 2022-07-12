@@ -54,8 +54,10 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Node
 import Hasura.GraphQL.Schema.Parser qualified as P
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -249,9 +251,9 @@ parsedSelectionsToFields ::
   (Text -> a) ->
   OMap.InsOrdHashMap G.Name (P.ParsedSelection a) ->
   Fields a
-parsedSelectionsToFields mkTypename =
+parsedSelectionsToFields mkTypenameFromText =
   OMap.toList
-    >>> map (FieldName . G.unName *** P.handleTypename (mkTypename . G.unName))
+    >>> map (FieldName . G.unName *** P.handleTypename (mkTypenameFromText . G.unName))
 
 numericAggOperators :: [G.Name]
 numericAggOperators =
@@ -319,7 +321,7 @@ mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
   addEnumSuffix enumTableGQLName enumTableCustomName
 
 addEnumSuffix :: (MonadReader r m, Has MkTypename r) => G.Name -> Maybe G.Name -> m G.Name
-addEnumSuffix enumTableGQLName enumTableCustomName = P.mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> Name.__enum
+addEnumSuffix enumTableGQLName enumTableCustomName = mkTypename $ (fromMaybe enumTableGQLName enumTableCustomName) <> Name.__enum
 
 -- TODO: figure out what the purpose of this method is.
 peelWithOrigin :: P.MonadParse m => P.Parser 'P.Both m a -> P.Parser 'P.Both m (IR.ValueWithOrigin a)

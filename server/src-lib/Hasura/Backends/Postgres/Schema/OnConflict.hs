@@ -29,6 +29,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp qualified as IR
@@ -82,7 +83,7 @@ conflictObjectParser sourceInfo tableInfo maybeUpdatePerms constraints = do
   constraintParser <- conflictConstraint constraints sourceInfo tableInfo
   whereExpParser <- boolExp sourceInfo tableInfo
   tableGQLName <- getTableGQLName tableInfo
-  objectName <- P.mkTypename $ tableGQLName <> Name.__on_conflict
+  objectName <- mkTypename $ tableGQLName <> Name.__on_conflict
 
   let objectDesc = G.Description $ "on_conflict condition type for table " <>> tableName
       (presetColumns, updateFilter) = fromMaybe (HM.empty, IR.gBoolExpTrue) $ do
@@ -149,7 +150,7 @@ conflictConstraint constraints sourceInfo tableInfo =
               P.EnumValueInfo,
             c
           )
-    enumName <- P.mkTypename $ tableGQLName <> Name.__constraint
+    enumName <- mkTypename $ tableGQLName <> Name.__constraint
     let enumDesc = G.Description $ "unique or primary key constraints on table " <>> tableName
     pure $ P.enum enumName (Just enumDesc) constraintEnumValues
   where

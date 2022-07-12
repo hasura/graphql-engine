@@ -17,6 +17,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -26,6 +27,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
+import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -35,7 +37,6 @@ import Hasura.RQL.Types.Column as RQL
 import Hasura.RQL.Types.Function as RQL
 import Hasura.RQL.Types.SchemaCache as RQL
 import Hasura.RQL.Types.Source as RQL
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as GQL
 
@@ -168,7 +169,7 @@ bsParser :: MonadParse m => Parser 'Both m ByteString
 bsParser = encodeUtf8 <$> P.string
 
 columnParser' ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'MySQL ->
   GQL.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
@@ -255,7 +256,7 @@ orderByOperators' _tCase =
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::
   forall m n r.
-  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r, Has NamingCase r) =>
+  (BackendSchema 'MySQL, MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType 'MySQL ->
   m (Parser 'Input n [ComparisonExp 'MySQL])
 comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do

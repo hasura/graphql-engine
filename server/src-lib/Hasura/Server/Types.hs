@@ -21,11 +21,11 @@ where
 import Data.Aeson
 import Data.HashSet qualified as Set
 import Database.PG.Query qualified as Q
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 

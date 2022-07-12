@@ -53,6 +53,7 @@ import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Explain qualified as GE
 import Hasura.GraphQL.Logging (MonadQueryLog)
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.WSServerApp qualified as WS
@@ -68,7 +69,6 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.SQL.Backend
 import Hasura.Server.API.Config (runGetConfig)
 import Hasura.Server.API.Metadata

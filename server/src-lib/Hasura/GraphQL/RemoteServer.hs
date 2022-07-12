@@ -23,7 +23,9 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Monad (Parse, runSchemaT)
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
+import Hasura.GraphQL.Schema.Typename
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
 import Hasura.Prelude
@@ -117,7 +119,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         mempty :: CustomizeRemoteFieldName,
         mempty :: MkTypename,
         mempty :: MkRootFieldName,
-        HasuraCase :: NamingCase,
+        HasuraCase,
         SchemaOptions
           { -- doesn't apply to remote schemas
             soStringifyNum = LeaveNumbersAlone,
