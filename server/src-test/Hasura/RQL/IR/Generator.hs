@@ -75,7 +75,7 @@ genAnnBoolExp
       boolOr = BoolOr <$> list defaultRange (genAnnBoolExp aGen tableGen)
       boolNot = BoolNot <$> genAnnBoolExp aGen tableGen
       boolExists = BoolExists <$> genGExists aGen tableGen
-      boolFld = BoolFld <$> aGen
+      boolFld = BoolField <$> aGen
 
 genAnnBoolExpFld ::
   MonadGen m =>

@@ -1763,7 +1763,7 @@ fromGBoolExp =
       fmap OrExpression (traverse fromGBoolExp expressions)
     Ir.BoolNot expression -> fmap NotExpression (fromGBoolExp expression)
     Ir.BoolExists gExists -> fmap ExistsExpression (fromGExists gExists)
-    Ir.BoolFld expression -> pure expression
+    Ir.BoolField expression -> pure expression
 
 --------------------------------------------------------------------------------
 -- Misc combinators

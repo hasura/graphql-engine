@@ -132,7 +132,7 @@ instance (Backend b, Eq a, Hashable a) => OnlyRelevantEq (GBoolExp b a) where
   BoolOr boolExpL `relevantEq` BoolOr boolExpR = Set.fromList boolExpL == Set.fromList boolExpR
   BoolNot boolExpL `relevantEq` BoolNot boolExpR = boolExpL == boolExpR
   BoolExists boolExpL `relevantEq` BoolExists boolExpR = boolExpL == boolExpR
-  BoolFld boolExpL `relevantEq` BoolFld boolExpR = boolExpL == boolExpR
+  BoolField boolExpL `relevantEq` BoolField boolExpR = boolExpL == boolExpR
   _ `relevantEq` _ = False
 
 instance (Backend b, Eq a, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a)) => OnlyRelevantEq (AnnComputedFieldBoolExp b a) where

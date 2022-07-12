@@ -211,7 +211,7 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
       sequenceA <$> for primaryKeys \columnInfo -> do
         field <- columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
         pure $
-          BoolFld . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
+          BoolField . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
             <$> P.field (ciName columnInfo) (ciDescription columnInfo) field
     pure $
       P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
@@ -1107,7 +1107,7 @@ relationshipField sourceInfo table ri = runMaybeT do
   let deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
       deduplicatePermissions x =
         case (optimizePermissionFilters, x) of
-          (True, BoolAnd [BoolFld (AVRelationship remoteRI remoteTablePerm)]) ->
+          (True, BoolAnd [BoolField (AVRelationship remoteRI remoteTablePerm)]) ->
             -- Here we try to figure out if the "forwards" joining condition
             -- from `table` to the related table `riRTable ri` is equal to the
             -- "backwards" joining condition from the related table back to
