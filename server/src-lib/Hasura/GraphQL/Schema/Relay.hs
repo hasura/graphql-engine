@@ -216,7 +216,7 @@ nodeField sourceCache = do
           parseScalarValueColumnType columnType columnValue `onLeft` \e ->
             P.parseErrorWith ParseFailed $ "value of column " <> ciColumn columnInfo <<> " in node id: " <> qeError e
         pure $
-          IR.BoolFld $
+          IR.BoolField $
             IR.AVColumn
               columnInfo
               [IR.AEQ True $ IR.UVParameter Nothing $ ColumnValue columnType parsedValue]

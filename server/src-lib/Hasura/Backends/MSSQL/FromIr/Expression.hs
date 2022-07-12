@@ -43,7 +43,7 @@ fromGBoolExp =
       fmap NotExpression (fromGBoolExp expression)
     IR.BoolExists gExists ->
       fromGExists gExists
-    IR.BoolFld expression ->
+    IR.BoolField expression ->
       fromAnnBoolExpFld expression
   where
     fromGExists :: IR.GExists 'MSSQL (IR.AnnBoolExpFld 'MSSQL Expression) -> ReaderT EntityAlias FromIr Expression

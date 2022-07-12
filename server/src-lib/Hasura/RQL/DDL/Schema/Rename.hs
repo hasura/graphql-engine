@@ -453,7 +453,7 @@ updateFieldInBoolExp qt rf be =
       BoolExists (GExists refqt wh) ->
         BoolExists . GExists refqt . unBoolExp
           <$> updateFieldInBoolExp refqt rf (BoolExp wh)
-      BoolFld fld -> BoolFld <$> updateColExp qt rf fld
+      BoolField fld -> BoolField <$> updateColExp qt rf fld
   where
     procExps = mapM updateBoolExp'
     updateBoolExp' =

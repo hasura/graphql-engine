@@ -115,7 +115,7 @@ mkParser table cib =
     columnInfos = mkColumnInfo <$> cib
 
     upiFilter :: GBoolExp PG (AnnBoolExpFld PG (PartialSQLExp PG))
-    upiFilter = BoolAnd $ fmap (\ci -> BoolFld $ AVColumn ci []) columnInfos
+    upiFilter = BoolAnd $ fmap (\ci -> BoolField $ AVColumn ci []) columnInfos
 
     ------------------------------------------
     sourceInfo :: SourceInfo PG

@@ -72,7 +72,7 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
 
   pure $
     BoolAnd <$> P.object name (Just description) do
-      tableFields <- map BoolFld . catMaybes <$> sequenceA tableFieldParsers
+      tableFields <- map BoolField . catMaybes <$> sequenceA tableFieldParsers
       specialFields <- catMaybes <$> sequenceA specialFieldParsers
       pure (tableFields ++ specialFields)
   where

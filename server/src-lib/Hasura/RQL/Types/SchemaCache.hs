@@ -750,7 +750,7 @@ getBoolExpDeps' = \case
   BoolAnd exps -> procExps exps
   BoolOr exps -> procExps exps
   BoolNot e -> getBoolExpDeps' e
-  BoolFld fld -> getColExpDeps fld
+  BoolField fld -> getColExpDeps fld
   BoolExists (GExists refqt whereExp) -> do
     BoolExpCtx {source} <- ask
     let tableDep =

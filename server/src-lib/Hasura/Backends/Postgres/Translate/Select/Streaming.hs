@@ -34,7 +34,7 @@ import Hasura.Backends.Postgres.Types.Column (unsafePGColumnToBackend)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
   ( AnnBoolExpFld (AVColumn),
-    GBoolExp (BoolFld),
+    GBoolExp (BoolField),
     OpExpG (AGT, ALT),
     andAnnBoolExps,
   )
@@ -87,7 +87,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
               fromResVars
                 (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType (_sciInitialValue cursorArg))
                 ["cursor", getPGColTxt $ ciColumn cursorColInfo]
-         in BoolFld $ AVColumn cursorColInfo [(orderByOpExp sqlExp)]
+         in BoolField $ AVColumn cursorColInfo [(orderByOpExp sqlExp)]
 
       selectArgs =
         noSelectArgs

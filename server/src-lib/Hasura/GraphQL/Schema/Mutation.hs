@@ -472,5 +472,5 @@ primaryKeysArguments tableInfo = runMaybeT $ do
     fmap (BoolAnd . toList) . sequenceA <$> for columns \columnInfo -> do
       field <- columnParser (ciType columnInfo) (G.Nullability False)
       pure $
-        BoolFld . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
+        BoolField . AVColumn columnInfo . pure . AEQ True . IR.mkParameter
           <$> P.field (ciName columnInfo) (ciDescription columnInfo) field

@@ -71,7 +71,7 @@ annBoolExp rhsParser rootTable fim boolExp =
         refFields <- withPathK "_table" $ askFieldInfoMapSource refqt
         annWhereExp <- withPathK "_where" $ annBoolExp rhsParser rootTable refFields whereExp
         return $ BoolExists $ GExists refqt annWhereExp
-    BoolFld fld -> BoolFld <$> annColExp rhsParser rootTable fim fld
+    BoolField fld -> BoolField <$> annColExp rhsParser rootTable fim fld
   where
     procExps = mapM (annBoolExp rhsParser rootTable fim)
 
@@ -157,7 +157,7 @@ translateBoolExp = \case
   BoolExists (GExists currTableReference wh) -> do
     whereExp <- recCurrentTable (S.QualTable currTableReference) wh
     return $ S.mkExists (S.FISimple currTableReference Nothing) whereExp
-  BoolFld boolExp -> case boolExp of
+  BoolField boolExp -> case boolExp of
     AVColumn colInfo opExps -> do
       BoolExpCtx {rootReference, currTableReference} <- ask
       let colFld = fromCol @('Postgres pgKind) $ ciColumn colInfo

@@ -153,7 +153,7 @@ fromGBoolExp = do
       fmap NotExpression (fromGBoolExp expression)
     IR.BoolExists gExists ->
       fmap ExistsExpression (fromGExists gExists)
-    IR.BoolFld expression ->
+    IR.BoolField expression ->
       pure expression
 
 fromAnnBoolExp ::

@@ -141,7 +141,7 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     _auWhere :: (BoolExp, BoolExp)
     _auWhere =
       ( column [],
-        BoolAnd $ fmap (\(c, ops) -> BoolFld $ AVColumn c ops) aubWhere
+        BoolAnd $ fmap (\(c, ops) -> BoolField $ AVColumn c ops) aubWhere
       )
 
     _auCheck :: BoolExp
@@ -163,5 +163,5 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
     column :: [OpExpG PG (UnpreparedValue PG)] -> BoolExp
     column stuff =
       BoolAnd
-        . fmap (\c -> BoolFld . AVColumn c $ stuff)
+        . fmap (\c -> BoolField . AVColumn c $ stuff)
         $ aubColumns

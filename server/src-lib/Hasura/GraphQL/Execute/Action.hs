@@ -356,13 +356,13 @@ resolveAsyncActionQuery userInfo annAction =
                 ciDescription = Nothing,
                 ciMutability = ColumnMutability False False
               }
-          actionIdColumnEq = BoolFld $ AVColumn actionIdColumnInfo [AEQ True $ IR.UVLiteral $ S.SELit $ actionIdToText actionId]
+          actionIdColumnEq = BoolField $ AVColumn actionIdColumnInfo [AEQ True $ IR.UVLiteral $ S.SELit $ actionIdToText actionId]
           sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
           sessionVarValue =
             IR.UVParameter Nothing $
               ColumnValue (ColumnScalar PGJSONB) $
                 PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
-          sessionVarsColumnEq = BoolFld $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]
+          sessionVarsColumnEq = BoolField $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]
        in -- For non-admin roles, accessing an async action's response should be allowed only for the user
           -- who initiated the action through mutation. The action's response is accessible for a query/subscription
           -- only when it's session variables are equal to that of action's.

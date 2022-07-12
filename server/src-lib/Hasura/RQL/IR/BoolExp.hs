@@ -1,6 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Boolean Expressions
+--
+-- This module defines the IR representation of boolean expressions
+-- used in @_where@ clauses in GraphQL queries, permissions, and so on.
+--
+-- The types in this module define a /generic/ structure with "holes" to be filled
+-- by each backend. Specifically, holes will include things like types for table names,
+-- and backend field types.
 module Hasura.RQL.IR.BoolExp
   ( BoolExp (..),
     ColExp (..),
@@ -63,15 +71,23 @@ import Hasura.Session
 ----------------------------------------------------------------------------------------------------
 -- Boolean structure
 
--- | This type represents a hierarchical boolean expression. It is parametric over the actual
+-- | This type represents a boolean expression tree. It is parametric over the actual
 -- implementation of the actual boolean term values. It nonetheless leaks some information:
 -- "exists" is only used in permissions, to add conditions based on another table.
-data GBoolExp (b :: BackendType) a
-  = BoolAnd [GBoolExp b a]
-  | BoolOr [GBoolExp b a]
-  | BoolNot (GBoolExp b a)
-  | BoolExists (GExists b a)
-  | BoolFld a
+--
+-- * The @backend@ parameter is used to find the backend-specific type for table names
+--   in the @BoolExists@ constructor.
+-- * The @field@ type represent the type of database-specific field types.
+data GBoolExp (backend :: BackendType) field
+  = BoolAnd [GBoolExp backend field]
+  | BoolOr [GBoolExp backend field]
+  | BoolNot (GBoolExp backend field)
+  | -- | Represents a condition on an aribtrary table.
+    -- since the @backend@ and @field@ are the same,
+    -- the table must be of the same database type.
+    BoolExists (GExists backend field)
+  | -- | A column field
+    BoolField field
   deriving (Show, Eq, Functor, Foldable, Traversable, Data, Generic)
 
 instance (Backend b, NFData a) => NFData (GBoolExp b a)
@@ -94,36 +110,41 @@ instance (Backend b, FromJSONKeyValue a) => FromJSON (GBoolExp b a) where
           | k == "_not" -> BoolNot <$> parseJSON v <?> Key k
           | k == "$exists" -> BoolExists <$> parseJSON v <?> Key k
           | k == "_exists" -> BoolExists <$> parseJSON v <?> Key k
-          | otherwise -> BoolFld <$> parseJSONKeyValue (k, v)
+          | otherwise -> BoolField <$> parseJSONKeyValue (k, v)
 
-instance (Backend b, ToJSONKeyValue a) => ToJSON (GBoolExp b a) where
+instance (Backend backend, ToJSONKeyValue field) => ToJSON (GBoolExp backend field) where
+  -- A representation for boolean values as JSON.
   toJSON be = case be of
-    -- special encoding for _and
+    -- @and@ expressions can be represented differently than the rest
+    -- if the keys are unique
     BoolAnd bExps ->
       let m = M.fromList $ map getKV bExps
-       in -- if the keys aren't repeated, then object encoding can be used
+       in -- if the keys aren't repeated, then the special notation of object encoding can be used
           if length m == length bExps
             then toJSON m
             else object $ pure kv
     _ -> object $ pure kv
     where
+      kv :: (Key, Value)
       kv = getKV be
+      getKV :: GBoolExp backend field -> (Key, Value)
       getKV = \case
         BoolAnd bExps -> "_and" .= map toJSON bExps
         BoolOr bExps -> "_or" .= map toJSON bExps
         BoolNot bExp -> "_not" .= toJSON bExp
         BoolExists bExists -> "_exists" .= toJSON bExists
-        BoolFld a -> toJSONKeyValue a
+        BoolField a -> toJSONKeyValue a
 
-gBoolExpTrue :: GBoolExp b a
+-- | A default representation for a @true@ boolean value.
+gBoolExpTrue :: GBoolExp backend field
 gBoolExpTrue = BoolAnd []
 
 -- | Represents a condition on an aribtrary table. Used as part of our permissions boolean
 -- expressions. See our documentation for more information:
--- https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#using-unrelated-tables-views
-data GExists (b :: BackendType) a = GExists
-  { _geTable :: TableName b,
-    _geWhere :: GBoolExp b a
+-- <https://hasura.io/docs/latest/graphql/core/auth/authorization/permission-rules.html#using-unrelated-tables-views>
+data GExists (backend :: BackendType) field = GExists
+  { _geTable :: TableName backend,
+    _geWhere :: GBoolExp backend field
   }
   deriving (Functor, Foldable, Traversable, Generic)
 
@@ -189,10 +210,10 @@ makePrisms ''GBoolExp
 -- | Permissions get translated into boolean expressions that are threaded throuhgout the
 -- parsers. For the leaf values of those permissions, we use this type, which references but doesn't
 -- inline the session variables.
-data PartialSQLExp (b :: BackendType)
-  = PSESessVar (SessionVarType b) SessionVariable
+data PartialSQLExp (backend :: BackendType)
+  = PSESessVar (SessionVarType backend) SessionVariable
   | PSESession
-  | PSESQLExp (SQLExpression b)
+  | PSESQLExp (SQLExpression backend)
   deriving (Generic)
 
 deriving instance (Backend b) => Eq (PartialSQLExp b)
@@ -224,32 +245,32 @@ hasStaticExp = getAny . foldMap (Any . isStaticValue)
 -- Boolean expressions in the schema
 
 -- | Operand for cast operator
-type CastExp b a = M.HashMap (ScalarType b) [OpExpG b a]
+type CastExp backend field = M.HashMap (ScalarType backend) [OpExpG backend field]
 
 -- | This type represents the boolean operators that can be applied on values of a column. This type
 -- only contains the common core, that we expect to be ultimately entirely supported in most if not
 -- all backends. Backends can extend this with the @BooleanOperators@ type in @Backend@.
-data OpExpG (b :: BackendType) a
-  = ACast (CastExp b a)
-  | AEQ Bool a
-  | ANE Bool a
-  | AIN a
-  | ANIN a
-  | AGT a
-  | ALT a
-  | AGTE a
-  | ALTE a
-  | ALIKE a -- LIKE
-  | ANLIKE a -- NOT LIKE
-  | CEQ (RootOrCurrentColumn b)
-  | CNE (RootOrCurrentColumn b)
-  | CGT (RootOrCurrentColumn b)
-  | CLT (RootOrCurrentColumn b)
-  | CGTE (RootOrCurrentColumn b)
-  | CLTE (RootOrCurrentColumn b)
+data OpExpG (backend :: BackendType) field
+  = ACast (CastExp backend field)
+  | AEQ Bool field
+  | ANE Bool field
+  | AIN field
+  | ANIN field
+  | AGT field
+  | ALT field
+  | AGTE field
+  | ALTE field
+  | ALIKE field -- LIKE
+  | ANLIKE field -- NOT LIKE
+  | CEQ (RootOrCurrentColumn backend)
+  | CNE (RootOrCurrentColumn backend)
+  | CGT (RootOrCurrentColumn backend)
+  | CLT (RootOrCurrentColumn backend)
+  | CGTE (RootOrCurrentColumn backend)
+  | CLTE (RootOrCurrentColumn backend)
   | ANISNULL -- IS NULL
   | ANISNOTNULL -- IS NOT NULL
-  | ABackendSpecific (BooleanOperators b a)
+  | ABackendSpecific (BooleanOperators backend field)
   deriving (Generic)
 
 data RootOrCurrentColumn b = RootOrCurrentColumn RootOrCurrent (Column b)
@@ -319,7 +340,7 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONK
     ANISNOTNULL -> ("_is_null", toJSON False)
     ABackendSpecific b -> toJSONKeyValue b
 
-opExpDepCol :: OpExpG backend a -> Maybe (RootOrCurrentColumn backend)
+opExpDepCol :: OpExpG backend field -> Maybe (RootOrCurrentColumn backend)
 opExpDepCol = \case
   CEQ c -> Just c
   CNE c -> Just c
@@ -330,10 +351,12 @@ opExpDepCol = \case
   _ -> Nothing
 
 -- | This type is used to represent the kinds of boolean expression used for compouted fields
--- based on the return type of the SQL function
-data ComputedFieldBoolExp (b :: BackendType) a
-  = CFBEScalar [OpExpG b a] -- SQL function returning a scalar
-  | CFBETable (TableName b) (AnnBoolExp b a) -- SQL function returning SET OF table
+-- based on the return type of the SQL function.
+data ComputedFieldBoolExp (backend :: BackendType) scalar
+  = -- | SQL function returning a scalar
+    CFBEScalar [OpExpG backend scalar]
+  | -- | SQL function returning SET OF table
+    CFBETable (TableName backend) (AnnBoolExp backend scalar)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (ComputedFieldBoolExp b a)
@@ -357,15 +380,15 @@ instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgument
 --       full_name
 --   }
 -- }
--- Limitation: Computed field whose function with no input arguments are allowed in boolean
--- expression. It is complex to generate schema for `where` clause with functions having
--- input arguments.
-data AnnComputedFieldBoolExp (b :: BackendType) a = AnnComputedFieldBoolExp
-  { _acfbXFieldInfo :: XComputedField b,
+-- Limitation: We only support computed fields in boolean expressions when they
+-- are functions with no input arguments, because it is complex to generate schema
+-- for @where@ clauses for functions that have input arguments.
+data AnnComputedFieldBoolExp (backend :: BackendType) scalar = AnnComputedFieldBoolExp
+  { _acfbXFieldInfo :: XComputedField backend,
     _acfbName :: ComputedFieldName,
-    _acfbFunction :: FunctionName b,
-    _acfbFunctionArgsExp :: FunctionArgsExp b a,
-    _acfbBoolExp :: ComputedFieldBoolExp b a
+    _acfbFunction :: FunctionName backend,
+    _acfbFunctionArgsExp :: FunctionArgsExp backend scalar,
+    _acfbBoolExp :: ComputedFieldBoolExp backend scalar
   }
   deriving (Generic)
 
@@ -389,12 +412,13 @@ instance (Backend b, Hashable (BooleanOperators b a), Hashable (FunctionArgument
 -- terms:
 --   - operators on a column of the current table, using the 'OpExpG' kind of operators
 --   - arbitrary expressions on columns of tables in relationships (in the same source)
+--   - A computed field of the current table
 --
--- This type is parametric over the type of leaf values, the values on which we operate.
-data AnnBoolExpFld (b :: BackendType) a
-  = AVColumn (ColumnInfo b) [OpExpG b a]
-  | AVRelationship (RelInfo b) (AnnBoolExp b a)
-  | AVComputedField (AnnComputedFieldBoolExp b a)
+-- This type is parameterized over the type of leaf values, the values on which we operate.
+data AnnBoolExpFld (backend :: BackendType) leaf
+  = AVColumn (ColumnInfo backend) [OpExpG backend leaf]
+  | AVRelationship (RelInfo backend) (AnnBoolExp backend leaf)
+  | AVComputedField (AnnComputedFieldBoolExp backend leaf)
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (AnnBoolExpFld b a)
@@ -427,19 +451,19 @@ instance (Backend b, ToJSONKeyValue (BooleanOperators b a), ToJSON a) => ToJSONK
 
 -- | A simple alias for the kind of boolean expressions used in the schema, that ties together
 -- 'GBoolExp', 'OpExpG', and 'AnnBoolExpFld'.
-type AnnBoolExp b a = GBoolExp b (AnnBoolExpFld b a)
+type AnnBoolExp backend scalar = GBoolExp backend (AnnBoolExpFld backend scalar)
 
 -- Type aliases for common use cases:
-type AnnBoolExpFldSQL b = AnnBoolExpFld b (SQLExpression b)
+type AnnBoolExpFldSQL backend = AnnBoolExpFld backend (SQLExpression backend)
 
-type AnnBoolExpSQL b = AnnBoolExp b (SQLExpression b)
+type AnnBoolExpSQL backend = AnnBoolExp backend (SQLExpression backend)
 
-type AnnBoolExpPartialSQL b = AnnBoolExp b (PartialSQLExp b)
+type AnnBoolExpPartialSQL backend = AnnBoolExp backend (PartialSQLExp backend)
 
-annBoolExpTrue :: AnnBoolExp backend a
+annBoolExpTrue :: AnnBoolExp backend scalar
 annBoolExpTrue = gBoolExpTrue
 
-andAnnBoolExps :: AnnBoolExp backend a -> AnnBoolExp backend a -> AnnBoolExp backend a
+andAnnBoolExps :: AnnBoolExp backend scalar -> AnnBoolExp backend scalar -> AnnBoolExp backend scalar
 andAnnBoolExps l r = BoolAnd [l, r]
 
 ----------------------------------------------------------------------------------------------------
@@ -449,9 +473,9 @@ andAnnBoolExps l r = BoolAnd [l, r]
 -- are part of the common core of operators.
 
 -- | Operand for STDWithin opoerator
-data DWithinGeomOp a = DWithinGeomOp
-  { dwgeomDistance :: a,
-    dwgeomFrom :: a
+data DWithinGeomOp field = DWithinGeomOp
+  { dwgeomDistance :: field,
+    dwgeomFrom :: field
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
@@ -464,10 +488,10 @@ instance (Hashable a) => Hashable (DWithinGeomOp a)
 $(deriveJSON hasuraJSON ''DWithinGeomOp)
 
 -- | Operand for STDWithin opoerator
-data DWithinGeogOp a = DWithinGeogOp
-  { dwgeogDistance :: a,
-    dwgeogFrom :: a,
-    dwgeogUseSpheroid :: a
+data DWithinGeogOp field = DWithinGeogOp
+  { dwgeogDistance :: field,
+    dwgeogFrom :: field,
+    dwgeogUseSpheroid :: field
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
@@ -480,9 +504,9 @@ instance (Hashable a) => Hashable (DWithinGeogOp a)
 $(deriveJSON hasuraJSON ''DWithinGeogOp)
 
 -- | Operand for STIntersect
-data STIntersectsNbandGeommin a = STIntersectsNbandGeommin
-  { singNband :: a,
-    singGeommin :: a
+data STIntersectsNbandGeommin field = STIntersectsNbandGeommin
+  { singNband :: field,
+    singGeommin :: field
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
@@ -495,9 +519,9 @@ instance (Hashable a) => Hashable (STIntersectsNbandGeommin a)
 $(deriveJSON hasuraJSON ''STIntersectsNbandGeommin)
 
 -- | Operand for STIntersect
-data STIntersectsGeomminNband a = STIntersectsGeomminNband
-  { signGeommin :: a,
-    signNband :: Maybe a
+data STIntersectsGeomminNband field = STIntersectsGeomminNband
+  { signGeommin :: field,
+    signNband :: Maybe field
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
 
@@ -515,7 +539,7 @@ $(deriveJSON hasuraJSON ''STIntersectsGeomminNband)
 -- | This is a simple newtype over AnnBoolExpFld. At time of writing, I do not know why we want
 -- this, and why it exists. It might be a relic of a needed differentiation, now lost?
 -- TODO: can this be removed?
-newtype AnnColumnCaseBoolExpField (b :: BackendType) a = AnnColumnCaseBoolExpField {_accColCaseBoolExpField :: AnnBoolExpFld b a}
+newtype AnnColumnCaseBoolExpField (backend :: BackendType) field = AnnColumnCaseBoolExpField {_accColCaseBoolExpField :: AnnBoolExpFld backend field}
   deriving (Functor, Foldable, Traversable, Generic)
 
 deriving instance (Backend b, Eq (BooleanOperators b a), Eq (FunctionArgumentExp b a), Eq a) => Eq (AnnColumnCaseBoolExpField b a)

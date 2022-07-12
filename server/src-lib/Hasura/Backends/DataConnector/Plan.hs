@@ -239,9 +239,9 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
         mkIfZeroOrMany IR.E.Or <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
       BoolNot x ->
         IR.E.Not <$> (translateBoolExp columnRelationshipReversePath sourceTableName) x
-      BoolFld (AVColumn c xs) ->
+      BoolField (AVColumn c xs) ->
         lift $ mkIfZeroOrMany IR.E.And <$> traverse (translateOp columnRelationshipReversePath (ciColumn c)) xs
-      BoolFld (AVRelationship relationshipInfo boolExp) -> do
+      BoolField (AVRelationship relationshipInfo boolExp) -> do
         let relationshipName = IR.R.mkRelationshipName $ riName relationshipInfo
         let targetTable = riRTable relationshipInfo
         let relationshipType = case riType relationshipInfo of
