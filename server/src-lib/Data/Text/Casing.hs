@@ -31,13 +31,18 @@ module Data.Text.Casing
     transformGQLSuffixWith,
 
     -- * Helpers
-    identifierToList,
     fromTuple,
     fromName,
+    fromNonEmptyList,
+    identifierToList,
+    lowerFirstChar,
+    transformPrefixAndSuffixAndConcat,
+    upperFirstChar,
   )
 where
 
 import Data.List (intersperse)
+import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -58,6 +63,9 @@ fromTuple (pref, suffs) = Identifier pref suffs
 
 fromName :: G.Name -> GQLNameIdentifier
 fromName n = Identifier n []
+
+fromNonEmptyList :: NonEmpty G.Name -> GQLNameIdentifier
+fromNonEmptyList neList = Identifier (NE.head neList) (map G.convertNameToSuffix (NE.tail neList))
 
 -- | transforms a graphql name with a transforming function
 --
@@ -104,12 +112,16 @@ toSnakeG (Identifier pref suff) = G.addSuffixes pref (map (transformGQLSuffixWit
 
 -- | To @PascalCase@ for @GQLNameIdentifier@
 toPascalG :: GQLNameIdentifier -> G.Name
-toPascalG (Identifier pref suff) = G.addSuffixes pref (map (transformGQLSuffixWith upperFirstChar) suff)
+toPascalG gqlIdentifier = transformPrefixAndSuffixAndConcat gqlIdentifier upperFirstChar upperFirstChar
 
 -- | To @camelCase@ for @GQLNameIdentifier@
 toCamelG :: GQLNameIdentifier -> G.Name
-toCamelG (Identifier pref []) = pref
-toCamelG (Identifier x xs) = G.addSuffixes (transformNameWith lowerFirstChar x) (map (transformGQLSuffixWith upperFirstChar) xs)
+toCamelG gqlIdentifier = transformPrefixAndSuffixAndConcat gqlIdentifier lowerFirstChar upperFirstChar
+
+-- | Transforms @GQLNameIdentifier@ and returns a @G.Name@
+transformPrefixAndSuffixAndConcat :: GQLNameIdentifier -> (T.Text -> T.Text) -> (T.Text -> T.Text) -> G.Name
+transformPrefixAndSuffixAndConcat (Identifier pref suff) prefixTransformer suffixTransformer =
+  G.addSuffixes (transformNameWith prefixTransformer pref) (map (transformGQLSuffixWith suffixTransformer) suff)
 
 -- @fromSnake@ is used in splitting the schema/table names separated by @_@
 -- For global naming conventions:
