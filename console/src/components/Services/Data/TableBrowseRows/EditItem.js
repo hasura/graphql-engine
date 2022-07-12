@@ -162,7 +162,7 @@ class EditItem extends Component {
 
     return (
       <RightContainer>
-        <div className="flex flex-col w-1/2">
+        <div className="flex flex-col container">
           <TableHeader
             count={count}
             dispatch={dispatch}
@@ -174,7 +174,7 @@ class EditItem extends Component {
           />
           <br />
           <div>
-            <div className="w-9/12">
+            <div className="container">
               <form id="updateForm">
                 {elements}
                 <Button
