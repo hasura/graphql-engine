@@ -2,8 +2,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.SourceCustomization
-  ( MkTypename (..),
-    SourceTypeCustomization,
+  ( SourceTypeCustomization,
     RootFieldsCustomization (..),
     mkCustomizedTypename,
     emptySourceCustomization,
@@ -17,7 +16,6 @@ module Hasura.RQL.Types.SourceCustomization
     withRemoteFieldNameCustomization,
 
     -- * Naming Convention specific
-    NamingCase (..),
     applyEnumValueCase,
     applyFieldNameCaseCust,
     applyTypeNameCaseCust,
@@ -26,7 +24,6 @@ module Hasura.RQL.Types.SourceCustomization
     getNamingConvention,
     getTextFieldName,
     getTextTypeName,
-    parseNamingConventionFromText,
 
     -- * Field name builders
     mkSelectField,
@@ -44,7 +41,6 @@ module Hasura.RQL.Types.SourceCustomization
 where
 
 import Control.Lens
-import Data.Aeson qualified as J
 import Data.Aeson.Extended
 import Data.Has
 import Data.List.NonEmpty qualified as NE
@@ -53,7 +49,8 @@ import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier (..))
 import Data.Text.Casing qualified as C
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
-import Hasura.GraphQL.Parser.Names
+import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Incremental.Internal.Dependency (Cacheable)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -95,31 +92,6 @@ instance FromJSON SourceTypeCustomization where
 
 emptySourceTypeCustomization :: SourceTypeCustomization
 emptySourceTypeCustomization = SourceTypeCustomization Nothing Nothing
-
--- | Represents the different possible type cases for fields and types, i.e.
---   @HasuraCase@ and @GraphqlCase@ (@CamelCase@ fields and @PascalCase@ types).
-data NamingCase = HasuraCase | GraphqlCase
-  deriving (Eq, Show, Generic)
-
-instance Cacheable NamingCase
-
-instance ToJSON NamingCase where
-  toJSON HasuraCase = J.String "hasura-default"
-  toJSON GraphqlCase = J.String "graphql-default"
-
-instance FromJSON NamingCase where
-  parseJSON = withText "NamingCase" $ \s -> case parseNamingConventionFromText s of
-    (Right nc) -> pure nc
-    (Left err) -> fail err
-
--- NOTE: This is used in parsing JSON as well as in parsing environment
--- variable.
-
--- | parses naming convention from @Text@
-parseNamingConventionFromText :: Text -> Either String NamingCase
-parseNamingConventionFromText "hasura-default" = Right HasuraCase
-parseNamingConventionFromText "graphql-default" = Right GraphqlCase
-parseNamingConventionFromText _ = Left "naming_convention can either be \"hasura-default\" or \"graphql-default\""
 
 mkCustomizedTypename :: Maybe SourceTypeCustomization -> NamingCase -> MkTypename
 mkCustomizedTypename stc tCase = MkTypename ((applyTypeNameCaseCust tCase) . (applyTypeCust stc tCase))

@@ -22,8 +22,10 @@ import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.TestUtils
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
+import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema

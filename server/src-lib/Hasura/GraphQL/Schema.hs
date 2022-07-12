@@ -25,6 +25,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Introspect
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     Kind (..),
@@ -39,6 +40,7 @@ import Hasura.GraphQL.Schema.Relay
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.RemoteRelationship
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (MkTypename (..))
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -271,25 +273,25 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
       withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
-        mkTypename <- asks getter
+        makeTypename <- asks getter
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
           buildQueryAndSubscriptionFields sourceInfo validTables validFunctions streamingSubscriptionsCtx
         (,,,)
           <$> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__query))
+            (makeTypename <> MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__mutation_frontend))
+            (makeTypename <> MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__mutation_backend))
+            (makeTypename <> MkTypename (<> Name.__mutation_backend))
             (buildMutationFields Backend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__subscription))
+            (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
       where
         sourceCustomization =
@@ -391,23 +393,23 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
 
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
           buildRelayQueryAndSubscriptionFields sourceInfo validTables validFunctions
-        mkTypename <- asks getter
+        makeTypename <- asks getter
         (,,,)
           <$> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__query))
+            (makeTypename <> MkTypename (<> Name.__query))
             (pure uncustomizedQueryRootFields)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__mutation_frontend))
+            (makeTypename <> MkTypename (<> Name.__mutation_frontend))
             (buildMutationFields Frontend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__mutation_backend))
+            (makeTypename <> MkTypename (<> Name.__mutation_backend))
             (buildMutationFields Backend sourceInfo validTables validFunctions)
           <*> customizeFields
             sourceCustomization
-            (mkTypename <> P.MkTypename (<> Name.__subscription))
+            (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
       where
         sourceCustomization =
@@ -796,7 +798,7 @@ customizeFields ::
   forall f n db remote action.
   (Functor f, MonadParse n) =>
   SourceCustomization ->
-  P.MkTypename ->
+  MkTypename ->
   f [FieldParser n (RootField db remote action JO.Value)] ->
   f [FieldParser n (NamespacedField (RootField db remote action JO.Value))]
 customizeFields SourceCustomization {..} =

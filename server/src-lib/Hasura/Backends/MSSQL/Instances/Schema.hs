@@ -22,6 +22,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -33,6 +34,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -46,7 +48,6 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -247,7 +248,7 @@ msMkRelationshipParser _sourceName _relationshipInfo = do
 -- * Individual components
 
 msColumnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r) =>
   ColumnType 'MSSQL ->
   G.Nullability ->
   m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
@@ -350,7 +351,7 @@ msComparisonExps ::
     MonadError QErr m,
     MonadReader r m,
     Has SchemaOptions r,
-    Has P.MkTypename r,
+    Has MkTypename r,
     Has NamingCase r
   ) =>
   ColumnType 'MSSQL ->

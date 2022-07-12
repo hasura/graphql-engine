@@ -26,13 +26,13 @@ import Hasura.Base.Error
 import Hasura.Cache.Bounded qualified as Cache (CacheSize, parseCacheSize)
 import Hasura.Eventing.EventTrigger (defaultFetchBatchSize)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Logging (defaultEnabledEngineLogTypes, userAllowedLogTypes)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config

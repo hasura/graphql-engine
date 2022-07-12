@@ -28,6 +28,7 @@ import Hasura.GraphQL.Schema.Parser (Kind (..), Parser, memoizeOn)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (withTypenameCustomization)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -65,7 +66,7 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
             selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
             annotatedFieldsParser <-
               MaybeT $
-                P.withTypenameCustomization
+                withTypenameCustomization
                   (mkCustomizedTypename (_scTypeNames $ _siCustomization sourceInfo) tCase)
                   (tableSelectionSet sourceInfo tableInfo)
             pure $

@@ -15,6 +15,7 @@ import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -22,6 +23,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -33,7 +35,7 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase, applyFieldNameCaseIdentifier)
+import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseIdentifier)
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -53,7 +55,7 @@ boolExp ::
   m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
 boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
   tableGQLName <- getTableGQLName tableInfo
-  name <- P.mkTypename $ tableGQLName <> Name.__bool_exp
+  name <- mkTypename $ tableGQLName <> Name.__bool_exp
   let description =
         G.Description $
           "Boolean expression to filter rows from the table " <> tableName

@@ -28,6 +28,7 @@ import Hasura.GraphQL.Schema.Parser
     Parser,
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.Action qualified as IR
@@ -143,7 +144,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
   errorsFieldParser <-
     lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGJSON) (G.Nullability True)
 
-  outputTypeName <- P.mkTypename $ unActionName actionName
+  outputTypeName <- mkTypename $ unActionName actionName
   let fieldName = unActionName actionName
       description = G.Description <$> comment
       actionIdInputField =
@@ -254,7 +255,7 @@ actionOutputFields ::
 actionOutputFields outputType annotatedObject objectTypes = do
   scalarOrEnumOrObjectFields <- forM (toList $ _aotFields annotatedObject) outputFieldParser
   relationshipFields <- traverse relationshipFieldParser $ _aotRelationships annotatedObject
-  outputTypeName <- P.mkTypename $ unObjectTypeName $ _aotName annotatedObject
+  outputTypeName <- mkTypename $ unObjectTypeName $ _aotName annotatedObject
   let allFieldParsers =
         scalarOrEnumOrObjectFields
           <> concat (catMaybes relationshipFields)

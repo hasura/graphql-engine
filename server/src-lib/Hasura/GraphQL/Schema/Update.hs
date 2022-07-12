@@ -25,8 +25,10 @@ import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSche
 import Hasura.GraphQL.Schema.BoolExp (boolExp)
 import Hasura.GraphQL.Schema.Common (Scenario (..), mapField, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tablePermissions, tableUpdateColumns)
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, annBoolExpTrue)
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
@@ -36,7 +38,6 @@ import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend (Backend (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), isNumCol)
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.RQL.Types.Table
 import Language.GraphQL.Draft.Syntax (Description (..), Name (..), Nullability (..), litName)
 
@@ -169,7 +170,7 @@ mergeDisjoint parsedResults = do
 -- > M.fromList [("col1", MkOp (fp "x")), ("col2", MkOp (fp "y"))]
 updateOperator ::
   forall n r m b a.
-  (P.MonadParse n, MonadReader r m, Has P.MkTypename r, Backend b) =>
+  (P.MonadParse n, MonadReader r m, Has MkTypename r, Backend b) =>
   Name ->
   Name ->
   (ColumnInfo b -> m (P.Parser 'P.Both n a)) ->
@@ -187,7 +188,7 @@ updateOperator tableGQLName opName mkParser columns opDesc objDesc = do
         P.fieldOptional fieldName fieldDesc fieldParser
           `mapField` \value -> (ciColumn columnInfo, value)
 
-  objName <- P.mkTypename $ tableGQLName <> opName <> $$(litName "_input")
+  objName <- mkTypename $ tableGQLName <> opName <> $$(litName "_input")
 
   pure $
     fmap (M.fromList . (fold :: Maybe [(Column b, a)] -> [(Column b, a)])) $
@@ -200,7 +201,7 @@ setOp ::
   forall b n r m.
   ( BackendSchema b,
     MonadReader r m,
-    Has P.MkTypename r,
+    Has MkTypename r,
     Has NamingCase r,
     MonadError QErr m,
     P.MonadSchema n m
@@ -232,7 +233,7 @@ incOp ::
     MonadError QErr m,
     P.MonadSchema n m,
     BackendSchema b,
-    Has P.MkTypename r,
+    Has MkTypename r,
     Has NamingCase r
   ) =>
   UpdateOperator b m n (UnpreparedValue b)
@@ -326,7 +327,7 @@ updateTableByPk backendUpdate scenario sourceInfo tableInfo fieldName descriptio
   selection <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   lift $ do
     tableGQLName <- getTableGQLName tableInfo
-    pkObjectName <- P.mkTypename $ tableGQLName <> $$(litName "_pk_columns_input")
+    pkObjectName <- mkTypename $ tableGQLName <> $$(litName "_pk_columns_input")
     let pkFieldName = $$(litName "pk_columns")
         pkObjectDesc = Description $ "primary key columns input for table: " <> unName tableGQLName
         pkParser = P.object pkObjectName (Just pkObjectDesc) pkArgs

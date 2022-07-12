@@ -42,6 +42,7 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation qualified as GSB
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( Definition,
     FieldParser,
@@ -55,6 +56,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -250,7 +252,7 @@ buildFunctionRelayQueryFields sourceName functionName functionInfo tableName pke
 -- Individual components
 
 columnParser ::
-  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has P.MkTypename r, Has NamingCase r) =>
+  (MonadSchema n m, MonadError QErr m, MonadReader r m, Has MkTypename r, Has NamingCase r) =>
   ColumnType ('Postgres pgKind) ->
   G.Nullability ->
   m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue ('Postgres pgKind))))

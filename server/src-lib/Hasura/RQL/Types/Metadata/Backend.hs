@@ -7,6 +7,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Environment qualified as Env
 import Hasura.Base.Error
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp

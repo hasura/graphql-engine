@@ -58,6 +58,7 @@ import Data.Text.Extended
 import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), MonadBuildSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)

@@ -40,7 +40,9 @@ import Data.Has
 import Data.Text.Casing (GQLNameIdentifier)
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (Type)
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.IR
 import Hasura.RQL.IR.Insert qualified as IR
@@ -52,7 +54,6 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
-import Hasura.RQL.Types.SourceCustomization (NamingCase)
 import Hasura.SQL.Backend
 import Hasura.Server.Types (StreamingSubscriptionsCtx)
 import Language.GraphQL.Draft.Syntax qualified as G

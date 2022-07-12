@@ -30,6 +30,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -108,7 +109,7 @@ selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT 
     tableArgsParser <- tableArguments sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLAggregateName _fiGQLArgsName
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- P.mkTypename =<< pure (tableGQLName <> Name.__aggregate)
+    selectionName <- mkTypename =<< pure (tableGQLName <> Name.__aggregate)
     aggregateFieldName <- mkRootFieldName _fiGQLAggregateName
     let argsParser = liftA2 (,) functionArgsParser tableArgsParser
         aggregationParser =
@@ -314,7 +315,7 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
         -- There are user-provided arguments: we need to parse an args object.
         argumentParsers <- sequenceA $ optional <> mandatory
         objectName <-
-          P.mkTypename
+          mkTypename
             =<< case functionTrackedAs of
               FTAComputedField computedFieldName _sourceName tableName -> do
                 tableInfo <- askTableInfo sourceInfo tableName

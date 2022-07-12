@@ -53,12 +53,12 @@ import Data.Time
 import Data.URL.Template
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SourceCustomization (NamingCase, parseNamingConventionFromText)
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Logging

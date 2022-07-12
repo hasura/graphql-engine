@@ -53,6 +53,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -262,7 +263,7 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
     tableGQLName <- getTableGQLName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- P.mkTypename $ tableGQLName <> Name.__aggregate
+    selectionName <- mkTypename $ tableGQLName <> Name.__aggregate
     let aggregationParser =
           P.nonNullableParser $
             parsedSelectionsToFields IR.TAFExp
@@ -368,7 +369,7 @@ defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
   guard $ isHasuraSchema schemaKind || isJust (relayExtension @b)
   lift $ memoizeOn 'defaultTableSelectionSet (sourceName, tableName) do
     tableGQLName <- getTableGQLName tableInfo
-    objectTypename <- P.mkTypename tableGQLName
+    objectTypename <- mkTypename tableGQLName
     let xRelay = relayExtension @b
         tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
         tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
@@ -451,7 +452,7 @@ tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
   _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   edgesParser <- MaybeT $ tableEdgesSelectionSet tableGQLName
   lift $ memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
-    connectionTypeName <- P.mkTypename $ tableGQLName <> Name._Connection
+    connectionTypeName <- mkTypename $ tableGQLName <> Name._Connection
     let pageInfo =
           P.subselection_
             Name._pageInfo
@@ -512,7 +513,7 @@ tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
       G.Name -> m (Maybe (Parser 'Output n (EdgeFields b)))
     tableEdgesSelectionSet tableGQLName = runMaybeT do
       edgeNodeParser <- MaybeT $ fmap P.nonNullableParser <$> tableSelectionSet sourceInfo tableInfo
-      edgesType <- lift $ P.mkTypename $ tableGQLName <> Name._Edge
+      edgesType <- lift $ mkTypename $ tableGQLName <> Name._Edge
       let cursor =
             P.selection_
               Name._cursor
@@ -843,9 +844,9 @@ tableAggregationFields sourceInfo tableInfo =
     let numericColumns = onlyNumCols allColumns
         comparableColumns = onlyComparableCols allColumns
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
-    selectName <- P.mkTypename $ tableGQLName <> Name.__aggregate_fields
+    selectName <- mkTypename $ tableGQLName <> Name.__aggregate_fields
     count <- countField
-    mkTypename <- asks getter
+    makeTypename <- asks getter
     numericAndComparable <-
       fmap concat $
         sequenceA $
@@ -857,7 +858,7 @@ tableAggregationFields sourceInfo tableInfo =
                   for numericAggOperators $ \operator -> do
                     let fieldNameCase = applyFieldNameCaseCust tCase operator
                     numFields <- mkNumericAggFields operator numericColumns
-                    pure $ parseAggOperator mkTypename operator fieldNameCase tableGQLName numFields,
+                    pure $ parseAggOperator makeTypename operator fieldNameCase tableGQLName numFields,
               -- operators on comparable columns
               if null comparableColumns
                 then Nothing
@@ -866,7 +867,7 @@ tableAggregationFields sourceInfo tableInfo =
                   pure $
                     comparisonAggOperators & map \operator ->
                       let fieldNameCase = applyFieldNameCaseCust tCase operator
-                       in parseAggOperator mkTypename operator fieldNameCase tableGQLName comparableFields
+                       in parseAggOperator makeTypename operator fieldNameCase tableGQLName comparableFields
             ]
     let aggregateFields = count : numericAndComparable
     pure $
@@ -911,15 +912,15 @@ tableAggregationFields sourceInfo tableInfo =
       pure $ IR.AFCount <$> P.selection Name._count Nothing args P.int
 
     parseAggOperator ::
-      P.MkTypename ->
+      MkTypename ->
       G.Name ->
       G.Name ->
       G.Name ->
       [FieldParser n (IR.ColFld b)] ->
       FieldParser n (IR.AggregateField b)
-    parseAggOperator mkTypename operator fieldName tableGQLName columns =
+    parseAggOperator makeTypename operator fieldName tableGQLName columns =
       let opText = G.unName operator
-          setName = P.runMkTypename mkTypename $ tableGQLName <> Name.__ <> operator <> Name.__fields
+          setName = runMkTypename makeTypename $ tableGQLName <> Name.__ <> operator <> Name.__fields
           setDesc = Just $ G.Description $ "aggregate " <> opText <> " on columns"
           subselectionParser =
             P.selectionSet setName setDesc columns

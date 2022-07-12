@@ -12,6 +12,7 @@ import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -19,6 +20,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy qualified as IR
@@ -66,7 +68,7 @@ orderByExp ::
 orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tableInfoName tableInfo) $ do
   tableGQLName <- getTableGQLName tableInfo
   tCase <- asks getter
-  name <- P.mkTypename $ tableGQLName <> Name.__order_by
+  name <- mkTypename $ tableGQLName <> Name.__order_by
   let description =
         G.Description $
           "Ordering options when selecting data from " <> tableInfoName tableInfo <<> "."
@@ -161,7 +163,7 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
   tableGQLName <- getTableGQLName @b tableInfo
   tCase <- asks getter
   allColumns <- tableSelectColumns sourceInfo tableInfo
-  mkTypename <- asks getter
+  makeTypename <- asks getter
   let numColumns = onlyNumCols allColumns
       compColumns = onlyComparableCols allColumns
       numFields = catMaybes <$> traverse (mkField tCase) numColumns
@@ -182,15 +184,15 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
                   then Nothing
                   else Just $
                     for numericAggOperators \operator ->
-                      parseOperator mkTypename operator tableGQLName numFields,
+                      parseOperator makeTypename operator tableGQLName numFields,
                 -- operators on comparable columns
                 if null compColumns
                   then Nothing
                   else Just $
                     for comparisonAggOperators \operator ->
-                      parseOperator mkTypename operator tableGQLName compFields
+                      parseOperator makeTypename operator tableGQLName compFields
               ]
-  objectName <- P.mkTypename $ tableGQLName <> Name.__aggregate_order_by
+  objectName <- mkTypename $ tableGQLName <> Name.__aggregate_order_by
   let description = G.Description $ "order by aggregate values of table " <>> tableName
   pure $ P.object objectName (Just description) aggFields
   where
@@ -205,14 +207,14 @@ orderByAggregation sourceInfo tableInfo = memoizeOn 'orderByAggregation (_siName
         <&> fmap (columnInfo,) . join
 
     parseOperator ::
-      P.MkTypename ->
+      MkTypename ->
       G.Name ->
       G.Name ->
       InputFieldsParser n [(ColumnInfo b, (BasicOrderType b, NullsOrderType b))] ->
       InputFieldsParser n (Maybe [IR.OrderByItemG b (IR.AnnotatedAggregateOrderBy b)])
-    parseOperator mkTypename operator tableGQLName columns =
+    parseOperator makeTypename operator tableGQLName columns =
       let opText = G.unName operator
-          objectName = P.runMkTypename mkTypename $ tableGQLName <> Name.__ <> operator <> Name.__order_by
+          objectName = runMkTypename makeTypename $ tableGQLName <> Name.__ <> operator <> Name.__order_by
           objectDesc = Just $ G.Description $ "order by " <> opText <> "() on columns of table " <>> tableName
        in P.fieldOptional operator Nothing (P.object objectName objectDesc columns)
             `mapField` map (\(col, info) -> mkOrderByItemG (IR.AAOOp opText col) info)
