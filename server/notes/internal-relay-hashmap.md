@@ -1,6 +1,6 @@
 This note is in [Hasura.GraphQL.Schema.Node](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Node.hs#L168).
 It is referenced at:
-  - line 47 of [Hasura.GraphQL.Schema.Relay](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Relay.hs#L47)
+  - line 48 of [Hasura.GraphQL.Schema.Relay](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Schema/Relay.hs#L48)
 
 # Internal Relay HashMap
 
