@@ -67,7 +67,6 @@
     - the nullability of items in the output is now always correctly reported
     - scalars other than UUID are more consistently inlined
     - objects now have a title and, when available, the same description as in the GraphQL schema
-- server: fix dropping column from a table that has update permissions (fix #8415)
 - server: bump Kriti package version to support optional variable lookup in string interpolation (fixes #8574)
 - console: Hide TimescaleDB internal schema from data tab
 - console: support naming convention in source customization for postgres DB [CON-297]
@@ -76,6 +75,14 @@
   - Debian graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use a ubuntu base instead of debian.
   - Debian flavour of images (`hasura/graphql-engine:<VERSION>.debian`) are still published to Docker Hub.
   - Centos flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
+
+## v2.9.0-beta.2
+
+### Bug fixes and improvements
+
+- server: fix dropping column from a table that has update permissions (fix #8415)
+- server: fix `unsupported/unknown datatype was returned` error thrown when using `mssql_redeliver_event` API
+- server: fix bug with MSSQL events and shutdown handler
 
 ## v2.8.4
 
