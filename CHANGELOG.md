@@ -2,7 +2,20 @@
 
 ## Next release
 
-- server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
+### Bug fixes and improvements
+
+## v2.9.0-beta.2
+
+### Bug fixes and improvements
+
+- server: fix dropping column from a table that has update permissions (fix #8415)
+- server: fix `unsupported/unknown datatype was returned` error thrown when using `mssql_redeliver_event` API
+- server: fix bug with MSSQL events and shutdown handler
+
+## v2.8.4
+
+### Bug fixes and improvements
+
 - server: Add support to customize the root field for streaming subscriptions (fixes #8618)
 
 ### Bug fixes and improvements
