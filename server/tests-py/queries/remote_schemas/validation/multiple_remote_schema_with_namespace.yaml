@@ -1,0 +1,71 @@
+- description: add a remote schema with namespace
+  url: /v1/metadata
+  status: 200
+  query:
+    type: add_remote_schema
+    args:
+      name: user1
+      definition:
+        url:  http://localhost:5000/user-graphql
+        customization:
+          root_fields_namespace: bar
+          type_names:
+            mapping:
+              UserQuery: MyQueryRoot
+  response:
+    message: success
+
+- description: add same remote schema with other namespace
+  url: /v1/metadata
+  status: 200
+  query:
+    type: add_remote_schema
+    args:
+      name: user2
+      definition:
+        url:  http://localhost:5000/user-graphql
+        customization:
+          root_fields_namespace: baz
+  response:
+    message: success
+
+- description: query with namespace
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        foo {
+          __typename
+        }
+        bar {
+          __typename
+        }
+        baz {
+          __typename
+        }
+      }
+  response:
+    data:
+      foo:
+        __typename: fooCharacterIFaceQuery
+      bar:
+        __typename: MyQueryRoot
+      baz:
+        __typename: bazUserQuery
+
+- description: remove both remote schema
+  url: /v1/metadata
+  status: 200
+  query:
+    type: bulk
+    args:
+    - type: remove_remote_schema
+      args:
+        name: user1
+    - type: remove_remote_schema
+      args:
+        name: user2
+  response:
+    - message: success
+    - message: success
