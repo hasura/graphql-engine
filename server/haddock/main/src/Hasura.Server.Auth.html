@@ -52,7 +52,7 @@
 </span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HTTP.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-comment">-- | Typeclass representing the @UserInfo@ authorization and resolving effect</span><span>
-</span><span id="line-55"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689307047"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="UserAuthentication"><span class="annot"><a href="Hasura.Server.Auth.html#UserAuthentication"><span class="hs-identifier hs-var">UserAuthentication</span></a></span></span><span> </span><span id="local-6989586621689307047"><span class="annot"><a href="#local-6989586621689307047"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689307127"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="UserAuthentication"><span class="annot"><a href="Hasura.Server.Auth.html#UserAuthentication"><span class="hs-identifier hs-var">UserAuthentication</span></a></span></span><span> </span><span id="local-6989586621689307127"><span class="annot"><a href="#local-6989586621689307127"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-56"></span><span>  </span><span id="resolveUserInfo"><span class="annot"><a href="Hasura.Server.Auth.html#resolveUserInfo"><span class="hs-identifier hs-type">resolveUserInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-57"></span><span>    </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-58"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -60,7 +60,7 @@
 </span><span id="line-60"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-61"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-62"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#ReqsText"><span class="hs-identifier hs-type">ReqsText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-63"></span><span>    </span><span class="annot"><a href="#local-6989586621689307047"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="#local-6989586621689307127"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>
 </span><span id="line-65"></span><span class="hs-comment">-- | The hashed admin password. 'hashAdminSecret' is our public interface for</span><span>
 </span><span id="line-66"></span><span class="hs-comment">-- constructing the secret.</span><span>
@@ -74,7 +74,7 @@
 </span><span id="line-74"></span><span class="hs-comment">--     - prevent theoretical timing attacks from a naive `==` check</span><span>
 </span><span id="line-75"></span><span class="hs-comment">--     - prevent misuse or inadvertent leaking of the secret</span><span>
 </span><span id="line-76"></span><span class="hs-keyword">newtype</span><span> </span><span id="AdminSecretHash"><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-var">AdminSecretHash</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AdminSecretHash"><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-var">AdminSecretHash</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Crypto.Digest</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Crypto.SHA512</span></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689307030"><span id="local-6989586621689307032"><span id="local-6989586621689307034"><span id="local-6989586621689307036"><span id="local-6989586621689307038"><span id="local-6989586621689307040"><span id="local-6989586621689307042"><span class="annot"><span class="annottext">Eq AdminSecretHash
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689307110"><span id="local-6989586621689307112"><span id="local-6989586621689307114"><span id="local-6989586621689307116"><span id="local-6989586621689307118"><span id="local-6989586621689307120"><span id="local-6989586621689307122"><span class="annot"><span class="annottext">Eq AdminSecretHash
 Eq AdminSecretHash
 -&gt; (AdminSecretHash -&gt; AdminSecretHash -&gt; Ordering)
 -&gt; (AdminSecretHash -&gt; AdminSecretHash -&gt; Bool)
@@ -112,7 +112,7 @@ $c&lt; :: AdminSecretHash -&gt; AdminSecretHash -&gt; Bool
 compare :: AdminSecretHash -&gt; AdminSecretHash -&gt; Ordering
 $ccompare :: AdminSecretHash -&gt; AdminSecretHash -&gt; Ordering
 $cp1Ord :: Eq AdminSecretHash
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689307025"><span id="local-6989586621689307027"><span class="annot"><span class="annottext">AdminSecretHash -&gt; AdminSecretHash -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689307105"><span id="local-6989586621689307107"><span class="annot"><span class="annottext">AdminSecretHash -&gt; AdminSecretHash -&gt; Bool
 (AdminSecretHash -&gt; AdminSecretHash -&gt; Bool)
 -&gt; (AdminSecretHash -&gt; AdminSecretHash -&gt; Bool)
 -&gt; Eq AdminSecretHash
@@ -123,26 +123,26 @@ $c/= :: AdminSecretHash -&gt; AdminSecretHash -&gt; Bool
 $c== :: AdminSecretHash -&gt; AdminSecretHash -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689307021"><span class="annot"><span class="hs-identifier hs-type">Hash.Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-80"></span><span>  </span><span id="local-6989586621689307019"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; AdminSecretHash -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621689307017"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689307017"><span class="hs-identifier hs-var">salt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span> </span><span id="local-6989586621689307016"><span class="annot"><span class="annottext">Digest SHA512
-</span><a href="#local-6989586621689307016"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; ByteString -&gt; Int
+</span><span id="line-79"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689307101"><span class="annot"><span class="hs-identifier hs-type">Hash.Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-80"></span><span>  </span><span id="local-6989586621689307099"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; AdminSecretHash -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621689307097"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689307097"><span class="hs-identifier hs-var">salt</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span> </span><span id="local-6989586621689307096"><span class="annot"><span class="annottext">Digest SHA512
+</span><a href="#local-6989586621689307096"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; ByteString -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">Hash.hashWithSalt</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689307017"><span class="hs-identifier hs-var">salt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Int) -&gt; ByteString -&gt; Int
+</span><a href="#local-6989586621689307097"><span class="hs-identifier hs-var">salt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Int) -&gt; ByteString -&gt; Int
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Digest SHA512 -&gt; ByteString
 forall bin bout.
 (ByteArrayAccess bin, ByteArray bout) =&gt;
 bin -&gt; bout
 </span><span class="hs-identifier hs-var">BA.convert</span></span><span> </span><span class="annot"><span class="annottext">Digest SHA512
-</span><a href="#local-6989586621689307016"><span class="hs-identifier hs-var">h</span></a></span><span>
+</span><a href="#local-6989586621689307096"><span class="hs-identifier hs-var">h</span></a></span><span>
 </span><span id="line-81"></span><span>
 </span><span id="line-82"></span><span class="hs-comment">-- We don't want to be able to leak the secret hash. This is a dummy instance</span><span>
 </span><span id="line-83"></span><span class="hs-comment">-- to support 'Show AuthMode' which we want for testing.</span><span>
-</span><span id="line-84"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689307010"><span id="local-6989586621689307013"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-85"></span><span>  </span><span id="local-6989586621689307008"><span class="annot"><span class="annottext">show :: AdminSecretHash -&gt; String
+</span><span id="line-84"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689307090"><span id="local-6989586621689307093"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621689307088"><span class="annot"><span class="annottext">show :: AdminSecretHash -&gt; String
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="annot"><span class="annottext">AdminSecretHash
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;(error \&quot;AdminSecretHash hidden\&quot;)&quot;</span></span><span>
@@ -174,7 +174,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-98"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AMAdminSecret"><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecret"><span class="hs-identifier hs-var">AMAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AMAdminSecretAndHook"><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndHook"><span class="hs-identifier hs-var">AMAdminSecretAndHook</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-type">AuthHook</span></a></span><span>
 </span><span id="line-100"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AMAdminSecretAndJWT"><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndJWT"><span class="hs-identifier hs-var">AMAdminSecretAndJWT</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCtx"><span class="hs-identifier hs-type">JWTCtx</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689306994"><span id="local-6989586621689306996"><span id="local-6989586621689306998"><span class="annot"><span class="annottext">Int -&gt; AuthMode -&gt; ShowS
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689307074"><span id="local-6989586621689307076"><span id="local-6989586621689307078"><span class="annot"><span class="annottext">Int -&gt; AuthMode -&gt; ShowS
 [AuthMode] -&gt; ShowS
 AuthMode -&gt; String
 (Int -&gt; AuthMode -&gt; ShowS)
@@ -187,7 +187,7 @@ show :: AuthMode -&gt; String
 $cshow :: AuthMode -&gt; String
 showsPrec :: Int -&gt; AuthMode -&gt; ShowS
 $cshowsPrec :: Int -&gt; AuthMode -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689306990"><span id="local-6989586621689306992"><span class="annot"><span class="annottext">AuthMode -&gt; AuthMode -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689307070"><span id="local-6989586621689307072"><span class="annot"><span class="annottext">AuthMode -&gt; AuthMode -&gt; Bool
 (AuthMode -&gt; AuthMode -&gt; Bool)
 -&gt; (AuthMode -&gt; AuthMode -&gt; Bool) -&gt; Eq AuthMode
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -201,9 +201,9 @@ $c== :: AuthMode -&gt; AuthMode -&gt; Bool
 </span><span id="line-104"></span><span class="hs-comment">-- required maintenance threads for JWT etc.</span><span>
 </span><span id="line-105"></span><span class="hs-comment">--</span><span>
 </span><span id="line-106"></span><span class="hs-comment">-- This must only be run once, on launch.</span><span>
-</span><span id="line-107"></span><span id="local-6989586621689306989"><span class="annot"><a href="Hasura.Server.Auth.html#setupAuthMode"><span class="hs-identifier hs-type">setupAuthMode</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689306989"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-109"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#HasReporter"><span class="hs-identifier hs-type">Tracing.HasReporter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689306989"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-107"></span><span id="local-6989586621689307069"><span class="annot"><a href="Hasura.Server.Auth.html#setupAuthMode"><span class="hs-identifier hs-type">setupAuthMode</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307069"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><a href="Hasura.Tracing.html#HasReporter"><span class="hs-identifier hs-type">Tracing.HasReporter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307069"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-111"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-112"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-type">AuthHook</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -211,7 +211,7 @@ $c== :: AuthMode -&gt; AuthMode -&gt; Bool
 </span><span id="line-114"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-116"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-117"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689306989"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span></span><span>
+</span><span id="line-117"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307069"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span></span><span>
 </span><span id="line-118"></span><span id="setupAuthMode"><span class="annot"><span class="annottext">setupAuthMode :: HashSet AdminSecretHash
 -&gt; Maybe AuthHook
 -&gt; [JWTConfig]
@@ -219,23 +219,23 @@ $c== :: AuthMode -&gt; AuthMode -&gt; Bool
 -&gt; Manager
 -&gt; Logger Hasura
 -&gt; ExceptT Text (ManagedT m) AuthMode
-</span><a href="Hasura.Server.Auth.html#setupAuthMode"><span class="hs-identifier hs-var hs-var">setupAuthMode</span></a></span></span><span> </span><span id="local-6989586621689306988"><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306988"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306987"><span class="annot"><span class="annottext">Maybe AuthHook
-</span><a href="#local-6989586621689306987"><span class="hs-identifier hs-var">mWebHook</span></a></span></span><span> </span><span id="local-6989586621689306986"><span class="annot"><span class="annottext">[JWTConfig]
-</span><a href="#local-6989586621689306986"><span class="hs-identifier hs-var">mJwtSecrets</span></a></span></span><span> </span><span id="local-6989586621689306985"><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span></span><span> </span><span id="local-6989586621689306984"><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689306984"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span id="local-6989586621689306983"><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689306983"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Server.Auth.html#setupAuthMode"><span class="hs-identifier hs-var hs-var">setupAuthMode</span></a></span></span><span> </span><span id="local-6989586621689307068"><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689307068"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689307067"><span class="annot"><span class="annottext">Maybe AuthHook
+</span><a href="#local-6989586621689307067"><span class="hs-identifier hs-var">mWebHook</span></a></span></span><span> </span><span id="local-6989586621689307066"><span class="annot"><span class="annottext">[JWTConfig]
+</span><a href="#local-6989586621689307066"><span class="hs-identifier hs-var">mJwtSecrets</span></a></span></span><span> </span><span id="local-6989586621689307065"><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621689307065"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span></span><span> </span><span id="local-6989586621689307064"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689307064"><span class="hs-identifier hs-var">httpManager</span></a></span></span><span> </span><span id="local-6989586621689307063"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689307063"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashSet AdminSecretHash -&gt; Bool
 forall a. HashSet a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.null</span></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306988"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe AuthHook
-</span><a href="#local-6989586621689306987"><span class="hs-identifier hs-var">mWebHook</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><a href="#local-6989586621689307068"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe AuthHook
+</span><a href="#local-6989586621689307067"><span class="hs-identifier hs-var">mWebHook</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[JWTConfig] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[JWTConfig]
-</span><a href="#local-6989586621689306986"><span class="hs-identifier hs-var">mJwtSecrets</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689307066"><span class="hs-identifier hs-var">mJwtSecrets</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-120"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe AuthHook
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -246,14 +246,14 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash -&gt; Maybe RoleName -&gt; AuthMode
 </span><a href="Hasura.Server.Auth.html#AMAdminSecret"><span class="hs-identifier hs-var">AMAdminSecret</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306988"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span><span>
+</span><a href="#local-6989586621689307068"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621689307065"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span><span>
 </span><span id="line-121"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe AuthHook
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-122"></span><span>      </span><span id="local-6989586621689306979"><span class="annot"><span class="annottext">[JWTCtx]
-</span><a href="#local-6989586621689306979"><span class="hs-identifier hs-var">jwtCtxs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(JWTConfig -&gt; ExceptT Text (ManagedT m) JWTCtx)
+</span><span id="line-122"></span><span>      </span><span id="local-6989586621689307059"><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621689307059"><span class="hs-identifier hs-var">jwtCtxs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(JWTConfig -&gt; ExceptT Text (ManagedT m) JWTCtx)
 -&gt; [JWTConfig] -&gt; ExceptT Text (ManagedT m) [JWTCtx]
 forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Traversable t, Applicative f) =&gt;
@@ -262,10 +262,10 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 forall (m :: * -&gt; *).
 (ForkableMonadIO m, HasReporter m) =&gt;
 JWTConfig -&gt; ExceptT Text (ManagedT m) JWTCtx
-</span><a href="#local-6989586621689306977"><span class="hs-identifier hs-var">mkJwtCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[JWTConfig] -&gt; [JWTConfig]
+</span><a href="#local-6989586621689307057"><span class="hs-identifier hs-var">mkJwtCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[JWTConfig] -&gt; [JWTConfig]
 forall a. Eq a =&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">L.nub</span></span><span> </span><span class="annot"><span class="annottext">[JWTConfig]
-</span><a href="#local-6989586621689306986"><span class="hs-identifier hs-var">mJwtSecrets</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689307066"><span class="hs-identifier hs-var">mJwtSecrets</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span>      </span><span class="annot"><span class="annottext">AuthMode -&gt; ExceptT Text (ManagedT m) AuthMode
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(AuthMode -&gt; ExceptT Text (ManagedT m) AuthMode)
@@ -273,9 +273,9 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash -&gt; [JWTCtx] -&gt; Maybe RoleName -&gt; AuthMode
 </span><a href="Hasura.Server.Auth.html#AMAdminSecretAndJWT"><span class="hs-identifier hs-var">AMAdminSecretAndJWT</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306988"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">[JWTCtx]
-</span><a href="#local-6989586621689306979"><span class="hs-identifier hs-var">jwtCtxs</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span><span>
+</span><a href="#local-6989586621689307068"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621689307059"><span class="hs-identifier hs-var">jwtCtxs</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621689307065"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span><span>
 </span><span id="line-124"></span><span>    </span><span class="hs-comment">-- Nothing below this case uses unauth role. Throw a fatal error if we would otherwise ignore</span><span>
 </span><span id="line-125"></span><span>    </span><span class="hs-comment">-- that parameter, lest users misunderstand their auth configuration:</span><span>
 </span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">(Bool, Maybe AuthHook, Bool)
@@ -283,7 +283,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-127"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Maybe RoleName -&gt; Bool
 forall a. Maybe a -&gt; Bool
 </span><span class="hs-identifier hs-var">isJust</span></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689307065"><span class="hs-identifier hs-var">mUnAuthRole</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; ExceptT Text (ManagedT m) AuthMode
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ExceptT Text (ManagedT m) AuthMode)
@@ -295,7 +295,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-130"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306973"><span class="hs-identifier hs-var">requiresAdminScrtMsg</span></a></span><span>
+</span><a href="#local-6989586621689307053"><span class="hs-identifier hs-var">requiresAdminScrtMsg</span></a></span><span>
 </span><span id="line-131"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -308,8 +308,8 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">AuthMode
 </span><a href="Hasura.Server.Auth.html#AMNoAuth"><span class="hs-identifier hs-var">AMNoAuth</span></a></span><span>
 </span><span id="line-133"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689306972"><span class="annot"><span class="annottext">AuthHook
-</span><a href="#local-6989586621689306972"><span class="hs-identifier hs-var">hook</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689307052"><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689307052"><span class="hs-identifier hs-var">hook</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AuthMode -&gt; ExceptT Text (ManagedT m) AuthMode
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(AuthMode -&gt; ExceptT Text (ManagedT m) AuthMode)
@@ -317,8 +317,8 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash -&gt; AuthHook -&gt; AuthMode
 </span><a href="Hasura.Server.Auth.html#AMAdminSecretAndHook"><span class="hs-identifier hs-var">AMAdminSecretAndHook</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306988"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
-</span><a href="#local-6989586621689306972"><span class="hs-identifier hs-var">hook</span></a></span><span>
+</span><a href="#local-6989586621689307068"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689307052"><span class="hs-identifier hs-var">hook</span></a></span><span>
 </span><span id="line-134"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">AuthHook
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -333,7 +333,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306973"><span class="hs-identifier hs-var">requiresAdminScrtMsg</span></a></span><span>
+</span><a href="#local-6989586621689307053"><span class="hs-identifier hs-var">requiresAdminScrtMsg</span></a></span><span>
 </span><span id="line-137"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe AuthHook
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -348,7 +348,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306973"><span class="hs-identifier hs-var">requiresAdminScrtMsg</span></a></span><span>
+</span><a href="#local-6989586621689307053"><span class="hs-identifier hs-var">requiresAdminScrtMsg</span></a></span><span>
 </span><span id="line-140"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">AuthHook
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -359,8 +359,8 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span id="line-142"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Fatal Error: Both webhook and JWT mode cannot be enabled at the same time&quot;</span></span><span>
 </span><span id="line-143"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-144"></span><span>    </span><span id="local-6989586621689306973"><span class="annot"><span class="annottext">requiresAdminScrtMsg :: Text
-</span><a href="#local-6989586621689306973"><span class="hs-identifier hs-var hs-var">requiresAdminScrtMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621689307053"><span class="annot"><span class="annottext">requiresAdminScrtMsg :: Text
+</span><a href="#local-6989586621689307053"><span class="hs-identifier hs-var hs-var">requiresAdminScrtMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; requires --admin-secret (HASURA_GRAPHQL_ADMIN_SECRET) or &quot;</span></span><span>
 </span><span id="line-146"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -368,14 +368,14 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; --access-key (HASURA_GRAPHQL_ACCESS_KEY) to be set&quot;</span></span><span>
 </span><span id="line-147"></span><span>
-</span><span id="line-148"></span><span>    </span><span id="local-6989586621689307167"><span class="annot"><a href="#local-6989586621689306977"><span class="hs-identifier hs-type">mkJwtCtx</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-149"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307167"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-150"></span><span>        </span><span class="annot"><a href="Hasura.Tracing.html#HasReporter"><span class="hs-identifier hs-type">Tracing.HasReporter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307167"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-148"></span><span>    </span><span id="local-6989586621689307247"><span class="annot"><a href="#local-6989586621689307057"><span class="hs-identifier hs-type">mkJwtCtx</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-149"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Concurrent.Extended.html#ForkableMonadIO"><span class="hs-identifier hs-type">ForkableMonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307247"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-150"></span><span>        </span><span class="annot"><a href="Hasura.Tracing.html#HasReporter"><span class="hs-identifier hs-type">Tracing.HasReporter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307247"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-151"></span><span>      </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-152"></span><span>      </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-153"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307167"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCtx"><span class="hs-identifier hs-type">JWTCtx</span></a></span></span><span>
-</span><span id="line-154"></span><span>    </span><span id="local-6989586621689306977"><span class="annot"><span class="annottext">mkJwtCtx :: JWTConfig -&gt; ExceptT Text (ManagedT m) JWTCtx
-</span><a href="#local-6989586621689306977"><span class="hs-identifier hs-var hs-var">mkJwtCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689306965"><span id="local-6989586621689306966"><span id="local-6989586621689306967"><span id="local-6989586621689306968"><span id="local-6989586621689306969"><span id="local-6989586621689306970"><span class="annot"><span class="annottext">Maybe NominalDiffTime
+</span><span id="line-153"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Trans.Managed.html#ManagedT"><span class="hs-identifier hs-type">ManagedT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307247"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCtx"><span class="hs-identifier hs-type">JWTCtx</span></a></span></span><span>
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621689307057"><span class="annot"><span class="annottext">mkJwtCtx :: JWTConfig -&gt; ExceptT Text (ManagedT m) JWTCtx
+</span><a href="#local-6989586621689307057"><span class="hs-identifier hs-var hs-var">mkJwtCtx</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689307045"><span id="local-6989586621689307046"><span id="local-6989586621689307047"><span id="local-6989586621689307048"><span id="local-6989586621689307049"><span id="local-6989586621689307050"><span class="annot"><span class="annottext">Maybe NominalDiffTime
 Maybe Audience
 Maybe StringOrURI
 Maybe JWTHeader
@@ -394,11 +394,11 @@ jcIssuer :: Maybe StringOrURI
 jcAudience :: Maybe Audience
 jcKeyOrUrl :: Either JWK URI
 </span><a href="Hasura.Server.Auth.JWT.html#jcHeader"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-155"></span><span>      </span><span id="local-6989586621689306958"><span class="annot"><span class="annottext">IORef JWKSet
-</span><a href="#local-6989586621689306958"><span class="hs-identifier hs-var">jwkRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either JWK URI
-</span><a href="#local-6989586621689306970"><span class="hs-identifier hs-var">jcKeyOrUrl</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-156"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689306957"><span class="annot"><span class="annottext">JWK
-</span><a href="#local-6989586621689306957"><span class="hs-identifier hs-var">jwk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
+</span><span id="line-155"></span><span>      </span><span id="local-6989586621689307038"><span class="annot"><span class="annottext">IORef JWKSet
+</span><a href="#local-6989586621689307038"><span class="hs-identifier hs-var">jwkRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either JWK URI
+</span><a href="#local-6989586621689307050"><span class="hs-identifier hs-var">jcKeyOrUrl</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-156"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689307037"><span class="annot"><span class="annottext">JWK
+</span><a href="#local-6989586621689307037"><span class="hs-identifier hs-var">jwk</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet))
 -&gt; IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
@@ -407,17 +407,17 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. a -&gt; IO (IORef a)
 </span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[JWK] -&gt; JWKSet
 </span><span class="hs-identifier hs-var">JWKSet</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">JWK
-</span><a href="#local-6989586621689306957"><span class="hs-identifier hs-var">jwk</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-157"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689306954"><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621689306954"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">URI -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
-</span><a href="#local-6989586621689306953"><span class="hs-identifier hs-var">getJwkFromUrl</span></a></span><span> </span><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621689306954"><span class="hs-identifier hs-var">url</span></a></span><span>
-</span><span id="line-158"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689306952"><span class="annot"><span class="annottext">jwtHeader :: JWTHeader
-</span><a href="#local-6989586621689306952"><span class="hs-identifier hs-var hs-var">jwtHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JWTHeader -&gt; Maybe JWTHeader -&gt; JWTHeader
+</span><a href="#local-6989586621689307037"><span class="hs-identifier hs-var">jwk</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-157"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689307034"><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621689307034"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">URI -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
+</span><a href="#local-6989586621689307033"><span class="hs-identifier hs-var">getJwkFromUrl</span></a></span><span> </span><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621689307034"><span class="hs-identifier hs-var">url</span></a></span><span>
+</span><span id="line-158"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689307032"><span class="annot"><span class="annottext">jwtHeader :: JWTHeader
+</span><a href="#local-6989586621689307032"><span class="hs-identifier hs-var hs-var">jwtHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JWTHeader -&gt; Maybe JWTHeader -&gt; JWTHeader
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">JWTHeader
 </span><a href="Hasura.Server.Auth.JWT.html#JHAuthorization"><span class="hs-identifier hs-var">JHAuthorization</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe JWTHeader
-</span><a href="#local-6989586621689306965"><span class="hs-identifier hs-var">jcHeader</span></a></span><span>
+</span><a href="#local-6989586621689307045"><span class="hs-identifier hs-var">jcHeader</span></a></span><span>
 </span><span id="line-159"></span><span>      </span><span class="annot"><span class="annottext">JWTCtx -&gt; ExceptT Text (ManagedT m) JWTCtx
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(JWTCtx -&gt; ExceptT Text (ManagedT m) JWTCtx)
@@ -431,20 +431,20 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; JWTHeader
 -&gt; JWTCtx
 </span><a href="Hasura.Server.Auth.JWT.html#JWTCtx"><span class="hs-identifier hs-var">JWTCtx</span></a></span><span> </span><span class="annot"><span class="annottext">IORef JWKSet
-</span><a href="#local-6989586621689306958"><span class="hs-identifier hs-var">jwkRef</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Audience
-</span><a href="#local-6989586621689306969"><span class="hs-identifier hs-var">jcAudience</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe StringOrURI
-</span><a href="#local-6989586621689306968"><span class="hs-identifier hs-var">jcIssuer</span></a></span><span> </span><span class="annot"><span class="annottext">JWTClaims
-</span><a href="#local-6989586621689306967"><span class="hs-identifier hs-var">jcClaims</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
-</span><a href="#local-6989586621689306966"><span class="hs-identifier hs-var">jcAllowedSkew</span></a></span><span> </span><span class="annot"><span class="annottext">JWTHeader
-</span><a href="#local-6989586621689306952"><span class="hs-identifier hs-var">jwtHeader</span></a></span><span>
+</span><a href="#local-6989586621689307038"><span class="hs-identifier hs-var">jwkRef</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Audience
+</span><a href="#local-6989586621689307049"><span class="hs-identifier hs-var">jcAudience</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe StringOrURI
+</span><a href="#local-6989586621689307048"><span class="hs-identifier hs-var">jcIssuer</span></a></span><span> </span><span class="annot"><span class="annottext">JWTClaims
+</span><a href="#local-6989586621689307047"><span class="hs-identifier hs-var">jcClaims</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
+</span><a href="#local-6989586621689307046"><span class="hs-identifier hs-var">jcAllowedSkew</span></a></span><span> </span><span class="annot"><span class="annottext">JWTHeader
+</span><a href="#local-6989586621689307032"><span class="hs-identifier hs-var">jwtHeader</span></a></span><span>
 </span><span id="line-160"></span><span>      </span><span class="hs-keyword">where</span><span>
 </span><span id="line-161"></span><span>        </span><span class="hs-comment">-- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@</span><span>
 </span><span id="line-162"></span><span>        </span><span class="hs-comment">-- header), do not start a background thread for refreshing the JWK</span><span>
-</span><span id="line-163"></span><span>        </span><span id="local-6989586621689306953"><span class="annot"><span class="annottext">getJwkFromUrl :: URI -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
-</span><a href="#local-6989586621689306953"><span class="hs-identifier hs-var hs-var">getJwkFromUrl</span></a></span></span><span> </span><span id="local-6989586621689306948"><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621689306948"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-164"></span><span>          </span><span id="local-6989586621689306947"><span class="annot"><span class="annottext">IORef JWKSet
-</span><a href="#local-6989586621689306947"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
+</span><span id="line-163"></span><span>        </span><span id="local-6989586621689307033"><span class="annot"><span class="annottext">getJwkFromUrl :: URI -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
+</span><a href="#local-6989586621689307033"><span class="hs-identifier hs-var hs-var">getJwkFromUrl</span></a></span></span><span> </span><span id="local-6989586621689307028"><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621689307028"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-164"></span><span>          </span><span id="local-6989586621689307027"><span class="annot"><span class="annottext">IORef JWKSet
+</span><a href="#local-6989586621689307027"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet))
 -&gt; IO (IORef JWKSet) -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
@@ -455,8 +455,8 @@ forall a. a -&gt; IO (IORef a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[JWK] -&gt; JWKSet
 </span><span class="hs-identifier hs-var">JWKSet</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-165"></span><span>          </span><span id="local-6989586621689306946"><span class="annot"><span class="annottext">Maybe NominalDiffTime
-</span><a href="#local-6989586621689306946"><span class="hs-identifier hs-var">maybeExpiry</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(forall a. m a -&gt; ManagedT m a)
+</span><span id="line-165"></span><span>          </span><span id="local-6989586621689307026"><span class="annot"><span class="annottext">Maybe NominalDiffTime
+</span><a href="#local-6989586621689307026"><span class="hs-identifier hs-var">maybeExpiry</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(forall a. m a -&gt; ManagedT m a)
 -&gt; ExceptT Text m (Maybe NominalDiffTime)
 -&gt; ExceptT Text (ManagedT m) (Maybe NominalDiffTime)
 forall k (t :: (* -&gt; *) -&gt; k -&gt; *) (m :: * -&gt; *) (n :: * -&gt; *)
@@ -477,7 +477,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (m :: * -&gt; *) a.
 MonadError Text m =&gt;
 ExceptT JwkFetchError m (Maybe a) -&gt; m (Maybe a)
-</span><a href="#local-6989586621689306944"><span class="hs-identifier hs-var">withJwkError</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT JwkFetchError (ExceptT Text m) (Maybe NominalDiffTime)
+</span><a href="#local-6989586621689307024"><span class="hs-identifier hs-var">withJwkError</span></a></span><span> </span><span class="annot"><span class="annottext">(ExceptT JwkFetchError (ExceptT Text m) (Maybe NominalDiffTime)
  -&gt; ExceptT Text m (Maybe NominalDiffTime))
 -&gt; ExceptT JwkFetchError (ExceptT Text m) (Maybe NominalDiffTime)
 -&gt; ExceptT Text m (Maybe NominalDiffTime)
@@ -509,19 +509,19 @@ forall (m :: * -&gt; *).
 Logger Hasura
 -&gt; Manager -&gt; URI -&gt; IORef JWKSet -&gt; m (Maybe NominalDiffTime)
 </span><a href="Hasura.Server.Auth.JWT.html#updateJwkRef"><span class="hs-identifier hs-var">updateJwkRef</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689306983"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689306984"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621689306948"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">IORef JWKSet
-</span><a href="#local-6989586621689306947"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><a href="#local-6989586621689307063"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689307064"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621689307028"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">IORef JWKSet
+</span><a href="#local-6989586621689307027"><span class="hs-identifier hs-var">ref</span></a></span><span>
 </span><span id="line-166"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
-</span><a href="#local-6989586621689306946"><span class="hs-identifier hs-var">maybeExpiry</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689307026"><span class="hs-identifier hs-var">maybeExpiry</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-167"></span><span>            </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IORef JWKSet -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">IORef JWKSet
-</span><a href="#local-6989586621689306947"><span class="hs-identifier hs-var">ref</span></a></span><span>
-</span><span id="line-168"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689306942"><span class="annot"><span class="annottext">NominalDiffTime
-</span><a href="#local-6989586621689306942"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689307027"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><span id="line-168"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689307022"><span class="annot"><span class="annottext">NominalDiffTime
+</span><a href="#local-6989586621689307022"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-169"></span><span>              </span><span class="annot"><span class="annottext">ExceptT Text (ManagedT m) Thread -&gt; ExceptT Text (ManagedT m) ()
 forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT Text (ManagedT m) Thread -&gt; ExceptT Text (ManagedT m) ())
@@ -543,7 +543,7 @@ ForkableMonadIO m =&gt;
 String -&gt; Logger Hasura -&gt; m Void -&gt; ManagedT m Thread
 </span><a href="Control.Concurrent.Extended.html#forkManagedT"><span class="hs-identifier hs-var">forkManagedT</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;jwkRefreshCtrl&quot;</span></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689306983"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; ManagedT m Thread) -&gt; m Void -&gt; ManagedT m Thread
+</span><a href="#local-6989586621689307063"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(m Void -&gt; ManagedT m Thread) -&gt; m Void -&gt; ManagedT m Thread
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-171"></span><span>                  </span><span class="annot"><span class="annottext">Logger Hasura
@@ -553,58 +553,58 @@ forall (m :: * -&gt; *) void.
 Logger Hasura
 -&gt; Manager -&gt; URI -&gt; IORef JWKSet -&gt; DiffTime -&gt; m void
 </span><a href="Hasura.Server.Auth.JWT.html#jwkRefreshCtrl"><span class="hs-identifier hs-var">jwkRefreshCtrl</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
-</span><a href="#local-6989586621689306983"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689306984"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621689306948"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">IORef JWKSet
-</span><a href="#local-6989586621689306947"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NominalDiffTime -&gt; DiffTime
+</span><a href="#local-6989586621689307063"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689307064"><span class="hs-identifier hs-var">httpManager</span></a></span><span> </span><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621689307028"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">IORef JWKSet
+</span><a href="#local-6989586621689307027"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NominalDiffTime -&gt; DiffTime
 forall x y. (Duration x, Duration y) =&gt; x -&gt; y
 </span><a href="Data.Time.Clock.Units.html#convertDuration"><span class="hs-identifier hs-var">convertDuration</span></a></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
-</span><a href="#local-6989586621689306942"><span class="hs-identifier hs-var">time</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689307022"><span class="hs-identifier hs-var">time</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-172"></span><span>              </span><span class="annot"><span class="annottext">IORef JWKSet -&gt; ExceptT Text (ManagedT m) (IORef JWKSet)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">IORef JWKSet
-</span><a href="#local-6989586621689306947"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><a href="#local-6989586621689307027"><span class="hs-identifier hs-var">ref</span></a></span><span>
 </span><span id="line-173"></span><span>
-</span><span id="line-174"></span><span>        </span><span id="local-6989586621689306944"><span class="annot"><span class="annottext">withJwkError :: ExceptT JwkFetchError m (Maybe a) -&gt; m (Maybe a)
-</span><a href="#local-6989586621689306944"><span class="hs-identifier hs-var hs-var">withJwkError</span></a></span></span><span> </span><span id="local-6989586621689306938"><span class="annot"><span class="annottext">ExceptT JwkFetchError m (Maybe a)
-</span><a href="#local-6989586621689306938"><span class="hs-identifier hs-var">act</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-175"></span><span>          </span><span id="local-6989586621689306937"><span class="annot"><span class="annottext">Either JwkFetchError (Maybe a)
-</span><a href="#local-6989586621689306937"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT JwkFetchError m (Maybe a)
+</span><span id="line-174"></span><span>        </span><span id="local-6989586621689307024"><span class="annot"><span class="annottext">withJwkError :: ExceptT JwkFetchError m (Maybe a) -&gt; m (Maybe a)
+</span><a href="#local-6989586621689307024"><span class="hs-identifier hs-var hs-var">withJwkError</span></a></span></span><span> </span><span id="local-6989586621689307018"><span class="annot"><span class="annottext">ExceptT JwkFetchError m (Maybe a)
+</span><a href="#local-6989586621689307018"><span class="hs-identifier hs-var">act</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-175"></span><span>          </span><span id="local-6989586621689307017"><span class="annot"><span class="annottext">Either JwkFetchError (Maybe a)
+</span><a href="#local-6989586621689307017"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ExceptT JwkFetchError m (Maybe a)
 -&gt; m (Either JwkFetchError (Maybe a))
 forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><span class="hs-identifier hs-var">runExceptT</span></span><span> </span><span class="annot"><span class="annottext">ExceptT JwkFetchError m (Maybe a)
-</span><a href="#local-6989586621689306938"><span class="hs-identifier hs-var">act</span></a></span><span>
+</span><a href="#local-6989586621689307018"><span class="hs-identifier hs-var">act</span></a></span><span>
 </span><span id="line-176"></span><span>          </span><span class="annot"><span class="annottext">Either JwkFetchError (Maybe a)
 -&gt; (JwkFetchError -&gt; m (Maybe a)) -&gt; m (Maybe a)
 forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="Hasura.Prelude.html#onLeft"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either JwkFetchError (Maybe a)
-</span><a href="#local-6989586621689306937"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="annot"><span class="annottext">((JwkFetchError -&gt; m (Maybe a)) -&gt; m (Maybe a))
+</span><a href="#local-6989586621689307017"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="annot"><span class="annottext">((JwkFetchError -&gt; m (Maybe a)) -&gt; m (Maybe a))
 -&gt; (JwkFetchError -&gt; m (Maybe a)) -&gt; m (Maybe a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-177"></span><span>            </span><span class="hs-comment">-- when fetching JWK initially, except expiry parsing error, all errors are critical</span><span>
 </span><span id="line-178"></span><span>            </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEHttpException"><span class="hs-identifier hs-type">JFEHttpException</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689306933"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306933"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe a)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689307013"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689307013"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe a)
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306933"><span class="hs-identifier hs-var">msg</span></a></span><span>
+</span><a href="#local-6989586621689307013"><span class="hs-identifier hs-var">msg</span></a></span><span>
 </span><span id="line-179"></span><span>            </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEHttpError"><span class="hs-identifier hs-type">JFEHttpError</span></a></span><span> </span><span class="annot"><span class="annottext">URI
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Status
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689306931"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306931"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe a)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689307011"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689307011"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe a)
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306931"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689307011"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-180"></span><span>            </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEJwkParseError"><span class="hs-identifier hs-type">JFEJwkParseError</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689306929"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306929"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe a)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689307009"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689307009"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (Maybe a)
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306929"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><a href="#local-6989586621689307009"><span class="hs-identifier hs-var">e</span></a></span><span>
 </span><span id="line-181"></span><span>            </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEExpiryParseError"><span class="hs-identifier hs-type">JFEExpiryParseError</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a -&gt; m (Maybe a)
@@ -615,14 +615,14 @@ forall a. Maybe a
 </span><span id="line-182"></span><span>
 </span><span id="line-183"></span><span class="hs-comment">-- | Authenticate the request using the headers and the configured 'AuthMode'.</span><span>
 </span><span id="line-184"></span><span class="annot"><a href="Hasura.Server.Auth.html#getUserInfoWithExpTime"><span class="hs-identifier hs-type">getUserInfoWithExpTime</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-185"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689306927"><span class="annot"><a href="#local-6989586621689306927"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-186"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689306927"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689306927"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689306927"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689306927"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-185"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689307007"><span class="annot"><a href="#local-6989586621689307007"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-186"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689307007"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689307007"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307007"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307007"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-187"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-188"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-190"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-191"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#ReqsText"><span class="hs-identifier hs-type">ReqsText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-192"></span><span>  </span><span class="annot"><a href="#local-6989586621689306927"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-192"></span><span>  </span><span class="annot"><a href="#local-6989586621689307007"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-193"></span><span id="getUserInfoWithExpTime"><span class="annot"><span class="annottext">getUserInfoWithExpTime :: Logger Hasura
 -&gt; Manager
 -&gt; [Header]
@@ -692,28 +692,28 @@ forall (m :: * -&gt; *).
 </span><span id="line-194"></span><span>
 </span><span id="line-195"></span><span class="hs-comment">-- Broken out for testing with mocks:</span><span>
 </span><span id="line-196"></span><span class="annot"><a href="Hasura.Server.Auth.html#getUserInfoWithExpTime_"><span class="hs-identifier hs-type">getUserInfoWithExpTime_</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-197"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689307094"><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689307091"><span class="annot"><a href="#local-6989586621689307091"><span class="hs-identifier hs-type">mgr</span></a></span></span><span> </span><span id="local-6989586621689307092"><span class="annot"><a href="#local-6989586621689307092"><span class="hs-identifier hs-type">logger</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-198"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-197"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689307174"><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689307171"><span class="annot"><a href="#local-6989586621689307171"><span class="hs-identifier hs-type">mgr</span></a></span></span><span> </span><span id="local-6989586621689307172"><span class="annot"><a href="#local-6989586621689307172"><span class="hs-identifier hs-type">logger</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-198"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-199"></span><span>  </span><span class="hs-comment">-- | mock 'userInfoFromAuthHook'</span><span>
-</span><span id="line-200"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="#local-6989586621689307092"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-201"></span><span>    </span><span class="annot"><a href="#local-6989586621689307091"><span class="hs-identifier hs-type">mgr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-200"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="#local-6989586621689307172"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-201"></span><span>    </span><span class="annot"><a href="#local-6989586621689307171"><span class="hs-identifier hs-type">mgr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-202"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-type">AuthHook</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-203"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-204"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#ReqsText"><span class="hs-identifier hs-type">ReqsText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-205"></span><span>    </span><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-205"></span><span>    </span><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-206"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-207"></span><span>  </span><span class="hs-comment">-- | mock 'processJwt'</span><span>
 </span><span id="line-208"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCtx"><span class="hs-identifier hs-type">JWTCtx</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-209"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-210"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-211"></span><span>    </span><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-211"></span><span>    </span><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-212"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-213"></span><span>  </span><span class="annot"><a href="#local-6989586621689307092"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-214"></span><span>  </span><span class="annot"><a href="#local-6989586621689307091"><span class="hs-identifier hs-type">mgr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-213"></span><span>  </span><span class="annot"><a href="#local-6989586621689307172"><span class="hs-identifier hs-type">logger</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-214"></span><span>  </span><span class="annot"><a href="#local-6989586621689307171"><span class="hs-identifier hs-type">mgr</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-215"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-216"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AuthMode"><span class="hs-identifier hs-type">AuthMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-217"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#ReqsText"><span class="hs-identifier hs-type">ReqsText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-218"></span><span>  </span><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>  </span><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-219"></span><span id="getUserInfoWithExpTime_"><span class="annot"><span class="annottext">getUserInfoWithExpTime_ :: (logger
  -&gt; mgr
  -&gt; AuthHook
@@ -730,44 +730,44 @@ forall (m :: * -&gt; *).
 -&gt; AuthMode
 -&gt; Maybe ReqsText
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="Hasura.Server.Auth.html#getUserInfoWithExpTime_"><span class="hs-identifier hs-var hs-var">getUserInfoWithExpTime_</span></a></span></span><span> </span><span id="local-6989586621689306925"><span class="annot"><span class="annottext">logger
+</span><a href="Hasura.Server.Auth.html#getUserInfoWithExpTime_"><span class="hs-identifier hs-var hs-var">getUserInfoWithExpTime_</span></a></span></span><span> </span><span id="local-6989586621689307005"><span class="annot"><span class="annottext">logger
 -&gt; mgr
 -&gt; AuthHook
 -&gt; [Header]
 -&gt; Maybe ReqsText
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306925"><span class="hs-identifier hs-var">userInfoFromAuthHook_</span></a></span></span><span> </span><span id="local-6989586621689306924"><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621689307005"><span class="hs-identifier hs-var">userInfoFromAuthHook_</span></a></span></span><span> </span><span id="local-6989586621689307004"><span class="annot"><span class="annottext">[JWTCtx]
 -&gt; [Header]
 -&gt; Maybe RoleName
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306924"><span class="hs-identifier hs-var">processJwt_</span></a></span></span><span> </span><span id="local-6989586621689306923"><span class="annot"><span class="annottext">logger
-</span><a href="#local-6989586621689306923"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689306922"><span class="annot"><span class="annottext">mgr
-</span><a href="#local-6989586621689306922"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span id="local-6989586621689306921"><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689306921"><span class="hs-identifier hs-var">rawHeaders</span></a></span></span><span> </span><span id="local-6989586621689306920"><span class="annot"><span class="annottext">AuthMode
-</span><a href="#local-6989586621689306920"><span class="hs-identifier hs-var">authMode</span></a></span></span><span> </span><span id="local-6989586621689306919"><span class="annot"><span class="annottext">Maybe ReqsText
-</span><a href="#local-6989586621689306919"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AuthMode
-</span><a href="#local-6989586621689306920"><span class="hs-identifier hs-var">authMode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689307004"><span class="hs-identifier hs-var">processJwt_</span></a></span></span><span> </span><span id="local-6989586621689307003"><span class="annot"><span class="annottext">logger
+</span><a href="#local-6989586621689307003"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689307002"><span class="annot"><span class="annottext">mgr
+</span><a href="#local-6989586621689307002"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span id="local-6989586621689307001"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689307001"><span class="hs-identifier hs-var">rawHeaders</span></a></span></span><span> </span><span id="local-6989586621689307000"><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621689307000"><span class="hs-identifier hs-var">authMode</span></a></span></span><span> </span><span id="local-6989586621689306999"><span class="annot"><span class="annottext">Maybe ReqsText
+</span><a href="#local-6989586621689306999"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AuthMode
+</span><a href="#local-6989586621689307000"><span class="hs-identifier hs-var">authMode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-220"></span><span>  </span><span class="annot"><span class="annottext">AuthMode
 </span><a href="Hasura.Server.Auth.html#AMNoAuth"><span class="hs-identifier hs-var">AMNoAuth</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header])
 forall (f :: * -&gt; *) t a a. Functor f =&gt; f t -&gt; f (t, Maybe a, [a])
-</span><a href="#local-6989586621689306918"><span class="hs-identifier hs-var">withNoExpTime</span></a></span><span> </span><span class="annot"><span class="annottext">(m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header]))
+</span><a href="#local-6989586621689306998"><span class="hs-identifier hs-var">withNoExpTime</span></a></span><span> </span><span class="annot"><span class="annottext">(m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header]))
 -&gt; m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret -&gt; m UserInfo
-</span><a href="#local-6989586621689306917"><span class="hs-identifier hs-var">mkUserInfoFallbackAdminRole</span></a></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
+</span><a href="#local-6989586621689306997"><span class="hs-identifier hs-var">mkUserInfoFallbackAdminRole</span></a></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
 </span><a href="Hasura.Session.html#UAuthNotSet"><span class="hs-identifier hs-var">UAuthNotSet</span></a></span><span>
 </span><span id="line-221"></span><span>  </span><span class="hs-comment">-- If hasura was started with an admin secret we:</span><span>
 </span><span id="line-222"></span><span>  </span><span class="hs-comment">--   - check if a secret was sent in the request</span><span>
 </span><span id="line-223"></span><span>  </span><span class="hs-comment">--     - if so, check it and authorize as admin else fail</span><span>
 </span><span id="line-224"></span><span>  </span><span class="hs-comment">--   - if not proceed with either webhook or JWT auth if configured</span><span>
-</span><span id="line-225"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecret"><span class="hs-identifier hs-type">AMAdminSecret</span></a></span><span> </span><span id="local-6989586621689306915"><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306915"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306914"><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306914"><span class="hs-identifier hs-var">maybeUnauthRole</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-225"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecret"><span class="hs-identifier hs-type">AMAdminSecret</span></a></span><span> </span><span id="local-6989586621689306995"><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306995"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306994"><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621689306994"><span class="hs-identifier hs-var">maybeUnauthRole</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-226"></span><span>    </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306913"><span class="hs-identifier hs-var">checkingSecretIfSent</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306915"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">(m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="#local-6989586621689306993"><span class="hs-identifier hs-var">checkingSecretIfSent</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306995"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">(m (UserInfo, Maybe UTCTime, [Header])
  -&gt; m (UserInfo, Maybe UTCTime, [Header]))
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
@@ -775,10 +775,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-227"></span><span>      </span><span class="annot"><span class="annottext">m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header])
 forall (f :: * -&gt; *) t a a. Functor f =&gt; f t -&gt; f (t, Maybe a, [a])
-</span><a href="#local-6989586621689306918"><span class="hs-identifier hs-var">withNoExpTime</span></a></span><span>
+</span><a href="#local-6989586621689306998"><span class="hs-identifier hs-var">withNoExpTime</span></a></span><span>
 </span><span id="line-228"></span><span>        </span><span class="hs-comment">-- Consider unauthorized role, if not found raise admin secret header required exception</span><span>
 </span><span id="line-229"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306914"><span class="hs-identifier hs-var">maybeUnauthRole</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689306994"><span class="hs-identifier hs-var">maybeUnauthRole</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-230"></span><span>          </span><span class="annot"><span class="annottext">Maybe RoleName
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-231"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; m UserInfo
@@ -801,26 +801,26 @@ forall a. IsString a =&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; required, but not found&quot;</span></span><span>
-</span><span id="line-235"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689306909"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689306909"><span class="hs-identifier hs-var">unAuthRole</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-235"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689306989"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689306989"><span class="hs-identifier hs-var">unAuthRole</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-236"></span><span>            </span><span class="annot"><span class="annottext">UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
 </span><a href="Hasura.Session.html#mkUserInfo"><span class="hs-identifier hs-var">mkUserInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RoleName -&gt; UserRoleBuild
 </span><a href="Hasura.Session.html#URBPreDetermined"><span class="hs-identifier hs-var">URBPreDetermined</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689306909"><span class="hs-identifier hs-var">unAuthRole</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
+</span><a href="#local-6989586621689306989"><span class="hs-identifier hs-var">unAuthRole</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
 </span><a href="Hasura.Session.html#UAdminSecretNotSent"><span class="hs-identifier hs-var">UAdminSecretNotSent</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689306905"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
+</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
 </span><span id="line-237"></span><span>  </span><span class="hs-comment">-- this is the case that actually ends up consuming the request AST</span><span>
-</span><span id="line-238"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndHook"><span class="hs-identifier hs-type">AMAdminSecretAndHook</span></a></span><span> </span><span id="local-6989586621689306904"><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306904"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306903"><span class="annot"><span class="annottext">AuthHook
-</span><a href="#local-6989586621689306903"><span class="hs-identifier hs-var">hook</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-238"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndHook"><span class="hs-identifier hs-type">AMAdminSecretAndHook</span></a></span><span> </span><span id="local-6989586621689306984"><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306984"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306983"><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689306983"><span class="hs-identifier hs-var">hook</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-239"></span><span>    </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306913"><span class="hs-identifier hs-var">checkingSecretIfSent</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306904"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">(m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="#local-6989586621689306993"><span class="hs-identifier hs-var">checkingSecretIfSent</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306984"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">(m (UserInfo, Maybe UTCTime, [Header])
  -&gt; m (UserInfo, Maybe UTCTime, [Header]))
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
@@ -831,21 +831,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [Header]
 -&gt; Maybe ReqsText
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306925"><span class="hs-identifier hs-var">userInfoFromAuthHook_</span></a></span><span> </span><span class="annot"><span class="annottext">logger
-</span><a href="#local-6989586621689306923"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">mgr
-</span><a href="#local-6989586621689306922"><span class="hs-identifier hs-var">manager</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
-</span><a href="#local-6989586621689306903"><span class="hs-identifier hs-var">hook</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689306921"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ReqsText
-</span><a href="#local-6989586621689306919"><span class="hs-identifier hs-var">reqs</span></a></span><span>
-</span><span id="line-240"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndJWT"><span class="hs-identifier hs-type">AMAdminSecretAndJWT</span></a></span><span> </span><span id="local-6989586621689306902"><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306902"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306901"><span class="annot"><span class="annottext">[JWTCtx]
-</span><a href="#local-6989586621689306901"><span class="hs-identifier hs-var">jwtSecrets</span></a></span></span><span> </span><span id="local-6989586621689306900"><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306900"><span class="hs-identifier hs-var">unAuthRole</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689307005"><span class="hs-identifier hs-var">userInfoFromAuthHook_</span></a></span><span> </span><span class="annot"><span class="annottext">logger
+</span><a href="#local-6989586621689307003"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">mgr
+</span><a href="#local-6989586621689307002"><span class="hs-identifier hs-var">manager</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689306983"><span class="hs-identifier hs-var">hook</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689307001"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ReqsText
+</span><a href="#local-6989586621689306999"><span class="hs-identifier hs-var">reqs</span></a></span><span>
+</span><span id="line-240"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.html#AMAdminSecretAndJWT"><span class="hs-identifier hs-type">AMAdminSecretAndJWT</span></a></span><span> </span><span id="local-6989586621689306982"><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306982"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306981"><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621689306981"><span class="hs-identifier hs-var">jwtSecrets</span></a></span></span><span> </span><span id="local-6989586621689306980"><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621689306980"><span class="hs-identifier hs-var">unAuthRole</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-241"></span><span>    </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306913"><span class="hs-identifier hs-var">checkingSecretIfSent</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306902"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">(m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="#local-6989586621689306993"><span class="hs-identifier hs-var">checkingSecretIfSent</span></a></span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306982"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span> </span><span class="annot"><span class="annottext">(m (UserInfo, Maybe UTCTime, [Header])
  -&gt; m (UserInfo, Maybe UTCTime, [Header]))
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
@@ -854,15 +854,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [Header]
 -&gt; Maybe RoleName
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306924"><span class="hs-identifier hs-var">processJwt_</span></a></span><span> </span><span class="annot"><span class="annottext">[JWTCtx]
-</span><a href="#local-6989586621689306901"><span class="hs-identifier hs-var">jwtSecrets</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689306921"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621689306900"><span class="hs-identifier hs-var">unAuthRole</span></a></span><span>
+</span><a href="#local-6989586621689307004"><span class="hs-identifier hs-var">processJwt_</span></a></span><span> </span><span class="annot"><span class="annottext">[JWTCtx]
+</span><a href="#local-6989586621689306981"><span class="hs-identifier hs-var">jwtSecrets</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689307001"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621689306980"><span class="hs-identifier hs-var">unAuthRole</span></a></span><span>
 </span><span id="line-242"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-243"></span><span>    </span><span class="hs-comment">-- CAREFUL!:</span><span>
-</span><span id="line-244"></span><span>    </span><span id="local-6989586621689306917"><span class="annot"><span class="annottext">mkUserInfoFallbackAdminRole :: UserAdminSecret -&gt; m UserInfo
-</span><a href="#local-6989586621689306917"><span class="hs-identifier hs-var hs-var">mkUserInfoFallbackAdminRole</span></a></span></span><span> </span><span id="local-6989586621689306899"><span class="annot"><span class="annottext">UserAdminSecret
-</span><a href="#local-6989586621689306899"><span class="hs-identifier hs-var">adminSecretState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-244"></span><span>    </span><span id="local-6989586621689306997"><span class="annot"><span class="annottext">mkUserInfoFallbackAdminRole :: UserAdminSecret -&gt; m UserInfo
+</span><a href="#local-6989586621689306997"><span class="hs-identifier hs-var hs-var">mkUserInfoFallbackAdminRole</span></a></span></span><span> </span><span id="local-6989586621689306979"><span class="annot"><span class="annottext">UserAdminSecret
+</span><a href="#local-6989586621689306979"><span class="hs-identifier hs-var">adminSecretState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-245"></span><span>      </span><span class="annot"><span class="annottext">UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
 forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
@@ -872,25 +872,25 @@ UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
 </span><a href="Hasura.Session.html#URBFromSessionVariablesFallback"><span class="hs-identifier hs-var">URBFromSessionVariablesFallback</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="Hasura.Session.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-247"></span><span>        </span><span class="annot"><span class="annottext">UserAdminSecret
-</span><a href="#local-6989586621689306899"><span class="hs-identifier hs-var">adminSecretState</span></a></span><span>
+</span><a href="#local-6989586621689306979"><span class="hs-identifier hs-var">adminSecretState</span></a></span><span>
 </span><span id="line-248"></span><span>        </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689306905"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
+</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span>
 </span><span id="line-249"></span><span>
-</span><span id="line-250"></span><span>    </span><span id="local-6989586621689306905"><span class="annot"><span class="annottext">sessionVariables :: SessionVariables
-</span><a href="#local-6989586621689306905"><span class="hs-identifier hs-var hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; SessionVariables
+</span><span id="line-250"></span><span>    </span><span id="local-6989586621689306985"><span class="annot"><span class="annottext">sessionVariables :: SessionVariables
+</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var hs-var">sessionVariables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; SessionVariables
 </span><a href="Hasura.Session.html#mkSessionVariablesHeaders"><span class="hs-identifier hs-var">mkSessionVariablesHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
-</span><a href="#local-6989586621689306921"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span>
+</span><a href="#local-6989586621689307001"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span>
 </span><span id="line-251"></span><span>
-</span><span id="line-252"></span><span>    </span><span class="annot"><a href="#local-6989586621689306913"><span class="hs-identifier hs-type">checkingSecretIfSent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-253"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689307094"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-254"></span><span>    </span><span id="local-6989586621689306913"><span class="annot"><span class="annottext">checkingSecretIfSent :: HashSet AdminSecretHash
+</span><span id="line-252"></span><span>    </span><span class="annot"><a href="#local-6989586621689306993"><span class="hs-identifier hs-type">checkingSecretIfSent</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-253"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.html#AdminSecretHash"><span class="hs-identifier hs-type">AdminSecretHash</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689307174"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-254"></span><span>    </span><span id="local-6989586621689306993"><span class="annot"><span class="annottext">checkingSecretIfSent :: HashSet AdminSecretHash
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
 -&gt; m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306913"><span class="hs-identifier hs-var hs-var">checkingSecretIfSent</span></a></span></span><span> </span><span id="local-6989586621689306895"><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306895"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306894"><span class="annot"><span class="annottext">m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306894"><span class="hs-identifier hs-var">actionIfNoAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-255"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689306893"><span class="annot"><span class="annottext">maybeRequestAdminSecret :: Maybe Text
-</span><a href="#local-6989586621689306893"><span class="hs-identifier hs-var hs-var">maybeRequestAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689306993"><span class="hs-identifier hs-var hs-var">checkingSecretIfSent</span></a></span></span><span> </span><span id="local-6989586621689306975"><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306975"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span></span><span> </span><span id="local-6989586621689306974"><span class="annot"><span class="annottext">m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="#local-6989586621689306974"><span class="hs-identifier hs-var">actionIfNoAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-255"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689306973"><span class="annot"><span class="annottext">maybeRequestAdminSecret :: Maybe Text
+</span><a href="#local-6989586621689306973"><span class="hs-identifier hs-var hs-var">maybeRequestAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-256"></span><span>            </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Maybe Text -&gt; Maybe Text)
 -&gt; [Maybe Text] -&gt; Maybe Text
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; a -&gt; a) -&gt; t a -&gt; a
@@ -905,7 +905,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span>
 </span><span id="line-258"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe Text
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-operator hs-var">`getSessionVariableValue`</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
-</span><a href="#local-6989586621689306905"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689306985"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-259"></span><span>                </span><span class="hs-special">[</span><span class="annot"><span class="annottext">SessionVariable
 forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#adminSecretHeader"><span class="hs-identifier hs-var">adminSecretHeader</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SessionVariable
@@ -914,20 +914,20 @@ forall a. IsString a =&gt; a
 </span><span id="line-260"></span><span>
 </span><span id="line-261"></span><span>      </span><span class="hs-comment">-- when admin secret is absent, run the action to retrieve UserInfo</span><span>
 </span><span id="line-262"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689306893"><span class="hs-identifier hs-var">maybeRequestAdminSecret</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689306973"><span class="hs-identifier hs-var">maybeRequestAdminSecret</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-263"></span><span>        </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (UserInfo, Maybe UTCTime, [Header])
-</span><a href="#local-6989586621689306894"><span class="hs-identifier hs-var">actionIfNoAdminSecret</span></a></span><span>
-</span><span id="line-264"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689306889"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306889"><span class="hs-identifier hs-var">requestAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689306974"><span class="hs-identifier hs-var">actionIfNoAdminSecret</span></a></span><span>
+</span><span id="line-264"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689306969"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689306969"><span class="hs-identifier hs-var">requestAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-265"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AdminSecretHash -&gt; HashSet AdminSecretHash -&gt; Bool
 forall a. (Eq a, Hashable a) =&gt; a -&gt; HashSet a -&gt; Bool
 </span><span class="hs-identifier hs-var">Set.member</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; AdminSecretHash
 </span><a href="Hasura.Server.Auth.html#hashAdminSecret"><span class="hs-identifier hs-var">hashAdminSecret</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689306889"><span class="hs-identifier hs-var">requestAdminSecret</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621689306895"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621689306969"><span class="hs-identifier hs-var">requestAdminSecret</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621689306975"><span class="hs-identifier hs-var">adminSecretHashSet</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-266"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; m ()
@@ -950,19 +950,19 @@ forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#deprecatedAccessKeyHeader"><span class="hs-identifier hs-var">deprecatedAccessKeyHeader</span></a></span><span>
 </span><span id="line-268"></span><span>          </span><span class="annot"><span class="annottext">m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header])
 forall (f :: * -&gt; *) t a a. Functor f =&gt; f t -&gt; f (t, Maybe a, [a])
-</span><a href="#local-6989586621689306918"><span class="hs-identifier hs-var">withNoExpTime</span></a></span><span> </span><span class="annot"><span class="annottext">(m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header]))
+</span><a href="#local-6989586621689306998"><span class="hs-identifier hs-var">withNoExpTime</span></a></span><span> </span><span class="annot"><span class="annottext">(m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header]))
 -&gt; m UserInfo -&gt; m (UserInfo, Maybe UTCTime, [Header])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret -&gt; m UserInfo
-</span><a href="#local-6989586621689306917"><span class="hs-identifier hs-var">mkUserInfoFallbackAdminRole</span></a></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
+</span><a href="#local-6989586621689306997"><span class="hs-identifier hs-var">mkUserInfoFallbackAdminRole</span></a></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
 </span><a href="Hasura.Session.html#UAdminSecretSent"><span class="hs-identifier hs-var">UAdminSecretSent</span></a></span><span>
 </span><span id="line-269"></span><span>
-</span><span id="line-270"></span><span>    </span><span id="local-6989586621689306918"><span class="annot"><span class="annottext">withNoExpTime :: f t -&gt; f (t, Maybe a, [a])
-</span><a href="#local-6989586621689306918"><span class="hs-identifier hs-var hs-var">withNoExpTime</span></a></span></span><span> </span><span id="local-6989586621689306885"><span class="annot"><span class="annottext">f t
-</span><a href="#local-6989586621689306885"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="annot"><span class="annottext">Maybe a
+</span><span id="line-270"></span><span>    </span><span id="local-6989586621689306998"><span class="annot"><span class="annottext">withNoExpTime :: f t -&gt; f (t, Maybe a, [a])
+</span><a href="#local-6989586621689306998"><span class="hs-identifier hs-var hs-var">withNoExpTime</span></a></span></span><span> </span><span id="local-6989586621689306965"><span class="annot"><span class="annottext">f t
+</span><a href="#local-6989586621689306965"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="annot"><span class="annottext">Maybe a
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(t -&gt; (t, Maybe a, [a])) -&gt; f t -&gt; f (t, Maybe a, [a])
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">f t
-</span><a href="#local-6989586621689306885"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621689306965"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-271"></span></pre></body></html>
