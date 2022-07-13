@@ -36,7 +36,6 @@ module Hasura.RQL.Types.SchemaCache
     TableCoreInfo,
     tciName,
     tciDescription,
-    tciSystemDefined,
     tciFieldInfoMap,
     tciPrimaryKey,
     tciUniqueConstraints,

@@ -23,7 +23,7 @@ import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
-import Hasura.RQL.Types.Common (Comment (..), FieldName (..), SystemDefined (..))
+import Hasura.RQL.Types.Common (Comment (..), FieldName (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
 import Hasura.RQL.Types.Source (SourceInfo)
@@ -136,7 +136,6 @@ mkParser table cib =
       TableCoreInfo
         { _tciName = table,
           _tciDescription = Nothing,
-          _tciSystemDefined = SystemDefined False,
           _tciFieldInfoMap = fieldInfoMap,
           _tciPrimaryKey = Nothing,
           _tciUniqueConstraints = mempty,

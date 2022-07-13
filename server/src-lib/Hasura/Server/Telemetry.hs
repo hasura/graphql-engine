@@ -231,13 +231,13 @@ computeMetrics ::
   Maybe ActionCache ->
   Metrics
 computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
-  let _mtTables = countUserTables (isNothing . _tciViewInfo . _tiCoreInfo)
-      _mtViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
-      _mtEnumTables = countUserTables (isJust . _tciEnumValues . _tiCoreInfo)
-      allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) userTables
+  let _mtTables = countSourceTables (isNothing . _tciViewInfo . _tiCoreInfo)
+      _mtViews = countSourceTables (isJust . _tciViewInfo . _tiCoreInfo)
+      _mtEnumTables = countSourceTables (isJust . _tciEnumValues . _tiCoreInfo)
+      allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) sourceTableCache
       (manualRels, autoRels) = L.partition riIsManual allRels
       _mtRelationships = RelationshipMetric (length manualRels) (length autoRels)
-      rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
+      rolePerms = join $ Map.elems $ Map.map permsOfTbl sourceTableCache
       _pmRoles = length $ L.uniques $ fst <$> rolePerms
       allPerms = snd <$> rolePerms
       _pmInsert = calcPerms _permIns allPerms
@@ -249,7 +249,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
       _mtEventTriggers =
         Map.size $
           Map.filter (not . Map.null) $
-            Map.map _tiEventTriggerInfoMap userTables
+            Map.map _tiEventTriggerInfoMap sourceTableCache
       _mtRemoteSchemas = Map.size <$> remoteSchemaMap
       _mtFunctions = Map.size $ Map.filter (not . isSystemDefined . _fiSystemDefined) sourceFunctionCache
       _mtActions = computeActionsMetrics <$> actionCache
@@ -257,8 +257,7 @@ computeMetrics sourceInfo _mtServiceTimings remoteSchemaMap actionCache =
   where
     sourceTableCache = _siTables sourceInfo
     sourceFunctionCache = _siFunctions sourceInfo
-    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) sourceTableCache
-    countUserTables predicate = length . filter predicate $ Map.elems userTables
+    countSourceTables predicate = length . filter predicate $ Map.elems sourceTableCache
 
     calcPerms :: (RolePermInfo b -> Maybe a) -> [RolePermInfo b] -> Int
     calcPerms fn perms = length $ mapMaybe fn perms

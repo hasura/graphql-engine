@@ -283,9 +283,8 @@ mkDescriptionWith descM defaultTxt = G.Description $ case descM of
 --        got removed in PDV. OTOH, I’m not sure how prevalent this feature
 --        actually is
 takeValidTables :: forall b. Backend b => TableCache b -> TableCache b
-takeValidTables = Map.filterWithKey graphQLTableFilter . Map.filter tableFilter
+takeValidTables = Map.filterWithKey graphQLTableFilter
   where
-    tableFilter = not . isSystemDefined . _tciSystemDefined . _tiCoreInfo
     graphQLTableFilter tableName tableInfo =
       -- either the table name should be GraphQL compliant
       -- or it should have a GraphQL custom name set with it

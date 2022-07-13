@@ -334,11 +334,9 @@ unTrackExistingTableOrViewP1 ::
   m ()
 unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
   schemaCache <- askSchemaCache
-  tableInfo <-
+  void $
     unsafeTableInfo @b source vn (scSources schemaCache)
       `onNothing` throw400 AlreadyUntracked ("view/table already untracked : " <>> vn)
-  when (isSystemDefined $ _tciSystemDefined $ _tiCoreInfo tableInfo) $
-    throw400 NotSupported $ vn <<> " is system defined, cannot untrack"
 
 unTrackExistingTableOrViewP2 ::
   forall b m.
@@ -499,7 +497,6 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         -<
           TableCoreInfo
             { _tciName = name,
-              _tciSystemDefined = SystemDefined False,
               _tciFieldInfoMap = columnMap,
               _tciPrimaryKey = primaryKey,
               _tciUniqueConstraints = _ptmiUniqueConstraints metadataTable,

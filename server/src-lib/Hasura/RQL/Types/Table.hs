@@ -71,7 +71,6 @@ module Hasura.RQL.Types.Table
     tciForeignKeys,
     tciName,
     tciPrimaryKey,
-    tciSystemDefined,
     tciUniqueConstraints,
     tciUniqueOrPrimaryKeyConstraints,
     tciViewInfo,
@@ -854,7 +853,6 @@ instance Backend b => FromJSON (ForeignKey b) where
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
   { _tciName :: TableName b,
     _tciDescription :: Maybe PG.PGDescription, -- TODO make into type family?
-    _tciSystemDefined :: SystemDefined,
     _tciFieldInfoMap :: FieldInfoMap field,
     _tciPrimaryKey :: Maybe (PrimaryKey b primaryKeyColumn),
     -- | Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
