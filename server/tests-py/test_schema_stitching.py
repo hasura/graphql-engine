@@ -804,6 +804,9 @@ class TestValidateRemoteSchemaNamespaceQuery:
 
     def test_remote_schema_namespace_validation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/namespace_validation.yaml')
+    
+    def test_multiple_remote_schema_with_namespace(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/multiple_remote_schema_with_namespace.yaml')
 
 class TestValidateRemoteSchemaCustomizeAllTheThings:
 

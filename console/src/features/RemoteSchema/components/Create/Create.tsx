@@ -185,8 +185,9 @@ export const Create = ({ onSuccess }: Props) => {
 
                   <div className="grid gap-3 grid-cols-12 mb-md">
                     <div className="flex items-center col-span-4">
-                      <label className="block text-gray-600 font-medium">
+                      <label className="flex items-center text-gray-600 font-medium">
                         Root Field Namespace
+                        <ToolTip message="Root field type names will be prefixed by this name." />
                       </label>
                     </div>
                     <div className="col-span-8">

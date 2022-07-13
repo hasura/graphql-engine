@@ -515,11 +515,22 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
     RemoteSchemaIntrospection typeDefinitions = irDoc
     typesToRename = filter nameFilter $ Map.keys typeDefinitions
+
+    -- NOTE: We are creating a root type name mapping, this will be used to
+    -- prefix the root field names with the root field namespace. We are doing
+    -- this inorder to reduce typename conflicts while adding the root field
+    -- namespace. Please note that this will have lower precedence order than
+    -- the _rtcMapping. This means that a user can still change the root type
+    -- name.
+    rootTypeNameMap =
+      mkPrefixSuffixMap _rscRootFieldsNamespace Nothing $
+        catMaybes [Just irQueryRoot, irMutationRoot, irSubscriptionRoot]
+
     typeRenameMap =
       case _rscTypeNames of
-        Nothing -> Map.empty
+        Nothing -> rootTypeNameMap
         Just RemoteTypeCustomization {..} ->
-          _rtcMapping <> mkPrefixSuffixMap _rtcPrefix _rtcSuffix typesToRename
+          _rtcMapping <> rootTypeNameMap <> mkPrefixSuffixMap _rtcPrefix _rtcSuffix typesToRename
 
     typeFieldMap :: HashMap G.Name [G.Name] -- typeName -> fieldNames
     typeFieldMap =

@@ -154,7 +154,19 @@ const GraphQLCustomizationEdit = ({
           </Button>
 
           <div className="flex items-center mt-md">
-            <label className="w-1/3">Root Field Namespace</label>
+            <label className="w-1/3">
+              Root Field Namespace{' '}
+              <OverlayTrigger
+                placement="right"
+                overlay={
+                  <Tooltip id="tooltip-cascade">
+                    Root field type names will be prefixed by this name.
+                  </Tooltip>
+                }
+              >
+                <FaQuestionCircle aria-hidden="true" />
+              </OverlayTrigger>
+            </label>
             <div className="w-2/3">
               <input
                 type="text"
