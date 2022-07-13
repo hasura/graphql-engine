@@ -29,7 +29,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
 import Data.Int (Int64)
-import Data.Set qualified as Set
+import Data.Set.NonEmpty qualified as NE
 import Data.Text.Lazy qualified as TL
 import Data.Time.Clock qualified as Time
 import Database.PG.Query qualified as Q
@@ -49,6 +49,7 @@ import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 import Hasura.Server.Migrate.Internal
+import Hasura.Server.Migrate.LatestVersion
 import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Session
@@ -246,7 +247,7 @@ updateColumnInEventTrigger table oCol nCol refTable = rewriteEventTriggerConf
 unlockEventsInSource ::
   MonadIO m =>
   SourceConfig ('Postgres pgKind) ->
-  Set.Set EventId ->
+  NE.NESet EventId ->
   m (Either QErr Int)
 unlockEventsInSource sourceConfig eventIds =
   liftIO $ runPgSourceWriteTx sourceConfig (unlockEventsTx $ toList eventIds)
@@ -314,11 +315,11 @@ getMaintenanceModeVersionTx = liftTx $ do
   -- the previous version and the current version will change depending
   -- upon between which versions we need to support maintenance mode
   if
-      | catalogVersion == 40 -> pure PreviousMMVersion
+      | catalogVersion == CatalogVersion 40 -> pure PreviousMMVersion
       -- The catalog is migrated to the 43rd version for a source
       -- which was initialised by a v1 graphql-engine instance (See @initSource@).
-      | catalogVersion == 43 -> pure CurrentMMVersion
-      | catalogVersion == fromInteger latestCatalogVersion -> pure CurrentMMVersion
+      | catalogVersion == CatalogVersion 43 -> pure CurrentMMVersion
+      | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
         throw500 $
           "Maintenance mode is only supported with catalog versions: 40, 43 and "

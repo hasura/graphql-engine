@@ -191,6 +191,7 @@ mkParser table cib =
         { _tcrfSelect = customRootField,
           _tcrfSelectByPk = customRootField,
           _tcrfSelectAggregate = customRootField,
+          _tcrfSelectStream = customRootField,
           _tcrfInsert = customRootField,
           _tcrfInsertOne = customRootField,
           _tcrfUpdate = customRootField,

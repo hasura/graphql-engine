@@ -167,6 +167,7 @@ common lib-depends
                      , monad-loops
                      , monad-validate
                      , mtl
+                     , nonempty-containers
                      , openapi3
                      , optparse-applicative
                      , parsec
@@ -637,6 +638,7 @@ library
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.SchemaCacheRef
                      , Hasura.Server.SchemaUpdate
+                     , Hasura.Server.Migrate.LatestVersion
                      , Hasura.Server.Migrate.Version
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
@@ -1021,6 +1023,7 @@ test-suite graphql-engine-tests
     Hasura.Server.Auth.JWTSpec
     Hasura.Server.AuthSpec
     Hasura.Server.MigrateSpec
+    Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
@@ -1166,6 +1169,7 @@ test-suite tests-hspec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.DC.QuerySpec
+    Test.CustomRootFieldsSpec
     Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
     Test.HelloWorldSpec

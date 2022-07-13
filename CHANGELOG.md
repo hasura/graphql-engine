@@ -2,7 +2,8 @@
 
 ## Next release
 
-server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
+- server: revert allow casting most postgres scalar types to strings in comparison expressions (#8617)
+- server: Add support to customize the root field for streaming subscriptions (fixes #8618)
 
 ### Bug fixes and improvements
 
@@ -29,8 +30,6 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 ## v2.8.1
 
 ### Bug fixes and improvements
-
-- server: fix bug that had disabled expression-based indexes in Postgres variants (fix #8601)
 
 ## v2.8.0
 
