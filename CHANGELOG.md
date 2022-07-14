@@ -59,6 +59,7 @@
 ### Bug fixes and improvements
 
 - server: use `root_field_namespace` as prefix for remote schema (fixes #8438)
+- server: allow all argument types for BigQuery routines
 - server: fix prefix/suffix behaviour for `graphql-default` naming convention (fixes #8544)
 - server: fix namespace visibility during introspection (fix #8434)
 - server: Create missing SQL triggers, if any, while reloading metadata and startup.
