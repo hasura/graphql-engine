@@ -260,11 +260,6 @@ class
   functionGraphQLName :: FunctionName b -> Either QErr G.Name
   getTableIdentifier :: TableName b -> Either QErr GQLNameIdentifier
 
-  -- | This function is used in the validation of a remote relationship where
-  -- we check whether the columns that are mapped to arguments of a remote
-  -- field are compatible
-  scalarTypeGraphQLName :: ScalarType b -> Either QErr G.Name
-
   -- TODO: metadata related functions
   snakeCaseTableName :: TableName b -> Text
 

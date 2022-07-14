@@ -114,7 +114,6 @@ instance
 
   tableGraphQLName = PG.qualifiedObjectToName
   functionGraphQLName = PG.qualifiedObjectToName
-  scalarTypeGraphQLName = runExcept . PG.mkScalarTypeName
 
   snakeCaseTableName = PG.snakeCaseQualifiedObject
   getTableIdentifier = PG.getIdentifierQualifiedObject

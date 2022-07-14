@@ -85,9 +85,6 @@ instance Backend 'MSSQL where
   functionGraphQLName :: FunctionName 'MSSQL -> Either QErr G.Name
   functionGraphQLName = error "Unexpected MSSQL error: calling functionGraphQLName. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
-  scalarTypeGraphQLName :: ScalarType 'MSSQL -> Either QErr G.Name
-  scalarTypeGraphQLName = runExcept . MSSQL.mkMSSQLScalarTypeName
-
   snakeCaseTableName :: TableName 'MSSQL -> Text
   snakeCaseTableName = MSSQL.snakeCaseTableName
 
