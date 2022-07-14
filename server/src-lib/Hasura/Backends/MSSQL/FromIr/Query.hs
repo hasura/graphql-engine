@@ -212,7 +212,7 @@ fromSelectRows annSelectG = do
     runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   fieldSources <-
     runReaderT
-      (traverse (fromAnnFieldsG argsExistingJoins stringifyNumbers) fields)
+      (traverse (fromAnnFieldsG argsExistingJoins) fields)
       (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromGBoolExp permFilter) (fromAlias selectFrom)
@@ -234,8 +234,7 @@ fromSelectRows annSelectG = do
       { _asnFields = fields,
         _asnFrom = from,
         _asnPerm = perm,
-        _asnArgs = args,
-        _asnStrfyNum = stringifyNumbers
+        _asnArgs = args
       } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
@@ -330,8 +329,7 @@ fromSelectAggregate
     { _asnFields = (zip [0 ..] -> fields),
       _asnFrom = from,
       _asnPerm = IR.TablePerm {_tpLimit = (maybe NoTop Top -> permissionBasedTop), _tpFilter = permFilter},
-      _asnArgs = args,
-      _asnStrfyNum = stringifyNumbers
+      _asnArgs = args
     } =
     do
       selectFrom <- case from of
@@ -353,7 +351,7 @@ fromSelectAggregate
       -- we need to separately treat the subselect expressions
       expss :: [(Int, Projection)] <- flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe fromTableExpFieldG fields
       nodes :: [(Int, (IR.FieldName, [FieldSource]))] <-
-        flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe (fromTableNodesFieldG argsExistingJoins stringifyNumbers) fields
+        flip runReaderT (fromAlias selectFrom) $ sequence $ mapMaybe (fromTableNodesFieldG argsExistingJoins) fields
       let aggregates :: [(Int, (IR.FieldName, [Projection]))] = mapMaybe fromTableAggFieldG fields
       pure
         emptySelect
@@ -546,12 +544,11 @@ fromTableAggFieldG = \case
 
 fromTableNodesFieldG ::
   Map TableName EntityAlias ->
-  IR.StringifyNumbers ->
   (Int, (IR.FieldName, IR.TableAggregateFieldG 'MSSQL Void Expression)) ->
   Maybe (ReaderT EntityAlias FromIr (Int, (IR.FieldName, [FieldSource])))
-fromTableNodesFieldG argsExistingJoins stringifyNumbers = \case
+fromTableNodesFieldG argsExistingJoins = \case
   (index, (fieldName, IR.TAFNodes () (annFieldsG :: [(IR.FieldName, IR.AnnFieldG 'MSSQL Void Expression)]))) -> Just do
-    fieldSources' <- fromAnnFieldsG argsExistingJoins stringifyNumbers `traverse` annFieldsG
+    fieldSources' <- fromAnnFieldsG argsExistingJoins `traverse` annFieldsG
     pure (index, (fieldName, fieldSources'))
   _ -> Nothing
 
@@ -586,13 +583,12 @@ fromAggregateField alias aggregateField =
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
   Map TableName EntityAlias ->
-  IR.StringifyNumbers ->
   (IR.FieldName, IR.AnnFieldG 'MSSQL Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
-fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
+fromAnnFieldsG existingJoins (IR.FieldName name, field) =
   case field of
     IR.AFColumn annColumnField -> do
-      expression <- fromAnnColumnField stringifyNumbers annColumnField
+      expression <- fromAnnColumnField annColumnField
       pure
         ( ExpressionFieldSource
             Aliased {aliasedThing = expression, aliasedAlias = name}
@@ -622,10 +618,9 @@ fromAnnFieldsG existingJoins stringifyNumbers (IR.FieldName name, field) =
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
-  IR.StringifyNumbers ->
   IR.AnnColumnField 'MSSQL Expression ->
   ReaderT EntityAlias FromIr Expression
-fromAnnColumnField _stringifyNumbers annColumnField = do
+fromAnnColumnField annColumnField = do
   fieldName <- fromColumn column
   -- TODO: Handle stringifying large numbers
   {-(IR.isScalarColumnWhere isBigNum typ && stringifyNumbers == IR.StringifyNumbers)-}
@@ -710,7 +705,7 @@ fromObjectRelationSelectG existingJoins annRelationSelectG = do
   fieldSources <-
     local
       (const entityAlias)
-      (traverse (fromAnnFieldsG mempty IR.LeaveNumbersAlone) fields)
+      (traverse (fromAnnFieldsG mempty) fields)
   let selectProjections = map fieldSourceProjections fieldSources
   joinJoinAlias <-
     do

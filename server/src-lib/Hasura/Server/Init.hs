@@ -27,12 +27,11 @@ import Hasura.Cache.Bounded qualified as Cache (CacheSize, parseCacheSize)
 import Hasura.Eventing.EventTrigger (defaultFetchBatchSize)
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging (defaultEnabledEngineLogTypes, userAllowedLogTypes)
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config
@@ -203,7 +202,7 @@ mkServeOptions rso = do
   enableTelemetry <-
     fromMaybe True
       <$> withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
-  strfyNum <- bool LeaveNumbersAlone StringifyNumbers <$> withEnvBool (rsoStringifyNum rso) (fst stringifyNumEnv)
+  strfyNum <- bool Options.Don'tStringifyNumbers Options.StringifyNumbers <$> withEnvBool (rsoStringifyNum rso) (fst stringifyNumEnv)
   dangerousBooleanCollapse <-
     fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
   enabledAPIs <-
@@ -230,7 +229,7 @@ mkServeOptions rso = do
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst eventsFetchIntervalEnv)
   maybeAsyncActionsFetchInterval <- withEnv (rsoAsyncActionsFetchInterval rso) (fst asyncActionsFetchIntervalEnv)
   enableRemoteSchemaPerms <-
-    bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled
+    bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions
       <$> withEnvBool (rsoEnableRemoteSchemaPermissions rso) (fst enableRemoteSchemaPermsEnv)
 
   webSocketCompressionFromEnv <-
@@ -254,7 +253,7 @@ mkServeOptions rso = do
 
   experimentalFeatures <- maybe mempty Set.fromList <$> withEnv (rsoExperimentalFeatures rso) (fst experimentalFeaturesEnv)
   inferFunctionPerms <-
-    maybe FunctionPermissionsInferred (bool FunctionPermissionsManual FunctionPermissionsInferred)
+    maybe Options.InferFunctionPermissions (bool Options.Don'tInferFunctionPermissions Options.InferFunctionPermissions)
       <$> withEnv (rsoInferFunctionPermissions rso) (fst inferFunctionPermsEnv)
 
   maintenanceMode <-
@@ -1432,8 +1431,8 @@ serveOptsToLog so =
           "enable_telemetry" J..= soEnableTelemetry so,
           "use_prepared_statements" J..= (Q.cpAllowPrepare . soConnParams) so,
           "stringify_numeric_types" J..= case soStringifyNum so of
-            StringifyNumbers -> True
-            LeaveNumbersAlone -> False,
+            Options.StringifyNumbers -> True
+            Options.Don'tStringifyNumbers -> False,
           "v1-boolean-null-collapse" J..= soDangerousBooleanCollapse so,
           "enabled_apis" J..= soEnabledAPIs so,
           "live_query_options" J..= soLiveQueryOpts so,

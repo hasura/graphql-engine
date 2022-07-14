@@ -21,6 +21,8 @@ import Hasura.GraphQL.Schema.BoolExp qualified as GS.BE
 import Hasura.GraphQL.Schema.Build qualified as GS.B
 import Hasura.GraphQL.Schema.Common qualified as GS.C
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options (SchemaOptions)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.Name qualified as Name
@@ -131,14 +133,15 @@ comparisonExps' ::
     MonadSchema n m,
     MonadError QErr m,
     MonadReader r m,
-    Has GS.C.SchemaOptions r,
+    Has SchemaOptions r,
     Has NamingCase r
   ) =>
   RQL.ColumnType 'DataConnector ->
   m (P.Parser 'P.Input n [ComparisonExp 'DataConnector])
 comparisonExps' = P.memoize 'comparisonExps' $ \columnType -> do
   tCase <- asks getter
-  collapseIfNull <- GS.C.retrieve GS.C.soDangerousBooleanCollapse
+  collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
+
   typedParser <- columnParser' columnType (GQL.Nullability False)
   nullableTextParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability True)
   textParser <- columnParser' (RQL.ColumnScalar IR.S.T.String) (GQL.Nullability False)

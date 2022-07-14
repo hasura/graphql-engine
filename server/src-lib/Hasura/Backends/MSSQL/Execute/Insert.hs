@@ -27,12 +27,12 @@ import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..), IfMatched)
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
-import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
 
@@ -41,7 +41,7 @@ import Hasura.Session
 executeInsert ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedInsert 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
@@ -145,7 +145,7 @@ executeInsert userInfo stringifyNum sourceConfig annInsert = do
 buildInsertTx ::
   TSQL.TableName ->
   Text ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   AnnotatedInsert 'MSSQL Void Expression ->
   QueryTagsComment ->
   Tx.TxET QErr IO EncJSON
@@ -234,7 +234,7 @@ buildUpsertTx tableName insert ifMatched queryTags = do
 
 -- | Builds a response to the user using the values in the temporary table named #inserted.
 buildInsertResponseTx ::
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   Text ->
   AnnotatedInsert 'MSSQL Void Expression ->
   QueryTagsComment ->

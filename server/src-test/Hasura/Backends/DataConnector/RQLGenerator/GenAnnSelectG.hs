@@ -7,10 +7,10 @@ import Hasura.Backends.DataConnector.RQLGenerator.GenSelectArgsG (genSelectArgsG
 import Hasura.Backends.DataConnector.RQLGenerator.GenSelectFromG (genSelectFromG)
 import Hasura.Backends.DataConnector.RQLGenerator.GenTablePermG (genTablePermG)
 import Hasura.Generator.Common (defaultRange)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude (Applicative ((<*>)), Bool (..), (<$>), (<&>))
 import Hasura.RQL.IR (AnnSelectG (..))
 import Hasura.RQL.IR.Generator (genFields)
-import Hasura.RQL.Types.Common (StringifyNumbers (..))
 import Hasura.SQL.Backend (BackendType (..))
 import Hedgehog (MonadGen)
 import Hedgehog.Gen (bool)
@@ -28,6 +28,6 @@ genAnnSelectG genA genFA =
   where
     genStringifyNumbers =
       bool <&> \case
-        False -> LeaveNumbersAlone
-        True -> StringifyNumbers
+        False -> Options.Don'tStringifyNumbers
+        True -> Options.StringifyNumbers
     genArgs = genSelectArgsG genA

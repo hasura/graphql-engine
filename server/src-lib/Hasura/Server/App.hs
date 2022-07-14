@@ -54,6 +54,7 @@ import Hasura.GraphQL.Execute.Subscription.State qualified as ES
 import Hasura.GraphQL.Explain qualified as GE
 import Hasura.GraphQL.Logging (MonadQueryLog)
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.GraphQL.Transport.WSServerApp qualified as WS
@@ -65,8 +66,6 @@ import Hasura.Prelude hiding (get, put)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint as EP
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
@@ -123,8 +122,8 @@ data ServerCtx = ServerCtx
     scEkgStore :: !(EKG.Store EKG.EmptyMetrics),
     scResponseInternalErrorsConfig :: !ResponseInternalErrorsConfig,
     scEnvironment :: !Env.Environment,
-    scRemoteSchemaPermsCtx :: !RemoteSchemaPermsCtx,
-    scFunctionPermsCtx :: !FunctionPermissionsCtx,
+    scRemoteSchemaPermsCtx :: !Options.RemoteSchemaPermissions,
+    scFunctionPermsCtx :: !Options.InferFunctionPermissions,
     scEnableMaintenanceMode :: !(MaintenanceMode ()),
     scExperimentalFeatures :: !(S.HashSet ExperimentalFeature),
     scLoggingSettings :: !LoggingSettings,
@@ -773,8 +772,8 @@ mkWaiApp ::
   SchemaCacheRef ->
   EKG.Store EKG.EmptyMetrics ->
   ServerMetrics ->
-  RemoteSchemaPermsCtx ->
-  FunctionPermissionsCtx ->
+  Options.RemoteSchemaPermissions ->
+  Options.InferFunctionPermissions ->
   WS.ConnectionOptions ->
   KeepAliveDelay ->
   MaintenanceMode () ->

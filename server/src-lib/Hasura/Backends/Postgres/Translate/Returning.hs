@@ -18,6 +18,7 @@ import Data.Coerce
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
@@ -83,7 +84,7 @@ mkMutFldExp ::
   ) =>
   Identifier ->
   Maybe Int ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   MutFld ('Postgres pgKind) ->
   S.SQLExp
 mkMutFldExp cteAlias preCalAffRows strfyNum = \case
@@ -141,7 +142,7 @@ mkMutationOutputExp ::
   Maybe Int ->
   MutationCTE ->
   MutationOutput ('Postgres pgKind) ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
   S.SelectWith

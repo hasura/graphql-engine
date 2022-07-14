@@ -128,6 +128,7 @@ import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Incremental
   ( Cacheable,
     Dependency,
@@ -241,14 +242,14 @@ data RemoteSchemaCtx = RemoteSchemaCtx
     _rscRemoteRelationships :: RemoteSchemaRelationships
   }
 
-getIntrospectionResult :: RemoteSchemaPermsCtx -> RoleName -> RemoteSchemaCtx -> Maybe IntrospectionResult
+getIntrospectionResult :: Options.RemoteSchemaPermissions -> RoleName -> RemoteSchemaCtx -> Maybe IntrospectionResult
 getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
   if
       | -- admin doesn't have a custom annotated introspection, defaulting to the original one
         role == adminRoleName ->
         pure $ _rscIntroOriginal remoteSchemaContext
       | -- if permissions are disabled, the role map will be empty, defaulting to the original one
-        remoteSchemaPermsCtx == RemoteSchemaPermsDisabled ->
+        remoteSchemaPermsCtx == Options.DisableRemoteSchemaPermissions ->
         pure $ _rscIntroOriginal remoteSchemaContext
       | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
         otherwise ->

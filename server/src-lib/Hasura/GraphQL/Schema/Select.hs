@@ -44,6 +44,8 @@ import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Options (OptimizePermissionFilters (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.OrderBy
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
@@ -103,7 +105,7 @@ defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   selectionSetParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift $ memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
-    stringifyNum <- retrieve soStringifyNum
+    stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableArgsParser <- tableArguments sourceInfo tableInfo
     pure $
       P.setFieldParserOrigin (MOSource (_siName sourceInfo)) $
@@ -114,7 +116,7 @@ defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
                 IR._asnFrom = IR.FromTable tableName,
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,
-                IR._asnStrfyNum = stringifyNum
+                IR._asnStrfyNum = stringifyNumbers
               }
   where
     tableName = tableInfoName tableInfo
@@ -158,7 +160,7 @@ selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = r
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   selectionSetParser <- fmap P.nonNullableParser <$> MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
   lift $ memoizeOn 'selectTableConnection (_siName sourceInfo, tableName, fieldName) do
-    stringifyNum <- retrieve soStringifyNum
+    stringifyNumbers <- retrieve Options.soStringifyNumbers
     selectArgsParser <- tableConnectionArgs pkeyColumns sourceInfo tableInfo
     pure $
       P.subselection fieldName description selectArgsParser selectionSetParser
@@ -174,7 +176,7 @@ selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = r
                     IR._asnFrom = IR.FromTable tableName,
                     IR._asnPerm = tablePermissionsInfo selectPermissions,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNum
+                    IR._asnStrfyNum = stringifyNumbers
                   }
             }
   where
@@ -207,7 +209,7 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
   selectionSetParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   guard $ all (\c -> ciColumn c `Map.member` spiCols selectPermissions) primaryKeys
   lift $ memoizeOn 'selectTableByPk (_siName sourceInfo, tableName, fieldName) do
-    stringifyNum <- retrieve soStringifyNum
+    stringifyNumbers <- retrieve Options.soStringifyNumbers
     argsParser <-
       sequenceA <$> for primaryKeys \columnInfo -> do
         field <- columnParser (ciType columnInfo) (G.Nullability $ ciIsNullable columnInfo)
@@ -227,7 +229,7 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
                     IR._asnFrom = IR.FromTable tableName,
                     IR._asnPerm = permissions,
                     IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
-                    IR._asnStrfyNum = stringifyNum
+                    IR._asnStrfyNum = stringifyNumbers
                   }
   where
     tableName = tableInfoName tableInfo
@@ -259,7 +261,7 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
   xNodesAgg <- hoistMaybe $ nodesAggExtension @b
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift $ memoizeOn 'defaultSelectTableAggregate (_siName sourceInfo, tableName, fieldName) do
-    stringifyNum <- retrieve soStringifyNum
+    stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableGQLName <- getTableGQLName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
@@ -282,7 +284,7 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
                 IR._asnFrom = IR.FromTable tableName,
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,
-                IR._asnStrfyNum = stringifyNum
+                IR._asnStrfyNum = stringifyNumbers
               }
   where
     tableName = tableInfoName tableInfo
@@ -1097,7 +1099,7 @@ relationshipField ::
   m (Maybe [FieldParser n (AnnotatedField b)])
 relationshipField sourceInfo table ri = runMaybeT do
   tCase <- asks getter
-  optimizePermissionFilters <- retrieve soOptimizePermissionFilters
+  optimizePermissionFilters <- retrieve Options.soOptimizePermissionFilters
   otherTableInfo <- lift $ askTableInfo sourceInfo $ riRTable ri
   remotePerms <- MaybeT $ tableSelectPermissions otherTableInfo
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
@@ -1108,7 +1110,7 @@ relationshipField sourceInfo table ri = runMaybeT do
   let deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
       deduplicatePermissions x =
         case (optimizePermissionFilters, x) of
-          (True, BoolAnd [BoolField (AVRelationship remoteRI remoteTablePerm)]) ->
+          (OptimizePermissionFilters, BoolAnd [BoolField (AVRelationship remoteRI remoteTablePerm)]) ->
             -- Here we try to figure out if the "forwards" joining condition
             -- from `table` to the related table `riRTable ri` is equal to the
             -- "backwards" joining condition from the related table back to

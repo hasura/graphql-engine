@@ -52,6 +52,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Common
 import Hasura.GraphQL.Execute.Action.Types as Types
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import Hasura.HTTP
 import Hasura.Logging qualified as L
@@ -657,7 +658,7 @@ processOutputSelectionSet ::
   GraphQLType ->
   [(PGCol, PGScalarType)] ->
   IR.ActionFields ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   RS.AnnSimpleSelectG ('Postgres 'Vanilla) Void v
 processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields =
   RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs

@@ -23,6 +23,7 @@ import Data.Text.Extended
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.RemoteServer
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.DDL.RemoteSchema.Permission
 import Hasura.RQL.Types.Common
@@ -75,7 +76,7 @@ runAddRemoteSchemaPermissions ::
 runAddRemoteSchemaPermissions q = do
   metadata <- getMetadata
   remoteSchemaPermsCtx <- _sccRemoteSchemaPermsCtx <$> askServerConfigCtx
-  unless (remoteSchemaPermsCtx == RemoteSchemaPermsEnabled) $ do
+  unless (remoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions) $ do
     throw400 ConstraintViolation $
       "remote schema permissions can only be added when "
         <> "remote schema permissions are enabled in the graphql-engine"

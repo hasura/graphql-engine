@@ -76,6 +76,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
 import Hasura.Backends.Postgres.Translate.Select.Internal.OrderBy (processOrderByItems)
 import Hasura.Backends.Postgres.Translate.Types
 import Hasura.GraphQL.Schema.Node (currentNodeIdVersion, nodeIdVersionInt)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG, obiColumn))
@@ -88,7 +89,7 @@ import Hasura.SQL.Backend
 
 processSelectParams ::
   forall pgKind m.
-  ( MonadReader StringifyNumbers m,
+  ( MonadReader Options.StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind)
   ) =>
@@ -164,7 +165,7 @@ processSelectParams
 
 processAnnAggregateSelect ::
   forall pgKind m.
-  ( MonadReader StringifyNumbers m,
+  ( MonadReader Options.StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -258,7 +259,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
 
 processAnnFields ::
   forall pgKind m.
-  ( MonadReader StringifyNumbers m,
+  ( MonadReader Options.StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -374,7 +375,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
     mkNodeId :: SourceName -> QualifiedTable -> PrimaryKeyColumns ('Postgres pgKind) -> S.SQLExp
     mkNodeId _sourceName (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
-            toJSONableExp LeaveNumbersAlone (ciType pgColumnInfo) False $
+            toJSONableExp Options.Don'tStringifyNumbers (ciType pgColumnInfo) False $
               S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ ciColumn pgColumnInfo
        in -- See Note [Relay Node id].
           encodeBase64 $
@@ -437,7 +438,7 @@ mkSimilarArrayFields annFields maybeOrderBys =
 
 processArrayRelation ::
   forall pgKind m.
-  ( MonadReader StringifyNumbers m,
+  ( MonadReader Options.StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -488,7 +489,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
           ()
         )
 
-aggregateFieldToExp :: AggregateFields ('Postgres pgKind) -> StringifyNumbers -> S.SQLExp
+aggregateFieldToExp :: AggregateFields ('Postgres pgKind) -> Options.StringifyNumbers -> S.SQLExp
 aggregateFieldToExp aggFlds strfyNum = jsonRow
   where
     jsonRow = S.applyJsonBuildObj (concatMap aggToFlds aggFlds)
@@ -511,7 +512,7 @@ aggregateFieldToExp aggFlds strfyNum = jsonRow
 
 processAnnSimpleSelect ::
   forall pgKind m.
-  ( MonadReader StringifyNumbers m,
+  ( MonadReader Options.StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -544,7 +545,7 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
 
 processConnectionSelect ::
   forall pgKind m.
-  ( MonadReader StringifyNumbers m,
+  ( MonadReader Options.StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
@@ -604,7 +605,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
         flip concatMap (toList primaryKeyColumns) $
           \pgColumnInfo ->
             [ S.SELit $ getPGColTxt $ ciColumn pgColumnInfo,
-              toJSONableExp LeaveNumbersAlone (ciType pgColumnInfo) False $
+              toJSONableExp Options.Don'tStringifyNumbers (ciType pgColumnInfo) False $
                 S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ ciColumn pgColumnInfo
             ]
 
@@ -657,7 +658,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
 
     processFields ::
       forall n.
-      ( MonadReader StringifyNumbers n,
+      ( MonadReader Options.StringifyNumbers n,
         MonadWriter JoinTree n,
         MonadState [(S.Alias, S.SQLExp)] n
       ) =>

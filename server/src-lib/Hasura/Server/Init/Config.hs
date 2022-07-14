@@ -54,11 +54,10 @@ import Data.URL.Template
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.Server.Auth
 import Hasura.Server.Cors
 import Hasura.Server.Logging
@@ -221,7 +220,7 @@ data ServeOptions impl = ServeOptions
     soEnableConsole :: Bool,
     soConsoleAssetsDir :: Maybe Text,
     soEnableTelemetry :: Bool,
-    soStringifyNum :: StringifyNumbers,
+    soStringifyNum :: Options.StringifyNumbers,
     soDangerousBooleanCollapse :: Bool,
     soEnabledAPIs :: Set.HashSet API,
     soLiveQueryOpts :: ES.LiveQueriesOptions,
@@ -233,10 +232,10 @@ data ServeOptions impl = ServeOptions
     soEventsHttpPoolSize :: Maybe Int,
     soEventsFetchInterval :: Maybe Milliseconds,
     soAsyncActionsFetchInterval :: OptionalInterval,
-    soEnableRemoteSchemaPermissions :: RemoteSchemaPermsCtx,
+    soEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
     soConnectionOptions :: WS.ConnectionOptions,
     soWebsocketKeepAlive :: KeepAliveDelay,
-    soInferFunctionPermissions :: FunctionPermissionsCtx,
+    soInferFunctionPermissions :: Options.InferFunctionPermissions,
     soEnableMaintenanceMode :: MaintenanceMode (),
     soSchemaPollInterval :: OptionalInterval,
     soExperimentalFeatures :: Set.HashSet ExperimentalFeature,

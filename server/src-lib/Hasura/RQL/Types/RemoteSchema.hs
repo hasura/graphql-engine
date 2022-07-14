@@ -15,7 +15,6 @@ module Hasura.RQL.Types.RemoteSchema
     RemoteSchemaName (..),
     RemoteSchemaNameQuery (..),
     RemoteSchemaPermissionDefinition (..),
-    RemoteSchemaPermsCtx (..),
     RemoteSchemaVariable (..),
     RemoteTypeCustomization (..),
     SessionArgumentPresetInfo (..),
@@ -419,21 +418,6 @@ instance Cacheable RemoteSchemaInputValueDefinition
 newtype RemoteSchemaIntrospection
   = RemoteSchemaIntrospection (HashMap G.Name (G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition))
   deriving (Show, Eq, Generic, Hashable, Cacheable, Ord)
-
-data RemoteSchemaPermsCtx
-  = RemoteSchemaPermsEnabled
-  | RemoteSchemaPermsDisabled
-  deriving (Show, Eq)
-
-instance J.FromJSON RemoteSchemaPermsCtx where
-  parseJSON =
-    J.withBool "RemoteSchemaPermsCtx" $
-      pure . bool RemoteSchemaPermsDisabled RemoteSchemaPermsEnabled
-
-instance J.ToJSON RemoteSchemaPermsCtx where
-  toJSON = \case
-    RemoteSchemaPermsEnabled -> J.Bool True
-    RemoteSchemaPermsDisabled -> J.Bool False
 
 -- | Extracts the name of a given type from its definition.
 -- TODO: move this to Language.GraphQL.Draft.Syntax.

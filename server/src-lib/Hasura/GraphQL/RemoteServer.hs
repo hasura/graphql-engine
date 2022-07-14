@@ -24,6 +24,8 @@ import Hasura.GraphQL.Parser.Monad (Parse, runSchemaT)
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Remote (buildRemoteParser)
 import Hasura.GraphQL.Schema.Typename
 import Hasura.GraphQL.Transport.HTTP.Protocol
@@ -31,7 +33,6 @@ import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SourceCustomization
@@ -122,18 +123,18 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         HasuraCase,
         SchemaOptions
           { -- doesn't apply to remote schemas
-            soStringifyNum = LeaveNumbersAlone,
+            soStringifyNumbers = Options.Don'tStringifyNumbers,
             -- doesn't apply to remote schemas
-            soDangerousBooleanCollapse = True,
+            soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans,
             -- we don't support remote schemas in Relay, but the check is
             -- performed ahead of time, meaning that the value here is
             -- irrelevant
             -- doesn't apply to remote schemas
-            soFunctionPermsContext = FunctionPermissionsInferred,
+            soInferFunctionPermissions = Options.InferFunctionPermissions,
             -- we default to no permissions
-            soRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
+            soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
             -- doesn't apply to remote schemas
-            soOptimizePermissionFilters = False
+            soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters
           },
         SchemaContext
           HasuraSchema

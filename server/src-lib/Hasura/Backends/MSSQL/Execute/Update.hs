@@ -25,12 +25,12 @@ import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Backends.MSSQL.Types.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
 
@@ -38,7 +38,7 @@ import Hasura.Session
 executeUpdate ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnotatedUpdateG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
@@ -68,7 +68,7 @@ executeUpdate userInfo stringifyNum sourceConfig updateOperation = do
 --   relationships with other tables.
 buildUpdateTx ::
   AnnotatedUpdate 'MSSQL ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   QueryTagsComment ->
   Tx.TxET QErr IO EncJSON
 buildUpdateTx updateOperation stringifyNum queryTags = do

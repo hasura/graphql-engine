@@ -24,6 +24,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Node
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser (Kind (..), Parser, memoizeOn)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
@@ -108,7 +109,7 @@ nodeField ::
 nodeField sourceCache = do
   let idDescription = G.Description "A globally unique id"
       idArgument = P.field Name._id (Just idDescription) P.identifier
-  stringifyNum <- retrieve soStringifyNum
+  stringifyNumbers <- retrieve Options.soStringifyNumbers
   nodeObject <-
     retrieve scSchemaKind >>= \case
       HasuraSchema -> throw500 "internal error: the node field should only be built for the Relay schema"
@@ -129,7 +130,7 @@ nodeField sourceCache = do
           let matchingTables = flip mapMaybe (Map.keys sourceCache) \sourceName ->
                 (sourceName,) <$> findNode @('Postgres 'Vanilla) sourceName tableName parseds
           case matchingTables of
-            [(sourceName, nodeValue)] -> createRootField stringifyNum sourceName tableName nodeValue pKeys
+            [(sourceName, nodeValue)] -> createRootField stringifyNumbers sourceName tableName nodeValue pKeys
             [] -> throwInvalidNodeId $ "no such table found: " <>> tableName
             l ->
               throwInvalidNodeId $
@@ -145,7 +146,7 @@ nodeField sourceCache = do
             nodeValue <-
               findNode @b sourceName tableName parseds
                 `onNothing` throwInvalidNodeId ("no table " <> tableName <<> " found in source " <>> sourceName)
-            createRootField stringifyNum sourceName tableName nodeValue pKeys
+            createRootField stringifyNumbers sourceName tableName nodeValue pKeys
   where
     throwInvalidNodeId :: Text -> n a
     throwInvalidNodeId t = P.withKey (J.Key "args") $ P.withKey (J.Key "id") $ P.parseError $ "invalid node id: " <> t
@@ -159,13 +160,13 @@ nodeField sourceCache = do
     -- selection.
     createRootField ::
       Backend b =>
-      StringifyNumbers ->
+      Options.StringifyNumbers ->
       SourceName ->
       TableName b ->
       NodeInfo b ->
       NESeq.NESeq J.Value ->
       n (IR.QueryRootField IR.UnpreparedValue)
-    createRootField stringifyNum sourceName tableName (NodeInfo sourceConfig perms pKeys fields) columnValues = do
+    createRootField stringifyNumbers sourceName tableName (NodeInfo sourceConfig perms pKeys fields) columnValues = do
       whereExp <- buildNodeIdBoolExp columnValues pKeys
       pure $
         IR.RFDB sourceName $
@@ -185,7 +186,7 @@ nodeField sourceCache = do
                             IR._saOffset = Nothing,
                             IR._saDistinct = Nothing
                           },
-                      IR._asnStrfyNum = stringifyNum
+                      IR._asnStrfyNum = stringifyNumbers
                     }
 
     -- Craft the 'where' condition of the query by making an `AEQ` entry for

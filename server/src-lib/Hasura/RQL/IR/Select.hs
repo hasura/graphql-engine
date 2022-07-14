@@ -152,6 +152,7 @@ import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy

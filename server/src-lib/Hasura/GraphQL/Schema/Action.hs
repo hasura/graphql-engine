@@ -21,6 +21,7 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -182,7 +183,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       let selectionSet = customScalarParser ast
       pure $ P.selection fieldName description actionIdInputField selectionSet <&> (,[])
 
-  stringifyNum <- retrieve soStringifyNum
+  stringifyNumbers <- retrieve Options.soStringifyNumbers
   definitionsList <- lift $ mkDefinitionList outputObject
   pure $
     parserOutput
@@ -193,7 +194,7 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
             _aaaqOutputType = _adOutputType definition,
             _aaaqFields = fields,
             _aaaqDefinitionList = definitionsList,
-            _aaaqStringifyNum = stringifyNum,
+            _aaaqStringifyNum = stringifyNumbers,
             _aaaqForwardClientHeaders = forwardClientHeaders,
             _aaaqSource = getActionSourceInfo outputObject
           }

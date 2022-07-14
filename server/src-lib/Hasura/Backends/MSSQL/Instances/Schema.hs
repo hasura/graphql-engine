@@ -23,6 +23,8 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options (SchemaOptions)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -358,7 +360,7 @@ msComparisonExps ::
   m (Parser 'Input n [ComparisonExp 'MSSQL])
 msComparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
-  collapseIfNull <- retrieve soDangerousBooleanCollapse
+  collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
   -- parsers used for individual values
   typedParser <- columnParser columnType (G.Nullability False)

@@ -26,6 +26,8 @@ import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.Introspect
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     Kind (..),
@@ -108,7 +110,7 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
       nonTableRoles =
         Set.insert adminRoleName $
           Set.fromList (allActionInfos ^.. folded . aiPermissions . to Map.keys . folded)
-            <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == RemoteSchemaPermsEnabled)
+            <> Set.fromList (bool mempty remoteSchemasRoles $ _sccRemoteSchemaPermsCtx == Options.EnableRemoteSchemaPermissions)
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
       allRoles = nonTableRoles <> allTableRoles
@@ -162,13 +164,13 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
 buildRoleContext ::
   forall m.
   (MonadError QErr m, MonadIO m) =>
-  (SQLGenCtx, FunctionPermissionsCtx) ->
+  (SQLGenCtx, Options.InferFunctionPermissions) ->
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
   RoleName ->
-  RemoteSchemaPermsCtx ->
+  Options.RemoteSchemaPermissions ->
   Set.HashSet ExperimentalFeature ->
   StreamingSubscriptionsCtx ->
   Maybe NamingCase ->
@@ -302,7 +304,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
 buildRelayRoleContext ::
   forall m.
   (MonadError QErr m, MonadIO m) =>
-  (SQLGenCtx, FunctionPermissionsCtx) ->
+  (SQLGenCtx, Options.InferFunctionPermissions) ->
   SourceCache ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
@@ -319,7 +321,7 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
           stringifyNum
           dangerousBooleanCollapse
           functionPermsCtx
-          RemoteSchemaPermsDisabled
+          Options.DisableRemoteSchemaPermissions
           optimizePermissionFilters
       -- TODO: At the time of writing this, remote schema queries are not supported in relay.
       -- When they are supported, we should get do what `buildRoleContext` does. Since, they
@@ -432,7 +434,7 @@ unauthenticatedContext ::
     MonadIO m
   ) =>
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
-  RemoteSchemaPermsCtx ->
+  Options.RemoteSchemaPermissions ->
   m (GQLContext, HashSet InconsistentMetadata)
 unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
   -- Since remote schemas can theoretically join against tables, we need to give
@@ -442,11 +444,11 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
   -- needed for sources is completely irrelevant and filled with default values.
   let fakeSchemaOptions =
         SchemaOptions
-          LeaveNumbersAlone -- stringifyNum doesn't apply to remotes
-          True -- booleanCollapse doesn't apply to remotes
-          FunctionPermissionsInferred -- function permissions don't apply to remotes
+          Options.Don'tStringifyNumbers -- stringifyNum doesn't apply to remotes
+          Options.Don'tDangerouslyCollapseBooleans -- booleanCollapse doesn't apply to remotes
+          Options.InferFunctionPermissions -- function permissions don't apply to remotes
           remoteSchemaPermsCtx
-          False
+          Options.Don'tOptimizePermissionFilters
       fakeSchemaContext =
         SchemaContext
           HasuraSchema
@@ -460,10 +462,10 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
 
   runMonadSchema fakeSchemaOptions fakeSchemaContext fakeRole do
     (queryFields, mutationFields, subscriptionFields, remoteErrors) <- case remoteSchemaPermsCtx of
-      RemoteSchemaPermsEnabled ->
+      Options.EnableRemoteSchemaPermissions ->
         -- Permissions are enabled, unauthenticated users have access to nothing.
         pure ([], [], [], mempty)
-      RemoteSchemaPermsDisabled -> do
+      Options.DisableRemoteSchemaPermissions -> do
         -- Permissions are disabled, unauthenticated users have access to remote schemas.
         (remoteFields, remoteSchemaErrors) <-
           buildAndValidateRemoteSchemas alteredRemoteSchemas [] [] fakeRole remoteSchemaPermsCtx
@@ -501,7 +503,7 @@ buildAndValidateRemoteSchemas ::
   [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))] ->
   [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))] ->
   RoleName ->
-  RemoteSchemaPermsCtx ->
+  Options.RemoteSchemaPermissions ->
   ConcreteSchemaT m ([RemoteSchemaParser P.Parse], HashSet InconsistentMetadata)
 buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields role remoteSchemaPermsCtx =
   runWriterT $ foldlM step [] (Map.elems remotes)
@@ -550,7 +552,7 @@ buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationFields r
 buildRemoteSchemaParser ::
   forall m.
   (MonadError QErr m, MonadIO m) =>
-  RemoteSchemaPermsCtx ->
+  Options.RemoteSchemaPermissions ->
   RoleName ->
   RemoteSchemaCtx ->
   ConcreteSchemaT m (Maybe (RemoteSchemaParser P.Parse))
@@ -575,14 +577,14 @@ buildQueryAndSubscriptionFields ::
   m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)])
 buildQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> functions) streamingSubsCtx = do
   roleName <- asks getter
-  functionPermsCtx <- retrieve soFunctionPermsContext
+  functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
     concat . catMaybes
       <$> for (Map.toList functions) \(functionName, functionInfo) -> runMaybeT $ do
         guard $
           roleName == adminRoleName
             || roleName `Map.member` _fiPermissions functionInfo
-            || functionPermsCtx == FunctionPermissionsInferred
+            || functionPermsCtx == Options.InferFunctionPermissions
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields sourceInfo functionName functionInfo targetTableName
 

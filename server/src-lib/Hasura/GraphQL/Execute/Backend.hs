@@ -24,6 +24,7 @@ import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
 import Hasura.GraphQL.Execute.RemoteJoin.Types
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias, RootFieldMap)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Metadata.Class
 import Hasura.Prelude
@@ -80,7 +81,7 @@ class
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->
-    StringifyNumbers ->
+    Options.StringifyNumbers ->
     SourceName ->
     SourceConfig b ->
     MutationDB b Void (UnpreparedValue b) ->
@@ -208,7 +209,7 @@ convertRemoteSourceRelationship
             _asnFrom = selectFrom,
             _asnPerm = TablePerm annBoolExpTrue Nothing,
             _asnArgs = noSelectArgs,
-            _asnStrfyNum = LeaveNumbersAlone
+            _asnStrfyNum = Options.Don'tStringifyNumbers
           }
 
 data DBStepInfo b = DBStepInfo

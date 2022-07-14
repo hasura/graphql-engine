@@ -16,6 +16,7 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -190,7 +191,7 @@ mkBoolOperator ::
   -- | Naming convention for the field
   NamingCase ->
   -- | shall this be collapsed to True when null is given?
-  Bool ->
+  Options.DangerouslyCollapseBooleans ->
   -- | name of this operator
   GQLNameIdentifier ->
   -- | optional description
@@ -198,14 +199,14 @@ mkBoolOperator ::
   -- | parser for the underlying value
   Parser k n a ->
   InputFieldsParser n (Maybe a)
-mkBoolOperator tCase True name desc = fmap join . P.fieldOptional (applyFieldNameCaseIdentifier tCase name) desc . P.nullable
-mkBoolOperator tCase False name desc = P.fieldOptional (applyFieldNameCaseIdentifier tCase name) desc
+mkBoolOperator tCase Options.DangerouslyCollapseBooleans name desc = fmap join . P.fieldOptional (applyFieldNameCaseIdentifier tCase name) desc . P.nullable
+mkBoolOperator tCase Options.Don'tDangerouslyCollapseBooleans name desc = P.fieldOptional (applyFieldNameCaseIdentifier tCase name) desc
 
 equalityOperators ::
   (MonadParse n, 'Input P.<: k) =>
   NamingCase ->
   -- | shall this be collapsed to True when null is given?
-  Bool ->
+  Options.DangerouslyCollapseBooleans ->
   -- | parser for one column value
   Parser k n (UnpreparedValue b) ->
   -- | parser for a list of column values
@@ -223,7 +224,7 @@ comparisonOperators ::
   (MonadParse n, 'Input P.<: k) =>
   NamingCase ->
   -- | shall this be collapsed to True when null is given?
-  Bool ->
+  Options.DangerouslyCollapseBooleans ->
   -- | parser for one column value
   Parser k n (UnpreparedValue b) ->
   [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]

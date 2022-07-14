@@ -42,11 +42,9 @@ import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (StringifyNumbers (..))
-import Hasura.RQL.Types.Function (FunctionPermissionsCtx (FunctionPermissionsInferred))
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaPermsCtx (RemoteSchemaPermsDisabled))
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
@@ -222,7 +220,7 @@ serveOptions =
       soEnableConsole = True,
       soConsoleAssetsDir = Just "../console/static/dist",
       soEnableTelemetry = False,
-      soStringifyNum = StringifyNumbers,
+      soStringifyNum = Options.StringifyNumbers,
       soDangerousBooleanCollapse = False,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
@@ -234,10 +232,10 @@ serveOptions =
       soEventsHttpPoolSize = Nothing,
       soEventsFetchInterval = Nothing,
       soAsyncActionsFetchInterval = Skip,
-      soEnableRemoteSchemaPermissions = RemoteSchemaPermsDisabled,
+      soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
       soConnectionOptions = WS.defaultConnectionOptions,
       soWebsocketKeepAlive = Init.defaultKeepAliveDelay,
-      soInferFunctionPermissions = FunctionPermissionsInferred,
+      soInferFunctionPermissions = Options.InferFunctionPermissions,
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
       soSchemaPollInterval = Interval 10,

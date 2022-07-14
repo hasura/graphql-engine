@@ -29,6 +29,7 @@ import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR.BoolExp
@@ -54,7 +55,7 @@ convertToSQLTransaction ::
   IR.AnnotatedInsert ('Postgres pgKind) Void PG.SQLExp ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   m EncJSON
 convertToSQLTransaction (IR.AnnotatedInsert fieldName isSingle annIns mutationOutput) userInfo planVars stringifyNum =
   if null $ IR._aiInsertObject annIns
@@ -80,7 +81,7 @@ insertMultipleObjects ::
   UserInfo ->
   IR.MutationOutput ('Postgres pgKind) ->
   Seq.Seq Q.PrepArg ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   m EncJSON
 insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
@@ -138,7 +139,7 @@ insertObject ::
   HashMap PGCol PG.SQLExp ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
 insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (Map.keys columns) (map IR._riRelationInfo objectRels) (Map.keys additionalColumns)
@@ -221,7 +222,7 @@ insertObjRel ::
   ) =>
   Seq.Seq Q.PrepArg ->
   UserInfo ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   IR.ObjectRelationInsert ('Postgres pgKind) PG.SQLExp ->
   m (Int, [(PGCol, PG.SQLExp)])
 insertObjRel planVars userInfo stringifyNum objRelIns =
@@ -257,7 +258,7 @@ insertArrRel ::
   [(PGCol, PG.SQLExp)] ->
   UserInfo ->
   Seq.Seq Q.PrepArg ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   IR.ArrayRelationInsert ('Postgres pgKind) PG.SQLExp ->
   m Int
 insertArrRel resCols userInfo planVars stringifyNum arrRelIns =

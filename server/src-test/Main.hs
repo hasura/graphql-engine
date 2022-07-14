@@ -42,6 +42,7 @@ import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
 import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
 import Hasura.GraphQL.Parser.MonadParseTest qualified as MonadParseSpec
 import Hasura.GraphQL.Schema.Build.UpdateSpec qualified as UpdateSpec
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
 import Hasura.IncrementalSpec qualified as IncrementalSpec
 import Hasura.Logging
@@ -57,8 +58,6 @@ import Hasura.RQL.Types.AllowlistSpec qualified as AllowlistSpec
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
 import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.TableSpec qualified as TableSpec
 import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
@@ -190,13 +189,13 @@ buildPostgresSpecs = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let sqlGenCtx = SQLGenCtx LeaveNumbersAlone False False
+        let sqlGenCtx = SQLGenCtx Options.Don'tStringifyNumbers Options.Don'tDangerouslyCollapseBooleans Options.Don'tOptimizePermissionFilters
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =
               ServerConfigCtx
-                FunctionPermissionsInferred
-                RemoteSchemaPermsDisabled
+                Options.InferFunctionPermissions
+                Options.DisableRemoteSchemaPermissions
                 sqlGenCtx
                 maintenanceMode
                 mempty

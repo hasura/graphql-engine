@@ -19,6 +19,7 @@ import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -267,7 +268,8 @@ bqComparisonExps ::
   ColumnType 'BigQuery ->
   m (Parser 'Input n [ComparisonExp 'BigQuery])
 bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
-  collapseIfNull <- retrieve soDangerousBooleanCollapse
+  collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
+
   dWithinGeogOpParser <- geographyWithinDistanceInput
   tCase <- asks getter
   -- see Note [Columns in comparison expression are never nullable]
@@ -416,7 +418,7 @@ bqComputedField ::
   TableInfo 'BigQuery ->
   m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
 bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
-  stringifyNum <- retrieve soStringifyNum
+  stringifyNumbers <- retrieve Options.soStringifyNumbers
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
@@ -436,7 +438,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
                     IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                     IR._asnPerm = tablePermissionsInfo returnTablePermissions,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNum
+                    IR._asnStrfyNum = stringifyNumbers
                   }
     BigQuery.ReturnTableSchema returnFields -> do
       -- Check if the computed field is available in the select permission
@@ -462,7 +464,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
                     IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                     IR._asnPerm = IR.noTablePermissions,
                     IR._asnArgs = IR.noSelectArgs,
-                    IR._asnStrfyNum = stringifyNum
+                    IR._asnStrfyNum = stringifyNumbers
                   }
   where
     fieldDescription :: Maybe G.Description
