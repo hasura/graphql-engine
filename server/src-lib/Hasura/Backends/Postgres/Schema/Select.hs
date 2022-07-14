@@ -24,6 +24,7 @@ import Hasura.GraphQL.Parser qualified as P
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -64,7 +65,7 @@ selectFunction sourceInfo fi@FunctionInfo {..} description = runMaybeT do
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   selectionSetParser <- MaybeT $ returnFunctionParser sourceInfo tableInfo
   lift do
-    stringifyNum <- retrieve soStringifyNum
+    stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableArgsParser <- tableArguments sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLName _fiGQLArgsName
     let argsParser = liftA2 (,) functionArgsParser tableArgsParser
@@ -77,7 +78,7 @@ selectFunction sourceInfo fi@FunctionInfo {..} description = runMaybeT do
               IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
               IR._asnPerm = tablePermissionsInfo selectPermissions,
               IR._asnArgs = tableArgs',
-              IR._asnStrfyNum = stringifyNum
+              IR._asnStrfyNum = stringifyNumbers
             }
   where
     returnFunctionParser =
@@ -104,7 +105,7 @@ selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT 
   tableInfo <- askTableInfo sourceInfo _fiReturnType
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift do
-    stringifyNum <- retrieve soStringifyNum
+    stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableGQLName <- getTableGQLName tableInfo
     tableArgsParser <- tableArguments sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLAggregateName _fiGQLArgsName
@@ -129,7 +130,7 @@ selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT 
               IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
               IR._asnPerm = tablePermissionsInfo selectPermissions,
               IR._asnArgs = tableArgs',
-              IR._asnStrfyNum = stringifyNum
+              IR._asnStrfyNum = stringifyNumbers
             }
 
 selectFunctionConnection ::
@@ -154,7 +155,7 @@ selectFunctionConnection sourceInfo fi@FunctionInfo {..} description pkeyColumns
   selectionSetParser <- MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
   lift do
     fieldName <- mkRootFieldName $ _fiGQLName <> Name.__connection
-    stringifyNum <- retrieve soStringifyNum
+    stringifyNumbers <- retrieve Options.soStringifyNumbers
     tableConnectionArgsParser <- tableConnectionArgs pkeyColumns sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLName _fiGQLArgsName
     let argsParser = liftA2 (,) functionArgsParser tableConnectionArgsParser
@@ -172,7 +173,7 @@ selectFunctionConnection sourceInfo fi@FunctionInfo {..} description pkeyColumns
                     IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
                     IR._asnPerm = tablePermissionsInfo selectPermissions,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNum
+                    IR._asnStrfyNum = stringifyNumbers
                   }
             }
 
@@ -188,7 +189,7 @@ computedFieldPG ::
   m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
 computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
-  stringifyNum <- retrieve soStringifyNum
+  stringifyNumbers <- retrieve Options.soStringifyNumbers
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
@@ -232,7 +233,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
                     IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                     IR._asnPerm = tablePermissionsInfo remotePerms,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNum
+                    IR._asnStrfyNum = stringifyNumbers
                   }
   where
     fieldDescription :: Maybe G.Description

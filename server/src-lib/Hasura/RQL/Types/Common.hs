@@ -49,7 +49,6 @@ module Hasura.RQL.Types.Common
     Comment (..),
     commentToMaybeText,
     commentFromMaybeText,
-    StringifyNumbers (..),
     EnvRecord (..),
   )
 where
@@ -69,6 +68,7 @@ import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Parser.Name qualified as GName
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
@@ -247,16 +247,11 @@ isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
 
 data SQLGenCtx = SQLGenCtx
-  { stringifyNum :: StringifyNumbers,
-    dangerousBooleanCollapse :: Bool,
-    optimizePermissionFilters :: Bool
+  { stringifyNum :: Options.StringifyNumbers,
+    dangerousBooleanCollapse :: Options.DangerouslyCollapseBooleans,
+    optimizePermissionFilters :: Options.OptimizePermissionFilters
   }
   deriving (Show, Eq)
-
-data StringifyNumbers
-  = StringifyNumbers
-  | LeaveNumbersAlone
-  deriving (Eq, Show)
 
 successMsg :: EncJSON
 successMsg = encJFromBuilder "{\"message\":\"success\"}"

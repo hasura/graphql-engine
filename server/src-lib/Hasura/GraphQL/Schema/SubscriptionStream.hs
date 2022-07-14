@@ -15,6 +15,7 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( InputFieldsParser,
     Kind (..),
@@ -251,7 +252,7 @@ selectStreamTable ::
 selectStreamTable sourceInfo tableInfo fieldName description = runMaybeT $ do
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   xStreamSubscription <- hoistMaybe $ streamSubscriptionExtension @b
-  stringifyNum <- retrieve soStringifyNum
+  stringifyNumbers <- retrieve Options.soStringifyNumbers
   tableStreamArgsParser <- lift $ tableStreamArguments sourceInfo tableInfo
   selectionSetParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift $
@@ -265,7 +266,7 @@ selectStreamTable sourceInfo tableInfo fieldName description = runMaybeT $ do
                 IR._assnFrom = IR.FromTable tableName,
                 IR._assnPerm = tablePermissionsInfo selectPermissions,
                 IR._assnArgs = args,
-                IR._assnStrfyNum = stringifyNum
+                IR._assnStrfyNum = stringifyNumbers
               }
   where
     tableName = tableInfoName tableInfo

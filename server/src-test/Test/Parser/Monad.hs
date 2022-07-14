@@ -16,13 +16,12 @@ import Data.Has (Has (..))
 import Data.Text qualified as T
 import Hasura.Base.Error (Code, QErr)
 import Hasura.GraphQL.Parser.Class (MonadParse (..), MonadSchema (..))
-import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaKind (..), SchemaOptions (..), ignoreRemoteRelationship)
+import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaKind (..), ignoreRemoteRelationship)
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
-import Hasura.RQL.Types.Common (StringifyNumbers (LeaveNumbersAlone))
-import Hasura.RQL.Types.Function (FunctionPermissionsCtx (..))
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaPermsCtx (..))
 import Hasura.RQL.Types.SourceCustomization (CustomizeRemoteFieldName, MkRootFieldName)
 import Hasura.Session (RoleName, adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
@@ -62,11 +61,11 @@ instance Has SchemaOptions SchemaEnvironment where
   getter =
     const
       SchemaOptions
-        { soStringifyNum = LeaveNumbersAlone,
-          soDangerousBooleanCollapse = False,
-          soFunctionPermsContext = FunctionPermissionsInferred,
-          soRemoteSchemaPermsCtx = RemoteSchemaPermsDisabled,
-          soOptimizePermissionFilters = False
+        { soStringifyNumbers = Options.Don'tStringifyNumbers,
+          soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
+          soInferFunctionPermissions = Options.InferFunctionPermissions,
+          soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
+          soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters
         }
 
   modifier :: (SchemaOptions -> SchemaOptions) -> SchemaEnvironment -> SchemaEnvironment

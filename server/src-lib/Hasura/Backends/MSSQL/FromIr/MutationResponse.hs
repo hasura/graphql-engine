@@ -11,6 +11,7 @@ import Hasura.Backends.MSSQL.FromIr (FromIr)
 import Hasura.Backends.MSSQL.FromIr.Query (fromSelect)
 import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.Returning (MutationOutputG)
@@ -28,7 +29,7 @@ import Hasura.SQL.Backend
 --
 -- For single row insert: the selection set is translated to SQL query using @'fromSelect'
 mkMutationOutputSelect ::
-  IR.StringifyNumbers ->
+  Options.StringifyNumbers ->
   Text ->
   MutationOutputG 'MSSQL Void Expression ->
   FromIr Select

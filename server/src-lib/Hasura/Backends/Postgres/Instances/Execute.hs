@@ -60,6 +60,7 @@ import Hasura.GraphQL.Namespace
     RootFieldMap,
   )
 import Hasura.GraphQL.Namespace qualified as G
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
   ( QueryTagsComment (..),
@@ -81,7 +82,6 @@ import Hasura.RQL.Types.Common
   ( FieldName (..),
     JsonAggSelect (..),
     SourceName,
-    StringifyNumbers,
   )
 import Hasura.RQL.Types.Function
 import Hasura.SQL.AnyBackend qualified as AB
@@ -195,7 +195,7 @@ convertDelete ::
   ) =>
   UserInfo ->
   IR.AnnDelG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertDelete userInfo deleteOperation stringifyNum = do
   queryTags <- ask
@@ -211,7 +211,7 @@ convertUpdate ::
   ) =>
   UserInfo ->
   IR.AnnotatedUpdateG ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertUpdate userInfo updateOperation stringifyNum = do
   queryTags <- ask
@@ -232,7 +232,7 @@ convertInsert ::
   ) =>
   UserInfo ->
   IR.AnnotatedInsert ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   m (Tracing.TraceT (Q.TxET QErr IO) EncJSON)
 convertInsert userInfo insertOperation stringifyNum = do
   queryTags <- ask
@@ -276,7 +276,7 @@ pgDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   MutationDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->

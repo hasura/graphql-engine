@@ -40,6 +40,7 @@ import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Plan
 import Hasura.GraphQL.Namespace (RootFieldAlias (..), RootFieldMap)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
@@ -237,7 +238,7 @@ msDBMutationPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'MSSQL ->
   MutationDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->

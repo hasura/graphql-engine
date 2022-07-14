@@ -14,6 +14,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser (FieldParser, MonadSchema)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
@@ -68,7 +69,7 @@ remoteRelationshipToSchemaField ::
   RemoteSchemaFieldInfo ->
   m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
 remoteRelationshipToSchemaField remoteSchemaCache lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
-  remoteSchemaPermsCtx <- retrieve soRemoteSchemaPermsCtx
+  remoteSchemaPermsCtx <- retrieve Options.soEnableRemoteSchemaPermissions
   roleName <- asks getter
   remoteSchemaContext <-
     Map.lookup _rrfiRemoteSchemaName remoteSchemaCache

@@ -23,11 +23,11 @@ import Hasura.Backends.MSSQL.ToQuery as TQ
 import Hasura.Backends.MSSQL.Types.Internal as TSQL
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags (QueryTagsComment)
 import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Session
 
@@ -35,7 +35,7 @@ import Hasura.Session
 executeDelete ::
   (MonadError QErr m, MonadReader QueryTagsComment m) =>
   UserInfo ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   SourceConfig 'MSSQL ->
   AnnDelG 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (ExceptT QErr IO EncJSON)
@@ -62,7 +62,7 @@ executeDelete userInfo stringifyNum sourceConfig deleteOperation = do
 --   relationships with other tables.
 buildDeleteTx ::
   AnnDel 'MSSQL ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   QueryTagsComment ->
   Tx.TxET QErr IO EncJSON
 buildDeleteTx deleteOperation stringifyNum queryTags = do

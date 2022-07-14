@@ -11,9 +11,8 @@ where
 import Data.Aeson.TH
 import Data.HashSet qualified as Set
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.Server.Auth
 import Hasura.Server.Auth.JWT
 import Hasura.Server.Types (ExperimentalFeature)
@@ -30,8 +29,8 @@ $(deriveToJSON hasuraJSON ''JWTInfo)
 
 data ServerConfig = ServerConfig
   { scfgVersion :: !Version,
-    scfgIsFunctionPermissionsInferred :: !FunctionPermissionsCtx,
-    scfgIsRemoteSchemaPermissionsEnabled :: !RemoteSchemaPermsCtx,
+    scfgIsFunctionPermissionsInferred :: !Options.InferFunctionPermissions,
+    scfgIsRemoteSchemaPermissionsEnabled :: !Options.RemoteSchemaPermissions,
     scfgIsAdminSecretSet :: !Bool,
     scfgIsAuthHookSet :: !Bool,
     scfgIsJwtSet :: !Bool,
@@ -47,8 +46,8 @@ data ServerConfig = ServerConfig
 $(deriveToJSON hasuraJSON ''ServerConfig)
 
 runGetConfig ::
-  FunctionPermissionsCtx ->
-  RemoteSchemaPermsCtx ->
+  Options.InferFunctionPermissions ->
+  Options.RemoteSchemaPermissions ->
   AuthMode ->
   Bool ->
   ES.LiveQueriesOptions ->

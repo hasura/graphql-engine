@@ -1,8 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.GraphQL.Schema.Common
-  ( SchemaOptions (..),
-    SchemaContext (..),
+  ( SchemaContext (..),
     SchemaKind (..),
     RemoteRelationshipParserBuilder (..),
     NodeInterfaceParserBuilder (..),
@@ -56,6 +55,7 @@ import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Node
+import Hasura.GraphQL.Schema.Options (SchemaOptions)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
@@ -76,21 +76,6 @@ import Hasura.Session (RoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
-
--- | Aggregation of options required to build the schema.
-data SchemaOptions = SchemaOptions
-  { -- | how numbers should be represented in the ouput; this option does not
-    -- influence the schema, but is bundled in the resulting IR
-    soStringifyNum :: StringifyNumbers,
-    -- | should boolean fields be collapsed to True when null is given?
-    soDangerousBooleanCollapse :: Bool,
-    -- | whether function permissions should be inferred
-    soFunctionPermsContext :: FunctionPermissionsCtx,
-    -- | whether remote schema permissions are enabled
-    soRemoteSchemaPermsCtx :: RemoteSchemaPermsCtx,
-    -- | 'True' when we should attempt to use experimental SQL optimization passes
-    soOptimizePermissionFilters :: Bool
-  }
 
 -- | Aggregation of contextual information required to build the schema.
 data SchemaContext = SchemaContext

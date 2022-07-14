@@ -22,10 +22,9 @@ import Data.Aeson
 import Data.HashSet qualified as Set
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Function
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 
@@ -115,8 +114,8 @@ data EventingMode = EventingEnabled | EventingDisabled
   deriving (Show, Eq)
 
 data ServerConfigCtx = ServerConfigCtx
-  { _sccFunctionPermsCtx :: FunctionPermissionsCtx,
-    _sccRemoteSchemaPermsCtx :: RemoteSchemaPermsCtx,
+  { _sccFunctionPermsCtx :: Options.InferFunctionPermissions,
+    _sccRemoteSchemaPermsCtx :: Options.RemoteSchemaPermissions,
     _sccSQLGenCtx :: SQLGenCtx,
     _sccMaintenanceMode :: MaintenanceMode (),
     _sccExperimentalFeatures :: Set.HashSet ExperimentalFeature,

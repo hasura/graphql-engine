@@ -10,7 +10,6 @@ module Hasura.RQL.Types.Function
     FunctionInfo (..),
     FunctionInputArgument,
     FunctionPermissionInfo (..),
-    FunctionPermissionsCtx (..),
     FunctionPermissionsMap,
     FunctionVolatility (..),
     InputArgument (..),
@@ -307,21 +306,6 @@ emptyFunctionConfig = FunctionConfig Nothing Nothing emptyFunctionCustomRootFiel
 
 -- Lists are used to model overloaded functions.
 type DBFunctionsMetadata b = HashMap (FunctionName b) [RawFunctionInfo b]
-
-data FunctionPermissionsCtx
-  = FunctionPermissionsInferred
-  | FunctionPermissionsManual
-  deriving (Show, Eq)
-
-instance FromJSON FunctionPermissionsCtx where
-  parseJSON =
-    withBool "FunctionPermissionsCtx" $
-      pure . bool FunctionPermissionsManual FunctionPermissionsInferred
-
-instance ToJSON FunctionPermissionsCtx where
-  toJSON = \case
-    FunctionPermissionsInferred -> Bool True
-    FunctionPermissionsManual -> Bool False
 
 data FunctionArgsExpG a = FunctionArgsExp
   { _faePositional :: [a],

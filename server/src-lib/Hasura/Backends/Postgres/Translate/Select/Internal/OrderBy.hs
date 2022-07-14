@@ -40,6 +40,7 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.JoinTree
     withWriteObjectRelation,
   )
 import Hasura.Backends.Postgres.Translate.Types
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.OrderBy
   ( OrderByItemG (OrderByItemG, obiColumn),
@@ -72,7 +73,7 @@ Otherwise:
 
 processOrderByItems ::
   forall pgKind m.
-  ( MonadReader StringifyNumbers m,
+  ( MonadReader Options.StringifyNumbers m,
     MonadWriter JoinTree m,
     Backend ('Postgres pgKind)
   ) =>

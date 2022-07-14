@@ -31,6 +31,7 @@ import Hasura.Backends.Postgres.Translate.Select
 import Hasura.Backends.Postgres.Translate.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
 import Hasura.RQL.IR.BoolExp
@@ -67,7 +68,7 @@ data Mutation (b :: BackendType) = Mutation
     _mQuery :: !(MutationCTE, DS.Seq Q.PrepArg),
     _mOutput :: !(MutationOutput b),
     _mCols :: ![ColumnInfo b],
-    _mStrfyNum :: !StringifyNumbers
+    _mStrfyNum :: !Options.StringifyNumbers
   }
 
 mkMutation ::
@@ -76,7 +77,7 @@ mkMutation ::
   (MutationCTE, DS.Seq Q.PrepArg) ->
   MutationOutput ('Postgres pgKind) ->
   [ColumnInfo ('Postgres pgKind)] ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   Mutation ('Postgres pgKind)
 mkMutation _userInfo table query output allCols strfyNum =
   Mutation table query output allCols strfyNum
@@ -111,7 +112,7 @@ execUpdateQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   UserInfo ->
   (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -128,7 +129,7 @@ execDeleteQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   UserInfo ->
   (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -144,7 +145,7 @@ execInsertQuery ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   UserInfo ->
   (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
@@ -211,7 +212,7 @@ executeMutationOutputQuery ::
   Maybe Int ->
   MutationCTE ->
   MutationOutput ('Postgres pgKind) ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   -- | Prepared params
   [Q.PrepArg] ->
   m EncJSON
@@ -235,7 +236,7 @@ mutateAndFetchCols ::
   QualifiedTable ->
   [ColumnInfo ('Postgres pgKind)] ->
   (MutationCTE, DS.Seq Q.PrepArg) ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum = do
   let mutationTx :: Q.FromRes a => Q.TxE QErr a

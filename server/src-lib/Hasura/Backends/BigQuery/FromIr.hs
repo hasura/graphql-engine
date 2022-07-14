@@ -224,8 +224,7 @@ fromSelectRows parentSelectFromEntity annSelectG = do
         { _asnFields = fields,
           _asnFrom = from,
           _asnPerm = perm,
-          _asnArgs = args,
-          _asnStrfyNum = stringifyNumbers
+          _asnArgs = args
         } = annSelectG
       Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
       permissionBasedTop =
@@ -250,7 +249,7 @@ fromSelectRows parentSelectFromEntity annSelectG = do
     runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   fieldSources <-
     runReaderT
-      (traverse (fromAnnFieldsG argsExistingJoins stringifyNumbers) fields)
+      (traverse (fromAnnFieldsG argsExistingJoins) fields)
       (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
@@ -395,7 +394,6 @@ fromSelectAggregate minnerJoinFields annSelectG = do
           ( fromTableAggregateFieldG
               args'
               permissionBasedTop
-              stringifyNumbers
           )
           fields
       )
@@ -520,8 +518,7 @@ fromSelectAggregate minnerJoinFields annSelectG = do
       { _asnFields = fields,
         _asnFrom = from,
         _asnPerm = perm,
-        _asnArgs = args,
-        _asnStrfyNum = stringifyNumbers -- TODO: Do we ignore this for aggregates?
+        _asnArgs = args
       } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
@@ -909,10 +906,9 @@ data FieldSource
 fromTableAggregateFieldG ::
   Args ->
   Top ->
-  Rql.StringifyNumbers ->
   (Rql.FieldName, Ir.TableAggregateFieldG 'BigQuery Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
-fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName name, field) =
+fromTableAggregateFieldG args permissionBasedTop (Rql.FieldName name, field) =
   case field of
     Ir.TAFAgg (aggregateFields :: [(Rql.FieldName, Ir.AggregateField 'BigQuery)]) ->
       case NE.nonEmpty aggregateFields of
@@ -940,7 +936,7 @@ fromTableAggregateFieldG args permissionBasedTop stringifyNumbers (Rql.FieldName
     Ir.TAFNodes _ (fields :: [(Rql.FieldName, Ir.AnnFieldG 'BigQuery Void Expression)]) -> do
       fieldSources <-
         traverse
-          (fromAnnFieldsG (argsExistingJoins args) stringifyNumbers)
+          (fromAnnFieldsG (argsExistingJoins args))
           fields
       arrayAggProjections <- lift (selectProjectionsFromFieldSources False fieldSources)
       globalTop <- lift getGlobalTop
@@ -982,13 +978,12 @@ fromAggregateField aggregateField =
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
   Map TableName EntityAlias ->
-  Rql.StringifyNumbers ->
   (Rql.FieldName, Ir.AnnFieldG 'BigQuery Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
-fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
+fromAnnFieldsG existingJoins (Rql.FieldName name, field) =
   case field of
     Ir.AFColumn annColumnField -> do
-      expression <- fromAnnColumnField stringifyNumbers annColumnField
+      expression <- fromAnnColumnField annColumnField
       pure
         ( ExpressionFieldSource
             Aliased {aliasedThing = expression, aliasedAlias = name}
@@ -1024,10 +1019,9 @@ fromAnnFieldsG existingJoins stringifyNumbers (Rql.FieldName name, field) =
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
-  Rql.StringifyNumbers ->
   Ir.AnnColumnField 'BigQuery Expression ->
   ReaderT EntityAlias FromIr Expression
-fromAnnColumnField _stringifyNumbers annColumnField = do
+fromAnnColumnField annColumnField = do
   fieldName <- fromColumn column
   if asText || False -- TODO: (Rql.isScalarColumnWhere Psql.isBigNum typ && stringifyNumbers == Rql.StringifyNumbers)
     then pure (ToStringExpression (ColumnExpression fieldName))
@@ -1190,7 +1184,7 @@ fromObjectRelationSelectG _existingJoins annRelationSelectG = do
   fieldSources <-
     local
       (const entityAlias)
-      (traverse (fromAnnFieldsG mempty Rql.LeaveNumbersAlone) fields)
+      (traverse (fromAnnFieldsG mempty) fields)
   selectProjections <- lift (selectProjectionsFromFieldSources True fieldSources)
   joinFieldName <- lift (fromRelName _aarRelationshipName)
   joinAlias <-

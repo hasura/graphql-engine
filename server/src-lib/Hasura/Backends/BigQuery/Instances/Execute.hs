@@ -20,6 +20,7 @@ import Hasura.Base.Error qualified as E
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Namespace (RootFieldAlias)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
   ( emptyQueryTagsComment,
@@ -121,7 +122,7 @@ bqDBMutationPlan ::
   ( MonadError E.QErr m
   ) =>
   UserInfo ->
-  StringifyNumbers ->
+  Options.StringifyNumbers ->
   SourceName ->
   SourceConfig 'BigQuery ->
   MutationDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->

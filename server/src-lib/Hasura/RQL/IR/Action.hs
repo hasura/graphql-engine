@@ -47,12 +47,13 @@ import Control.Lens (makeLenses, makePrisms)
 import Data.Aeson qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.Kind (Type)
+import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
 import Hasura.RQL.Types.Action qualified as RQL
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Common (EnvRecord, FieldName, Fields, ResolvedWebhook, SourceName, StringifyNumbers, Timeout)
+import Hasura.RQL.Types.Common (EnvRecord, FieldName, Fields, ResolvedWebhook, SourceName, Timeout)
 import Hasura.RQL.Types.CustomTypes
   ( AnnotatedObjectType (..),
     AnnotatedOutputType (..),

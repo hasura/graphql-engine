@@ -87,6 +87,7 @@ import Hasura.GraphQL.Execute.Action.Subscription
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Execute.Subscription.Poll qualified as ES
 import Hasura.GraphQL.Logging (MonadQueryLog (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP
   ( CacheStoreSuccess (CacheStoreSkipped),
     MonadExecuteQuery (..),
@@ -376,8 +377,13 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
                   }
               sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
            in PostgresConnConfiguration sourceConnInfo Nothing
-      optimizePermissionFilters = EFOptimizePermissionFilters `elem` soExperimentalFeatures
-      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
+      dangerouslyCollapseBooleans
+        | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
+        | otherwise = Options.Don'tDangerouslyCollapseBooleans
+      optimizePermissionFilters
+        | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
+        | otherwise = Options.Don'tOptimizePermissionFilters
+      sqlGenCtx = SQLGenCtx soStringifyNum dangerouslyCollapseBooleans optimizePermissionFilters
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -667,10 +673,15 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
   -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
   liftIO disableAssertNF
 
-  let optimizePermissionFilters = EFOptimizePermissionFilters `elem` soExperimentalFeatures
-      sqlGenCtx = SQLGenCtx soStringifyNum soDangerousBooleanCollapse optimizePermissionFilters
+  let dangerouslyCollapseBooleans
+        | soDangerousBooleanCollapse = Options.DangerouslyCollapseBooleans
+        | otherwise = Options.Don'tDangerouslyCollapseBooleans
+
+      optimizePermissionFilters
+        | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
+        | otherwise = Options.Don'tOptimizePermissionFilters
+      sqlGenCtx = SQLGenCtx soStringifyNum dangerouslyCollapseBooleans optimizePermissionFilters
       Loggers loggerCtx logger _ = _scLoggers
-  --SchemaSyncCtx{..} = _scSchemaSyncCtx
 
   authModeRes <-
     runExceptT $

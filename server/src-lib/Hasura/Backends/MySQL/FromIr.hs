@@ -432,10 +432,9 @@ fromSelectArgsG selectArgsG = do
 -- number stringification is on, then we wrap it in a
 -- 'ToStringExpression' so that it's casted when being projected.
 fromAnnColumnField ::
-  IR.StringifyNumbers ->
   IR.AnnColumnField 'MySQL Expression ->
   ReaderT EntityAlias FromIr Expression
-fromAnnColumnField _stringifyNumbers annColumnField = do
+fromAnnColumnField annColumnField = do
   fieldName <- fromColumn column
   if typ == IR.ColumnScalar MySQL.Geometry
     then pure $ MethodExpression (ColumnExpression fieldName) "STAsText" []
@@ -634,7 +633,7 @@ fromObjectRelationSelectG annRelationSelectG = do
   fieldSources <-
     local
       (const entityAlias)
-      (traverse (fromAnnFieldsG IR.LeaveNumbersAlone) fields)
+      (traverse fromAnnFieldsG fields)
   let selectProjections =
         concatMap (toList . fieldSourceProjections) fieldSources
   filterExpression <- local (const entityAlias) (fromAnnBoolExp tableFilter)
@@ -707,7 +706,7 @@ fromSelectRows annSelectG = do
     runReaderT (fromSelectArgsG args) (fromAlias selectFrom)
   fieldSources <-
     runReaderT
-      (traverse (fromAnnFieldsG stringifyNumbers) fields)
+      (traverse fromAnnFieldsG fields)
       (fromAlias selectFrom)
   filterExpression <-
     runReaderT (fromAnnBoolExp permFilter) (fromAlias selectFrom)
@@ -732,8 +731,7 @@ fromSelectRows annSelectG = do
       { _asnFields = fields,
         _asnFrom = from,
         _asnPerm = perm,
-        _asnArgs = args,
-        _asnStrfyNum = stringifyNumbers
+        _asnArgs = args
       } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
 
@@ -779,13 +777,12 @@ fromArrayRelationSelectG annRelationSelectG = do
 
 -- | The main sources of fields, either constants, fields or via joins.
 fromAnnFieldsG ::
-  IR.StringifyNumbers ->
   (IR.FieldName, IR.AnnFieldG 'MySQL Void Expression) ->
   ReaderT EntityAlias FromIr FieldSource
-fromAnnFieldsG stringifyNumbers (IR.FieldName name, field) =
+fromAnnFieldsG (IR.FieldName name, field) =
   case field of
     IR.AFColumn annColumnField -> do
-      expression <- fromAnnColumnField stringifyNumbers annColumnField
+      expression <- fromAnnColumnField annColumnField
       pure
         ( ExpressionFieldSource
             Aliased {aliasedThing = expression, aliasedAlias = name}

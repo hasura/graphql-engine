@@ -43,6 +43,8 @@ import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation qualified as GSB
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options (SchemaOptions)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
   ( Definition,
     FieldParser,
@@ -376,7 +378,7 @@ comparisonExps ::
   m (Parser 'Input n [ComparisonExp ('Postgres pgKind)])
 comparisonExps = memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
-  collapseIfNull <- retrieve soDangerousBooleanCollapse
+  collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
   -- parsers used for comparison arguments
   geogInputParser <- geographyWithinDistanceInput

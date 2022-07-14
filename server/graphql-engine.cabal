@@ -812,6 +812,7 @@ library
                      , Hasura.GraphQL.Schema.NamingCase
                      , Hasura.GraphQL.Schema.Node
                      , Hasura.GraphQL.Schema.OrderBy
+                     , Hasura.GraphQL.Schema.Options
                      , Hasura.GraphQL.Schema.Parser
                      , Hasura.GraphQL.Schema.Postgres
                      , Hasura.GraphQL.Schema.Relay
