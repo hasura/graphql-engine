@@ -60,7 +60,7 @@ const RemoteSchemaSubSidebar = ({
             location.pathname.includes(`/remote-schemas/`) &&
             location.pathname.includes(`/${d.name}/`)
           ) {
-            activeTableClass = 'text-orange-400';
+            activeTableClass = '!text-yellow-500';
           }
 
           const inconsistentCurrentSchema = inconsistentRemoteSchemas.find(
@@ -68,12 +68,9 @@ const RemoteSchemaSubSidebar = ({
           );
 
           return (
-            <li
-              className={activeTableClass}
-              key={i}
-              data-test={`remote-schema-sidebar-links-${i + 1}`}
-            >
+            <li key={i} data-test={`remote-schema-sidebar-links-${i + 1}`}>
               <Link
+                className={activeTableClass}
                 to={`${appPrefix}/manage/${d.name}/details`}
                 data-test={d.name}
               >

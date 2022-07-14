@@ -168,7 +168,7 @@ class Common extends React.Component {
             onButtonChange={this.toggleUrlParam.bind(this)}
             onInputChange={this.handleInputChange.bind(this)}
             required={urlRequired}
-            bsClass={`${inputStyles} w-80`}
+            bsClass="w-80"
             inputVal={manualUrl || envName}
             disabled={isDisabled}
             id="graphql-server-url"
