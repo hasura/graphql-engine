@@ -72,7 +72,7 @@ export const RemoteSchemaWidget = ({
         <label className="block ">
           <span className="text-gray-600 mb-xs font-semibold">Mapping</span>
           <br />
-          <span className="text-gray-600 mb-xs">
+          <span className="text-gray-600 mb-xs font-normal">
             Build a query mapping from your source schema type to a field
             argument in your reference schema{' '}
           </span>
