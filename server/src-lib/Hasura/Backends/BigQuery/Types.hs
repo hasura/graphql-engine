@@ -58,7 +58,6 @@ module Hasura.Backends.BigQuery.Types
     isNumType,
     parseScalarValue,
     projectionAlias,
-    scalarTypeGraphQLName,
     scientificToText,
     columnToFieldName,
     FunctionName (..),
@@ -93,7 +92,6 @@ import Hasura.Base.Error
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.Function (FunctionArgName)
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.Haskell.TH.Syntax
@@ -1018,23 +1016,6 @@ instance ToJSON FunctionArgument where
 --------------------------------------------------------------------------------
 -- Backend-related stuff
 --
-scalarTypeGraphQLName :: ScalarType -> Either QErr G.Name
-scalarTypeGraphQLName = \case
-  StringScalarType -> pure RQL.stringScalar
-  BytesScalarType -> pure RQL.stringScalar
-  IntegerScalarType -> pure RQL.intScalar
-  FloatScalarType -> pure RQL.floatScalar
-  BoolScalarType -> pure RQL.boolScalar
-  DecimalScalarType -> pure RQL.floatScalar
-  BigDecimalScalarType -> pure RQL.floatScalar
-  TimestampScalarType -> pure RQL.stringScalar
-  DateScalarType -> pure RQL.stringScalar
-  TimeScalarType -> pure RQL.stringScalar
-  DatetimeScalarType -> pure RQL.stringScalar
-  GeographyScalarType -> pure RQL.stringScalar
-  scalarType ->
-    throw400 ValidationFailed $
-      "unsupported bigquery scalar type: " <> tshow scalarType
 
 parseScalarValue :: ScalarType -> J.Value -> Either QErr Value
 parseScalarValue scalarType jValue = case scalarType of

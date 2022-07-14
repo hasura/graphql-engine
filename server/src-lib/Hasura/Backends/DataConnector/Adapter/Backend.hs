@@ -15,7 +15,6 @@ import Hasura.Backends.DataConnector.IR.Table as IR.T
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable)
-import Hasura.RQL.Types.Common as RQL (boolScalar, floatScalar, stringScalar)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -103,12 +102,6 @@ instance Backend 'DataConnector where
 
   functionGraphQLName :: FunctionName 'DataConnector -> Either QErr G.Name
   functionGraphQLName = error "functionGraphQLName: not implemented for the Data Connector backend."
-
-  scalarTypeGraphQLName :: ScalarType 'DataConnector -> Either QErr G.Name
-  scalarTypeGraphQLName = \case
-    IR.S.T.String -> pure stringScalar
-    IR.S.T.Number -> pure floatScalar
-    IR.S.T.Bool -> pure boolScalar
 
   snakeCaseTableName :: TableName 'DataConnector -> Text
   snakeCaseTableName = IR.N.unName

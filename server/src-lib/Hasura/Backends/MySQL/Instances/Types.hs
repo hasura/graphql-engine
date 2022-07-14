@@ -100,9 +100,6 @@ instance Backend 'MySQL where
   functionGraphQLName :: FunctionName 'MySQL -> Either QErr G.Name
   functionGraphQLName = error "functionGraphQLName: MySQL backend does not support this operation yet."
 
-  scalarTypeGraphQLName :: ScalarType 'MySQL -> Either QErr G.Name
-  scalarTypeGraphQLName = error "scalarTypeGraphQLName: MySQL backend does not support this operation yet."
-
   snakeCaseTableName :: TableName 'MySQL -> Text
   snakeCaseTableName MySQL.TableName {name, schema} =
     maybe "" (<> "_") schema <> name
