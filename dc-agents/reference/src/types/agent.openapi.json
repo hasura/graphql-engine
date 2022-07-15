@@ -789,14 +789,22 @@
         ]
       },
       "BinaryComparisonOperator": {
-        "enum": [
-          "less_than",
-          "less_than_or_equal",
-          "greater_than",
-          "greater_than_or_equal",
-          "equal"
-        ],
-        "type": "string"
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "less_than",
+              "less_than_or_equal",
+              "greater_than",
+              "greater_than_or_equal",
+              "equal"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
       },
       "ComparisonColumn": {
         "properties": {
@@ -881,16 +889,32 @@
         ]
       },
       "BinaryArrayComparisonOperator": {
-        "enum": [
-          "in"
-        ],
-        "type": "string"
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "in"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
       },
       "UnaryComparisonOperator": {
-        "enum": [
-          "is_null"
-        ],
-        "type": "string"
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "is_null"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
       },
       "ApplyBinaryArrayComparisonExpression": {
         "properties": {

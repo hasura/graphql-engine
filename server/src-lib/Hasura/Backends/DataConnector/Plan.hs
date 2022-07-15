@@ -16,9 +16,11 @@ import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Min (..))
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended ((<>>))
+import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Export qualified as IR
+import Hasura.Backends.DataConnector.IR.Expression (UnaryComparisonOperator (CustomUnaryComparisonOperator))
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
@@ -305,33 +307,41 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
         AIN literal -> pure $ inOperator literal
         ANIN literal -> pure . IR.E.Not $ inOperator literal
         CEQ rootOrCurrentColumn ->
-          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
         CNE rootOrCurrentColumn ->
-          IR.E.Not <$> mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
+          pure $ IR.E.Not $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.Equal rootOrCurrentColumn
         CGT rootOrCurrentColumn ->
-          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThan rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThan rootOrCurrentColumn
         CLT rootOrCurrentColumn ->
-          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThan rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThan rootOrCurrentColumn
         CGTE rootOrCurrentColumn ->
-          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThanOrEqual rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.GreaterThanOrEqual rootOrCurrentColumn
         CLTE rootOrCurrentColumn ->
-          mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThanOrEqual rootOrCurrentColumn
+          pure $ mkApplyBinaryComparisonOperatorToAnotherColumn IR.E.LessThanOrEqual rootOrCurrentColumn
         ALIKE _literal ->
           throw400 NotSupported "The ALIKE operator is not supported by the Data Connector backend"
         ANLIKE _literal ->
           throw400 NotSupported "The ANLIKE operator is not supported by the Data Connector backend"
         ACast _literal ->
           throw400 NotSupported "The ACast operator is not supported by the Data Connector backend"
+        ABackendSpecific CustomBooleanOperator {..} -> case _cboRHS of
+          Nothing -> pure $ IR.E.ApplyUnaryComparisonOperator (CustomUnaryComparisonOperator _cboName) currentComparisonColumn
+          Just (Left rootOrCurrentColumn) ->
+            pure $ mkApplyBinaryComparisonOperatorToAnotherColumn (IR.E.CustomBinaryComparisonOperator _cboName) rootOrCurrentColumn
+          Just (Right (IR.S.ValueLiteral value)) ->
+            pure $ mkApplyBinaryComparisonOperatorToScalar (IR.E.CustomBinaryComparisonOperator _cboName) value
+          Just (Right (IR.S.ArrayLiteral array)) ->
+            pure $ IR.E.ApplyBinaryArrayComparisonOperator (IR.E.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array
       where
         currentComparisonColumn :: IR.E.ComparisonColumn
         currentComparisonColumn = IR.E.ComparisonColumn (reverse columnRelationshipReversePath) columnName
 
-        mkApplyBinaryComparisonOperatorToAnotherColumn :: IR.E.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> m IR.E.Expression
-        mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) = do
+        mkApplyBinaryComparisonOperatorToAnotherColumn :: IR.E.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> IR.E.Expression
+        mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) =
           let columnPath = case rootOrCurrent of
                 IsRoot -> []
                 IsCurrent -> (reverse columnRelationshipReversePath)
-          pure $ IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.AnotherColumn $ IR.E.ComparisonColumn columnPath otherColumnName)
+           in IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.AnotherColumn $ IR.E.ComparisonColumn columnPath otherColumnName)
 
         inOperator :: IR.S.Literal -> IR.E.Expression
         inOperator literal =

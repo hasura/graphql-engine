@@ -107,6 +107,7 @@ data BinaryComparisonOperator
   | GreaterThan
   | GreaterThanOrEqual
   | Equal
+  | CustomBinaryComparisonOperator Text
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
@@ -116,6 +117,7 @@ instance Witch.From API.BinaryComparisonOperator BinaryComparisonOperator where
   from API.GreaterThan = GreaterThan
   from API.GreaterThanOrEqual = GreaterThanOrEqual
   from API.Equal = Equal
+  from (API.CustomBinaryComparisonOperator name) = CustomBinaryComparisonOperator name
 
 instance Witch.From BinaryComparisonOperator API.BinaryComparisonOperator where
   from LessThan = API.LessThan
@@ -123,28 +125,35 @@ instance Witch.From BinaryComparisonOperator API.BinaryComparisonOperator where
   from GreaterThan = API.GreaterThan
   from GreaterThanOrEqual = API.GreaterThanOrEqual
   from Equal = API.Equal
+  from (CustomBinaryComparisonOperator name) = API.CustomBinaryComparisonOperator name
 
 data UnaryComparisonOperator
   = IsNull
+  | CustomUnaryComparisonOperator Text
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
 instance Witch.From API.UnaryComparisonOperator UnaryComparisonOperator where
   from API.IsNull = IsNull
+  from (API.CustomUnaryComparisonOperator name) = CustomUnaryComparisonOperator name
 
 instance Witch.From UnaryComparisonOperator API.UnaryComparisonOperator where
   from IsNull = API.IsNull
+  from (CustomUnaryComparisonOperator name) = API.CustomUnaryComparisonOperator name
 
 data BinaryArrayComparisonOperator
   = In
+  | CustomBinaryArrayComparisonOperator Text
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
 instance Witch.From API.BinaryArrayComparisonOperator BinaryArrayComparisonOperator where
   from API.In = In
+  from (API.CustomBinaryArrayComparisonOperator name) = CustomBinaryArrayComparisonOperator name
 
 instance Witch.From BinaryArrayComparisonOperator API.BinaryArrayComparisonOperator where
   from In = API.In
+  from (CustomBinaryArrayComparisonOperator name) = API.CustomBinaryArrayComparisonOperator name
 
 data ComparisonColumn = ComparisonColumn
   { _ccPath :: [IR.R.RelationshipName],

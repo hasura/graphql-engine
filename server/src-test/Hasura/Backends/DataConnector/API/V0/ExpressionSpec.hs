@@ -43,16 +43,27 @@ spec = do
     describe "Equal" $
       testToFromJSONToSchema Equal [aesonQQ|"equal"|]
 
+    describe "CustomBinaryComparisonOperator" $
+      testToFromJSONToSchema (CustomBinaryComparisonOperator "foo") [aesonQQ|"foo"|]
+
     jsonOpenApiProperties genBinaryComparisonOperator
 
   describe "BinaryArrayComparisonOperator" $ do
     describe "In" $
       testToFromJSONToSchema In [aesonQQ|"in"|]
+
+    describe "CustomBinaryArrayComparisonOperator" $
+      testToFromJSONToSchema (CustomBinaryArrayComparisonOperator "foo") [aesonQQ|"foo"|]
+
     jsonOpenApiProperties genBinaryArrayComparisonOperator
 
   describe "UnaryComparisonOperator" $ do
     describe "IsNull" $
       testToFromJSONToSchema IsNull [aesonQQ|"is_null"|]
+
+    describe "CustomUnaryComparisonOperator" $
+      testToFromJSONToSchema (CustomUnaryComparisonOperator "foo") [aesonQQ|"foo"|]
+
     jsonOpenApiProperties genUnaryComparisonOperator
 
   describe "ComparisonColumn" $ do
@@ -166,13 +177,25 @@ spec = do
     jsonProperties genExpression
 
 genBinaryComparisonOperator :: MonadGen m => m BinaryComparisonOperator
-genBinaryComparisonOperator = Gen.enumBounded
+genBinaryComparisonOperator =
+  Gen.choice
+    [ Gen.element [LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, Equal],
+      CustomBinaryComparisonOperator <$> Gen.text (linear 0 5) Gen.unicode
+    ]
 
 genBinaryArrayComparisonOperator :: MonadGen m => m BinaryArrayComparisonOperator
-genBinaryArrayComparisonOperator = Gen.enumBounded
+genBinaryArrayComparisonOperator =
+  Gen.choice
+    [ pure In,
+      CustomBinaryArrayComparisonOperator <$> Gen.text (linear 0 5) Gen.unicode
+    ]
 
 genUnaryComparisonOperator :: MonadGen m => m UnaryComparisonOperator
-genUnaryComparisonOperator = Gen.enumBounded
+genUnaryComparisonOperator =
+  Gen.choice
+    [ pure IsNull,
+      CustomUnaryComparisonOperator <$> Gen.text (linear 0 5) Gen.unicode
+    ]
 
 genComparisonColumn :: MonadGen m => m ComparisonColumn
 genComparisonColumn =
