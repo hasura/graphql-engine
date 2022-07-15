@@ -1225,7 +1225,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebsocketKeepAlive) result `Hspec.shouldSatisfy` \case
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldSatisfy` \case
           Right soWebSocketKeepAlive -> soWebSocketKeepAlive == UUT.KeepAliveDelay 5
           Left _err -> False
 
@@ -1237,7 +1237,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebsocketKeepAlive) result `Hspec.shouldSatisfy` \case
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldSatisfy` \case
           Right soWebSocketKeepAlive -> soWebSocketKeepAlive == UUT.KeepAliveDelay 10
           Left _err -> False
 
@@ -1249,7 +1249,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebsocketKeepAlive) result `Hspec.shouldSatisfy` \case
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldSatisfy` \case
           Right soWebSocketKeepAlive -> soWebSocketKeepAlive == UUT.KeepAliveDelay 20
           Left _err -> False
 
@@ -1493,7 +1493,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebsocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
           Right soWebSocketConnectionInitTimeout -> soWebSocketConnectionInitTimeout == UUT.WSConnectionInitTimeout 3
           Left _err -> False
 
@@ -1506,7 +1506,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebsocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
           Right soWebSocketConnectionInitTimeout -> soWebSocketConnectionInitTimeout == UUT.WSConnectionInitTimeout 200
           Left _err -> False
 
@@ -1518,7 +1518,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebsocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
           Right soWebSocketConnectionInitTimeout -> soWebSocketConnectionInitTimeout == UUT.WSConnectionInitTimeout 300
           Left _err -> False
 
@@ -1586,6 +1586,3 @@ mkServeOptionsSpec =
         fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldSatisfy` \case
           Right soDefaultNamingConvention -> soDefaultNamingConvention == Just NC.GraphqlCase
           Left _err -> False
-
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe = either (const Nothing) Just

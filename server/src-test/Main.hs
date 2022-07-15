@@ -142,9 +142,9 @@ unitSpecs = do
   describe "Hasura.RQL.Types.Table" TableSpec.spec
   describe "Hasura.RQL.WebhookTransformsSpec" WebhookTransformsSpec.spec
   describe "Hasura.Server.Auth.JWT" JWTSpec.spec
-  describe "Hasura.Server.Migrate.Version" VersionSpec.spec
   describe "Hasura.Server.Init" InitSpec.spec
-  describe "Hasura.Server.Init Args" ArgSpec.spec
+  describe "Hasura.Server.Init.Arg" ArgSpec.spec
+  describe "Hasura.Server.Migrate.Version" VersionSpec.spec
   describe "Hasura.Session" SessionSpec.spec
 
 buildMSSQLSpecs :: IO (SpecWith ())

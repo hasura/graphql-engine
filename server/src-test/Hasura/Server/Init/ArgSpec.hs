@@ -6,7 +6,6 @@ where
 --------------------------------------------------------------------------------
 
 import Database.PG.Query qualified as Q
-import Hasura.App qualified as App
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.Logging qualified as Logging
@@ -34,7 +33,7 @@ mainParserSpec =
   Hspec.describe "Main Command" $ do
     Hspec.it "Accepts the serve command" $ do
       let -- Given
-          parserInfo = Opt.info (App.parseHGECommand @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["serve", "--server-port", "420"]
           -- Then
@@ -46,7 +45,7 @@ mainParserSpec =
 
     Hspec.it "Accepts the export command" $ do
       let -- Given
-          parserInfo = Opt.info (App.parseHGECommand @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["export"]
           -- Then
@@ -58,7 +57,7 @@ mainParserSpec =
 
     Hspec.it "Accepts the clean command" $ do
       let -- Given
-          parserInfo = Opt.info (App.parseHGECommand @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["clean"]
           -- Then
@@ -70,7 +69,7 @@ mainParserSpec =
 
     Hspec.it "Accepts the downgrade command" $ do
       let -- Given
-          parserInfo = Opt.info (App.parseHGECommand @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["downgrade", "--to-v1.0.0-beta.1", "--dryRun"]
           -- Then
@@ -82,7 +81,7 @@ mainParserSpec =
 
     Hspec.it "Accepts the version command" $ do
       let -- Given
-          parserInfo = Opt.info (App.parseHGECommand @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["version"]
           -- Then
@@ -99,7 +98,7 @@ downgradeParserSpec =
   Hspec.describe "Downgrade Command" $ do
     Hspec.it "It accepts '--to-catalog-version'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--to-catalog-version", "v2.8.2"]
           -- Then
@@ -112,7 +111,7 @@ downgradeParserSpec =
 
     Hspec.it "It fails '--to-catalog-version' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--to-catalog-version"]
           -- Then
@@ -125,7 +124,7 @@ downgradeParserSpec =
 
     Hspec.it "It accepts '--dry-run' with '--to-catalog-version'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--to-catalog-version", "v2.8.2", "--dryRun"]
           -- Then
@@ -138,7 +137,7 @@ downgradeParserSpec =
 
     Hspec.it "It accepts '--dry-run' with a downgrade shortcut" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--to-v1.0.0-beta.1", "--dryRun"]
           -- Then
@@ -151,7 +150,7 @@ downgradeParserSpec =
 
     Hspec.it "It fails '--dry-run' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--to-catalog-version", "v2.8.2", "--dryRun", "x"]
           -- Then
@@ -164,7 +163,7 @@ downgradeParserSpec =
 
     Hspec.it "It fails '--dry-run' must be run with '--to-catalog-version' or a downgrade shortcut" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--dryRun"]
           -- Then
@@ -177,7 +176,7 @@ downgradeParserSpec =
 
     Hspec.it "It accepts a downgrade shortcut" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--to-v1.0.0-beta.1"]
           -- Then
@@ -190,7 +189,7 @@ downgradeParserSpec =
 
     Hspec.it "It fails downgrade shortcuts dont expect arguments" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.downgradeOptionsParser Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.downgradeCommandParser Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--to-v1.0.0-beta.1", "x"]
           -- Then
@@ -208,7 +207,7 @@ serveParserSpec =
   Hspec.describe "Serve Command" $ do
     Hspec.it "It accepts '--server-port'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--server-port", "420"]
           -- Then
@@ -221,7 +220,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--server-port' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--server-port"]
           -- Then
@@ -234,7 +233,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--server-port' expects an integer" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--server-port", "four"]
           -- Then
@@ -247,7 +246,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--server-host'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--server-host", "*"]
           -- Then
@@ -260,7 +259,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--server-host' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--server-host"]
           -- Then
@@ -273,7 +272,7 @@ serveParserSpec =
 
     Hspec.it "It accepts the flags for a 'RawConnParams'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--stripes", "3", "--connections", "2", "--timeout", "40", "--conn-lifetime", "400", "--use-prepared-statements", "true", "--pool-timeout", "45"]
           -- Then
@@ -286,7 +285,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--tx-iso'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--tx-iso", "read-committed"]
           -- Then
@@ -299,7 +298,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--tx-iso' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--tx-iso"]
           -- Then
@@ -312,7 +311,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--tx-iso' expects valid TX isolation levels" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--tx-iso", "foo"]
           -- Then
@@ -325,7 +324,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--admin-secret'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--admin-secret", "A monad is a monoid in the category of endofunctors"]
           -- Then
@@ -338,7 +337,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--admin-secret' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--admin-secret"]
           -- Then
@@ -351,7 +350,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--access-key'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--access-key", "A monad is a monoid in the category of endofunctors"]
           -- Then
@@ -364,7 +363,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--access-key' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--access-key"]
           -- Then
@@ -375,9 +374,22 @@ serveParserSpec =
         Opt.Failure _pf -> pure ()
         Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
 
+    Hspec.it "It fails '--admin-secret' and '--access-key' cannot be used in conjunction" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--admin-secret", "A monad is a monoid in the category of endofunctors", "--access-key", "x"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
     Hspec.it "It accepts '--auth-hook'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--auth-hook", "http://www.auth.com"]
           -- Then
@@ -390,7 +402,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--auth-hook' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--auth-hook"]
           -- Then
@@ -403,7 +415,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--auth-hook-mode'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--auth-hook-mode", "POST"]
           -- Then
@@ -416,7 +428,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--auth-hook-mode' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--auth-hook-mode"]
           -- Then
@@ -429,7 +441,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--auth-hook-mode' only expects GET or POST" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--auth-hook-mode", "PUT"]
           -- Then
@@ -442,7 +454,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--jwt-secret'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--jwt-secret", "{ \"jwk_url\": \"https://www.hasura.io\", \"issuer\": \"myapp\" }"]
           -- Then
@@ -455,7 +467,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--jwt-secret' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--jwt-secret"]
           -- Then
@@ -468,7 +480,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--jwt-secret' expects a JSON serialized 'JWTConfig' object" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--jwt-secret", "{ \"name\": \"Simon\", \"issuer\": \"myapp\" }"]
           -- Then
@@ -481,7 +493,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--unauthorized-role'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--unauthorized-role", "guest"]
           -- Then
@@ -494,7 +506,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--unauthorized-role' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--unauthorized-role"]
           -- Then
@@ -507,7 +519,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--cors-domain'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--cors-domain", "https://*.foo.bar.com:8080, http://*.localhost, http://localhost:3000, http://example.com"]
           -- Then
@@ -521,7 +533,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--cors-domain' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--cors-domain"]
           -- Then
@@ -534,7 +546,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--cors-domain' rejects an invalid CORS domains" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--cors-domain", "x"]
           -- Then
@@ -547,7 +559,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--disable-cors'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--disable-cors"]
           -- Then
@@ -560,7 +572,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--disable-cors' supercedes '--cors-domain'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--cors-domain", "https://*.foo.bar.com:8080, http://*.localhost, http://localhost:3000, http://example.com", "--disable-cors"]
           -- Then
@@ -573,7 +585,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--disable-cors' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--disable-cors", "x"]
           -- Then
@@ -586,7 +598,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enable-console'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-console"]
           -- Then
@@ -599,7 +611,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enable-console' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-console", "x"]
           -- Then
@@ -612,7 +624,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--console-assets-dir'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--console-assets-dir", "/assets"]
           -- Then
@@ -625,7 +637,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--console-assets-dir' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--console-assets-dir"]
           -- Then
@@ -638,7 +650,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enable-telemetry'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-telemetry", "true"]
           -- Then
@@ -651,7 +663,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enable-telemetry' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-telemetry"]
           -- Then
@@ -664,7 +676,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enable-telemetry' expects a boolean argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-telemetry", "one"]
           -- Then
@@ -677,7 +689,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--ws-read-cookie'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--ws-read-cookie"]
           -- Then
@@ -690,7 +702,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--ws-read-cookie' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--ws-read-cookie", "x"]
           -- Then
@@ -703,7 +715,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--stringify-numeric-types'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--stringify-numeric-types"]
           -- Then
@@ -716,7 +728,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--stringify-numeric-types' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--stringify-numeric-types", "x"]
           -- Then
@@ -729,7 +741,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--v1-boolean-null-collapse'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--v1-boolean-null-collapse", "true"]
           -- Then
@@ -742,7 +754,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--v1-boolean-null-collapse' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--v1-boolean-null-collapse"]
           -- Then
@@ -755,7 +767,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--v1-boolean-null-collapse' expects a boolean argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--v1-boolean-null-collapse", "123"]
           -- Then
@@ -768,7 +780,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enabled-apis'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enabled-apis", "graphql,pgdump"]
           -- Then
@@ -781,7 +793,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enabled-apis' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enabled-apis"]
           -- Then
@@ -794,7 +806,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enabled-apis' expects a valid API arguments" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enabled-apis", "PIZZA"]
           -- Then
@@ -807,7 +819,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--live-queries-multiplexed-refetch-interval'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--live-queries-multiplexed-refetch-interval", "54000"]
           -- Then
@@ -820,7 +832,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--live-queries-multiplexed-refetch-interval' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--live-queries-multiplexed-refetch-interval"]
           -- Then
@@ -833,7 +845,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--live-queries-multiplexed-refetch-interval' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--live-queries-multiplexed-refetch-interval", "true"]
           -- Then
@@ -846,7 +858,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--live-queries-multiplexed-batch-size'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--live-queries-multiplexed-batch-size", "102"]
           -- Then
@@ -859,7 +871,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--live-queries-multiplexed-batch-size' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--live-queries-multiplexed-batch-size"]
           -- Then
@@ -872,7 +884,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--live-queries-multiplexed-batch-size' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--live-queries-multiplexed-batch-size", "false"]
           -- Then
@@ -885,7 +897,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--streaming-queries-multiplexed-refetch-interval'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--streaming-queries-multiplexed-refetch-interval", "57000"]
           -- Then
@@ -898,7 +910,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--streaming-queries-multiplexed-refetch-interval' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--streaming-queries-multiplexed-refetch-interval"]
           -- Then
@@ -911,7 +923,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--streaming-queries-multiplexed-refetch-interval' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--streaming-queries-multiplexed-refetch-interval", "foo"]
           -- Then
@@ -924,7 +936,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--streaming-queries-multiplexed-batch-size'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--streaming-queries-multiplexed-batch-size", "102"]
           -- Then
@@ -937,7 +949,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--streaming-queries-multiplexed-batch-size' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--streaming-queries-multiplexed-batch-size"]
           -- Then
@@ -950,7 +962,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--streaming-queries-multiplexed-batch-size' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--streaming-queries-multiplexed-batch-size", "102.5"]
           -- Then
@@ -963,7 +975,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enable-allowlist'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-allowlist"]
           -- Then
@@ -976,7 +988,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enable-allowlist' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-allowlist", "x"]
           -- Then
@@ -989,7 +1001,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enabled-log-types'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enabled-log-types", "startup, webhook-log"]
           -- Then
@@ -1002,7 +1014,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enabled-log-types' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enabled-log-types"]
           -- Then
@@ -1015,7 +1027,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enabled-log-types' expects a valid log types as arguments" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enabled-log-types", "not-valid-log-type, startup"]
           -- Then
@@ -1028,7 +1040,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--log-level'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--log-level", "warn"]
           -- Then
@@ -1041,7 +1053,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--log-level' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--log-level"]
           -- Then
@@ -1054,7 +1066,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--log-level' expects a valid log level argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--log-level", "shout"]
           -- Then
@@ -1067,7 +1079,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--query-plan-cache-size'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--query-plan-cache-size", "65535"]
           -- Then
@@ -1081,7 +1093,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--query-plan-cache-size' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--query-plan-cache-size"]
           -- Then
@@ -1094,7 +1106,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--query-plan-cache-size' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--query-plan-cache-size", "false"]
           -- Then
@@ -1107,7 +1119,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--dev-mode'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--dev-mode"]
           -- Then
@@ -1120,7 +1132,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--dev-mode' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--dev-mode", "x"]
           -- Then
@@ -1133,7 +1145,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--admin-internal-errors'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--admin-internal-errors", "true"]
           -- Then
@@ -1146,7 +1158,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--admin-internal-errors' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--admin-internal-errors"]
           -- Then
@@ -1159,7 +1171,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--admin-internal-errors' expects a boolean argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--admin-internal-errors", "five"]
           -- Then
@@ -1172,7 +1184,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--events-http-pool-size'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-http-pool-size", "50"]
           -- Then
@@ -1185,7 +1197,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--events-http-pool-size' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-http-pool-size"]
           -- Then
@@ -1198,7 +1210,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--events-http-pool-size' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-http-pool-size", "10.5"]
           -- Then
@@ -1211,7 +1223,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--events-fetch-interval'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-fetch-interval", "634"]
           -- Then
@@ -1224,7 +1236,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--events-fetch-interval' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-fetch-interval"]
           -- Then
@@ -1237,7 +1249,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--events-fetch-interval' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-fetch-interval", "true"]
           -- Then
@@ -1250,7 +1262,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--async-actions-fetch-interval'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--async-actions-fetch-interval", "123"]
           -- Then
@@ -1263,7 +1275,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--async-actions-fetch-interval' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--async-actions-fetch-interval"]
           -- Then
@@ -1276,7 +1288,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--async-actions-fetch-interval' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--async-actions-fetch-interval", "true"]
           -- Then
@@ -1289,7 +1301,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enable-remote-schema-permissions'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-remote-schema-permissions"]
           -- Then
@@ -1302,7 +1314,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enable-remote-schema-permissions' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-remote-schema-permissions", "x"]
           -- Then
@@ -1315,7 +1327,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--websocket-compression'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-compression"]
           -- Then
@@ -1328,7 +1340,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--websocket-compression' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-compression", "x"]
           -- Then
@@ -1341,7 +1353,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--websocket-keepalive'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-keepalive", "8"]
           -- Then
@@ -1354,7 +1366,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--websocket-keepalive' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-keepalive"]
           -- Then
@@ -1367,7 +1379,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--websocket-keepalive' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-keepalive", "true"]
           -- Then
@@ -1380,7 +1392,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--infer-function-permissions'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--infer-function-permissions", "false"]
           -- Then
@@ -1393,7 +1405,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--infer-function-permissions' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--infer-function-permissions"]
           -- Then
@@ -1406,7 +1418,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--infer-function-permissions' expects a boolean argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--infer-function-permissions", "five"]
           -- Then
@@ -1419,7 +1431,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enable-maintenance-mode'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-maintenance-mode"]
           -- Then
@@ -1432,7 +1444,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enable-maintenance-mode' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-maintenance-mode", "x"]
           -- Then
@@ -1445,7 +1457,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--schema-sync-poll-interval'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--schema-sync-poll-interval", "5432"]
           -- Then
@@ -1458,7 +1470,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--schema-sync-poll-interval' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--schema-sync-poll-interval"]
           -- Then
@@ -1471,7 +1483,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--schema-sync-poll-interval' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--schema-sync-poll-interval", "true"]
           -- Then
@@ -1484,7 +1496,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--experimental-features'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--experimental-features", "inherited_roles,optimize_permission_filters"]
           -- Then
@@ -1497,7 +1509,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--experimental-features' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--experimental-features"]
           -- Then
@@ -1510,7 +1522,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--experimental-features' expects a valid experimental feature options in the argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--experimental-features", "inherited_roles,pretend_feature"]
           -- Then
@@ -1523,7 +1535,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--events-fetch-batch-size'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-fetch-batch-size", "40"]
           -- Then
@@ -1536,7 +1548,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--events-fetch-batch-size' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-fetch-batch-size"]
           -- Then
@@ -1549,7 +1561,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--events-fetch-batch-size' expects a non-negative integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--events-fetch-batch-size", "-40"]
           -- Then
@@ -1562,7 +1574,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--graceful-shutdown-timeout'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--graceful-shutdown-timeout", "52"]
           -- Then
@@ -1575,7 +1587,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--graceful-shutdown-timeout' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--graceful-shutdown-timeout"]
           -- Then
@@ -1588,7 +1600,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--graceful-shutdown-timeout' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--graceful-shutdown-timeout", "true"]
           -- Then
@@ -1601,7 +1613,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--websocket-connection-init-timeout'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-connection-init-timeout", "34"]
           -- Then
@@ -1614,7 +1626,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--websocket-connection-init-timeout' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-connection-init-timeout"]
           -- Then
@@ -1627,7 +1639,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--websocket-connection-init-timeout' expects an integer argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--websocket-connection-init-timeout", "true"]
           -- Then
@@ -1640,7 +1652,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--enable-metadata-query-logging'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-metadata-query-logging"]
           -- Then
@@ -1653,7 +1665,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--enable-metadata-query-logging' does not expect an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--enable-metadata-query-logging", "x"]
           -- Then
@@ -1666,7 +1678,7 @@ serveParserSpec =
 
     Hspec.it "It accepts '--default-naming-convention'" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--default-naming-convention", "graphql-default"]
           -- Then
@@ -1679,7 +1691,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--default-naming-convention' expects an argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--default-naming-convention"]
           -- Then
@@ -1692,7 +1704,7 @@ serveParserSpec =
 
     Hspec.it "It fails '--default-naming-convention' expects a valid naming convention argument" $ do
       let -- Given
-          parserInfo = Opt.info (UUT.serveOptionsParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
           argInput = ["--default-naming-convention", "mysterious-default"]
           -- Then
@@ -1702,6 +1714,3 @@ serveParserSpec =
         Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
         Opt.Failure _pf -> pure ()
         Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
-
-eitherToMaybe :: Either a b -> Maybe b
-eitherToMaybe = either (const Nothing) Just

@@ -600,7 +600,13 @@ library
                      , Hasura.Server.Auth
                      , Hasura.Server.Compression
                      , Hasura.Server.Init
+                     , Hasura.Server.Init.Arg
+                     , Hasura.Server.Init.Arg.Command.Downgrade
+                     , Hasura.Server.Init.Arg.Command.Serve
+                     , Hasura.Server.Init.Arg.PrettyPrinter
                      , Hasura.Server.Init.Config
+                     , Hasura.Server.Init.Env
+                     , Hasura.Server.Init.Logging
                      , Hasura.Server.Limits
                      , Hasura.Server.Logging
                      , Hasura.Server.MetadataOpenAPI
@@ -1058,6 +1064,8 @@ test-suite graphql-engine-tests
     Hasura.RQL.WebhookTransformsSpec
     Hasura.Server.Auth.JWTSpec
     Hasura.Server.AuthSpec
+    Hasura.Server.InitSpec
+    Hasura.Server.Init.ArgSpec
     Hasura.Server.MigrateSpec
     Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec

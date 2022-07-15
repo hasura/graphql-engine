@@ -9,6 +9,8 @@ module Hasura.Prelude
     onNothingM,
     onJust,
     withJust,
+    maybeToEither,
+    eitherToMaybe,
     onLeft,
     mapLeft,
     whenMaybe,
@@ -159,6 +161,20 @@ onJust m action = maybe (pure ()) action m
 
 withJust :: Applicative m => Maybe a -> (a -> m (Maybe b)) -> m (Maybe b)
 withJust m action = maybe (pure Nothing) action m
+
+-- | Transform a 'Maybe' into an 'Either' given a default value.
+--
+-- > maybeToEither def Nothing == Left def
+-- > maybeToEither _def (Just b) == Right b
+maybeToEither :: a -> Maybe b -> Either a b
+maybeToEither a = maybe (Left a) Right
+
+-- | Convert an 'Either' to a 'Maybe', forgetting the 'Left' values.
+--
+-- > eitherToMaybe (Left a) == Nothing
+-- > eitherToMaybe (Right b) == Just b
+eitherToMaybe :: Either a b -> Maybe b
+eitherToMaybe = either (const Nothing) Just
 
 onLeft :: Applicative m => Either e a -> (e -> m a) -> m a
 onLeft e f = either f pure e

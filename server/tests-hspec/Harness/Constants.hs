@@ -234,7 +234,7 @@ serveOptions =
       soAsyncActionsFetchInterval = Skip,
       soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
       soConnectionOptions = WS.defaultConnectionOptions,
-      soWebsocketKeepAlive = Init.defaultKeepAliveDelay,
+      soWebSocketKeepAlive = Init.defaultKeepAliveDelay,
       soInferFunctionPermissions = Options.InferFunctionPermissions,
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
@@ -243,7 +243,7 @@ serveOptions =
       soEventsFetchBatchSize = 1,
       soDevMode = True,
       soGracefulShutdownTimeout = 0, -- Don't wait to shutdown.
-      soWebsocketConnectionInitTimeout = Init.defaultWSConnectionInitTimeout,
+      soWebSocketConnectionInitTimeout = Init.defaultWSConnectionInitTimeout,
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
