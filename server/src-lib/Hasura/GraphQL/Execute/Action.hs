@@ -52,6 +52,7 @@ import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.Eventing.Common
 import Hasura.GraphQL.Execute.Action.Types as Types
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import Hasura.HTTP
@@ -628,13 +629,13 @@ callWebhook
           case (webhookResponse', outputType') of
             (J.Null, _) -> unless (isNullableType outputType') $ throwUnexpected "got null for the action webhook response"
             (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
-              unless (G.unName name == G.unName intScalar || G.unName name == G.unName floatScalar) $
+              unless (name == GName._Int || name == GName._Float) $
                 throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> G.unName name
             (J.Bool _, (GraphQLType (G.TypeNamed _ name))) ->
-              unless (G.unName name == G.unName boolScalar) $
+              unless (name == GName._Boolean) $
                 throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
             (J.String _, (GraphQLType (G.TypeNamed _ name))) ->
-              unless (G.unName name == G.unName stringScalar || G.unName name == G.unName idScalar) $
+              unless (name == GName._String || name == GName._ID) $
                 throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
             (J.Array _, (GraphQLType (G.TypeNamed _ name))) ->
               throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name

@@ -105,10 +105,10 @@ import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Casing qualified as C
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Base.Error
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
-import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.SQL.Backend
 import Hasura.SQL.GeoJSON qualified as Geo
 import Hasura.SQL.WKT qualified as WKT
@@ -578,17 +578,17 @@ fromDataLength = \case
 
 mkMSSQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name
 mkMSSQLScalarTypeName = \case
-  CharType -> pure RQL.stringScalar
-  WcharType -> pure RQL.stringScalar
-  WvarcharType -> pure RQL.stringScalar
-  VarcharType -> pure RQL.stringScalar
-  WtextType -> pure RQL.stringScalar
-  TextType -> pure RQL.stringScalar
-  FloatType -> pure RQL.floatScalar
+  CharType -> pure GName._String
+  WcharType -> pure GName._String
+  WvarcharType -> pure GName._String
+  VarcharType -> pure GName._String
+  WtextType -> pure GName._String
+  TextType -> pure GName._String
+  FloatType -> pure GName._Float
   -- integer types
-  IntegerType -> pure RQL.intScalar
+  IntegerType -> pure GName._Int
   -- boolean type
-  BitType -> pure RQL.boolScalar
+  BitType -> pure GName._Boolean
   scalarType ->
     G.mkName (scalarTypeDBName DataLengthUnspecified scalarType)
       `onNothing` throw400

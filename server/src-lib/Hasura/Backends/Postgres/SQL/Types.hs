@@ -66,6 +66,7 @@ import Database.PG.Query qualified as Q
 import Database.PG.Query.PTI qualified as PTI
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Base.Error
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
@@ -616,11 +617,11 @@ instance Cacheable PGRawFunctionInfo
 $(deriveJSON hasuraJSON ''PGRawFunctionInfo)
 
 mkScalarTypeName :: MonadError QErr m => PGScalarType -> m G.Name
-mkScalarTypeName PGInteger = pure intScalar
-mkScalarTypeName PGBoolean = pure boolScalar
-mkScalarTypeName PGFloat = pure floatScalar
-mkScalarTypeName PGText = pure stringScalar
-mkScalarTypeName PGVarchar = pure stringScalar
+mkScalarTypeName PGInteger = pure GName._Int
+mkScalarTypeName PGBoolean = pure GName._Boolean
+mkScalarTypeName PGFloat = pure GName._Float
+mkScalarTypeName PGText = pure GName._String
+mkScalarTypeName PGVarchar = pure GName._String
 mkScalarTypeName (PGCompositeScalar compositeScalarType) =
   -- When the function argument is a row type argument
   -- then it's possible that there can be an object type

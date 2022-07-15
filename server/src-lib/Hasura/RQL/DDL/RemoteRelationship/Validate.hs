@@ -405,17 +405,17 @@ validateType permittedVariables value expectedGType schemaDocument =
         -- TODO: check whether the type of lhs join field is allowed
         Just _lhsJoinField -> pure ()
     G.VInt {} -> do
-      let intScalarGType = mkGraphQLType intScalar
+      let intScalarGType = mkGraphQLType GName._Int
       isTypeCoercible intScalarGType expectedGType
     G.VFloat {} -> do
-      let floatScalarGType = mkGraphQLType floatScalar
+      let floatScalarGType = mkGraphQLType GName._Float
       isTypeCoercible floatScalarGType expectedGType
     G.VBoolean {} -> do
-      let boolScalarGType = mkGraphQLType boolScalar
+      let boolScalarGType = mkGraphQLType GName._Boolean
       isTypeCoercible boolScalarGType expectedGType
     G.VNull -> throwError NullNotAllowedHere
     G.VString {} -> do
-      let stringScalarGType = mkGraphQLType stringScalar
+      let stringScalarGType = mkGraphQLType GName._String
       isTypeCoercible stringScalarGType expectedGType
     G.VEnum _ -> throwError UnsupportedEnum
     G.VList values -> do

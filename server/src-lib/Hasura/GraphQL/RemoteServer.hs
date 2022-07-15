@@ -499,13 +499,12 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
   where
     rootTypeNames =
       if isNothing _rscRootFieldsNamespace
-        then catMaybes [Just irQueryRoot, irMutationRoot, irSubscriptionRoot]
-        else []
+        then Set.fromList $ catMaybes [Just irQueryRoot, irMutationRoot, irSubscriptionRoot]
+        else mempty
     -- root type names should not be prefixed or suffixed unless
     -- there is a custom root namespace field
-    scalarTypeNames = [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
-    protectedTypeNames = scalarTypeNames ++ rootTypeNames
-    nameFilter name = not $ "__" `T.isPrefixOf` G.unName name || name `elem` protectedTypeNames
+    protectedTypeNames = GName.builtInScalars <> rootTypeNames
+    nameFilter name = not $ "__" `T.isPrefixOf` G.unName name || name `Set.member` protectedTypeNames
 
     mkPrefixSuffixMap :: Maybe G.Name -> Maybe G.Name -> [G.Name] -> HashMap G.Name G.Name
     mkPrefixSuffixMap mPrefix mSuffix names = Map.fromList $ case (mPrefix, mSuffix) of
