@@ -1061,6 +1061,8 @@ test-suite graphql-engine-tests
     Hasura.Server.MigrateSpec
     Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec
+    Hasura.Server.InitSpec
+    Hasura.Server.Init.ArgSpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
     Hasura.StreamingSubscriptionSpec

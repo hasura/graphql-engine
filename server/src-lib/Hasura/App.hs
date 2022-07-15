@@ -37,6 +37,7 @@ module Hasura.App
     mkHGEServer,
     mkPgSourceResolver,
     mkMSSQLSourceResolver,
+    parseHGECommand,
   )
 where
 

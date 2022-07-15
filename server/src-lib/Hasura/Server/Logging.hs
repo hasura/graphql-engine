@@ -226,7 +226,7 @@ emptyHttpLogMetadata = (CommonHttpLogMetadata RequestModeNonBatchable Nothing, e
 
 -- See Note [Disable query printing for metadata queries]
 data MetadataQueryLoggingMode = MetadataQueryLoggingEnabled | MetadataQueryLoggingDisabled
-  deriving (Eq)
+  deriving (Show, Eq)
 
 instance FromJSON MetadataQueryLoggingMode where
   parseJSON =
