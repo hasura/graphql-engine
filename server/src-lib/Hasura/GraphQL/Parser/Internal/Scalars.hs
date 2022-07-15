@@ -38,9 +38,9 @@ import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.Convert
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
-import Hasura.RQL.Types.Common
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 import Prelude
 
@@ -53,39 +53,39 @@ import Prelude
 -- Built-in scalars
 
 boolean :: MonadParse m => Parser origin 'Both m Bool
-boolean = mkScalar boolScalar Nothing \case
+boolean = mkScalar GName._Boolean Nothing \case
   GraphQLValue (VBoolean b) -> pure b
   JSONValue (A.Bool b) -> pure b
-  v -> typeMismatch boolScalar "a boolean" v
+  v -> typeMismatch GName._Boolean "a boolean" v
 
 int :: MonadParse m => Parser origin 'Both m Int32
-int = mkScalar intScalar Nothing \case
+int = mkScalar GName._Int Nothing \case
   GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
   JSONValue (A.Number n) -> convertWith scientificToInteger n
-  v -> typeMismatch intScalar "a 32-bit integer" v
+  v -> typeMismatch GName._Int "a 32-bit integer" v
 
 float :: MonadParse m => Parser origin 'Both m Double
-float = mkScalar floatScalar Nothing \case
+float = mkScalar GName._Float Nothing \case
   GraphQLValue (VFloat f) -> convertWith scientificToFloat f
   GraphQLValue (VInt i) -> convertWith scientificToFloat $ fromInteger i
   JSONValue (A.Number n) -> convertWith scientificToFloat n
-  v -> typeMismatch floatScalar "a float" v
+  v -> typeMismatch GName._Float "a float" v
 
 string :: MonadParse m => Parser origin 'Both m Text
-string = mkScalar stringScalar Nothing \case
+string = mkScalar GName._String Nothing \case
   GraphQLValue (VString s) -> pure s
   JSONValue (A.String s) -> pure s
-  v -> typeMismatch stringScalar "a string" v
+  v -> typeMismatch GName._String "a string" v
 
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
 identifier :: MonadParse m => Parser origin 'Both m Text
-identifier = mkScalar idScalar Nothing \case
+identifier = mkScalar GName._ID Nothing \case
   GraphQLValue (VString s) -> pure s
   GraphQLValue (VInt i) -> pure . Text.pack $ show i
   JSONValue (A.String s) -> pure s
   JSONValue (A.Number n) -> parseScientific n
-  v -> typeMismatch idScalar "a String or a 32-bit integer" v
+  v -> typeMismatch GName._ID "a String or a 32-bit integer" v
   where
     parseScientific = convertWith $ fmap (Text.pack . show @Int) . scientificToInteger
 
@@ -108,17 +108,17 @@ jsonb = jsonScalar $$(litName "jsonb") Nothing
 -- compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "NonNegativeInt".
 nonNegativeInt :: MonadParse m => Parser origin 'Both m Int32
-nonNegativeInt = mkScalar intScalar Nothing \case
+nonNegativeInt = mkScalar GName._Int Nothing \case
   GraphQLValue (VInt i) | i >= 0 -> convertWith scientificToInteger $ fromInteger i
   JSONValue (A.Number n) | n >= 0 -> convertWith scientificToInteger n
-  v -> typeMismatch intScalar "a non-negative 32-bit integer" v
+  v -> typeMismatch GName._Int "a non-negative 32-bit integer" v
 
 -- | GraphQL ints are 32-bit integers; but in some places we want to accept bigger ints. To do so,
 -- we declare a cusom scalar that can represent 64-bit ints, which accepts both int literals and
 -- string literals. We do keep the same type name in the schema for backwards compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "BigInt".
 bigInt :: MonadParse m => Parser origin 'Both m Int64
-bigInt = mkScalar intScalar Nothing \case
+bigInt = mkScalar GName._Int Nothing \case
   GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
   JSONValue (A.Number n) -> convertWith scientificToInteger n
   GraphQLValue (VString s)
@@ -127,7 +127,7 @@ bigInt = mkScalar intScalar Nothing \case
   JSONValue (A.String s)
     | Right (i, "") <- decimal s ->
       pure i
-  v -> typeMismatch intScalar "a 32-bit integer, or a 64-bit integer represented as a string" v
+  v -> typeMismatch GName._Int "a 32-bit integer, or a 64-bit integer represented as a string" v
 
 -- | Parser for 'Scientific'. Certain backends like BigQuery support
 -- Decimal/BigDecimal and need an arbitrary precision number.

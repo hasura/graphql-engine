@@ -145,7 +145,7 @@ validateCustomTypeDefinitions sources customTypes allScalars = do
         <> map (unObjectTypeName . _otdName) objectDefinitions
 
     scalarTypes =
-      mapFromL _stdName $ scalarDefinitions <> defaultGraphQLScalars
+      mapFromL _stdName scalarDefinitions <> defaultGraphQLScalars
 
     enumTypes =
       mapFromL (unEnumTypeName . _etdName) enumDefinitions

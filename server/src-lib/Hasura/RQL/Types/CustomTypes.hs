@@ -49,10 +49,13 @@ import Control.Lens.TH (makeLenses)
 import Data.Aeson ((.!=), (.:), (.:?), (.=))
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
+import Data.HashMap.Strict qualified as Map
+import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.Postgres.Instances.Types ()
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -97,11 +100,11 @@ isNullableType = coerce G.isNullable
 
 isInBuiltScalar :: Text -> Bool
 isInBuiltScalar s
-  | s == G.unName intScalar = True
-  | s == G.unName floatScalar = True
-  | s == G.unName stringScalar = True
-  | s == G.unName boolScalar = True
-  | s == G.unName idScalar = True
+  | s == G.unName GName._Int = True
+  | s == G.unName GName._Float = True
+  | s == G.unName GName._String = True
+  | s == G.unName GName._Boolean = True
+  | s == G.unName GName._ID = True
   | otherwise = False
 
 -- | A set of custom GraphQL types, sorted by "kind".
@@ -202,10 +205,8 @@ instance NFData ScalarTypeDefinition
 
 instance Cacheable ScalarTypeDefinition
 
-defaultGraphQLScalars :: [ScalarTypeDefinition]
-defaultGraphQLScalars = do
-  name <- [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
-  pure $ ScalarTypeDefinition name Nothing
+defaultGraphQLScalars :: HashMap G.Name ScalarTypeDefinition
+defaultGraphQLScalars = Map.fromList . map (\name -> (name, ScalarTypeDefinition name Nothing)) $ Set.toList GName.builtInScalars
 
 --------------------------------------------------------------------------------
 -- Custom enums

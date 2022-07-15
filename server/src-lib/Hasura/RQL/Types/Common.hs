@@ -36,11 +36,6 @@ module Hasura.RQL.Types.Common
     defaultSource,
     sourceNameToText,
     JsonAggSelect (..),
-    intScalar,
-    floatScalar,
-    stringScalar,
-    boolScalar,
-    idScalar,
     MetricsConfig (..),
     emptyMetricsConfig,
     PGConnectionParams (..),
@@ -67,7 +62,6 @@ import Data.URL.Template
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
 import Hasura.EncJSON
-import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -477,14 +471,6 @@ getEnv env k = do
   case mEnv of
     Nothing -> throw400 NotFound $ "environment variable '" <> k <> "' not set"
     Just envVal -> return (T.pack envVal)
-
--- default scalar names
-intScalar, floatScalar, stringScalar, boolScalar, idScalar :: G.Name
-intScalar = GName._Int
-floatScalar = GName._Float
-stringScalar = GName._String
-boolScalar = GName._Boolean
-idScalar = GName._ID
 
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig

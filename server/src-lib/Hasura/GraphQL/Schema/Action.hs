@@ -19,6 +19,7 @@ import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -235,11 +236,11 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
         ASTCustom ScalarTypeDefinition {..} ->
           pure $
             if
-                | _stdName == idScalar -> PGText
-                | _stdName == intScalar -> PGInteger
-                | _stdName == floatScalar -> PGFloat
-                | _stdName == stringScalar -> PGText
-                | _stdName == boolScalar -> PGBoolean
+                | _stdName == GName._ID -> PGText
+                | _stdName == GName._Int -> PGInteger
+                | _stdName == GName._Float -> PGFloat
+                | _stdName == GName._String -> PGText
+                | _stdName == GName._Boolean -> PGBoolean
                 | otherwise -> PGJSON
 
 -- | Async action's unique id
@@ -413,11 +414,11 @@ customScalarParser ::
 customScalarParser = \case
   ASTCustom ScalarTypeDefinition {..} ->
     if
-        | _stdName == idScalar -> J.toJSON <$> P.identifier
-        | _stdName == intScalar -> J.toJSON <$> P.int
-        | _stdName == floatScalar -> J.toJSON <$> P.float
-        | _stdName == stringScalar -> J.toJSON <$> P.string
-        | _stdName == boolScalar -> J.toJSON <$> P.boolean
+        | _stdName == GName._ID -> J.toJSON <$> P.identifier
+        | _stdName == GName._Int -> J.toJSON <$> P.int
+        | _stdName == GName._Float -> J.toJSON <$> P.float
+        | _stdName == GName._String -> J.toJSON <$> P.string
+        | _stdName == GName._Boolean -> J.toJSON <$> P.boolean
         | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name backendScalarType ->
     let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar

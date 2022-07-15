@@ -20,12 +20,12 @@ import Hasura.GraphQL.Execute qualified as E
 import Hasura.GraphQL.Execute.Backend qualified as EB
 import Hasura.GraphQL.Logging (MonadQueryLog)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHashList (..))
+import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Transport.HTTP qualified as GH
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.HTTP
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.QueryCollection
 import Hasura.Server.Limits
@@ -62,11 +62,11 @@ resolveVar varName (These expectedVar (Left l)) =
   case G._vdType expectedVar of
     G.TypeList _ _ -> Left $ "List variables are not currently supported in URL or Query parameters. (Variable " <> toTxt @G.Name varName <> ", with value " <> tshow l <> ")"
     G.TypeNamed (G.Nullability nullable) typeName
-      | typeName == boolScalar && T.null l -> Right $ Just $ J.Bool True -- Booleans indicated true by a standalone key.
+      | typeName == GName._Boolean && T.null l -> Right $ Just $ J.Bool True -- Booleans indicated true by a standalone key.
       | nullable && T.null l -> Right Nothing -- Missing value, but nullable variable sets value to null.
       | otherwise -> case J.decodeStrict (T.encodeUtf8 l) of -- We special case parsing of bools and numbers and pass the rest through as literal strings.
-        Just v@(J.Bool _) | typeName `elem` [Name._Bool, boolScalar] -> Right $ Just v
-        Just v@(J.Number _) | typeName `elem` [intScalar, floatScalar, Name._Number, Name._Double, Name._float8, Name._numeric] -> Right $ Just v
+        Just v@(J.Bool _) | typeName `elem` [Name._Bool, GName._Boolean] -> Right $ Just v
+        Just v@(J.Number _) | typeName `elem` [GName._Int, GName._Float, Name._Number, Name._Double, Name._float8, Name._numeric] -> Right $ Just v
         _ -> Right $ Just $ J.String l
 
 mkPassthroughRequest :: EndpointMetadata GQLQueryWithText -> VariableValues -> GQLReq GQLQueryText

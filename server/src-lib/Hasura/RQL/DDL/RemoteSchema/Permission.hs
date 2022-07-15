@@ -48,7 +48,6 @@ import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude
-import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
@@ -1012,5 +1011,5 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
     schemaDependency = SchemaDependency (SORemoteSchema $ _rscName upstreamRemoteCtx) DRRemoteSchema
 
     defaultScalars =
-      map (\n -> G.ScalarTypeDefinition Nothing n []) $
-        [intScalar, floatScalar, stringScalar, boolScalar, idScalar]
+      map (\n -> G.ScalarTypeDefinition Nothing n []) . toList $
+        GName.builtInScalars
