@@ -84,7 +84,7 @@ POST /v1/metadata
 
 The `backend_configs.dataconnector` section lets you set the URIs for as many agents as you'd like. In this case, we've defined one called "reference". When you create a source, the `kind` of the source should be set to the name you gave the agent in the `backend_configs.dataconnector` section (in this case, "reference").
 
-The `configuration` property under the source can contain an 'arbitrary' JSON object, and this JSON will be sent to the agent on every request via the `X-Hasura-DataConnector-Config` header. The example here is configuration that the reference agent uses. The JSON object must conform to the schema specified by the agent from its `/config-schema` endpoint.
+The `configuration` property under the source can contain an 'arbitrary' JSON object, and this JSON will be sent to the agent on every request via the `X-Hasura-DataConnector-Config` header. The example here is configuration that the reference agent uses. The JSON object must conform to the schema specified by the agent from its `/capabilities` endpoint.
 
 The `name` property under the source will be sent to the agent on every request via the `X-Hasura-DataConnector-SourceName` header. This name uniquely identifies a source within an instance of HGE.
 
@@ -413,9 +413,9 @@ For example, to order records principally by `last_name`, delegating to `first_n
 
 #### Relationships
 
-If the call to `GET /schema` returns a `capabilities` record with the `relationships` field set to `true`, then the query structure may include fields corresponding to relationships.
+If the call to `GET /capabilities` returns a `capabilities` record with a `relationships` field then the query structure may include fields corresponding to relationships.
 
-_Note_ :if the `relationships` field is set to `false` then `graphql-engine` will attempt to split queries into separate queries whenever relationships are involved. This is not always possible, depending on the structure of the query, but the fastest path to adding a data source as a Data Connector is to set `relationships` to `false` and to ignore this section. (This is currently not supported, but is intended to be in the future.)
+_Note_ : if the `relationships` capability is not present then `graphql-engine` will not send queries to this agent involving relationships.
 
 Relationship fields are indicated by a `type` field containing the string `relationship`. Such fields will also include the name of the relationship in a field called `relationship`. This name refers to a relationship that is specified on the top-level query request object in the `table_relationships` field.
 
