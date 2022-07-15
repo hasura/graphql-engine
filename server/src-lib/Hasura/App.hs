@@ -37,7 +37,6 @@ module Hasura.App
     mkHGEServer,
     mkPgSourceResolver,
     mkMSSQLSourceResolver,
-    parseHGECommand,
   )
 where
 
@@ -177,42 +176,9 @@ throwErrExit reason = liftIO . throwIO . ExitException reason . BC.pack
 throwErrJExit :: (A.ToJSON a, MonadIO m) => forall b. ExitCode -> a -> m b
 throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . A.encode
 
-parseHGECommand :: EnabledLogTypes impl => Parser (HGECommand (RawServeOptions impl))
-parseHGECommand =
-  subparser
-    ( command
-        "serve"
-        ( info
-            (helper <*> (HCServe <$> serveOptionsParser))
-            ( progDesc "Start the GraphQL Engine Server"
-                <> footerDoc (Just serveCmdFooter)
-            )
-        )
-        <> command
-          "export"
-          ( info
-              (pure HCExport)
-              (progDesc "Export graphql-engine's metadata to stdout")
-          )
-        <> command
-          "clean"
-          ( info
-              (pure HCClean)
-              (progDesc "Clean graphql-engine's metadata to start afresh")
-          )
-        <> command
-          "downgrade"
-          ( info
-              (HCDowngrade <$> downgradeOptionsParser)
-              (progDesc "Downgrade the GraphQL Engine schema to the specified version")
-          )
-        <> command
-          "version"
-          ( info
-              (pure HCVersion)
-              (progDesc "Prints the version of GraphQL Engine")
-          )
-    )
+--------------------------------------------------------------------------------
+-- TODO(SOLOMON): Move Into `Hasura.Server.Init`. Unable to do so
+-- currently due `throwErrExit`.
 
 parseArgs :: EnabledLogTypes impl => IO (HGEOptions (ServeOptions impl))
 parseArgs = do
@@ -223,15 +189,13 @@ parseArgs = do
   where
     opts =
       info
-        (helper <*> hgeOpts)
+        (helper <*> parseHgeOpts)
         ( fullDesc
             <> header "Hasura GraphQL Engine: Blazing fast, instant realtime GraphQL APIs on your DB with fine grained access control, also trigger webhooks on database events."
             <> footerDoc (Just mainCmdFooter)
         )
-    hgeOpts =
-      HGEOptionsRaw <$> parsePostgresConnInfo
-        <*> parseMetadataDbUrl
-        <*> parseHGECommand
+
+--------------------------------------------------------------------------------
 
 printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
 printJSON = liftIO . BLC.putStrLn . A.encode
@@ -723,13 +687,13 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soEnableRemoteSchemaPermissions
           soInferFunctionPermissions
           soConnectionOptions
-          soWebsocketKeepAlive
+          soWebSocketKeepAlive
           soEnableMaintenanceMode
           soEventingMode
           soReadOnlyMode
           soExperimentalFeatures
           _scEnabledLogTypes
-          soWebsocketConnectionInitTimeout
+          soWebSocketConnectionInitTimeout
           soEnableMetadataQueryLogging
           soDefaultNamingConvention
 
