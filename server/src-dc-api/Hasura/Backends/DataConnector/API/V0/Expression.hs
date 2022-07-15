@@ -21,6 +21,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
+import Data.Text (Text)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
@@ -36,48 +37,69 @@ data BinaryComparisonOperator
   | GreaterThan
   | GreaterThanOrEqual
   | Equal
-  deriving stock (Data, Eq, Generic, Ord, Show, Enum, Bounded)
+  | CustomBinaryComparisonOperator {getCustomBinaryComparisonOperator :: Text}
+  deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec BinaryComparisonOperator
 
 instance HasCodec BinaryComparisonOperator where
   codec =
     named "BinaryComparisonOperator" $
-      disjointStringConstCodec
-        [ (LessThan, "less_than"),
-          (LessThanOrEqual, "less_than_or_equal"),
-          (GreaterThan, "greater_than"),
-          (GreaterThanOrEqual, "greater_than_or_equal"),
-          (Equal, "equal")
-        ]
+      matchChoiceCodec
+        ( disjointStringConstCodec
+            [ (LessThan, "less_than"),
+              (LessThanOrEqual, "less_than_or_equal"),
+              (GreaterThan, "greater_than"),
+              (GreaterThanOrEqual, "greater_than_or_equal"),
+              (Equal, "equal")
+            ]
+        )
+        (dimapCodec CustomBinaryComparisonOperator getCustomBinaryComparisonOperator textCodec)
+        $ \case
+          op@CustomBinaryComparisonOperator {} -> Right op
+          op -> Left op
 
 -- | A serializable representation of binary array comparison operators.
 data BinaryArrayComparisonOperator
   = In
-  deriving stock (Data, Eq, Generic, Ord, Show, Enum, Bounded)
+  | CustomBinaryArrayComparisonOperator {getCustomBinaryArrayComparisonOperator :: Text}
+  deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec BinaryArrayComparisonOperator
 
 instance HasCodec BinaryArrayComparisonOperator where
   codec =
     named "BinaryArrayComparisonOperator" $
-      disjointStringConstCodec
-        [ (In, "in")
-        ]
+      matchChoiceCodec
+        ( disjointStringConstCodec
+            [ (In, "in")
+            ]
+        )
+        (dimapCodec CustomBinaryArrayComparisonOperator getCustomBinaryArrayComparisonOperator textCodec)
+        $ \case
+          op@CustomBinaryArrayComparisonOperator {} -> Right op
+          op -> Left op
 
 -- | A serializable representation of unary comparison operators.
 data UnaryComparisonOperator
   = IsNull
-  deriving stock (Data, Eq, Generic, Ord, Show, Enum, Bounded)
+  | CustomUnaryComparisonOperator {getCustomUnaryComparisonOperator :: Text}
+  deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec UnaryComparisonOperator
 
 instance HasCodec UnaryComparisonOperator where
   codec =
     named "UnaryComparisonOperator" $
-      disjointStringConstCodec
-        [ (IsNull, "is_null")
-        ]
+      matchChoiceCodec
+        ( disjointStringConstCodec
+            [ (IsNull, "is_null")
+            ]
+        )
+        (dimapCodec CustomUnaryComparisonOperator getCustomUnaryComparisonOperator textCodec)
+        $ \case
+          op@CustomUnaryComparisonOperator {} -> Right op
+          op -> Left op
 
 -- | A serializable representation of query expressions.
 data Expression

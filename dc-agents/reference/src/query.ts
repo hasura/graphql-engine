@@ -19,21 +19,24 @@ const prettyPrintBinaryComparisonOperator = (operator: BinaryComparisonOperator)
     case "less_than": return "<";
     case "less_than_or_equal": return "<=";
     case "equal": return "==";
-    default: return unreachable(operator);
+    case "not_equal": return "!="; // Custom operator
+    default: return unknownOperator(operator);
   };
 };
 
 const prettyPrintBinaryArrayComparisonOperator = (operator: BinaryArrayComparisonOperator): string => {
   switch (operator) {
     case "in": return "IN";
-    default: return unreachable(operator);
+    case "not_in": return "NOT IN"; // Custom operator
+    default: return unknownOperator(operator);
   };
 };
 
 const prettyPrintUnaryComparisonOperator = (operator: UnaryComparisonOperator): string => {
   switch (operator) {
     case "is_null": return "IS NULL";
-    default: return unreachable(operator);
+    case "is_not_null": return "IS NOT NULL"; // Custom operator
+    default: return unknownOperator(operator);
   };
 };
 
@@ -44,14 +47,16 @@ const getBinaryComparisonOperatorEvaluator = (operator: BinaryComparisonOperator
     case "less_than": return (a, b) => a !== null && b !== null && a < b;
     case "less_than_or_equal": return (a, b) => a !== null && b !== null && a <= b;
     case "equal": return (a, b) => a !== null && b !== null && a === b;
-    default: return unreachable(operator);
+    case "not_equal": return (a, b) => a === null || b === null || a !== b; // Custom operator
+    default: return unknownOperator(operator);
   };
 };
 
 const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparisonOperator): ((left: ScalarValue, right: ScalarValue[]) => boolean) => {
   switch (operator) {
     case "in": return (a, bs) => a !== null && bs.includes(a);
-    default: return unreachable(operator);
+    case "not_in": return (a, bs) => a === null || !bs.includes(a); // Custom operator
+    default: return unknownOperator(operator);
   };
 };
 
@@ -59,7 +64,8 @@ const getBinaryArrayComparisonOperatorEvaluator = (operator: BinaryArrayComparis
 const getUnaryComparisonOperatorEvaluator = (operator: UnaryComparisonOperator): ((value: ScalarValue) => boolean) => {
   switch (operator) {
     case "is_null": return (v) => v === null;
-    default: return unreachable(operator);
+    case "is_not_null": return (v) => v !== null; // Custom operator
+    default: return unknownOperator(operator);
   };
 };
 
@@ -334,3 +340,5 @@ export const queryData = (staticData: StaticData, queryRequest: QueryRequest) =>
 
   return performQuery(queryRequest.table, queryRequest.query);
 };
+
+const unknownOperator = (x: string): never => { throw new Error(`Unknown operator: ${x}`) };

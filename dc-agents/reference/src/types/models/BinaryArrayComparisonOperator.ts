@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type BinaryArrayComparisonOperator = 'in';
+export type BinaryArrayComparisonOperator = ('in' | string);
+

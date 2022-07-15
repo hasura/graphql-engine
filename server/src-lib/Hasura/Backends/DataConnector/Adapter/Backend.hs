@@ -1,8 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Backend () where
+module Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..)) where
 
-import Data.Aeson qualified as J (Value)
+import Data.Aeson qualified as J (ToJSON (..), Value)
+import Data.Aeson.Extended (ToJSONKeyValue (..))
+import Data.Aeson.Key (fromText)
 import Data.Text.Casing qualified as C
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -13,7 +15,9 @@ import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
 import Hasura.Backends.DataConnector.IR.Table as IR.T
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
+import Hasura.Incremental
 import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -50,7 +54,7 @@ instance Backend 'DataConnector where
   -- The 'SQLExpression' type family should be removed in a future refactor
   type SQLExpression 'DataConnector = IR.S.V.Literal
   type ScalarSelectionArguments 'DataConnector = Void
-  type BooleanOperators 'DataConnector = Const XDisable
+  type BooleanOperators 'DataConnector = CustomBooleanOperator
   type ExtraTableMetadata 'DataConnector = Unimplemented
   type ComputedFieldDefinition 'DataConnector = Unimplemented
   type FunctionArgumentExp 'DataConnector = Const Unimplemented
@@ -115,3 +119,18 @@ instance Backend 'DataConnector where
 
   namingConventionSupport :: SupportedNamingCase
   namingConventionSupport = OnlyHasuraCase
+
+data CustomBooleanOperator a = CustomBooleanOperator
+  { _cboName :: Text,
+    _cboRHS :: Maybe (Either (RootOrCurrentColumn 'DataConnector) a) -- TODO turn Either into a specific type
+  }
+  deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
+
+instance NFData a => NFData (CustomBooleanOperator a)
+
+instance Hashable a => Hashable (CustomBooleanOperator a)
+
+instance Cacheable a => Cacheable (CustomBooleanOperator a)
+
+instance J.ToJSON a => ToJSONKeyValue (CustomBooleanOperator a) where
+  toJSONKeyValue CustomBooleanOperator {..} = (fromText _cboName, J.toJSON _cboRHS)

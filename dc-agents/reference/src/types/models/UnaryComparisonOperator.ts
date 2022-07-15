@@ -2,4 +2,5 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type UnaryComparisonOperator = 'is_null';
+export type UnaryComparisonOperator = ('is_null' | string);
+
