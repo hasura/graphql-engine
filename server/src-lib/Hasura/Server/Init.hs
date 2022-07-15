@@ -1128,7 +1128,7 @@ parseDefaultNamingConvention =
   optional $
     option
       (eitherReader readDefaultNamingCase)
-      ( long "experimental-features"
+      ( long "default-naming-convention"
           <> help (snd defaultNamingConvention)
       )
 

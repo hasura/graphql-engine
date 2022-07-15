@@ -488,7 +488,7 @@ instance FromEnv ES.RefetchInterval where
     maybe (Left "refetch interval should be a non negative integer") Right $ ES.mkRefetchInterval val
 
 instance FromEnv Milliseconds where
-  fromEnv = fmap fromInteger . readEither
+  fromEnv = readEither
 
 instance FromEnv Seconds where
   fromEnv = fmap fromInteger . readEither
