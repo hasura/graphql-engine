@@ -29000,6 +29000,7 @@ instance GHC.Classes.Eq Hasura.Server.Logging.GQLBatchQueryOperationLog
 instance GHC.Classes.Eq Hasura.Server.Logging.RequestMode
 instance GHC.Classes.Eq Hasura.Server.Logging.CommonHttpLogMetadata
 instance GHC.Classes.Eq Hasura.Server.Logging.MetadataQueryLoggingMode
+instance GHC.Show.Show Hasura.Server.Logging.MetadataQueryLoggingMode
 instance GHC.Classes.Eq Hasura.Server.Logging.LoggingSettings
 instance GHC.Classes.Eq Hasura.Server.Logging.HttpInfoLog
 instance GHC.Classes.Eq Hasura.Server.Logging.OperationLog
