@@ -5,6 +5,8 @@ where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens (preview, _Just)
+import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
@@ -31,6 +33,96 @@ spec = Hspec.describe "Arg Parsing Tests" $ do
 mainParserSpec :: Hspec.Spec
 mainParserSpec =
   Hspec.describe "Main Command" $ do
+    Hspec.it "Accepts '--database-url'" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--database-url", "postgres://user:password@localhost/hasura", "serve", "--server-port", "420"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _do -> pure ()
+        Opt.Failure pf -> Hspec.expectationFailure $ show pf
+        Opt.CompletionInvoked _cr -> Hspec.expectationFailure "Completion Invoked"
+
+    Hspec.it "Rejects '--database-url' requires an argument" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--database-url", "serve", "--server-port", "420"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      case result of
+        Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
+        Opt.Failure _pf -> pure ()
+        Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "Accepts '--database-url' with a valid URLTemplate argument" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--database-url", "https://hasura.io/{{foo}}", "serve", "--server-port", "420"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap (preview (UUT.pciDatabaseConn . _Just . UUT._PGConnDatabaseUrl) . UUT.horDatabaseUrl) result `Hspec.shouldSatisfy` \case
+        Opt.Success template -> template == eitherToMaybe (Template.parseURLTemplate "https://hasura.io/{{foo}}")
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False
+
+    Hspec.it "Accepts PostgresRawConnDetails flags" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput =
+            [ "--host",
+              "localhost",
+              "--port",
+              "22",
+              "--user",
+              "user",
+              "--password",
+              "pass",
+              "--dbname",
+              "hasura",
+              "serve",
+              "--server-port",
+              "420"
+            ]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap (preview (UUT.pciDatabaseConn . _Just . UUT._PGConnDetails) . UUT.horDatabaseUrl) result `Hspec.shouldSatisfy` \case
+        Opt.Success template ->
+          template
+            == Just
+              ( UUT.PostgresRawConnDetails
+                  { connHost = "localhost",
+                    connPort = 22,
+                    connUser = "user",
+                    connPassword = "pass",
+                    connDatabase = "hasura",
+                    connOptions = Nothing
+                  }
+              )
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False
+
+    Hspec.it "Accepts '--metadata-database-url'" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput = ["--metadata-database-url", "postgres://user:password@localhost/hasura", "serve", "--server-port", "420"]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap UUT.horMetadataDbUrl result `Hspec.shouldSatisfy` \case
+        Opt.Success metadataUrl -> metadataUrl == Just "postgres://user:password@localhost/hasura"
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False
+
     Hspec.it "Accepts the serve command" $ do
       let -- Given
           parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
