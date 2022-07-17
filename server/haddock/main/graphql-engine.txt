@@ -29408,6 +29408,8 @@ data PostgresConnInfo a
 PostgresConnInfo :: !a -> !Maybe Int -> PostgresConnInfo a
 [_pciDatabaseConn] :: PostgresConnInfo a -> !a
 [_pciRetries] :: PostgresConnInfo a -> !Maybe Int
+pciDatabaseConn :: Lens' (PostgresConnInfo a) a
+pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
 
 -- | Structured Postgres connection information as provided by the arg
 --   parser or env vars.
@@ -29425,6 +29427,8 @@ PostgresRawConnDetails :: !String -> !Int -> !String -> !String -> !String -> !M
 data PostgresRawConnInfo
 PGConnDatabaseUrl :: !URLTemplate -> PostgresRawConnInfo
 PGConnDetails :: !PostgresRawConnDetails -> PostgresRawConnInfo
+_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
+_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
 rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
 rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
 
