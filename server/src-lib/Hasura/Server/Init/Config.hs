@@ -11,8 +11,12 @@ module Hasura.Server.Init.Config
     KeepAliveDelay (..),
     OptionalInterval (..),
     PostgresConnInfo (..),
+    pciDatabaseConn,
+    pciRetries,
     PostgresRawConnDetails (..),
     PostgresRawConnInfo (..),
+    _PGConnDatabaseUrl,
+    _PGConnDetails,
     RawAuthHook,
     RawConnParams (..),
     RawServeOptions (..),
@@ -30,6 +34,7 @@ where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens (Lens', Prism', lens, prism')
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
@@ -289,6 +294,12 @@ data PostgresConnInfo a = PostgresConnInfo
   }
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
+pciDatabaseConn :: Lens' (PostgresConnInfo a) a
+pciDatabaseConn = lens _pciDatabaseConn $ \pci a -> pci {_pciDatabaseConn = a}
+
+pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
+pciRetries = lens _pciRetries $ \pci mi -> pci {_pciRetries = mi}
+
 -- | Structured Postgres connection information as provided by the arg
 -- parser or env vars.
 data PostgresRawConnDetails = PostgresRawConnDetails
@@ -309,6 +320,16 @@ data PostgresRawConnInfo
   = PGConnDatabaseUrl !URLTemplate
   | PGConnDetails !PostgresRawConnDetails
   deriving (Show, Eq)
+
+_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
+_PGConnDatabaseUrl = prism' PGConnDatabaseUrl $ \case
+  PGConnDatabaseUrl template -> Just template
+  PGConnDetails _ -> Nothing
+
+_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
+_PGConnDetails = prism' PGConnDetails $ \case
+  PGConnDatabaseUrl _ -> Nothing
+  PGConnDetails prcd -> Just prcd
 
 rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
 rawConnDetailsToUrl =

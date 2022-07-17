@@ -185,7 +185,7 @@ parseRawConnDetails = do
               <> Opt.help "PostgreSQL options"
           )
 
--- NOTE: This gets smooshed in Hasura.App
+-- TODO(SOLOMON): Should we parse the URL here?
 parseMetadataDbUrl :: Opt.Parser (Maybe String)
 parseMetadataDbUrl =
   Opt.optional $
