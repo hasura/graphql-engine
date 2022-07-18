@@ -1,6 +1,6 @@
-This note is in [Hasura.GraphQL.Parser.Collect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Collect.hs#L174).
+This note is in [Hasura.GraphQL.Parser.Collect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Collect.hs#L175).
 It is referenced at:
-  - line 170 of [Hasura.GraphQL.Parser.Collect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Collect.hs#L170)
+  - line 171 of [Hasura.GraphQL.Parser.Collect](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Collect.hs#L171)
 
 # Lazily merge selection sets
 
