@@ -4,7 +4,7 @@
 -- we can't use onNothing without creating a dependency cycle
 {- HLINT ignore "Use onNothing" -}
 
-module Data.Sequence.NonEmpty
+module Data.Sequence.NESeq
   ( NESeq,
     pattern (:<||),
     pattern (:||>),

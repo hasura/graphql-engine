@@ -103,6 +103,12 @@ response:
       - name: UpdateExplicitCommentInMetadata
         description: Explicit comment on update
 
+      - name: UpdateManyAutomaticNoCommentInDb
+        description: 'update multiples rows of table: "automatic_no_comment_in_db"'
+
+      - name: UpdateManyExplicitCommentInMetadata
+        description: Explicit comment on update_many
+
       - name: delete_automatic_comment_in_db
         description: 'delete data from the table: "automatic_comment_in_db"'
 
@@ -133,8 +139,14 @@ response:
       - name: update_automatic_comment_in_db_by_pk
         description: 'update single row of the table: "automatic_comment_in_db"'
 
+      - name: update_automatic_comment_in_db_many
+        description: 'update multiples rows of table: "automatic_comment_in_db"'
+
       - name: update_explicit_no_comment_in_metadata
         description: null
 
       - name: update_explicit_no_comment_in_metadata_by_pk
+        description: null
+
+      - name: update_explicit_no_comment_in_metadata_many
         description: null

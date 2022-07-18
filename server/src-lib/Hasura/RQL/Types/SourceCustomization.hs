@@ -34,6 +34,7 @@ module Hasura.RQL.Types.SourceCustomization
     mkInsertOneField,
     mkUpdateField,
     mkUpdateByPkField,
+    mkUpdateManyField,
     mkDeleteField,
     mkDeleteByPkField,
     mkRelayConnectionField,
@@ -282,6 +283,9 @@ mkUpdateField name = C.fromName Name._update <> name
 
 mkUpdateByPkField :: GQLNameIdentifier -> GQLNameIdentifier
 mkUpdateByPkField name = C.fromName Name._update <> name <> C.fromTuple $$(G.litGQLIdentifier ["by", "pk"])
+
+mkUpdateManyField :: GQLNameIdentifier -> GQLNameIdentifier
+mkUpdateManyField name = C.fromName Name._update <> name <> C.fromName Name._many
 
 mkDeleteField :: GQLNameIdentifier -> GQLNameIdentifier
 mkDeleteField name = C.fromName Name._delete <> name

@@ -15,7 +15,7 @@ import Data.Aeson.Types qualified as J
 import Data.Align (align)
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
-import Data.Sequence.NonEmpty qualified as NESeq
+import Data.Sequence.NESeq qualified as NESeq
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.These (partitionThese)

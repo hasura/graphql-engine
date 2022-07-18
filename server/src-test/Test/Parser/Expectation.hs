@@ -5,6 +5,8 @@
 module Test.Parser.Expectation
   ( UpdateTestSetup (..),
     UpdateExpectationBuilder (..),
+    BackendUpdateBuilder (..),
+    MultiRowUpdateBuilder (..),
     runUpdateFieldTest,
     module I,
   )
@@ -13,9 +15,10 @@ where
 import Data.Bifunctor (bimap)
 import Data.HashMap.Strict qualified as HM
 import Hasura.Backends.Postgres.SQL.Types (QualifiedTable)
-import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..), UpdateOpExpression (..))
+import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..), MultiRowUpdate (..), UpdateOpExpression (..))
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
-import Hasura.GraphQL.Parser.Variable
+import Hasura.GraphQL.Parser.Schema (Definition (..))
+import Hasura.GraphQL.Parser.Variable (Variable (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
@@ -41,7 +44,7 @@ type Field = Syntax.Field Syntax.NoFragments Variable
 
 type Where = (ColumnInfoBuilder, [OpExpG PG (UnpreparedValue PG)])
 
-type Update = (ColumnInfoBuilder, UpdateOpExpression (UnpreparedValue PG))
+type Update = BackendUpdateBuilder ColumnInfoBuilder
 
 -- | Holds all the information required to setup and run a field parser update
 -- test.
@@ -71,7 +74,7 @@ data UpdateExpectationBuilder = UpdateExpectationBuilder
     -- ColumnInfoBuilder@ and @newValue :: UnpreparedValue PG@:
     --
     -- > [(namecolumn, UpdateSet newValue)]
-    utbUpdate :: [Update]
+    utbUpdate :: Update
   }
 
 -- | Run a test given the schema and field.
@@ -79,13 +82,19 @@ runUpdateFieldTest :: UpdateTestSetup -> Expectation
 runUpdateFieldTest UpdateTestSetup {..} =
   case mkParser table utsColumns of
     SchemaTestT [] -> expectationFailure "expected at least one parser"
-    SchemaTestT (FieldParser {fParser} : _xs) ->
-      case fParser utsField of
-        ParserTestT (Right annUpdate) -> do
-          coerce annUpdate `shouldBe` expected
-        ParserTestT (Left err) -> err
+    SchemaTestT parsers ->
+      case find (byName (Syntax._fName utsField)) parsers of
+        Nothing -> expectationFailure $ "could not find parser " <> show (Syntax._fName utsField)
+        Just FieldParser {..} ->
+          case fParser utsField of
+            ParserTestT (Right annUpdate) ->
+              coerce annUpdate `shouldBe` expected
+            ParserTestT (Left err) -> err
   where
     UpdateExpectationBuilder {..} = utsExpect
+
+    byName :: Syntax.Name -> Parser -> Bool
+    byName name FieldParser {..} = name == dName fDefinition
 
     table :: QualifiedTable
     table = mkTable utsTable
@@ -98,8 +107,10 @@ runUpdateFieldTest UpdateTestSetup {..} =
             aubOutput = utbOutput,
             aubColumns = mkColumnInfo <$> utsColumns,
             aubWhere = first mkColumnInfo <$> utbWhere,
-            aubUpdate = first mkColumnInfo <$> utbUpdate
+            aubUpdate = mkUpdateColumns utbUpdate
           }
+    mkUpdateColumns :: BackendUpdateBuilder ColumnInfoBuilder -> BackendUpdateBuilder (ColumnInfo PG)
+    mkUpdateColumns = fmap mkColumnInfo
 
 -- | Internal use only. The intended use is through 'runUpdateFieldTest'.
 --
@@ -114,8 +125,19 @@ data AnnotatedUpdateBuilder = AnnotatedUpdateBuilder
     -- | the where clause(s)
     aubWhere :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])],
     -- | the update statement(s)
-    aubUpdate :: [(ColumnInfo PG, UpdateOpExpression (UnpreparedValue PG))]
+    aubUpdate :: BackendUpdateBuilder (ColumnInfo PG)
   }
+
+data BackendUpdateBuilder col
+  = UpdateTable [(col, UpdateOpExpression (UnpreparedValue PG))]
+  | UpdateMany [MultiRowUpdateBuilder col]
+  deriving stock (Functor)
+
+data MultiRowUpdateBuilder col = MultiRowUpdateBuilder
+  { mrubWhere :: [(col, [OpExpG PG (UnpreparedValue PG)])],
+    mrubUpdate :: [(col, UpdateOpExpression (UnpreparedValue PG))]
+  }
+  deriving stock (Functor)
 
 -- | 'RemoteRelationshipField' cannot have Eq/Show instances, so we're wrapping
 -- it.
@@ -135,23 +157,33 @@ mkAnnotatedUpdate ::
   AnnotatedUpdateG PG (RemoteRelationshipFieldWrapper UnpreparedValue) (UnpreparedValue PG)
 mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
   where
+    toBoolExp :: [(ColumnInfo PG, [OpExpG PG (UnpreparedValue PG)])] -> BoolExp
+    toBoolExp = BoolAnd . fmap (\(c, ops) -> BoolField $ AVColumn c ops)
+
     _auTable :: QualifiedTable
     _auTable = aubTable
 
     _auWhere :: (BoolExp, BoolExp)
-    _auWhere =
-      ( column [],
-        BoolAnd $ fmap (\(c, ops) -> BoolField $ AVColumn c ops) aubWhere
-      )
+    _auWhere = (column [], toBoolExp aubWhere)
 
     _auCheck :: BoolExp
     _auCheck = BoolAnd []
 
-    _auBackend :: BackendUpdate (UnpreparedValue PG)
+    _auBackend :: BackendUpdate 'Vanilla (UnpreparedValue PG)
     _auBackend =
-      BackendUpdate
-        { updateOperations =
-            HM.fromList $ fmap (bimap ciColumn id) aubUpdate
+      case aubUpdate of
+        UpdateTable items ->
+          BackendUpdate $
+            HM.fromList $
+              fmap (first ciColumn) items
+        UpdateMany rows ->
+          BackendMultiRowUpdate $ fmap mapRows rows
+
+    mapRows :: MultiRowUpdateBuilder (ColumnInfo PG) -> MultiRowUpdate 'Vanilla (UnpreparedValue PG)
+    mapRows MultiRowUpdateBuilder {..} =
+      MultiRowUpdate
+        { mruWhere = toBoolExp mrubWhere,
+          mruExpression = HM.fromList $ fmap (bimap ciColumn id) mrubUpdate
         }
 
     _auOutput :: Output

@@ -128,7 +128,7 @@ import Data.Monoid as M (getAlt)
 import Data.Ord as M (comparing)
 import Data.Semigroup as M (Semigroup (..))
 import Data.Sequence as M (Seq)
-import Data.Sequence.NonEmpty as M (NESeq)
+import Data.Sequence.NESeq as M (NESeq)
 import Data.String as M (IsString)
 import Data.Text as M (Text)
 import Data.Text qualified as T

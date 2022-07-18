@@ -22,6 +22,7 @@ args:
         insert: InsertAutomaticNoCommentInDb
         insert_one: InsertOneAutomaticNoCommentInDb
         update: UpdateAutomaticNoCommentInDb
+        update_many: UpdateManyAutomaticNoCommentInDb
         update_by_pk: UpdateByPkAutomaticNoCommentInDb
         delete: DeleteAutomaticNoCommentInDb
         delete_by_pk: DeleteByPkAutomaticNoCommentInDb
@@ -60,6 +61,9 @@ args:
         update_by_pk:
           name: UpdateByPkExplicitCommentInMetadata
           comment: Explicit comment on update_by_pk
+        update_many:
+          name: UpdateManyExplicitCommentInMetadata
+          comment: Explicit comment on update_many
         delete:
           name: DeleteExplicitCommentInMetadata
           comment: Explicit comment on delete
@@ -103,6 +107,9 @@ args:
           name: null
           comment: ""
         update_by_pk:
+          name: null
+          comment: ""
+        update_many:
           name: null
           comment: ""
         delete:

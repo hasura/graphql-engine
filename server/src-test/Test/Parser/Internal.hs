@@ -5,29 +5,30 @@ module Test.Parser.Internal
     ColumnInfoBuilder (..),
     mkColumnInfo,
     mkParser,
+    Parser,
   )
 where
 
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
+import Data.Sequence.NESeq qualified as NESeq
 import Data.Text.Casing qualified as C
-import Hasura.Backends.Postgres.Instances.Schema (updateOperators)
-import Hasura.Backends.Postgres.SQL.Types (QualifiedObject (..), QualifiedTable, TableName (..), unsafePGCol)
-import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..))
-import Hasura.GraphQL.Schema.Build qualified as Build
+import Hasura.Backends.Postgres.Instances.Schema ()
+import Hasura.Backends.Postgres.SQL.Types (ConstraintName (..), QualifiedObject (..), QualifiedTable, TableName (..), unsafePGCol)
+import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common (Scenario (Frontend))
-import Hasura.GraphQL.Schema.Parser (FieldParser, InputFieldsParser)
+import Hasura.GraphQL.Schema.Parser (FieldParser)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), PartialSQLExp (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Update (AnnotatedUpdateG (..))
 import Hasura.RQL.IR.Value (UnpreparedValue (..))
 import Hasura.RQL.Types.Column (ColumnInfo (..), ColumnMutability (..), ColumnType (..))
-import Hasura.RQL.Types.Common (Comment (..), FieldName (..))
+import Hasura.RQL.Types.Common (Comment (..), FieldName (..), OID (..))
 import Hasura.RQL.Types.Instances ()
 import Hasura.RQL.Types.Permission (AllowedRootFields (..))
 import Hasura.RQL.Types.Source (SourceInfo)
-import Hasura.RQL.Types.Table (CustomRootField (..), FieldInfo (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
+import Hasura.RQL.Types.Table (Constraint (..), CustomRootField (..), FieldInfo (..), PrimaryKey (..), RolePermInfo (..), SelPermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..))
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax (unsafeMkName)
 import Test.Parser.Monad
@@ -53,7 +54,9 @@ data ColumnInfoBuilder = ColumnInfoBuilder
     -- > ColumnScalar PGText
     cibType :: ColumnType PG,
     -- | whether the column is nullable or not
-    cibNullable :: Bool
+    cibNullable :: Bool,
+    -- | is it a primary key?
+    cibIsPrimaryKey :: Bool
   }
 
 -- | Create a column using the provided 'ColumnInfoBuilder' and defaults.
@@ -85,20 +88,13 @@ mkColumnInfo ColumnInfoBuilder {..} =
 -- This will not work for inserts and deletes (see @rolePermInfo@ below).
 mkParser :: QualifiedTable -> [ColumnInfoBuilder] -> SchemaTestT [Parser]
 mkParser table cib =
-  Build.buildTableUpdateMutationFields
-    backendUpdateParser
+  buildTableUpdateMutationFields
     Frontend
     sourceInfo
     table
     tableInfo
     name
   where
-    backendUpdateParser ::
-      TableInfo PG ->
-      SchemaTestT (InputFieldsParser ParserTestT (BackendUpdate (UnpreparedValue PG)))
-    backendUpdateParser ti =
-      fmap BackendUpdate <$> updateOperators ti updPermInfo
-
     updPermInfo :: UpdPermInfo PG
     updPermInfo =
       UpdPermInfo
@@ -113,6 +109,11 @@ mkParser table cib =
 
     columnInfos :: [ColumnInfo PG]
     columnInfos = mkColumnInfo <$> cib
+
+    pks :: Maybe (NESeq (ColumnInfo PG))
+    pks = case mkColumnInfo <$> filter cibIsPrimaryKey cib of
+      [] -> Nothing
+      (x : xs) -> Just $ foldl (<>) (NESeq.singleton x) $ fmap NESeq.singleton xs
 
     upiFilter :: GBoolExp PG (AnnBoolExpFld PG (PartialSQLExp PG))
     upiFilter = BoolAnd $ fmap (\ci -> BoolField $ AVColumn ci []) columnInfos
@@ -137,7 +138,7 @@ mkParser table cib =
         { _tciName = table,
           _tciDescription = Nothing,
           _tciFieldInfoMap = fieldInfoMap,
-          _tciPrimaryKey = Nothing,
+          _tciPrimaryKey = pk,
           _tciUniqueConstraints = mempty,
           _tciForeignKeys = mempty,
           _tciViewInfo = Nothing,
@@ -145,6 +146,20 @@ mkParser table cib =
           _tciCustomConfig = tableConfig,
           _tciExtraTableMetadata = ()
         }
+
+    pk :: Maybe (PrimaryKey PG (ColumnInfo PG))
+    pk = case pks of
+      Nothing -> Nothing
+      Just primaryColumns ->
+        Just
+          PrimaryKey
+            { _pkConstraint =
+                Constraint
+                  { _cName = ConstraintName "",
+                    _cOid = OID 0
+                  },
+              _pkColumns = primaryColumns
+            }
 
     rolePermInfo :: RolePermInfo PG
     rolePermInfo =
@@ -194,6 +209,7 @@ mkParser table cib =
           _tcrfInsertOne = customRootField,
           _tcrfUpdate = customRootField,
           _tcrfUpdateByPk = customRootField,
+          _tcrfUpdateMany = customRootField,
           _tcrfDelete = customRootField,
           _tcrfDeleteByPk = customRootField
         }
@@ -206,7 +222,7 @@ mkParser table cib =
         }
     ------------------------------------------
     name :: C.GQLNameIdentifier
-    name = C.fromName $ unsafeMkName "test"
+    name = C.fromName $ unsafeMkName $ getTableTxt $ qName table
 
 toHashPair :: ColumnInfoBuilder -> (FieldName, FieldInfo PG)
 toHashPair cib = (coerce $ cibName cib, FIColumn $ mkColumnInfo cib)

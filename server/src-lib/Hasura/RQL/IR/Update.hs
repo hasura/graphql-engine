@@ -24,6 +24,10 @@ import Hasura.SQL.Backend
 
 data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
   { _auTable :: !(TableName b),
+    -- | The where clause for /update_table/ and /update_table_by_pk/ along with
+    -- the permissions filter.
+    -- In the case of /update_table_many/, this will be empty and the actual
+    -- where clauses (one per update) are found in 'BackendUpdate'.
     _auWhere :: !(AnnBoolExp b v, AnnBoolExp b v),
     _auCheck :: !(AnnBoolExp b v),
     -- | All the backend-specific data related to an update mutation

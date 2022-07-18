@@ -3,6 +3,7 @@
 -- Translates IR update to Postgres-specific SQL UPDATE statements.
 module Hasura.Backends.Postgres.Translate.Update
   ( mkUpdateCTE,
+    UpdateCTE (..),
   )
 where
 
@@ -21,24 +22,65 @@ import Hasura.RQL.Types.Column
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
 
+data UpdateCTE
+  = -- | Used for /update_table/ and /update_table_by_pk/.
+    Update S.TopLevelCTE
+  | -- | Used for /update_table_many/.
+    MultiUpdate [S.TopLevelCTE]
+
+-- | Create the update CTE.
 mkUpdateCTE ::
+  forall pgKind.
   Backend ('Postgres pgKind) =>
   AnnotatedUpdate ('Postgres pgKind) ->
-  S.TopLevelCTE
-mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk (BackendUpdate opExps) _ columnsInfo) =
-  S.CTEUpdate update
-  where
-    update =
-      S.SQLUpdate tn setExp Nothing tableFltr
-        . Just
-        . S.RetExp
-        $ [ S.selectStar,
-            asCheckErrorExtractor $ insertCheckConstraint checkExpr
-          ]
-    setExp = S.SetExp $ map (expandOperator columnsInfo) (Map.toList opExps)
-    tableFltr = Just $ S.WhereFrag tableFltrExpr
-    tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
-    checkExpr = toSQLBoolExp (S.QualTable tn) chk
+  UpdateCTE
+mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk backendUpdate _ columnsInfo) =
+  case backendUpdate of
+    BackendUpdate opExps ->
+      Update $ S.CTEUpdate update
+      where
+        update =
+          S.SQLUpdate
+            { upTable = tn,
+              upSet =
+                S.SetExp $ map (expandOperator columnsInfo) (Map.toList opExps),
+              upFrom = Nothing,
+              upWhere =
+                Just
+                  . S.WhereFrag
+                  . toSQLBoolExp (S.QualTable tn)
+                  $ andAnnBoolExps permFltr wc,
+              upRet =
+                Just $
+                  S.RetExp
+                    [ S.selectStar,
+                      asCheckErrorExtractor $
+                        insertCheckConstraint $
+                          toSQLBoolExp (S.QualTable tn) chk
+                    ]
+            }
+    BackendMultiRowUpdate updates ->
+      MultiUpdate $ translateUpdate <$> updates
+      where
+        translateUpdate :: MultiRowUpdate pgKind S.SQLExp -> S.TopLevelCTE
+        translateUpdate MultiRowUpdate {..} =
+          S.CTEUpdate
+            S.SQLUpdate
+              { upTable = tn,
+                upSet =
+                  S.SetExp $ map (expandOperator columnsInfo) (Map.toList mruExpression),
+                upFrom = Nothing,
+                upWhere =
+                  Just . S.WhereFrag $ toSQLBoolExp (S.QualTable tn) mruWhere,
+                upRet =
+                  Just $
+                    S.RetExp
+                      [ S.selectStar,
+                        asCheckErrorExtractor
+                          . insertCheckConstraint
+                          $ toSQLBoolExp (S.QualTable tn) chk
+                      ]
+              }
 
 expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression S.SQLExp) -> S.SetExpItem
 expandOperator infos (column, op) = S.SetExpItem $

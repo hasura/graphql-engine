@@ -55,6 +55,146 @@
   </tbody>
   </table>
 
+### Update multiple records for Postgres
+
+We are introducing a new way to allow updating multiple records in the same
+transaction for Postgres sources (#2768).
+
+For example, the following query can be used to run the equivalent of two
+`update_by_pk` in a single transaction:
+
+```graphql
+update_artist_many(
+  updates: [
+    { where: { id: { _eq: 1 } },
+      _set: { name: "new name", description: "other" }
+    }
+    { where: { id: { _eq: 2 } },
+      _set: { name: "new name" }
+    }
+    ]
+) {
+  affected_rows
+  returning {
+    name
+  }
+}
+```
+
+However, this feature allows arbitrary updates, even when they overlap:
+
+
+```graphql
+update_artist_many(
+  updates: [
+    { where: { id: { _lte: 3 } },
+      _set: { name: "first", description: "other" }
+    }
+    { where: { id: { _eq: 2 } },
+      _set: { name: "second" }
+    }
+    { where: { id: { _gt: 2 } },
+      _set: { name: "third", description: "hello" }
+    }
+    { where: { id: { _eq: 1 } },
+      _set: { name: "done" }
+    }
+    ]
+) {
+  affected_rows
+  returning {
+    id
+    name
+  }
+}
+```
+
+Given the table looked like this before the query:
+
+id | name | description
+-- | ---- | -----------
+ 1 | one  | d1
+ 2 | two  | d2
+ 3 | three | d3
+ 4 | four | d4
+
+After executing the query, the table will look like:
+
+id | name | description
+-- | ---- | -----------
+ 1 | done  | other
+ 2 | second  | other
+ 3 | third | hello
+ 4 | third | hello
+
+The returned data will look like this:
+
+```json
+{
+  "data": {
+    "update_artist_many": [
+      {
+        "affected_rows": 3,
+        "returning": [
+          {
+            "id": 1,
+            "name": "first"
+          },
+          {
+            "id": 2,
+            "name": "first"
+          },
+          {
+            "id": 3,
+            "name": "first"
+          }
+        ]
+      },
+      {
+        "affected_rows": 1,
+        "returning": [
+          {
+            "id": 2,
+            "name": "second"
+          }
+        ]
+      },
+      {
+        "affected_rows": 2,
+        "returning": [
+          {
+            "id": 3,
+            "name": "third"
+          },
+          {
+            "id": 4,
+            "name": "third"
+          }
+        ]
+      },
+      {
+        "affected_rows": 1,
+        "returning": [
+          {
+            "id": 1,
+            "name": "done"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The way it works is:
+- we allow arbitrary `where` clauses (just like in a regular `update`)
+- we allow arbitrary `update`s (`_set`, `_inc`, etc., depending on the field
+    type)
+- we run each update in sequence, in a transaction (if one of them fails,
+    everything is rolled back)
+- we collect the return value of each query and return a list of results
+
+Please submit any feedback you may have for this feature at https://github.com/hasura/graphql-engine/issues/2768.
 
 ### Bug fixes and improvements
 

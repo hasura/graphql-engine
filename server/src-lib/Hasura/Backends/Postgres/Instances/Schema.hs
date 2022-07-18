@@ -7,7 +7,7 @@
 --
 -- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for Postgres.
 module Hasura.Backends.Postgres.Instances.Schema
-  ( updateOperators,
+  (
   )
 where
 
@@ -63,6 +63,7 @@ import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Returning (MutationOutputG (..))
 import Hasura.RQL.IR.Root (RemoteRelationshipField)
 import Hasura.RQL.IR.Select
   ( QueryDB (QDBConnection),
@@ -75,7 +76,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Function (FunctionInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table (RolePermInfo (..), TableInfo, UpdPermInfo)
+import Hasura.RQL.Types.Table (CustomRootField (..), RolePermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..), ViewInfo (..), isMutable, tableInfoName)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
 import Hasura.SQL.Tag (HasTag)
 import Hasura.SQL.Types
@@ -209,6 +210,7 @@ buildTableRelayQueryFields sourceName tableName tableInfo gqlName pkeyColumns = 
       selectTableConnection sourceName tableInfo rootFieldName fieldDesc pkeyColumns
 
 pgkBuildTableUpdateMutationFields ::
+  PostgresSchema pgKind =>
   MonadBuildSchema ('Postgres pgKind) r m n =>
   BackendTableSelectSchema ('Postgres pgKind) =>
   Scenario ->
@@ -221,18 +223,102 @@ pgkBuildTableUpdateMutationFields ::
   -- | field display name
   C.GQLNameIdentifier ->
   m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
-pgkBuildTableUpdateMutationFields scenario sourceName tableName tableInfo gqlName =
+pgkBuildTableUpdateMutationFields scenario sourceInfo tableName tableInfo gqlName =
   concat . maybeToList <$> runMaybeT do
     updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
-    lift $
-      GSB.buildTableUpdateMutationFields
-        -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955
-        (\ti -> fmap BackendUpdate <$> updateOperators ti updatePerms)
-        scenario
-        sourceName
-        tableName
-        tableInfo
-        gqlName
+    lift $ do
+      -- update_table and update_table_by_pk
+      singleUpdates <-
+        GSB.buildTableUpdateMutationFields
+          -- TODO: https://github.com/hasura/graphql-engine-mono/issues/2955
+          (\ti -> fmap BackendUpdate <$> updateOperators ti updatePerms)
+          scenario
+          sourceInfo
+          tableName
+          tableInfo
+          gqlName
+
+      -- update_table_many
+      multiUpdate <-
+        updateTableMany
+          scenario
+          sourceInfo
+          tableInfo
+          gqlName
+
+      pure $ singleUpdates ++ maybeToList multiUpdate
+
+-- | Create a parser for 'update_table_many'. This function is very similar to
+-- both 'GSB.buildTableUpdateMutationFields' and
+-- 'Hasura.GraphQL.Schema.Update.updateTable'.
+--
+-- It is similar to the former because of its shape: has to deal with grabbing
+-- the casing, deals with update permissions, etc.
+--
+-- It is similar to the latter because it deals with creating the
+-- parser/subselection/etc.
+--
+-- The reason this function exists here is because it is Postgres specific. It
+-- would not fit very well next to the functions mentioned above.
+--
+-- However, if you are trying to implement this feature for other backends,
+-- please consider making this function similar to /updateTable/ and moving it
+-- there.
+-- Note: this will likely require adding a type or a function to
+-- 'BackendSchema'.
+updateTableMany ::
+  forall pgKind r m n.
+  PostgresSchema pgKind =>
+  MonadBuildSchema ('Postgres pgKind) r m n =>
+  Scenario ->
+  SourceInfo ('Postgres pgKind) ->
+  TableInfo ('Postgres pgKind) ->
+  C.GQLNameIdentifier ->
+  m (Maybe (P.FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))))
+updateTableMany scenario sourceInfo tableInfo gqlName = runMaybeT do
+  tCase <- asks getter
+  let columns = tableColumns tableInfo
+      viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
+  guard $ isMutable viIsUpdatable viewInfo
+  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+  guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
+  updates <- lift (mkMultiRowUpdateParser sourceInfo tableInfo updatePerms)
+  selection <- lift $ P.multiple <$> GSB.mutationSelectionSet sourceInfo tableInfo
+  updateName <- mkRootFieldName $ GSB.setFieldNameCase tCase tableInfo _tcrfUpdateMany mkUpdateManyField gqlName
+  let argsParser = liftA2 (,) updates (pure annBoolExpTrue)
+  pure $
+    P.subselection updateName updateDesc argsParser selection
+      <&> SU.mkUpdateObject tableName columns updatePerms . fmap MOutMultirowFields
+  where
+    tableName = tableInfoName tableInfo
+    defaultUpdateDesc = "update multiples rows of table: " <>> tableName
+    updateDesc = GSB.buildFieldDescription defaultUpdateDesc $ _crfComment _tcrfUpdateMany
+    TableCustomRootFields {..} = _tcCustomRootFields . _tciCustomConfig $ _tiCoreInfo tableInfo
+
+-- | Create a parser for the updates section of the `update_table_many` update.
+--
+-- It parses a list with two fields: 'where', and an update expression
+-- (set/inc/etc).
+mkMultiRowUpdateParser ::
+  forall pgKind r m n.
+  MonadBuildSchema ('Postgres pgKind) r m n =>
+  SourceInfo ('Postgres pgKind) ->
+  TableInfo ('Postgres pgKind) ->
+  UpdPermInfo ('Postgres pgKind) ->
+  m (P.InputFieldsParser n (PGIR.BackendUpdate pgKind (IR.UnpreparedValue ('Postgres pgKind))))
+mkMultiRowUpdateParser sourceInfo tableInfo updatePerms = do
+  tableGQLName <- getTableGQLName tableInfo
+  updatesObjectName <- mkTypename $ tableGQLName <> $$(G.litName "_updates")
+  fmap BackendMultiRowUpdate
+    . P.field Name._updates (Just updatesDesc)
+    . P.list
+    . P.object updatesObjectName Nothing
+    <$> do
+      mruWhere <- P.field Name._where Nothing <$> boolExp sourceInfo tableInfo
+      mruExpression <- updateOperators tableInfo updatePerms
+      pure $ MultiRowUpdate <$> mruWhere <*> mruExpression
+  where
+    updatesDesc = "updates to execute, in order"
 
 buildFunctionRelayQueryFields ::
   forall pgKind m n r.

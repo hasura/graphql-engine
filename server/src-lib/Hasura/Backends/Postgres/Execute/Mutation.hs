@@ -117,10 +117,17 @@ execUpdateQuery ::
   (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
 execUpdateQuery strfyNum userInfo (u, p) =
-  runMutation
-    (mkMutation userInfo (_auTable u) (MCCheckConstraint updateCTE, p) (_auOutput u) (_auAllCols u) strfyNum)
+  case updateCTE of
+    Update singleUpdate -> runCTE singleUpdate
+    MultiUpdate ctes -> encJFromList <$> traverse runCTE ctes
   where
+    updateCTE :: UpdateCTE
     updateCTE = mkUpdateCTE u
+
+    runCTE :: S.TopLevelCTE -> m EncJSON
+    runCTE cte =
+      runMutation
+        (mkMutation userInfo (_auTable u) (MCCheckConstraint cte, p) (_auOutput u) (_auAllCols u) strfyNum)
 
 execDeleteQuery ::
   forall pgKind m.

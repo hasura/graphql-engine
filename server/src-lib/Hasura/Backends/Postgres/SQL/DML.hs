@@ -38,7 +38,7 @@ module Hasura.Backends.Postgres.SQL.DML
     SQLInsert (SQLInsert, siCols, siConflict, siRet, siTable, siValues),
     SQLOp (SQLOp),
     ColumnOp (..),
-    SQLUpdate (SQLUpdate),
+    SQLUpdate (..),
     Select (Select, selCTEs, selDistinct, selExtr, selFrom, selLimit, selOffset, selOrderBy, selWhere),
     SelectWith,
     SelectWithG (SelectWith),
@@ -1009,11 +1009,11 @@ data SQLDelete = SQLDelete
   deriving (Show, Eq)
 
 data SQLUpdate = SQLUpdate
-  { upTable :: !QualifiedTable,
-    upSet :: !SetExp,
-    upFrom :: !(Maybe FromExp),
-    upWhere :: !(Maybe WhereFrag),
-    upRet :: !(Maybe RetExp)
+  { upTable :: QualifiedTable,
+    upSet :: SetExp,
+    upFrom :: Maybe FromExp,
+    upWhere :: Maybe WhereFrag,
+    upRet :: Maybe RetExp
   }
   deriving (Show, Eq)
 

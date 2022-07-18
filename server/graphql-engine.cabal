@@ -404,7 +404,7 @@ library
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
-                     , Data.Sequence.NonEmpty
+                     , Data.Sequence.NESeq
                      , Data.SqlCommenter
                      , Data.SerializableBlob
                      , Data.Text.Casing
@@ -1217,8 +1217,11 @@ test-suite tests-hspec
  -- Test
     Test.ArrayParamPermissionSpec
     Test.ArrayRelationshipsSpec
-    Test.BasicFieldsSpec
     Test.BackendOnlyPermissionsSpec
+    Test.BasicFieldsSpec
+    Test.BigQuery.ComputedFieldSpec
+    Test.BigQuery.GraphQLQueryBasicSpec
+    Test.BigQuery.Metadata.ComputedFieldSpec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.CustomRootFieldsSpec
@@ -1227,8 +1230,16 @@ test-suite tests-hspec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
     Test.DirectivesSpec
-    Test.EventTriggersRunSQLSpec
+    Test.DisableRootFields.Common
+    Test.DisableRootFields.DefaultRootFieldsSpec
+    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipSpec
+    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec
+    Test.DisableRootFields.SelectPermission.EnableAggSpec
+    Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
+    Test.DisableRootFields.SelectPermission.EnablePKSpec
     Test.EventTriggersRecreationSpec
+    Test.EventTriggersRunSQLSpec
+    Test.GatheringUniqueConstraintsSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
@@ -1240,7 +1251,6 @@ test-suite tests-hspec
     Test.ObjectRelationshipsSpec
     Test.OrderingSpec
     Test.PostgresTypesSpec
-    Test.GatheringUniqueConstraintsSpec
     Test.PrimaryKeySpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
@@ -1250,22 +1260,13 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-    Test.DisableRootFields.Common
-    Test.DisableRootFields.DefaultRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.DisableRootFields.SelectPermission.EnableAggSpec
-    Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec
-    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipSpec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
-    Test.BigQuery.ComputedFieldSpec
-    Test.BigQuery.GraphQLQueryBasicSpec
-    Test.BigQuery.Metadata.ComputedFieldSpec
+    Test.SQLServer.InsertVarcharColumnSpec
     Test.SelectSpec
     Test.SerializationSpec
     Test.ServiceLivenessSpec
-    Test.SQLServer.InsertVarcharColumnSpec
+    Test.UpdateManySpec
     Test.ViewsSpec
     Test.WhereSpec
 
