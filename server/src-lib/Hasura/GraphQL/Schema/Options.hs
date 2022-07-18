@@ -19,7 +19,6 @@ data SchemaOptions = SchemaOptions
   { soStringifyNumbers :: StringifyNumbers,
     soDangerousBooleanCollapse :: DangerouslyCollapseBooleans,
     soInferFunctionPermissions :: InferFunctionPermissions,
-    soEnableRemoteSchemaPermissions :: RemoteSchemaPermissions,
     soOptimizePermissionFilters :: OptimizePermissionFilters
   }
 

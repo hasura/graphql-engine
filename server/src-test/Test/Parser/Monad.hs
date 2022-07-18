@@ -64,7 +64,6 @@ instance Has SchemaOptions SchemaEnvironment where
         { soStringifyNumbers = Options.Don'tStringifyNumbers,
           soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
           soInferFunctionPermissions = Options.InferFunctionPermissions,
-          soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
           soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters
         }
 

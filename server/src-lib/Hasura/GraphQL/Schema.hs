@@ -188,12 +188,11 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
           stringifyNum
           dangerousBooleanCollapse
           functionPermsCtx
-          remoteSchemaPermsCtx
           optimizePermissionFilters
       schemaContext =
         SchemaContext
           HasuraSchema
-          (remoteRelationshipField sources (fst <$> remotes))
+          (remoteRelationshipField sources (fst <$> remotes) remoteSchemaPermsCtx)
   runMonadSchema schemaOptions schemaContext role $ do
     -- build all sources
     (sourcesQueryFields, sourcesMutationFrontendFields, sourcesMutationBackendFields, subscriptionFields) <-
@@ -321,7 +320,6 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
           stringifyNum
           dangerousBooleanCollapse
           functionPermsCtx
-          Options.DisableRemoteSchemaPermissions
           optimizePermissionFilters
       -- TODO: At the time of writing this, remote schema queries are not supported in relay.
       -- When they are supported, we should get do what `buildRoleContext` does. Since, they
@@ -329,7 +327,7 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
       schemaContext =
         SchemaContext
           (RelaySchema $ nodeInterface sources)
-          (remoteRelationshipField sources mempty)
+          (remoteRelationshipField sources mempty Options.DisableRemoteSchemaPermissions)
   runMonadSchema schemaOptions schemaContext role do
     node <- fmap NotNamespaced <$> nodeField sources
     fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
@@ -447,7 +445,6 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
           Options.Don'tStringifyNumbers -- stringifyNum doesn't apply to remotes
           Options.Don'tDangerouslyCollapseBooleans -- booleanCollapse doesn't apply to remotes
           Options.InferFunctionPermissions -- function permissions don't apply to remotes
-          remoteSchemaPermsCtx
           Options.Don'tOptimizePermissionFilters
       fakeSchemaContext =
         SchemaContext
