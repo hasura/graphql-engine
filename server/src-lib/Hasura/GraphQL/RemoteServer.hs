@@ -131,8 +131,6 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
             -- irrelevant
             -- doesn't apply to remote schemas
             soInferFunctionPermissions = Options.InferFunctionPermissions,
-            -- we default to no permissions
-            soEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
             -- doesn't apply to remote schemas
             soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters
           },

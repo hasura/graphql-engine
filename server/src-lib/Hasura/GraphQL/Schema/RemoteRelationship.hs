@@ -14,7 +14,7 @@ import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
 import Hasura.GraphQL.Schema.NamingCase
-import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.GraphQL.Schema.Options (RemoteSchemaPermissions)
 import Hasura.GraphQL.Schema.Parser (FieldParser, MonadSchema)
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Remote
@@ -42,8 +42,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 remoteRelationshipField ::
   SourceCache ->
   RemoteSchemaMap ->
+  RemoteSchemaPermissions ->
   RemoteRelationshipParserBuilder
-remoteRelationshipField sourceCache remoteSchemaCache = RemoteRelationshipParserBuilder
+remoteRelationshipField sourceCache remoteSchemaCache remoteSchemaPermissions = RemoteRelationshipParserBuilder
   \RemoteFieldInfo {..} -> runMaybeT do
     queryType <- retrieve scSchemaKind
     -- https://github.com/hasura/graphql-engine/issues/5144
@@ -57,7 +58,7 @@ remoteRelationshipField sourceCache remoteSchemaCache = RemoteRelationshipParser
             fields <- lift $ remoteRelationshipToSourceField sourceCache remoteSourceFieldInfo
             pure $ fmap (IR.RemoteSourceField . mkAnyBackend) <$> fields
       RFISchema remoteSchema -> do
-        fields <- MaybeT $ remoteRelationshipToSchemaField remoteSchemaCache _rfiLHS remoteSchema
+        fields <- MaybeT $ remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions _rfiLHS remoteSchema
         pure $ pure $ IR.RemoteSchemaField <$> fields
 
 -- | Parser(s) for remote relationship fields to a remote schema
@@ -65,16 +66,16 @@ remoteRelationshipToSchemaField ::
   forall r m n lhsJoinField.
   (MonadBuildSchemaBase r m n) =>
   RemoteSchemaMap ->
+  RemoteSchemaPermissions ->
   Map.HashMap FieldName lhsJoinField ->
   RemoteSchemaFieldInfo ->
   m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
-remoteRelationshipToSchemaField remoteSchemaCache lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
-  remoteSchemaPermsCtx <- retrieve Options.soEnableRemoteSchemaPermissions
+remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
   roleName <- asks getter
   remoteSchemaContext <-
     Map.lookup _rrfiRemoteSchemaName remoteSchemaCache
       `onNothing` throw500 ("invalid remote schema name: " <>> _rrfiRemoteSchemaName)
-  introspection <- hoistMaybe $ getIntrospectionResult remoteSchemaPermsCtx roleName remoteSchemaContext
+  introspection <- hoistMaybe $ getIntrospectionResult remoteSchemaPermissions roleName remoteSchemaContext
   let remoteSchemaRelationships = _rscRemoteRelationships remoteSchemaContext
       roleIntrospection = irDoc introspection
       remoteSchemaRoot = irQueryRoot introspection
