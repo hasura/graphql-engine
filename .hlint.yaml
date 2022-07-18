@@ -195,7 +195,7 @@
     imports:
       - package base
     rules:
-      - suggest: {lhs: "Language.GraphQL.Draft.Syntax.unsafeMkName", rhs: "Language.GraphQL.Draft.Syntax.mkName", note: "avoid unsafeMkName if possible"}
+      - error: {lhs: "Language.GraphQL.Draft.Syntax.unsafeMkName", rhs: "Language.GraphQL.Draft.Syntax.mkName", note: "avoid unsafeMkName if possible"}
       - error: {lhs: "Control.Concurrent.threadDelay", rhs: "Control.Concurrent.Extended.sleep", note: "Please use `sleep` instead (and read the docs!)"}
       - suggest: {lhs: "Control.Concurrent.Async.Lifted.Safe.async", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}
       - suggest: {lhs: "Control.Concurrent.forkIO", rhs: "Control.Concurrent.Async.Lifted.Safe.withAsync", note: "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync' or our 'forkImmortal' instead for more robust threading."}

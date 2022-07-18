@@ -85,9 +85,13 @@ instance (Eq k, Hashable k, Arbitrary k, Ord v, Arbitrary v) => Arbitrary (MMap.
 -- or via flag (disabled by default) which enables QuickCheck as a dependency
 -- and supplies (non-orphan) instances that way.
 
+{-# ANN arbitraryGraphQLName ("HLint: ignore Use mkName" :: String) #-}
+-- Factored out so that we can annotate it.
+arbitraryGraphQLName :: Gen GraphQL.Name
+arbitraryGraphQLName = GraphQL.unsafeMkName . T.pack <$> listOf1 (elements ['a' .. 'z'])
+
 instance Arbitrary GraphQL.Name where
-  arbitrary =
-    GraphQL.unsafeMkName . T.pack <$> listOf1 (elements ['a' .. 'z'])
+  arbitrary = arbitraryGraphQLName
 
 instance Arbitrary GraphQL.Description where
   arbitrary = GraphQL.Description <$> arbitrary

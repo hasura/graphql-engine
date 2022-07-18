@@ -33,6 +33,8 @@ import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Vanilla))
 import Language.GraphQL.Draft.Syntax (unsafeMkName)
 import Test.Parser.Monad
 
+{-# ANN module ("HLint: ignore Use mkName" :: String) #-}
+
 type PG = 'Postgres 'Vanilla
 
 type Parser = FieldParser ParserTestT (AnnotatedUpdateG PG (RemoteRelationshipField UnpreparedValue) (UnpreparedValue PG))

@@ -334,32 +334,29 @@ resolveAsyncActionQuery userInfo annAction =
     mkAnnFldFromPGCol (column', columnType) =
       RS.mkAnnColumnField column' (ColumnScalar columnType) Nothing Nothing
 
-    -- TODO: avoid using ColumnInfo
-    -- TODO(#3478): avoid using `unsafeMkName`
-    mkPGColumnInfo (column', columnType) =
-      ColumnInfo
-        { ciColumn = column',
-          ciName = G.unsafeMkName $ getPGColTxt column',
-          ciPosition = 0,
-          ciType = ColumnScalar columnType,
-          ciIsNullable = True,
-          ciDescription = Nothing,
-          ciMutability = ColumnMutability False False
-        }
-
     tableBoolExpression =
       let actionIdColumnInfo =
             ColumnInfo
-              { ciColumn = unsafePGCol "id",
+              { ciColumn = fst idColumn,
                 ciName = Name._id,
                 ciPosition = 0,
-                ciType = ColumnScalar PGUUID,
+                ciType = ColumnScalar (snd idColumn),
                 ciIsNullable = False,
                 ciDescription = Nothing,
                 ciMutability = ColumnMutability False False
               }
           actionIdColumnEq = BoolField $ AVColumn actionIdColumnInfo [AEQ True $ IR.UVLiteral $ S.SELit $ actionIdToText actionId]
-          sessionVarsColumnInfo = mkPGColumnInfo sessionVarsColumn
+          -- TODO: avoid using ColumnInfo
+          sessionVarsColumnInfo =
+            ColumnInfo
+              { ciColumn = unsafePGCol "session_variables",
+                ciName = Name._session_variables,
+                ciPosition = 0,
+                ciType = ColumnScalar (snd sessionVarsColumn),
+                ciIsNullable = True,
+                ciDescription = Nothing,
+                ciMutability = ColumnMutability False False
+              }
           sessionVarValue =
             IR.UVParameter Nothing $
               ColumnValue (ColumnScalar PGJSONB) $
