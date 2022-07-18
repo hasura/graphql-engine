@@ -866,7 +866,7 @@ mkPaginationSelectExp ::
   S.Select
 mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} =
   S.mkSelect
-    { S.selCTEs = [(S.toAlias countCteAlias, allRowsSelect), (S.toAlias limitCteAlias, limitCteSelect)],
+    { S.selCTEs = [(S.toTableAlias countCteAlias, allRowsSelect), (S.toTableAlias limitCteAlias, limitCteSelect)],
       S.selExtr = [countExtractor, rowsExtractor]
     }
   where

@@ -34,14 +34,14 @@ import Hasura.SQL.Backend
 -- see Note [Mutation output expression].
 data MutationCTE
   = -- | A Mutation with check constraint validation (Insert or Update)
-    MCCheckConstraint !S.CTE
+    MCCheckConstraint !S.TopLevelCTE
   | -- | A Select statement which emits mutated table rows
     MCSelectValues !S.Select
   | -- | A Delete statement
     MCDelete !S.SQLDelete
   deriving (Show, Eq)
 
-getMutationCTE :: MutationCTE -> S.CTE
+getMutationCTE :: MutationCTE -> S.TopLevelCTE
 getMutationCTE = \case
   MCCheckConstraint cte -> cte
   MCSelectValues select -> S.CTESelect select
@@ -146,8 +146,8 @@ mkMutationOutputExp ::
   S.SelectWith
 mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
   S.SelectWith
-    [ (S.Alias mutationResultAlias, getMutationCTE cte),
-      (S.Alias allColumnsAlias, allColumnsSelect)
+    [ (S.toTableAlias mutationResultAlias, getMutationCTE cte),
+      (S.toTableAlias allColumnsAlias, allColumnsSelect)
     ]
     sel
   where
@@ -199,4 +199,4 @@ checkConstraintIdentifier = Identifier "check__constraint"
 
 asCheckErrorExtractor :: S.SQLExp -> S.Extractor
 asCheckErrorExtractor s =
-  S.Extractor s $ Just $ S.Alias checkConstraintIdentifier
+  S.Extractor s $ Just $ S.toColumnAlias checkConstraintIdentifier

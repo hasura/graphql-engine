@@ -29,12 +29,12 @@ import Hasura.SQL.Backend
 
 -- | Generate alias for order by extractors
 mkAnnOrderByAlias ::
-  Identifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> S.Alias
+  Identifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> S.ColumnAlias
 mkAnnOrderByAlias pfx parAls similarFields = \case
   AOCColumn pgColumnInfo ->
     let pgColumn = ciColumn pgColumnInfo
         obColAls = mkBaseTableColumnAlias pfx pgColumn
-     in S.Alias obColAls
+     in obColAls
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
   AOCObjectRelation relInfo _ rest ->
     let rn = riName relInfo
@@ -48,15 +48,15 @@ mkAnnOrderByAlias pfx parAls similarFields = \case
           mkArrayRelationSourcePrefix pfx parAls similarFields $
             mkOrderByFieldName rn
         obAls = arrPfx <> Identifier "." <> toIdentifier (mkAggregateOrderByAlias aggOrderBy)
-     in S.Alias obAls
+     in S.toColumnAlias obAls
   AOCComputedField cfOrderBy ->
     let fieldName = fromComputedField $ _cfobName cfOrderBy
      in case _cfobOrderByElement cfOrderBy of
-          CFOBEScalar _ -> S.Alias $ mkComputedFieldTableAlias pfx fieldName
+          CFOBEScalar _ -> S.toColumnAlias $ mkComputedFieldTableAlias pfx fieldName
           CFOBETableAggregation _ _ aggOrderBy ->
             let cfPfx = mkComputedFieldTableAlias pfx fieldName
                 obAls = cfPfx <> Identifier "." <> toIdentifier (mkAggregateOrderByAlias aggOrderBy)
-             in S.Alias obAls
+             in S.toColumnAlias obAls
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias
@@ -81,17 +81,17 @@ mkComputedFieldTableAlias :: Identifier -> FieldName -> Identifier
 mkComputedFieldTableAlias pfx fldAls =
   pfx <> Identifier ".cf." <> toIdentifier fldAls
 
-mkBaseTableAlias :: Identifier -> Identifier
+mkBaseTableAlias :: Identifier -> S.TableAlias
 mkBaseTableAlias pfx =
-  pfx <> Identifier ".base"
+  S.toTableAlias $ pfx <> Identifier ".base"
 
-mkBaseTableColumnAlias :: Identifier -> PGCol -> Identifier
+mkBaseTableColumnAlias :: Identifier -> PGCol -> S.ColumnAlias
 mkBaseTableColumnAlias pfx pgColumn =
-  pfx <> Identifier ".pg." <> toIdentifier pgColumn
+  S.toColumnAlias $ pfx <> Identifier ".pg." <> toIdentifier pgColumn
 
-mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.Alias
+mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.ColumnAlias
 mkAggregateOrderByAlias =
-  (S.Alias . Identifier) . \case
+  (S.toColumnAlias . Identifier) . \case
     AAOCount -> "count"
     AAOOp opText col -> opText <> "." <> getPGColTxt (ciColumn col)
 
@@ -113,8 +113,8 @@ mkArrayRelationAlias ::
   FieldName ->
   HM.HashMap FieldName [FieldName] ->
   FieldName ->
-  S.Alias
+  S.TableAlias
 mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
-  S.Alias $
+  S.toTableAlias $
     mkUniqArrayRelationAlias parentFieldName $
       HM.lookupDefault [fieldName] fieldName similarFieldsMap

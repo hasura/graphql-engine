@@ -7,9 +7,6 @@
 -- <https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS>
 --
 -- Also see Note [Postgres identifier length limitations]
---
--- This is an internal module for unit testing purposes.
--- Use 'Hasura.Backends.Postgres.SQL.IdentifierUniqueness' instead.
 module Hasura.Backends.Postgres.SQL.IdentifierUniqueness
   ( -- * Exported API
     prefixNumToAliases,
@@ -25,67 +22,103 @@ import Hasura.Prelude
 {- Note [Postgres identifier length limitations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Postgres truncates identifiers to a maximum of 63 characters by default (see
-https://www.postgresql.org/docs/12/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS).
+https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS).
 -}
 
--- Prefix an Int to all aliases to preserve the uniqueness of identifiers.
--- See Note [Postgres identifier length limitations].
+------------------------------------------------
+
+-- * API
+
+-- | Prefix an Int to all aliases to preserve the uniqueness of identifiers.
+-- See Note [Postgres identifier length limitations] above.
 prefixNumToAliases :: S.Select -> S.Select
 prefixNumToAliases = runUniq . uSelect
 
 prefixNumToAliasesSelectWith :: S.SelectWithG S.Select -> S.SelectWithG S.Select
 prefixNumToAliasesSelectWith = runUniq . uSelectWith
 
+------------------------------------------------
+
+-- * Data types
+
 runUniq :: Uniq a -> a
-runUniq = flip evalState emptyUniqSt
+runUniq = flip evalState emptyUniqState
 
-emptyUniqSt :: UniqSt
-emptyUniqSt = UniqSt 0 Map.empty
+emptyUniqState :: UniqState
+emptyUniqState = UniqState 0 Map.empty
 
-data UniqSt = UniqSt
-  { _uqVar :: !Int,
-    _uqIdens :: !(Map.HashMap Identifier Int)
+data UniqState = UniqState
+  { -- | Used to generate fresh prefix ids
+    _uqFreshId :: Int,
+    -- | Mapping from an identifier to their prefix id
+    _uqIdentifierMap :: Map.HashMap Identifier Int
   }
   deriving (Show, Eq)
 
-type Uniq = State UniqSt
+type Uniq = State UniqState
 
-withNumPfx :: Identifier -> Int -> Identifier
-withNumPfx iden i =
-  Identifier pfx <> iden
-  where
-    pfx = "_" <> tshow i <> "_"
+------------------------------------------------
 
-addAlias :: S.Alias -> Uniq S.Alias
-addAlias (S.Alias iden) = do
-  UniqSt var idens <- get
-  put $ UniqSt (var + 1) $ Map.insert iden var idens
-  return $ S.Alias $ withNumPfx iden var
+-- * Utilities
 
+-- | attach a prefix id to an identifier
+mkPrefixedName :: Identifier -> Int -> Identifier
+mkPrefixedName identifier id' =
+  Identifier ("_" <> tshow id' <> "_") <> identifier
+
+-- | Return a prefixed alias by:
+--   1. Generating a fresh prefix id for the alias' identifier
+--   2. Adding the identifier + id to the identifier mapping
+addAlias :: S.TableAlias -> Uniq S.TableAlias
+addAlias (S.TableAlias identifier) = do
+  UniqState freshId identifierMap <- get
+  put $ UniqState (freshId + 1) $ Map.insert identifier freshId identifierMap
+  pure $ S.TableAlias $ mkPrefixedName identifier freshId
+
+-- | Search for the identifier in the identifier mapping and return
+--   a prefixed identifier if found, or the original identifier
+--   if not found in the identifier map.
 getIdentifier :: Identifier -> Uniq Identifier
-getIdentifier iden = do
-  UniqSt _ idens <- get
-  let varNumM = Map.lookup iden idens
-  return $ maybe iden (withNumPfx iden) varNumM
+getIdentifier identifier = do
+  UniqState _ identifierMap <- get
+  let idM = Map.lookup identifier identifierMap
+  pure $ maybe identifier (mkPrefixedName identifier) idM
 
-restoringIdens :: Uniq a -> Uniq a
-restoringIdens action = do
-  UniqSt _ idens <- get
+-- | Run an action that might change the identifier mapping
+--   and discard the changes made to the identifier map.
+restoringIdentifierMap :: Uniq a -> Uniq a
+restoringIdentifierMap action = do
+  UniqState _ identifierMap <- get
   res <- action
-  -- restore the idens to before the action
-  modify' $ \s -> s {_uqIdens = idens}
-  return res
+  -- restore the identifier map to before the action
+  modify' $ \s -> s {_uqIdentifierMap = identifierMap}
+  pure res
 
+------------------------------------------------
+
+-- * Algorithm
+
+-- | We run the algorithm on each CTE separately and discard the identifier mapping,
+--   then we run the algorithm on the main select and return that result
+--   (with the identifier mapping generated from that).
 uSelectWith :: S.SelectWithG S.Select -> Uniq (S.SelectWithG S.Select)
 uSelectWith (S.SelectWith ctes baseSelect) =
   S.SelectWith
-    <$> forM ctes (\(als, sel) -> (als,) <$> restoringIdens (uSelect sel))
+    <$> forM ctes (\(als, sel) -> (als,) <$> restoringIdentifierMap (uSelect sel))
     <*> uSelect baseSelect
 
+-- | We go in order of each component in the select, starting with
+--   the from and CTE clauses (as those introduce new names).
+--   We return a transformed 'Select' (with the identifier map in the 'Uniq' state).
+--
+--   We transform the table names but not column names.
 uSelect :: S.Select -> Uniq S.Select
 uSelect (S.Select ctes distM extrs fromM whereM grpM havnM ordByM limitM offM) = do
-  -- this has to be the first thing to process
+  -- Potentially introduces a new alias so it should go before the rest.
   newFromM <- mapM uFromExp fromM
+
+  -- Potentially introduces a new alias in subsequent CTEs and the main select,
+  -- so it should go first.
   newCTEs <- for ctes $ \(alias, cte) -> (,) <$> addAlias alias <*> uSelect cte
 
   newWhereM <- forM whereM $
@@ -97,7 +130,7 @@ uSelect (S.Select ctes distM extrs fromM whereM grpM havnM ordByM limitM offM) =
   newOrdM <- mapM uOrderBy ordByM
   newDistM <- mapM uDistinct distM
   newExtrs <- mapM uExtractor extrs
-  return $
+  pure $
     S.Select
       newCTEs
       newDistM
@@ -111,122 +144,145 @@ uSelect (S.Select ctes distM extrs fromM whereM grpM havnM ordByM limitM offM) =
       offM
   where
     uDistinct = \case
-      S.DistinctSimple -> return S.DistinctSimple
-      S.DistinctOn l -> S.DistinctOn <$> mapM uSqlExp l
-    uExtractor (S.Extractor e alM) =
-      S.Extractor <$> uSqlExp e <*> return alM
+      S.DistinctSimple -> pure S.DistinctSimple
+      S.DistinctOn exprs -> S.DistinctOn <$> mapM uSqlExp exprs
+    uExtractor (S.Extractor expr alias) =
+      S.Extractor <$> uSqlExp expr <*> pure alias
 
+-- | Transform every @from_item@.
+--   Potentially introduces a new alias.
 uFromExp :: S.FromExp -> Uniq S.FromExp
 uFromExp (S.FromExp fromItems) =
   S.FromExp <$> mapM uFromItem fromItems
 
-uFunctionArgs :: S.FunctionArgs -> Uniq S.FunctionArgs
-uFunctionArgs (S.FunctionArgs positional named) =
-  S.FunctionArgs <$> mapM uSqlExp positional <*> mapM uSqlExp named
-
-uFunctionAlias :: S.FunctionAlias -> Uniq S.FunctionAlias
-uFunctionAlias (S.FunctionAlias alias definitionList) =
-  S.FunctionAlias <$> addAlias alias <*> pure definitionList
-
-uFunctionExp :: S.FunctionExp -> Uniq S.FunctionExp
-uFunctionExp (S.FunctionExp qf args alM) =
-  S.FunctionExp qf <$> uFunctionArgs args <*> mapM uFunctionAlias alM
-
+-- | Transform a single @from_item@.
+--   Potentially introduces a new alias.
 uFromItem :: S.FromItem -> Uniq S.FromItem
 uFromItem fromItem = case fromItem of
-  S.FISimple t alM ->
-    S.FISimple t <$> mapM addAlias alM
-  S.FIIdentifier iden ->
-    S.FIIdentifier <$> return iden
+  -- _Note_: Potentially introduces a new alias
+  S.FISimple qualifiedTable maybeAlias ->
+    S.FISimple qualifiedTable <$> mapM addAlias maybeAlias
+  S.FIIdentifier identifier ->
+    pure $ S.FIIdentifier identifier
   S.FIFunc funcExp ->
     S.FIFunc <$> uFunctionExp funcExp
+  -- W transform the arguments and result table alias
+  -- Note: Potentially introduces a new alias
   S.FIUnnest args als cols ->
-    S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> mapM uSqlExp cols
+    S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> pure cols
+  -- Note: Potentially introduces a new alias
   S.FISelect isLateral sel al -> do
     -- we are kind of ignoring if we have to reset
-    -- idens to empty based on correlation
-    -- unless isLateral $ modify' $ \s -> s { _uqIdens = Map.empty}
-    newSel <- restoringIdens $ uSelect sel
+    -- identifiers to empty based on correlation.
+    -- If this select is not part of a lateral join, then it shouldn't
+    -- have access to tables exposed previously.
+    -- > unless isLateral $ modify' $ \s -> s { _uqIdentifiers = Map.empty}
+    newSel <- restoringIdentifierMap $ uSelect sel
     newAls <- addAlias al
-    return $ S.FISelect isLateral newSel newAls
+    pure $ S.FISelect isLateral newSel newAls
+  -- _Note_: Potentially introduces a new alias
   S.FISelectWith isLateral selectWith al -> do
     newSelectWith <- uSelectWith selectWith
     newAls <- addAlias al
-    return $ S.FISelectWith isLateral newSelectWith newAls
+    pure $ S.FISelectWith isLateral newSelectWith newAls
   S.FIValues (S.ValuesExp tups) als mCols -> do
     newValExp <- fmap S.ValuesExp $
       forM tups $ \(S.TupleExp ts) ->
         S.TupleExp <$> mapM uSqlExp ts
-    return $ S.FIValues newValExp als mCols
+    pure $ S.FIValues newValExp als mCols
+  -- _Note_: Potentially introduces a new alias
   S.FIJoin joinExp ->
     S.FIJoin <$> uJoinExp joinExp
 
+-- | Transform a function call expression.
+uFunctionExp :: S.FunctionExp -> Uniq S.FunctionExp
+uFunctionExp (S.FunctionExp functionName args maybeAlias) =
+  S.FunctionExp functionName
+    <$> uFunctionArgs args
+    <*> mapM uFunctionAlias maybeAlias
+
+-- | Transform function call arguments.
+uFunctionArgs :: S.FunctionArgs -> Uniq S.FunctionArgs
+uFunctionArgs (S.FunctionArgs positional named) =
+  S.FunctionArgs <$> mapM uSqlExp positional <*> mapM uSqlExp named
+
+-- | Transform a function call alias.
+uFunctionAlias :: S.FunctionAlias -> Uniq S.FunctionAlias
+uFunctionAlias (S.FunctionAlias alias definitionList) =
+  S.FunctionAlias <$> addAlias alias <*> pure definitionList
+
+-- | Transform join expressions.
+--   Potentially introduces a new alias.
 uJoinExp :: S.JoinExpr -> Uniq S.JoinExpr
-uJoinExp (S.JoinExpr left ty right joinCond) = do
+uJoinExp (S.JoinExpr left joinType right joinCond) = do
   leftN <- uFromItem left
   rightN <- uFromItem right
-  S.JoinExpr leftN ty rightN <$> uJoinCond joinCond
+  joinCondN <- uJoinCond joinCond
+  pure $ S.JoinExpr leftN joinType rightN joinCondN
 
+-- | Transform Join condition. `ON` join condition might contain references
+--   to table names and aliases.
 uJoinCond :: S.JoinCond -> Uniq S.JoinCond
 uJoinCond joinCond = case joinCond of
   S.JoinOn be -> S.JoinOn <$> uBoolExp be
-  S.JoinUsing cols -> return $ S.JoinUsing cols
+  S.JoinUsing cols -> pure $ S.JoinUsing cols
 
+-- | Transform boolean expression.
+--
+--   The boolean expression structure does not contain a table name currently,
+--   So we look for 'SQLExp's and transform those, as those may contain table
+--   names and aliases.
+--
+--   We discard new aliases that might be generated here because we don't
+--   use them outside of the boolean expression.
 uBoolExp :: S.BoolExp -> Uniq S.BoolExp
 uBoolExp =
-  restoringIdens . \case
-    S.BELit b -> return $ S.BELit b
+  restoringIdentifierMap . \case
+    S.BELit b -> pure $ S.BELit b
     S.BEBin op left right ->
-      S.BEBin <$> return op <*> uBoolExp left <*> uBoolExp right
+      S.BEBin op <$> uBoolExp left <*> uBoolExp right
     S.BENot b -> S.BENot <$> uBoolExp b
     S.BECompare op left right ->
-      S.BECompare <$> return op <*> uSqlExp left <*> uSqlExp right
+      S.BECompare op <$> uSqlExp left <*> uSqlExp right
     S.BECompareAny op left right ->
-      S.BECompareAny <$> return op <*> uSqlExp left <*> uSqlExp right
+      S.BECompareAny op <$> uSqlExp left <*> uSqlExp right
     S.BENull e -> S.BENull <$> uSqlExp e
     S.BENotNull e -> S.BENotNull <$> uSqlExp e
     S.BEExists sel -> S.BEExists <$> uSelect sel
     S.BEIN left exps -> S.BEIN <$> uSqlExp left <*> mapM uSqlExp exps
     S.BEExp e -> S.BEExp <$> uSqlExp e
 
-uOrderBy :: S.OrderByExp -> Uniq S.OrderByExp
-uOrderBy (S.OrderByExp ordByItems) =
-  S.OrderByExp <$> mapM uOrderByItem ordByItems
-  where
-    uOrderByItem (S.OrderByItem e ordTyM nullsOrdM) =
-      S.OrderByItem
-        <$> uSqlExp e
-        <*> return ordTyM
-        <*> return nullsOrdM
-
+-- | Transform a SQL expression.
+--   We look for table names and aliases and rename them if needed.
+--   SQL expressions do not introduce new table aliases, so we discard
+--   the new aliases that might be generated here.
 uSqlExp :: S.SQLExp -> Uniq S.SQLExp
 uSqlExp =
-  restoringIdens . \case
-    S.SEPrep i -> return $ S.SEPrep i
-    S.SENull -> return S.SENull
-    S.SELit t -> return $ S.SELit t
-    S.SEUnsafe t -> return $ S.SEUnsafe t
+  restoringIdentifierMap . \case
+    S.SEPrep i -> pure $ S.SEPrep i
+    S.SENull -> pure S.SENull
+    S.SELit t -> pure $ S.SELit t
+    S.SEUnsafe t -> pure $ S.SEUnsafe t
     S.SESelect s -> S.SESelect <$> uSelect s
     S.SEStar qual -> S.SEStar <$> traverse uQual qual
+    S.SEIdentifier identifier -> pure $ S.SEIdentifier identifier
     -- this is for row expressions
     -- todo: check if this is always okay
-    S.SEIdentifier iden -> return $ S.SEIdentifier iden
-    S.SERowIdentifier iden -> S.SERowIdentifier <$> getIdentifier iden
-    S.SEQIdentifier (S.QIdentifier qual iden) -> do
-      newQual <- uQual qual
-      return $ S.SEQIdentifier $ S.QIdentifier newQual iden
-    S.SEFnApp fn args ordByM ->
-      S.SEFnApp
-        <$> return fn
-        <*> mapM uSqlExp args
-        <*> mapM uOrderBy ordByM
-    S.SEOpApp op args ->
-      S.SEOpApp op
+    S.SERowIdentifier identifier -> S.SERowIdentifier <$> getIdentifier identifier
+    -- we rename the table alias if needed
+    S.SEQIdentifier (S.QIdentifier qualifier identifier) -> do
+      newQualifier <- uQual qualifier
+      pure $ S.SEQIdentifier $ S.QIdentifier newQualifier identifier
+    S.SEFnApp fn args orderBy ->
+      S.SEFnApp fn
         <$> mapM uSqlExp args
+        <*> mapM uOrderBy orderBy
+    S.SEOpApp op args ->
+      S.SEOpApp op <$> mapM uSqlExp args
     S.SETyAnn e ty ->
       S.SETyAnn
         <$> uSqlExp e
-        <*> return ty
+        <*> pure ty
     S.SECond be onTrue onFalse ->
       S.SECond
         <$> uBoolExp be
@@ -235,18 +291,32 @@ uSqlExp =
     S.SEBool be ->
       S.SEBool <$> uBoolExp be
     S.SEExcluded t ->
-      S.SEExcluded <$> return t
+      pure $ S.SEExcluded t
     S.SEArray l ->
       S.SEArray <$> mapM uSqlExp l
     S.SEArrayIndex arrayExp indexExp ->
       S.SEArrayIndex <$> uSqlExp arrayExp <*> uSqlExp indexExp
     S.SETuple (S.TupleExp l) ->
       S.SETuple . S.TupleExp <$> mapM uSqlExp l
-    S.SECount cty -> return $ S.SECount cty
+    S.SECount cty -> pure $ S.SECount cty
     S.SENamedArg arg val -> S.SENamedArg arg <$> uSqlExp val
     S.SEFunction funcExp -> S.SEFunction <$> uFunctionExp funcExp
   where
+    -- rename the table alias if needed
     uQual = \case
-      S.QualifiedIdentifier iden ty -> S.QualifiedIdentifier <$> getIdentifier iden <*> pure ty
-      S.QualTable t -> return $ S.QualTable t
-      S.QualVar t -> return $ S.QualVar t
+      S.QualifiedIdentifier identifier typeAnnotation ->
+        S.QualifiedIdentifier <$> getIdentifier identifier <*> pure typeAnnotation
+      -- I'm not sure why this isn't changed
+      S.QualTable t -> pure $ S.QualTable t
+      S.QualVar t -> pure $ S.QualVar t
+
+-- | Transform order by clauses.
+--   Since order by does not introduce new aliases we can discard the new names
+--   that might be added, this is already done by `uSqlExp` though.
+uOrderBy :: S.OrderByExp -> Uniq S.OrderByExp
+uOrderBy (S.OrderByExp ordByItems) =
+  S.OrderByExp <$> mapM uOrderByItem ordByItems
+  where
+    uOrderByItem (S.OrderByItem expr ordering nullsOrder) = do
+      exprN <- uSqlExp expr
+      pure $ S.OrderByItem exprN ordering nullsOrder

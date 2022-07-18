@@ -30,11 +30,11 @@ rootExtractor_ =
           ]
           Nothing
       )
-      (Just (Alias {getAlias = Identifier {getIdenTxt = "root"}}))
+      (Just (ColumnAlias {getColumnAlias = Identifier {getIdenTxt = "root"}}))
   ]
 
 -- | a top level extractor with an order by clause
-extractorOrd_ :: Text -> [OrderByItem] -> Maybe Alias -> [Extractor]
+extractorOrd_ :: Text -> [OrderByItem] -> Maybe ColumnAlias -> [Extractor]
 extractorOrd_ table orders alias =
   [ Extractor
       ( SEFnApp
@@ -60,7 +60,7 @@ extractorOrd_ table orders alias =
   ]
 
 -- | Apply a @row_to_json@ function to expressions.
-row_to_json_ :: [SQLExp] -> Maybe Alias -> Extractor
+row_to_json_ :: [SQLExp] -> Maybe ColumnAlias -> Extractor
 row_to_json_ exps = Extractor (SEFnApp "row_to_json" exps Nothing)
 
 -- * Select
@@ -123,27 +123,30 @@ selectIdentifiers_ alias table columns =
                                           (Identifier column)
                                       )
                                   )
-                                  ( Just (Alias {getAlias = Identifier column})
+                                  ( Just (ColumnAlias {getColumnAlias = Identifier column})
                                   )
                             )
                             columns
                       }
                   )
-                  (Alias {getAlias = Identifier alias})
+                  (TableAlias {getTableAlias = Identifier alias})
               ]
         }
     )
 
 -- * Aliases
 
-as_ :: (Maybe Alias -> a) -> Text -> a
-as_ f alias = f (Just (Alias {getAlias = Identifier alias}))
+asT_ :: (Maybe TableAlias -> a) -> Text -> a
+asT_ f alias = f (Just (TableAlias {getTableAlias = Identifier alias}))
+
+asC_ :: (Maybe ColumnAlias -> a) -> Text -> a
+asC_ f alias = f (Just (ColumnAlias {getColumnAlias = Identifier alias}))
 
 as'_ :: Select -> Text -> FromItem
-as'_ sel alias = FISelect (Lateral False) sel (Alias {getAlias = Identifier alias})
+as'_ sel alias = FISelect (Lateral False) sel (TableAlias {getTableAlias = Identifier alias})
 
 asE_ :: SQLExp -> Text -> Extractor
-asE_ se alias = Extractor se (Just (Alias {getAlias = Identifier alias}))
+asE_ se alias = Extractor se (Just (ColumnAlias {getColumnAlias = Identifier alias}))
 
 -- * From
 
@@ -231,7 +234,7 @@ orderby_ = Just . OrderByExp . NE.fromList
 
 -- | an order by column set to ascending ordering.
 asc_ :: Text -> OrderByItem
-asc_ idn = OrderByItem (SEIdentifier (Identifier idn)) (Just OTAsc) (Just NLast)
+asc_ idn = OrderByItem (SEIdentifier (Identifier idn)) (Just OTAsc) (Just NullsLast)
 
 -- * Limit
 

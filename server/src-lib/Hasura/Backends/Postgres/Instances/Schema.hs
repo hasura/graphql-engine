@@ -343,22 +343,22 @@ orderByOperators tCase =
   (Name._order_by,) $
     NE.fromList
       [ ( define (applyEnumValueCase tCase Name._asc) "in ascending order, nulls last",
-          (PG.OTAsc, PG.NLast)
+          (PG.OTAsc, PG.NullsLast)
         ),
         ( define (applyEnumValueCase tCase Name._asc_nulls_first) "in ascending order, nulls first",
-          (PG.OTAsc, PG.NFirst)
+          (PG.OTAsc, PG.NullsFirst)
         ),
         ( define (applyEnumValueCase tCase Name._asc_nulls_last) "in ascending order, nulls last",
-          (PG.OTAsc, PG.NLast)
+          (PG.OTAsc, PG.NullsLast)
         ),
         ( define (applyEnumValueCase tCase Name._desc) "in descending order, nulls first",
-          (PG.OTDesc, PG.NFirst)
+          (PG.OTDesc, PG.NullsFirst)
         ),
         ( define (applyEnumValueCase tCase Name._desc_nulls_first) "in descending order, nulls first",
-          (PG.OTDesc, PG.NFirst)
+          (PG.OTDesc, PG.NullsFirst)
         ),
         ( define (applyEnumValueCase tCase Name._desc_nulls_last) "in descending order, nulls last",
-          (PG.OTDesc, PG.NLast)
+          (PG.OTDesc, PG.NullsLast)
         )
       ]
   where

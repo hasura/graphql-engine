@@ -2,10 +2,11 @@
 --
 -- Provide types and combinators for defining Postgres SQL queries and mutations.
 module Hasura.Backends.Postgres.SQL.DML
-  ( Alias (..),
+  ( ColumnAlias (..),
+    TableAlias (..),
     BinOp (AndOp, OrOp),
     BoolExp (..),
-    CTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate),
+    TopLevelCTE (CTEDelete, CTEInsert, CTESelect, CTEUpdate),
     CompareOp (SContainedIn, SContains, SEQ, SGT, SGTE, SHasKey, SHasKeysAll, SHasKeysAny, SILIKE, SIREGEX, SLIKE, SLT, SLTE, SMatchesFulltext, SNE, SNILIKE, SNIREGEX, SNLIKE, SNREGEX, SNSIMILAR, SREGEX, SSIMILAR),
     CountType (CTDistinct, CTSimple, CTStar),
     DistinctExpr (DistinctOn, DistinctSimple),
@@ -22,10 +23,10 @@ module Hasura.Backends.Postgres.SQL.DML
     JoinType (Inner, LeftOuter),
     Lateral (Lateral),
     LimitExp (LimitExp),
-    NullsOrder (NFirst, NLast),
+    NullsOrder (NullsFirst, NullsLast),
     OffsetExp (OffsetExp),
     OrderByExp (..),
-    OrderByItem (OrderByItem, oColumn),
+    OrderByItem (OrderByItem, oExpression),
     OrderType (OTAsc, OTDesc),
     QIdentifier (QIdentifier),
     Qual (QualTable, QualVar, QualifiedIdentifier),
@@ -90,7 +91,8 @@ module Hasura.Backends.Postgres.SQL.DML
     simplifyBoolExp,
     textArrTypeAnn,
     textTypeAnn,
-    toAlias,
+    toTableAlias,
+    toColumnAlias,
   )
 where
 
@@ -106,10 +108,13 @@ import Hasura.Prelude
 import Hasura.SQL.Types
 import Text.Builder qualified as TB
 
+-- | An select statement that does not require mutation CTEs.
+--
+--   See 'SelectWithG' or 'SelectWith' for select statements with mutations as CTEs.
 data Select = Select
   { -- | Unlike 'SelectWith', does not allow data-modifying statements (as those are only allowed at
     -- the top level of a query).
-    selCTEs :: ![(Alias, Select)],
+    selCTEs :: ![(TableAlias, Select)],
     selDistinct :: !(Maybe DistinctExpr),
     selExtr :: ![Extractor],
     selFrom :: !(Maybe FromExp),
@@ -128,6 +133,7 @@ instance Cacheable Select
 
 instance Hashable Select
 
+-- | An empty select statement.
 mkSelect :: Select
 mkSelect =
   Select
@@ -162,10 +168,11 @@ newtype OrderByExp
   = OrderByExp (NonEmpty OrderByItem)
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
+-- |
 data OrderByItem = OrderByItem
-  { oColumn :: !SQLExp,
-    oType :: !(Maybe OrderType),
-    oNulls :: !(Maybe NullsOrder)
+  { oExpression :: !SQLExp,
+    oOrdering :: !(Maybe OrderType),
+    oNullsOrder :: !(Maybe NullsOrder)
   }
   deriving (Show, Eq, Generic, Data)
 
@@ -176,9 +183,10 @@ instance Cacheable OrderByItem
 instance Hashable OrderByItem
 
 instance ToSQL OrderByItem where
-  toSQL (OrderByItem e ot no) =
-    toSQL e <~> toSQL ot <~> toSQL no
+  toSQL (OrderByItem expr ordering nullsOrder) =
+    toSQL expr <~> toSQL ordering <~> toSQL nullsOrder
 
+-- | Order by ascending or descending
 data OrderType = OTAsc | OTDesc
   deriving (Show, Eq, Generic, Data)
 
@@ -199,8 +207,8 @@ instance J.ToJSON OrderType where
   toJSON = J.genericToJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 2}
 
 data NullsOrder
-  = NFirst
-  | NLast
+  = NullsFirst
+  | NullsLast
   deriving (Show, Eq, Generic, Data)
 
 instance NFData NullsOrder
@@ -210,8 +218,8 @@ instance Cacheable NullsOrder
 instance Hashable NullsOrder
 
 instance ToSQL NullsOrder where
-  toSQL NFirst = "NULLS FIRST"
-  toSQL NLast = "NULLS LAST"
+  toSQL NullsFirst = "NULLS FIRST"
+  toSQL NullsLast = "NULLS LAST"
 
 instance J.FromJSON NullsOrder where
   parseJSON = J.genericParseJSON $ J.defaultOptions {J.constructorTagModifier = J.snakeCase . drop 1}
@@ -251,7 +259,7 @@ mkSelFromExp :: Bool -> Select -> TableName -> FromItem
 mkSelFromExp isLateral sel tn =
   FISelect (Lateral isLateral) sel alias
   where
-    alias = Alias $ toIdentifier tn
+    alias = toTableAlias $ toIdentifier tn
 
 mkRowExp :: [Extractor] -> SQLExp
 mkRowExp extrs =
@@ -446,10 +454,12 @@ data SQLExp
   | SESelect !Select
   | -- | all fields (@*@) or all fields from relation (@iden.*@)
     SEStar !(Maybe Qual)
-  | SEIdentifier !Identifier
-  | -- iden and row identifier are distinguished for easier rewrite rules
+  | -- | A column name
+    SEIdentifier !Identifier
+  | -- | SEIdentifier and SERowIdentifier are distinguished for easier rewrite rules
     SERowIdentifier !Identifier
-  | SEQIdentifier !QIdentifier
+  | -- | A qualified column name
+    SEQIdentifier !QIdentifier
   | -- | this is used to apply a sql function to an expression. The 'Text' is the function name
     SEFnApp !Text ![SQLExp] !(Maybe OrderByExp)
   | SEOpApp !SQLOp ![SQLExp]
@@ -474,18 +484,41 @@ instance Hashable SQLExp
 instance J.ToJSON SQLExp where
   toJSON = J.toJSON . toSQLTxt
 
--- Use the 'Extractor' data-type to Postgres alias tables/columns
-newtype Alias = Alias {getAlias :: Identifier}
+-- | Represents an alias assignment for a column
+newtype ColumnAlias = ColumnAlias {getColumnAlias :: Identifier}
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
-instance IsIdentifier Alias where
-  toIdentifier (Alias iden) = iden
+instance IsIdentifier ColumnAlias where
+  toIdentifier (ColumnAlias identifier) = identifier
 
-instance ToSQL Alias where
-  toSQL (Alias iden) = "AS" <~> toSQL iden
+toColumnAlias :: (IsIdentifier a) => a -> ColumnAlias
+toColumnAlias = ColumnAlias . toIdentifier
 
-toAlias :: (IsIdentifier a) => a -> Alias
-toAlias = Alias . toIdentifier
+-- | Convert a column alias assignment to SQL _with_ @AS@ prefix
+columnAliasToSqlWithAs :: ColumnAlias -> TB.Builder
+columnAliasToSqlWithAs (ColumnAlias alias) = "AS" <~> toSQL alias
+
+-- | Convert a column alias assignment to SQL _without_ @AS@ prefix
+columnAliasToSqlWithoutAs :: ColumnAlias -> TB.Builder
+columnAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
+
+-- | Represents an alias assignment for a table, relation or row
+newtype TableAlias = TableAlias {getTableAlias :: Identifier}
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
+
+instance IsIdentifier TableAlias where
+  toIdentifier (TableAlias identifier) = identifier
+
+toTableAlias :: (IsIdentifier a) => a -> TableAlias
+toTableAlias = TableAlias . toIdentifier
+
+-- | Convert a table alias assignment to SQL _with_ @AS@ prefix
+tableAliasToSqlWithAs :: TableAlias -> TB.Builder
+tableAliasToSqlWithAs alias = "AS" <~> toSQL (toIdentifier alias)
+
+-- | Convert a table alias assignment to SQL _without_ @AS@ prefix
+tableAliasToSqlWithoutAs :: TableAlias -> TB.Builder
+tableAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
 
 countStar :: SQLExp
 countStar = SECount CTStar
@@ -551,7 +584,7 @@ int64ToSQLExp :: Int64 -> SQLExp
 int64ToSQLExp = SEUnsafe . tshow
 
 -- | Extractor can be used to apply Postgres alias to a column
-data Extractor = Extractor !SQLExp !(Maybe Alias)
+data Extractor = Extractor !SQLExp !(Maybe ColumnAlias)
   deriving (Show, Eq, Generic, Data)
 
 instance NFData Extractor
@@ -590,7 +623,7 @@ mkExtr t = Extractor (mkSIdenExp t) Nothing
 
 instance ToSQL Extractor where
   toSQL (Extractor ce mal) =
-    toSQL ce <~> toSQL mal
+    toSQL ce <~> maybe "" columnAliasToSqlWithAs mal
 
 data DistinctExpr
   = DistinctSimple
@@ -605,8 +638,8 @@ instance Hashable DistinctExpr
 
 instance ToSQL DistinctExpr where
   toSQL DistinctSimple = "DISTINCT"
-  toSQL (DistinctOn exps) =
-    "DISTINCT ON" <~> parenB ("," <+> exps)
+  toSQL (DistinctOn exprs) =
+    "DISTINCT ON" <~> parenB ("," <+> exprs)
 
 data FunctionArgs = FunctionArgs
   { fasPostional :: ![SQLExp],
@@ -627,8 +660,8 @@ instance ToSQL FunctionArgs where
      in parenB $ ", " <+> (positionalArgs <> namedArgs)
 
 data DefinitionListItem = DefinitionListItem
-  { _dliColumn :: !PGCol,
-    _dliType :: !PGScalarType
+  { _dliColumn :: PGCol,
+    _dliType :: PGScalarType
   }
   deriving (Show, Eq, Data, Generic)
 
@@ -642,8 +675,16 @@ instance ToSQL DefinitionListItem where
   toSQL (DefinitionListItem column columnType) =
     toSQL column <~> toSQL columnType
 
+-- | We can alias the result of a function call that returns a @SETOF RECORD@
+--   by naming the result relation, and the columns and their types. For example:
+--
+-- > SELECT * FROM
+-- > function_returns_record(arg1, arg2 ...) AS relation_name(column_1 column_1_type, column_2 column_2_type, ...)
+--
+--   Note: a function that returns a table (instead of a record) cannot name the types
+--         as seen in the above example.
 data FunctionAlias = FunctionAlias
-  { _faIdentifier :: !Alias,
+  { _faIdentifier :: !TableAlias,
     _faDefinitionList :: !(Maybe [DefinitionListItem])
   }
   deriving (Show, Eq, Data, Generic)
@@ -656,15 +697,16 @@ instance Hashable FunctionAlias
 
 mkFunctionAlias :: Identifier -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
 mkFunctionAlias identifier listM =
-  FunctionAlias (toAlias identifier) $
+  FunctionAlias (toTableAlias identifier) $
     fmap (map (uncurry DefinitionListItem)) listM
 
 instance ToSQL FunctionAlias where
-  toSQL (FunctionAlias iden (Just definitionList)) =
-    toSQL iden <> parenB (", " <+> definitionList)
-  toSQL (FunctionAlias iden Nothing) =
-    toSQL iden
+  toSQL (FunctionAlias tableAlias (Just definitionList)) =
+    tableAliasToSqlWithAs tableAlias <> parenB (", " <+> definitionList)
+  toSQL (FunctionAlias tableAlias Nothing) =
+    tableAliasToSqlWithAs tableAlias
 
+-- | A function call
 data FunctionExp = FunctionExp
   { feName :: !QualifiedFunction,
     feArgs :: !FunctionArgs,
@@ -682,15 +724,27 @@ instance ToSQL FunctionExp where
   toSQL (FunctionExp qf args alsM) =
     toSQL qf <> toSQL args <~> toSQL alsM
 
+-- | See @from_item@ in <https://www.postgresql.org/docs/current/sql-select.html>
 data FromItem
-  = FISimple !QualifiedTable !(Maybe Alias)
-  | FIIdentifier !Identifier
-  | FIFunc !FunctionExp
-  | FIUnnest ![SQLExp] !Alias ![SQLExp]
-  | FISelect !Lateral !Select !Alias
-  | FISelectWith !Lateral !(SelectWithG Select) !Alias
-  | FIValues !ValuesExp !Alias !(Maybe [PGCol])
-  | FIJoin !JoinExpr
+  = -- | A simple table
+    FISimple QualifiedTable (Maybe TableAlias)
+  | -- | An identifier (from CTEs)
+    FIIdentifier Identifier
+  | -- | A function call (that should return a relation (@SETOF@) and not a scalar)
+    FIFunc FunctionExp
+  | -- | @unnest@ converts (an) array(s) to a relation.
+    --
+    --   We have:
+    --   * The unnest function arguments
+    --   * The relation alias
+    --   * A list of column aliases
+    --
+    --   See @unnest@ in <https://www.postgresql.org/docs/current/functions-array.html>.
+    FIUnnest [SQLExp] TableAlias [ColumnAlias]
+  | FISelect Lateral Select TableAlias
+  | FISelectWith Lateral (SelectWithG Select) TableAlias
+  | FIValues ValuesExp TableAlias (Maybe [PGCol])
+  | FIJoin JoinExpr
   deriving (Show, Eq, Generic, Data)
 
 instance NFData FromItem
@@ -699,13 +753,13 @@ instance Cacheable FromItem
 
 instance Hashable FromItem
 
-mkSelFromItem :: Select -> Alias -> FromItem
+mkSelFromItem :: Select -> TableAlias -> FromItem
 mkSelFromItem = FISelect (Lateral False)
 
-mkSelectWithFromItem :: SelectWithG Select -> Alias -> FromItem
+mkSelectWithFromItem :: SelectWithG Select -> TableAlias -> FromItem
 mkSelectWithFromItem = FISelectWith (Lateral False)
 
-mkLateralFromItem :: Select -> Alias -> FromItem
+mkLateralFromItem :: Select -> TableAlias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
 
 toColTupExp :: [PGCol] -> SQLExp
@@ -713,21 +767,24 @@ toColTupExp =
   SETuple . TupleExp . map (SEIdentifier . Identifier . getPGColTxt)
 
 instance ToSQL FromItem where
-  toSQL (FISimple qt mal) =
-    toSQL qt <~> toSQL mal
+  toSQL (FISimple qualifiedTable tableAlias) =
+    toSQL qualifiedTable <~> maybe "" tableAliasToSqlWithAs tableAlias
   toSQL (FIIdentifier iden) =
     toSQL iden
   toSQL (FIFunc funcExp) = toSQL funcExp
   -- unnest(expressions) alias(columns)
-  toSQL (FIUnnest args als cols) =
-    "UNNEST" <> parenB (", " <+> args) <~> toSQL als <> parenB (", " <+> cols)
-  toSQL (FISelect mla sel al) =
-    toSQL mla <~> parenB (toSQL sel) <~> toSQL al
-  toSQL (FISelectWith mla selWith al) =
-    toSQL mla <~> parenB (toSQL selWith) <~> toSQL al
-  toSQL (FIValues valsExp al mCols) =
-    parenB (toSQL valsExp) <~> toSQL al
-      <~> toSQL (toColTupExp <$> mCols)
+  toSQL (FIUnnest args tableAlias cols) =
+    "UNNEST"
+      <> parenB (", " <+> args)
+      <~> tableAliasToSqlWithAs tableAlias
+      <> parenB (", " <+> map columnAliasToSqlWithoutAs cols)
+  toSQL (FISelect isLateral select alias) =
+    toSQL isLateral <~> parenB (toSQL select) <~> tableAliasToSqlWithAs alias
+  toSQL (FISelectWith isLateral selectWith alias) =
+    toSQL isLateral <~> parenB (toSQL selectWith) <~> tableAliasToSqlWithAs alias
+  toSQL (FIValues valsExp alias cols) =
+    parenB (toSQL valsExp) <~> tableAliasToSqlWithAs alias
+      <~> toSQL (toColTupExp <$> cols)
   toSQL (FIJoin je) =
     toSQL je
 
@@ -1087,22 +1144,38 @@ instance ToSQL SQLInsert where
       <~> maybe "" toSQL (siConflict si)
       <~> toSQL (siRet si)
 
-data CTE
+-- | Top-level Common Table Expression statement.
+--
+--   A top level CTE can be a query or a mutation statement.
+--
+--   Postgres supports mutations only in top-level CTEs.
+--   See <https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING>
+data TopLevelCTE
   = CTESelect !Select
   | CTEInsert !SQLInsert
   | CTEUpdate !SQLUpdate
   | CTEDelete !SQLDelete
   deriving (Show, Eq)
 
-instance ToSQL CTE where
+instance ToSQL TopLevelCTE where
   toSQL = \case
     CTESelect q -> toSQL q
     CTEInsert q -> toSQL q
     CTEUpdate q -> toSQL q
     CTEDelete q -> toSQL q
 
-data SelectWithG v = SelectWith
-  { swCTEs :: ![(Alias, v)],
+-- | A @SELECT@ statement with Common Table Expressions.
+--   <https://www.postgresql.org/docs/current/queries-with.html>
+--
+--   These CTEs are determined by the @statement@ parameter.
+--   Currently they are either 'TopLevelCTE', which allow for a query or mutation statement,
+--   or 'Select', which only allow for querying results.
+--
+--   The distinction is required because Postgres only supports mutations in CTEs
+--   at the top level.
+--   See <https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING>
+data SelectWithG statement = SelectWith
+  { swCTEs :: ![(TableAlias, statement)],
     swSelect :: !Select
   }
   deriving (Show, Eq, Generic, Data)
@@ -1117,9 +1190,10 @@ instance (ToSQL v) => ToSQL (SelectWithG v) where
   toSQL (SelectWith ctes sel) =
     "WITH " <> (", " <+> map f ctes) <~> toSQL sel
     where
-      f (Alias al, q) = toSQL al <~> "AS" <~> parenB (toSQL q)
+      f (al, q) = tableAliasToSqlWithoutAs al <~> "AS" <~> parenB (toSQL q)
 
-type SelectWith = SelectWithG CTE
+-- | A top-level select with CTEs.
+type SelectWith = SelectWithG TopLevelCTE
 
 -- local helpers
 

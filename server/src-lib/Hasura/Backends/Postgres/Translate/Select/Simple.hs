@@ -73,4 +73,4 @@ mkSQLSelect jsonAggSelect annSel =
     rootFldIdentifier = toIdentifier rootFldName
     sourcePrefixes = SourcePrefixes rootFldIdentifier rootFldIdentifier
     rootFldName = FieldName "root"
-    rootFldAls = S.Alias $ toIdentifier rootFldName
+    rootFldAls = S.toColumnAlias $ toIdentifier rootFldName

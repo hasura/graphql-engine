@@ -256,7 +256,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
       \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = Q.fromBuilder $ toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select
+    selectWith = S.SelectWith [(S.toTableAlias aliasIdentifier, getMutationCTE cte)] select
     select =
       S.mkSelect
         { S.selExtr =

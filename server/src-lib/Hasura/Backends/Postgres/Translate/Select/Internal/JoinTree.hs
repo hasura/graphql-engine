@@ -39,7 +39,7 @@ withWriteObjectRelation ::
   (MonadWriter JoinTree m) =>
   m
     ( ObjectRelationSource,
-      HM.HashMap S.Alias S.SQLExp,
+      HM.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a
@@ -57,7 +57,7 @@ withWriteArrayRelation ::
   m
     ( ArrayRelationSource,
       S.Extractor,
-      HM.HashMap S.Alias S.SQLExp,
+      HM.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a
@@ -77,7 +77,7 @@ withWriteArrayConnection ::
   m
     ( ArrayConnectionSource,
       S.Extractor,
-      HM.HashMap S.Alias S.SQLExp,
+      HM.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a
@@ -97,7 +97,7 @@ withWriteComputedFieldTableSet ::
   m
     ( ComputedFieldTableSetSource,
       S.Extractor,
-      HM.HashMap S.Alias S.SQLExp,
+      HM.HashMap S.ColumnAlias S.SQLExp,
       a
     ) ->
   m a

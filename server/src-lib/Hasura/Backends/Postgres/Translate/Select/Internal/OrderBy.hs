@@ -83,7 +83,7 @@ processOrderByItems ::
   Maybe (NE.NonEmpty PGCol) ->
   Maybe (NE.NonEmpty (AnnotatedOrderByItem ('Postgres pgKind))) ->
   m
-    ( [(S.Alias, S.SQLExp)], -- Order by Extractors
+    ( [(S.ColumnAlias, S.SQLExp)], -- Order by Extractors
       SelectSorting,
       Maybe S.SQLExp -- The cursor expression
     )
@@ -98,14 +98,14 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
   where
     processAnnOrderByItem ::
       AnnotatedOrderByItem ('Postgres pgKind) ->
-      m (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind))))
+      m (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind))))
     processAnnOrderByItem orderByItem =
       forM orderByItem $ \ordByCol ->
         (ordByCol,)
           <$> processAnnotatedOrderByElement sourcePrefix' fieldAlias' ordByCol
 
     processAnnotatedOrderByElement ::
-      Identifier -> FieldName -> AnnotatedOrderByElement ('Postgres pgKind) S.SQLExp -> m (S.Alias, (SQLExpression ('Postgres pgKind)))
+      Identifier -> FieldName -> AnnotatedOrderByElement ('Postgres pgKind) S.SQLExp -> m (S.ColumnAlias, (SQLExpression ('Postgres pgKind)))
     processAnnotatedOrderByElement sourcePrefix fieldAlias annObCol = do
       let ordByAlias = mkAnnOrderByAlias sourcePrefix fieldAlias similarArrayFields annObCol
       (ordByAlias,) <$> case annObCol of
@@ -182,9 +182,9 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
                 )
 
     generateSorting ::
-      NE.NonEmpty (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind)))) ->
+      NE.NonEmpty (OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind)))) ->
       ( SelectSorting,
-        [(S.Alias, SQLExpression ('Postgres pgKind))] -- 'distinct on' column extractors
+        [(S.ColumnAlias, SQLExpression ('Postgres pgKind))] -- 'distinct on' column extractors
       )
     generateSorting orderByExps@(firstOrderBy NE.:| restOrderBys) =
       case fst $ obiColumn firstOrderBy of
@@ -228,7 +228,7 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
            in (sorting, nodeDistinctOnExtractors)
 
     mkCursorExp ::
-      [OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.Alias, SQLExpression ('Postgres pgKind)))] ->
+      [OrderByItemG ('Postgres pgKind) (AnnotatedOrderByElement ('Postgres pgKind) (SQLExpression ('Postgres pgKind)), (S.ColumnAlias, SQLExpression ('Postgres pgKind)))] ->
       S.SQLExp
     mkCursorExp orderByItemExps =
       S.applyJsonBuildObj $
@@ -272,12 +272,12 @@ applyDistinctOnAtNode ::
   Identifier ->
   NE.NonEmpty PGCol ->
   ( S.DistinctExpr,
-    [(S.Alias, S.SQLExp)] -- additional column extractors
+    [(S.ColumnAlias, S.SQLExp)] -- additional column extractors
   )
 applyDistinctOnAtNode pfx neCols = (distOnExp, colExtrs)
   where
     cols = toList neCols
     distOnExp = S.DistinctOn $ map (S.SEIdentifier . toIdentifier . mkQColAls) cols
     mkQCol c = S.mkQIdenExp (mkBaseTableAlias pfx) $ toIdentifier c
-    mkQColAls = S.Alias . mkBaseTableColumnAlias pfx
+    mkQColAls = mkBaseTableColumnAlias pfx
     colExtrs = flip map cols $ mkQColAls &&& mkQCol
