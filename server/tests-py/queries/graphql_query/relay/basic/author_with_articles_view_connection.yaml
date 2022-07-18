@@ -37,7 +37,7 @@ query:
     }
 response:
   errors:
-  - extensions:
-      path: $.selectionSet.author_connection.selectionSet.edges.selectionSet.node.selectionSet.articles_view_connection
-      code: validation-failed
-    message: "field \"articles_view_connection\" not found in type: 'author'"
+    - extensions:
+        path: $.selectionSet.author_connection.selectionSet.edges.selectionSet.node.selectionSet.articles_view_connection
+        code: validation-failed
+      message: "field 'articles_view_connection' not found in type: 'author'"

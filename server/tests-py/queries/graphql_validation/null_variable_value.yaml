@@ -37,10 +37,10 @@
   status: 200
   response:
     errors:
-    - extensions:
-        path: $.selectionSet.update_author.args.where.id._eq
-        code: validation-failed
-      message: unexpected null value for type "Int"
+      - extensions:
+          path: $.selectionSet.update_author.args.where.id._eq
+          code: validation-failed
+        message: unexpected null value for type 'Int'
   query:
     variables:
       author_id: null

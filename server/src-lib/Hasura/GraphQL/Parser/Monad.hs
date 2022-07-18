@@ -19,8 +19,8 @@ import Data.GADT.Compare.Extended
 import Data.IORef
 import Data.Kind qualified as K
 import Data.Proxy (Proxy (..))
-import Data.Text (Text)
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class
 import Language.Haskell.TH qualified as TH
 import System.IO.Unsafe (unsafeInterleaveIO)
@@ -181,12 +181,12 @@ runParse parse =
 
 instance MonadParse Parse where
   withKey key = Parse . withExceptT (\pe -> pe {pePath = key : pePath pe}) . unParse
-  parseErrorWith code text = Parse $ do
-    throwError $ ParseError {peCode = code, pePath = [], peMessage = text}
+  parseErrorWith code message = Parse $ do
+    throwError $ ParseError {peCode = code, pePath = [], peMessage = message}
 
 data ParseError = ParseError
   { pePath :: JSONPath,
-    peMessage :: Text,
+    peMessage :: ErrorMessage,
     peCode :: Code
   }
 
@@ -195,4 +195,4 @@ reportParseErrors ::
   ParseError ->
   m a
 reportParseErrors (ParseError {pePath, peMessage, peCode}) =
-  throwError (err400 peCode peMessage) {qePath = pePath}
+  throwError (err400 peCode (fromErrorMessage peMessage)) {qePath = pePath}

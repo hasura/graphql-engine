@@ -92,7 +92,7 @@
       - extensions:
           path: $.selectionSet.profiles.selectionSet.userBasic.selectionSet.userMessages
           code: validation-failed
-        message: "field \"userMessages\" not found in type: 'User'"
+        message: "field 'userMessages' not found in type: 'User'"
   query:
     query: |
       query {

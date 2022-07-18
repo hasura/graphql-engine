@@ -140,7 +140,7 @@ errors:
     code: validation-failed
     path: $.selectionSet.no_queries_available
   message: |-
-    field "no_queries_available" not found in type: 'query_root'
+    field 'no_queries_available' not found in type: 'query_root'
 |]
 
 responseAuthor :: Value -> Value

@@ -47,7 +47,8 @@ listRFDisabledExpectedResponse =
     - extensions:
         path: $.selectionSet.hasura_author
         code: validation-failed
-      message: 'field "hasura_author" not found in type: ''query_root'''
+      message: |-
+        field 'hasura_author' not found in type: 'query_root'
   |]
 
 pkQuery :: Value
@@ -77,7 +78,8 @@ pkRFDisabledExpectedResponse =
     - extensions:
         path: $.selectionSet.hasura_author_by_pk
         code: validation-failed
-      message: 'field "hasura_author_by_pk" not found in type: ''query_root'''
+      message: |-
+        field 'hasura_author_by_pk' not found in type: 'query_root'
   |]
 
 aggregateQuery :: Value
@@ -108,7 +110,8 @@ aggRFDisabledExpectedResponse =
     - extensions:
         path: $.selectionSet.hasura_author_aggregate
         code: validation-failed
-      message: 'field "hasura_author_aggregate" not found in type: ''query_root'''
+      message: |-
+        field 'hasura_author_aggregate' not found in type: 'query_root'
   |]
 
 queryTypesIntrospection :: Value

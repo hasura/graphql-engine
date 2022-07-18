@@ -33,6 +33,7 @@ import Data.Text.Extended
 import Data.Traversable (for)
 import Data.Type.Equality
 import Hasura.Base.Error
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Collect
 import Hasura.GraphQL.Parser.Directives
@@ -223,7 +224,7 @@ selectionSetObject name description parsers implementsInterfaces =
         -- this field needs a selection set, and if none was provided,
         -- we must fail.
         when (null input) $
-          parseError $ "missing selection set for " <>> name
+          parseError $ "missing selection set for " <> toErrorValue name
 
         -- TODO(PDV) This probably accepts invalid queries, namely queries that use
         -- type names that do not exist.
@@ -238,7 +239,7 @@ selectionSetObject name description parsers implementsInterfaces =
                     SelectField <$> parser selectionField
                 | otherwise ->
                   withKey (Key (K.fromText (unName _fName))) $
-                    parseError $ "field " <> _fName <<> " not found in type: " <> squote name
+                    parseError $ "field " <> toErrorValue _fName <> " not found in type: " <> toErrorValue name
           _dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
           -- insert processing of custom directives here
           pure parsedValue
@@ -341,7 +342,7 @@ rawSelection name description argumentsParser resultParser =
         -- handles parsing the fields it cares about
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ name <<> " has no argument named " <>> argumentName
+            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
         fmap (_fAlias,_fArguments,) $ withKey (Key "args") $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
     }
   where
@@ -395,7 +396,7 @@ rawSubselection name description argumentsParser bodyParser =
         -- handles parsing the fields it cares about
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ name <<> " has no argument named " <>> argumentName
+            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
         (_fAlias,_fArguments,,) <$> withKey (Key "args") (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
           <*> pParser bodyParser _fSelectionSet
     }

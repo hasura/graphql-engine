@@ -235,5 +235,5 @@ errors:
   - extensions:
       code: validation-failed
       path: $.selectionSet.update_hasura_album_many.selectionSet.returning.selectionSet.name
-    message: 'field "name" not found in type: ''hasura_album'''
+    message: 'field ''name'' not found in type: ''hasura_album'''
 |]

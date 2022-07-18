@@ -15,7 +15,6 @@
           source: default
           table: authors
 
-
 - description: Querying an inconsistent table permission should not be available
   url: /v1/graphql
   headers:
@@ -31,10 +30,10 @@
       }
   response:
     errors:
-    - extensions:
-        path: $.selectionSet.update_authors
-        code: validation-failed
-      message: "field \"update_authors\" not found in type: 'mutation_root'"
+      - extensions:
+          path: $.selectionSet.update_authors
+          code: validation-failed
+        message: "field 'update_authors' not found in type: 'mutation_root'"
 
 - description: add permission for the inherited role which was inconsistent
   url: /v1/metadata
@@ -74,7 +73,7 @@
   url: /v1/graphql
   headers:
     X-Hasura-Role: author_editor
-    X-Hasura-Author-Id: '1'
+    X-Hasura-Author-Id: "1"
   status: 200
   query:
     query: |

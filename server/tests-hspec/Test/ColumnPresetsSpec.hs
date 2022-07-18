@@ -139,7 +139,8 @@ errors:
 - extensions:
     path: $.selectionSet.insert_hasura_author.args.objects[0].uuid
     code: validation-failed
-  message: 'field "uuid" not found in type: ''hasura_author_insert_input'''
+  message: |-
+    field 'uuid' not found in type: 'hasura_author_insert_input'
 |]
 
   ----------------------------------------
@@ -168,7 +169,8 @@ errors:
 - extensions:
     path: $.selectionSet.insert_hasura_author.args.objects[0].company
     code: validation-failed
-  message: 'field "company" not found in type: ''hasura_author_insert_input'''
+  message: |-
+    field 'company' not found in type: 'hasura_author_insert_input'
 |]
 
 --------------------------------------------------------------------------------

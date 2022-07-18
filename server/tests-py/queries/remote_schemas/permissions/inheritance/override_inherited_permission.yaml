@@ -2,7 +2,7 @@
   url: /v1/graphql
   headers:
     X-Hasura-Role: inherited_role1
-    X-Hasura-User-Id: '1'
+    X-Hasura-User-Id: "1"
   status: 200
   query:
     query: |
@@ -37,7 +37,7 @@
   url: /v1/graphql
   headers:
     X-Hasura-Role: inherited_role1
-    X-Hasura-User-Id: '1'
+    X-Hasura-User-Id: "1"
   status: 200
   query:
     query: |
@@ -52,4 +52,4 @@
       - extensions:
           path: $.selectionSet.user
           code: validation-failed
-        message: "field \"user\" not found in type: 'query_root'"
+        message: "field 'user' not found in type: 'query_root'"

@@ -19,6 +19,7 @@ import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
 import Data.Typeable (Typeable)
 import Hasura.Base.Error
+import Hasura.Base.ToErrorValue
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.SQL.Backend
@@ -120,6 +121,11 @@ class
     ToTxt (ScalarType b),
     ToTxt (TableName b),
     ToTxt (ConstraintName b),
+    ToErrorValue (Column b),
+    ToErrorValue (FunctionName b),
+    ToErrorValue (ScalarType b),
+    ToErrorValue (TableName b),
+    ToErrorValue (ConstraintName b),
     Cacheable (SourceConfig b),
     Cacheable (BackendConfig b),
     Typeable (TableName b),

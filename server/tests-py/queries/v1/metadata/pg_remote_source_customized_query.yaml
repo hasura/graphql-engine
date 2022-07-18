@@ -186,7 +186,7 @@
     - extensions:
         code: validation-failed
         path: $.selectionSet.s2
-      message: "field \"s2\" not found in type: 'query_root'"
+      message: "field 's2' not found in type: 'query_root'"
 
   query:
     query: |

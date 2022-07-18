@@ -39,6 +39,7 @@ import Data.Sequence.NESeq qualified as NESeq
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Internal.Parser qualified as P
 import Hasura.GraphQL.Schema.Backend
@@ -783,7 +784,7 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
                 IR.OrderByItemG orderType annObCol nullsOrder
       where
         throwInvalidCursor = parseError "the \"after\" or \"before\" cursor is invalid"
-        liftQErr = either (parseError . qeError) pure . runExcept
+        liftQErr = either (parseError . toErrorMessage . qeError) pure . runExcept
 
         mkAggregateOrderByPath = \case
           IR.AAOCount -> ["count"]

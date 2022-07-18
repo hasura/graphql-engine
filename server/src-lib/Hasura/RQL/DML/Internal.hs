@@ -102,11 +102,7 @@ assertAskPermInfo pt pa tableInfo = do
   mPermInfo <- askPermInfo pa tableInfo
   onNothing mPermInfo $
     throw400 PermissionDenied $
-      mconcat
-        [ permTypeToCode pt <> " on " <>> tableInfoName tableInfo,
-          " for role " <>> roleName,
-          " is not allowed. "
-        ]
+      permTypeToCode pt <> " on " <> tableInfoName tableInfo <<> " for role " <> roleName <<> " is not allowed. "
 
 isTabUpdatable :: RoleName -> TableInfo ('Postgres 'Vanilla) -> Bool
 isTabUpdatable role ti
@@ -176,11 +172,7 @@ checkPermOnCol pt allowedCols col = do
     permErrMsg role
       | role == adminRoleName = "no such column exists : " <>> col
       | otherwise =
-        mconcat
-          [ "role " <>> role,
-            " does not have permission to ",
-            permTypeToCode pt <> " column " <>> col
-          ]
+        "role " <> role <<> " does not have permission to " <> permTypeToCode pt <> " column " <>> col
 
 checkSelectPermOnScalarComputedField ::
   (UserInfoM m, QErrM m) =>
@@ -264,12 +256,9 @@ fetchRelDet relName refTabName = do
   return (_tciFieldInfoMap $ _tiCoreInfo refTabInfo, refSelPerm)
   where
     relPermErr rTable roleName _ =
-      mconcat
-        [ "role " <>> roleName,
-          " does not have permission to read relationship " <>> relName,
-          "; no permission on",
-          " table " <>> rTable
-        ]
+      "role " <> roleName
+        <<> " does not have permission to read relationship " <> relName
+        <<> "; no permission on table " <>> rTable
 
 checkOnColExp ::
   (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>

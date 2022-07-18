@@ -10,16 +10,16 @@ where
 
 import Control.Lens hiding (index)
 import Data.Aeson qualified as J
-import Data.Aeson.Extended qualified as J
 import Data.Aeson.Types qualified as J
 import Data.Align (align)
 import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Sequence.NESeq qualified as NESeq
 import Data.Text qualified as T
-import Data.Text.Extended
 import Data.These (partitionThese)
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Instances ()
@@ -131,12 +131,12 @@ nodeField sourceCache = do
                 (sourceName,) <$> findNode @('Postgres 'Vanilla) sourceName tableName parseds
           case matchingTables of
             [(sourceName, nodeValue)] -> createRootField stringifyNumbers sourceName tableName nodeValue pKeys
-            [] -> throwInvalidNodeId $ "no such table found: " <>> tableName
+            [] -> throwInvalidNodeId $ "no such table found: " <> toErrorValue tableName
             l ->
               throwInvalidNodeId $
-                "this V1 node id matches more than one table across different sources: " <> tableName
-                  <<> " exists in sources "
-                  <> commaSeparated (fst <$> l)
+                "this V1 node id matches more than one table across different sources: " <> toErrorValue tableName
+                  <> " exists in sources "
+                  <> toErrorValue (fst <$> l)
         NodeIdV2 nodev2 ->
           -- Node id V2.
           --
@@ -145,14 +145,14 @@ nodeField sourceCache = do
           AB.dispatchAnyBackend @Backend nodev2 \(V2NodeId sourceName tableName pKeys :: V2NodeId b) -> do
             nodeValue <-
               findNode @b sourceName tableName parseds
-                `onNothing` throwInvalidNodeId ("no table " <> tableName <<> " found in source " <>> sourceName)
+                `onNothing` throwInvalidNodeId ("no table " <> toErrorValue tableName <> " found in source " <> toErrorValue sourceName)
             createRootField stringifyNumbers sourceName tableName nodeValue pKeys
   where
-    throwInvalidNodeId :: Text -> n a
+    throwInvalidNodeId :: ErrorMessage -> n a
     throwInvalidNodeId t = P.withKey (J.Key "args") $ P.withKey (J.Key "id") $ P.parseError $ "invalid node id: " <> t
 
     parseNodeId :: Text -> n NodeId
-    parseNodeId = either (throwInvalidNodeId . T.pack) pure . J.eitherDecode . base64Decode
+    parseNodeId = either (throwInvalidNodeId . toErrorMessage . T.pack) pure . J.eitherDecode . base64Decode
 
     -- Given all the node id information about a table, and the extracted
     -- 'NodeInfo', craft the top-level query. This relies on the assumption
@@ -205,18 +205,18 @@ nodeField sourceCache = do
 
       unless (null nonAlignedPkColumns) $
         throwInvalidNodeId $
-          "primary key columns " <> dquoteList (map ciColumn nonAlignedPkColumns) <> " are missing"
+          "primary key columns " <> toErrorValue (map ciColumn nonAlignedPkColumns) <> " are missing"
 
       unless (null nonAlignedColumnValues) $
         throwInvalidNodeId $
-          "unexpected column values " <> J.encodeToStrictText nonAlignedColumnValues
+          "unexpected column values " <> toErrorValue nonAlignedColumnValues
 
       let allTuples = (firstPkColumn, firstColumnValue) : alignedTuples
       IR.BoolAnd <$> for allTuples \(columnInfo, columnValue) -> do
         let columnType = ciType columnInfo
         parsedValue <-
           parseScalarValueColumnType columnType columnValue `onLeft` \e ->
-            P.parseErrorWith ParseFailed $ "value of column " <> ciColumn columnInfo <<> " in node id: " <> qeError e
+            P.parseErrorWith ParseFailed $ "value of column " <> toErrorValue (ciColumn columnInfo) <> " in node id: " <> toErrorMessage (qeError e)
         pure $
           IR.BoolField $
             IR.AVColumn

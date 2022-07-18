@@ -18,6 +18,7 @@ import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..))
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
@@ -288,7 +289,7 @@ msColumnParser columnType (G.Nullability isNullable) =
               { pType = schemaType,
                 pParser =
                   P.valueToJSON (P.toGraphQLType schemaType)
-                    >=> either (P.parseErrorWith ParseFailed . qeError) pure . (MSSQL.parseScalarValue scalarType)
+                    >=> either (P.parseErrorWith ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
               }
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (Map.toList enumValues) of

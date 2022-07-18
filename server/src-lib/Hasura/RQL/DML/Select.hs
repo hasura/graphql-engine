@@ -141,53 +141,35 @@ convOrderByElem sessVarBldr (flds, spi) = \case
         if isScalarColumnWhere isGeoType ty
           then
             throw400 UnexpectedPayload $
-              mconcat
-                [ fldName <<> " has type 'geometry'",
-                  " and cannot be used in order_by"
-                ]
+              fldName <<> " has type 'geometry' and cannot be used in order_by"
           else pure $ AOCColumn colInfo
       FIRelationship _ ->
         throw400 UnexpectedPayload $
-          mconcat
-            [ fldName <<> " is a",
-              " relationship and should be expanded"
-            ]
+          fldName <<> " is a relationship and should be expanded"
       FIComputedField _ ->
         throw400 UnexpectedPayload $
-          mconcat
-            [ fldName <<> " is a",
-              " computed field and can't be used in 'order_by'"
-            ]
+          fldName <<> " is a computed field and can't be used in 'order_by'"
       -- TODO Rakesh (from master)
       FIRemoteRelationship {} ->
-        throw400 UnexpectedPayload (mconcat [fldName <<> " is a remote field"])
+        throw400 UnexpectedPayload (fldName <<> " is a remote field")
   OCRel fldName rest -> do
     fldInfo <- askFieldInfo flds fldName
     case fldInfo of
       FIColumn _ ->
         throw400 UnexpectedPayload $
-          mconcat
-            [ fldName <<> " is a Postgres column",
-              " and cannot be chained further"
-            ]
+          fldName <<> " is a Postgres column and cannot be chained further"
       FIComputedField _ ->
         throw400 UnexpectedPayload $
-          mconcat
-            [ fldName <<> " is a",
-              " computed field and can't be used in 'order_by'"
-            ]
+          fldName <<> " is a computed field and can't be used in 'order_by'"
       FIRelationship relInfo -> do
         when (riType relInfo == ArrRel) $
           throw400 UnexpectedPayload $
-            mconcat
-              [ fldName <<> " is an array relationship",
-                " and can't be used in 'order_by'"
-              ]
+            fldName <<> " is an array relationship and can't be used in 'order_by'"
         (relFim, relSelPermInfo) <- fetchRelDet (riName relInfo) (riRTable relInfo)
         resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $ spiFilter relSelPermInfo
         AOCObjectRelation relInfo resolvedSelFltr <$> convOrderByElem sessVarBldr (relFim, relSelPermInfo) rest
       FIRemoteRelationship {} ->
-        throw400 UnexpectedPayload (mconcat [fldName <<> " is a remote field"])
+        throw400 UnexpectedPayload (fldName <<> " is a remote field")
 
 convSelectQ ::
   ( UserInfoM m,
@@ -315,11 +297,7 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
           isJust (sqOrderBy selQ)
         ]
     objRelMisuseMsg =
-      mconcat
-        [ "when selecting an 'obj_relationship' ",
-          "'where', 'order_by', 'limit' and 'offset' ",
-          " can't be used"
-        ]
+      "when selecting an 'obj_relationship' 'where', 'order_by', 'limit' and 'offset'  can't be used"
 
 convSelectQuery ::
   ( UserInfoM m,

@@ -13,9 +13,9 @@ import Control.Arrow ((>>>))
 import Control.Monad (unless)
 import Data.Aeson qualified as A
 import Data.Function (on)
-import Data.Text (Text)
-import Data.Text.Extended
 import Data.Void (absurd)
+import Hasura.Base.ErrorMessage
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Names
 import Hasura.GraphQL.Parser.Variable
@@ -78,10 +78,10 @@ typeCheck :: MonadParse m => Bool -> GType -> Variable -> m ()
 typeCheck locationHasDefaultValue locationType variable@Variable {vInfo, vType} =
   unless (isVariableUsageAllowed locationHasDefaultValue locationType variable) $
     parseError $
-      "variable " <> dquote (getName vInfo) <> " is declared as "
-        <> showGT vType
+      "variable " <> toErrorValue (getName vInfo) <> " is declared as "
+        <> toErrorValue vType
         <> ", but used where "
-        <> showGT locationType
+        <> toErrorValue locationType
         <> " is expected"
 
 isVariableUsageAllowed ::
@@ -119,15 +119,15 @@ isVariableUsageAllowed locationHasDefaultValue locationType variable
 
 -- Error handling functions
 
-typeMismatch :: (HasName n, MonadParse m) => n -> Text -> InputValue Variable -> m a
+typeMismatch :: (HasName n, MonadParse m) => n -> ErrorMessage -> InputValue Variable -> m a
 typeMismatch name expected given =
   parseError $
-    "expected " <> expected <> " for type " <> getName name <<> ", but found " <> describeValue given
+    "expected " <> expected <> " for type " <> toErrorValue (getName name) <> ", but found " <> describeValue given
 
-describeValue :: InputValue Variable -> Text
+describeValue :: InputValue Variable -> ErrorMessage
 describeValue = describeValueWith (describeValueWith absurd . vValue)
 
-describeValueWith :: (var -> Text) -> InputValue var -> Text
+describeValueWith :: (var -> ErrorMessage) -> InputValue var -> ErrorMessage
 describeValueWith describeVariable = \case
   JSONValue jval -> describeJSON jval
   GraphQLValue gval -> describeGraphQL gval

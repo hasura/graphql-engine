@@ -21,7 +21,7 @@ query:
     }
 response:
   errors:
-  - extensions:
-      path: $.selectionSet.custom_profiles_connection.selectionSet.edges.selectionSet.node.selectionSet.messageBasic
-      code: validation-failed
-    message: "field \"messageBasic\" not found in type: 'custom_profiles'"
+    - extensions:
+        path: $.selectionSet.custom_profiles_connection.selectionSet.edges.selectionSet.node.selectionSet.messageBasic
+        code: validation-failed
+      message: "field 'messageBasic' not found in type: 'custom_profiles'"

@@ -28,6 +28,7 @@ import Database.ODBC.TH qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.DDL.EventTrigger
 import Hasura.Backends.MSSQL.DDL.Source.Version
+import Hasura.Backends.MSSQL.Instances.Types ()
 import Hasura.Backends.MSSQL.Meta
 import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
 import Hasura.Backends.MSSQL.Types

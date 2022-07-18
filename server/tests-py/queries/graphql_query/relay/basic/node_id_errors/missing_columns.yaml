@@ -15,7 +15,7 @@ query:
     }
 response:
   errors:
-  - extensions:
-      path: "$.selectionSet.node.args.id"
-      code: validation-failed
-    message: 'invalid node id: primary key columns "last_name" are missing'
+    - extensions:
+        path: "$.selectionSet.node.args.id"
+        code: validation-failed
+      message: "invalid node id: primary key columns ['last_name'] are missing"

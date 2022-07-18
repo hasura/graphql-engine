@@ -18,6 +18,7 @@ import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Types.Column
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.GraphQL.Schema.Backend
@@ -434,7 +435,7 @@ customScalarParser = \case
             -- well.
             void $
               parseScalarValue @b (unwrapScalar scalarType) jsonInput
-                `onLeft` \e -> parseErrorWith ParseFailed $ qeError e
+                `onLeft` \e -> parseErrorWith ParseFailed . toErrorMessage $ qeError e
             pure jsonInput
      in P.Parser
           { pType = schemaType,

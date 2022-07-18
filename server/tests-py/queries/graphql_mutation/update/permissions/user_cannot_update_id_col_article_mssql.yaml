@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: user
-  X-Hasura-User-Id: '1'
+  X-Hasura-User-Id: "1"
 query:
   query: |
     mutation {
@@ -26,7 +26,7 @@ query:
     }
 response:
   errors:
-  - extensions:
-      path: "$.selectionSet.update_article.args._set.id"
-      code: validation-failed
-    message: 'field "id" not found in type: ''article_set_input'''
+    - extensions:
+        path: "$.selectionSet.update_article.args._set.id"
+        code: validation-failed
+      message: "field 'id' not found in type: 'article_set_input'"

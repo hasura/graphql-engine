@@ -15,7 +15,7 @@ import Control.Monad (foldM, unless)
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap)
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Maybe (fromMaybe)
-import Data.Text.Extended
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Variable
@@ -153,13 +153,14 @@ mergeFields = foldM addField OMap.empty
     mergeField alias oldField newField = do
       unless (_fName oldField == _fName newField) $
         parseError $
-          "selection of both " <> _fName oldField <<> " and "
-            <> _fName newField <<> " specify the same response name, " <>> alias
+          "selection of both " <> toErrorValue (_fName oldField) <> " and "
+            <> toErrorValue (_fName newField)
+            <> " specify the same response name, "
+            <> toErrorValue (alias)
 
       unless (_fArguments oldField == _fArguments newField) $
         parseError $
-          "inconsistent arguments between multiple selections of "
-            <> "field " <>> _fName oldField
+          "inconsistent arguments between multiple selections of field " <> toErrorValue (_fName oldField)
 
       pure
         $! Field

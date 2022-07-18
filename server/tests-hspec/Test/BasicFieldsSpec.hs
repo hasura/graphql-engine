@@ -164,7 +164,7 @@ errors:
     code: validation-failed
     path: $.selectionSet.hasura_author.selectionSet.notPresentCol
   message: |-
-    field "notPresentCol" not found in type: 'hasura_author'
+    field 'notPresentCol' not found in type: 'hasura_author'
 |]
 
   it "Missing table" $ \testEnvironment ->
@@ -187,5 +187,5 @@ errors:
     code: validation-failed
     path: $.selectionSet.random
   message: |-
-    field "random" not found in type: 'query_root'
+    field 'random' not found in type: 'query_root'
 |]

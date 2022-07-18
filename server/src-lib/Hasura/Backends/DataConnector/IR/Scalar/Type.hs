@@ -10,6 +10,8 @@ where
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Witch qualified
@@ -42,6 +44,9 @@ data Type
 
 instance ToTxt Type where
   toTxt = tshow
+
+instance ToErrorValue Type where
+  toErrorValue = ErrorValue.squote . tshow
 
 instance Witch.From API.Type Type where
   from = \case

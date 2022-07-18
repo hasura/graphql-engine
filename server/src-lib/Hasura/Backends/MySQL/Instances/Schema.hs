@@ -14,6 +14,7 @@ import Data.Text.Extended
 import Database.MySQL.Base.Types qualified as MySQL
 import Hasura.Backends.MySQL.Types qualified as MySQL
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Build qualified as GSB
 import Hasura.GraphQL.Schema.Common
@@ -201,7 +202,7 @@ columnParser' columnType (GQL.Nullability isNullable) =
             { pType = schemaType,
               pParser =
                 P.valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (P.parseErrorWith ParseFailed . qeError) pure . (MySQL.parseScalarValue scalarType)
+                  >=> either (P.parseErrorWith ParseFailed . toErrorMessage . qeError) pure . (MySQL.parseScalarValue scalarType)
             }
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (HM.toList enumValues) of

@@ -9,7 +9,7 @@
       - extensions:
           path: $.selectionSet.profiles_by_pk.selectionSet.remoteUser
           code: validation-failed
-        message: "field \"remoteUser\" not found in type: 'profiles'"
+        message: "field 'remoteUser' not found in type: 'profiles'"
   query:
     query: |
       query {
@@ -54,7 +54,7 @@
       - extensions:
           path: $.selectionSet.profiles_by_pk.selectionSet.remoteUser
           code: validation-failed
-        message: "field \"remoteUser\" not found in type: 'profiles'"
+        message: "field 'remoteUser' not found in type: 'profiles'"
   query:
     query: |
       query {

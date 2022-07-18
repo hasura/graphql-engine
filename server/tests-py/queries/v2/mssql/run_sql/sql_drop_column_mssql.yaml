@@ -60,7 +60,7 @@
     - extensions:
         path: $.selectionSet.test.selectionSet.name
         code: validation-failed
-      message: "field \"name\" not found in type: 'test'"
+      message: "field 'name' not found in type: 'test'"
   query:
     query: |
       query {

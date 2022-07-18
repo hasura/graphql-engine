@@ -16,6 +16,8 @@ import Data.Text.Extended (ToTxt (..))
 import Database.MySQL.Base (Connection)
 import Database.MySQL.Base.Types qualified as MySQLTypes (Type (..))
 import Hasura.Backends.MySQL.Types.Internal
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Language.Haskell.TH
@@ -175,6 +177,9 @@ instance ToJSONKey ScalarType
 
 instance ToTxt ScalarType where
   toTxt = tshow
+
+instance ToErrorValue ScalarType where
+  toErrorValue = ErrorValue.squote . tshow
 
 deriving newtype instance Monoid Where
 

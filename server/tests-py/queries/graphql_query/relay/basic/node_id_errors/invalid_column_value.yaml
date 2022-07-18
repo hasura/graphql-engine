@@ -15,8 +15,7 @@ query:
     }
 response:
   errors:
-  - extensions:
-      path: "$.selectionSet.node"
-      code: parse-failed
-    message: 'value of column "first_name" in node id: parsing Text failed, expected
-      String, but encountered Number'
+    - extensions:
+        path: "$.selectionSet.node"
+        code: parse-failed
+      message: "value of column 'first_name' in node id: parsing Text failed, expected String, but encountered Number"

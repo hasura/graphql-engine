@@ -1035,11 +1035,11 @@ askColInfo m c msg = do
     throwErr fieldType =
       throwError $
         err400 UnexpectedPayload $
-          mconcat
-            [ "expecting a database column; but, ",
-              c <<> " is a " <> fieldType <> "; ",
-              msg
-            ]
+          "expecting a database column; but, "
+            <> c <<> " is a "
+            <> fieldType
+            <> "; "
+            <> msg
 
 askComputedFieldInfo ::
   (MonadError QErr m) =>
@@ -1059,10 +1059,9 @@ askComputedFieldInfo fields computedField = do
     throwErr fieldType =
       throwError $
         err400 UnexpectedPayload $
-          mconcat
-            [ "expecting a computed field; but, ",
-              computedField <<> " is a " <> fieldType <> "; "
-            ]
+          "expecting a computed field; but, "
+            <> computedField <<> " is a "
+            <> fieldType
 
 assertColumnExists ::
   forall backend m.
@@ -1089,11 +1088,9 @@ askRelType m r msg = do
     _ ->
       throwError $
         err400 UnexpectedPayload $
-          mconcat
-            [ "expecting a relationship; but, ",
-              r <<> " is a postgres column; ",
-              msg
-            ]
+          "expecting a relationship; but, "
+            <> r <<> " is a postgres column; "
+            <> msg
 
 askRemoteRel ::
   (MonadError QErr m) =>

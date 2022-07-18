@@ -45,7 +45,7 @@
       - extensions:
           path: $.selectionSet.hero.selectionSet.non_existing_field
           code: validation-failed
-        message: 'field "non_existing_field" not found in type: ''FooDroid'''
+        message: "field 'non_existing_field' not found in type: 'FooDroid'"
 
 - description: query with prefix original (non-customized) type name in inline fragment
   url: /v1/graphql
@@ -129,7 +129,7 @@
     - extensions:
         path: $.selectionSet.heroByArgs.args.arguments
         code: validation-failed
-      message: variable "args" is declared as CharacterInputArgs!, but used where FooCharacterInputArgs! is expected
+      message: variable 'args' is declared as 'CharacterInputArgs!', but used where 'FooCharacterInputArgs!' is expected
 
 - description: query with __type introspection
   url: /v1/graphql

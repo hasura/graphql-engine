@@ -82,10 +82,10 @@
       }
   response:
     errors:
-    - extensions:
-        path: $.selectionSet.my_remote_schema.selectionSet.user.selectionSet.foo_gimmeText
-        code: validation-failed
-      message: "field \"foo_gimmeText\" not found in type: 'FooUser'"
+      - extensions:
+          path: $.selectionSet.my_remote_schema.selectionSet.user.selectionSet.foo_gimmeText
+          code: validation-failed
+        message: "field 'foo_gimmeText' not found in type: 'FooUser'"
 
 - description: run the above query as admin
   url: /v1/graphql
