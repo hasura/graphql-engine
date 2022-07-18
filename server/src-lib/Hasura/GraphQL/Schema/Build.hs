@@ -49,6 +49,8 @@ module Hasura.GraphQL.Schema.Build
     buildTableQueryAndSubscriptionFields,
     buildTableStreamingSubscriptionFields,
     buildTableUpdateMutationFields,
+    setFieldNameCase,
+    buildFieldDescription,
   )
 where
 

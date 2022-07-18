@@ -162,6 +162,7 @@ data TableCustomRootFields = TableCustomRootFields
     _tcrfInsertOne :: CustomRootField,
     _tcrfUpdate :: CustomRootField,
     _tcrfUpdateByPk :: CustomRootField,
+    _tcrfUpdateMany :: CustomRootField,
     _tcrfDelete :: CustomRootField,
     _tcrfDeleteByPk :: CustomRootField
   }
@@ -184,6 +185,7 @@ instance ToJSON TableCustomRootFields where
           "insert_one" .= _tcrfInsertOne,
           "update" .= _tcrfUpdate,
           "update_by_pk" .= _tcrfUpdateByPk,
+          "update_many" .= _tcrfUpdateMany,
           "delete" .= _tcrfDelete,
           "delete_by_pk" .= _tcrfDeleteByPk
         ]
@@ -200,6 +202,7 @@ instance FromJSON TableCustomRootFields where
         <*> (obj .:? "insert_one" .!= defaultCustomRootField)
         <*> (obj .:? "update" .!= defaultCustomRootField)
         <*> (obj .:? "update_by_pk" .!= defaultCustomRootField)
+        <*> (obj .:? "update_many" .!= defaultCustomRootField)
         <*> (obj .:? "delete" .!= defaultCustomRootField)
         <*> (obj .:? "delete_by_pk" .!= defaultCustomRootField)
 
@@ -222,22 +225,24 @@ emptyCustomRootFields =
       _tcrfInsertOne = defaultCustomRootField,
       _tcrfUpdate = defaultCustomRootField,
       _tcrfUpdateByPk = defaultCustomRootField,
+      _tcrfUpdateMany = defaultCustomRootField,
       _tcrfDelete = defaultCustomRootField,
       _tcrfDeleteByPk = defaultCustomRootField
     }
 
 getAllCustomRootFields :: TableCustomRootFields -> [CustomRootField]
-getAllCustomRootFields (TableCustomRootFields select selectByPk selectAgg selectStream insert insertOne update updateByPk delete deleteByPk) =
-  [ select,
-    selectByPk,
-    selectAgg,
-    selectStream,
-    insert,
-    insertOne,
-    update,
-    updateByPk,
-    delete,
-    deleteByPk
+getAllCustomRootFields TableCustomRootFields {..} =
+  [ _tcrfSelect,
+    _tcrfSelectByPk,
+    _tcrfSelectAggregate,
+    _tcrfSelectStream,
+    _tcrfInsert,
+    _tcrfInsertOne,
+    _tcrfUpdate,
+    _tcrfUpdateByPk,
+    _tcrfUpdateMany,
+    _tcrfDelete,
+    _tcrfDeleteByPk
   ]
 
 data FieldInfo (b :: BackendType)

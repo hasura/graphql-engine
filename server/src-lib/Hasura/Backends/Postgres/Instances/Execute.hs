@@ -39,7 +39,7 @@ import Hasura.Backends.Postgres.SQL.Value qualified as PG
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
 import Hasura.Backends.Postgres.Types.Function qualified as PG
-import Hasura.Backends.Postgres.Types.Update
+import Hasura.Backends.Postgres.Types.Update qualified as BackendUpdate
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON, encJFromBS, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend
@@ -216,7 +216,7 @@ convertUpdate ::
 convertUpdate userInfo updateOperation stringifyNum = do
   queryTags <- ask
   preparedUpdate <- traverse (prepareWithoutPlan userInfo) updateOperation
-  if null $ updateOperations . IR._auBackend $ updateOperation
+  if BackendUpdate.isEmpty $ IR._auBackend updateOperation
     then pure $ pure $ IR.buildEmptyMutResp $ IR._auOutput preparedUpdate
     else
       pure $

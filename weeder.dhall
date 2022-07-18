@@ -16,7 +16,7 @@
     , "^Data.Aeson.Ordered.*"
     , "^Data.HashMap.Strict.Multi.*"
     , "^Data.HashMap.Strict.NonEmpty.*"
-    , "^Data.Sequence.NonEmpty.*"
+    , "^Data.Sequence.NESeq.*"
     , "^Data.Text.Casing.*"
     , "^Data.Text.Extended.*"
     , "^Data.Trie.*"

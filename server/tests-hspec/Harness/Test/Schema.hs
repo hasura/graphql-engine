@@ -7,6 +7,7 @@ module Harness.Test.Schema
     Reference (..),
     Column (..),
     ScalarType (..),
+    defaultSerialType,
     ScalarValue (..),
     UniqueConstraint (..),
     BackendScalarType (..),
@@ -231,6 +232,17 @@ backendScalarValue :: BackendScalarValue -> (BackendScalarValue -> Maybe Backend
 backendScalarValue bsv fn = case fn bsv of
   Nothing -> error $ "backendScalarValue: Retrieved value is Nothing, passed " <> show bsv
   Just scalarValue -> scalarValue
+
+defaultSerialType :: ScalarType
+defaultSerialType =
+  TCustomType $
+    defaultBackendScalarType
+      { bstMysql = Nothing,
+        bstMssql = Just "INT IDENTITY(1,1)",
+        bstCitus = Just "SERIAL",
+        bstPostgres = Just "SERIAL",
+        bstBigQuery = Nothing
+      }
 
 -- | Helper function to construct 'Column's with common defaults
 column :: Text -> ScalarType -> Column

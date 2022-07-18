@@ -23,7 +23,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.Sequence qualified as Seq
-import Data.Sequence.NonEmpty qualified as NESeq
+import Data.Sequence.NESeq qualified as NESeq
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR

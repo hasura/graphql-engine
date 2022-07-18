@@ -35,7 +35,7 @@ import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
-import Data.Sequence.NonEmpty qualified as NESeq
+import Data.Sequence.NESeq qualified as NESeq
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error

@@ -11,7 +11,7 @@ import Data.FileEmbed (embedFile, makeRelativeToProject)
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
-import Data.Sequence.NonEmpty qualified as SNE
+import Data.Sequence.NESeq qualified as SNE
 import Data.String (fromString)
 import Database.MySQL.Base (Connection)
 import Database.MySQL.Base.Types (Field (..))

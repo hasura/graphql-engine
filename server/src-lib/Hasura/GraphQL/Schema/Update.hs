@@ -12,6 +12,7 @@ module Hasura.GraphQL.Schema.Update
     incOp,
     updateTable,
     updateTableByPk,
+    mkUpdateObject,
   )
 where
 

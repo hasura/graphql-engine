@@ -28,20 +28,22 @@ type PG = 'Postgres 'Vanilla
 -- Given a table with one or two columns, perform a simple update. There are no
 -- permission restrictions. It's also only using text fields and 'UpdateSet'.
 spec :: Spec
-spec = describe "Simple update" do
-  it "single column" do
-    runUpdateFieldTest
-      UpdateTestSetup
-        { utsTable = "artist",
-          utsColumns = [nameColumn],
-          utsExpect =
-            UpdateExpectationBuilder
-              { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                utbWhere = [(nameColumn, [AEQ True oldValue])],
-                utbUpdate = [(nameColumn, UpdateSet newValue)]
-              },
-          utsField =
-            [GQL.field|
+spec = do
+  describe "Update parsers" do
+    describe "update where" do
+      it "single column" do
+        runUpdateFieldTest
+          UpdateTestSetup
+            { utsTable = "artist",
+              utsColumns = [nameColumn],
+              utsExpect =
+                UpdateExpectationBuilder
+                  { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
+                    utbWhere = [(nameColumn, [AEQ True oldValue])],
+                    utbUpdate = UpdateTable [(nameColumn, UpdateSet newValue)]
+                  },
+              utsField =
+                [GQL.field|
 update_artist(
   where: { name: { _eq: "old name"}},
   _set: { name: "new name" }
@@ -49,24 +51,25 @@ update_artist(
   affected_rows
 }
 |]
-        }
+            }
 
-  it "two columns" do
-    runUpdateFieldTest
-      UpdateTestSetup
-        { utsTable = "artist",
-          utsColumns = [nameColumn, descColumn],
-          utsExpect =
-            UpdateExpectationBuilder
-              { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
-                utbWhere = [(nameColumn, [AEQ True oldValue])],
-                utbUpdate =
-                  [ (nameColumn, UpdateSet newValue),
-                    (descColumn, UpdateSet otherValue)
-                  ]
-              },
-          utsField =
-            [GQL.field|
+      it "two columns" do
+        runUpdateFieldTest
+          UpdateTestSetup
+            { utsTable = "artist",
+              utsColumns = [nameColumn, descColumn],
+              utsExpect =
+                UpdateExpectationBuilder
+                  { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
+                    utbWhere = [(nameColumn, [AEQ True oldValue])],
+                    utbUpdate =
+                      UpdateTable
+                        [ (nameColumn, UpdateSet newValue),
+                          (descColumn, UpdateSet otherValue)
+                        ]
+                  },
+              utsField =
+                [GQL.field|
 update_artist(
   where: { name: { _eq: "old name"}},
   _set: { name: "new name", description: "other" }
@@ -74,14 +77,144 @@ update_artist(
   affected_rows
 }
 |]
-        }
+            }
+    describe "update many" do
+      it "one update" do
+        runUpdateFieldTest
+          UpdateTestSetup
+            { utsTable = "artist",
+              utsColumns = [nameColumn, descColumn, idColumn],
+              utsExpect =
+                UpdateExpectationBuilder
+                  { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
+                    utbWhere = [],
+                    utbUpdate =
+                      UpdateMany
+                        [ MultiRowUpdateBuilder
+                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
+                              mrubUpdate =
+                                [ (nameColumn, UpdateSet newValue),
+                                  (descColumn, UpdateSet otherValue)
+                                ]
+                            }
+                        ]
+                  },
+              utsField =
+                [GQL.field|
+update_artist_many(
+  updates: [
+    { where: { id: { _eq: 1 } },
+      _set: { name: "new name", description: "other" }
+    }
+    ]
+) {
+  affected_rows
+}
+|]
+            }
+
+      it "two updates, complex where clause" do
+        runUpdateFieldTest
+          UpdateTestSetup
+            { utsTable = "artist",
+              utsColumns = [nameColumn, descColumn, idColumn],
+              utsExpect =
+                UpdateExpectationBuilder
+                  { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
+                    utbWhere = [],
+                    utbUpdate =
+                      UpdateMany
+                        [ MultiRowUpdateBuilder
+                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
+                              mrubUpdate =
+                                [ (nameColumn, UpdateSet newValue),
+                                  (descColumn, UpdateSet otherValue)
+                                ]
+                            },
+                          MultiRowUpdateBuilder
+                            { mrubWhere = [(idColumn, [AEQ True integerTwo])],
+                              mrubUpdate = [(descColumn, UpdateSet otherValue)]
+                            }
+                        ]
+                  },
+              utsField =
+                [GQL.field|
+update_artist_many(
+  updates: [
+    { where: { id: { _eq: 1 } }
+      _set: { name: "new name", description: "other" }
+    }
+    { where: { id: { _eq: 2 } }
+      _set: { description: "other" }
+    }
+    ]
+) {
+  affected_rows
+}
+|]
+            }
+
+      it "three updates, ordering" do
+        runUpdateFieldTest
+          UpdateTestSetup
+            { utsTable = "artist",
+              utsColumns = [nameColumn, descColumn, idColumn],
+              utsExpect =
+                UpdateExpectationBuilder
+                  { utbOutput = MOutMultirowFields [("affected_rows", MCount)],
+                    utbWhere = [],
+                    utbUpdate =
+                      UpdateMany
+                        [ MultiRowUpdateBuilder
+                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
+                              mrubUpdate = [(nameColumn, UpdateSet newValue)]
+                            },
+                          MultiRowUpdateBuilder
+                            { mrubWhere = [(idColumn, [AEQ True integerOne])],
+                              mrubUpdate = [(nameColumn, UpdateSet oldValue)]
+                            },
+                          MultiRowUpdateBuilder
+                            { mrubWhere = [(idColumn, [AEQ True integerTwo])],
+                              mrubUpdate = [(nameColumn, UpdateSet otherValue)]
+                            }
+                        ]
+                  },
+              utsField =
+                [GQL.field|
+update_artist_many(
+  updates: [
+    { where: { id: { _eq: 1 } }
+      _set: { name: "new name" }
+    }
+    { where: { id: { _eq: 1 } }
+      _set: { name: "old name" }
+    }
+    { where: { id: { _eq: 2 } }
+      _set: { name: "other" }
+    }
+    ]
+) {
+  affected_rows
+}
+|]
+            }
+
+idColumn :: ColumnInfoBuilder
+idColumn =
+  ColumnInfoBuilder
+    { cibName = "id",
+      cibType = ColumnScalar PGInteger,
+      cibNullable = False,
+      cibIsPrimaryKey = True
+    }
 
 nameColumn :: ColumnInfoBuilder
 nameColumn =
   ColumnInfoBuilder
     { cibName = "name",
       cibType = ColumnScalar PGText,
-      cibNullable = False
+      cibNullable = False,
+      cibIsPrimaryKey = False
     }
 
 oldValue :: UnpreparedValue PG
@@ -105,7 +238,8 @@ descColumn =
   ColumnInfoBuilder
     { cibName = "description",
       cibType = ColumnScalar PGText,
-      cibNullable = False
+      cibNullable = False,
+      cibIsPrimaryKey = False
     }
 
 otherValue :: UnpreparedValue PG
@@ -114,4 +248,20 @@ otherValue =
     ColumnValue
       { cvType = ColumnScalar PGText,
         cvValue = PGValText "other"
+      }
+
+integerOne :: UnpreparedValue PG
+integerOne =
+  UVParameter Nothing $
+    ColumnValue
+      { cvType = ColumnScalar PGInteger,
+        cvValue = PGValInteger 1
+      }
+
+integerTwo :: UnpreparedValue PG
+integerTwo =
+  UVParameter Nothing $
+    ColumnValue
+      { cvType = ColumnScalar PGInteger,
+        cvValue = PGValInteger 2
       }

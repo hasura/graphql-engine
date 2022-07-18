@@ -72,7 +72,7 @@ alldefaults :: Schema.Table
 alldefaults =
   (table "alldefaults")
     { tableColumns =
-        [ Schema.column "id" defaultSerialType,
+        [ Schema.column "id" Schema.defaultSerialType,
           Schema.column "dt" defaultDateTimeType
         ],
       tablePrimaryKey = ["id"]
@@ -82,7 +82,7 @@ somedefaults :: Schema.Table
 somedefaults =
   (table "somedefaults")
     { tableColumns =
-        [ Schema.column "id" defaultSerialType,
+        [ Schema.column "id" Schema.defaultSerialType,
           Schema.column "dt" defaultDateTimeType,
           Schema.column "name" Schema.TStr
         ],
@@ -93,24 +93,13 @@ withrelationship :: Schema.Table
 withrelationship =
   (table "withrelationship")
     { tableColumns =
-        [ Schema.column "id" defaultSerialType,
+        [ Schema.column "id" Schema.defaultSerialType,
           Schema.column "nickname" Schema.TStr,
           Schema.column "time_id" Schema.TInt
         ],
       tablePrimaryKey = ["nickname"],
       tableReferences = [Schema.Reference "time_id" "alldefaults" "id"]
     }
-
-defaultSerialType :: Schema.ScalarType
-defaultSerialType =
-  Schema.TCustomType $
-    Schema.defaultBackendScalarType
-      { Schema.bstMysql = Nothing,
-        Schema.bstMssql = Just "INT IDENTITY(1,1)",
-        Schema.bstCitus = Just "SERIAL",
-        Schema.bstPostgres = Just "SERIAL",
-        Schema.bstBigQuery = Nothing
-      }
 
 defaultDateTimeType :: Schema.ScalarType
 defaultDateTimeType =
