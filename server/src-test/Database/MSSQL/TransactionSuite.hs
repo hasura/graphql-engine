@@ -1,4 +1,4 @@
-module Database.MSSQL.TransactionSpec (spec) where
+module Database.MSSQL.TransactionSuite (suite) where
 
 import Control.Exception.Base (bracket)
 import Data.ByteString (ByteString)
@@ -41,8 +41,8 @@ newtype Transaction = Transaction
   { unTransaction :: [Query]
   }
 
-spec :: Text -> Spec
-spec connString = do
+suite :: Text -> Spec
+suite connString = do
   runBasicChecks connString
   transactionStateTests connString
 

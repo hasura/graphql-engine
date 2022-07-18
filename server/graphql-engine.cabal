@@ -924,6 +924,7 @@ executable emit-metadata-openapi
 -- However, that doesn't work yet. See https://github.com/haskell/cabal/issues/8218
 test-suite graphql-engine-tests
   import: common-all, common-exe, lib-depends
+  build-tool-depends: hspec-discover:hspec-discover
   type: exitcode-stdio-1.0
   build-depends:
       aeson
@@ -1008,7 +1009,8 @@ test-suite graphql-engine-tests
     Data.Text.RawString
     Data.TimeSpec
     Data.TrieSpec
-    Database.MSSQL.TransactionSpec
+    Database.MSSQL.TransactionSuite
+    Discover
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
@@ -1066,15 +1068,14 @@ test-suite graphql-engine-tests
     Hasura.Server.AuthSpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
-    Hasura.Server.MigrateSpec
+    Hasura.Server.MigrateSuite
     Hasura.Server.Migrate.VersionSpec
     Hasura.Server.TelemetrySpec
     Hasura.Server.InitSpec
     Hasura.Server.Init.ArgSpec
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
-    Hasura.StreamingSubscriptionSpec
-    Hasura.StreamingSubscriptionSpec
+    Hasura.StreamingSubscriptionSuite
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Utils
     Test.Autodocodec.Extended
