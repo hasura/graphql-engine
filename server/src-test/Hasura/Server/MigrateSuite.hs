@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.Server.MigrateSpec (CacheRefT (..), spec) where
+module Hasura.Server.MigrateSuite (CacheRefT (..), suite) where
 
 import Control.Concurrent.MVar.Lifted
 import Control.Monad.Morph
@@ -92,7 +92,7 @@ type SpecWithCache m = SpecWith (MetadataT (CacheRefT m) :~> IO)
 singleTransaction :: MetadataT (CacheRefT m) () -> MetadataT (CacheRefT m) ()
 singleTransaction = id
 
-spec ::
+suite ::
   forall m.
   ( MonadIO m,
     MonadBaseControl IO m,
@@ -105,7 +105,7 @@ spec ::
   PGExecCtx ->
   Q.ConnInfo ->
   SpecWithCache m
-spec srcConfig pgExecCtx pgConnInfo = do
+suite srcConfig pgExecCtx pgConnInfo = do
   let logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
         t <- liftIO $ getFormattedTime Nothing

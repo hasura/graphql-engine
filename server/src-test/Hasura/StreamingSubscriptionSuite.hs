@@ -2,7 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Hasura.StreamingSubscriptionSpec (buildStreamingSubscriptionsSpec) where
+module Hasura.StreamingSubscriptionSuite (buildStreamingSubscriptionSuite) where
 
 import Control.Concurrent.Async qualified as Async
 import Control.Concurrent.MVar qualified as MVar
@@ -49,8 +49,8 @@ import System.Exit (exitFailure)
 import System.Metrics
 import Test.Hspec
 
-buildStreamingSubscriptionsSpec :: IO Spec
-buildStreamingSubscriptionsSpec = do
+buildStreamingSubscriptionSuite :: IO Spec
+buildStreamingSubscriptionSuite = do
   env <- getEnvironment
 
   pgUrlText :: Text <- flip onLeft (printErrExit . T.pack) $

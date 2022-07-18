@@ -2,75 +2,38 @@
 
 module Main (main) where
 
-import Control.Concurrent.ExtendedSpec qualified as ConcurrentExtended
 import Control.Concurrent.MVar
-import Control.Monad.CircularSpec qualified as Circular
 import Control.Natural ((:~>) (..))
 import Data.Aeson qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.ByteString.Lazy.UTF8 qualified as LBS
 import Data.Environment qualified as Env
-import Data.HashMap.Strict.ExtendedSpec qualified as HashMapExtendedSpec
-import Data.NonNegativeIntSpec qualified as NonNegativeIntSpec
-import Data.Parser.CacheControlSpec qualified as CacheControlParser
-import Data.Parser.JSONPathSpec qualified as JsonPath
-import Data.Parser.RemoteRelationshipSpec qualified as RemoteRelationship
-import Data.Parser.URLTemplateSpec qualified as URLTemplate
 import Data.Time.Clock (getCurrentTime)
-import Data.TimeSpec qualified as TimeSpec
-import Data.TrieSpec qualified as TrieSpec
 import Data.URL.Template
-import Database.MSSQL.TransactionSpec qualified as TransactionSpec
+import Database.MSSQL.TransactionSuite qualified as TransactionSuite
 import Database.PG.Query qualified as Q
+import Discover qualified
 import Hasura.App
   ( PGMetadataStorageAppT (..),
     mkMSSQLSourceResolver,
     mkPgSourceResolver,
   )
-import Hasura.AppSpec qualified as AppSpec
-import Hasura.Backends.DataConnector.API.V0Spec qualified as DataConnector.API.V0Spec
-import Hasura.Backends.MSSQL.ErrorSpec qualified as MSSQLErrorSpec
-import Hasura.Backends.MySQL.DataLoader.ExecuteTests qualified as MySQLDataLoader
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
-import Hasura.Backends.Postgres.Execute.PrepareSpec qualified as PrepareSpec
 import Hasura.Backends.Postgres.Execute.Types
-import Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec qualified as IdentifierUniqueness
-import Hasura.Backends.Postgres.SQL.ValueSpec qualified as ValueSpec
-import Hasura.EventingSpec qualified as EventingSpec
-import Hasura.GraphQL.NamespaceSpec qualified as NamespaceSpec
-import Hasura.GraphQL.Parser.DirectivesTest qualified as GraphQLDirectivesSpec
-import Hasura.GraphQL.Parser.MonadParseTest qualified as MonadParseSpec
-import Hasura.GraphQL.Schema.Build.UpdateSpec qualified as UpdateSpec
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.GraphQL.Schema.RemoteTest qualified as GraphRemoteSchemaSpec
-import Hasura.IncrementalSpec qualified as IncrementalSpec
 import Hasura.Logging
 import Hasura.Metadata.Class
-import Hasura.Metadata.DTO.MetadataDTOSpec qualified as MetadataDTOSpec
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
-import Hasura.RQL.IR.SelectSpec qualified as SelectSpec
-import Hasura.RQL.MetadataSpec qualified as MetadataSpec
-import Hasura.RQL.PermissionSpec qualified as PermSpec
-import Hasura.RQL.Types.AllowlistSpec qualified as AllowlistSpec
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.CommonSpec qualified as CommonTypesSpec
-import Hasura.RQL.Types.EndpointSpec qualified as EndpointSpec
 import Hasura.RQL.Types.SchemaCache.Build
-import Hasura.RQL.Types.TableSpec qualified as TableSpec
-import Hasura.RQL.WebhookTransformsSpec qualified as WebhookTransformsSpec
-import Hasura.Server.Auth.JWTSpec qualified as JWTSpec
 import Hasura.Server.Init
-import Hasura.Server.Init.ArgSpec qualified as ArgSpec
-import Hasura.Server.InitSpec qualified as InitSpec
 import Hasura.Server.Migrate
-import Hasura.Server.Migrate.VersionSpec qualified as VersionSpec
-import Hasura.Server.MigrateSpec qualified as MigrateSpec
+import Hasura.Server.MigrateSuite qualified as MigrateSuite
 import Hasura.Server.Types
-import Hasura.SessionSpec qualified as SessionSpec
-import Hasura.StreamingSubscriptionSpec qualified as StreamingSubSpec
+import Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Client.TLS qualified as HTTP
 import Options.Applicative
@@ -95,57 +58,15 @@ main :: IO ()
 main = do
   parseArgs >>= \case
     AllSuites -> do
-      streamingSubSpec <- StreamingSubSpec.buildStreamingSubscriptionsSpec
+      streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
       postgresSpecs <- buildPostgresSpecs
       mssqlSpecs <- buildMSSQLSpecs
-      runHspec [] (unitSpecs *> postgresSpecs *> mssqlSpecs *> streamingSubSpec)
+      runHspec [] (Discover.spec *> postgresSpecs *> mssqlSpecs *> streamingSubscriptionSuite)
     SingleSuite hspecArgs suite -> do
       runHspec hspecArgs =<< case suite of
-        UnitSuite -> pure unitSpecs
+        UnitSuite -> pure Discover.spec
         PostgresSuite -> buildPostgresSpecs
         MSSQLSuite -> buildMSSQLSpecs
-
-unitSpecs :: Spec
-unitSpecs = do
-  describe "Control.Concurrent.ExtendedSpec" ConcurrentExtended.spec
-  describe "Control.Monad.CircularSpec" Circular.spec
-  describe "Data.HashMap.Strict.ExtendedSpec" HashMapExtendedSpec.spec
-  describe "Data.NonNegativeInt" NonNegativeIntSpec.spec
-  describe "Data.Parser.CacheControl" CacheControlParser.spec
-  describe "Data.Parser.JSONPath" JsonPath.spec
-  describe "Data.Parser.RemoteRelationshipSpec" RemoteRelationship.spec
-  describe "Data.Parser.URLTemplate" URLTemplate.spec
-  describe "Data.Time" TimeSpec.spec
-  describe "Data.Trie" TrieSpec.spec
-  describe "Hasura.App" AppSpec.spec
-  describe "Hasura.Backends.DataConnector.API.V0" DataConnector.API.V0Spec.spec
-  describe "Hasura.Backends.MSSQL.ErrorSpec" MSSQLErrorSpec.spec
-  describe "Hasura.Backends.MySQL.DataLoader.ExecuteTests" MySQLDataLoader.spec
-  describe "Hasura.Backends.Postgres.Execute.PrepareSpec" PrepareSpec.spec
-  describe "Hasura.Backends.Postgres.SQL.Select.IdentifierUniqueness" IdentifierUniqueness.spec
-  describe "Hasura.Backends.Postgres.SQL.ValueSpec" ValueSpec.spec
-  describe "Hasura.Eventing" EventingSpec.spec
-  describe "Hasura.GraphQL.Namespace" NamespaceSpec.spec
-  describe "Hasura.GraphQL.Parser.Directives" GraphQLDirectivesSpec.spec
-  describe "Hasura.GraphQL.Parser.Monad" MonadParseSpec.spec
-  describe "Hasura.GraphQL.Schema.Build.UpdateSpec" UpdateSpec.spec
-  describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
-  describe "Hasura.GraphQL.Schema.Remote" GraphRemoteSchemaSpec.spec
-  describe "Hasura.Incremental" IncrementalSpec.spec
-  describe "Hasura.Metadata.DTO.Metadata" MetadataDTOSpec.spec
-  describe "Hasura.RQL.IR.SelectSpec" SelectSpec.spec
-  describe "Hasura.RQL.MetadataSpec" MetadataSpec.spec
-  describe "Hasura.RQL.PermissionSpec" PermSpec.spec
-  describe "Hasura.RQL.Types.Allowlist" AllowlistSpec.spec
-  describe "Hasura.RQL.Types.Common" CommonTypesSpec.spec
-  describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
-  describe "Hasura.RQL.Types.Table" TableSpec.spec
-  describe "Hasura.RQL.WebhookTransformsSpec" WebhookTransformsSpec.spec
-  describe "Hasura.Server.Auth.JWT" JWTSpec.spec
-  describe "Hasura.Server.Init" InitSpec.spec
-  describe "Hasura.Server.Init.Arg" ArgSpec.spec
-  describe "Hasura.Server.Migrate.Version" VersionSpec.spec
-  describe "Hasura.Session" SessionSpec.spec
 
 buildMSSQLSpecs :: IO (SpecWith ())
 buildMSSQLSpecs = do
@@ -157,7 +78,10 @@ buildMSSQLSpecs = do
       onNothing maybeV $
         throwError $
           "Expected: " <> envVar
-  pure $ describe "Database.MSSQL.TransactionSpec" $ TransactionSpec.spec connStr
+
+  -- We use "suite" to denote a set of tests that can't (yet) be detected and
+  -- run by @hspec-discover@.
+  pure $ describe "Database.MSSQL.TransactionSuite" $ TransactionSuite.suite connStr
 
 mssqlConnectionString :: (String, String)
 mssqlConnectionString =
@@ -227,15 +151,17 @@ buildPostgresSpecs = do
           pure (metadata, schemaCache)
 
         cacheRef <- newMVar schemaCache
-        pure $ NT (run . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
+        pure $ NT (run . flip MigrateSuite.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
 
-  streamingSubSpec <- StreamingSubSpec.buildStreamingSubscriptionsSpec
+  -- We use "suite" to denote a set of tests that can't (yet) be detected and
+  -- run by @hspec-discover@.
+  streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
 
   pure $ do
-    describe "Migrate spec" $
+    describe "Migrate suite" $
       beforeAll setupCacheRef $
-        describe "Hasura.Server.Migrate" $ MigrateSpec.spec sourceConfig pgContext pgConnInfo
-    describe "Streaming subscription spec" $ streamingSubSpec
+        describe "Hasura.Server.Migrate" $ MigrateSuite.suite sourceConfig pgContext pgConnInfo
+    describe "Streaming subscription suite" $ streamingSubscriptionSuite
 
 parseArgs :: IO TestSuites
 parseArgs =
