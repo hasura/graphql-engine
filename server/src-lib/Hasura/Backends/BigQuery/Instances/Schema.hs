@@ -14,6 +14,7 @@ import Data.Text.Extended
 import Hasura.Backends.BigQuery.Name
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Build qualified as GSB
@@ -216,7 +217,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
             { pType = schemaType,
               pParser =
                 P.valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (P.parseErrorWith ParseFailed . qeError) pure . runAesonParser J.parseJSON
+                  >=> either (P.parseErrorWith ParseFailed . toErrorMessage . qeError) pure . runAesonParser J.parseJSON
             }
     stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
     stringBased scalarName =

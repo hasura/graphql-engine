@@ -52,15 +52,11 @@
         }
       }
   response:
-    "errors": [
-      {
-        "message": "field \"unaliased_function\" not found in type: 'query_root'",
-        "extensions": {
-          "code": "validation-failed",
-          "path": "$.selectionSet.unaliased_function"
-        }
-      }
-    ]
+    errors:
+      - message: "field 'unaliased_function' not found in type: 'query_root'"
+        extensions:
+          code: validation-failed
+          path: $.selectionSet.unaliased_function
 
 - description: Execute the function by its alias, which should succeed
   url: /v1/graphql
@@ -134,15 +130,11 @@
         }
       }
   response:
-    "errors": [
-      {
-        "message": "field \"unaliased_function\" not found in type: 'query_root'",
-        "extensions": {
-          "code": "validation-failed",
-          "path": "$.selectionSet.unaliased_function"
-        }
-      }
-    ]
+    "errors":
+      - message: "field 'unaliased_function' not found in type: 'query_root'"
+        extensions:
+          code: validation-failed
+          path: $.selectionSet.unaliased_function
 
 - description: Execute the function by its alias, which should succeed
   url: /v1/graphql

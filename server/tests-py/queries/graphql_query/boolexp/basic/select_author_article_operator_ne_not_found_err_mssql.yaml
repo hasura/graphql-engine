@@ -3,11 +3,11 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-  - extensions:
-      code: validation-failed
-      path: $.selectionSet.author.args.where.name._ne
-    message: |-
-      field "_ne" not found in type: 'String_MSSQL_comparison_exp'
+    - extensions:
+        code: validation-failed
+        path: $.selectionSet.author.args.where.name._ne
+      message: |-
+        field '_ne' not found in type: 'String_MSSQL_comparison_exp'
 query:
   query: |
     query {

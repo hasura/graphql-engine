@@ -20,8 +20,9 @@ import Data.Has (Has)
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.Extended qualified as M
 import Data.List.NonEmpty qualified as NE
-import Data.Text.Extended (commaSeparated, dquote, (<>>))
+import Data.Text.Extended ((<>>))
 import Hasura.Base.Error (QErr)
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSchema (..), MonadBuildSchema, columnParser)
 import Hasura.GraphQL.Schema.BoolExp (boolExp)
 import Hasura.GraphQL.Schema.Common (Scenario (..), mapField, partialSQLExpToUnpreparedValue)
@@ -122,20 +123,6 @@ runUpdateOperator tableInfo UpdateOperator {..} = do
   (sequenceA :: Maybe (m a) -> m (Maybe a))
     (applicableCols <&> updateOperatorParser tableGQLName tableName)
 
--- | Ensure that /some/ updates have been specified in a mutation.
-ensureNonEmpty ::
-  forall b m t.
-  (P.MonadParse m, Backend b) =>
-  [Text] ->
-  [HashMap (Column b) t] ->
-  m ()
-ensureNonEmpty allowedOperators parsedResults =
-  when (null $ M.unions parsedResults) $
-    P.parseError $
-      "At least any one of "
-        <> commaSeparated allowedOperators
-        <> " is expected"
-
 -- | Merge the results of parsed update operators. Throws an error if the same
 -- column has been specified in multiple operators.
 mergeDisjoint ::
@@ -150,7 +137,7 @@ mergeDisjoint parsedResults = do
   unless (null duplicates) $
     P.parseError
       ( "Column found in multiple operators: "
-          <> commaSeparated (map dquote duplicates)
+          <> toErrorValue duplicates
           <> "."
       )
 

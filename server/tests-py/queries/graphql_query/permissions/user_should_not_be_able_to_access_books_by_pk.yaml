@@ -5,10 +5,10 @@
     X-Hasura-Role: user
   response:
     errors:
-    - extensions:
-        path: $.selectionSet.books_by_pk
-        code: validation-failed
-      message: "field \"books_by_pk\" not found in type: 'query_root'"
+      - extensions:
+          path: $.selectionSet.books_by_pk
+          code: validation-failed
+        message: "field 'books_by_pk' not found in type: 'query_root'"
   query:
     query: |
       query {

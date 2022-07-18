@@ -423,7 +423,8 @@ errors:
 - extensions:
     path: "$.selectionSet.hasura_author.selectionSet.search_articles_1"
     code: validation-failed
-  message: 'field "search_articles_1" not found in type: ''hasura_author'''
+  message: |-
+    field 'search_articles_1' not found in type: 'hasura_author'
 |]
 
   it "Query with computed field search_articles_2 as user_2 role" $ \testEnv ->
@@ -452,5 +453,6 @@ errors:
 - extensions:
     path: "$.selectionSet.hasura_author.selectionSet.search_articles_2"
     code: validation-failed
-  message: 'field "search_articles_2" not found in type: ''hasura_author'''
+  message: |-
+    field 'search_articles_2' not found in type: 'hasura_author'
 |]

@@ -30,8 +30,8 @@ module Hasura.Backends.MySQL.Types.Internal
     OrderBy (..),
     Select (..),
     defaultConnPoolSettings,
-    FunctionName,
     ConstraintName (..),
+    FunctionName (..),
     parseMySQLScalarType,
     parseScalarValue,
     mkMySQLScalarTypeName,
@@ -54,11 +54,11 @@ import Data.Word (Word16)
 import Database.MySQL.Base (Connection)
 import Database.MySQL.Base.Types qualified as MySQLTypes (Type (..))
 import Hasura.Base.Error
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.Incremental.Internal.Dependency (Cacheable (..))
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
-
-type FunctionName = Text
 
 data Aliased a = Aliased
   { aliasedThing :: !a,
@@ -82,14 +82,24 @@ data SourceConfig = SourceConfig
     scConnectionPool :: !(Pool Connection)
   }
 
-newtype ConstraintName = ConstraintName
-  {unConstraintName :: Text}
+newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving newtype (Show, Eq, ToTxt, J.FromJSON, J.ToJSON, Hashable, NFData, Cacheable)
 
-newtype Column = Column
-  {unColumn :: Text}
+instance ToErrorValue ConstraintName where
+  toErrorValue = ErrorValue.squote . unConstraintName
+
+newtype FunctionName = FunctionName {unFunctionName :: Text}
+  deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, Cacheable, NFData)
+
+instance ToErrorValue FunctionName where
+  toErrorValue = ErrorValue.squote . unFunctionName
+
+newtype Column = Column {unColumn :: Text}
   deriving newtype (Show, Eq, Ord, ToTxt, J.FromJSONKey, J.ToJSONKey, J.FromJSON, J.ToJSON, Hashable, Cacheable, NFData)
   deriving (Generic)
+
+instance ToErrorValue Column where
+  toErrorValue = ErrorValue.squote . unColumn
 
 data ScalarValue
   = BigValue !Int32 -- Not (!Int64) due to scalar-representation
@@ -210,6 +220,10 @@ data TableName = TableName
   { name :: !Text,
     schema :: !(Maybe Text)
   }
+
+instance ToErrorValue TableName where
+  toErrorValue TableName {name, schema} =
+    ErrorValue.squote $ maybe name (<> "." <> name) schema
 
 data From
   = FromQualifiedTable (Aliased TableName)

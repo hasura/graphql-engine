@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: user
-  X-Hasura-User-Id: '2'
+  X-Hasura-User-Id: "2"
 query:
   query: |
     mutation {
@@ -21,7 +21,7 @@ query:
     }
 response:
   errors:
-  - extensions:
-      path: "$.selectionSet.insert_article.args.objects[0].is_published"
-      code: validation-failed
-    message: 'field "is_published" not found in type: ''article_insert_input'''
+    - extensions:
+        path: "$.selectionSet.insert_article.args.objects[0].is_published"
+        code: validation-failed
+      message: "field 'is_published' not found in type: 'article_insert_input'"

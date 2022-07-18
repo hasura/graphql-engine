@@ -12,6 +12,8 @@ import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Kind (Type)
 import Data.Text.Extended (ToTxt)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Witch qualified
@@ -37,6 +39,9 @@ newtype Name ty = Name {unName :: Text}
       ToJSONKey,
       ToTxt
     )
+
+instance ToErrorValue (Name ty) where
+  toErrorValue = ErrorValue.squote . unName
 
 instance Witch.From API.TableName (Name 'Table) where
   from (API.TableName n) = Name n

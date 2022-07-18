@@ -15,7 +15,7 @@
       - extensions:
           path: $.selectionSet.user.selectionSet.non_existing_field
           code: validation-failed
-        message: "field \"non_existing_field\" not found in type: 'User'"
+        message: "field 'non_existing_field' not found in type: 'User'"
 
 - description: query the remote with a non-existing field in an interface type
   url: /v1/graphql
@@ -39,7 +39,7 @@
       - extensions:
           path: $.selectionSet.hero.selectionSet.non_existing_field
           code: validation-failed
-        message: "field \"non_existing_field\" not found in type: 'Droid'"
+        message: "field 'non_existing_field' not found in type: 'Droid'"
 
 - description: query the remote with a non-existing field in an union type
   url: /v1/graphql
@@ -65,4 +65,4 @@
       - extensions:
           path: $.selectionSet.search.selectionSet.non_existing_field
           code: validation-failed
-        message: "field \"non_existing_field\" not found in type: 'Human'"
+        message: "field 'non_existing_field' not found in type: 'Human'"

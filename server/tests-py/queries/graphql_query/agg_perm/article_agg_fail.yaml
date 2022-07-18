@@ -3,11 +3,11 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-  - extensions:
-      path: $.selectionSet.article_agg
-      code: validation-failed
-    message: |-
-      field "article_agg" not found in type: 'query_root'
+    - extensions:
+        path: $.selectionSet.article_agg
+        code: validation-failed
+      message: |-
+        field 'article_agg' not found in type: 'query_root'
 headers:
   X-Hasura-Role: user
 query:

@@ -17,6 +17,7 @@ import Data.List.Extended (duplicates)
 import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Namespace
@@ -712,7 +713,7 @@ parseBuildIntrospectionSchema q m s = qerrAsMonadParse $ buildIntrospectionSchem
     qerrAsMonadParse action =
       case runExcept action of
         Right a -> pure a
-        Left QErr {..} -> foldr P.withKey (P.parseErrorWith qeCode qeError) qePath
+        Left QErr {..} -> foldr P.withKey (P.parseErrorWith qeCode (toErrorMessage qeError)) qePath
 
 queryWithIntrospectionHelper ::
   forall n m.

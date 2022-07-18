@@ -298,7 +298,8 @@ tests opts = describe "DisableAllRootFieldsRelationshipSpec" $ do
             - extensions:
                 path: $.selectionSet.hasura_article
                 code: validation-failed
-              message: 'field "hasura_article" not found in type: ''query_root'''
+              message: |-
+                field 'hasura_article' not found in type: 'query_root'
           |]
 
     shouldReturnYaml

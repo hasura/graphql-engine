@@ -23,6 +23,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     columnNameToFieldName,
     ColumnType,
     Comment (..),
+    ConstraintName (..),
     Countable (..),
     DataLength (..),
     Delete (..),
@@ -35,6 +36,7 @@ module Hasura.Backends.MSSQL.Types.Internal
     ForJson (..),
     From (..),
     FunctionApplicationExpression (..),
+    FunctionName (..),
     MergeUsing (..),
     MergeOn (..),
     MergeWhenMatched (..),
@@ -514,6 +516,10 @@ data SpatialOp
 -- | Column name of some database table -- this differs to FieldName
 -- that is used for referring to things within a query.
 newtype ColumnName = ColumnName {columnNameText :: Text}
+
+newtype ConstraintName = ConstraintName {constraintNameText :: Text}
+
+newtype FunctionName = FunctionName {functionNameText :: Text}
 
 -- | Derived from the odbc package.
 data ScalarType

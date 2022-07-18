@@ -16,9 +16,11 @@ import Data.Aeson.Types
 import Data.Text.Extended (ToTxt (..))
 import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.Types.Internal
+import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax
+import Hasura.Base.ToErrorValue
 
 deriving instance Generic (Aliased a)
 instance Hashable a => Hashable (Aliased a)
@@ -48,6 +50,8 @@ INSTANCE_CLUMP_1(UnifiedOn)
 INSTANCE_CLUMP_1(UnifiedColumn)
 INSTANCE_CLUMP_1(TempTableName)
 INSTANCE_CLUMP_1(SomeTableName)
+INSTANCE_CLUMP_1(ConstraintName)
+INSTANCE_CLUMP_1(FunctionName)
 
 
 #define INSTANCE_CLUMP_2(name) \
@@ -125,6 +129,21 @@ instance Cacheable ODBC.Binary
 --------------------------------------------------------------------------------
 -- Debug instances
 
+instance ToErrorValue ScalarType where
+  toErrorValue = ErrorValue.squote . tshow
+
+instance ToErrorValue TableName where
+  toErrorValue = ErrorValue.squote . tshow
+
+instance ToErrorValue ConstraintName where
+  toErrorValue = ErrorValue.squote . constraintNameText
+
+instance ToErrorValue ColumnName where
+  toErrorValue = ErrorValue.squote . columnNameText
+
+instance ToErrorValue FunctionName where
+  toErrorValue = ErrorValue.squote . functionNameText
+
 instance ToTxt ScalarType where
   toTxt = tshow -- TODO: include schema
 
@@ -136,6 +155,12 @@ instance ToTxt TableName where
 
 instance ToTxt ColumnName where
   toTxt = columnNameText
+
+instance ToTxt ConstraintName where
+  toTxt = constraintNameText
+
+instance ToTxt FunctionName where
+  toTxt = functionNameText
 
 #define INSTANCE_CLUMP_3(name) \
          instance ToJSON name where \
@@ -150,6 +175,10 @@ INSTANCE_CLUMP_3(FieldName)
 deriving instance FromJSON ColumnName
 
 deriving instance ToJSON ColumnName
+
+deriving instance ToJSON ConstraintName
+
+deriving instance ToJSON FunctionName
 
 instance FromJSON TableName where
   parseJSON v@(String _) =
@@ -174,6 +203,8 @@ instance ToJSONKey ScalarType
 deriving newtype instance ToJSONKey ColumnName
 
 deriving newtype instance FromJSONKey ColumnName
+
+deriving newtype instance ToJSONKey FunctionName
 
 --------------------------------------------------------------------------------
 -- Manual instances

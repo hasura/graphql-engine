@@ -42,7 +42,7 @@
       }
   response:
     errors:
-    - extensions:
-        path: $.selectionSet.get_user_by_email.selectionSet.user
-        code: validation-failed
-      message: '"user" has no argument named "limit"'
+      - extensions:
+          path: $.selectionSet.get_user_by_email.selectionSet.user
+          code: validation-failed
+        message: "'user' has no argument named 'limit'"

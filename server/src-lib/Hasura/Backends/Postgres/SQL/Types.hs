@@ -66,6 +66,8 @@ import Database.PG.Query qualified as Q
 import Database.PG.Query.PTI qualified as PTI
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Base.Error
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
 import Hasura.Name qualified as Name
@@ -162,17 +164,23 @@ instance IsIdentifier ConstraintName where
 instance ToSQL ConstraintName where
   toSQL = toSQL . toIdentifier
 
+instance ToErrorValue ConstraintName where
+  toErrorValue = ErrorValue.squote . getConstraintTxt
+
 newtype FunctionName = FunctionName {getFunctionTxt :: Text}
   deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, NFData, Cacheable)
 
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
 
+instance ToSQL FunctionName where
+  toSQL = toSQL . toIdentifier
+
 instance ToTxt FunctionName where
   toTxt = getFunctionTxt
 
-instance ToSQL FunctionName where
-  toSQL = toSQL . toIdentifier
+instance ToErrorValue FunctionName where
+  toErrorValue = ErrorValue.squote . getFunctionTxt
 
 newtype SchemaName = SchemaName {getSchemaTxt :: Text}
   deriving
@@ -233,8 +241,11 @@ instance (ToJSON a) => ToJSON (QualifiedObject a) where
 instance (ToJSON a, ToTxt a) => ToJSONKey (QualifiedObject a) where
   toJSONKey = ToJSONKeyText (K.fromText . qualifiedObjectToText) (text . qualifiedObjectToText)
 
-instance (ToTxt a) => ToTxt (QualifiedObject a) where
+instance ToTxt a => ToTxt (QualifiedObject a) where
   toTxt = qualifiedObjectToText
+
+instance ToTxt a => ToErrorValue (QualifiedObject a) where
+  toErrorValue (QualifiedObject sn o) = ErrorValue.squote $ getSchemaTxt sn <> "." <> toTxt o
 
 instance (Hashable a) => Hashable (QualifiedObject a)
 
@@ -315,6 +326,9 @@ instance ToSQL PGCol where
 
 instance ToTxt PGCol where
   toTxt = getPGColTxt
+
+instance ToErrorValue PGCol where
+  toErrorValue = ErrorValue.squote . getPGColTxt
 
 unsafePGCol :: Text -> PGCol
 unsafePGCol = PGCol
@@ -412,6 +426,9 @@ instance ToJSONKey PGScalarType where
 
 instance ToTxt PGScalarType where
   toTxt = pgScalarTypeToText
+
+instance ToErrorValue PGScalarType where
+  toErrorValue = ErrorValue.squote . pgScalarTypeToText
 
 textToPGScalarType :: Text -> PGScalarType
 textToPGScalarType t = fromMaybe (PGUnknown t) (lookup t pgScalarTranslations)

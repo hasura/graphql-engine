@@ -6,8 +6,8 @@ module Hasura.GraphQL.Parser.Class.Parse
 where
 
 import Data.Aeson.Types (JSONPathElement)
-import Data.Text (Text)
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage
 import Prelude
 
 -- | A class that provides functionality for parsing GraphQL queries, i.e.
@@ -17,7 +17,7 @@ class Monad m => MonadParse m where
 
   -- | Not the full power of 'MonadError' because parse errors cannot be
   -- caught.
-  parseErrorWith :: Code -> Text -> m a
+  parseErrorWith :: Code -> ErrorMessage -> m a
 
-parseError :: MonadParse m => Text -> m a
+parseError :: MonadParse m => ErrorMessage -> m a
 parseError = parseErrorWith ValidationFailed

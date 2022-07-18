@@ -34,7 +34,7 @@
     - extensions:
         path: $.selectionSet.user.selectionSet.gimmeText
         code: validation-failed
-      message: "field \"gimmeText\" not found in type: 'User'"
+      message: "field 'gimmeText' not found in type: 'User'"
 
 - description: run the above query as admin
   url: /v1/graphql

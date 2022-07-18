@@ -14,7 +14,7 @@
       - extensions:
           path: $.selectionSet.user
           code: validation-failed
-        message: '"user" has no argument named "foo"'
+        message: "'user' has no argument named 'foo'"
 
 - description: query the remote with a string literal for an int
   url: /v1/graphql
@@ -53,7 +53,7 @@
       - extensions:
           path: $.selectionSet.createUserInputObj.args.userData.foo
           code: validation-failed
-        message: "field \"foo\" not found in type: 'UserDetailsInput'"
+        message: "field 'foo' not found in type: 'UserDetailsInput'"
 
 - description: an argument expecting a list of input objects should work properly
   url: /v1/graphql

@@ -61,6 +61,8 @@ import Data.Text.NonEmpty
 import Data.URL.Template
 import Database.PG.Query qualified as Q
 import Hasura.Base.Error
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Incremental (Cacheable)
@@ -212,6 +214,11 @@ instance ToJSON SourceName where
 
 instance ToTxt SourceName where
   toTxt = sourceNameToText
+
+instance ToErrorValue SourceName where
+  toErrorValue = \case
+    SNDefault -> "default"
+    SNName t -> ErrorValue.squote (unNonEmptyText t)
 
 instance ToJSONKey SourceName
 

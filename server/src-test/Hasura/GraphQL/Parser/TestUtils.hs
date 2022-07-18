@@ -9,6 +9,7 @@ where
 import Data.HashMap.Strict qualified as M
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
+import Hasura.Base.ErrorMessage (fromErrorMessage)
 import Hasura.GraphQL.Schema.Parser
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -20,7 +21,7 @@ newtype TestMonad a = TestMonad {runTest :: Either Text a}
 
 instance MonadParse TestMonad where
   withKey = const id
-  parseErrorWith = const $ TestMonad . Left
+  parseErrorWith = const $ TestMonad . Left . fromErrorMessage
 
 -- values generation
 

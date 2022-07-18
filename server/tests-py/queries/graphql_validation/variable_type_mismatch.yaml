@@ -3,10 +3,10 @@
   status: 200
   response:
     errors:
-    - extensions:
-        path: "$.selectionSet.update_author.args._set.name"
-        code: "validation-failed"
-      message: variable "name" is declared as Int!, but used where String is expected
+      - extensions:
+          path: "$.selectionSet.update_author.args._set.name"
+          code: "validation-failed"
+        message: variable 'name' is declared as 'Int!', but used where 'String' is expected
   query:
     query: |
       mutation update_author($name: Int!) {
@@ -25,10 +25,10 @@
   status: 200
   response:
     errors:
-    - extensions:
-        path: "$.selectionSet.author.args.limit"
-        code: "validation-failed"
-      message: variable "limit" is declared as String, but used where Int is expected
+      - extensions:
+          path: "$.selectionSet.author.args.limit"
+          code: "validation-failed"
+        message: variable 'limit' is declared as 'String', but used where 'Int' is expected
   query:
     query: |
       query get_author($limit: String) {
@@ -45,10 +45,10 @@
   status: 200
   response:
     errors:
-    - extensions:
-        path: "$.selectionSet.insert_misgivings_one.args.object.f"
-        code: "validation-failed"
-      message: variable "i" is declared as Int, but used where Float is expected
+      - extensions:
+          path: "$.selectionSet.insert_misgivings_one.args.object.f"
+          code: "validation-failed"
+        message: variable 'i' is declared as 'Int', but used where 'Float' is expected
   query:
     query: |
       mutation have_misgivings($i: Int) {
@@ -64,10 +64,10 @@
   status: 200
   response:
     errors:
-    - extensions:
-       path: "$.selectionSet.insert_author.args.objects[0].location"
-       code: "validation-failed"
-      message: variable "location" is declared as geometry, but used where geography is expected
+      - extensions:
+          path: "$.selectionSet.insert_author.args.objects[0].location"
+          code: "validation-failed"
+        message: variable 'location' is declared as 'geometry', but used where 'geography' is expected
   query:
     query: |
       mutation insert_author($location: geometry) {
@@ -77,18 +77,18 @@
       }
     variables:
       location:
-      - 42
-      - 101
+        - 42
+        - 101
 
 - description: "Variable type mismatch: nullable variable at non-nullable location"
   url: /v1/graphql
   status: 200
   response:
     errors:
-    - extensions:
-       path: "$.selectionSet.insert_author_one.args.object"
-       code: "validation-failed"
-      message: variable "author" is declared as author_insert_input, but used where author_insert_input! is expected
+      - extensions:
+          path: "$.selectionSet.insert_author_one.args.object"
+          code: "validation-failed"
+        message: variable 'author' is declared as 'author_insert_input', but used where 'author_insert_input!' is expected
   query:
     query: |
       mutation insert_author($author: author_insert_input) {
@@ -125,10 +125,10 @@
   status: 200
   response:
     errors:
-    - extensions:
-       path: "$.selectionSet.insert_author_one.args.object"
-       code: "validation-failed"
-      message: variable "author" is declared as author_insert_input, but used where author_insert_input! is expected
+      - extensions:
+          path: "$.selectionSet.insert_author_one.args.object"
+          code: "validation-failed"
+        message: variable 'author' is declared as 'author_insert_input', but used where 'author_insert_input!' is expected
   query:
     query: |
       mutation insert_author($author: author_insert_input = null) {
@@ -148,9 +148,9 @@
     data:
       __type:
         fields:
-        - name: id
-        - name: location
-        - name: name
+          - name: id
+          - name: location
+          - name: name
 
   query:
     query: |
@@ -163,7 +163,6 @@
       }
     variables:
       includeDeprecated: False
-
 
 - description: Variable type match nullability
   url: /v1/graphql
@@ -206,9 +205,9 @@
     data:
       __type:
         fields:
-        - name: id
-        - name: location
-        - name: name
+          - name: id
+          - name: location
+          - name: name
 
   query:
     query: |

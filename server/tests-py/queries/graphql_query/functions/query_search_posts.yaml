@@ -25,7 +25,7 @@
     - extensions:
         path: $.selectionSet.search_posts
         code: validation-failed
-      message: "field \"search_posts\" not found in type: 'mutation_root'"
+      message: "field 'search_posts' not found in type: 'mutation_root'"
   query:
     query: |
       mutation {

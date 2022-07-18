@@ -89,6 +89,8 @@ import Data.Text.Lazy.Builder.Scientific (formatScientificBuilder)
 import Data.Vector (Vector)
 import Data.Vector.Instances ()
 import Hasura.Base.Error
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.Incremental.Internal.Dependency
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -586,7 +588,10 @@ instance ToJSONKey TableName
 instance NFData TableName
 
 instance ToTxt TableName where
-  toTxt TableName {..} = toTxt tableNameSchema <> "." <> toTxt tableName
+  toTxt TableName {..} = tableNameSchema <> "." <> tableName
+
+instance ToErrorValue TableName where
+  toErrorValue = ErrorValue.squote . toTxt
 
 data FieldName = FieldName
   { fieldName :: Text,
@@ -608,6 +613,9 @@ newtype ColumnName = ColumnName
   { columnName :: Text
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift, FromJSON, ToJSON, ToJSONKey, FromJSONKey, Hashable, Cacheable, NFData, ToTxt)
+
+instance ToErrorValue ColumnName where
+  toErrorValue = ErrorValue.squote . columnName
 
 data Comment = DueToPermission | RequestedSingleObject
   deriving (Eq, Ord, Show, Generic, Data, Lift)
@@ -831,6 +839,9 @@ instance Hashable ScalarType
 
 instance ToTxt ScalarType where toTxt = tshow
 
+instance ToErrorValue ScalarType where
+  toErrorValue = ErrorValue.squote . tshow
+
 --------------------------------------------------------------------------------
 -- Unified table metadata
 
@@ -927,6 +938,9 @@ instance ToTxt FunctionName where
     case functionNameSchema of
       Nothing -> functionName
       Just schemaName -> schemaName <> "." <> functionName
+
+instance ToErrorValue FunctionName where
+  toErrorValue = ErrorValue.squote . toTxt
 
 instance Hashable FunctionName
 

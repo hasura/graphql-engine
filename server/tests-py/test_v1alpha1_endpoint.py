@@ -60,7 +60,7 @@ class TestV1Alpha1GraphQLErrors:
                         "path": "$.selectionSet.author.selectionSet.notPresentCol",
                         "code": "validation-failed"
                     },
-                    "message": "field \"notPresentCol\" not found in type: 'author'"
+                    "message": "field 'notPresentCol' not found in type: 'author'"
                 }]
             }
         }
@@ -70,7 +70,7 @@ class TestV1Alpha1GraphQLErrors:
             'response': {
                 "path": "$.selectionSet.author.selectionSet.notPresentCol",
                 "code": "validation-failed",
-                "error": "field \"notPresentCol\" not found in type: 'author'"
+                "error": "field 'notPresentCol' not found in type: 'author'"
             }
         }
 

@@ -205,7 +205,8 @@ errors:
 - extensions:
     path: $.selectionSet.hasura_author.selectionSet
     code: validation-failed
-  message: directive "exclude" is not defined in the schema
+  message: |-
+    directive 'exclude' is not defined in the schema
 |]
   it "Rejects duplicate directives" \testEnvironment ->
     shouldReturnYaml
@@ -227,7 +228,8 @@ errors:
 - extensions:
     path: $.selectionSet.hasura_author.selectionSet
     code: validation-failed
-  message: 'the following directives are used more than once: include'
+  message: |-
+    the following directives are used more than once: ['include']
 |]
   it "Rejects directives on wrong element" \testEnvironment ->
     shouldReturnYaml
@@ -249,7 +251,8 @@ errors:
 - extensions:
     path: $
     code: validation-failed
-  message: directive "include" is not allowed on a query
+  message: |-
+    directive 'include' is not allowed on a query
 |]
 
   it "works with includeId as True includeName as False" \testEnvironment ->

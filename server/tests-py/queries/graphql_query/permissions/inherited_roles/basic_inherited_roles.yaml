@@ -10,7 +10,7 @@
     - extensions:
         path: "$.selectionSet.employee.selectionSet.hr_remarks"
         code: validation-failed
-      message: "field \"hr_remarks\" not found in type: 'employee'"
+      message: "field 'hr_remarks' not found in type: 'employee'"
   query:
     query: |
       query {

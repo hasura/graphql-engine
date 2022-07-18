@@ -31,6 +31,8 @@ import Hasura.Backends.Postgres.Types.Column
 import Hasura.Backends.Postgres.Types.Insert as PGIR
 import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
     BackendTableSelectSchema,
@@ -372,10 +374,10 @@ columnParser columnType (G.Nullability isNullable) = do
             { pType = schemaType,
               pParser =
                 P.valueToJSON (P.toGraphQLType schemaType) >=> \case
-                  J.Null -> P.parseError $ "unexpected null value for type " <>> name
+                  J.Null -> P.parseError $ "unexpected null value for type " <> toErrorValue name
                   value ->
                     runAesonParser (parsePGValue scalarType) value
-                      `onLeft` (P.parseErrorWith ParseFailed . qeError)
+                      `onLeft` (P.parseErrorWith ParseFailed . toErrorMessage . qeError)
             }
     ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
       case nonEmpty (Map.toList enumValues) of
@@ -406,7 +408,7 @@ pgScalarSelectionArgumentsParser columnType
     fieldName = Name._path
     description = Just "JSON select path"
     toColExp textValue = case parseJSONPath textValue of
-      Left err -> P.parseError $ "parse json path error: " <> err
+      Left err -> P.parseError $ "parse json path error: " <> toErrorMessage err
       Right [] -> pure Nothing
       Right jPaths -> pure $ Just $ PG.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
     elToColExp (Key k) = PG.SELit $ K.toText k

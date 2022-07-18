@@ -168,7 +168,7 @@ transformColumn sysCol =
       rciType = parseScalarType $ styName $ scJoinedSysType sysCol
       foreignKeys =
         scJoinedForeignKeyColumns sysCol <&> \foreignKeyColumn ->
-          let _fkConstraint = Constraint "fk_mssql" $ OID $ sfkcConstraintObjectId foreignKeyColumn
+          let _fkConstraint = Constraint (ConstraintName "fk_mssql") $ OID $ sfkcConstraintObjectId foreignKeyColumn
 
               schemaName = SchemaName $ ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
               _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
@@ -181,7 +181,7 @@ transformColumn sysCol =
 
 transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)
 transformPrimaryKey (SysPrimaryKey {..}) =
-  let constraint = Constraint spkName $ OID spkIndexId
+  let constraint = Constraint (ConstraintName spkName) $ OID spkIndexId
       columns = (ColumnName . spkcName) <$> spkColumns
    in PrimaryKey constraint columns
 

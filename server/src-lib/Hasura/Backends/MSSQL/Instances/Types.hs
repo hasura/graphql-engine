@@ -28,9 +28,9 @@ instance Backend 'MSSQL where
 
   -- It's something of a wart that we have to
   -- specify this here, as we don't support functions for MSSQL.
-  type FunctionName 'MSSQL = Text
+  type FunctionName 'MSSQL = MSSQL.FunctionName
   type FunctionArgument 'MSSQL = Void
-  type ConstraintName 'MSSQL = Text
+  type ConstraintName 'MSSQL = MSSQL.ConstraintName
   type BasicOrderType 'MSSQL = MSSQL.Order
   type NullsOrderType 'MSSQL = MSSQL.NullsOrder
   type CountType 'MSSQL = MSSQL.Countable MSSQL.ColumnName
@@ -77,7 +77,7 @@ instance Backend 'MSSQL where
   functionToTable = error "Unexpected MSSQL error: calling functionToTable. Please report this error at https://github.com/hasura/graphql-engine/issues/6590"
 
   tableToFunction :: TableName 'MSSQL -> FunctionName 'MSSQL
-  tableToFunction = MSSQL.tableName
+  tableToFunction = MSSQL.FunctionName . MSSQL.tableName
 
   tableGraphQLName :: TableName 'MSSQL -> Either QErr G.Name
   tableGraphQLName = MSSQL.getGQLTableName

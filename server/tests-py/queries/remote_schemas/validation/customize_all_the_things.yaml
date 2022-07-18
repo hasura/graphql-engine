@@ -48,7 +48,7 @@
       - extensions:
           path: $.selectionSet.star_wars.selectionSet.super_hero.selectionSet.non_existing_field
           code: validation-failed
-        message: 'field "non_existing_field" not found in type: ''Android'''
+        message: "field 'non_existing_field' not found in type: 'Android'"
 
 - description: query with prefix original (non-customized) type name in inline fragment
   url: /v1/graphql
@@ -143,7 +143,7 @@
     - extensions:
         path: $.selectionSet.star_wars.selectionSet.super_hero.args.episode
         code: validation-failed
-      message: variable "ep" is declared as Int!, but used where MyInt! is expected
+      message: variable 'ep' is declared as 'Int!', but used where 'MyInt!' is expected
 
 - description: query with __type introspection
   url: /v1/graphql
@@ -334,7 +334,7 @@
       - extensions:
           path: $.selectionSet.star_wars.selectionSet.super_hero.selectionSet.id
           code: validation-failed
-        message: "field \"id\" not found in type: 'FooHuman_x'"
+        message: "field 'id' not found in type: 'FooHuman_x'"
 
 - description: query aliases
   url: /v1/graphql

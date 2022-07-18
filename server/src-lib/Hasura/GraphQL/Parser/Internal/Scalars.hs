@@ -34,6 +34,7 @@ import Data.Text.Read (decimal)
 import Data.UUID qualified as UUID
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.Convert
 import Hasura.GraphQL.Parser.Internal.TypeChecking
@@ -196,4 +197,4 @@ convertWith ::
   MonadParse m =>
   (a -> A.Parser b) ->
   (a -> m b)
-convertWith f x = either (parseErrorWith ParseFailed . qeError) pure $ runAesonParser f x
+convertWith f x = either (parseErrorWith ParseFailed . toErrorMessage . qeError) pure $ runAesonParser f x

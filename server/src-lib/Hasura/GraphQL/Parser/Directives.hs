@@ -37,9 +37,9 @@ import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.List qualified as L
 import Data.Maybe (catMaybes)
-import Data.Text.Extended
 import Data.Traversable (for)
 import Data.Typeable (eqT)
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.DirectiveName qualified as Name
 import Hasura.GraphQL.Parser.Internal.Input
@@ -116,11 +116,11 @@ parseDirectives directiveParsers location givenDirectives = do
       let name = G._dName directive
       -- check the directive has a matching definition
       DirectiveInfo {diLocations} <-
-        maybe (parseError ("directive " <> name <<> " is not defined in the schema")) pure $
+        maybe (parseError ("directive " <> toErrorValue name <> " is not defined in the schema")) pure $
           L.find (\di -> diName di == name) (allDirectives @m)
       -- check that it is allowed at the current location
       unless (location `elem` diLocations) $
-        parseError $ "directive " <> name <<> " is not allowed on " <> humanReadable location
+        parseError $ "directive " <> toErrorValue name <> " is not allowed on " <> humanReadable location
       -- if we are expecting to parse it now, create a dmap entry
       case L.find (\d -> diName (dDefinition d) == name) directiveParsers of
         Nothing -> pure Nothing
@@ -130,7 +130,7 @@ parseDirectives directiveParsers location givenDirectives = do
   -- check that the result does not contain duplicates
   let dups = duplicates $ fst <$> result
   unless (null dups) $
-    parseError $ "the following directives are used more than once: " <> commaSeparated dups
+    parseError $ "the following directives are used more than once: " <> toErrorValue dups
   pure $ DM.fromList $ snd <$> result
   where
     humanReadable = \case
@@ -283,7 +283,7 @@ mkDirective name description advertised location argsParser =
       dParser = \(G.Directive _name arguments) -> withKey (Key $ K.fromText $ G.unName name) $ do
         for_ (M.keys arguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ name <<> " has no argument named " <>> argumentName
+            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
         withKey (Key $ K.fromText "args") $ ifParser argsParser $ GraphQLValue <$> arguments
     }
   where

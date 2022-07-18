@@ -37,7 +37,7 @@
     - extensions:
         path: $.selectionSet.add_to_score.selectionSet.role_echo
         code: validation-failed
-      message: "field \"role_echo\" not found in type: 'user'"
+      message: "field 'role_echo' not found in type: 'user'"
 
 - description: Works with permitted columns
   headers:

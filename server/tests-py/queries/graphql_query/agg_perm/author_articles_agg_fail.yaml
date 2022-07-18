@@ -3,11 +3,11 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-  - extensions:
-      path: $.selectionSet.author.selectionSet.articles_agg
-      code: validation-failed
-    message: |-
-      field "articles_agg" not found in type: 'author'
+    - extensions:
+        path: $.selectionSet.author.selectionSet.articles_agg
+        code: validation-failed
+      message: |-
+        field 'articles_agg' not found in type: 'author'
 headers:
   X-Hasura-Role: user
 query:

@@ -41,10 +41,10 @@
 
   response:
     errors:
-    - extensions:
-        path: $.selectionSet.my_remote_schema.selectionSet.messages
-        code: validation-failed
-      message: '"messages" has no argument named "includes"'
+      - extensions:
+          path: $.selectionSet.my_remote_schema.selectionSet.messages
+          code: validation-failed
+        message: "'messages' has no argument named 'includes'"
 
 - description: run the above query as the admin role
   url: /v1/graphql

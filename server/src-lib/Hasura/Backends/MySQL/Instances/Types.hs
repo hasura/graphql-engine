@@ -89,7 +89,7 @@ instance Backend 'MySQL where
   functionToTable = error "functionToTable: MySQL backend does not support this operation yet."
 
   tableToFunction :: TableName 'MySQL -> FunctionName 'MySQL
-  tableToFunction = MySQL.name
+  tableToFunction = MySQL.FunctionName . MySQL.name
 
   tableGraphQLName :: TableName 'MySQL -> Either QErr G.Name
   tableGraphQLName MySQL.TableName {..} =

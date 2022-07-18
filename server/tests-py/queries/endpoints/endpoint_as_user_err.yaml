@@ -7,5 +7,5 @@
   query:
   response:
     path: $.selectionSet.test_table
-    error: "field \"test_table\" not found in type: 'query_root'"
+    error: "field 'test_table' not found in type: 'query_root'"
     code: validation-failed

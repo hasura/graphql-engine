@@ -17,4 +17,4 @@ response:
     - extensions:
         path: $.selectionSet.messages
         code: validation-failed
-      message: "field \"messages\" not found in type: 'query_root'"
+      message: "field 'messages' not found in type: 'query_root'"

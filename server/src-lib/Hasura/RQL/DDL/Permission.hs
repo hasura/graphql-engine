@@ -282,12 +282,7 @@ runDropPerm ::
 runDropPerm permType (DropPerm source table role) = do
   tableMetadata <- askTableMetadata @b source table
   unless (doesPermissionExistInMetadata tableMetadata role permType) $ do
-    let errMsg =
-          mconcat
-            [ permTypeToCode permType <> " permission on " <>> table,
-              " for role " <>> role,
-              " does not exist"
-            ]
+    let errMsg = permTypeToCode permType <> " permission on " <> table <<> " for role " <> role <<> " does not exist"
     throw400 PermissionDenied errMsg
   withNewInconsistentObjsCheck $
     buildSchemaCache $

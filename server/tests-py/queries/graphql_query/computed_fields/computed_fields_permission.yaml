@@ -46,7 +46,7 @@
       - extensions:
           path: $.selectionSet.author.selectionSet.full_name
           code: validation-failed
-        message: "field \"full_name\" not found in type: 'author'"
+        message: "field 'full_name' not found in type: 'author'"
 
 - description: Query author with computed fields as public role
   url: /v1/graphql
@@ -70,4 +70,4 @@
           path: $.selectionSet.author.selectionSet.get_articles.selectionSet.id
           code: validation-failed
        # the "public_role" role doesn't have access to "id" field
-        message: "field \"id\" not found in type: 'article'"
+        message: "field 'id' not found in type: 'article'"

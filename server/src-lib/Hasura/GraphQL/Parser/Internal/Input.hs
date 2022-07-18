@@ -28,17 +28,17 @@ import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NonEmpty
-import Data.Text.Extended
 import Data.Traversable (for)
 import Data.Type.Equality
 import Data.Vector qualified as V
 import Data.Void (Void)
+import Hasura.Base.ErrorValue qualified as ErrorValue
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
-import Hasura.Server.Utils (englishList)
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 import Prelude
 
@@ -245,7 +245,7 @@ field name description parser =
     { ifDefinitions = [Definition name description Nothing $ InputFieldInfo (pType parser) Nothing],
       ifParser = \values -> withKey (A.Key (K.fromText (unName name))) do
         value <-
-          maybe (parseError ("missing required field " <>> name)) pure $ M.lookup name values <|> nullableDefault
+          maybe (parseError ("missing required field " <> toErrorValue name)) pure $ M.lookup name values <|> nullableDefault
         pInputParser parser value
     }
   where
@@ -333,9 +333,11 @@ enum name description values =
         invalidType =
           parseError $
             "expected one of the values "
-              <> englishList "or" (toTxt . dName . fst <$> values)
+              <> toErrorValue (dName . fst <$> values)
               <> " for type "
-              <> name <<> ", but found " <>> value
+              <> toErrorValue name
+              <> ", but found "
+              <> toErrorValue value
 
 -- -----------------------------------------------------------------------------
 -- helpers
@@ -376,9 +378,9 @@ object name description parser =
       for_ (M.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $
           withKey (A.Key (K.fromText (unName fieldName))) $
-            parseError $ "field " <> dquote fieldName <> " not found in type: " <> squote name
+            parseError $ "field " <> toErrorValue fieldName <> " not found in type: " <> toErrorValue name
       ifParser parser fields
-    invalidName key = parseError $ "variable value contains object with key " <> key <<> ", which is not a legal GraphQL name"
+    invalidName key = parseError $ "variable value contains object with key " <> ErrorValue.dquote key <> ", which is not a legal GraphQL name"
 
 list :: forall origin k m a. (MonadParse m, 'Input <: k) => Parser origin k m a -> Parser origin k m [a]
 list parser =
