@@ -157,9 +157,11 @@ cd "$PROJECT_ROOT"
 echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
+# Note: this does not help at all on 'nix' environments since 'pyenv' is not
+# something you normally use under nix.
 if command -v pyenv >/dev/null; then
   # For now I guess use the greatest python3 >= 3.5
-  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 { print $1 }' | tail -n1)
+  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 && $1 < 3.8  { print $1 }' | tail -n1)
   if [ -z "$v" ]; then
     # shellcheck disable=SC2016
     echo_error 'Please `pyenv install` a version of python >= 3.6 so we can use it'
