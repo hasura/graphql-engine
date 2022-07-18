@@ -79,6 +79,9 @@ __scalar = [G.name|_scalar|]
 _id :: G.Name
 _id = [G.name|id|]
 
+_session_variables :: G.Name
+_session_variables = [G.name|session_variables|]
+
 -- * Relationships
 
 __remote_rel_ :: G.Name
