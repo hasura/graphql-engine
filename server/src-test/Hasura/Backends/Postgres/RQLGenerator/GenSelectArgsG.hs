@@ -90,4 +90,4 @@ genBasicOrderType :: MonadGen m => m (BasicOrderType ('Postgres 'Vanilla))
 genBasicOrderType = Gen.element [OTAsc, OTDesc]
 
 genNullsOrderType :: MonadGen m => m (NullsOrderType ('Postgres 'Vanilla))
-genNullsOrderType = Gen.element [NFirst, NLast]
+genNullsOrderType = Gen.element [NullsFirst, NullsLast]

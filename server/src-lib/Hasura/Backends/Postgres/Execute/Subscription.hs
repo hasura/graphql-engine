@@ -110,7 +110,7 @@ toSQLFromItem ::
   ( Backend ('Postgres pgKind),
     DS.PostgresAnnotatedFieldJSON pgKind
   ) =>
-  S.Alias ->
+  S.TableAlias ->
   QueryDB ('Postgres pgKind) Void S.SQLExp ->
   S.FromItem
 toSQLFromItem = flip \case
@@ -132,7 +132,7 @@ mkMultiplexedQuery rootFields =
       { S.selExtr =
           -- SELECT _subs.result_id, _fld_resp.root AS result
           [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result")
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
           ],
         S.selFrom =
           Just $
@@ -146,18 +146,18 @@ mkMultiplexedQuery rootFields =
     subsInputFromItem =
       S.FIUnnest
         [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
-        (S.Alias $ Identifier "_subs")
-        [S.SEIdentifier $ Identifier "result_id", S.SEIdentifier $ Identifier "result_vars"]
+        (S.toTableAlias $ Identifier "_subs")
+        [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.toTableAlias $ Identifier "_fld_resp")
     selectRootFields =
       S.mkSelect
-        { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just . S.Alias $ Identifier "root")],
+        { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")],
           S.selFrom =
             Just . S.FromExp $
               OMap.toList rootFields <&> \(fieldAlias, resolvedAST) ->
-                toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
+                toSQLFromItem (S.toTableAlias $ aliasToIdentifier fieldAlias) resolvedAST
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
@@ -182,8 +182,8 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
       { S.selExtr =
           -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
           [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just . S.Alias $ Identifier "result"),
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "cursor")) (Just . S.Alias $ Identifier "cursor")
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result"),
+            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
           ],
         S.selFrom =
           Just $
@@ -197,17 +197,17 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
     subsInputFromItem =
       S.FIUnnest
         [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
-        (S.Alias $ Identifier "_subs")
-        [S.SEIdentifier $ Identifier "result_id", S.SEIdentifier $ Identifier "result_vars"]
+        (S.toTableAlias $ Identifier "_subs")
+        [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.Alias $ Identifier "_fld_resp")
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.toTableAlias $ Identifier "_fld_resp")
     selectRootFields =
       S.mkSelect
-        { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just . S.Alias $ Identifier "root")), cursorExtractor],
+        { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")), cursorExtractor],
           S.selFrom =
             Just . S.FromExp $
-              pure $ toSQLFromItem (S.Alias $ aliasToIdentifier fieldAlias) resolvedAST
+              pure $ toSQLFromItem (S.toTableAlias $ aliasToIdentifier fieldAlias) resolvedAST
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
@@ -219,7 +219,7 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
 
     -- to_json("root"."cursor") AS "cursor"
     cursorSQLExp = S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "cursor")] Nothing
-    cursorExtractor = S.Extractor cursorSQLExp (Just . S.Alias $ Identifier "cursor")
+    cursorExtractor = S.Extractor cursorSQLExp (Just $ S.toColumnAlias $ Identifier "cursor")
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
     aliasToIdentifier = Identifier . G.unName
 

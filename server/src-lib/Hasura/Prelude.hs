@@ -31,6 +31,8 @@ module Hasura.Prelude
     -- * Trace debugging
     ltrace,
     ltraceM,
+    traceToFile,
+    traceToFileM,
 
     -- * Efficient coercions
     coerce,
@@ -133,6 +135,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
 import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.IO qualified as TLIO
 import Data.Time.Clock.Units
 import Data.Traversable as M (for)
 import Data.Void as M (Void, absurd)
@@ -140,6 +143,7 @@ import Data.Word as M (Word64)
 import Debug.Trace qualified as Debug (trace, traceM)
 import GHC.Clock qualified as Clock
 import GHC.Generics as M (Generic)
+import System.IO.Unsafe (unsafePerformIO) -- for custom trace functions
 import Text.Pretty.Simple qualified as PS
 import Text.Read as M (readEither, readMaybe)
 import Prelude as M hiding (fail, init, lookup)
@@ -302,6 +306,25 @@ ltrace lbl x = Debug.trace (lbl <> ": " <> TL.unpack (PS.pShow x)) x
 ltraceM :: Applicative m => Show a => String -> a -> m ()
 ltraceM lbl x = Debug.traceM (lbl <> ": " <> TL.unpack (PS.pShow x))
 {-# WARNING ltraceM "ltraceM left in code" #-}
+
+-- | Trace a prettified value to a file
+traceToFile :: Show a => FilePath -> a -> a
+traceToFile filepath x =
+  Debug.trace
+    ("tracing to " <> filepath)
+    (unsafePerformIO (TLIO.writeFile filepath (PS.pShowNoColor x) $> x))
+{-# WARNING traceToFile "traceToFile left in code" #-}
+
+-- | Trace a prettified value to a file in an Applicative context
+traceToFileM :: Applicative m => Show a => FilePath -> a -> m ()
+traceToFileM filepath x =
+  Debug.traceM $
+    unwords
+      [ "tracing to",
+        filepath,
+        show $ unsafePerformIO $ TLIO.writeFile filepath $ PS.pShowNoColor x
+      ]
+{-# WARNING traceToFileM "traceToFileM left in code" #-}
 
 -- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log_16(n))@
 --   time and requires 'Hashable' and `Eq` instances. hashNub is faster than

@@ -175,7 +175,7 @@ translateBoolExp = \case
                 (mkQCol (S.QualifiedIdentifier aliasRelTN Nothing) rCol)
                 (mkQCol currTableReference lCol)
           innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
-      return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias aliasRelTN) innerBoolExp
+      return $ S.mkExists (S.FISimple relTN $ Just $ S.toTableAlias aliasRelTN) innerBoolExp
     AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
       case cfBoolExp of
         CFBEScalar opExps -> do
@@ -189,7 +189,7 @@ translateBoolExp = \case
           aliasFunction <- freshIdentifier function
           let functionExp =
                 mkComputedFieldFunctionExp currTableReference function sessionArgPresence $
-                  Just $ S.Alias aliasFunction
+                  Just $ S.toTableAlias aliasFunction
           S.mkExists (S.FIFunc functionExp) <$> recCurrentTable (S.QualifiedIdentifier aliasFunction Nothing) be
   where
     mkQCol :: forall a. IsIdentifier a => S.Qual -> a -> S.SQLExp
@@ -219,7 +219,7 @@ mkComputedFieldFunctionExp ::
   S.Qual ->
   QualifiedFunction ->
   FunctionArgsExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) ->
-  Maybe S.Alias ->
+  Maybe S.TableAlias ->
   S.FunctionExp
 mkComputedFieldFunctionExp qual function functionArgs alias =
   -- "function_schema"."function_name"("qual".*)

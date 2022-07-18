@@ -24,7 +24,7 @@ import Hasura.SQL.Types
 mkUpdateCTE ::
   Backend ('Postgres pgKind) =>
   AnnotatedUpdate ('Postgres pgKind) ->
-  S.CTE
+  S.TopLevelCTE
 mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk (BackendUpdate opExps) _ columnsInfo) =
   S.CTEUpdate update
   where

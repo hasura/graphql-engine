@@ -12,7 +12,7 @@ import Hasura.RQL.Types.Common (FieldName (getFieldNameTxt))
 import Hasura.SQL.Backend (PostgresKind (..))
 
 class PostgresAnnotatedFieldJSON (pgKind :: PostgresKind) where
-  annRowToJson :: FieldName -> [(FieldName, S.SQLExp)] -> (S.Alias, S.SQLExp)
+  annRowToJson :: FieldName -> [(FieldName, S.SQLExp)] -> (S.ColumnAlias, S.SQLExp)
 
 instance PostgresAnnotatedFieldJSON 'Vanilla where
   annRowToJson fieldAlias fieldExps =
@@ -28,13 +28,13 @@ instance PostgresAnnotatedFieldJSON 'Vanilla where
         [S.SELit $ getFieldNameTxt fieldName, fieldExp]
 
       toRowToJsonExtr (fieldName, fieldExp) =
-        S.Extractor fieldExp $ Just $ S.toAlias fieldName
+        S.Extractor fieldExp $ Just $ S.toColumnAlias fieldName
 
       -- uses row_to_json to build a json object
       withRowToJSON ::
-        FieldName -> [S.Extractor] -> (S.Alias, S.SQLExp)
+        FieldName -> [S.Extractor] -> (S.ColumnAlias, S.SQLExp)
       withRowToJSON parAls extrs =
-        (S.toAlias parAls, jsonRow)
+        (S.toColumnAlias parAls, jsonRow)
         where
           jsonRow = S.applyRowToJson extrs
 

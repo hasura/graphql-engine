@@ -30,7 +30,7 @@ literalQueries =
     it "top-level extractor not modified" $ do
       let noAlias =
             mkSelect
-              { selExtr = [Extractor (SELit "1") (Just $ Alias $ Identifier "one")]
+              { selExtr = [Extractor (SELit "1") (Just $ ColumnAlias $ Identifier "one")]
               }
       shouldBe
         (prefixNumToAliases noAlias)
@@ -53,7 +53,7 @@ simpleQueries =
                 selFrom =
                   from_
                     [ mkSelect
-                        { selExtr = [row_to_json_ [selectIdentifiers_ e' rootbase' ["name", "age"]] `as_` "root"],
+                        { selExtr = [row_to_json_ [selectIdentifiers_ e' rootbase' ["name", "age"]] `asC_` "root"],
                           selFrom = from_ [selectStar_ "public" "user" `as'_` rootbase']
                         }
                         `as'_` root'
@@ -80,7 +80,7 @@ simpleQueries =
                 selFrom =
                   from_
                     [ mkSelect
-                        { selExtr = [row_to_json_ [selectIdentifiers_ e' rootbase' ["name", "age"]] `as_` "root"],
+                        { selExtr = [row_to_json_ [selectIdentifiers_ e' rootbase' ["name", "age"]] `asC_` "root"],
                           selFrom = from_ [selectStar_ "public" "user" `as'_` rootbase'],
                           selWhere = where_ $ stcolumn_ "public" "user" "id" `eq_` int_
                         }
@@ -120,14 +120,14 @@ simpleQueries =
                 selFrom =
                   from_
                     [ mkSelect
-                        { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `as_` "root"],
+                        { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `asC_` "root"],
                           selFrom =
                             from_ $
                               lateralLeftJoin_
                                 (selectStar_ "public" "article" `as'_` root_base')
                                 ( mkSelect
                                     { selExtr =
-                                        [row_to_json_ [selectIdentifiers_ e2' root_or_author_base' ["name"]] `as_` "author"],
+                                        [row_to_json_ [selectIdentifiers_ e2' root_or_author_base' ["name"]] `asC_` "author"],
                                       selFrom =
                                         from_
                                           [ (selectStar_ "public" "author")
@@ -174,18 +174,18 @@ simpleQueries =
       --   ) AS "root"
       let query e1' root_base' e2' root_or_author_base' root_or_author' root' =
             mkSelect
-              { selExtr = extractorOrd_ "root" [asc_ "root.or.author.pg.name", asc_ "root.or.author.pg.id"] `as_` "root",
+              { selExtr = extractorOrd_ "root" [asc_ "root.or.author.pg.name", asc_ "root.or.author.pg.id"] `asC_` "root",
                 selFrom =
                   from_
                     [ mkSelect
-                        { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `as_` "root"],
+                        { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `asC_` "root"],
                           selFrom =
                             from_ $
                               lateralLeftJoin_
                                 (selectStar_ "public" "article" `as'_` root_base')
                                 ( mkSelect
                                     { selExtr =
-                                        [row_to_json_ [selectIdentifiers_ e2' root_base' ["name", "id"]] `as_` "author"],
+                                        [row_to_json_ [selectIdentifiers_ e2' root_base' ["name", "id"]] `asC_` "author"],
                                       selFrom =
                                         from_
                                           [ (selectStar_ "public" "author")
@@ -256,7 +256,7 @@ simpleQueries =
                 selFrom =
                   from_
                     [ mkSelect
-                        { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `as_` "root"],
+                        { selExtr = [row_to_json_ [selectIdentifiers_ e1' root_base' ["id", "author"]] `asC_` "root"],
                           selFrom =
                             from_ $
                               lateralLeftJoin_
@@ -268,7 +268,7 @@ simpleQueries =
                                           [ asc_ "root.ar.root.articles.pg.content",
                                             asc_ "root.ar.root.articles.pg.published_on"
                                           ]
-                                          `as_` "articles",
+                                          `asC_` "articles",
                                       selFrom =
                                         from_
                                           [ mkSelect
@@ -282,7 +282,7 @@ simpleQueries =
                                                           ["title", "content"]
                                                           e2'
                                                       ]
-                                                      `as_` "articles",
+                                                      `asC_` "articles",
                                                     tcolumn_ "root.ar.root.articles.base" "published_on"
                                                       `asE_` "root.ar.root.articles.pg.published_on"
                                                   ],

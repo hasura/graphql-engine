@@ -102,7 +102,7 @@ processSelectParams ::
   SelectArgs ('Postgres pgKind) ->
   m
     ( SelectSource,
-      [(S.Alias, S.SQLExp)],
+      [(S.ColumnAlias, S.SQLExp)],
       Maybe S.SQLExp -- Order by cursor
     )
 processSelectParams
@@ -175,7 +175,7 @@ processAnnAggregateSelect ::
   AnnAggregateSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HM.HashMap S.Alias S.SQLExp,
+      HM.HashMap S.ColumnAlias S.SQLExp,
       S.Extractor
     )
 processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
@@ -202,7 +202,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
           pure
             ( [annFieldExtr],
               withJsonAggExtr permLimitSubQuery (orderByForJsonAgg selectSource) $
-                S.Alias $ toIdentifier fieldName
+                S.toColumnAlias $ toIdentifier fieldName
             )
         TAFExp e ->
           pure
@@ -211,7 +211,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
             )
 
   let topLevelExtractor =
-        flip S.Extractor (Just $ S.Alias $ toIdentifier fieldAlias) $
+        flip S.Extractor (Just $ S.toColumnAlias $ toIdentifier fieldAlias) $
           S.applyJsonBuildObj $
             flip concatMap (map (second snd) processedFields) $
               \(FieldName fieldText, fieldExp) -> [S.SELit fieldText, fieldExp]
@@ -268,7 +268,7 @@ processAnnFields ::
   FieldName ->
   SimilarArrayFields ->
   AnnFields ('Postgres pgKind) ->
-  m (S.Alias, S.SQLExp)
+  m (S.ColumnAlias, S.SQLExp)
 processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
   fieldExps <- forM annFields $ \(fieldName, field) ->
     (fieldName,)
@@ -324,7 +324,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
               sel
           let computedFieldTableSetSource = ComputedFieldTableSetSource fieldName selectSource
               extractor =
-                asJsonAggExtr selectTy (S.toAlias fieldName) PLSQNotRequired $
+                asJsonAggExtr selectTy (S.toColumnAlias fieldName) PLSQNotRequired $
                   orderByForJsonAgg selectSource
           pure
             ( computedFieldTableSetSource,
@@ -337,7 +337,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields = do
   where
     mkSourcePrefixes newPrefix = SourcePrefixes newPrefix sourcePrefix
 
-    baseTableIdentifier = mkBaseTableAlias sourcePrefix
+    baseTableIdentifier = toIdentifier $ mkBaseTableAlias sourcePrefix
 
     toSQLCol :: AnnColumnField ('Postgres pgKind) S.SQLExp -> m S.SQLExp
     toSQLCol (AnnColumnField col typ asText colOpM caseBoolExpMaybe) = do
@@ -445,7 +445,7 @@ processArrayRelation ::
   ) =>
   SourcePrefixes ->
   FieldName ->
-  S.Alias ->
+  S.TableAlias ->
   ArraySelect ('Postgres pgKind) ->
   m ()
 processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
@@ -459,7 +459,7 @@ processArrayRelation sourcePrefixes fieldAlias relAlias arrSel =
       let topExtr =
             asJsonAggExtr
               JASMultipleRows
-              (S.toAlias fieldAlias)
+              (S.toColumnAlias fieldAlias)
               permLimitSubQuery
               $ orderByForJsonAgg source
       pure
@@ -523,7 +523,7 @@ processAnnSimpleSelect ::
   AnnSimpleSelect ('Postgres pgKind) ->
   m
     ( SelectSource,
-      HM.HashMap S.Alias S.SQLExp
+      HM.HashMap S.ColumnAlias S.SQLExp
     )
 processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel = do
   (selectSource, orderByAndDistinctExtrs, _) <-
@@ -552,13 +552,13 @@ processConnectionSelect ::
   ) =>
   SourcePrefixes ->
   FieldName ->
-  S.Alias ->
+  S.TableAlias ->
   HM.HashMap PGCol PGCol ->
   ConnectionSelect ('Postgres pgKind) Void S.SQLExp ->
   m
     ( ArrayConnectionSource,
       S.Extractor,
-      HM.HashMap S.Alias S.SQLExp
+      HM.HashMap S.ColumnAlias S.SQLExp
     )
 processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connectionSelect = do
   (selectSource, orderByAndDistinctExtrs, maybeOrderByCursor) <-
@@ -571,7 +571,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
       tablePermissions
       tableArgs
 
-  let mkCursorExtractor = (S.Alias cursorIdentifier,) . (`S.SETyAnn` S.textTypeAnn)
+  let mkCursorExtractor = (S.toColumnAlias cursorIdentifier,) . (`S.SETyAnn` S.textTypeAnn)
       cursorExtractors = case maybeOrderByCursor of
         Just orderByCursor -> [mkCursorExtractor orderByCursor]
         Nothing ->
@@ -579,7 +579,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           -- Those columns are required to perform connection split via a WHERE clause.
           mkCursorExtractor primaryKeyColumnsObjectExp : primaryKeyColumnExtractors
   (topExtractorExp, exps) <- flip runStateT [] $ processFields selectSource
-  let topExtractor = S.Extractor topExtractorExp $ Just $ S.Alias fieldIdentifier
+  let topExtractor = S.Extractor topExtractorExp $ Just $ S.toColumnAlias fieldIdentifier
       allExtractors = HM.fromList $ cursorExtractors <> exps <> orderByAndDistinctExtrs
       arrayConnectionSource =
         ArrayConnectionSource
@@ -613,7 +613,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
       flip map (toList primaryKeyColumns) $
         \pgColumnInfo ->
           let pgColumn = ciColumn pgColumnInfo
-           in ( S.Alias $ mkBaseTableColumnAlias thisPrefix pgColumn,
+           in ( mkBaseTableColumnAlias thisPrefix pgColumn,
                 S.mkQIdenExp (mkBaseTableAlias thisPrefix) pgColumn
               )
 
@@ -660,7 +660,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
       forall n.
       ( MonadReader Options.StringifyNumbers n,
         MonadWriter JoinTree n,
-        MonadState [(S.Alias, S.SQLExp)] n
+        MonadState [(S.ColumnAlias, S.SQLExp)] n
       ) =>
       SelectSource ->
       n S.SQLExp

@@ -21,7 +21,7 @@ import Hasura.SQL.Backend
 mkInsertCTE ::
   Backend ('Postgres pgKind) =>
   InsertQueryP1 ('Postgres pgKind) ->
-  S.CTE
+  S.TopLevelCTE
 mkInsertCTE (InsertQueryP1 tn cols vals conflict (insCheck, updCheck) _ _) =
   S.CTEInsert insert
   where

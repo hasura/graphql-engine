@@ -321,7 +321,7 @@ mkInsertQ ::
   Maybe (IR.OnConflictClause ('Postgres pgKind) PG.SQLExp) ->
   Map.HashMap PGCol PG.SQLExp ->
   (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) ->
-  PG.CTE
+  PG.TopLevelCTE
 mkInsertQ table onConflictM insertRow (insCheck, updCheck) =
   let sqlConflict = PGT.toSQLConflict table <$> onConflictM
       sqlExps = Map.elems insertRow

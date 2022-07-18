@@ -130,7 +130,7 @@ applySortingAndSlicing SortingAndSlicing {..} =
               ApplySortingAndSlicing (Nothing, noSlicing, Nothing) (Just nodeOrderBy, _sasSlicing, nodeDistinctOn)
 
 data SelectNode = SelectNode
-  { _snExtractors :: !(HM.HashMap PG.Alias PG.SQLExp),
+  { _snExtractors :: !(HM.HashMap PG.ColumnAlias PG.SQLExp),
     _snJoinTree :: !JoinTree
   }
   deriving stock (Eq)
@@ -175,7 +175,7 @@ instance Hashable ObjectRelationSource
 deriving instance Eq ObjectRelationSource
 
 data ArrayRelationSource = ArrayRelationSource
-  { _arsAlias :: !PG.Alias,
+  { _arsAlias :: !PG.TableAlias,
     _arsRelationMapping :: !(HM.HashMap PG.PGCol PG.PGCol),
     _arsSelectSource :: !SelectSource
   }
@@ -208,7 +208,7 @@ deriving instance Show ComputedFieldTableSetSource
 deriving instance Eq ComputedFieldTableSetSource
 
 data ArrayConnectionSource = ArrayConnectionSource
-  { _acsAlias :: !PG.Alias,
+  { _acsAlias :: !PG.TableAlias,
     _acsRelationMapping :: !(HM.HashMap PG.PGCol PG.PGCol),
     _acsSplitFilter :: !(Maybe PG.BoolExp),
     _acsSlice :: !(Maybe ConnectionSlice),

@@ -38,7 +38,7 @@ mkSelectExpFromColumnValues qt allCols = \case
   [] -> return selNoRows
   colVals -> do
     tuples <- mapM mkTupsFromColVal colVals
-    let fromItem = S.FIValues (S.ValuesExp tuples) (S.Alias rowAlias) Nothing
+    let fromItem = S.FIValues (S.ValuesExp tuples) (S.toTableAlias rowAlias) Nothing
     return
       S.mkSelect
         { S.selExtr = [extractor],

@@ -52,14 +52,14 @@ mkConnectionSelect connectionSelect =
             processConnectionSelect
               sourcePrefixes
               rootFieldName
-              (S.Alias rootIdentifier)
+              (S.toTableAlias rootIdentifier)
               mempty
               connectionSelect
       selectNode =
         MultiRowSelectNode [topExtractor] $
           SelectNode nodeExtractors joinTree
    in prefixNumToAliasesSelectWith $
-        connectionToSelectWith (S.Alias rootIdentifier) connectionSource selectNode
+        connectionToSelectWith (S.toTableAlias rootIdentifier) connectionSource selectNode
   where
     strfyNum = _asnStrfyNum $ _csSelect connectionSelect
     rootFieldName = FieldName "root"

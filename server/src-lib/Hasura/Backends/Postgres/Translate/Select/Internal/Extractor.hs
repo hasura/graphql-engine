@@ -23,7 +23,7 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 
 aggregateFieldsToExtractorExps ::
-  Identifier -> AggregateFields ('Postgres pgKind) -> [(S.Alias, S.SQLExp)]
+  Identifier -> AggregateFields ('Postgres pgKind) -> [(S.ColumnAlias, S.SQLExp)]
 aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
   flip concatMap aggregateFields $ \(_, field) ->
     case field of
@@ -44,7 +44,7 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
     mkColExp c =
       let qualCol = S.mkQIdenExp (mkBaseTableAlias sourcePrefix) (toIdentifier c)
           colAls = toIdentifier c
-       in (S.Alias colAls, qualCol)
+       in (S.toColumnAlias colAls, qualCol)
 
 mkAggregateOrderByExtractorAndFields ::
   forall pgKind.
@@ -76,7 +76,7 @@ mkAggregateOrderByExtractorAndFields annAggOrderBy =
     alias = Just $ mkAggregateOrderByAlias annAggOrderBy
 
 withJsonAggExtr ::
-  PermissionLimitSubQuery -> Maybe S.OrderByExp -> S.Alias -> S.SQLExp
+  PermissionLimitSubQuery -> Maybe S.OrderByExp -> S.ColumnAlias -> S.SQLExp
 withJsonAggExtr permLimitSubQuery ordBy alias =
   -- if select has aggregations then use subquery to apply permission limit
   case permLimitSubQuery of
@@ -84,7 +84,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     PLSQNotRequired -> simpleJsonAgg
   where
     simpleJsonAgg = mkSimpleJsonAgg rowIdenExp ordBy
-    rowIdenExp = S.SEIdentifier $ S.getAlias alias
+    rowIdenExp = S.SEIdentifier $ toIdentifier alias
     subSelAls = Identifier "sub_query"
     unnestTable = Identifier "unnest_table"
 
@@ -99,7 +99,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
           fromExp =
             S.FromExp $
               pure $
-                S.mkSelFromItem subSelect $ S.Alias subSelAls
+                S.mkSelFromItem subSelect $ S.toTableAlias subSelAls
        in S.SESelect $
             S.mkSelect
               { S.selExtr = pure extr,
@@ -111,7 +111,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
             flip S.Extractor (Just alias) $
               S.mkQIdenExp unnestTable alias
           obExtrs = flip map newOBAliases $ \a ->
-            S.Extractor (S.mkQIdenExp unnestTable a) $ Just $ S.Alias a
+            S.Extractor (S.mkQIdenExp unnestTable a) $ Just $ S.toColumnAlias a
        in S.mkSelect
             { S.selExtr = jsonRowExtr : obExtrs,
               S.selFrom = Just $ S.FromExp $ pure unnestFromItem,
@@ -122,8 +122,8 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     unnestFromItem =
       let arrayAggItems = flip map (rowIdenExp : obCols) $
             \s -> S.SEFnApp "array_agg" [s] Nothing
-       in S.FIUnnest arrayAggItems (S.Alias unnestTable) $
-            rowIdenExp : map S.SEIdentifier newOBAliases
+       in S.FIUnnest arrayAggItems (S.toTableAlias unnestTable) $
+            alias : map S.toColumnAlias newOBAliases
 
     newOrderBy = S.OrderByExp <$> NE.nonEmpty newOBItems
 
@@ -131,12 +131,12 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     transformOrderBy (S.OrderByExp l) = unzip3 $
       flip map (zip (toList l) [1 ..]) $ \(obItem, i :: Int) ->
         let iden = Identifier $ "ob_col_" <> tshow i
-         in ( obItem {S.oColumn = S.SEIdentifier iden},
-              S.oColumn obItem,
+         in ( obItem {S.oExpression = S.SEIdentifier iden},
+              S.oExpression obItem,
               iden
             )
 
-asSingleRowExtr :: S.Alias -> S.SQLExp
+asSingleRowExtr :: S.ColumnAlias -> S.SQLExp
 asSingleRowExtr col =
   S.SEFnApp "coalesce" [jsonAgg, S.SELit "null"] Nothing
   where
@@ -148,7 +148,7 @@ asSingleRowExtr col =
         ]
 
 asJsonAggExtr ::
-  JsonAggSelect -> S.Alias -> PermissionLimitSubQuery -> Maybe S.OrderByExp -> S.Extractor
+  JsonAggSelect -> S.ColumnAlias -> PermissionLimitSubQuery -> Maybe S.OrderByExp -> S.Extractor
 asJsonAggExtr jsonAggSelect als permLimitSubQuery ordByExpM =
   flip S.Extractor (Just als) $ case jsonAggSelect of
     JASMultipleRows -> withJsonAggExtr permLimitSubQuery ordByExpM als

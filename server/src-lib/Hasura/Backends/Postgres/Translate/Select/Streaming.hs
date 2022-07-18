@@ -117,13 +117,13 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             colExp =
               [ S.SELit (getPGColTxt pgColumn),
                 S.SETyAnn
-                  (mkMaxOrMinSQLExp maxOrMinTxt $ mkBaseTableColumnAlias rootFldIdentifier pgColumn)
+                  (mkMaxOrMinSQLExp maxOrMinTxt $ toIdentifier $ mkBaseTableColumnAlias rootFldIdentifier pgColumn)
                   S.textTypeAnn
               ]
          in -- SELECT json_build_object ('col1', MAX(col1) :: text)
 
             S.SEFnApp "json_build_object" colExp Nothing
-      cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.Alias $ Identifier "cursor")
+      cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.toColumnAlias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
    in prefixNumToAliases $
         generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
@@ -131,7 +131,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
     rootFldIdentifier = toIdentifier rootFldName
     sourcePrefixes = SourcePrefixes rootFldIdentifier rootFldIdentifier
     rootFldName = FieldName "root"
-    rootFldAls = S.Alias $ toIdentifier rootFldName
+    rootFldAls = S.toColumnAlias $ toIdentifier rootFldName
 
     -- TODO: these functions also exist in `resolveMultiplexedValue`, de-duplicate these!
     fromResVars pgType jPath =

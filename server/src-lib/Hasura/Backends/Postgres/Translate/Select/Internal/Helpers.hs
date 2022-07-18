@@ -87,7 +87,7 @@ fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
       onArgumentExp
         (S.SERowIdentifier alias)
         (S.mkQIdenExp alias . Identifier)
-    alias = mkBaseTableAlias prefix
+    alias = toIdentifier $ mkBaseTableAlias prefix
 
 selectFromToFromItem :: Identifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
 selectFromToFromItem pfx = \case
@@ -107,9 +107,9 @@ functionToIdentifier = Identifier . qualifiedObjectToText
 
 -- uses json_build_object to build a json object
 withJsonBuildObj ::
-  FieldName -> [S.SQLExp] -> (S.Alias, S.SQLExp)
+  FieldName -> [S.SQLExp] -> (S.ColumnAlias, S.SQLExp)
 withJsonBuildObj parAls exps =
-  (S.toAlias parAls, jsonRow)
+  (S.toColumnAlias parAls, jsonRow)
   where
     jsonRow = S.applyJsonBuildObj exps
 

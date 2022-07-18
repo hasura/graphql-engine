@@ -698,7 +698,7 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
       -- the column name.
       | isScalarColumnWhere isGeoType (ciType column) = Extractor sqlExp (Just $ getAlias column)
       | otherwise = Extractor sqlExp Nothing
-    getAlias col = toAlias $ Identifier $ getPGColTxt (ciColumn col)
+    getAlias col = toColumnAlias $ Identifier $ getPGColTxt (ciColumn col)
 
 checkIfTriggerExists ::
   QualifiedTriggerName ->
