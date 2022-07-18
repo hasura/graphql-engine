@@ -8,6 +8,7 @@ where
 import Data.HashSet qualified as Set
 import Data.Monoid (All (..))
 import Database.PG.Query qualified as Q
+import Hasura.GraphQL.Execute.Subscription.Options (SubscriptionsOptions (_lqoBatchSize))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ESO
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ESP
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
@@ -23,6 +24,8 @@ import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as UUT
 import Network.WebSockets qualified as WS
 import Test.Hspec qualified as Hspec
+
+{-# ANN module ("HLint: ignore Redundant ==" :: String) #-}
 
 --------------------------------------------------------------------------------
 
@@ -97,9 +100,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soPort result `Hspec.shouldSatisfy` \case
-          Right port -> port == 8080
-          Left _err -> False
+        fmap UUT.soPort result `Hspec.shouldBe` Right 8080
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -109,9 +110,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soPort result `Hspec.shouldSatisfy` \case
-          Right port -> port == 420
-          Left _err -> False
+        fmap UUT.soPort result `Hspec.shouldBe` Right 420
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -121,9 +120,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soPort result `Hspec.shouldSatisfy` \case
-          Right port -> port == 11
-          Left _err -> False
+        fmap UUT.soPort result `Hspec.shouldBe` Right 11
 
     Hspec.describe "soHost" $ do
       Hspec.it "Default = '*'" $ do
@@ -134,9 +131,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soHost result `Hspec.shouldSatisfy` \case
-          Right host -> host == "*"
-          Left _err -> False
+        fmap UUT.soHost result `Hspec.shouldBe` Right "*"
 
       Hspec.it "Env > Nothing" $ do
         -- Given
@@ -146,9 +141,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soHost result `Hspec.shouldSatisfy` \case
-          Right host -> host == "127.0.0.1"
-          Left _err -> False
+        fmap UUT.soHost result `Hspec.shouldBe` Right "127.0.0.1"
 
       Hspec.it "Arg > Env" $ do
         -- Given
@@ -158,9 +151,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soHost result `Hspec.shouldSatisfy` \case
-          Right host -> host == "*4"
-          Left _err -> False
+        fmap UUT.soHost result `Hspec.shouldBe` Right "*4"
 
     Hspec.describe "soConnParams" $ do
       Hspec.it "Default == 1, 50, 180, 600" $ do
@@ -171,20 +162,18 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConnParams result `Hspec.shouldSatisfy` \case
-          Right connParams ->
-            getAll $
-              foldMap
-                All
-                [ Q.cpStripes connParams == 1,
-                  Q.cpConns connParams == 50,
-                  Q.cpIdleTime connParams == 180,
-                  Q.cpAllowPrepare connParams == True,
-                  Q.cpMbLifetime connParams == Just 600,
-                  Q.cpTimeout connParams == Nothing,
-                  Q.cpCancel connParams == True
-                ]
-          Left _err -> False
+        fmap UUT.soConnParams result
+          `Hspec.shouldBe` Right
+            ( Q.ConnParams
+                { Q.cpStripes = 1,
+                  Q.cpConns = 50,
+                  Q.cpIdleTime = 180,
+                  Q.cpAllowPrepare = True,
+                  Q.cpMbLifetime = Just 600,
+                  Q.cpTimeout = Nothing,
+                  Q.cpCancel = True
+                }
+            )
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -201,20 +190,18 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConnParams result `Hspec.shouldSatisfy` \case
-          Right connParams ->
-            getAll $
-              foldMap
-                All
-                [ Q.cpStripes connParams == 42,
-                  Q.cpConns connParams == 43,
-                  Q.cpIdleTime connParams == 44,
-                  Q.cpAllowPrepare connParams == False,
-                  Q.cpMbLifetime connParams == Just 45,
-                  Q.cpTimeout connParams == Just 46,
-                  Q.cpCancel connParams == True
-                ]
-          Left _err -> False
+        fmap UUT.soConnParams result
+          `Hspec.shouldBe` Right
+            ( Q.ConnParams
+                { Q.cpStripes = 42,
+                  Q.cpConns = 43,
+                  Q.cpIdleTime = 44,
+                  Q.cpAllowPrepare = False,
+                  Q.cpMbLifetime = Just 45,
+                  Q.cpTimeout = Just 46,
+                  Q.cpCancel = True
+                }
+            )
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -225,9 +212,9 @@ mkServeOptionsSpec =
                       { rcpStripes = Just 2,
                         rcpConns = Just 3,
                         rcpIdleTime = Just 4,
-                        rcpConnLifetime = Just 4,
+                        rcpConnLifetime = Just 5,
                         rcpAllowPrepare = Just True,
-                        rcpPoolTimeout = Just 5
+                        rcpPoolTimeout = Just 6
                       }
                 }
             -- When
@@ -242,20 +229,18 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConnParams result `Hspec.shouldSatisfy` \case
-          Right connParams ->
-            getAll $
-              foldMap
-                All
-                [ Q.cpStripes connParams == 2,
-                  Q.cpConns connParams == 3,
-                  Q.cpIdleTime connParams == 4,
-                  Q.cpAllowPrepare connParams == True,
-                  Q.cpMbLifetime connParams == Just 4,
-                  Q.cpTimeout connParams == Just 5,
-                  Q.cpCancel connParams == True
-                ]
-          Left _err -> False
+        fmap UUT.soConnParams result
+          `Hspec.shouldBe` Right
+            ( Q.ConnParams
+                { cpStripes = 2,
+                  cpConns = 3,
+                  cpIdleTime = 4,
+                  cpAllowPrepare = True,
+                  cpMbLifetime = Just 5,
+                  cpTimeout = Just 6,
+                  cpCancel = True
+                }
+            )
 
     Hspec.describe "soTxIso" $ do
       Hspec.it "Default == ReadCommitted" $ do
@@ -266,9 +251,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soTxIso result `Hspec.shouldSatisfy` \case
-          Right txIso -> txIso == Q.ReadCommitted
-          Left _err -> False
+        fmap UUT.soTxIso result `Hspec.shouldBe` Right Q.ReadCommitted
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -278,9 +261,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soTxIso result `Hspec.shouldSatisfy` \case
-          Right txIso -> txIso == Q.RepeatableRead
-          Left _err -> False
+        fmap UUT.soTxIso result `Hspec.shouldBe` Right Q.RepeatableRead
 
       Hspec.it "Arg > Env" $ do
         -- Given
@@ -290,9 +271,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soTxIso result `Hspec.shouldSatisfy` \case
-          Right txIso -> txIso == Q.Serializable
-          Left _err -> False
+        fmap UUT.soTxIso result `Hspec.shouldBe` Right Q.Serializable
 
     Hspec.describe "soAdminSecret" $ do
       Hspec.it "Env > Nothing" $ do
@@ -303,9 +282,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAdminSecret result `Hspec.shouldSatisfy` \case
-          Right soAdminSecret -> soAdminSecret == Set.singleton (Auth.hashAdminSecret "A monad is a monoid in the category of endofunctors")
-          Left _err -> False
+        fmap UUT.soAdminSecret result `Hspec.shouldBe` Right (Set.singleton (Auth.hashAdminSecret "A monad is a monoid in the category of endofunctors"))
 
       Hspec.it "Arg > Env" $ do
         -- Given
@@ -315,9 +292,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAdminSecret result `Hspec.shouldSatisfy` \case
-          Right soAdminSecret -> soAdminSecret == Set.singleton (Auth.hashAdminSecret "Whats the big deal")
-          Left _err -> False
+        fmap UUT.soAdminSecret result `Hspec.shouldBe` Right (Set.singleton (Auth.hashAdminSecret "Whats the big deal"))
 
     Hspec.describe "soAuthHook" $ do
       Hspec.it "Default Hook Mode == GET" $ do
@@ -328,9 +303,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldSatisfy` \case
-          Right soAuthHook -> soAuthHook == Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTGet)
-          Left _err -> False
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTGet))
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -343,9 +316,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldSatisfy` \case
-          Right soAuthHook -> soAuthHook == Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTPost)
-          Left _err -> False
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTPost))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -358,9 +329,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAuthHook result `Hspec.shouldSatisfy` \case
-          Right soAuthHook -> soAuthHook == Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTGet)
-          Left _err -> False
+        fmap UUT.soAuthHook result `Hspec.shouldBe` Right (Just (UUT.AuthHookG "http://auth.hook.com" UUT.AHTGet))
 
     Hspec.describe "soJwtSecret" $ do
       Hspec.it "Env > Nothing" $ do
@@ -375,11 +344,8 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soJwtSecret result `Hspec.shouldSatisfy` \case
-          Right soJwtSecret ->
-            Right soJwtSecret
-              == UUT.fromEnv "[{\"type\": \"HS256\", \"key\": \"11111111111111111111111111111111\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}]"
-          Left _err -> False
+        fmap UUT.soJwtSecret result
+          `Hspec.shouldBe` UUT.fromEnv "[{\"type\": \"HS256\", \"key\": \"11111111111111111111111111111111\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}]"
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -394,9 +360,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soJwtSecret result `Hspec.shouldSatisfy` \case
-          Right soJwtSecret -> soJwtSecret == maybe [] pure jwtConfig
-          Left _err -> False
+        fmap UUT.soJwtSecret result `Hspec.shouldBe` Right (onNothing jwtConfig [])
 
     Hspec.describe "soUnAuthRole" $ do
       Hspec.it "Env > Nothing" $ do
@@ -407,9 +371,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldSatisfy` \case
-          Right soUnAuthRole -> soUnAuthRole == UUT.mkRoleName "guest"
-          Left _err -> False
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "guest")
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -419,9 +381,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soUnAuthRole result `Hspec.shouldSatisfy` \case
-          Right soUnAuthRole -> soUnAuthRole == UUT.mkRoleName "visitor"
-          Left _err -> False
+        fmap UUT.soUnAuthRole result `Hspec.shouldBe` Right (UUT.mkRoleName "visitor")
 
     Hspec.describe "soCorsConfig" $ do
       Hspec.it "Env > Nothing" $ do
@@ -432,9 +392,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soCorsConfig result `Hspec.shouldSatisfy` \case
-          Right soCorsConfig -> Just soCorsConfig == eitherToMaybe (Cors.readCorsDomains "http://domain1:23, http://domain2:34")
-          Left _err -> False
+        fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
       Hspec.it "Default CorsConfig == CCAllowAll" $ do
         let -- Given
@@ -444,9 +402,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soCorsConfig result `Hspec.shouldSatisfy` \case
-          Right soCorsConfig -> soCorsConfig == Cors.CCAllowAll
-          Left _err -> False
+        fmap UUT.soCorsConfig result `Hspec.shouldBe` Right Cors.CCAllowAll
 
       Hspec.it "Env 'HASURA_GRAPHQL_DISABLE_CORS=false' superseded by 'HASURA_GRAPHQL_CORS_DOMAIN'" $ do
         let -- Given
@@ -456,9 +412,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soCorsConfig result `Hspec.shouldSatisfy` \case
-          Right soCorsConfig -> Just soCorsConfig == eitherToMaybe (Cors.readCorsDomains "http://domain1:23, http://domain2:34")
-          Left _err -> False
+        fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
       Hspec.it "Env 'HASURA_GRAPHQL_DISABLE_CORS=true' enables use of cookie value" $ do
         let -- Given
@@ -468,9 +422,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soCorsConfig result `Hspec.shouldSatisfy` \case
-          Right soCorsConfig -> soCorsConfig == Cors.CCDisabled True
-          Left _err -> False
+        fmap UUT.soCorsConfig result `Hspec.shouldBe` Right (Cors.CCDisabled True)
 
       Hspec.it "Env 'HASURA_GRAPHQL_DISABLE_CORS=true' supersedes 'HASURA_GRAPHQL_CORS_DOMAIN'" $ do
         let -- Given
@@ -480,9 +432,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soCorsConfig result `Hspec.shouldSatisfy` \case
-          Right soCorsConfig -> soCorsConfig == Cors.CCDisabled False
-          Left _err -> False
+        fmap UUT.soCorsConfig result `Hspec.shouldBe` Right (Cors.CCDisabled False)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -492,9 +442,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soCorsConfig result `Hspec.shouldSatisfy` \case
-          Right soCorsConfig -> Just soCorsConfig == eitherToMaybe (Cors.readCorsDomains "http://domain1:23, http://domain2:34")
-          Left _err -> False
+        fmap UUT.soCorsConfig result `Hspec.shouldBe` Cors.readCorsDomains "http://domain1:23, http://domain2:34"
 
     Hspec.describe "soEnableConsole" $ do
       Hspec.it "Default == False" $ do
@@ -505,9 +453,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldSatisfy` \case
-          Right soEnableConsole -> soEnableConsole == False
-          Left _err -> False
+        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right False
 
       -- NOTE: This is a little confusing. We are first simulating
       -- not providing the '--enable-console' flag with the env var set to 'true'.
@@ -521,9 +467,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldSatisfy` \case
-          Right soEnableConsole -> soEnableConsole == True
-          Left _err -> False
+        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -533,9 +477,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableConsole result `Hspec.shouldSatisfy` \case
-          Right soEnableConsole -> soEnableConsole == True
-          Left _err -> False
+        fmap UUT.soEnableConsole result `Hspec.shouldBe` Right True
 
     Hspec.describe "soConsoleAssetsDir" $ do
       Hspec.it "Env > Nothing" $ do
@@ -546,9 +488,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConsoleAssetsDir result `Hspec.shouldSatisfy` \case
-          Right soConsoleAssetsDir -> soConsoleAssetsDir == Just "/assets"
-          Left _err -> False
+        fmap UUT.soConsoleAssetsDir result `Hspec.shouldBe` Right (Just "/assets")
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -558,9 +498,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soConsoleAssetsDir result `Hspec.shouldSatisfy` \case
-          Right soConsoleAssetsDir -> soConsoleAssetsDir == Just "/data"
-          Left _err -> False
+        fmap UUT.soConsoleAssetsDir result `Hspec.shouldBe` Right (Just "/data")
 
     Hspec.describe "soEnableTelemetry" $ do
       Hspec.it "Default == True" $ do
@@ -571,9 +509,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldSatisfy` \case
-          Right soEnableTelemetry -> soEnableTelemetry == True
-          Left _err -> False
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right True
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -583,9 +519,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldSatisfy` \case
-          Right soEnableTelemetry -> soEnableTelemetry == False
-          Left _err -> False
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -595,9 +529,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableTelemetry result `Hspec.shouldSatisfy` \case
-          Right soEnableTelemetry -> soEnableTelemetry == False
-          Left _err -> False
+        fmap UUT.soEnableTelemetry result `Hspec.shouldBe` Right False
 
     Hspec.describe "soStringifyNum" $ do
       Hspec.it "Default == LeaveNumbersAlone" $ do
@@ -608,9 +540,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soStringifyNum result `Hspec.shouldSatisfy` \case
-          Right soStringifyNum -> soStringifyNum == Options.Don'tStringifyNumbers
-          Left _err -> False
+        fmap UUT.soStringifyNum result `Hspec.shouldBe` Right Options.Don'tStringifyNumbers
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -620,9 +550,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soStringifyNum result `Hspec.shouldSatisfy` \case
-          Right soStringifyNum -> soStringifyNum == Options.StringifyNumbers
-          Left _err -> False
+        fmap UUT.soStringifyNum result `Hspec.shouldBe` Right Options.StringifyNumbers
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -632,9 +560,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soStringifyNum result `Hspec.shouldSatisfy` \case
-          Right soStringifyNum -> soStringifyNum == Options.StringifyNumbers
-          Left _err -> False
+        fmap UUT.soStringifyNum result `Hspec.shouldBe` Right Options.StringifyNumbers
 
     Hspec.describe "soDangerousBooleanCollapse" $ do
       Hspec.it "Default == False" $ do
@@ -645,9 +571,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldSatisfy` \case
-          Right soDangerousBooleanCollapse -> soDangerousBooleanCollapse == False
-          Left _err -> False
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right False
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -657,9 +581,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldSatisfy` \case
-          Right soDangerousBooleanCollapse -> soDangerousBooleanCollapse == True
-          Left _err -> False
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right True
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -669,9 +591,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldSatisfy` \case
-          Right soDangerousBooleanCollapse -> soDangerousBooleanCollapse == False
-          Left _err -> False
+        fmap UUT.soDangerousBooleanCollapse result `Hspec.shouldBe` Right False
 
     Hspec.describe "soEnabledAPIs" $ do
       Hspec.it "Default == metadata,graphql,pgdump,config" $ do
@@ -682,9 +602,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledAPIs result `Hspec.shouldSatisfy` \case
-          Right soEnabledAPIs -> soEnabledAPIs == Set.fromList [UUT.METADATA, UUT.GRAPHQL, UUT.PGDUMP, UUT.CONFIG]
-          Left _err -> False
+        fmap UUT.soEnabledAPIs result `Hspec.shouldBe` Right (Set.fromList [UUT.METADATA, UUT.GRAPHQL, UUT.PGDUMP, UUT.CONFIG])
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -694,9 +612,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledAPIs result `Hspec.shouldSatisfy` \case
-          Right soEnabledAPIs -> soEnabledAPIs == Set.fromList [UUT.METADATA, UUT.GRAPHQL]
-          Left _err -> False
+        fmap UUT.soEnabledAPIs result `Hspec.shouldBe` Right (Set.fromList [UUT.METADATA, UUT.GRAPHQL])
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -706,9 +622,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledAPIs result `Hspec.shouldSatisfy` \case
-          Right soEnabledAPIs -> soEnabledAPIs == Set.fromList [UUT.CONFIG]
-          Left _err -> False
+        fmap UUT.soEnabledAPIs result `Hspec.shouldBe` Right (Set.fromList [UUT.CONFIG])
 
     Hspec.describe "soLiveQueryOpts" $ do
       Hspec.it "Default == 1000, 100" $ do
@@ -719,15 +633,13 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soLiveQueryOpts result `Hspec.shouldSatisfy` \case
-          Right soLiveQueryOpts ->
-            getAll $
-              foldMap
-                All
-                [ Just (ESO._lqoRefetchInterval soLiveQueryOpts) == ESO.mkRefetchInterval 1,
-                  Just (ESO._lqoBatchSize soLiveQueryOpts) == ESO.mkBatchSize 100
-                ]
-          Left _err -> False
+        fmap UUT.soLiveQueryOpts result
+          `Hspec.shouldBe` Right
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 1,
+                  _lqoBatchSize = ESO.BatchSize 100
+                }
+            )
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -740,15 +652,13 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soLiveQueryOpts result `Hspec.shouldSatisfy` \case
-          Right soLiveQueryOpts ->
-            getAll $
-              foldMap
-                All
-                [ Just (ESO._lqoRefetchInterval soLiveQueryOpts) == ESO.mkRefetchInterval 2,
-                  Just (ESO._lqoBatchSize soLiveQueryOpts) == ESO.mkBatchSize 200
-                ]
-          Left _err -> False
+        fmap UUT.soLiveQueryOpts result
+          `Hspec.shouldBe` Right
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 2,
+                  _lqoBatchSize = ESO.BatchSize 200
+                }
+            )
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -765,15 +675,13 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soLiveQueryOpts result `Hspec.shouldSatisfy` \case
-          Right soLiveQueryOpts ->
-            getAll $
-              foldMap
-                All
-                [ Just (ESO._lqoRefetchInterval soLiveQueryOpts) == ESO.mkRefetchInterval 3,
-                  Just (ESO._lqoBatchSize soLiveQueryOpts) == ESO.mkBatchSize 300
-                ]
-          Left _err -> False
+        fmap UUT.soLiveQueryOpts result
+          `Hspec.shouldBe` Right
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 3,
+                  _lqoBatchSize = ESO.BatchSize 300
+                }
+            )
 
     Hspec.describe "soStreamingQueryOpts" $ do
       Hspec.it "Default == 1000, 100" $ do
@@ -784,15 +692,13 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soStreamingQueryOpts result `Hspec.shouldSatisfy` \case
-          Right soStreamingQueryOpts ->
-            getAll $
-              foldMap
-                All
-                [ Just (ESO._lqoRefetchInterval soStreamingQueryOpts) == ESO.mkRefetchInterval 1,
-                  Just (ESO._lqoBatchSize soStreamingQueryOpts) == ESO.mkBatchSize 100
-                ]
-          Left _err -> False
+        fmap UUT.soStreamingQueryOpts result
+          `Hspec.shouldBe` Right
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 1,
+                  _lqoBatchSize = ESO.BatchSize 100
+                }
+            )
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -805,15 +711,13 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soStreamingQueryOpts result `Hspec.shouldSatisfy` \case
-          Right soStreamingQueryOpts ->
-            getAll $
-              foldMap
-                All
-                [ Just (ESO._lqoRefetchInterval soStreamingQueryOpts) == ESO.mkRefetchInterval 2,
-                  Just (ESO._lqoBatchSize soStreamingQueryOpts) == ESO.mkBatchSize 200
-                ]
-          Left _err -> False
+        fmap UUT.soStreamingQueryOpts result
+          `Hspec.shouldBe` Right
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 2,
+                  _lqoBatchSize = ESO.BatchSize 200
+                }
+            )
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -830,15 +734,13 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soStreamingQueryOpts result `Hspec.shouldSatisfy` \case
-          Right soStreamingQueryOpts ->
-            getAll $
-              foldMap
-                All
-                [ Just (ESO._lqoRefetchInterval soStreamingQueryOpts) == ESO.mkRefetchInterval 3,
-                  Just (ESO._lqoBatchSize soStreamingQueryOpts) == ESO.mkBatchSize 300
-                ]
-          Left _err -> False
+        fmap UUT.soStreamingQueryOpts result
+          `Hspec.shouldBe` Right
+            ( ESO.SubscriptionsOptions
+                { _lqoRefetchInterval = ESO.RefetchInterval 3,
+                  _lqoBatchSize = ESO.BatchSize 300
+                }
+            )
 
     Hspec.describe "soEnableAllowlist" $ do
       Hspec.it "Env > Nothing" $ do
@@ -849,9 +751,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowlist result `Hspec.shouldSatisfy` \case
-          Right soEnableAllowlist -> soEnableAllowlist == True
-          Left _err -> False
+        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -861,9 +761,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableAllowlist result `Hspec.shouldSatisfy` \case
-          Right soEnableAllowlist -> soEnableAllowlist == True
-          Left _err -> False
+        fmap UUT.soEnableAllowlist result `Hspec.shouldBe` Right True
 
     Hspec.describe "soEnabledLogTypes" $ do
       Hspec.it "Default == Startup, HttpLog, WebhookLog, WebsocketLog" $ do
@@ -874,10 +772,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledLogTypes result `Hspec.shouldSatisfy` \case
-          Right soEnabledLogTypes ->
-            soEnabledLogTypes == Set.fromList [Logging.ELTStartup, Logging.ELTHttpLog, Logging.ELTWebhookLog, Logging.ELTWebsocketLog]
-          Left _err -> False
+        fmap UUT.soEnabledLogTypes result `Hspec.shouldBe` Right (Set.fromList [Logging.ELTStartup, Logging.ELTHttpLog, Logging.ELTWebhookLog, Logging.ELTWebsocketLog])
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -887,9 +782,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledLogTypes result `Hspec.shouldSatisfy` \case
-          Right soEnabledLogTypes -> soEnabledLogTypes == Set.fromList [Logging.ELTHttpLog]
-          Left _err -> False
+        fmap UUT.soEnabledLogTypes result `Hspec.shouldBe` Right (Set.fromList [Logging.ELTHttpLog])
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -899,9 +792,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnabledLogTypes result `Hspec.shouldSatisfy` \case
-          Right soEnabledLogTypes -> soEnabledLogTypes == Set.fromList [Logging.ELTActionHandler]
-          Left _err -> False
+        fmap UUT.soEnabledLogTypes result `Hspec.shouldBe` Right (Set.fromList [Logging.ELTActionHandler])
 
     Hspec.describe "soLogLevel" $ do
       Hspec.it "Default == LevelInfo" $ do
@@ -912,9 +803,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soLogLevel result `Hspec.shouldSatisfy` \case
-          Right soLogLevel -> soLogLevel == Logging.LevelInfo
-          Left _err -> False
+        fmap UUT.soLogLevel result `Hspec.shouldBe` Right Logging.LevelInfo
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -924,9 +813,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soLogLevel result `Hspec.shouldSatisfy` \case
-          Right soLogLevel -> soLogLevel == Logging.LevelWarn
-          Left _err -> False
+        fmap UUT.soLogLevel result `Hspec.shouldBe` Right Logging.LevelWarn
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -936,9 +823,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soLogLevel result `Hspec.shouldSatisfy` \case
-          Right soLogLevel -> soLogLevel == Logging.LevelWarn
-          Left _err -> False
+        fmap UUT.soLogLevel result `Hspec.shouldBe` Right Logging.LevelWarn
 
     Hspec.describe "soDevMode" $ do
       Hspec.it "Default == False" $ do
@@ -975,9 +860,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soDevMode result `Hspec.shouldSatisfy` \case
-          Right soDevMode -> soDevMode == True
-          Left _err -> False
+        fmap UUT.soDevMode result `Hspec.shouldBe` Right True
 
     Hspec.describe "soAdminInternalErrors" $ do
       Hspec.it "Default == InternalErrorsAdminOnly" $ do
@@ -988,9 +871,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldSatisfy` \case
-          Right soResponseInternalErrorsConfig -> soResponseInternalErrorsConfig == UUT.InternalErrorsAdminOnly
-          Left _err -> False
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAdminOnly
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1000,9 +881,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldSatisfy` \case
-          Right soResponseInternalErrorsConfig -> soResponseInternalErrorsConfig == UUT.InternalErrorsDisabled
-          Left _err -> False
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
 
       Hspec.it "Dev Mode supersedes rsoAdminInternalErrors" $ do
         let -- Given
@@ -1012,9 +891,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldSatisfy` \case
-          Right soResponseInternalErrorsConfig -> soResponseInternalErrorsConfig == UUT.InternalErrorsAllRequests
-          Left _err -> False
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsAllRequests
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1024,9 +901,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldSatisfy` \case
-          Right soResponseInternalErrorsConfig -> soResponseInternalErrorsConfig == UUT.InternalErrorsDisabled
-          Left _err -> False
+        fmap UUT.soResponseInternalErrorsConfig result `Hspec.shouldBe` Right UUT.InternalErrorsDisabled
 
     Hspec.describe "soEventsHttpPoolSize" $ do
       -- TODO(SOLOMON): Despite the parser help message, there
@@ -1040,9 +915,7 @@ mkServeOptionsSpec =
       --      -- Then
       --      result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-      --  fmap UUT.soEventsHttpPoolSize result `Hspec.shouldSatisfy` \case
-      --    Right soEventsHttpPoolSize -> soEventsHttpPoolSize == Just 100
-      --    Left _err -> False
+      --  fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 100)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1052,9 +925,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldSatisfy` \case
-          Right soEventsHttpPoolSize -> soEventsHttpPoolSize == Just 200
-          Left _err -> False
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1064,9 +935,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldSatisfy` \case
-          Right soEventsHttpPoolSize -> soEventsHttpPoolSize == Just 300
-          Left _err -> False
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Just 300)
 
     Hspec.describe "soEventsFetchInterval" $ do
       Hspec.it "Env > Nothing" $ do
@@ -1077,9 +946,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldSatisfy` \case
-          Right soEventsFetchInterval -> soEventsFetchInterval == Just 200
-          Left _err -> False
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Just 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1089,9 +956,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldSatisfy` \case
-          Right soEventsFetchInterval -> soEventsFetchInterval == Just 300
-          Left _err -> False
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Just 300)
 
     Hspec.describe "soAsyncActionsFetchInterval" $ do
       Hspec.it "Default == 1000" $ do
@@ -1102,9 +967,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldSatisfy` \case
-          Right soAsyncActionsFetchInterval -> soAsyncActionsFetchInterval == UUT.Interval 1000
-          Left _err -> False
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval 1000)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1114,9 +977,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldSatisfy` \case
-          Right soAsyncActionsFetchInterval -> soAsyncActionsFetchInterval == UUT.Interval 200
-          Left _err -> False
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval 200)
 
       Hspec.it "0 == 'Skip'" $ do
         let -- Given
@@ -1126,9 +987,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldSatisfy` \case
-          Right soAsyncActionsFetchInterval -> soAsyncActionsFetchInterval == UUT.Skip
-          Left _err -> False
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right UUT.Skip
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1138,9 +997,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldSatisfy` \case
-          Right soAsyncActionsFetchInterval -> soAsyncActionsFetchInterval == UUT.Interval 300
-          Left _err -> False
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval 300)
 
     Hspec.describe "soEnableRemoteSchemaPermissions" $ do
       Hspec.it "Default == False" $ do
@@ -1151,9 +1008,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldSatisfy` \case
-          Right soEnableRemoteSchemaPermissions -> soEnableRemoteSchemaPermissions == Options.DisableRemoteSchemaPermissions
-          Left _err -> False
+        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldBe` Right Options.DisableRemoteSchemaPermissions
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1163,9 +1018,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldSatisfy` \case
-          Right soEnableRemoteSchemaPermissions -> soEnableRemoteSchemaPermissions == Options.EnableRemoteSchemaPermissions
-          Left _err -> False
+        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldBe` Right Options.EnableRemoteSchemaPermissions
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1175,9 +1028,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldSatisfy` \case
-          Right soEnableRemoteSchemaPermissions -> soEnableRemoteSchemaPermissions == Options.EnableRemoteSchemaPermissions
-          Left _err -> False
+        fmap UUT.soEnableRemoteSchemaPermissions result `Hspec.shouldBe` Right Options.EnableRemoteSchemaPermissions
 
     Hspec.describe "soWebSocketCompression" $ do
       Hspec.it "Default == NoCompression" $ do
@@ -1188,9 +1039,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketCompression -> soWebSocketCompression == WS.NoCompression
-          Left _err -> False
+        fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result `Hspec.shouldBe` Right WS.NoCompression
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1200,9 +1049,8 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketCompression -> soWebSocketCompression == WS.PermessageDeflateCompression WS.defaultPermessageDeflate
-          Left _err -> False
+        fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
+          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1212,9 +1060,8 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketCompression -> soWebSocketCompression == WS.PermessageDeflateCompression WS.defaultPermessageDeflate
-          Left _err -> False
+        fmap (WS.connectionCompressionOptions . UUT.soConnectionOptions) result
+          `Hspec.shouldBe` Right (WS.PermessageDeflateCompression WS.defaultPermessageDeflate)
 
     Hspec.describe "soWebSocketKeepAlive" $ do
       Hspec.it "Default == 5" $ do
@@ -1225,9 +1072,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketKeepAlive -> soWebSocketKeepAlive == UUT.KeepAliveDelay 5
-          Left _err -> False
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay 5)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1237,9 +1082,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketKeepAlive -> soWebSocketKeepAlive == UUT.KeepAliveDelay 10
-          Left _err -> False
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay 10)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1249,9 +1092,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketKeepAlive -> soWebSocketKeepAlive == UUT.KeepAliveDelay 20
-          Left _err -> False
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay 20)
 
     Hspec.describe "soInferFunctionPermissions" $ do
       Hspec.it "Default == FunctionPermissionsInferred" $ do
@@ -1262,9 +1103,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldSatisfy` \case
-          Right soInferFunctionPermissions -> soInferFunctionPermissions == Options.InferFunctionPermissions
-          Left _err -> False
+        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldBe` Right Options.InferFunctionPermissions
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1274,9 +1113,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldSatisfy` \case
-          Right soInferFunctionPermissions -> soInferFunctionPermissions == Options.Don'tInferFunctionPermissions
-          Left _err -> False
+        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldBe` Right Options.Don'tInferFunctionPermissions
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1286,9 +1123,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldSatisfy` \case
-          Right soInferFunctionPermissions -> soInferFunctionPermissions == Options.InferFunctionPermissions
-          Left _err -> False
+        fmap (UUT.soInferFunctionPermissions) result `Hspec.shouldBe` Right Options.InferFunctionPermissions
 
     Hspec.describe "soEnableMaintenanceMode" $ do
       Hspec.it "Defaut == MaintenanceModeDisabled" $ do
@@ -1299,9 +1134,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldSatisfy` \case
-          Right soEnableMaintenanceMode -> soEnableMaintenanceMode == Types.MaintenanceModeDisabled
-          Left _err -> False
+        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldBe` Right Types.MaintenanceModeDisabled
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1311,9 +1144,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldSatisfy` \case
-          Right soEnableMaintenanceMode -> soEnableMaintenanceMode == Types.MaintenanceModeEnabled ()
-          Left _err -> False
+        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldBe` Right (Types.MaintenanceModeEnabled ())
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1323,9 +1154,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldSatisfy` \case
-          Right soEnableMaintenanceMode -> soEnableMaintenanceMode == Types.MaintenanceModeEnabled ()
-          Left _err -> False
+        fmap (UUT.soEnableMaintenanceMode) result `Hspec.shouldBe` Right (Types.MaintenanceModeEnabled ())
 
     Hspec.describe "soSchemaPollInterval" $ do
       Hspec.it "Default == 1000" $ do
@@ -1336,9 +1165,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldSatisfy` \case
-          Right soSchemaPollInterval -> soSchemaPollInterval == UUT.Interval 1000
-          Left _err -> False
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval 1000)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1348,9 +1175,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldSatisfy` \case
-          Right soSchemaPollInterval -> soSchemaPollInterval == UUT.Interval 2000
-          Left _err -> False
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval 2000)
 
       Hspec.it "0 == Skip" $ do
         let -- Given
@@ -1360,9 +1185,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldSatisfy` \case
-          Right soSchemaPollInterval -> soSchemaPollInterval == UUT.Skip
-          Left _err -> False
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right UUT.Skip
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1372,9 +1195,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldSatisfy` \case
-          Right soSchemaPollInterval -> soSchemaPollInterval == UUT.Interval 3000
-          Left _err -> False
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval 3000)
 
     Hspec.describe "soExperimentalFeatures" $ do
       Hspec.it "Default == mempty" $ do
@@ -1386,10 +1207,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soExperimentalFeatures) result `Hspec.shouldSatisfy` \case
-          Right soExperimentalFeatures ->
-            soExperimentalFeatures == mempty
-          Left _err -> False
+        fmap (UUT.soExperimentalFeatures) result `Hspec.shouldBe` Right mempty
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1400,10 +1218,8 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soExperimentalFeatures) result `Hspec.shouldSatisfy` \case
-          Right soExperimentalFeatures ->
-            soExperimentalFeatures == Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions]
-          Left _err -> False
+        fmap (UUT.soExperimentalFeatures) result
+          `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1413,24 +1229,19 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soExperimentalFeatures) result `Hspec.shouldSatisfy` \case
-          Right soExperimentalFeatures ->
-            soExperimentalFeatures == Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions]
-          Left _err -> False
+        fmap (UUT.soExperimentalFeatures) result
+          `Hspec.shouldBe` Right (Set.fromList [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions])
 
     Hspec.describe "soEventsFetchBatchSize" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyRawServeOptions
             -- When
-            -- When
             env = [("HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE", "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldSatisfy` \case
-          Right soEventsFetchBatchSize -> soEventsFetchBatchSize == 200
-          Left _err -> False
+        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right 200
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1440,9 +1251,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldSatisfy` \case
-          Right soEventsFetchBatchSize -> soEventsFetchBatchSize == 300
-          Left _err -> False
+        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right 300
 
     Hspec.describe "soGracefulShutdownTimeout" $ do
       Hspec.it "Default == 60" $ do
@@ -1454,9 +1263,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldSatisfy` \case
-          Right soGracefulShutdownTimeout -> soGracefulShutdownTimeout == 60
-          Left _err -> False
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right 60
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1467,9 +1274,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldSatisfy` \case
-          Right soGracefulShutdownTimeout -> soGracefulShutdownTimeout == 200
-          Left _err -> False
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right 200
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1479,36 +1284,28 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldSatisfy` \case
-          Right soGracefulShutdownTimeout -> soGracefulShutdownTimeout == 300
-          Left _err -> False
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right 300
 
     Hspec.describe "soWebSocketConnectionInitTimeout" $ do
       Hspec.it "Default == 3" $ do
         let -- Given
             rawServeOptions = emptyRawServeOptions
             -- When
-            -- When
             env = []
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketConnectionInitTimeout -> soWebSocketConnectionInitTimeout == UUT.WSConnectionInitTimeout 3
-          Left _err -> False
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout 3)
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
             rawServeOptions = emptyRawServeOptions
             -- When
-            -- When
             env = [("HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketConnectionInitTimeout -> soWebSocketConnectionInitTimeout == UUT.WSConnectionInitTimeout 200
-          Left _err -> False
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1518,9 +1315,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldSatisfy` \case
-          Right soWebSocketConnectionInitTimeout -> soWebSocketConnectionInitTimeout == UUT.WSConnectionInitTimeout 300
-          Left _err -> False
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout 300)
 
     Hspec.describe "soEnableMetadataQueryLoggingEnv" $ do
       Hspec.it "Default == MetadataQueryLoggingDisabled" $ do
@@ -1532,9 +1327,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldSatisfy` \case
-          Right soEnableMetadataQueryLogging -> soEnableMetadataQueryLogging == Logging.MetadataQueryLoggingDisabled
-          Left _err -> False
+        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingDisabled
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
@@ -1545,9 +1338,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldSatisfy` \case
-          Right soEnableMetadataQueryLogging -> soEnableMetadataQueryLogging == Logging.MetadataQueryLoggingEnabled
-          Left _err -> False
+        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingEnabled
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1557,9 +1348,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldSatisfy` \case
-          Right soEnableMetadataQueryLogging -> soEnableMetadataQueryLogging == Logging.MetadataQueryLoggingEnabled
-          Left _err -> False
+        fmap (UUT.soEnableMetadataQueryLogging) result `Hspec.shouldBe` Right Logging.MetadataQueryLoggingEnabled
 
     Hspec.describe "soDefaultNamingConvention" $ do
       Hspec.it "Env > Nothing" $ do
@@ -1571,9 +1360,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldSatisfy` \case
-          Right soDefaultNamingConvention -> soDefaultNamingConvention == Just NC.GraphqlCase
-          Left _err -> False
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NC.GraphqlCase)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
@@ -1583,6 +1370,4 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
-        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldSatisfy` \case
-          Right soDefaultNamingConvention -> soDefaultNamingConvention == Just NC.GraphqlCase
-          Left _err -> False
+        fmap (UUT.soDefaultNamingConvention) result `Hspec.shouldBe` Right (Just NC.GraphqlCase)

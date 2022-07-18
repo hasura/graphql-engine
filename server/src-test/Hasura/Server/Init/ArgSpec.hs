@@ -20,6 +20,8 @@ import Hasura.Session qualified as Session
 import Options.Applicative qualified as Opt
 import Test.Hspec qualified as Hspec
 
+{-# ANN module ("HLint: ignore Redundant ==" :: String) #-}
+
 --------------------------------------------------------------------------------
 
 spec :: Hspec.Spec
