@@ -8,3 +8,4 @@ help:
 include ./scripts/make/tests.mk
 include ./scripts/make/lint.mk
 include ./scripts/make/build.mk
+include ./scripts/make/ghcid.mk
