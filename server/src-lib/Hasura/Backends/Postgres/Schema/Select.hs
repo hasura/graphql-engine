@@ -12,6 +12,7 @@ module Hasura.Backends.Postgres.Schema.Select
 where
 
 import Control.Lens hiding (index)
+import Data.Has (getter)
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
@@ -61,6 +62,7 @@ selectFunction ::
   Maybe G.Description ->
   m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
 selectFunction sourceInfo fi@FunctionInfo {..} description = runMaybeT do
+  tCase <- asks getter
   tableInfo <- lift $ askTableInfo sourceInfo _fiReturnType
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   selectionSetParser <- MaybeT $ returnFunctionParser sourceInfo tableInfo
@@ -78,7 +80,8 @@ selectFunction sourceInfo fi@FunctionInfo {..} description = runMaybeT do
               IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
               IR._asnPerm = tablePermissionsInfo selectPermissions,
               IR._asnArgs = tableArgs',
-              IR._asnStrfyNum = stringifyNumbers
+              IR._asnStrfyNum = stringifyNumbers,
+              IR._asnNamingConvention = Just tCase
             }
   where
     returnFunctionParser =
@@ -98,6 +101,7 @@ selectFunctionAggregate ::
   Maybe G.Description ->
   m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
 selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT do
+  tCase <- asks getter
   targetTableInfo <- askTableInfo sourceInfo _fiReturnType
   selectPermissions <- MaybeT $ tableSelectPermissions targetTableInfo
   guard $ spiAllowAgg selectPermissions
@@ -130,7 +134,8 @@ selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT 
               IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
               IR._asnPerm = tablePermissionsInfo selectPermissions,
               IR._asnArgs = tableArgs',
-              IR._asnStrfyNum = stringifyNumbers
+              IR._asnStrfyNum = stringifyNumbers,
+              IR._asnNamingConvention = Just tCase
             }
 
 selectFunctionConnection ::
@@ -148,6 +153,7 @@ selectFunctionConnection ::
   PrimaryKeyColumns ('Postgres pgKind) ->
   m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
 selectFunctionConnection sourceInfo fi@FunctionInfo {..} description pkeyColumns = runMaybeT do
+  tCase <- asks getter
   returnTableInfo <- lift $ askTableInfo sourceInfo _fiReturnType
   selectPermissions <- MaybeT $ tableSelectPermissions returnTableInfo
   xRelayInfo <- hoistMaybe $ relayExtension @('Postgres pgKind)
@@ -173,7 +179,8 @@ selectFunctionConnection sourceInfo fi@FunctionInfo {..} description pkeyColumns
                     IR._asnFrom = IR.FromFunction _fiSQLName funcArgs Nothing,
                     IR._asnPerm = tablePermissionsInfo selectPermissions,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNumbers
+                    IR._asnStrfyNum = stringifyNumbers,
+                    IR._asnNamingConvention = Just tCase
                   }
             }
 
@@ -188,6 +195,7 @@ computedFieldPG ::
   TableInfo ('Postgres pgKind) ->
   m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
 computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
+  tCase <- asks getter
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
@@ -233,7 +241,8 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
                     IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                     IR._asnPerm = tablePermissionsInfo remotePerms,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNumbers
+                    IR._asnStrfyNum = stringifyNumbers,
+                    IR._asnNamingConvention = Just tCase
                   }
   where
     fieldDescription :: Maybe G.Description

@@ -34,7 +34,7 @@
         );
         INSERT INTO days_of_the_week (day_name)
           VALUES ('Monday'), ('Tuesday'), ('Wednesday'), ('Thursday'), ('Friday'), ('Saturday'), ('Sunday');
-        
+
         CREATE TABLE users(
             id serial PRIMARY KEY,
             favourite_day text NOT NULL REFERENCES days_of_the_week
@@ -83,6 +83,135 @@
           enumValues {
             name
           }
+        }
+      }
+
+- description: Insert users returning enum values (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insertUsers:
+        returning:
+        - id: 2
+          favouriteDay: SUNDAY
+        - id: 3
+          favouriteDay: FRIDAY
+        - id: 4
+          favouriteDay: MONDAY
+        - id: 5
+          favouriteDay: SATURDAY
+
+  query:
+    query: |
+      mutation {
+        insertUsers(objects: [{favouriteDay: SUNDAY},{favouriteDay: FRIDAY},{favouriteDay: MONDAY},{favouriteDay: SATURDAY}]) {
+          returning {
+            id
+            favouriteDay
+          }
+        }
+      }
+
+- description: Update users returning enum values (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      updateUsers:
+        returning:
+        - id: 1
+          favouriteDay: MONDAY
+        - id: 2
+          favouriteDay: MONDAY
+
+  query:
+    query: |
+      mutation {
+        updateUsers(where: {favouriteDay: {_eq: SUNDAY}}, _set: {favouriteDay: MONDAY}) {
+          returning {
+            id
+            favouriteDay
+          }
+        }
+      }
+
+- description: Delete users returning enum values (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      deleteUsers:
+        returning:
+        - id: 4
+          favouriteDay: MONDAY
+        - id: 1
+          favouriteDay: MONDAY
+        - id: 2
+          favouriteDay: MONDAY
+
+  query:
+    query: |
+      mutation MyMutation {
+        deleteUsers(where: {favouriteDay: {_eq: MONDAY}}) {
+          returning {
+            id
+            favouriteDay
+          }
+        }
+      }
+
+- description: Insert user by pk returning enum value (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insertUsersOne:
+        id: 6
+        favouriteDay: SUNDAY
+
+  query:
+    query: |
+      mutation {
+        insertUsersOne(object: {favouriteDay: SUNDAY}) {
+          id
+          favouriteDay
+        }
+      }
+
+- description: Update user by pk returning enum value (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      updateUsersByPk:
+        id: 3
+        favouriteDay: WEDNESDAY
+
+  query:
+    query: |
+      mutation {
+        updateUsersByPk(pk_columns: {id: 3}, _set: {favouriteDay: WEDNESDAY}) {
+          id
+          favouriteDay
+        }
+      }
+
+- description: Delete user by pk returning enum value (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      deleteUsersByPk:
+        id: 5
+        favouriteDay: SATURDAY
+
+  query:
+    query: |
+      mutation MyMutation {
+        deleteUsersByPk(id: 5) {
+          id
+          favouriteDay
         }
       }
 

@@ -202,7 +202,7 @@ convertDelete ::
 convertDelete userInfo deleteOperation stringifyNum = do
   queryTags <- ask
   preparedDelete <- traverse (prepareWithoutPlan userInfo) deleteOperation
-  pure $ flip runReaderT queryTags $ PGE.execDeleteQuery stringifyNum userInfo (preparedDelete, Seq.empty)
+  pure $ flip runReaderT queryTags $ PGE.execDeleteQuery stringifyNum (_adNamingConvention deleteOperation) userInfo (preparedDelete, Seq.empty)
 
 convertUpdate ::
   forall pgKind m.
@@ -223,7 +223,7 @@ convertUpdate userInfo updateOperation stringifyNum = do
     else
       pure $
         flip runReaderT queryTags $
-          PGE.execUpdateQuery stringifyNum userInfo (preparedUpdate, Seq.empty)
+          PGE.execUpdateQuery stringifyNum (_auNamingConvention updateOperation) userInfo (preparedUpdate, Seq.empty)
 
 convertInsert ::
   forall pgKind m.
@@ -239,7 +239,7 @@ convertInsert ::
 convertInsert userInfo insertOperation stringifyNum = do
   queryTags <- ask
   preparedInsert <- traverse (prepareWithoutPlan userInfo) insertOperation
-  pure $ flip runReaderT queryTags $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum
+  pure $ flip runReaderT queryTags $ convertToSQLTransaction preparedInsert userInfo Seq.empty stringifyNum (_aiNamingConvention insertOperation)
 
 -- | A pared-down version of 'Query.convertQuerySelSet', for use in execution of
 -- special case of SQL function mutations (see 'MDBFunction').

@@ -224,7 +224,8 @@ fromSelectRows parentSelectFromEntity annSelectG = do
         { _asnFields = fields,
           _asnFrom = from,
           _asnPerm = perm,
-          _asnArgs = args
+          _asnArgs = args,
+          _asnNamingConvention = _tCase
         } = annSelectG
       Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
       permissionBasedTop =
@@ -518,7 +519,8 @@ fromSelectAggregate minnerJoinFields annSelectG = do
       { _asnFields = fields,
         _asnFrom = from,
         _asnPerm = perm,
-        _asnArgs = args
+        _asnArgs = args,
+        _asnNamingConvention = _tCase
       } = annSelectG
     Ir.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =

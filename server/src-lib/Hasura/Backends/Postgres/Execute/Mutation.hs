@@ -31,6 +31,7 @@ import Hasura.Backends.Postgres.Translate.Select
 import Hasura.Backends.Postgres.Translate.Update
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -68,7 +69,8 @@ data Mutation (b :: BackendType) = Mutation
     _mQuery :: !(MutationCTE, DS.Seq Q.PrepArg),
     _mOutput :: !(MutationOutput b),
     _mCols :: ![ColumnInfo b],
-    _mStrfyNum :: !Options.StringifyNumbers
+    _mStrfyNum :: !Options.StringifyNumbers,
+    _mNamingConvention :: !(Maybe NamingCase)
   }
 
 mkMutation ::
@@ -78,9 +80,10 @@ mkMutation ::
   MutationOutput ('Postgres pgKind) ->
   [ColumnInfo ('Postgres pgKind)] ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   Mutation ('Postgres pgKind)
-mkMutation _userInfo table query output allCols strfyNum =
-  Mutation table query output allCols strfyNum
+mkMutation _userInfo table query output allCols strfyNum tCase =
+  Mutation table query output allCols strfyNum tCase
 
 runMutation ::
   ( MonadTx m,
@@ -102,8 +105,8 @@ mutateAndReturn ::
   ) =>
   Mutation ('Postgres pgKind) ->
   m EncJSON
-mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols strfyNum) =
-  executeMutationOutputQuery qt allCols Nothing cte mutationOutput strfyNum (toList p)
+mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols strfyNum tCase) =
+  executeMutationOutputQuery qt allCols Nothing cte mutationOutput strfyNum tCase (toList p)
 
 execUpdateQuery ::
   forall pgKind m.
@@ -113,10 +116,11 @@ execUpdateQuery ::
     MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   UserInfo ->
   (AnnotatedUpdate ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
-execUpdateQuery strfyNum userInfo (u, p) =
+execUpdateQuery strfyNum tCase userInfo (u, p) =
   case updateCTE of
     Update singleUpdate -> runCTE singleUpdate
     MultiUpdate ctes -> encJFromList <$> traverse runCTE ctes
@@ -127,7 +131,7 @@ execUpdateQuery strfyNum userInfo (u, p) =
     runCTE :: S.TopLevelCTE -> m EncJSON
     runCTE cte =
       runMutation
-        (mkMutation userInfo (_auTable u) (MCCheckConstraint cte, p) (_auOutput u) (_auAllCols u) strfyNum)
+        (mkMutation userInfo (_auTable u) (MCCheckConstraint cte, p) (_auOutput u) (_auAllCols u) strfyNum tCase)
 
 execDeleteQuery ::
   forall pgKind m.
@@ -137,12 +141,13 @@ execDeleteQuery ::
     MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   UserInfo ->
   (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
-execDeleteQuery strfyNum userInfo (u, p) =
+execDeleteQuery strfyNum tCase userInfo (u, p) =
   runMutation
-    (mkMutation userInfo (_adTable u) (MCDelete delete, p) (_adOutput u) (_adAllCols u) strfyNum)
+    (mkMutation userInfo (_adTable u) (MCDelete delete, p) (_adOutput u) (_adAllCols u) strfyNum tCase)
   where
     delete = mkDelete u
 
@@ -153,12 +158,13 @@ execInsertQuery ::
     MonadReader QueryTagsComment m
   ) =>
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   UserInfo ->
   (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg) ->
   m EncJSON
-execInsertQuery strfyNum userInfo (u, p) =
+execInsertQuery strfyNum tCase userInfo (u, p) =
   runMutation
-    (mkMutation userInfo (iqp1Table u) (MCCheckConstraint insertCTE, p) (iqp1Output u) (iqp1AllCols u) strfyNum)
+    (mkMutation userInfo (iqp1Table u) (MCCheckConstraint insertCTE, p) (iqp1Output u) (iqp1AllCols u) strfyNum tCase)
   where
     insertCTE = mkInsertCTE u
 
@@ -185,9 +191,9 @@ mutateAndSel ::
   ) =>
   Mutation ('Postgres pgKind) ->
   m EncJSON
-mutateAndSel (Mutation qt q mutationOutput allCols strfyNum) = do
+mutateAndSel (Mutation qt q mutationOutput allCols strfyNum tCase) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
+  MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum tCase
   select <- mkSelectExpFromColumnValues qt allCols columnVals
   -- Perform select query and fetch returning fields
   executeMutationOutputQuery
@@ -197,6 +203,7 @@ mutateAndSel (Mutation qt q mutationOutput allCols strfyNum) = do
     (MCSelectValues select)
     mutationOutput
     strfyNum
+    tCase
     []
 
 withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
@@ -220,14 +227,15 @@ executeMutationOutputQuery ::
   MutationCTE ->
   MutationOutput ('Postgres pgKind) ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   -- | Prepared params
   [Q.PrepArg] ->
   m EncJSON
-executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum prepArgs = do
+executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase prepArgs = do
   queryTags <- ask
   let queryTx :: Q.FromRes a => m a
       queryTx = do
-        let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum
+        let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
             query = Q.fromBuilder $ toSQL selectWith
             queryWithQueryTags = query {Q.getQueryText = (Q.getQueryText query) <> (_unQueryTagsComment queryTags)}
         -- See Note [Prepared statements in Mutations]
@@ -244,8 +252,9 @@ mutateAndFetchCols ::
   [ColumnInfo ('Postgres pgKind)] ->
   (MutationCTE, DS.Seq Q.PrepArg) ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
-mutateAndFetchCols qt cols (cte, p) strfyNum = do
+mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
   let mutationTx :: Q.FromRes a => Q.TxE QErr a
       mutationTx =
         -- See Note [Prepared statements in Mutations]
@@ -288,4 +297,4 @@ mutateAndFetchCols qt cols (cte, p) strfyNum = do
     colSel =
       S.SESelect $
         mkSQLSelect JASMultipleRows $
-          AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
+          AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase

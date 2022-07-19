@@ -96,7 +96,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             _saOrderBy = orderByItems,
             _saLimit = Just $ _ssaBatchSize args
           }
-      sqlSelect = AnnSelectG fields from perm selectArgs strfyNum
+      sqlSelect = AnnSelectG fields from perm selectArgs strfyNum Nothing
       permLimitSubQuery = PLSQNotRequired
       ((selectSource, nodeExtractors), joinTree) =
         runWriter $

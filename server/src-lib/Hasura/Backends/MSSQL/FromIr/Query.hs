@@ -234,7 +234,8 @@ fromSelectRows annSelectG = do
       { _asnFields = fields,
         _asnFrom = from,
         _asnPerm = perm,
-        _asnArgs = args
+        _asnArgs = args,
+        _asnNamingConvention = _tCase
       } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
     permissionBasedTop =
@@ -329,7 +330,8 @@ fromSelectAggregate
     { _asnFields = (zip [0 ..] -> fields),
       _asnFrom = from,
       _asnPerm = IR.TablePerm {_tpLimit = (maybe NoTop Top -> permissionBasedTop), _tpFilter = permFilter},
-      _asnArgs = args
+      _asnArgs = args,
+      _asnNamingConvention = _tCase
     } =
     do
       selectFrom <- case from of

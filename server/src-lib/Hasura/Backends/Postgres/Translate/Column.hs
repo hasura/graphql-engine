@@ -11,6 +11,7 @@ import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Types.Column
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.Types.Column
@@ -23,8 +24,8 @@ toTxtValue ColumnValue {..} =
     ty = unsafePGColumnToBackend cvType
 
 -- | Formats each columns to appropriate SQL expression
-toJSONableExp :: Options.StringifyNumbers -> ColumnType ('Postgres pgKind) -> Bool -> SQLExp -> SQLExp
-toJSONableExp stringifyNum colType asText expression
+toJSONableExp :: Options.StringifyNumbers -> ColumnType ('Postgres pgKind) -> Bool -> Maybe NamingCase -> SQLExp -> SQLExp
+toJSONableExp stringifyNum colType asText tCase expression
   -- If it's a numeric column greater than a 32-bit integer, we have to stringify it as JSON spec doesn't support >32-bit integers
   | asText || (isScalarColumnWhere isBigNum colType && (case stringifyNum of Options.StringifyNumbers -> True; Options.Don'tStringifyNumbers -> False)) =
     expression `SETyAnn` textTypeAnn
@@ -38,4 +39,5 @@ toJSONableExp stringifyNum colType asText expression
       ]
       Nothing
       `SETyAnn` jsonTypeAnn
+  | isEnumColumn colType && any isGraphqlCase tCase = applyUppercase expression
   | otherwise = expression

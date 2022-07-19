@@ -8,7 +8,7 @@ import Hasura.Backends.DataConnector.RQLGenerator.GenSelectFromG (genSelectFromG
 import Hasura.Backends.DataConnector.RQLGenerator.GenTablePermG (genTablePermG)
 import Hasura.Generator.Common (defaultRange)
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Prelude (Applicative ((<*>)), Bool (..), (<$>), (<&>))
+import Hasura.Prelude hiding (bool)
 import Hasura.RQL.IR (AnnSelectG (..))
 import Hasura.RQL.IR.Generator (genFields)
 import Hasura.SQL.Backend (BackendType (..))
@@ -25,6 +25,7 @@ genAnnSelectG genA genFA =
     <*> genTablePermG genA
     <*> genArgs
     <*> genStringifyNumbers
+    <*> (pure Nothing)
   where
     genStringifyNumbers =
       bool <&> \case

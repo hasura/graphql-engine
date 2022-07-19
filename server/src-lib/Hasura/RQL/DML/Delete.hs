@@ -86,6 +86,7 @@ validateDeleteQWith
         (resolvedDelFltr, annSQLBoolExp)
         (mkDefaultMutFlds mAnnRetCols)
         allCols
+        Nothing
     where
       selNecessaryMsg =
         "; \"delete\" is only allowed if the role "
@@ -123,4 +124,4 @@ runDelete q = do
   validateDeleteQ q
     >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
       . flip runReaderT emptyQueryTagsComment
-      . execDeleteQuery strfyNum userInfo
+      . execDeleteQuery strfyNum Nothing userInfo

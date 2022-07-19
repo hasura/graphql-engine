@@ -20,7 +20,7 @@ mkDelete ::
   Backend ('Postgres pgKind) =>
   AnnDel ('Postgres pgKind) ->
   S.SQLDelete
-mkDelete (AnnDel tn (fltr, wc) _ _) =
+mkDelete (AnnDel tn (fltr, wc) _ _ _) =
   S.SQLDelete tn Nothing tableFltr $ Just S.returningStar
   where
     tableFltr =

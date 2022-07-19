@@ -688,7 +688,7 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
       mkRowExp $ map (\col -> toExtractor (mkQId opVar strfyNum col) col) columns
 
     mkQId opVar strfyNum colInfo =
-      toJSONableExp strfyNum (ciType colInfo) False $
+      toJSONableExp strfyNum (ciType colInfo) False Nothing $
         SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ ciColumn colInfo
 
     -- Generate the SQL expression

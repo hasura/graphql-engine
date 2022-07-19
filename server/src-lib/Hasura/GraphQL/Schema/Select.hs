@@ -103,6 +103,7 @@ defaultSelectTable ::
   Maybe G.Description ->
   m (Maybe (FieldParser n (SelectExp b)))
 defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
+  tCase <- asks getter
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   selectionSetParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift $ memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
@@ -117,7 +118,8 @@ defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
                 IR._asnFrom = IR.FromTable tableName,
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,
-                IR._asnStrfyNum = stringifyNumbers
+                IR._asnStrfyNum = stringifyNumbers,
+                IR._asnNamingConvention = Just tCase
               }
   where
     tableName = tableInfoName tableInfo
@@ -157,6 +159,7 @@ selectTableConnection ::
   PrimaryKeyColumns b ->
   m (Maybe (FieldParser n (ConnectionSelectExp b)))
 selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = runMaybeT do
+  tCase <- asks getter
   xRelayInfo <- hoistMaybe $ relayExtension @b
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   selectionSetParser <- fmap P.nonNullableParser <$> MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
@@ -177,7 +180,8 @@ selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = r
                     IR._asnFrom = IR.FromTable tableName,
                     IR._asnPerm = tablePermissionsInfo selectPermissions,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNumbers
+                    IR._asnStrfyNum = stringifyNumbers,
+                    IR._asnNamingConvention = Just tCase
                   }
             }
   where
@@ -205,6 +209,7 @@ selectTableByPk ::
   Maybe G.Description ->
   m (Maybe (FieldParser n (SelectExp b)))
 selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
+  tCase <- asks getter
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
   selectionSetParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
@@ -230,7 +235,8 @@ selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
                     IR._asnFrom = IR.FromTable tableName,
                     IR._asnPerm = permissions,
                     IR._asnArgs = IR.noSelectArgs {IR._saWhere = whereExpr},
-                    IR._asnStrfyNum = stringifyNumbers
+                    IR._asnStrfyNum = stringifyNumbers,
+                    IR._asnNamingConvention = Just tCase
                   }
   where
     tableName = tableInfoName tableInfo
@@ -257,6 +263,7 @@ defaultSelectTableAggregate ::
   Maybe G.Description ->
   m (Maybe (FieldParser n (AggSelectExp b)))
 defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMaybeT $ do
+  tCase <- asks getter
   selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
   guard $ spiAllowAgg selectPermissions
   xNodesAgg <- hoistMaybe $ nodesAggExtension @b
@@ -285,7 +292,8 @@ defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMayb
                 IR._asnFrom = IR.FromTable tableName,
                 IR._asnPerm = tablePermissionsInfo selectPermissions,
                 IR._asnArgs = args,
-                IR._asnStrfyNum = stringifyNumbers
+                IR._asnStrfyNum = stringifyNumbers,
+                IR._asnNamingConvention = Just tCase
               }
   where
     tableName = tableInfoName tableInfo

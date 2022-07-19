@@ -545,7 +545,8 @@ fromSelectAggregate mparentRelationship annSelectG = do
         _asnFrom = from,
         _asnPerm = perm,
         _asnArgs = args,
-        _asnStrfyNum = _num
+        _asnStrfyNum = _num,
+        _asnNamingConvention = _tCase
       } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
 
@@ -731,7 +732,8 @@ fromSelectRows annSelectG = do
       { _asnFields = fields,
         _asnFrom = from,
         _asnPerm = perm,
-        _asnArgs = args
+        _asnArgs = args,
+        _asnNamingConvention = _tCase
       } = annSelectG
     IR.TablePerm {_tpLimit = mPermLimit, _tpFilter = permFilter} = perm
 

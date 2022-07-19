@@ -10,11 +10,13 @@ module Hasura.RQL.IR.Update
     auBackend,
     auOutput,
     auAllCols,
+    auNamingConvention,
   )
 where
 
 import Control.Lens.TH (makeLenses)
 import Data.Kind (Type)
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Returning
@@ -38,7 +40,8 @@ data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
 
     -- | Selection set
     _auOutput :: !(MutationOutputG b r v),
-    _auAllCols :: ![ColumnInfo b]
+    _auAllCols :: ![ColumnInfo b],
+    _auNamingConvention :: !(Maybe NamingCase)
   }
   deriving stock (Functor, Foldable, Traversable)
 
