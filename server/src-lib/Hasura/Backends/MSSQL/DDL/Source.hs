@@ -20,6 +20,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
+import Data.HashMap.Strict qualified as HM
 import Data.Text.Lazy qualified as LT
 import Database.MSSQL.Transaction
 import Database.MSSQL.Transaction qualified as Tx
@@ -40,6 +41,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
@@ -72,8 +74,24 @@ resolveDatabaseMetadata config customization = runExceptT do
 postDropSourceHook ::
   (MonadIO m, MonadBaseControl IO m) =>
   MSSQLSourceConfig ->
+  TableEventTriggers 'MSSQL ->
   m ()
-postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx) = do
+postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx) tableTriggersMap = do
+  -- The SQL triggers for MSSQL source are created within the schema of the table,
+  -- and is not associated with 'hdb_catalog' schema. Thus only deleting the
+  -- 'hdb_catalog' schema is not sufficient, since it will still leave the SQL
+  -- triggers within the table schema.
+  --
+  -- This causes problems, whenever the next insert/delete/update operation occurs
+  -- the SQL triggers will try to unsuccessfully insert event_log to the nonexistent
+  -- 'hdb_catalog.event_log' table. The left over SQL triggers thus stops any
+  -- operation that will happen on the table.
+  --
+  -- Hence we first delete all the related Hasura SQL triggers and then drop the
+  -- 'hdb_catalog' schema.
+  for_ (HM.toList tableTriggersMap) $ \(_table@(TableName _tableName schema), triggers) ->
+    for_ triggers $ \triggerName ->
+      liftIO $ runExceptT $ mssqlRunReadWrite mssqlExecCtx (dropTriggerQ triggerName schema)
   _ <- runExceptT $ mssqlRunReadWrite mssqlExecCtx dropSourceCatalog
   -- Close the connection
   liftIO $ mssqlDestroyConn mssqlExecCtx

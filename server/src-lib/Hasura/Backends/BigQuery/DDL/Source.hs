@@ -175,7 +175,8 @@ restTableReferenceToTableName RestTableReference {..} =
 postDropSourceHook ::
   (MonadIO m) =>
   BigQuerySourceConfig ->
+  TableEventTriggers 'BigQuery ->
   m ()
-postDropSourceHook _ =
+postDropSourceHook _ _ =
   -- On BigQuery we don't keep connections open.
   pure ()

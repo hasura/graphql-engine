@@ -8,6 +8,7 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     recordSuccess,
     recordError,
     recordError',
+    dropTriggerQ,
     dropTriggerAndArchiveEvents,
     dropDanglingSQLTrigger,
     redeliverEvent,

@@ -227,10 +227,12 @@ runPostDropSourceHook ::
 runPostDropSourceHook sourceName sourceInfo = do
   logger :: (L.Logger L.Hasura) <- asks getter
   let sourceConfig = _siConfiguration sourceInfo
+  -- Create a hashmap: {TableName: [Triggers]}
+  let tableTriggersMap = HM.map (HM.keys . _tiEventTriggerInfoMap) (_siTables sourceInfo)
   -- We only log errors that arise from 'postDropSourceHook' here, and not
   -- surface them as end-user errors. See comment
   -- https://github.com/hasura/graphql-engine/issues/7092#issuecomment-873845282
-  runExceptT (postDropSourceHook @b sourceConfig) >>= either (logDropSourceHookError logger) pure
+  runExceptT (postDropSourceHook @b sourceConfig tableTriggersMap) >>= either (logDropSourceHookError logger) pure
   where
     logDropSourceHookError logger err =
       let msg =

@@ -114,6 +114,7 @@ class
   postDropSourceHook ::
     (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =>
     SourceConfig b ->
+    TableEventTriggers b ->
     m ()
 
   -- TODO: rename?
