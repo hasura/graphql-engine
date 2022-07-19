@@ -2,12 +2,9 @@
 
 -- | GraphQL quasi quoter with built-in interpolation.
 -- Interpolation works via the #{expression} syntax.
-module Harness.Quoter.Graphql (graphql) where
+module Harness.Quoter.Graphql (graphql, ToGraphqlString (..)) where
 
-import Data.Aeson (ToJSON)
-import Data.Aeson.Extended (encode)
 import Data.Bifunctor (first)
-import Data.ByteString.Lazy.UTF8 qualified as BSL
 import Data.String (fromString)
 import Language.Haskell.Meta (parseExp)
 import Language.Haskell.TH
@@ -15,6 +12,14 @@ import Language.Haskell.TH.Quote
 import Text.Parsec qualified as P
 import Text.Parsec.String (Parser)
 import Prelude
+
+-- | a class for values that can be interpolated in GraphQL queries
+class ToGraphqlString a where
+  showGql :: a -> String
+
+instance ToGraphqlString Bool where
+  showGql True = "true"
+  showGql False = "false"
 
 -- | Transforms GraphQL to its JSON representation. Does string interpolation.
 -- For every expression enclosed as #{expression}, this Quasi Quoter will
@@ -24,7 +29,7 @@ import Prelude
 -- [graphql| Hello, #{not x}! |]
 --
 -- Will get translated to "Hello, false!". Note that we convert the Haskell
--- value to its json representation vua `Data.Aeson.toJSON`. If the expression
+-- value to a string using Show. If the expression
 -- fails to evaluate, the compilation will fail.
 graphql :: QuasiQuoter
 graphql =
@@ -93,8 +98,7 @@ interpret =
   where
     go :: GraphqlPart -> ExpQ
     go (GPRaw s) = stringE s
-    go (GPExpression e) = appE [|jsonToString|] (pure e)
+    go (GPExpression e) = appE [|exprToGql|] (pure e)
 
--- TODO: Is there a direct way, without going through 'Text'?
-jsonToString :: ToJSON a => a -> String
-jsonToString = BSL.toString . encode
+exprToGql :: (ToGraphqlString a) => a -> String
+exprToGql a = showGql a
