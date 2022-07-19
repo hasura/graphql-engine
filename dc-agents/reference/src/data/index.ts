@@ -177,22 +177,28 @@ const schema: SchemaResponse = {
           description: "Employee primary key identifier"
         },
         {
-          name: "FirstName",
-          type: "string",
-          nullable: false,
-          description: "The employee's first name"
-        },
-        {
           name: "LastName",
           type: "string",
           nullable: false,
           description: "The employee's last name"
         },
         {
+          name: "FirstName",
+          type: "string",
+          nullable: false,
+          description: "The employee's first name"
+        },
+        {
           name: "Title",
           type: "string",
           nullable: true,
           description: "The employee's job title"
+        },
+        {
+          name: "ReportsTo",
+          type: "number",
+          nullable: true,
+          description: "The employee's manager"
         },
         {
           name: "BirthDate",
@@ -251,7 +257,7 @@ const schema: SchemaResponse = {
         {
           name: "Email",
           type: "string",
-          nullable: false,
+          nullable: true,
           description: "The employee's email address"
         },
       ]
@@ -386,7 +392,7 @@ const schema: SchemaResponse = {
         },
         {
           name: "Name",
-          type: "number",
+          type: "string",
           nullable: true,
           description: "The name of the media type format"
         },
@@ -405,7 +411,7 @@ const schema: SchemaResponse = {
         },
         {
           name: "Name",
-          type: "number",
+          type: "string",
           nullable: true,
           description: "The name of the playlist"
         },
@@ -425,7 +431,7 @@ const schema: SchemaResponse = {
         {
           name: "TrackId",
           type: "number",
-          nullable: true,
+          nullable: false,
           description: "The ID of the track"
         },
       ]
@@ -456,7 +462,7 @@ const schema: SchemaResponse = {
         {
           name: "MediaTypeId",
           type: "number",
-          nullable: true,
+          nullable: false,
           description: "The ID of the media type the track is encoded with"
         },
         {
