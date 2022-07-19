@@ -111,7 +111,7 @@ convertQuerySelSet
               let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
                   queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
                   (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-              dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo sourceName sourceConfig noRelsDBAST
+              dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST
               pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
         RFRemote rf -> do
           RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo

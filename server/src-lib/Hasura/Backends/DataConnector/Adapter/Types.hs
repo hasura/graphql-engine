@@ -11,6 +11,7 @@ where
 
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey, genericParseJSON, genericToJSON)
 import Data.Aeson qualified as J
+import Data.Aeson.KeyMap qualified as J
 import Data.Text.Extended (ToTxt)
 import Data.Text.NonEmpty (NonEmptyText)
 import Hasura.Backends.DataConnector.API qualified as API
@@ -20,9 +21,21 @@ import Network.HTTP.Client (Manager)
 import Servant.Client (BaseUrl)
 import Witch qualified
 
-newtype ConnSourceConfig = ConnSourceConfig API.Config
+data ConnSourceConfig = ConnSourceConfig
+  { value :: API.Config,
+    template :: Maybe Text
+  }
   deriving stock (Eq, Ord, Show, Generic)
-  deriving anyclass (Hashable, NFData, ToJSON, FromJSON)
+  deriving anyclass (Hashable, NFData, ToJSON)
+
+-- Default to the old style of ConnSourceConfig if a "value" field isn't present.
+-- This will prevent existing configurations from breaking.
+-- NOTE: This is planned to be deprecated in future once tooling is migrated.
+instance FromJSON ConnSourceConfig where
+  parseJSON = J.withObject "ConnSourceConfig" \o ->
+    case J.lookup "value" o of
+      Just _ -> ConnSourceConfig <$> o J..: "value" <*> o J..:? "template"
+      Nothing -> pure $ ConnSourceConfig (API.Config o) Nothing
 
 instance Cacheable ConnSourceConfig where
   unchanged _ = (==)
@@ -30,6 +43,7 @@ instance Cacheable ConnSourceConfig where
 data SourceConfig = SourceConfig
   { _scEndpoint :: BaseUrl,
     _scConfig :: API.Config,
+    _scTemplate :: Maybe Text, -- TODO: Use Parsed Kriti Template
     _scCapabilities :: API.Capabilities,
     _scSchema :: API.SchemaResponse,
     _scManager :: Manager,
@@ -43,10 +57,11 @@ instance J.ToJSON SourceConfig where
   toJSON _ = J.String "SourceConfig"
 
 instance Eq SourceConfig where
-  SourceConfig ep1 capabilities1 config1 schema1 _ dcName1 == SourceConfig ep2 capabilities2 config2 schema2 _ dcName2 =
+  SourceConfig ep1 capabilities1 config1 template1 schema1 _ dcName1 == SourceConfig ep2 capabilities2 config2 template2 schema2 _ dcName2 =
     ep1 == ep2
       && capabilities1 == capabilities2
       && config1 == config2
+      && template1 == template2
       && schema1 == schema2
       && dcName1 == dcName2
 

@@ -15,6 +15,7 @@ where
 
 import Control.Monad.Trans.Control qualified as MT
 import Data.Aeson qualified as J
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.IntMap qualified as IntMap
@@ -123,11 +124,12 @@ pgDBQueryPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
+  Env.Environment ->
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
   QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) ->
   m (DBStepInfo ('Postgres pgKind))
-pgDBQueryPlan userInfo sourceName sourceConfig qrf = do
+pgDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
   (preparedQuery, PlanningSt _ _ planVals) <-
     flip runStateT initPlanningSt $ traverse (prepareWithPlan userInfo) qrf
   queryTagsComment <- ask
@@ -469,7 +471,7 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
   -- In the future if we want to add support we'll need to add a new type of
   -- metadata (e.g. 'ParameterizedQueryHash' doesn't make sense here) and find
   -- a root field name that makes sense to attach to it.
-  flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo sourceName sourceConfig rootSelection
+  flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection
   where
     coerceToColumn = PG.unsafePGCol . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema

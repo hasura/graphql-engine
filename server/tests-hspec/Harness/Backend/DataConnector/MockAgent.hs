@@ -6,6 +6,7 @@ module Harness.Backend.DataConnector.MockAgent
   )
 where
 
+import Data.HashMap.Strict.InsOrd qualified as HMap
 import Data.IORef qualified as I
 import Data.OpenApi qualified as OpenApi
 import Data.Proxy
@@ -39,7 +40,17 @@ capabilities =
           { _csrConfigSchema =
               mempty
                 { OpenApi._schemaType = Just OpenApi.OpenApiObject,
-                  OpenApi._schemaNullable = Just False
+                  OpenApi._schemaNullable = Just False,
+                  OpenApi._schemaProperties =
+                    HMap.singleton
+                      "DEBUG"
+                      ( OpenApi.Inline
+                          mempty
+                            { OpenApi._schemaType = Just OpenApi.OpenApiObject,
+                              OpenApi._schemaNullable = Just True,
+                              OpenApi._schemaAdditionalProperties = Just (OpenApi.AdditionalPropertiesAllowed True)
+                            }
+                      )
                 },
             _csrOtherSchemas = mempty
           }
@@ -212,27 +223,33 @@ mockCapabilitiesHandler mcfg = liftIO $ do
   cfg <- I.readIORef mcfg
   pure $ _capabilitiesResponse cfg
 
-mockSchemaHandler :: I.IORef MockConfig -> API.SourceName -> API.Config -> Handler API.SchemaResponse
-mockSchemaHandler mcfg _sourceName _config = liftIO $ do
+mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler API.SchemaResponse
+mockSchemaHandler mcfg mQueryConfig _sourceName queryConfig = liftIO $ do
   cfg <- I.readIORef mcfg
+  I.writeIORef mQueryConfig (Just queryConfig)
   pure $ _schemaResponse cfg
 
-mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> API.SourceName -> API.Config -> API.QueryRequest -> Handler API.QueryResponse
-mockQueryHandler mcfg mquery _sourceName _cfg query = liftIO $ do
+mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.QueryRequest -> Handler API.QueryResponse
+mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ do
   handler <- fmap _queryResponse $ I.readIORef mcfg
   I.writeIORef mquery (Just query)
+  I.writeIORef mQueryCfg (Just queryConfig)
   pure $ handler query
 
 healthcheckHandler :: Maybe API.SourceName -> Maybe API.Config -> Handler NoContent
 healthcheckHandler _sourceName _config = pure NoContent
 
-dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> Server API.Api
-dcMockableServer mcfg mquery = mockCapabilitiesHandler mcfg :<|> mockSchemaHandler mcfg :<|> mockQueryHandler mcfg mquery :<|> healthcheckHandler
+dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> Server API.Api
+dcMockableServer mcfg mquery mQueryConfig =
+  mockCapabilitiesHandler mcfg
+    :<|> mockSchemaHandler mcfg mQueryConfig
+    :<|> mockQueryHandler mcfg mquery mQueryConfig
+    :<|> healthcheckHandler
 
 mockAgentPort :: Warp.Port
 mockAgentPort = 65006
 
-runMockServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> IO ()
-runMockServer mcfg mquery = do
-  let app = serve (Proxy :: Proxy API.Api) $ dcMockableServer mcfg mquery
+runMockServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> IO ()
+runMockServer mcfg mquery mQueryConfig = do
+  let app = serve (Proxy :: Proxy API.Api) $ dcMockableServer mcfg mquery mQueryConfig
   Warp.run mockAgentPort app

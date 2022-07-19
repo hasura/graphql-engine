@@ -11,6 +11,8 @@ module Harness.Backend.DataConnector
     MockConfig (..),
     MockAgentEnvironment (..),
     TestCase (..),
+    TestCaseRequired (..),
+    defaultTestCase,
     mockBackendConfig,
     chinookMock,
     runMockedTest,
@@ -107,7 +109,8 @@ teardown (testEnvironment, _) = do
 data MockAgentEnvironment = MockAgentEnvironment
   { maeConfig :: I.IORef MockConfig,
     maeQuery :: I.IORef (Maybe API.QueryRequest),
-    maeThreadId :: ThreadId
+    maeThreadId :: ThreadId,
+    maeQueryConfig :: I.IORef (Maybe API.Config)
   }
 
 -- | Create the 'I.IORef's and launch the servant mock agent.
@@ -115,7 +118,8 @@ mkLocalTestEnvironmentMock :: TestEnvironment -> IO MockAgentEnvironment
 mkLocalTestEnvironmentMock _ = do
   maeConfig <- I.newIORef chinookMock
   maeQuery <- I.newIORef Nothing
-  maeThreadId <- forkIO $ runMockServer maeConfig maeQuery
+  maeQueryConfig <- I.newIORef Nothing
+  maeThreadId <- forkIO $ runMockServer maeConfig maeQuery maeQueryConfig
   healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health"
   pure $ MockAgentEnvironment {..}
 
@@ -141,9 +145,30 @@ data TestCase = TestCase
     -- agent. A @Nothing@ value indicates that the 'API.Query'
     -- assertion should be skipped.
     _whenQuery :: Maybe API.QueryRequest,
+    -- | The expected HGE 'API.QueryHeaders' response and outgoing HGE 'API.QueryHeaders'
+    _whenConfig :: Maybe API.Config,
     -- | The expected GQL response and outgoing HGE 'API.Query'
     _then :: Aeson.Value
   }
+
+data TestCaseRequired = TestCaseRequired
+  { -- | The Mock configuration for the agent
+    _givenRequired :: MockConfig,
+    -- | The Graphql Query to test
+    _whenRequestRequired :: Aeson.Value,
+    -- | The expected GQL response and outgoing HGE 'API.Query'
+    _thenRequired :: Aeson.Value
+  }
+
+defaultTestCase :: TestCaseRequired -> TestCase
+defaultTestCase TestCaseRequired {..} =
+  TestCase
+    { _given = _givenRequired,
+      _whenRequest = _whenRequestRequired,
+      _whenQuery = Nothing,
+      _whenConfig = Nothing,
+      _then = _thenRequired
+    }
 
 -- | Test runner for the Mock Agent. 'runMockedTest' sets the mocked
 -- value in the agent, fires a GQL request, then asserts on the
@@ -166,5 +191,10 @@ runMockedTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = 
   query <- I.readIORef maeQuery
   I.writeIORef maeQuery Nothing
 
+  -- Read the logged 'API.Config' from the Agent
+  queryConfig <- I.readIORef maeQueryConfig
+  I.writeIORef maeQueryConfig Nothing
+
   -- Assert that the 'API.QueryRequest' was constructed how we expected.
   onJust _whenQuery ((query `shouldBe`) . Just)
+  onJust _whenConfig ((queryConfig `shouldBe`) . Just)

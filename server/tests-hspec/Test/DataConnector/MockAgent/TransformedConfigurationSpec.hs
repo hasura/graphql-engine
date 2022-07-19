@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Query Tests for Data Connector Backend using a Mock Agent
-module Test.DataConnector.MockAgent.BasicQuerySpec
+-- | Configuration Transformation Tests for Data Connector Backend using a Mock Agent
+module Test.DataConnector.MockAgent.TransformedConfigurationSpec
   ( spec,
   )
 where
@@ -11,7 +11,6 @@ where
 import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
-import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Quoter.Graphql (graphql)
@@ -82,7 +81,16 @@ tables:
             remote_table: Album
             column_mapping:
               ArtistId: ArtistId
-configuration: {}
+configuration:
+  value: {}
+  template: |
+    {
+      "DEBUG": {
+        "session": {{ $session?.foo ?? "foo session default" }},
+        "env":     {{ $env?.bar     ?? "bar env default"     }},
+        "config":  {{ $config?.baz  ?? "baz config default"  }}
+      }
+    }
 |]
 
 --------------------------------------------------------------------------------
@@ -90,33 +98,33 @@ configuration: {}
 tests :: Context.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
 tests opts = do
   describe "Basic Tests" $ do
-    it "works with simple object query" $
+    it "works with configuration transformation Kriti template" $
       DataConnector.runMockedTest opts $
         let required =
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
                           [yamlObjects|
-                            - id: 1
-                              title: For Those About To Rock We Salute You
-                          |]
+            - id: 1
+              title: For Those About To Rock We Salute You
+            |]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> API.QueryResponse albums},
                   _whenRequestRequired =
                     [graphql|
-                      query getAlbum {
-                        albums(limit: 1) {
-                          id
-                          title
-                        }
-                      }
-                    |],
+            query getAlbum {
+              albums(limit: 1) {
+                id
+                title
+              }
+            }
+            |],
                   _thenRequired =
                     [yaml|
-                      data:
-                        albums:
-                          - id: 1
-                            title: For Those About To Rock We Salute You
-                    |]
+              data:
+                albums:
+                  - id: 1
+                    title: For Those About To Rock We Salute You
+            |]
                 }
          in (DataConnector.defaultTestCase required)
               { _whenQuery =
@@ -137,63 +145,18 @@ tests opts = do
                                 _qOrderBy = Nothing
                               }
                         }
-                    )
-              }
-
-    it "works with order_by id" $
-      DataConnector.runMockedTest opts $
-        let required =
-              DataConnector.TestCaseRequired
-                { _givenRequired =
-                    let albums =
-                          [yamlObjects|
-              - id: 1
-                title: For Those About To Rock We Salute You
-              - id: 2
-                title: Balls to the Wall
-              - id: 3
-                title: Restless and Wild
-            |]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> API.QueryResponse albums},
-                  _whenRequestRequired =
-                    [graphql|
-              query getAlbum {
-                albums(limit: 3, order_by: {id: asc}) {
-                  id
-                  title
-                }
-              }
-              |],
-                  _thenRequired =
-                    [yaml|
-              data:
-                albums:
-                  - id: 1
-                    title: For Those About To Rock We Salute You
-                  - id: 2
-                    title: Balls to the Wall
-                  - id: 3
-                    title: Restless and Wild
-            |]
-                }
-         in (DataConnector.defaultTestCase required)
-              { _whenQuery =
-                  Just
-                    ( API.QueryRequest
-                        { _qrTable = API.TableName {unTableName = "Album"},
-                          _qrTableRelationships = [],
-                          _qrQuery =
-                            API.Query
-                              { _qFields =
-                                  KM.fromList
-                                    [ ("id", API.ColumnField (ValueWrapper {getValue = API.ColumnName {unColumnName = "AlbumId"}})),
-                                      ("title", API.ColumnField (ValueWrapper {getValue = API.ColumnName {unColumnName = "Title"}}))
-                                    ],
-                                _qLimit = Just 3,
-                                _qOffset = Nothing,
-                                _qWhere = Just (API.And (ValueWrapper {getValue = []})),
-                                _qOrderBy = Just (API.OrderBy {column = API.ColumnName {unColumnName = "AlbumId"}, ordering = API.Ascending} NE.:| [])
-                              }
-                        }
-                    )
+                    ),
+                _whenConfig =
+                  -- TODO: Create a QQ for this purpose.
+                  let conf =
+                        Aeson.fromJSON
+                          [yaml|
+                  DEBUG:
+                    config: "baz config default"
+                    env: "bar env default"
+                    session: "foo session default"
+                |]
+                   in case conf of
+                        Aeson.Success r -> Just r
+                        _ -> error "Should parse."
               }
