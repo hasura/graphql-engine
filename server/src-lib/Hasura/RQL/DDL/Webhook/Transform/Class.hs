@@ -56,6 +56,7 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
 import Kriti (runKritiWith)
+import Kriti.CustomFunctions qualified as Kriti (basicFuncMap)
 import Kriti.Error qualified as Kriti (CustomFunctionError (..), serialize)
 import Kriti.Parser qualified as Kriti (parser)
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -172,7 +173,7 @@ mkReqTransformCtx url sessionVars rtcEngine reqData =
           rtcSessionVariables,
           rtcQueryParams,
           rtcEngine,
-          rtcFunctions
+          rtcFunctions = rtcFunctions <> Kriti.basicFuncMap
         }
   where
     getSessionVar :: J.Value -> Either Kriti.CustomFunctionError J.Value

@@ -17,6 +17,7 @@ where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson.Extended qualified as J
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
@@ -86,11 +87,12 @@ msDBQueryPlan ::
     MonadReader QueryTagsComment m
   ) =>
   UserInfo ->
+  Env.Environment ->
   SourceName ->
   SourceConfig 'MSSQL ->
   QueryDB 'MSSQL Void (UnpreparedValue 'MSSQL) ->
   m (DBStepInfo 'MSSQL)
-msDBQueryPlan userInfo sourceName sourceConfig qrf = do
+msDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
   let sessionVariables = _uiSession userInfo
   statement <- planQuery sessionVariables qrf
   queryTags <- ask

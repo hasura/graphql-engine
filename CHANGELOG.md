@@ -198,6 +198,7 @@ Please submit any feedback you may have for this feature at https://github.com/h
 
 ### Bug fixes and improvements
 
+- server: Kriti `basicFunctions` now available for REST Connectors
 - server: use `root_field_namespace` as prefix for remote schema (fixes #8438)
 - server: allow all argument types for BigQuery routines
 - server: fix prefix/suffix behaviour for `graphql-default` naming convention (fixes #8544)

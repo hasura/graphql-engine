@@ -13,6 +13,8 @@ import Data.Sequence.NESeq qualified as NESeq
 import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
+import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (ConnSourceConfig))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -68,10 +70,12 @@ resolveSourceConfig' ::
   DC.DataConnectorBackendConfig ->
   Environment ->
   m (Either QErr DC.SourceConfig)
-resolveSourceConfig' logger sourceName (DC.ConnSourceConfig config) (DataConnectorKind dataConnectorName) backendConfig _ = runExceptT do
+resolveSourceConfig' logger sourceName csc@ConnSourceConfig {template, value = originalConfig} (DataConnectorKind dataConnectorName) backendConfig env = runExceptT do
   DC.DataConnectorOptions {..} <-
     OMap.lookup dataConnectorName backendConfig
       `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
+
+  transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
   manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
 
   -- TODO: capabilities applies to all sources for an agent.
@@ -81,17 +85,18 @@ resolveSourceConfig' logger sourceName (DC.ConnSourceConfig config) (DataConnect
       . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
       $ genericClient // API._capabilities
 
-  validateConfiguration sourceName dataConnectorName crConfigSchemaResponse config
+  validateConfiguration sourceName dataConnectorName crConfigSchemaResponse transformedConfig
 
   schemaResponse <-
     runTraceTWithReporter noReporter "resolve source"
       . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
-      $ (genericClient // API._schema) (toTxt sourceName) config
+      $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
 
   pure
     DC.SourceConfig
       { _scEndpoint = _dcoUri,
-        _scConfig = config,
+        _scConfig = originalConfig,
+        _scTemplate = template,
         _scCapabilities = crCapabilities,
         _scSchema = schemaResponse,
         _scManager = manager,

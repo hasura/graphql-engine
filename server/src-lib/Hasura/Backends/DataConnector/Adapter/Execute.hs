@@ -9,12 +9,14 @@ where
 
 import Data.Aeson qualified as J
 import Data.ByteString.Lazy qualified as BL
+import Data.Environment qualified as Env
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended (toTxt)
 import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (_scCapabilities))
-import Hasura.Backends.DataConnector.Agent.Client
-import Hasura.Backends.DataConnector.IR.Export as IR
+import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
+import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (_scCapabilities, _scConfig))
+import Hasura.Backends.DataConnector.Agent.Client (AgentClientT)
+import Hasura.Backends.DataConnector.IR.Export as IR (QueryError (ExposedLiteral), queryRequestToAPI)
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.Plan qualified as DC
 import Hasura.Base.Error (Code (..), QErr, throw400, throw500)
@@ -37,23 +39,25 @@ instance BackendExecute 'DataConnector where
   type MultiplexedQuery 'DataConnector = Void
   type ExecutionMonad 'DataConnector = AgentClientT (Tracing.TraceT (ExceptT QErr IO))
 
-  mkDBQueryPlan UserInfo {..} sourceName sourceConfig ir = do
+  mkDBQueryPlan UserInfo {..} env sourceName sourceConfig ir = do
     queryRequest <- DC.mkPlan _uiSession sourceConfig ir
+    transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.toJSON env)] env
     pure
       DBStepInfo
         { dbsiSourceName = sourceName,
-          dbsiSourceConfig = sourceConfig,
+          dbsiSourceConfig = transformedSourceConfig,
           dbsiPreparedQuery = Just queryRequest,
-          dbsiAction = buildAction sourceName sourceConfig queryRequest
+          dbsiAction = buildAction sourceName transformedSourceConfig queryRequest
         }
 
   mkDBQueryExplain fieldName UserInfo {..} sourceName sourceConfig ir = do
     queryRequest <- DC.mkPlan _uiSession sourceConfig ir
+    transformedSourceConfig <- transformSourceConfig sourceConfig [("$session", J.toJSON _uiSession), ("$env", J.object [])] Env.emptyEnvironment
     pure $
       mkAnyBackend @'DataConnector
         DBStepInfo
           { dbsiSourceName = sourceName,
-            dbsiSourceConfig = sourceConfig,
+            dbsiSourceConfig = transformedSourceConfig,
             dbsiPreparedQuery = Just queryRequest,
             dbsiAction = pure . encJFromJValue . toExplainPlan fieldName $ queryRequest
           }

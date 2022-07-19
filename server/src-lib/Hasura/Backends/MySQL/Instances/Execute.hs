@@ -5,6 +5,7 @@ module Hasura.Backends.MySQL.Instances.Execute () where
 import Data.Aeson as J
 import Data.Bifunctor
 import Data.Coerce
+import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
@@ -34,6 +35,7 @@ instance BackendExecute 'MySQL where
   type PreparedQuery 'MySQL = Text
   type MultiplexedQuery 'MySQL = Void
   type ExecutionMonad 'MySQL = Tracing.TraceT (ExceptT QErr IO)
+
   mkDBQueryPlan = mysqlDBQueryPlan
   mkDBMutationPlan = error "mkDBMutationPlan: MySQL backend does not support this operation yet."
   mkLiveQuerySubscriptionPlan _ _ _ _ = error "mkLiveQuerySubscriptionPlan: MySQL backend does not support this operation yet."
@@ -47,11 +49,12 @@ mysqlDBQueryPlan ::
   ( MonadError QErr m
   ) =>
   UserInfo ->
+  Env.Environment ->
   SourceName ->
   SourceConfig 'MySQL ->
   QueryDB 'MySQL Void (UnpreparedValue 'MySQL) ->
   m (DBStepInfo 'MySQL)
-mysqlDBQueryPlan userInfo sourceName sourceConfig qrf = do
+mysqlDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
   (headAndTail, actionsForest) <- queryToActionForest userInfo qrf
   pure
     ( DBStepInfo

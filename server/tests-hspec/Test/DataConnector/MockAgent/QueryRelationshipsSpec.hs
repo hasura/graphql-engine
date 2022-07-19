@@ -9,6 +9,7 @@ import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
+import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml, yamlObjects)
@@ -66,19 +67,20 @@ tests opts = do
   describe "Object Relationships Tests" $ do
     it "works with multiple object relationships" $
       DataConnector.runMockedTest opts $
-        DataConnector.TestCase
-          { _given =
-              let albums =
-                    [yamlObjects|
+        let required =
+              DataConnector.TestCaseRequired
+                { _givenRequired =
+                    let albums =
+                          [yamlObjects|
                       - Genre:
                           Name: "Rock"
                         MediaType:
                           Name: "MPEG audio file"
                         Name: "For Those About To Rock (We Salute You)"
                     |]
-               in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> API.QueryResponse albums},
-            _whenRequest =
-              [graphql|
+                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> API.QueryResponse albums},
+                  _whenRequestRequired =
+                    [graphql|
                 query getTrack {
                   Track(limit: 1) {
                     Name
@@ -91,81 +93,8 @@ tests opts = do
                   }
                 }
               |],
-            _whenQuery =
-              Just
-                ( API.QueryRequest
-                    { _qrTable = API.TableName "Track",
-                      _qrTableRelationships =
-                        [ API.TableRelationships
-                            { _trSourceTable = API.TableName "Track",
-                              _trRelationships =
-                                HashMap.fromList
-                                  [ ( API.RelationshipName "Genre",
-                                      API.Relationship
-                                        { _rTargetTable = API.TableName "Genre",
-                                          _rRelationshipType = API.ObjectRelationship,
-                                          _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
-                                        }
-                                    ),
-                                    ( API.RelationshipName "MediaType",
-                                      API.Relationship
-                                        { _rTargetTable = API.TableName "MediaType",
-                                          _rRelationshipType = API.ObjectRelationship,
-                                          _rColumnMapping =
-                                            HashMap.fromList
-                                              [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
-                                        }
-                                    )
-                                  ]
-                            }
-                        ],
-                      _qrQuery =
-                        API.Query
-                          { _qFields =
-                              KM.fromList
-                                [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name"))),
-                                  ( "Genre",
-                                    API.RelField
-                                      ( API.RelationshipField
-                                          (API.RelationshipName "Genre")
-                                          API.Query
-                                            { _qFields =
-                                                KM.fromList
-                                                  [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
-                                                  ],
-                                              _qLimit = Nothing,
-                                              _qOffset = Nothing,
-                                              _qWhere = Just (API.And (ValueWrapper [])),
-                                              _qOrderBy = Nothing
-                                            }
-                                      )
-                                  ),
-                                  ( "MediaType",
-                                    API.RelField
-                                      ( API.RelationshipField
-                                          (API.RelationshipName "MediaType")
-                                          API.Query
-                                            { _qFields =
-                                                KM.fromList
-                                                  [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
-                                                  ],
-                                              _qLimit = Nothing,
-                                              _qOffset = Nothing,
-                                              _qWhere = Just (API.And (ValueWrapper [])),
-                                              _qOrderBy = Nothing
-                                            }
-                                      )
-                                  )
-                                ],
-                            _qLimit = Just 1,
-                            _qOffset = Nothing,
-                            _qWhere = Just (API.And (ValueWrapper {getValue = []})),
-                            _qOrderBy = Nothing
-                          }
-                    }
-                ),
-            _then =
-              [yaml|
+                  _thenRequired =
+                    [yaml|
                 data:
                   Track:
                     - Genre:
@@ -174,4 +103,79 @@ tests opts = do
                         Name: "MPEG audio file"
                       Name: "For Those About To Rock (We Salute You)"
               |]
-          }
+                }
+         in (DataConnector.defaultTestCase required)
+              { _whenQuery =
+                  Just
+                    ( API.QueryRequest
+                        { _qrTable = API.TableName "Track",
+                          _qrTableRelationships =
+                            [ API.TableRelationships
+                                { _trSourceTable = API.TableName "Track",
+                                  _trRelationships =
+                                    HashMap.fromList
+                                      [ ( API.RelationshipName "Genre",
+                                          API.Relationship
+                                            { _rTargetTable = API.TableName "Genre",
+                                              _rRelationshipType = API.ObjectRelationship,
+                                              _rColumnMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+                                            }
+                                        ),
+                                        ( API.RelationshipName "MediaType",
+                                          API.Relationship
+                                            { _rTargetTable = API.TableName "MediaType",
+                                              _rRelationshipType = API.ObjectRelationship,
+                                              _rColumnMapping =
+                                                HashMap.fromList
+                                                  [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
+                                            }
+                                        )
+                                      ]
+                                }
+                            ],
+                          _qrQuery =
+                            API.Query
+                              { _qFields =
+                                  KM.fromList
+                                    [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name"))),
+                                      ( "Genre",
+                                        API.RelField
+                                          ( API.RelationshipField
+                                              (API.RelationshipName "Genre")
+                                              API.Query
+                                                { _qFields =
+                                                    KM.fromList
+                                                      [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
+                                                      ],
+                                                  _qLimit = Nothing,
+                                                  _qOffset = Nothing,
+                                                  _qWhere = Just (API.And (ValueWrapper [])),
+                                                  _qOrderBy = Nothing
+                                                }
+                                          )
+                                      ),
+                                      ( "MediaType",
+                                        API.RelField
+                                          ( API.RelationshipField
+                                              (API.RelationshipName "MediaType")
+                                              API.Query
+                                                { _qFields =
+                                                    KM.fromList
+                                                      [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
+                                                      ],
+                                                  _qLimit = Nothing,
+                                                  _qOffset = Nothing,
+                                                  _qWhere = Just (API.And (ValueWrapper [])),
+                                                  _qOrderBy = Nothing
+                                                }
+                                          )
+                                      )
+                                    ],
+                                _qLimit = Just 1,
+                                _qOffset = Nothing,
+                                _qWhere = Just (API.And (ValueWrapper {getValue = []})),
+                                _qOrderBy = Nothing
+                              }
+                        }
+                    )
+              }

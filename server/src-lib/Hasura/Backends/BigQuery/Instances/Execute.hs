@@ -4,6 +4,7 @@ module Hasura.Backends.BigQuery.Instances.Execute () where
 
 import Data.Aeson qualified as Aeson
 import Data.Aeson.Text qualified as Aeson
+import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
@@ -65,11 +66,12 @@ bqDBQueryPlan ::
   ( MonadError E.QErr m
   ) =>
   UserInfo ->
+  Env.Environment ->
   SourceName ->
   SourceConfig 'BigQuery ->
   QueryDB 'BigQuery Void (UnpreparedValue 'BigQuery) ->
   m (DBStepInfo 'BigQuery)
-bqDBQueryPlan userInfo sourceName sourceConfig qrf = do
+bqDBQueryPlan userInfo _env sourceName sourceConfig qrf = do
   -- TODO (naveen): Append query tags to the query
   select <- planNoPlan (BigQuery.bigQuerySourceConfigToFromIrConfig sourceConfig) userInfo qrf
   let action = do
@@ -199,7 +201,7 @@ bqDBRemoteRelationshipPlan ::
   (FieldName, SourceRelationshipSelection 'BigQuery Void UnpreparedValue) ->
   m (DBStepInfo 'BigQuery)
 bqDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argumentId relationship = do
-  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo sourceName sourceConfig rootSelection
+  flip runReaderT emptyQueryTagsComment $ bqDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection
   where
     coerceToColumn = BigQuery.ColumnName . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema

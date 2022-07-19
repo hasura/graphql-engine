@@ -13,6 +13,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson qualified as J
 import Data.Aeson.Casing qualified as J
 import Data.Aeson.Ordered qualified as JO
+import Data.Environment as Env
 import Data.Kind (Type)
 import Data.Tagged
 import Data.Text.Extended
@@ -70,6 +71,7 @@ class
       MonadReader QueryTagsComment m
     ) =>
     UserInfo ->
+    Env.Environment ->
     SourceName ->
     SourceConfig b ->
     QueryDB b Void (UnpreparedValue b) ->

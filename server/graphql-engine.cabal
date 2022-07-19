@@ -567,6 +567,7 @@ library
                      , Hasura.Backends.DataConnector.Adapter.API
                      , Hasura.Backends.DataConnector.Adapter.Backend
                      , Hasura.Backends.DataConnector.Adapter.Execute
+                     , Hasura.Backends.DataConnector.Adapter.ConfigTransform
                      , Hasura.Backends.DataConnector.Adapter.Metadata
                      , Hasura.Backends.DataConnector.Adapter.Schema
                      , Hasura.Backends.DataConnector.Adapter.Transport
@@ -1230,6 +1231,7 @@ test-suite tests-hspec
     Test.CustomFieldNamesSpec
     Test.CustomRootFieldsSpec
     Test.DataConnector.MockAgent.BasicQuerySpec
+    Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
