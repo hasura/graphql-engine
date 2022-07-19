@@ -20,7 +20,7 @@ import Hasura.RQL.Types.Column qualified as IR
 import Hasura.SQL.Backend
 
 fromUpdate :: IR.AnnotatedUpdate 'MSSQL -> FromIr Update
-fromUpdate (IR.AnnotatedUpdateG table (permFilter, whereClause) _ backendUpdate _ allColumns) = do
+fromUpdate (IR.AnnotatedUpdateG table (permFilter, whereClause) _ backendUpdate _ allColumns _tCase) = do
   tableAlias <- generateAlias (TableTemplate (tableName table))
   runReaderT
     ( do

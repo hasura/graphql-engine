@@ -25,6 +25,7 @@ genAnnSelectG genA genFA =
     <*> genTablePermG genA
     <*> genArgs
     <*> genStringifyNumbers
+    <*> (pure Nothing)
   where
     genStringifyNumbers =
       Gen.bool <&> \case

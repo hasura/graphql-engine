@@ -204,7 +204,7 @@ Please submit any feedback you may have for this feature at https://github.com/h
 - server: fix prefix/suffix behaviour for `graphql-default` naming convention (fixes #8544)
 - server: fix namespace visibility during introspection (fix #8434)
 - server: Create missing SQL triggers, if any, while reloading metadata and startup.
-- server: fix name transformation bug in `graphql-default` naming convention (fixes #8640 partially)
+- server: fix name/enum transformation bugs in `graphql-default` naming convention (fixes #8640)
 - server: changes to the Rest Endpoints OpenAPI specification:
     - the nullability of items in the output is now always correctly reported
     - scalars other than UUID are more consistently inlined

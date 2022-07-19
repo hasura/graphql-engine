@@ -104,6 +104,7 @@ module Hasura.RQL.IR.Select
     asnFrom,
     asnPerm,
     asnStrfyNum,
+    asnNamingConvention,
     bifoldMapAnnSelectG,
     csXRelay,
     csPrimaryKeyColumns,
@@ -152,6 +153,7 @@ import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -192,7 +194,8 @@ data AnnSelectG (b :: BackendType) (f :: Type -> Type) (v :: Type) = AnnSelectG
     _asnFrom :: SelectFromG b v,
     _asnPerm :: TablePermG b v,
     _asnArgs :: SelectArgsG b v,
-    _asnStrfyNum :: StringifyNumbers
+    _asnStrfyNum :: StringifyNumbers,
+    _asnNamingConvention :: Maybe NamingCase
   }
   deriving stock (Functor, Foldable, Traversable)
 

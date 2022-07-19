@@ -29,6 +29,7 @@ import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Types.Insert
 import Hasura.Base.Error
 import Hasura.EncJSON
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.QueryTags
@@ -56,13 +57,14 @@ convertToSQLTransaction ::
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   m EncJSON
-convertToSQLTransaction (IR.AnnotatedInsert fieldName isSingle annIns mutationOutput) userInfo planVars stringifyNum =
+convertToSQLTransaction (IR.AnnotatedInsert fieldName isSingle annIns mutationOutput _tCase) userInfo planVars stringifyNum tCase =
   if null $ IR._aiInsertObject annIns
     then pure $ IR.buildEmptyMutResp mutationOutput
     else
       withPaths ["selectionSet", fieldName, "args", suffix] $
-        insertMultipleObjects annIns mempty userInfo mutationOutput planVars stringifyNum
+        insertMultipleObjects annIns mempty userInfo mutationOutput planVars stringifyNum tCase
   where
     withPaths p x = foldr ($) x $ withPathK <$> p
     suffix = bool "objects" "object" isSingle
@@ -82,8 +84,9 @@ insertMultipleObjects ::
   IR.MutationOutput ('Postgres pgKind) ->
   Seq.Seq Q.PrepArg ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   m EncJSON
-insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum =
+insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput planVars stringifyNum tCase =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     IR.AnnotatedInsertData insObjs table checkCondition columnInfos presetRow (BackendInsert conflictClause) = multiObjIns
@@ -108,12 +111,12 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
           rowCount = tshow . length $ IR._aiInsertObject multiObjIns
       Tracing.trace ("Insert (" <> rowCount <> ") " <> qualifiedObjectToText table) do
         Tracing.attachMetadata [("count", rowCount)]
-        PGE.execInsertQuery stringifyNum userInfo (insertQuery, planVars)
+        PGE.execInsertQuery stringifyNum tCase userInfo (insertQuery, planVars)
 
     withRelsInsert = do
       insertRequests <- indexedForM insObjs \obj -> do
         let singleObj = IR.AnnotatedInsertData (IR.Single obj) table checkCondition columnInfos presetRow (BackendInsert conflictClause)
-        insertObject singleObj additionalColumns userInfo planVars stringifyNum
+        insertObject singleObj additionalColumns userInfo planVars stringifyNum tCase
       let affectedRows = sum $ map fst insertRequests
           columnValues = mapMaybe snd insertRequests
       selectExpr <- PGT.mkSelectExpFromColumnValues table columnInfos columnValues
@@ -124,6 +127,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
         (PGT.MCSelectValues selectExpr)
         mutationOutput
         stringifyNum
+        tCase
         []
 
 insertObject ::
@@ -140,12 +144,13 @@ insertObject ::
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   m (Int, Maybe (ColumnValues ('Postgres pgKind) TxtEncodedVal))
-insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
+insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase = Tracing.trace ("Insert " <> qualifiedObjectToText table) do
   validateInsert (Map.keys columns) (map IR._riRelationInfo objectRels) (Map.keys additionalColumns)
 
   -- insert all object relations and fetch this insert dependent column values
-  objInsRes <- forM beforeInsert $ insertObjRel planVars userInfo stringifyNum
+  objInsRes <- forM beforeInsert $ insertObjRel planVars userInfo stringifyNum tCase
 
   -- prepare final insert columns
   let objRelAffRows = sum $ map fst objInsRes
@@ -156,7 +161,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
 
   PGE.MutateResp affRows colVals <-
     liftTx $
-      PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum
+      PGE.mutateAndFetchCols @pgKind table allColumns (PGT.MCCheckConstraint cte, planVars) stringifyNum tCase
   colValM <- asSingleObject colVals
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null allAfterInsertRels
@@ -195,7 +200,7 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum = Tra
       afterInsertDepColsWithVal <- fetchFromColVals colVal afterInsertDepCols
       arrInsARows <-
         forM allAfterInsertRels $
-          insertArrRel afterInsertDepColsWithVal userInfo planVars stringifyNum
+          insertArrRel afterInsertDepColsWithVal userInfo planVars stringifyNum tCase
       return $ sum arrInsARows
 
     asSingleObject ::
@@ -223,11 +228,12 @@ insertObjRel ::
   Seq.Seq Q.PrepArg ->
   UserInfo ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   IR.ObjectRelationInsert ('Postgres pgKind) PG.SQLExp ->
   m (Int, [(PGCol, PG.SQLExp)])
-insertObjRel planVars userInfo stringifyNum objRelIns =
+insertObjRel planVars userInfo stringifyNum tCase objRelIns =
   withPathK (relNameToTxt relName) $ do
-    (affRows, colValM) <- withPathK "data" $ insertObject singleObjIns mempty userInfo planVars stringifyNum
+    (affRows, colValM) <- withPathK "data" $ insertObject singleObjIns mempty userInfo planVars stringifyNum tCase
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos
     let columns = flip mapMaybe (Map.toList mapCols) \(column, target) -> do
@@ -259,9 +265,10 @@ insertArrRel ::
   UserInfo ->
   Seq.Seq Q.PrepArg ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   IR.ArrayRelationInsert ('Postgres pgKind) PG.SQLExp ->
   m Int
-insertArrRel resCols userInfo planVars stringifyNum arrRelIns =
+insertArrRel resCols userInfo planVars stringifyNum tCase arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
     let additionalColumns = Map.fromList $
           flip mapMaybe resCols \(column, value) -> do
@@ -269,7 +276,7 @@ insertArrRel resCols userInfo planVars stringifyNum arrRelIns =
             Just (target, value)
     resBS <-
       withPathK "data" $
-        insertMultipleObjects multiObjIns additionalColumns userInfo mutOutput planVars stringifyNum
+        insertMultipleObjects multiObjIns additionalColumns userInfo mutOutput planVars stringifyNum tCase
     resObj <- decodeEncJSON resBS
     onNothing (Map.lookup ("affected_rows" :: Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"

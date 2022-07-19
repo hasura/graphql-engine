@@ -18,6 +18,7 @@ import Data.Coerce
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -85,9 +86,10 @@ mkMutFldExp ::
   Identifier ->
   Maybe Int ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   MutFld ('Postgres pgKind) ->
   S.SQLExp
-mkMutFldExp cteAlias preCalAffRows strfyNum = \case
+mkMutFldExp cteAlias preCalAffRows strfyNum tCase = \case
   MCount ->
     let countExp =
           S.SESelect $
@@ -102,7 +104,7 @@ mkMutFldExp cteAlias preCalAffRows strfyNum = \case
         tabPerm = TablePerm annBoolExpTrue Nothing
      in S.SESelect $
           mkSQLSelect JASMultipleRows $
-            AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
+            AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase
 
 toFIIdentifier :: Identifier -> FIIdentifier
 toFIIdentifier = coerce . getIdenTxt
@@ -143,8 +145,9 @@ mkMutationOutputExp ::
   MutationCTE ->
   MutationOutput ('Postgres pgKind) ->
   Options.StringifyNumbers ->
+  Maybe NamingCase ->
   S.SelectWith
-mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
+mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase =
   S.SelectWith
     [ (S.toTableAlias mutationResultAlias, getMutationCTE cte),
       (S.toTableAlias allColumnsAlias, allColumnsSelect)
@@ -173,7 +176,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
             let jsonBuildObjArgs = flip concatMap mutFlds $
                   \(FieldName k, mutFld) ->
                     [ S.SELit k,
-                      mkMutFldExp allColumnsAlias preCalAffRows strfyNum mutFld
+                      mkMutFldExp allColumnsAlias preCalAffRows strfyNum tCase mutFld
                     ]
              in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
           MOutSinglerowObject annFlds ->
@@ -181,7 +184,7 @@ mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum =
                 tabPerm = TablePerm annBoolExpTrue Nothing
              in S.SESelect $
                   mkSQLSelect JASSingleObject $
-                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum
+                    AnnSelectG annFlds tabFrom tabPerm noSelectArgs strfyNum tCase
 
 mkCheckErrorExp :: IsIdentifier a => a -> S.SQLExp
 mkCheckErrorExp alias =

@@ -211,7 +211,8 @@ convertRemoteSourceRelationship
             _asnFrom = selectFrom,
             _asnPerm = TablePerm annBoolExpTrue Nothing,
             _asnArgs = noSelectArgs,
-            _asnStrfyNum = Options.Don'tStringifyNumbers
+            _asnStrfyNum = Options.Don'tStringifyNumbers,
+            _asnNamingConvention = Nothing
           }
 
 data DBStepInfo b = DBStepInfo

@@ -18,6 +18,7 @@ module Hasura.RQL.IR.Insert
     aiIsSingle,
     aiData,
     aiOutput,
+    aiNamingConvention,
     AnnotatedInsertField (..),
     AnnotatedInsertRow,
     ArrayRelationInsert,
@@ -42,6 +43,7 @@ where
 import Control.Lens ((^?))
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Kind (Type)
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Conflict
@@ -60,7 +62,8 @@ data AnnotatedInsert (b :: BackendType) (r :: Type) v = AnnotatedInsert
   { _aiFieldName :: Text,
     _aiIsSingle :: Bool,
     _aiData :: MultiObjectInsert b v,
-    _aiOutput :: MutationOutputG b r v
+    _aiOutput :: MutationOutputG b r v,
+    _aiNamingConvention :: Maybe NamingCase
   }
   deriving (Functor, Foldable, Traversable)
 

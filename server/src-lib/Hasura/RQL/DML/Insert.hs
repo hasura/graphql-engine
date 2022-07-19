@@ -253,7 +253,7 @@ runInsert q = do
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite $
-    flip runReaderT emptyQueryTagsComment $ execInsertQuery strfyNum userInfo res
+    flip runReaderT emptyQueryTagsComment $ execInsertQuery strfyNum Nothing userInfo res
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]
 decodeInsObjs v = do

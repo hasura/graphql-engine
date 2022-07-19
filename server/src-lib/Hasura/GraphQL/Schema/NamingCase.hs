@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Schema.NamingCase
   ( NamingCase (..),
+    isGraphqlCase,
     parseNamingConventionFromText,
   )
 where
@@ -29,3 +30,7 @@ parseNamingConventionFromText :: Text -> Either String NamingCase
 parseNamingConventionFromText "hasura-default" = Right HasuraCase
 parseNamingConventionFromText "graphql-default" = Right GraphqlCase
 parseNamingConventionFromText _ = Left "naming_convention can either be \"hasura-default\" or \"graphql-default\""
+
+isGraphqlCase :: NamingCase -> Bool
+isGraphqlCase GraphqlCase = True
+isGraphqlCase _ = False

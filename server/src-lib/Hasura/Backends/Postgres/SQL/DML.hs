@@ -51,6 +51,7 @@ module Hasura.Backends.Postgres.SQL.DML
     applyJsonBuildArray,
     applyJsonBuildObj,
     applyRowToJson,
+    applyUppercase,
     boolTypeAnn,
     buildUpsertSetExp,
     columnDefaultValue,
@@ -617,6 +618,10 @@ applyJsonBuildArray args =
 applyRowToJson :: [Extractor] -> SQLExp
 applyRowToJson extrs =
   SEFnApp "row_to_json" [mkRowExp extrs] Nothing
+
+applyUppercase :: SQLExp -> SQLExp
+applyUppercase arg =
+  SEFnApp "upper" [arg] Nothing
 
 mkExtr :: (IsIdentifier a) => a -> Extractor
 mkExtr t = Extractor (mkSIdenExp t) Nothing

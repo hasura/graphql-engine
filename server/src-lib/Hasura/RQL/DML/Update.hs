@@ -191,6 +191,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
       (BackendUpdate $ Map.fromList $ fmap UpdateSet <$> setExpItems)
       (mkDefaultMutFlds mAnnRetCols)
       allCols
+      Nothing
   where
     mRetCols = uqReturning uq
     selNecessaryMsg =
@@ -229,4 +230,4 @@ runUpdate q = do
   validateUpdateQuery q
     >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
       . flip runReaderT emptyQueryTagsComment
-      . execUpdateQuery strfyNum userInfo
+      . execUpdateQuery strfyNum Nothing userInfo

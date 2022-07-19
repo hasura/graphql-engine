@@ -290,7 +290,7 @@ updateTableMany scenario sourceInfo tableInfo gqlName = runMaybeT do
   let argsParser = liftA2 (,) updates (pure annBoolExpTrue)
   pure $
     P.subselection updateName updateDesc argsParser selection
-      <&> SU.mkUpdateObject tableName columns updatePerms . fmap MOutMultirowFields
+      <&> SU.mkUpdateObject tableName columns updatePerms (Just tCase) . fmap MOutMultirowFields
   where
     tableName = tableInfoName tableInfo
     defaultUpdateDesc = "update multiples rows of table: " <>> tableName

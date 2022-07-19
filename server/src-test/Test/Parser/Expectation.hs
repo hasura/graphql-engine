@@ -19,6 +19,7 @@ import Hasura.Backends.Postgres.Types.Update (BackendUpdate (..), MultiRowUpdate
 import Hasura.GraphQL.Parser.Internal.Parser (FieldParser (..))
 import Hasura.GraphQL.Parser.Schema (Definition (..))
 import Hasura.GraphQL.Parser.Variable (Variable (..))
+import Hasura.GraphQL.Schema.NamingCase
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExpFld (..), GBoolExp (..), OpExpG (..))
 import Hasura.RQL.IR.Returning (MutationOutputG (..))
@@ -197,3 +198,6 @@ mkAnnotatedUpdate AnnotatedUpdateBuilder {..} = AnnotatedUpdateG {..}
       BoolAnd
         . fmap (\c -> BoolField . AVColumn c $ stuff)
         $ aubColumns
+
+    _auNamingConvention :: Maybe NamingCase
+    _auNamingConvention = Just HasuraCase

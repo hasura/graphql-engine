@@ -232,7 +232,7 @@ convSelectQ table fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
       tabArgs = SelectArgs wClause annOrdByM mQueryLimit (fromIntegral <$> mQueryOffset) Nothing
 
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
-  pure $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum
+  pure $ AnnSelectG annFlds tabFrom tabPerm tabArgs strfyNum Nothing
   where
     mQueryOffset = sqOffset selQ
     mQueryLimit = sqLimit selQ

@@ -321,7 +321,7 @@ resolveAsyncActionQuery userInfo annAction =
                       { RS._saWhere = Just tableBoolExpression
                       }
                   tablePermissions = RS.TablePerm annBoolExpTrue Nothing
-               in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics
+               in RS.AnnSelectG annotatedFields tableFromExp tablePermissions tableArguments stringifyNumerics Nothing
   where
     IR.AnnActionAsyncQuery _ actionId outputType asyncFields definitionList stringifyNumerics _ actionSource = annAction
 
@@ -658,8 +658,8 @@ processOutputSelectionSet ::
   IR.ActionFields ->
   Options.StringifyNumbers ->
   RS.AnnSimpleSelectG ('Postgres 'Vanilla) Void v
-processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields =
-  RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs
+processOutputSelectionSet tableRowInput actionOutputType definitionList actionFields strfyNum =
+  RS.AnnSelectG annotatedFields selectFrom RS.noTablePermissions RS.noSelectArgs strfyNum Nothing
   where
     annotatedFields = fmap actionFieldToAnnField <$> actionFields
     jsonbToPostgresRecordFunction =

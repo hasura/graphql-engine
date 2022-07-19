@@ -439,7 +439,8 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
                     IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                     IR._asnPerm = tablePermissionsInfo returnTablePermissions,
                     IR._asnArgs = args,
-                    IR._asnStrfyNum = stringifyNumbers
+                    IR._asnStrfyNum = stringifyNumbers,
+                    IR._asnNamingConvention = Nothing
                   }
     BigQuery.ReturnTableSchema returnFields -> do
       -- Check if the computed field is available in the select permission
@@ -465,7 +466,8 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
                     IR._asnFrom = IR.FromFunction (_cffName _cfiFunction) functionArgs' Nothing,
                     IR._asnPerm = IR.noTablePermissions,
                     IR._asnArgs = IR.noSelectArgs,
-                    IR._asnStrfyNum = stringifyNumbers
+                    IR._asnStrfyNum = stringifyNumbers,
+                    IR._asnNamingConvention = Nothing
                   }
   where
     fieldDescription :: Maybe G.Description

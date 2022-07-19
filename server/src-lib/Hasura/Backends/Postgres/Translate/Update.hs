@@ -34,7 +34,7 @@ mkUpdateCTE ::
   Backend ('Postgres pgKind) =>
   AnnotatedUpdate ('Postgres pgKind) ->
   UpdateCTE
-mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk backendUpdate _ columnsInfo) =
+mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk backendUpdate _ columnsInfo _tCase) =
   case backendUpdate of
     BackendUpdate opExps ->
       Update $ S.CTEUpdate update

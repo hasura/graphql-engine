@@ -39,6 +39,7 @@ class TestNamingConventionsFailure:
         check_query_f(hge_ctx, self.dir() + '/mssql_naming_convention.yaml')
 
 @pytest.mark.skipif(
+    not env_var_contains('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'naming_convention') or
     not env_var_contains('HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION', 'graphql-default'),
     reason="This test expects the HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION environment variable set to graphql-default")
 class TestDefaultNamingConvention:

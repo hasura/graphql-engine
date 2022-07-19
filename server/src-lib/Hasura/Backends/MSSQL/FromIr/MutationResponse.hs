@@ -50,7 +50,7 @@ mkMutationOutputSelect stringifyNum withAlias = \case
       IR.Fields (IR.AnnFieldG 'MSSQL Void Expression) ->
       FromIr Select
     mkSelect jsonAggSelect annFields = do
-      let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier $ IR.FIIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum
+      let annSelect = IR.AnnSelectG annFields (IR.FromIdentifier $ IR.FIIdentifier withAlias) IR.noTablePermissions IR.noSelectArgs stringifyNum Nothing
       fromSelect jsonAggSelect annSelect
 
     -- SELECT COUNT(*) AS "count" FROM [with_alias]

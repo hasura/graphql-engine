@@ -12,6 +12,7 @@ module Hasura.GraphQL.Schema.Mutation
   )
 where
 
+import Data.Has (getter)
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
 import Data.Text.Extended
@@ -19,6 +20,7 @@ import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
 import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
@@ -75,6 +77,7 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
   -- If we're in a frontend scenario, we should not include backend_only inserts
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && ipiBackendOnly insertPerms
+  tCase <- asks getter
   lift do
     updatePerms <- _permUpd <$> tablePermissions tableInfo
     -- objects [{ ... }]
@@ -88,7 +91,7 @@ insertIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName desc
           pure $ mkInsertObject objects tableInfo backendInsert insertPerms updatePerms
     pure $
       P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output)
+        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) False insertObject (IR.MOutMultirowFields output) (Just tCase)
   where
     mkObjectsArg objectParser =
       P.field
@@ -124,6 +127,7 @@ insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName d
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && ipiBackendOnly insertPerms
   selectionParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
+  tCase <- asks getter
   lift do
     updatePerms <- _permUpd <$> tablePermissions tableInfo
     objectParser <- tableFieldsInput sourceInfo tableInfo
@@ -134,7 +138,7 @@ insertOneIntoTable backendInsertAction scenario sourceInfo tableInfo fieldName d
           pure $ mkInsertObject [object] tableInfo backendInsert insertPerms updatePerms
     pure $
       P.subselection fieldName description argsParser selectionParser
-        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output)
+        <&> \(insertObject, output) -> IR.AnnotatedInsert (G.unName fieldName) True insertObject (IR.MOutSinglerowObject output) (Just tCase)
   where
     mkObjectArg objectParser =
       P.field
@@ -358,6 +362,7 @@ deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT 
   -- If we're in a frontend scenario, we should not include backend_only deletes
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && dpiBackendOnly deletePerms
+  tCase <- asks getter
   lift do
     let whereName = Name._where
         whereDesc = "filter the rows which have to be deleted"
@@ -366,7 +371,7 @@ deleteFromTable scenario sourceInfo tableInfo fieldName description = runMaybeT 
     let columns = tableColumns tableInfo
     pure $
       P.subselection fieldName description whereArg selection
-        <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms . fmap IR.MOutMultirowFields
+        <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutMultirowFields
 
 -- | Construct a root field, normally called delete_tablename_by_pk, that can be used to delete an
 -- individual rows from a DB table, specified by primary key. Select permissions are required, as
@@ -394,24 +399,27 @@ deleteFromTableByPk scenario sourceInfo tableInfo fieldName description = runMay
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && dpiBackendOnly deletePerms
   selection <- MaybeT $ tableSelectionSet sourceInfo tableInfo
+  tCase <- asks getter
   let columns = tableColumns tableInfo
   pure $
     P.subselection fieldName description pkArgs selection
-      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms . fmap IR.MOutSinglerowObject
+      <&> mkDeleteObject (tableInfoName tableInfo) columns deletePerms (Just tCase) . fmap IR.MOutSinglerowObject
 
 mkDeleteObject ::
   Backend b =>
   TableName b ->
   [ColumnInfo b] ->
   DelPermInfo b ->
+  Maybe NamingCase ->
   (AnnBoolExp b (IR.UnpreparedValue b), IR.MutationOutputG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)) ->
   IR.AnnDelG b (IR.RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue b)
-mkDeleteObject table columns deletePerms (whereExp, mutationOutput) =
+mkDeleteObject table columns deletePerms tCase (whereExp, mutationOutput) =
   IR.AnnDel
     { IR._adTable = table,
       IR._adWhere = (permissionFilter, whereExp),
       IR._adOutput = mutationOutput,
-      IR._adAllCols = columns
+      IR._adAllCols = columns,
+      IR._adNamingConvention = tCase
     }
   where
     permissionFilter = fmap partialSQLExpToUnpreparedValue <$> dpiFilter deletePerms

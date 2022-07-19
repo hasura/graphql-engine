@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Column
   ( ColumnType (..),
     _ColumnScalar,
     _ColumnEnumReference,
+    isEnumColumn,
     isScalarColumnWhere,
     ValueParser,
     onlyNumCols,
@@ -132,6 +133,10 @@ isScalarColumnWhere :: (ScalarType b -> Bool) -> ColumnType b -> Bool
 isScalarColumnWhere f = \case
   ColumnScalar scalar -> f scalar
   ColumnEnumReference _ -> False
+
+isEnumColumn :: ColumnType b -> Bool
+isEnumColumn (ColumnEnumReference _) = True
+isEnumColumn _ = False
 
 -- | Note: Unconditionally accepts null values and returns 'PGNull'.
 parseScalarValueColumnType ::
