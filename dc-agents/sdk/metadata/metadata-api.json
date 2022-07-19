@@ -84,6 +84,19 @@
             },
             {
               "table": "Employee",
+              "object_relationships": [
+                {
+                  "name": "ReportsTo",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Employee",
+                      "column_mapping": {
+                        "ReportsTo": "EmployeeId"
+                      }
+                    }
+                  }
+                }
+              ],
               "array_relationships": [
                 {
                   "name": "SupportRepForCustomers",
@@ -92,6 +105,17 @@
                       "remote_table": "Customer",
                       "column_mapping": {
                         "EmployeeId": "SupportRepId"
+                      }
+                    }
+                  }
+                },
+                {
+                  "name": "DirectReports",
+                  "using": {
+                    "manual_configuration": {
+                      "remote_table": "Employee",
+                      "column_mapping": {
+                        "EmployeeId": "ReportsTo"
                       }
                     }
                   }
