@@ -50,6 +50,7 @@ const makeDataRouter = (
         component={migrationsConnector(connect)}
       />
       <IndexRedirect to="manage" />
+
       <Route path="manage" component={ConnectedDatabaseManagePage} />
       <Route path="schema/manage" component={ConnectedDatabaseManagePage} />
       <Route path="sql" component={rawSQLConnector(connect)} />

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import { FaCheckCircle } from 'react-icons/fa';
 import { manageDatabasesRoute } from '../../Common/utils/routesUtils';
 import TreeView from './TreeView';
-import { getDatabaseTableTypeInfoForAllSources } from './DataActions';
 import { isInconsistentSource, getSourceDriver } from './utils';
 import { canReUseTableTypes } from './DataSources/utils';
 import { useDataSource } from '../../../dataSources';
@@ -16,12 +16,13 @@ import {
   updateCurrentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
   fetchDataInit,
+  getDatabaseTableTypeInfoForAllSources,
 } from './DataActions';
 import _push from './push';
 import Button from '../../Common/Button/Button';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import Spinner from '../../Common/Spinner/Spinner';
-import { FaCheckCircle } from 'react-icons/fa';
+import { useGDCTreeClick } from './GDCTree/hooks/useGDCTreeClick';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -200,6 +201,7 @@ const DataSubSidebar = props => {
   };
 
   const [treeViewItems, setTreeViewItems] = useState([]);
+  const handleGDCTreeClick = useGDCTreeClick(dispatch);
 
   useEffect(() => {
     // skip api call, if the data is there in store
@@ -283,20 +285,7 @@ const DataSubSidebar = props => {
         )}
       </div>
       <ul className={styles.subSidebarListUL} data-test="table-links">
-        <div
-          style={
-            // // block sidebar interaction during data fetch
-            // schemaLoading ||
-            // databaseLoading ||
-            // sidebarLoadingState ||
-            // isFetching ?
-            //   {
-            //     pointerEvents: 'none',
-            //     cursor: 'progress',
-            //   } :
-            { pointerEvents: 'auto' }
-          }
-        >
+        <div style={{ pointerEvents: 'auto' }}>
           <TreeView
             items={treeViewItems}
             onDatabaseChange={onDatabaseChange}
@@ -307,6 +296,7 @@ const DataSubSidebar = props => {
             databaseLoading={databaseLoading}
             schemaLoading={schemaLoading}
             preLoadState={preLoadState}
+            gdcItemClick={handleGDCTreeClick}
           />
         </div>
       </ul>

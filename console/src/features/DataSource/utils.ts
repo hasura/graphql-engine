@@ -110,6 +110,5 @@ export const getZodSchema = (
       })
       .transform((value: any) => pickBy(value, (d: any) => d !== ''));
 
-  console.log('!', property);
   return z.void();
 };

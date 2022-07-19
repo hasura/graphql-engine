@@ -1,21 +1,23 @@
 import React, { useState, useEffect, ReactNode } from 'react';
-import { Link } from 'react-router';
+import { DownOutlined, RightOutlined } from '@ant-design/icons';
 import {
-  FaChevronDown,
-  FaChevronRight,
   FaDatabase,
   FaFolder,
   FaFolderOpen,
   FaListUl,
   FaTable,
 } from 'react-icons/fa';
-
+import { Key } from 'antd/lib/table/interface';
+import { Link } from 'react-router';
+import './custom.css';
 import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import {
   getFunctionModifyRoute,
   getTableBrowseRoute,
 } from '../../Common/utils/routesUtils';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import { GDCTree } from './GDCTree/GDCTree';
+import { GDCSource } from './GDCTree/types';
 
 type SourceItemsTypes =
   | 'database'
@@ -43,6 +45,8 @@ type SourceItem = {
 const activeStyle = {
   color: '#fd9540',
 };
+
+const legacyIconStyles = 'ml-2 mr-5';
 
 const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
   const caseSensitiveResults: SourceItem[] = [];
@@ -226,15 +230,9 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
           }
         >
           {isOpen ? (
-            <FaChevronDown
-              className="text-xs mr-1"
-              style={{ strokeWidth: 50 }}
-            />
+            <DownOutlined className={`text-xs ${legacyIconStyles}`} />
           ) : (
-            <FaChevronRight
-              className="text-xs mr-1"
-              style={{ strokeWidth: 50 }}
-            />
+            <RightOutlined className={`text-xs ${legacyIconStyles}`} />
           )}
           {isOpen ? <FaFolderOpen /> : <FaFolder />} {item.name}
         </span>
@@ -342,15 +340,9 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           style={showActiveStyle ? activeStyle : {}}
         >
           {isOpen ? (
-            <FaChevronDown
-              className="text-xs mr-1"
-              style={{ strokeWidth: 50 }}
-            />
+            <DownOutlined className={`text-xs ${legacyIconStyles}`} />
           ) : (
-            <FaChevronRight
-              className="text-xs mr-1"
-              style={{ strokeWidth: 50 }}
-            />
+            <RightOutlined className={`text-xs ${legacyIconStyles}`} />
           )}
           {sourceItemsTypesToIcons[item.type]} {item.name}
         </span>
@@ -395,6 +387,7 @@ type TreeViewProps = {
   databaseLoading: boolean;
   schemaLoading: boolean;
   preLoadState: boolean;
+  gdcItemClick: (value: Key[]) => void;
 };
 const TreeView: React.FC<TreeViewProps> = ({
   items,
@@ -406,6 +399,7 @@ const TreeView: React.FC<TreeViewProps> = ({
   databaseLoading,
   schemaLoading,
   preLoadState,
+  gdcItemClick,
 }) => {
   const handleSelectDataSource = (dataSource: string) => {
     onDatabaseChange(dataSource);
@@ -439,7 +433,6 @@ const TreeView: React.FC<TreeViewProps> = ({
       </li>
     );
   }
-
   return (
     <div className={styles.treeNav}>
       {items.map((item, key) => (
@@ -455,6 +448,8 @@ const TreeView: React.FC<TreeViewProps> = ({
           schemaLoading={schemaLoading}
         />
       ))}
+
+      <GDCTree<GDCSource> onSelect={gdcItemClick} />
     </div>
   );
 };
