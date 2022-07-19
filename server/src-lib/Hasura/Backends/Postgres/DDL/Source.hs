@@ -368,9 +368,10 @@ fetchPgScalars =
 -- | Clean source database after dropping in metadata
 postDropSourceHook ::
   (MonadIO m, MonadError QErr m, MonadBaseControl IO m) =>
-  PGSourceConfig ->
+  SourceConfig ('Postgres pgKind) ->
+  TableEventTriggers ('Postgres pgKind) ->
   m ()
-postDropSourceHook sourceConfig = do
+postDropSourceHook sourceConfig _tableTriggerMap = do
   -- Clean traces of Hasura in source database
   --
   -- There are three type of database we have to consider here, which we

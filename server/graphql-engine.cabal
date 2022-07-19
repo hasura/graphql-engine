@@ -1244,6 +1244,7 @@ test-suite tests-hspec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
     Test.EventTriggersRecreationSpec
     Test.EventTriggersRunSQLSpec
+    Test.EventTriggerDropSourceCleanupSpec
     Test.GatheringUniqueConstraintsSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
