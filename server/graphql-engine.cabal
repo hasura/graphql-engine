@@ -404,7 +404,6 @@ library
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires
                      , Data.Parser.JSONPath
-                     , Data.Sequence.NESeq
                      , Data.SqlCommenter
                      , Data.SerializableBlob
                      , Data.Text.Casing

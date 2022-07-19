@@ -17,7 +17,7 @@ where
 import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.Sequence qualified as Seq
-import Data.Sequence.NESeq qualified as NESeq
+import Data.Sequence.NonEmpty qualified as NESeq
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column

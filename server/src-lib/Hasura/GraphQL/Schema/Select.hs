@@ -35,7 +35,6 @@ import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
-import Data.Sequence.NESeq qualified as NESeq
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
@@ -766,7 +765,7 @@ tableConnectionArgs pkeyColumns sourceInfo tableInfo = do
     parseConnectionSplit maybeOrderBys splitKind cursorSplit = do
       cursorValue <- J.eitherDecode cursorSplit `onLeft` const throwInvalidCursor
       case maybeOrderBys of
-        Nothing -> forM (NESeq.toNonEmpty pkeyColumns) $
+        Nothing -> forM (nonEmptySeqToNonEmptyList pkeyColumns) $
           \columnInfo -> do
             let columnJsonPath = [J.Key $ K.fromText $ toTxt $ ciColumn columnInfo]
                 columnType = ciType columnInfo
