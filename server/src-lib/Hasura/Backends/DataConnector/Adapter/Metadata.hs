@@ -9,7 +9,7 @@ import Data.Environment (Environment)
 import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Sequence qualified as Seq
-import Data.Sequence.NESeq qualified as NESeq
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API qualified as API
@@ -143,7 +143,7 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
                           -- TODO: Add Column Mutability to the 'TableInfo'
                           rciMutability = RQL.T.C.ColumnMutability False False
                         },
-                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint () (OID 0)) <$> NESeq.fromSeq primaryKeyColumns,
+                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint () (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = mempty,
                   _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,

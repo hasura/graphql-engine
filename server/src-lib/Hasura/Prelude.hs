@@ -49,6 +49,9 @@ module Hasura.Prelude
     -- * Aeson options
     hasuraJSON,
 
+    -- * NonEmpty.Seq
+    nonEmptySeqToNonEmptyList,
+
     -- * Extensions to @Data.Foldable@
     module Data.Time.Clock.Units,
   )
@@ -128,7 +131,8 @@ import Data.Monoid as M (getAlt)
 import Data.Ord as M (comparing)
 import Data.Semigroup as M (Semigroup (..))
 import Data.Sequence as M (Seq)
-import Data.Sequence.NESeq as M (NESeq)
+import Data.Sequence.NonEmpty as M (NESeq)
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.String as M (IsString)
 import Data.Text as M (Text)
 import Data.Text qualified as T
@@ -334,3 +338,8 @@ traceToFileM filepath x =
 -- [0,1,2,3,4,5,7,9]
 hashNub :: (Hashable a, Eq a) => [a] -> [a]
 hashNub = HSet.toList . HSet.fromList
+
+-- | Convert a non-empty sequence to a non-empty list.
+nonEmptySeqToNonEmptyList :: NESeq a -> NonEmpty a
+nonEmptySeqToNonEmptyList (x NESeq.:<|| xs) =
+  x M.:| toList xs

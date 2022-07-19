@@ -23,7 +23,7 @@ import Data.Aeson qualified as J
 import Data.Aeson.Types qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.Sequence qualified as Seq
-import Data.Sequence.NESeq qualified as NESeq
+import Data.Sequence.NonEmpty qualified as NESeq
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
@@ -128,7 +128,7 @@ data V1NodeId = V1NodeId
 data V2NodeId b = V2NodeId
   { _ni2Source :: SourceName,
     _ni2Table :: TableName b,
-    _ni2Columns :: !(NESeq.NESeq J.Value)
+    _ni2Columns :: NESeq.NESeq J.Value
   }
 
 instance J.FromJSON NodeId where

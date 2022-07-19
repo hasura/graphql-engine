@@ -29,6 +29,7 @@ import Data.HashSet.InsOrd qualified as OSet
 import Data.Int
 import Data.Map.Strict as M
 import Data.Scientific (Scientific)
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Set (Set)
 import Data.Text.NonEmpty
 import Data.Time
@@ -117,6 +118,9 @@ class (Eq a) => Cacheable a where
   default unchanged :: (Generic a, GCacheable (Rep a)) => Accesses -> a -> a -> Bool
   unchanged accesses a b = gunchanged (from a) (from b) accesses
   {-# INLINEABLE unchanged #-}
+
+instance (Cacheable a) => Cacheable (NESeq a) where
+  unchanged access = unchanged access `on` NESeq.toSeq
 
 -- | A mapping from root 'Dependency' keys to the accesses made against those dependencies.
 newtype Accesses = Accesses {unAccesses :: DM.DMap UniqueS Access}
@@ -354,8 +358,6 @@ instance Cacheable UT.URLTemplate
 instance (Cacheable a) => Cacheable (Maybe a)
 
 instance (Cacheable a, Cacheable b) => Cacheable (Either a b)
-
-instance (Cacheable a) => Cacheable (NESeq a)
 
 instance Cacheable a => Cacheable [a]
 

@@ -14,7 +14,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.List (delete)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
-import Data.Sequence.NESeq qualified as NESeq
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended
 import Database.PG.Query qualified as Q
 import Hasura.Backends.Postgres.Connection

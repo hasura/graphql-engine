@@ -11,7 +11,7 @@ where
 
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
-import Data.Sequence.NESeq qualified as NESeq
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Casing qualified as C
 import Hasura.Backends.Postgres.Instances.Schema ()
 import Hasura.Backends.Postgres.SQL.Types (ConstraintName (..), QualifiedObject (..), QualifiedTable, TableName (..), unsafePGCol)
@@ -112,7 +112,7 @@ mkParser table cib =
     columnInfos :: [ColumnInfo PG]
     columnInfos = mkColumnInfo <$> cib
 
-    pks :: Maybe (NESeq (ColumnInfo PG))
+    pks :: Maybe (NESeq.NESeq (ColumnInfo PG))
     pks = case mkColumnInfo <$> filter cibIsPrimaryKey cib of
       [] -> Nothing
       (x : xs) -> Just $ foldl (<>) (NESeq.singleton x) $ fmap NESeq.singleton xs

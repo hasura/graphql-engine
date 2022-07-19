@@ -11,7 +11,7 @@ import Data.FileEmbed (embedFile, makeRelativeToProject)
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
 import Data.HashSet qualified as HS
-import Data.Sequence.NESeq qualified as SNE
+import Data.Sequence.NonEmpty qualified as NESeq
 import Data.String (fromString)
 import Database.MySQL.Base (Connection)
 import Database.MySQL.Base.Types (Field (..))
@@ -62,7 +62,7 @@ mergeMetadata InformationSchema {..} =
                       (ConstraintName $ fromMaybe "" isConstraintName)
                       (OID $ fromIntegral $ fromMaybe 0 isConstraintOrdinalPosition)
                   )
-                  (SNE.singleton (Column isColumnName))
+                  (NESeq.singleton (Column isColumnName))
             else Nothing,
         _ptmiUniqueConstraints =
           if isColumnKey == UNI
