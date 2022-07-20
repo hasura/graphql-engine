@@ -25,7 +25,7 @@
 # Ref: https://stackoverflow.com/a/424142/10208226 to get list of changed files in a commit
 # git diff-tree --no-commit-id --name-only -r 90c8f75
 # ./docs/scripts/pandoc-auto-transform.sh
-# files=( "graphql/core/databases/ms-sql-server/index.rst" "graphql/core/databases/ms-sql-server/mutations/index.rst" "graphql/core/databases/ms-sql-server/mutations/insert.rst" "graphql/core/databases/ms-sql-server/mutations/upsert.rst" "graphql/core/databases/postgres/mutations/upsert.rst" )
+# files=( "graphql/core/databases/ms-sql-server/index.rst" "graphql/core/mutations/ms-sql-server/index.rst" "graphql/core/mutations/ms-sql-server/insert.rst" "graphql/core/mutations/ms-sql-server/upsert.rst" "graphql/core/mutations/postgres/upsert.rst" )
 # for f in "${files[@]}"; do
 #     mkdir -pv -- "docs/${f%/*}" && touch -- "docs/docs/${f%}.txt";
 #     pandoc "docs-old/$f" -f rst -t gfm -s -o "docs/docs/${f%}.txt";

@@ -1,0 +1,30 @@
+---
+description: Manage subscriptions on your database with Hasura
+keywords:
+  - hasura
+  - docs
+  - subscription
+slug: index
+---
+
+# Subscriptions
+
+## Introduction
+
+A GraphQL subscription is essentially a query where the client receives an update whenever the value of any field
+changes upstream.
+
+Subscriptions are supported for all kinds of queries. All the concepts of [queries](/queries/index.mdx) hold true for
+subscriptions as well.
+
+:::info Caveat
+
+Hasura follows the [GraphQL spec](https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field) which allows
+for only one root field in a subscription.
+
+:::
+
+## Explore subscriptions
+
+- [Explore subscriptions with Postgres / Citus / Hyperscale](/subscriptions/postgres/index.mdx)
+- [Explore subscriptions with MS SQL Server](/subscriptions/ms-sql-server/index.mdx)

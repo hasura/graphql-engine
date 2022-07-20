@@ -1,0 +1,39 @@
+---
+sidebar_label: Data Federation Types
+sidebar_position: 2
+description: Join data across remote data sources
+keywords:
+  - hasura
+  - docs
+  - remote join
+  - data federation
+---
+
+# Data Federation Types
+
+Hasura GraphQL engine supports the following remote relationships across your various data sources:
+
+## Database to database relationships
+To join data across tables between two different database sources, such as order information stored in a Postgres
+database, and user information stored in a separate Postgres or say a SQL Server database.
+[Database to database relationships](/schema/postgres/remote-relationships/remote-source-relationships.mdx)
+
+## Database to Remote Schema relationships
+To join data across tables and remote GraphQL APIs. For example, you can join customer data from your tables with
+account data from Stripe, Spotify, or Auth0 via their GraphQL APIs.
+[Database to Remote Schema relationships](/schema/postgres/remote-relationships/remote-schema-relationships.mdx)
+
+## Remote Schema to database relationships
+To join data from remote GraphQL schemas to database tables. For example connecting account data from Stripe, Spotify or
+Auth0 GraphQL APIs to customer data in your tables.
+[Remote Schema to database relationships](/remote-schemas/remote-relationships/remote-schema-db-relationships.mdx):
+
+## Remote Schema to Remote Schema relationships (a.k.a GraphQL joins
+To join data between two remote GraphQL schemas. For example connecting customer data from your custom GraphQL API to
+account data from Stripe, Spotify or Auth0 GraphQL APIs.
+[Remote Schema to Remote Schema relationships (a.k.a GraphQL joins)](/remote-schemas/remote-relationships/remote-schema-relationships.mdx)
+
+## Action to database relationships
+To join data across tables and actions (i.e. Rest APIs). For example, you can join user data from your database with
+the response from a `createUser` action.
+[Action to database relationships](/schema/postgres/remote-relationships/action-relationships.mdx)

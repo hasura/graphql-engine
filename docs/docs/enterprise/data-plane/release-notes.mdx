@@ -1,0 +1,336 @@
+---
+sidebar_label: Release Notes
+sidebar_position: 6
+description: Release Notes for Hasura EE Data Plane
+title: 'EE: Release Notes'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - data plane
+  - release notes
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Release Notes <HeadingIcon icon={`ee`} size={36} />
+
+### `v2.7.0-pro.2`
+
+- Adds query tags support for MSSQL data sources
+- Hide exception details when pertaining to postgres client certificates
+- Expose postgres ssl certificate directory configuration via HASURA_GRAPHQL_PG_SSL_CERTIFICATE_PATH and
+  pg-ssl-certificate-path
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.7.0)
+
+### `v2.6.2-pro.1`
+
+- Fixes a bug which occured while inserting empty objects with default values to postgres, citus, and sql server
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.6.2)
+
+### `v2.6.1-pro.1`
+
+- Fix a race condition bug in rate limiting
+- Fix options parsing bug preventing HASURA_GRAPHQL_ADMIN_SECRETS from being set correctly.
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.6.0)
+
+### `v2.5.1-pro.1`
+
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.5.0)
+
+### `v2.4.0-pro.1`
+
+- console: support for MSSQL read replicas
+- console: fix monitoring tab indefinite loading issue on PRO CLI mode
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.4.0)
+
+### `v2.3.1-pro.1`
+
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.3.1)
+
+### `v2.3.0-pro.1`
+
+- Adds `HASURA_GRAPHQL_JWT_SECRETS` env var and CLI option for providing multiple JWT secrets.
+- `/v1alpha1/graphql` endpoint returns status code 429 when rate limit exceeded (#8081)
+- Includes everything from CE (community edition), detailed changelog
+  [here](https://github.com/hasura/graphql-engine/releases/tag/v2.3.0)
+
+### `v2.2.2-pro.1`
+
+- The open-source version of Redis (v5) is now included by default in the Hasura Data Plane
+- Hasura rate limiting and caching features have been enabled by default
+- Includes everything from OSS, detailed changelog [here](https://github.com/hasura/graphql-engine/releases)
+- Helm chart available [here](https://storage.googleapis.com/hasura-ee-charts/hge-pro-2.2.2.tgz)
+
+### `v2.2.0-pro.1`
+
+- server: allow the max cache size to be user configurable via the `HASURA_GRAPHQL_MAX_CACHE_SIZE` env var.
+- server: make the bucket capacity proporitional to the max cache size value
+
+### `v2.1.1-pro.3`
+
+- Fixes a bug in configuring response cache size.
+
+### `v2.0.10-athena.alpha.7`
+
+- Enables HTTP Proxy for Athena connections using: `AWS_OPTION_HTTP_OPTIONS_PROXY_URL`
+
+### `v2.1.1-pro.2.centos`
+
+- Allows configuring the response cache size using an environment variable `HASURA_GRAPHQL_MAX_CACHE_SIZE`, the value
+  defaults to 1 MB when the env var is not set.
+- Action transforms, read more in the [docs](/actions/rest-connectors.mdx)
+- Event trigger transforms, you can now modify the HTTP request that is sent to your Event Trigger webhook by using
+  Event Trigger transforms.
+- SQL Server mutations, insert and Delete mutations for SQL Server are now supported, only update mutations are pending.
+- Root field name and type name customization per source
+- Function field names customization
+- Support for Mac M1
+- Includes everything from OSS, detailed changelog [here](https://github.com/hasura/graphql-engine/releases)
+
+### `v2.0.10-athena.alpha.6`
+
+- Enables more permissive types
+
+### `v2.0.10-athena.alpha.5`
+
+- Enables support for AWS Session Tokens for Athena credentialling
+
+### `v2.0.10-athena.alpha.4`
+
+- Patches container-sec vulnerabilities with npm
+
+### `v2.0.10-athena.alpha.3`
+
+- Support for previewing Athena support
+
+### `v2.0.10-pro.1-streaming.1.patched`
+
+- Support for streaming API
+
+### `v2.0.10-pro.1.patched`
+
+- Includes security patches.
+- server: fix bug which recreated event triggers every time the graphql-engine started up
+- server: remove identity notion for table columns (fix [#7557](https://github.com/hasura/graphql-engine/issues/7557))
+- console: add performance fixes for handling large db schemas
+
+### `v2.0.9-pro.1.patched`
+
+- Includes security patches.
+
+### `v2.0.9-pro.1`
+
+#### Support for null values in boolean expressions
+
+In v2, we introduced a breaking change, that aimed at fixing a
+[long-standing issue](https://github.com/hasura/graphql-engine/issues/704>) a null value in a boolean expression would
+always evaluate to `True` for all rows. For example, the following queries were all equivalent:
+
+```
+delete_users(where: {\_id: {\_eq: null}}) # field is null, which is as if it were omitted
+delete_users(where: {\_id: {}}) # object is empty, evaluates to True for all rows
+delete_users(where: {}) # object is empty, evaluates to True for all rows
+delete_users() # delete all users
+```
+
+This behaviour was unintuitive, and could be an unpleasant surprise for users that expected the first query to mean
+"delete all users for whom the id column is null". Therefore in v2, we changed the implementation of boolean operators
+to reject null values, as we deemed it safer:
+
+```
+delete_users(where: {\_id: {\_eq: null}}) # error: argument of \_eq cannot be null
+```
+
+However, this change broke the workflows of [some of our users](https://github.com/hasura/graphql-engine/issues/6660)
+who were relying on this property of boolean operators. This was used, for instance, to _conditionally_ enable a test:
+
+{{< highlight graphql >}} query($isVerified: Boolean) { users(where: {\_isVerified: {\_eq: $isVerified}}) { name } }
+{{< / highlight >}}
+
+We now support the use of the functions `ST_3DDWithin` and `ST_3DIntersects` in boolean expressions. Note that
+`ST_3DIntersects` requires PostGIS be
+[built with SFCGAL support](https://www.postgis.net/docs/manual-3.1/reference.html#reference_sfcgal) which may depend on
+the PostGIS distribution used.
+
+- Console: Add custom_column_names to track_table request with replaced invalid characters
+- Console: Add details button to the success notification to see inserted row
+- Console: Add request preview for REST endpoints
+- Server: Format Tracing values inside trace_log to string.
+- Server: Fix issue with scheduled trigger logs
+- Server: Format the values of `injectEventContext` as hexadecimal string instead of integer (fix #6465)
+- Server: All `/query` APIs now require admin privileges
+- Miscellaneous fixes
+
+### `v2.0.1-pro.1`
+
+Includes everything from OSS `v2.0.0-alpha.1` through
+[v2.0.0-alpha.6](https://github.com/hasura/graphql-engine/releases)
+
+- Hasura Cloud now stores project metadata in its own managed database
+- Allow adding data source using env var
+- Add cache rate limiting to the query cache.
+- Support queries with session variables in @cached.
+- Add endpoints for clearing the query cache and reading the query cache metrics.
+- Add read replicas UI
+
+#### Breaking changes
+
+This version includes breaking changes from previous version (i.e `v1.3.3-pro.x`).
+
+- **Multiple mutations in same request are not transactional**
+
+UPDATE (since v2.0.9-pro.1): For only Postgres data source, multiple fields in a mutation will be run in one transaction
+to preserve backwards compatibility
+
+- **Semantics of explicit "null" values in "where" filters have changed**
+
+  According to the discussion in [issue 704](https://github.
+  xcom/hasura/graphql-engine/issues/704#issuecomment-635571407), an explicit `null` value in a comparison input object
+  will be treated as an error rather than resulting in the expression being evaluated to `True`.
+
+  For example: The mutation `delete_users(where: {id: {_eq: $userId}}) { name }` will yield an error if `$userId` is
+  `null` instead of deleting all users.
+
+  _UPDATE (since v2.0.9-pro.1)_: The old behaviour can be enabled by setting an environment variable:
+  `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE: true`.
+
+- **Semantics of "null" join values in remote schema relationships have changed**
+
+  In a remote schema relationship query, the remote schema will be queried when all of the joining arguments are not
+  `null` values. When there are `null` value(s), the remote schema won't be queried and the response of the remote
+  relationship field will be `null`. Earlier, the remote schema was queried with the `null` value arguments and the
+  response depended upon how the remote schema handled the `null` arguments but as per user feedback, this behaviour was
+  clearly not expected.
+
+- **Order of keys in objects passed as "order_by" operator inputs is not preserved**
+
+  The `order_by` operator accepts an array of objects as input to allow ordering by multiple fields in a given order,
+  i.e. `[{field1: sortOrder}, {field2: sortOrder}]` but it is also accepts a single object with multiple keys as an
+  input, i.e. `{field1: sortOrder, field2: sortOrder}`. In earlier versions, Hasura's query parsing logic used to
+  maintain the order of keys in the input object and hence the appropriate `order by` clauses with the fields in the
+  right order were generated.
+
+  As the [GraphQL spec](http://spec.graphql.org/June2018/#sec-Input-Object-Values) mentions that input object keys are
+  unordered, Hasura v2.0's new and stricter query parsing logic doesn't maintain the order of keys in the input object
+  taking away the guarantee of the generated `order by` clauses to have the fields in the given order.
+
+  For example: The query `fetch_users(order_by: {age: desc, name: asc}) {id name age}` which is intended to fetch users
+  ordered by their age and then by their name is now not guaranteed to return results first ordered by age and then by
+  their name as the `order_by` input is passed as an object. To achieve the expected behaviour, the following query
+  `fetch_users(order_by: [{age: desc}, {name: asc}]) {id name age}` should be used which uses an array to define the
+  order of fields to generate the appropriate `order by` clause.
+
+- **Incompatibility with older Hasura version remote schemas**
+
+  With v2.0, some of the auto-generated schema types have been extended. For example, `String_comparison_exp` has an
+  additional `regex` input object field. This means if you have a Hasura API with an older Hasura version added as a
+  remote schema then it will have a type conflict. You should upgrade all Hasura remote schemas to avoid such type
+  conflicts.
+
+- **Migrations are not executed under a single transaction**
+
+  While applying multiple migrations, in earlier Hasura CLI versions all migration files were run under one transaction
+  block. i.e. if any migration threw an error, all the previously successfully executed migrations would be rolled back.
+  With Hasura CLI v2.0, each migration file is run in its own transaction block but all the migrations are not executed
+  under one. i.e. if any migration throws an error, applying further migrations will be stopped but the other
+  successfully executed migrations up till that point will not be rolled back.
+
+### `v1.3.0-pro.2`
+
+- Add tracing flame graph to Operations page, improvements to tracing
+- Log request body size for HTTP/Websocket APIs
+- Console bug fixes
+- Introduce Query Response Caching and Distributed Tracing
+
+### `v1.3.0-pro.1`
+
+- Update Hasura Core to 1.3.0
+- Console bug fixes
+- Introduce new buffering system to send logs and metrics to Hasura Cloud
+- Fix broken log structure for subscription workers (poller-log)
+
+### `v1.2.2-pro.1`
+
+- Update Hasura Core to v1.2.2
+- Console bug fixes
+
+### `v1.2.1-pro.1`
+
+- Update Hasura Core to `v1.2.1`.
+- Console: Add UI for enabling/disabling query variables analytics and response body analytics.
+- Console change default filters to 1, 6, 12, 24 hours.
+- CLI: Disable validation & auth for commands like `version`, `projects` etc.
+
+### `v1.1.1-pro.4`
+
+- Add command to run regression test from the CLI.
+- Server: skip read-replica urls settings if value is an empty string.
+
+### `v1.1.1-pro.3`
+
+- Introducing Hasura Pro CLI plugin for Console.
+
+### `v1.1.1-pro.2`
+
+- Customisation of connection pool parameters for read replicas
+- Console UI updates to subscriptions workers tab:
+  - Show error message if config api is unreachable
+  - Add graph icon to actions column to view graphs for a particular worker
+- Response body and query variables analysis are disabled by default.
+
+### `v1.1.1-pro.1`
+
+- v1.1.1 release on Pro
+
+### `v1.1.0-pro.5`
+
+- New metrics on the internal workings of subscription
+- console: add hide introspection query filter
+- console: optimise apollo client initializations
+
+### `v1.1.0-pro.4`
+
+- console: optimisations to operations tab to load things faster
+- console: add select all option to filter dropdowns
+- console: persist group by as url params
+- server: set log level warn for log streaming failures
+
+### `v1.1.0-pro.3`
+
+- Add read replica support
+
+### `v1.1.0-pro.2`
+
+- Fix a bug with `pg_dump` API
+
+### `v1.1.0-pro.1`
+
+- Update Hasura to v1.1.0
+- Make GraphQL/Metadata APIs available even when the backend is not reachable
+- Some bug fixes on console
+
+### `v1.0.0-pro.5`
+
+- Add websocket and subscription analytics.
+
+### `v1.0.0-pro.4`
+
+- Gracefully handle jwt expiration when console is open
+- Remove update notification on the console
+- Fix a rounding error in the overview tab on console
+- Render session variables in JSON format in the Inspect modal
+
+### `v1.0.0-pro.3`
+
+- Fixes a bug with depth limit calculation
+- Introspection query is excluded from depth limits
+- Fixes a bug with regression tests
+- Enhancements to Operations page

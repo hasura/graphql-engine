@@ -1,0 +1,48 @@
+---
+sidebar_label: Upgrade to 0.2.x
+sidebar_position: 5
+description: Upgrade Hasura EE Control Plane to 0.2.x
+title: 'EE: Upgrade to 0.2.x'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - upgrade
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Upgrade to 0.2.x <HeadingIcon icon={`ee`} size={36} />
+
+:::info Note
+
+This is applicable only when upgrading from Lux/Helm version 0.1.x -> 0.2.x / 2.0.x.
+
+:::
+
+## Pre Install
+
+Starting with the control plane version 0.2.x, docker images are access controlled. Credentials required to access these
+[docker credentials] will be shared with you during the on-boarding.
+
+Before starting the upgrade, configure private registry access with the following
+[guide](/enterprise/control-plane/pulling-images.mdx).
+
+## Installation
+
+Install can be done via the usual installation commands with the following [guide](/enterprise/control-plane/index.mdx).
+
+## Post Install
+
+- Remove deprecated services from cluster by running below,
+  - kubectl delete ingress accounts
+  - kubectl delete all -l app=cronjob
+  - kubectl delete all -l app=accounts
+- Reload metadata including remote schemas on data portal `http://<domain>/data/` or restart data service.
+- Modify the server URL of existing projects in Projects Page to fix a `Launch Console` issue. The modification can be
+  as simple as adding or removing a `\` at the end, `Save` and revert the same.
+
+<Thumbnail src='/img/graphql/enterprise/lux-2.0-upgrade-fix.gif' alt='Upgrade Lux' />

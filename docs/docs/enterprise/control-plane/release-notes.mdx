@@ -1,0 +1,442 @@
+---
+sidebar_label: Release Notes
+sidebar_position: 6
+description: Release Notes for Hasura EE Control Plane
+title: 'EE: Release Notes'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - release notes
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Release Notes <HeadingIcon icon={`ee`} size={36} />
+
+### `2.0.13`
+
+- We now support exporting traces from Hasura projects to APM tools via the OpenTelemetry Protocol.
+  [Docs here](/observability/integrations/opentelemetry.mdx)
+- Fixes container vulnerabilities
+- Fixes a race condition during startup of services
+- Compatible with graphql-engine-pro versions 1.3.x and 2.x.y
+
+| Component             | Version                                              |
+| --------------------- | ---------------------------------------------------- |
+| `api`                 | `lux-api:2.0.13`                                     |
+| `auth`                | `lux-auth:2.0.13`                                    |
+| `auth-redis`          | `redis:5`                                            |
+| `cloud`               | `lux-cloud:2.0.13`                                   |
+| `data`                | `lux-data:2.0.13`                                    |
+| `lux-psql-init`       | `lux-psql-init:v0.0.2`                               |
+| `logs-grpc`           | `lux-logs:2.0.13`                                    |
+| `logs-monitor`        | `lux-logs:2.0.13`                                    |
+| `logs-redis`          | `redis:5`                                            |
+| `logs-worker`         | `lux-logs:2.0.13`                                    |
+| `metrics`             | `lux-metrics:2.0.13`                                 |
+| `metrics-exporter`    | `lux-metrics-exporter:2.0.13`                        |
+| `prometheus-exporter` | `lux-prometheus-exporter:2.0.13`                     |
+| `ddtrace`             | `lux-ddtrace:2.0.13`                                 |
+| `metricsapi`          | `lux-metricsapi:2.0.13`                              |
+| `oauth`               | `hydra:v1.4.9`                                       |
+| `postgres`            | `postgres:11`                                        |
+| `timescaledb`         | `timescaledb:1.7.4-pg11`                             |
+| `graphql-engine-pro`  | `v2.2.2-pro.1.centos [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.13.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.13.tgz)
+- [graphql-engine-pro:v2.7.0-pro.2.ubuntu](https://hub.docker.com/layers/graphql-engine-pro/hasuraci/graphql-engine-pro/v2.7.0-pro.2.ubuntu/images/sha256-94af7997efaa62ffb453812b51f9e750fd307f06b1aed659a80e2a12c6ec1686?context=explore)
+- [cli-releases](https://github.com/hasura/graphql-engine/releases)
+
+### `2.0.12`
+
+- Fixes container vulnerabilities
+- Fixes issues with datadog traces export
+- Compatible with graphql-engine-pro versions 1.3.x and 2.x.y
+
+| Component             | Version                                              |
+| --------------------- | ---------------------------------------------------- |
+| `api`                 | `lux-api:2.0.12`                                     |
+| `auth`                | `lux-auth:2.0.12`                                    |
+| `auth-redis`          | `redis:5`                                            |
+| `cloud`               | `lux-cloud:2.0.12`                                   |
+| `data`                | `lux-data:2.0.12`                                    |
+| `lux-psql-init`       | `lux-psql-init:v0.0.2`                               |
+| `logs-grpc`           | `lux-logs:2.0.12`                                    |
+| `logs-monitor`        | `lux-logs:2.0.12`                                    |
+| `logs-redis`          | `redis:5`                                            |
+| `logs-worker`         | `lux-logs:2.0.12`                                    |
+| `metrics`             | `lux-metrics:2.0.12`                                 |
+| `metrics-exporter`    | `lux-metrics-exporter:2.0.12`                        |
+| `prometheus-exporter` | `lux-prometheus-exporter:2.0.12`                     |
+| `ddtrace`             | `lux-ddtrace:2.0.12`                                 |
+| `metricsapi`          | `lux-metricsapi:2.0.12`                              |
+| `oauth`               | `hydra:v1.4.9`                                       |
+| `postgres`            | `postgres:11`                                        |
+| `timescaledb`         | `timescaledb:1.7.4-pg11`                             |
+| `graphql-engine-pro`  | `v2.2.2-pro.1.centos [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.12.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.12.tgz)
+- [graphql-engine-pro:v2.7.0-pro.2.ubuntu](https://hub.docker.com/layers/graphql-engine-pro/hasuraci/graphql-engine-pro/v2.7.0-pro.2.ubuntu/images/sha256-94af7997efaa62ffb453812b51f9e750fd307f06b1aed659a80e2a12c6ec1686?context=explore)
+- [cli-releases](https://github.com/hasura/graphql-engine/releases)
+
+### `2.0.11`
+
+- The control plane dashboard allows you to set an `environment` tag for your projects
+- Performance improvements to Azure monitor trace export integration
+- Bug fixes for datadog metrics & traces exports. Added support for new datadog regions
+- Project data passthrough can now be visualized through the control plane dashboard
+- Compatible with graphql-engine-pro versions 1.3.x and 2.x.y
+
+| Component             | Version                                              |
+| --------------------- | ---------------------------------------------------- |
+| `api`                 | `lux-api:2.0.11`                                     |
+| `auth`                | `lux-auth:2.0.11`                                    |
+| `auth-redis`          | `redis:5`                                            |
+| `cloud`               | `lux-cloud:2.0.11`                                   |
+| `data`                | `lux-data:2.0.11`                                    |
+| `lux-psql-init`       | `lux-psql-init:v0.0.2`                               |
+| `logs-grpc`           | `lux-logs:2.0.11`                                    |
+| `logs-monitor`        | `lux-logs:2.0.11`                                    |
+| `logs-redis`          | `redis:5`                                            |
+| `logs-worker`         | `lux-logs:2.0.11`                                    |
+| `metrics`             | `lux-metrics:2.0.11`                                 |
+| `metrics-exporter`    | `lux-metrics-exporter:2.0.11`                        |
+| `prometheus-exporter` | `lux-prometheus-exporter:2.0.11`                     |
+| `ddtrace`             | `lux-ddtrace:2.0.11`                                 |
+| `metricsapi`          | `lux-metricsapi:2.0.11`                              |
+| `oauth`               | `hydra:v1.4.9`                                       |
+| `postgres`            | `postgres:11`                                        |
+| `timescaledb`         | `timescaledb:1.7.4-pg11`                             |
+| `graphql-engine-pro`  | `v2.2.2-pro.1.centos [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.11.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.11.tgz)
+- [graphql-engine-pro:v2.6.1-pro.1.ubuntu](https://hub.docker.com/layers/graphql-engine-pro/hasuraci/graphql-engine-pro/v2.6.1-pro.1.ubuntu/images/sha256-dcc04951653401db0532ae13e2d7bee4d648b6384023cd132e2f88e408b09efe?context=explore)
+- [cli-releases](https://github.com/hasura/graphql-engine/releases)
+
+### `2.0.10`
+
+- The control plane dashboard now supports the ability to search for projects
+- Hasura project traces can now be sent to Azure Monitor by configuring the Azure integration
+- Hasura project traces can now be sent to Datadog. Config
+  [here](https://docs.ee.hasura.io/lux-installation/helm-configs/#configure-datadog-trace-exporter)
+- Compatible with graphql-engine-pro versions 1.3.x and 2.x.y
+
+| Component             | Version                                              |
+| --------------------- | ---------------------------------------------------- |
+| `api`                 | `lux-api:2.0.10`                                     |
+| `auth`                | `lux-auth:2.0.10`                                    |
+| `auth-redis`          | `redis:5`                                            |
+| `cloud`               | `lux-cloud:2.0.10`                                   |
+| `data`                | `lux-data:2.0.10`                                    |
+| `lux-psql-init`       | `lux-psql-init:v0.0.2`                               |
+| `logs-grpc`           | `lux-logs:2.0.10`                                    |
+| `logs-monitor`        | `lux-logs:2.0.10`                                    |
+| `logs-redis`          | `redis:5`                                            |
+| `logs-worker`         | `lux-logs:2.0.10`                                    |
+| `metrics`             | `lux-metrics:2.0.10`                                 |
+| `metrics-exporter`    | `lux-metrics-exporter:2.0.10`                        |
+| `prometheus-exporter` | `lux-prometheus-exporter:2.0.10`                     |
+| `ddtrace`             | `lux-ddtrace:2.0.10`                                 |
+| `metricsapi`          | `lux-metricsapi:2.0.10`                              |
+| `oauth`               | `hydra:v1.4.9`                                       |
+| `postgres`            | `postgres:11`                                        |
+| `timescaledb`         | `timescaledb:1.7.4-pg11`                             |
+| `graphql-engine-pro`  | `v2.2.2-pro.1.centos [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.10.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.10.tgz)
+- [graphql-engine-pro:v2.2.2-pro.1.centos](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.2.2-pro.1.centos/images/sha256-4b4c68e1d4896b611142d0f73b8bb8df71adf59c9ad67f998dc6c472750fcd64?context=explore)
+- [cli-releases](https://github.com/hasura/graphql-engine/releases)
+
+### `2.0.9`
+
+- We now support exporting Hasura metrics in Prometheus format via a specialized endpoint. This allows you to use a
+  Prometheus agent to scrape and load your metrics into a Prometheus compatible for further analysis. Config
+  [here](https://docs.ee.hasura.io/lux-installation/helm-configs/#configure-prometheus-exporter)
+- A non-root user `hasura` now runs all control plane containers by default
+- The Hasura control plane service has been upgraded to 2.x.x and you can now disable introspection queries
+- The control plane dashboard now supports the ability to list projects across multiple pages
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+| Component            | Version                                              |
+| -------------------- | ---------------------------------------------------- |
+| `api`                | `lux-api:2.0.9`                                      |
+| `auth`               | `lux-auth:2.0.9`                                     |
+| `auth-redis`         | `redis:5`                                            |
+| `cloud`              | `lux-cloud:2.0.9`                                    |
+| `data`               | `lux-data:2.0.9`                                     |
+| `lux-psql-init`      | `lux-psql-init:v0.0.2`                               |
+| `logs-grpc`          | `lux-logs:2.0.9`                                     |
+| `logs-monitor`       | `lux-logs:2.0.9`                                     |
+| `logs-redis`         | `redis:5`                                            |
+| `logs-worker`        | `lux-logs:2.0.9`                                     |
+| `metrics`            | `lux-metrics:2.0.9`                                  |
+| `metrics-exporter`   | `lux-metrics-exporter:2.0.9`                         |
+| `metricsapi`         | `lux-metricsapi:2.0.9`                               |
+| `oauth`              | `hydra:v1.4.9`                                       |
+| `postgres`           | `postgres:11`                                        |
+| `timescaledb`        | `timescaledb:1.7.4-pg11`                             |
+| `graphql-engine-pro` | `v2.2.2-pro.1.centos [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.9.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.9.tgz)
+- [graphql-engine-pro:v2.2.2-pro.1.centos](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.2.2-pro.1.centos/images/sha256-4b4c68e1d4896b611142d0f73b8bb8df71adf59c9ad67f998dc6c472750fcd64?context=explore)
+- [cli-releases](https://github.com/hasura/graphql-engine/releases)
+
+### `2.0.8`
+
+- Fixes security vulnerabilities
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+| Component            | Version                                              |
+| -------------------- | ---------------------------------------------------- |
+| `api`                | `lux-api:2.0.8`                                      |
+| `auth`               | `lux-auth:2.0.8`                                     |
+| `auth-redis`         | `redis:5`                                            |
+| `cloud`              | `lux-cloud:2.0.8`                                    |
+| `data`               | `lux-data:2.0.8`                                     |
+| `lux-psql-init`      | `lux-psql-init:v0.0.2`                               |
+| `logs-grpc`          | `lux-logs:2.0.8`                                     |
+| `logs-monitor`       | `lux-logs:2.0.8`                                     |
+| `logs-redis`         | `redis:5`                                            |
+| `logs-worker`        | `lux-logs:2.0.8`                                     |
+| `metrics`            | `lux-metrics:2.0.8`                                  |
+| `metrics-exporter`   | `lux-metrics-exporter:2.0.8`                         |
+| `metricsapi`         | `lux-metricsapi:2.0.8`                               |
+| `oauth`              | `hydra:v1.4.9`                                       |
+| `postgres`           | `postgres:11`                                        |
+| `timescaledb`        | `timescaledb:1.7.4-pg11`                             |
+| `graphql-engine-pro` | `v2.1.1-pro.3.centos [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.8.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.8.tgz)
+- [graphql-engine-pro:v2.1.1-pro.3.centos](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.1.1-pro.3.centos/images/sha256-b0a5b94409120281465bcc4ec42c32d28ffa9c87d4018bacf660d639f1744ccc?context=explore)
+- [cli-releases](https://github.com/hasura/graphql-engine/releases)
+
+### `2.0.6`
+
+- The default canonicalisation algorithm used for SAML AuthN request signing is set to `xml-exc-c14n`, in accordance
+  with the SAML spec.
+- All images are non root by default and have appropriate security contexts set.
+- Enables overriding of security context for deployments.
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+| Component            | Version                                              |
+| -------------------- | ---------------------------------------------------- |
+| `api`                | `lux-api:2.0.6`                                      |
+| `auth`               | `lux-auth:2.0.6`                                     |
+| `auth-redis`         | `redis:5`                                            |
+| `cloud`              | `lux-cloud:2.0.6`                                    |
+| `data`               | `lux-data:2.0.6`                                     |
+| `lux-psql-init`      | `lux-psql-init:v0.0.2`                               |
+| `logs-grpc`          | `lux-logs:2.0.6`                                     |
+| `logs-monitor`       | `lux-logs:2.0.6`                                     |
+| `logs-redis`         | `redis:5`                                            |
+| `logs-worker`        | `lux-logs:2.0.6`                                     |
+| `metrics`            | `lux-metrics:2.0.6`                                  |
+| `metrics-exporter`   | `lux-metrics-exporter:2.0.6`                         |
+| `metricsapi`         | `lux-metricsapi:2.0.6`                               |
+| `oauth`              | `hydra:v1.4.9`                                       |
+| `postgres`           | `postgres:11`                                        |
+| `timescaledb`        | `timescaledb:1.7.4-pg11`                             |
+| `graphql-engine-pro` | `v2.1.1-pro.2.centos [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.6.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.6.tgz)
+- [graphql-engine-pro:v2.1.1-pro.2.centos](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.1.1-pro.2.centos/images/sha256-f66c1b86d5fc851efb251be3ec599760bfee48944640311f84caab2aaf26cf29?context=explore)
+- [cli-releases](https://github.com/hasura/graphql-engine/releases)
+
+### `2.0.5`
+
+- Fixes the ingress annotation deprecation
+  [issue](https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#deprecating-the-ingress-class-annotation)
+  when installing lux in newer (>=1.18) k8s versions.
+- This chart installs Lux version `2.0.4`
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+| Component            | Version                                                |
+| -------------------- | ------------------------------------------------------ |
+| `api`                | `lux-api:2.0.4`                                        |
+| `auth`               | `lux-auth:2.0.4`                                       |
+| `auth-redis`         | `redis:5`                                              |
+| `cloud`              | `lux-cloud:2.0.4`                                      |
+| `data`               | `lux-data:2.0.4`                                       |
+| `lux-psql-init`      | `lux-psql-init:v0.0.2`                                 |
+| `logs-grpc`          | `lux-logs:2.0.4`                                       |
+| `logs-monitor`       | `lux-logs:2.0.4`                                       |
+| `logs-redis`         | `redis:5`                                              |
+| `logs-worker`        | `lux-logs:2.0.4`                                       |
+| `metrics`            | `lux-metrics:2.0.4`                                    |
+| `metrics-exporter`   | `lux-metrics-exporter:2.0.4`                           |
+| `metricsapi`         | `lux-metricsapi:2.0.4`                                 |
+| `oauth`              | `hydra:v1.4.9`                                         |
+| `postgres`           | `postgres:11`                                          |
+| `timescaledb`        | `timescaledb:1.7.4-pg11`                               |
+| `graphql-engine-pro` | `v2.0.10-pro.1.patched [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.5.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.5.tgz)
+- [graphql-engine-pro:v2.0.10-pro.1.patched](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.0.10-pro.1.patched/images/sha256-c4d5803f311e589b53c34ab6bd7f724d038c7b764e22027f1dbdf46da9b5e3ee?context=explore)
+- [graphql-engine-pro:v2.0.10-pro.1-streaming.1.patched](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.0.10-pro.1-streaming.1.patched/images/sha256-cd66d9610bc86492aa122fa885dd9b5d8a6c2274202713f72d6c5debac184f67?context=explore)
+- [cli-hasura-windows-amd64.exe](https://graphql-engine-cdn.hasura.io/cli/v2.0.10-signed/cli-hasura-windows-amd64.exe)
+
+### `2.0.4`
+
+- Adds the ability to configure a keypair to be used for SAML request signing
+- Performance improvements to SAML workflow and enhance error messages
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+| Component            | Version                                                |
+| -------------------- | ------------------------------------------------------ |
+| `api`                | `lux-api:2.0.4`                                        |
+| `auth`               | `lux-auth:2.0.4`                                       |
+| `auth-redis`         | `redis:5`                                              |
+| `cloud`              | `lux-cloud:2.0.4`                                      |
+| `data`               | `lux-data:2.0.4`                                       |
+| `lux-psql-init`      | `lux-psql-init:v0.0.2`                                 |
+| `logs-grpc`          | `lux-logs:2.0.4`                                       |
+| `logs-monitor`       | `lux-logs:2.0.4`                                       |
+| `logs-redis`         | `redis:5`                                              |
+| `logs-worker`        | `lux-logs:2.0.4`                                       |
+| `metrics`            | `lux-metrics:2.0.4`                                    |
+| `metrics-exporter`   | `lux-metrics-exporter:2.0.4`                           |
+| `metricsapi`         | `lux-metricsapi:2.0.4`                                 |
+| `oauth`              | `hydra:v1.4.9`                                         |
+| `postgres`           | `postgres:11`                                          |
+| `timescaledb`        | `timescaledb:1.7.4-pg11`                               |
+| `graphql-engine-pro` | `v2.0.10-pro.1.patched [Latest tested stable release]` |
+
+**Assets**
+
+- [lux-2.0.4.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.4.tgz)
+- [graphql-engine-pro:v2.0.10-pro.1.patched](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.0.10-pro.1.patched/images/sha256-c4d5803f311e589b53c34ab6bd7f724d038c7b764e22027f1dbdf46da9b5e3ee?context=explore)
+- [graphql-engine-pro:v2.0.10-pro.1-streaming.1.patched](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.0.10-pro.1-streaming.1.patched/images/sha256-cd66d9610bc86492aa122fa885dd9b5d8a6c2274202713f72d6c5debac184f67?context=explore)
+- [cli-hasura-windows-amd64.exe](https://graphql-engine-cdn.hasura.io/cli/v2.0.10-signed/cli-hasura-windows-amd64.exe)
+
+### `2.0.2`
+
+- Update kubernetes manifests to support latest API changes,
+  [source](https://kubernetes.io/blog/2021/07/14/upcoming-changes-in-kubernetes-1-22/#api-changes)
+- Minor security fixes
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+| Component            | Version                                         |
+| -------------------- | ----------------------------------------------- |
+| `api`                | `lux-api:2.0.2`                                 |
+| `auth`               | `lux-auth:2.0.2`                                |
+| `auth-redis`         | `redis:5`                                       |
+| `cloud`              | `lux-cloud:2.0.2`                               |
+| `data`               | `lux-data:2.0.2`                                |
+| `lux-psql-init`      | `lux-psql-init:v0.0.2`                          |
+| `logs-grpc`          | `lux-logs:2.0.2`                                |
+| `logs-monitor`       | `lux-logs:2.0.2`                                |
+| `logs-redis`         | `redis:5`                                       |
+| `logs-worker`        | `lux-logs:2.0.2`                                |
+| `metrics`            | `lux-metrics:2.0.2`                             |
+| `metrics-exporter`   | `lux-metrics-exporter:2.0.2`                    |
+| `metricsapi`         | `lux-metricsapi:2.0.2`                          |
+| `oauth`              | `hydra:v1.4.9`                                  |
+| `postgres`           | `postgres:11`                                   |
+| `timescaledb`        | `timescaledb:1.7.4-pg11`                        |
+| `graphql-engine-pro` | `v2.0.10-pro.1.patched [Latest tested release]` |
+
+**Assets**
+
+- [lux-2.0.2.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.2.tgz)
+- [graphql-engine-pro:v2.0.10-pro.1.patched](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.0.10-pro.1.patched/images/sha256-c4d5803f311e589b53c34ab6bd7f724d038c7b764e22027f1dbdf46da9b5e3ee?context=explore)
+
+### `2.0.1`
+
+- Minor fixes for Azure monitor integration
+- Optionally disable SAML assertion request for SSO
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+| Component            | Version                                        |
+| -------------------- | ---------------------------------------------- |
+| `api`                | `lux-api:2.0.1`                                |
+| `auth`               | `lux-auth:2.0.1`                               |
+| `auth-redis`         | `redis:5`                                      |
+| `cloud`              | `lux-cloud:2.0.1`                              |
+| `data`               | `lux-data:2.0.1`                               |
+| `lux-psql-init`      | `lux-psql-init:v0.0.2`                         |
+| `logs-grpc`          | `lux-logs:2.0.1`                               |
+| `logs-monitor`       | `lux-logs:2.0.1`                               |
+| `logs-redis`         | `redis:5`                                      |
+| `logs-worker`        | `lux-logs:2.0.1`                               |
+| `metrics`            | `lux-metrics:2.0.1`                            |
+| `metrics-exporter`   | `lux-metrics-exporter:2.0.1`                   |
+| `metricsapi`         | `lux-metricsapi:2.0.1`                         |
+| `oauth`              | `hydra:v1.4.9`                                 |
+| `postgres`           | `postgres:11`                                  |
+| `timescaledb`        | `timescaledb:1.7.4-pg11`                       |
+| `graphql-engine-pro` | `v2.0.9-pro.1.patched [Latest tested release]` |
+
+**Assets**
+
+- [lux-2.0.1.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.1.tgz)
+- [graphql-engine-pro:v2.0.9-pro.1.patched](https://hub.docker.com/layers/hasuraci/graphql-engine-pro/v2.0.9-pro.1.patched/images/sha256-6edf9a16582c3eab4b8500a57b8dbf0d9dd7a89aedd61f72855aad78383fe528)
+
+### `2.0.0`
+
+- The semver versioning for the control plane (Lux) has been modified starting with this version to synchronize it with
+  `graphql-engine-pro` images.
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+**Assets**
+
+- [lux-2.0.0.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.0.tgz)
+
+### `0.2.5`
+
+- Docker images use a non root user by default.
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+**Assets**
+
+- [lux-0.2.5.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-0.2.5.tgz)
+
+### `0.2.4`
+
+- Support for Azure monitor
+- Bug fixes to support sub-domain based deployments over `http`
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+**Assets**
+
+- [lux-0.2.4.tgz](https://storage.googleapis.com/staging-hasura-charts/lux-0.2.4.tgz)
+
+### `0.2.0`
+
+- Upgrade from 0.1.x requires extra steps, refer upgrading-to-0.2.
+- Images are now hosted under a private container registry and are no longer published to dockerhub.
+- Support for SSO via SAML 2.0
+- Metrics and log exports to Datadog & New Relic now available
+- Projects collaborators view, team console added
+- Compatible with graphql-engine-pro versions 1.3.x and 2.0.x
+
+**Assets**
+
+- [lux-0.2.0.tgz](https://storage.googleapis.com/staging-hasura-charts/lux-0.2.0.tgz)
+
+### `0.1.3`
+
+- Bug fixes to metrics subsystem
+- Compatible with graphql-engine-pro versions 1.3.x
+
+**Assets**
+
+- [lux-0.1.3.tgz](https://storage.googleapis.com/staging-hasura-charts/lux-0.1.3.tgz)

@@ -1,0 +1,58 @@
+---
+sidebar_label: Caching
+sidebar_position: 2
+description: Hasura EE Data Plane Caching
+title: 'EE: Enable GraphQL Caching'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - graphql engine
+  - data plane
+  - caching
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Enable GraphQL Caching <HeadingIcon icon={`ee`} size={36} />
+
+To start using query response caching with your Hasura EE GraphQL Engine you will need a Redis instance that is
+co-located with the Hasura GraphQL containers.
+
+Once you provision a Redis instance provide the URL to the Hasura GraphQL Engine docker configuration using the
+following environment variable:
+
+```
+HASURA_GRAPHQL_REDIS_URL=redis://redis:6379
+```
+
+To read more about caching works and how to use it on [Hasura Cloud Docs](/queries/response-caching.mdx).
+
+## Enable Redis TLS
+
+TLS connection information can be specified via the following environment variables:
+
+- `HASURA_GRAPHQL_REDIS_USE_TLS`: Opt-in flag that enables the use of TLS for the caching Redis instance, defaults to
+  false.
+- `HASURA_GRAPHQL_RATE_LIMIT_REDIS_USE_TLS`: Opt-in flag that enables the use of TLS for the rate-limiting Redis
+  instance, defaults to false.
+- `HASURA_GRAPHQL_REDIS_TLS_HOSTNAME`: TLS hostname to use for caching Redis instance.
+- `HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME`: TLS hostname to use for rate-limiting Redis instance.
+- `HASURA_GRAPHQL_REDIS_TLS_SHARED_CA_STORE_PATH`: path to the shared CA certificate store to use for both the caching
+  and rate-limiting Redis instances. If unspecified, defaults to the system CA store if available.
+
+### Example
+
+```
+HASURA_GRAPHQL_REDIS_USE_TLS="true"
+HASURA_GRAPHQL_REDIS_URL="redis://username:password@redishostname:port"
+HASURA_GRAPHQL_REDIS_TLS_HOSTNAME="redishostname"
+```
+
+For rate limit Redis:
+
+```
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_USE_TLS="true"
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL="redis://username:password@redishostname:port"
+HASURA_GRAPHQL_RATE_LIMIT_REDIS_TLS_HOSTNAME="redishostname"
+```

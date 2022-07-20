@@ -1,0 +1,193 @@
+---
+sidebar_label: To remote database
+sidebar_position: 1
+description: Adding remote database relationships with BigQuery tables in Hasura
+keywords:
+  - hasura
+  - docs
+  - remote database relationship
+  - remote join
+  - remote source
+  - bigquery
+  - data federation
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# BigQuery: Database to remote database relationships
+
+## Introduction
+
+Remote database relationships (a.k.a remote source relationships) extend the concept of joining data between tables
+within a single database to joining data across tables between separate databases.
+
+After you've established relationships between types in your source database and types in your target database, you can
+"join" them with GraphQL queries.
+
+Because Hasura is meant to be a GraphQL server that you can expose directly to your apps, Hasura also handles security
+and authorization while providing remote joins.
+
+:::tip Supported from
+
+Remote database relationships for BigQuery are supported from versions `v2.1.0` and above.
+
+:::
+
+## Create remote database relationships
+
+### Step 0: Add two database sources
+
+Add a source database as described [here](/databases/connect-db/index.mdx) and track the required tables. Then, repeat
+the process to add your target database.
+
+### Step 1: Define and create the relationship
+
+A remote database relationship is defined alongside the source database table (that is, the source side of the join).
+
+The following fields can be defined for a remote schema relationship:
+
+- **Relationship type**: Either `object` or `array` - similar to normal relationships. Hasura supports both many-to-one
+  (object) and one-to-many (array) relationships.
+- **Relationship Name**: A name for the relationship.
+- **Reference Source**: The name of the target database (that is, the target side of the join).
+- **Reference Table**: The table in the target database source that should be joined with the source table
+- **Field Mapping**: A mapping between fields in the source table and their corresponding fields in the target table,
+  just as a foreign key relationship would be defined by such mapping within a single database.
+
+For example, say we have a table `articles(id int, author_id int)` in the source database and a table
+`author(id int, name text)` in the target database.
+
+We can create an object remote database relationship `author` joining the `articles` table to the `author` table using the
+`articles.author_id` and `author.id` fields.
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Console support will be added soon.
+
+<!-- TODO: verify remote source relationships in the console https://github.com/hasura/graphql-engine-mono/issues/4981
+
+Head to the `Data > [database] > [articles] > Relationships` tab. Under the `Remote Database Relationships` section,
+select `Add a remote database relationship`.
+<Thumbnail
+  src='/img/graphql/core/databases/postgres/schema/create-remote-source-relationship.png'
+  alt='Create remote database relationships'
+/>
+
+Hit `Save`.
+ -->
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Update the `metadata > databases > [bq-source] > tables > [source_author].yaml` file:
+
+```yaml {4-14}
+table:
+  dataset: source
+  name: author
+remote_relationships:
+- name: articles
+  definition:
+    to_source:
+      field_mapping:
+        id: author_id
+      relationship_type: array
+      source: bq-target
+      table:
+        dataset: target
+        name: articles
+```
+
+Apply the metadata:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can add a remote database relationship by using the
+[bigquery_create_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-create-remote-relationship)
+or
+[bigquery_update_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-bigquery-update-remote-relationship)
+metadata APIs with the `to_source` field.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_create_remote_relationship",
+  "args": {
+    "name": "articles",
+    "source": "bq-source",
+    "table": {
+      "name": "author",
+      "dataset": "source"
+    },
+    "definition": {
+      "to_source": {
+        "relationship_type": "array",
+        "source": "bq-target",
+        "table": {
+          "name": "articles",
+          "dataset": "target"
+        },
+        "field_mapping": {
+          "id": "author_id"
+        }
+      }
+    }
+  }
+}
+
+```
+
+</TabItem>
+</Tabs>
+
+### Step 2: Explore with GraphiQL
+
+Run the following query in the GraphiQL editor to test your remote database relationship across the two connected
+databases:
+
+<GraphiQLIDE
+  query={`query {
+  source_author {
+    articles {
+      id
+      author_id
+    }
+  }
+}
+`}
+  response={`{
+  "data": {
+    "source_author": [
+      {
+        "articles": [
+          {
+            "id": "2",
+            "author_id": "1",
+            "title": "veniam"
+          }
+        ]
+      },
+      {
+        "articles": [
+          {
+            "id": "3",
+            "author_id": "2",
+            "title": "nostrud"
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>

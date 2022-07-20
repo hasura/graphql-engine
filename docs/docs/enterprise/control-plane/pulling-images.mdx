@@ -1,0 +1,62 @@
+---
+sidebar_label: Pulling Images
+sidebar_position: 7
+description: Pulling Images for Hasura EE Control Plane to 0.2.x
+title: 'EE: Pulling Images'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - images
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Pulling Images <HeadingIcon icon={`ee`} size={36} />
+
+Starting Hasura EE 2.0, docker images are access controlled. Credentials required to access these Docker credentials
+will be shared with you during the on-boarding.
+
+## Configuration
+
+### Method 1
+
+Create kubernetes service accounts for Hasura EE services and configures these service accounts to pull images from the
+private registry.
+
+Following changes to be made to the overrides file,
+
+```
+global:
+# Services will now use service accounts to pull docker images from private container registries
+  serviceAccount:
+    enabled: true
+
+configs:
+secrets:
+# Adds imagePullSecret to the service accounts to be able to pull images from hasura-ee container registry
+  imagePullSecret:
+    auths:
+      gcr.io:
+        username: "_json_key"
+        password: |
+# Shared "company-sa.json" JSON file content to be pasted here, indent correctly.
+        email: "email@domain.com"
+```
+
+### Method 2
+
+Patch the default service account on the environment to pull images from the private registry.
+
+```
+kubectl create secret docker-registry gcr-json-key \
+ --docker-server=gcr.io \
+ --docker-username=_json_key \
+ --docker-password="$(cat company-sa.json)" \
+ --docker-email=email@domain.com
+
+ kubectl patch serviceaccount default \
+  -p '{"imagePullSecrets": [{"name": "gcr-json-key"}]}'
+```

@@ -12,20 +12,6 @@ export default function ContentWrapper(props) {
 		isBrowser && window.location.pathname.includes("/graphql/core/");
 	return (
 		<>
-			<div className={styles["doc-sidebar-tabs"]}>
-				<VersionedLink
-					to="/graphql/core/index/"
-					className={`${styles["link-tab"]} ${isCoreDocs ? styles['active'] : ''}`}
-				>
-					Hasura Core
-				</VersionedLink>
-				<VersionedLink
-					to="/graphql/cloud/index/"
-					className={`${styles["link-tab"]} ${isCloudDocs ? styles['active'] : ''}`}
-				>
-					Hasura Cloud
-				</VersionedLink>
-			</div>
 			<Content {...props} />
 		</>
 	);

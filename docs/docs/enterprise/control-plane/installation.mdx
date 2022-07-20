@@ -1,0 +1,281 @@
+---
+sidebar_label: Installation
+sidebar_position: 1
+description: Hasura EE Control Plane Installation
+title: 'EE: Control Plane (Lux) Installation'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - installation
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Control Plane (Lux) Installation <HeadingIcon icon={`ee`} size={36} />
+
+This doc covers how you can install the Hasura EE Control Plane. The Hasura EE Control Plane is also referred to as
+"Lux" and requires a Kubernetes environment to run.
+
+## Prerequisites
+
+- A service account token to pull Hasura EE images. [Contact sales](mailto:sales@hasura.io) if you haven't received your
+  service account token.
+- A kubernetes cluster with 4CPU and 16GB RAM capacity. The provided helm charts are tested with kubernetes
+  versions >1.17.
+- `kubectl` privileges to run pods, create persistent volumes and a loadbalancer type service
+- Nginx ingress controller [(setup)](https://kubernetes.github.io/ingress-nginx/deploy/) or similar ingress controller.
+  To enable `https`, make sure the ingress controller allows HTTPS connections.
+- A verified DNS entry that points to the ingress controller. For example, http://20.10.10.10.nip.io/ on the browser
+  should resolve to the ingress pod.
+- [Helm CLI](https://helm.sh/docs/intro/install/#from-the-binary-releases) to generate the right kubernetes manifests
+  locally from the templates
+
+## Installation instructions
+
+### Step 1: Download the Lux Helm Charts tarball
+
+**Download**: [lux.tgz](https://storage.googleapis.com/hasura-ee-charts/lux-2.0.8.tgz)
+
+This tarball contains all the helm charts and templates that will help you generate the final kubernetes manifests.
+
+### Step 2: Set up configuration required for your environment
+
+Configuration settings that are unique to your Hasura EE install are set up in a `override-values.yaml` file. These
+configuration values will then be used to generated the final kubernetes manifests.
+
+#### Step 2.1: Create the `override-values.yaml` file
+
+**Download**: [override-values.yaml](https://storage.googleapis.com/hasura-ee-artifacts/override-values.yaml)
+
+Create the file in the same directory where you have the `lux` tarball.
+
+```
+.
+└── lux-2.0.8.tgz
+└── override-values.yaml
+```
+
+#### Step 2.2 Edit `override-values.yaml` with the right configuration values
+
+Below is a reference override file which can be used to get started.
+
+- Update the `$.secrets.imagePullSecret.auths.gcr.io.password` value in the overrides file with the contents of the
+  service account json file sent to you.
+- Ensure you regenerate the secrets.
+- Set up the correct `domain` value.
+
+```
+# For more information on configuration options, refer to:
+# https://docs.pro.hasura.io/custom-installation/helm-configs/
+
+global:
+  # Allowed values: http, https
+  uriScheme: "http"
+  # Set to the configured domain / Ingress' loadbalancerIP.nip.io
+  domain: "35.235.7.103.nip.io"
+  # Set to the k8s namespace Lux (Hasura EE Control Plane) should be deployed to.
+  # The namespace should exist before applying the manifest
+  namespace: "default"
+
+  # Make Lux components available on subdomains, defaults to path based deployment [false]
+  subDomain: false
+  # When urischeme is set to https, choose between letsencrypt-staging and letsencrypt-prod to enable TLS termination using certificates from LetsEncrypt.
+  certIssuer: "letsencrypt-prod"
+  # K8s deployments use service accounts to pull docker images from private container registries.
+  # Should be set to true to use Hasura private registry for control plane images.
+  serviceAccount:
+    enabled: true
+
+secrets:
+# Adds imagePullSecret to the service accounts to be able to pull images from hasura-ee container registry
+  imagePullSecret:
+    auths:
+      gcr.io:
+        username: "_json_key"
+        # Below content should be replaced with the shared "company-sa.json" file content, indented correctly.
+        password: |
+          {
+            "type": "service_account",
+            "project_id": "xxxxxxxxx",
+            "private_key_id": "xxxxx",
+            "private_key": "-----BEGIN PRIVATE KEY-----\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx3\n-----END PRIVATE KEY-----\n",
+            "client_email": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            ...
+            }
+        email: "support@hasura.io"
+  # Password length - 16 - Generate new passwords
+  dbPassword: "5gfFvdBfUcYcQ4Js"
+  timescaledbPassword: "5gfFvdBfUcYcQ4Js"
+  data:
+    # Generate some random secrets for below of said length
+    # Secret length - 64
+    # Sets the Admin secret for Hasura instances powering the control plane. This is different from the admin secrets of the Data plance Hasura Pro instances.
+    HASURA_GRAPHQL_ADMIN_SECRET: "dKpC46ZapzYa5b2ymfv9TWy8w9Kg7mCmhTEebTPzhrNmYpHMwLYmcVDGUcqV6uVa"
+    # Generate some secrets for oauth2 service
+    # Secret length - 64
+    OIDC_SUBJECT_TYPE_PAIRWISE_SALT: "22LEu9qH3nMXmYs8d4tgYnJ2THLbkNe5KfuLvZZeXjX5QQhCQpKGYpGec6hWrAKJ"
+    SECRETS_SYSTEM: "TRUB88kkZzcGT5E5DYSGnZLKEX6ty2g6GfjgBvaYMYEAFFLcEcE8PYCNU78JPxgK"
+    # Generate some secrets for auth service [for cookie and session encrytion keys]
+    # Secret length - 64
+    COOKIE_KEY: "K2qZ3XMuwCuw3NkhfsRAKfBy3AXX4BmFw972pd6awyRUhckTXDPKB8nBwXwPpapk"
+    SESSION_KEY: "rbe8jLRKAaSYn5NTA53f2jJaFQqaPkREAT9seYYMAr2dL9yZ3695M9NdBP3EqsC6"
+    # set credentials for accompanying redis instance
+    # redis is part of the installation - only credentials needs to be set
+    # Secret length - 32
+    AUTH_REDIS_PASSWORD: "DG7MjA4hquDyYE9q6e32AcbadMTRqEuK"
+    LOGS_REDIS_PASSWORD: "DG7MjA4hquDyYE9q6e32AcbadMTRqEuK"
+    # email credentials
+    # SMTP server is not part of the installation, credentials for an external service is required
+    SMTP_PASSWORD: "password"
+    # Social login details for auth service (Optional)
+    GITHUB_CLIENT_ID: "<github-client-id>"
+    GITHUB_CLIENT_SECRET: "<github-client-secret>"
+    GOOGLE_CLIENT_ID: "<google-client-id>"
+    GOOGLE_CLIENT_SECRET: "<google-client-secret>"
+
+## SMTP configuration to send e-mails
+# configs:
+#   smtpHost: "smtp.org.com"
+#   smtpPort: "2525"
+#   smtpDisableAuth: "true"
+
+## Stateful services configuration; defaults to true to use embedded services.
+## Can be set to false to use external managed services.
+postgres:
+  enabled: true
+timescaledb:
+  enabled: true
+auth-redis:
+  enabled: true
+logs-redis:
+  enabled: true
+
+## (Optional) Enable Prometheus exporter(Disabled by default)
+prometheus-exporter:
+  enabled: true
+
+## Example of per service configuration override. For more options, refer:
+## https://docs.pro.hasura.io/custom-installation/helm-configs/#common-overrides
+# hge-pro:
+#   namespace: data-plane
+#   tag: "v1.3.3-pro.3"
+#   additionalEnv: |
+#     - name: HASURA_GRAPHQL_ENABLED_APIS
+#       value: "graphql,metadata,config,developer,pgdump"
+#   resources: |
+#     requests:
+#       cpu: 200m
+#       memory: 1Gi
+#     limits:
+#       cpu: 1000m
+#       memory: 1Gi
+```
+
+### Step 3: Generate the kubernetes manifests
+
+After configuring the override file to your requirements, run the commands below to generate the right manifests::
+
+**View rendered manifests:**
+
+```
+helm template -f override-values.yaml lux-2.0.8.tgz
+```
+
+**Render and apply manifests using kubectl:**
+
+```
+helm template -f override-values.yaml lux-2.0.8.tgz | kubectl apply -f-
+```
+
+This will start all services and will be available on the configured domain in the overrides file.
+
+### Step 4: Verify that your installation is working
+
+1. Check if all your kubernetes pods are in the ready state.
+2. Check if you're able to reach `https://domain` and see the Hasura EE login screen.
+
+### Step 5: Add a user
+
+Users are developers or admins who are running or maintaining Hasura GraphQL projects. Once a user is a confirmed user
+on Hasura EE Control Plane (Lux) then they are ready to run Hasura EE data plane instances.
+
+Head to `http://<domain>` and sign up. If you have SMTP, SSO, or login via OAuth2 providers enabled then users can
+sign-up with the appropriate email and user validation automatically done.
+
+However, if you don't have these identity providers configured then you can "verify" users manually.
+
+<Thumbnail src='/img/graphql/enterprise/Pro_Sign-up.png' alt='Hasura Pro Signup' />
+
+#### Step 5.1: Manually adding a user to Lux
+
+- Head to `http://domain` where the user should try to "sign up via email".
+- As the infrastructure administrator, you can "force confirm / verify" this user.
+  - Head to `http://<domain>/data/console` URL (this is the data management console for the Control Plane).
+  - Login to the console using the `HASURA_GRAPHQL_ADMIN_SECRET` from the `override-values.yaml`.
+  - Go to the Data Tab -> `users` table and edit the row corresponding to the user who signed up, and set the
+    `confirmed` column to `true`.
+
+### Step 6: Run Hasura EE Data Plane (GraphQL Engine) instances
+
+To run (or upgrade your existing Hasura CE) Hasura GraphQL engine instances:
+[follow this guide](/getting-started/index.mdx).
+
+## Sizing
+
+The resource heavy services are `logs-grpc, logs-worker, redis and timescaledb` which form the logging / monitoring
+suite.
+
+:::info Note
+
+In a `dev` or `poc` environment, retention period of metrics could be lowered to bring down cluster costs significantly.
+
+:::
+
+#### Stateful Services
+
+Postgres, Timescale and Redis are the stateful services that run within Lux. Lux is tested with the following versions,
+
+| Service    | Version |
+| ---------- | ------- |
+| Postgres   | 12      |
+| Auth Redis | 5       |
+| Logs Redis | 5       |
+| Timescale  | 1.7.4   |
+
+##### Redis
+
+Logs Redis is stateful and it buffers the logs for Timescale ingestion. Redis can be vertically scaled by determining
+the memory needed from the below formula:
+
+:::info Note
+
+Redis*Memory = Average_response_size * Requests*per_minute * Queue_time_in_mins \* 4
+
+:::
+
+##### Time Scale
+
+Timescale DB stores metrics and logs generated by Hasura pro instances. It's vital to provision a disk with a high IOPS
+for Timescale. Further tuning of timescale can be carried out by following the
+[guide](https://github.com/timescale/timescaledb-tune). The disk size can be vertically scaled using the below formula:
+
+:::info Note
+
+Timescale*disk_size = Average_response_size * Requests*per_minute * Retention*Days * 60 \_ 24 \* 4
+
+:::
+
+#### Stateless Services
+
+Every other stateless service in Lux like `logs-worker` have their baseline CPU and memory allocated and they can be
+horizontally scaled by increasing the replicas based on the workload.
+
+##### Example:
+
+Requests Per Minute: `100` Response Size: `50KB` Retention Period: `7 days`
+
+Applying the above formulae, Timescale Disk: `50*100*7*60*24*4 KB` = ~192.26 GB Redis RAM: `50*100*120*4 KB` = ~2.28 GB

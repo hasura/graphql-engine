@@ -1,0 +1,255 @@
+---
+sidebar_label: Paginate query results
+sidebar_position: 7
+description: Manage pagination on BigQuery in Hasura
+keywords:
+  - hasura
+  - docs
+  - bigquery
+  - query
+  - pagination
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# BigQuery: Paginate query results
+
+## The **limit** & **offset** arguments
+
+The operators `limit` and `offset` are used for pagination.
+
+`limit` specifies the number of rows to retain from the result set and
+`offset` determines which slice to retain from the results.
+
+You can see the complete specification of the `limit` and `offset`
+arguments in the [API reference](/api-reference/graphql-api/query.mdx#paginationexp).
+
+The following are examples of different pagination scenarios:
+
+## Limit results
+
+**Example:** Fetch the first 5 authors from the list of all authors:
+
+<GraphiQLIDE
+  query={`query {
+  bigquery_authors(
+    limit: 5
+  ) {
+    id
+    name
+  }
+}`}
+response={`{
+  "data": {
+    "bigquery_authors": [
+      {
+        "id": "1",
+        "name": "Justin"
+      },
+      {
+        "id": "2",
+        "name": "Beltran"
+      },
+      {
+        "id": "3",
+        "name": "Sidney"
+      },
+      {
+        "id": "4",
+        "name": "Anjela"
+      },
+      {
+        "id": "5",
+        "name": "Amii"
+      }
+    ]
+  }
+}`}
+/>
+
+:::info Note
+
+The query field will be of the format `<dataset_name>_<table_name>`.
+
+:::
+
+## Limit results from an offset
+
+**Example:** Fetch 5 authors from the list of all authors, starting with
+the 6th one:
+
+<GraphiQLIDE
+  query={`query {
+  bigquery_authors(
+    limit: 5,
+    offset:5
+  ) {
+    id
+    name
+  }
+}`}
+response={`{
+  "data": {
+    "bigquery_authors": [
+      {
+        "id": "6",
+        "name": "Corny"
+      },
+      {
+        "id": "7",
+        "name": "Berti"
+      },
+      {
+        "id": "8",
+        "name": "April"
+      },
+      {
+        "id": "9",
+        "name": "Ninnetta"
+      },
+      {
+        "id": "10",
+        "name": "Lyndsay"
+      }
+    ]
+  }
+}`}
+/>
+
+## Limit results in a nested object {#bq-nested-paginate}
+
+**Example:** Fetch a list of authors and a list of their first 2
+articles:
+
+<GraphiQLIDE
+  query={`query {
+  bigquery_authors {
+    id
+    name
+    articles (
+      limit: 2
+      offset: 0
+    ) {
+      id
+      title
+    }
+  }
+}`}
+response={`{
+  "data": {
+    "bigquery_authors": [
+      {
+        "id": "1",
+        "name": "Justin",
+        "articles": [
+          {
+            "id": "15",
+            "title": "vel dapibus at"
+          },
+          {
+            "id": "16",
+            "title": "sem duis aliquam"
+          }
+        ]
+      },
+      {
+        "id": "2",
+        "name": "Beltran",
+        "articles": [
+          {
+            "id": "2",
+            "title": "a nibh"
+          },
+          {
+            "id": "9",
+            "title": "sit amet"
+          }
+        ]
+      },
+      {
+        "id": "3",
+        "name": "Sidney",
+        "articles": [
+          {
+            "id": "6",
+            "title": "sapien ut"
+          },
+          {
+            "id": "11",
+            "title": "turpis eget"
+          }
+        ]
+      },
+      {
+        "id": "4",
+        "name": "Anjela",
+        "articles": [
+          {
+            "id": "1",
+            "title": "sit amet"
+          },
+          {
+            "id": "3",
+            "title": "amet justo morbi"
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+## Fetch limited results along with data aggregated over all results *(e.g. total count)* in the same query
+
+Sometimes, some aggregated information on all the data is required along
+with a subset of data.
+
+E.g. the total count of results can be returned along with a page of
+results. The count can then be used to calculate the number of pages
+based on the limit that is set.
+
+**Example:** Fetch a list of articles where a certain condition is true
+and get their count. Then limit the number of articles to return.
+
+<GraphiQLIDE
+  query={`query articles ($where: bigquery_articles_bool_exp!) {
+  bigquery_articles_aggregate(where: $where) {
+    aggregate {
+      totalCount: count
+    }
+  }
+  bigquery_articles (where: $where limit: 4) {
+    id
+    title
+  }
+}`}
+response={`{
+  "data": {
+    "bigquery_articles_aggregate": {
+      "aggregate": {
+        "totalCount": "8"
+      }
+    },
+    "bigquery_articles": [
+      {
+        "id": "33",
+        "title": "How to make fajitas"
+      },
+      {
+        "id": "31",
+        "title": "How to make fajitas"
+      },
+      {
+        "id": "32",
+        "title": "How to make fajitas"
+      },
+      {
+        "id": "2",
+        "title": "How to climb mount everest"
+      }
+    ]
+  }
+}`}
+/>
+
+

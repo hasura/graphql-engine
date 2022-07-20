@@ -1,0 +1,102 @@
+---
+sidebar_label: Components
+sidebar_position: 8
+description: Components for Hasura EE Control Plane to 0.2.x
+title: 'EE: Components'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - components
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Components <HeadingIcon icon={`ee`} size={36} />
+
+#### Cloud
+
+Admin UI, where user will login/signup etc. and where user can create/manage projects. Data service acts as the primary
+backend for the UI.
+
+#### Auth
+
+The Auth service, built on top of [authboss](https://github.com/volatiletech/authboss/). This service powers all the
+authentication APIs (password and social logins) and the auth webhooks of Data and Metrics (Hasura CE) services. Also,
+adds auxiliary functionality around authentication like password recovery/change, etc,.
+
+#### API
+
+This microservice executes various business logic and is added as Remote schema and Event triggers to Data service. The
+following endpoints are exposed:
+
+- `/events`: Event triggers used by Hasura for sending emails etc.
+- `/graphql`: Remote schema exposed by Hasura for custom logic.
+- `/scheduler`: API execute certain tasks like cleaning up old logs, called by `cronjob`
+
+#### Auth-Redis
+
+This Redis instance is used to store the cookie for faster lookups and is used by Auth Service.
+
+#### Logs-monitor
+
+In older versions of lux, this service is called `Cronjob`. It periodically calls `/scheduler` APIs (of API service) to
+execute actions like deleting old logs etc.
+
+#### Data
+
+This is a Hasura CE fronting the Postgres DB. This is the backend for the Admin / Dashboard UI serving project and user
+data, etc.
+
+#### Logs-gRPC
+
+Although the service is named logs-grpc , it is able to support HTTP/WS/gRPC protocols. Graphql-Engine-Pro uses HTTP
+protocol to send logs. This service receives the logs, parses them and buffers them in logs-redis in-memory queue.
+
+#### Logs-Redis
+
+This Redis instance is used as an in-memory buffer during logs ingestion pipeline. The logs are fed in by logs-grpc
+service and consumed by logs-worker service.
+
+#### Logs-worker
+
+Logs-worker service continuously fetches logs from logs-redis and inserts them into the timescale DB.
+
+#### Metrics
+
+This is a Hasura CE fronting the Timescale DB. This is the backend for the monitoring page in the Hasura Pro console.
+
+#### Metricsapi
+
+This service is hooked to the metrics service as Remote schema/Event trigger and executes custom business logic on the
+Timescale data.
+
+#### Oauth
+
+Powered by [hydra](https://github.com/ory/hydra), with Postgres DB as data store. Serves all the OAuth2 APIs required
+for authenticating server and console on behalf of a user. The primary functionality of this service is to validate
+tokens from various services.
+
+#### Postgres
+
+Standard Postgres installation, Storing all the user data, project information, collaborators, OAuth2 data etc. Fronted
+by Data (Hasura CE) service.
+
+#### Timescale
+
+Timeseries database (an extension on top of Postgres) to store and process Hasura Pro logs to derive metrics. Fronted by
+Metrics (Hasura CE) service.
+
+#### Email
+
+_This is not part of the standard Hasura control plane_, but an external SMTP service
+([SES](https://aws.amazon.com/ses/), Gmail, [Mailcow](https://mailcow.email/) etc,.) which is hooked into the Control
+plane and is used for sending Emails in the form of signup mails, collaborator invitations, etc,.
+
+#### Metrics Exporter
+
+_This is not part of the standard Hasura control plane installation_. Metrics exporter is a custom solution which
+integrates Hasura metrics with third party observability services. Currently, we have official exporters for
+[Datadog](https://www.datadoghq.com/) and [NewRelic](https://newrelic.com/).
