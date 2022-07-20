@@ -8,7 +8,7 @@ import get from 'lodash.get';
 import { APIError } from '@/hooks/error';
 import React, { useState } from 'react';
 import { FaExclamationCircle, FaPlusCircle } from 'react-icons/fa';
-import { Headers } from '../Headers';
+import { RequestHeadersSelector } from '@/new-components/RequestHeadersSelector';
 import { schema, Schema } from './schema';
 import { transformFormData } from './utils';
 import { GraphQLServiceUrl } from './GraphQLServiceUrl';
@@ -157,7 +157,7 @@ export const Create = ({ onSuccess }: Props) => {
                 </label>
               </div>
 
-              <Headers name="headers" />
+              <RequestHeadersSelector name="headers" />
             </div>
             <div className="mb-lg w-8/12">
               <h2 className="text-lg font-semibold flex items-center">
