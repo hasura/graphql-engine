@@ -3,7 +3,7 @@ module github.com/hasura/graphql-engine/cli/v2
 go 1.16
 
 require (
-	cuelang.org/go v0.4.2
+	cuelang.org/go v0.4.3
 	github.com/AlecAivazis/survey/v2 v2.3.1
 	github.com/Masterminds/semver v1.5.0
 	github.com/Microsoft/go-winio v0.4.17-0.20210211115548-6eac466e5fa3 // indirect
@@ -52,6 +52,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/subosito/gotenv v1.2.0
 	github.com/vektah/gqlparser v1.3.1
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
 	golang.org/x/term v0.0.0-20210916214954-140adaaadfaf
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
