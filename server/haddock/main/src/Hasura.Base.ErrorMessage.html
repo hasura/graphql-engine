@@ -30,7 +30,7 @@
 </span><span id="line-30"></span><span>    </span><span id="fromErrorMessage"><span class="annot"><span class="annottext">ErrorMessage -&gt; Text
 </span><a href="Hasura.Base.ErrorMessage.html#fromErrorMessage"><span class="hs-identifier hs-var hs-var">fromErrorMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689247610"><span id="local-6989586621689247612"><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; Bool
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689302087"><span id="local-6989586621689302089"><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; Bool
 (ErrorMessage -&gt; ErrorMessage -&gt; Bool)
 -&gt; (ErrorMessage -&gt; ErrorMessage -&gt; Bool) -&gt; Eq ErrorMessage
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -38,7 +38,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ErrorMessage -&gt; ErrorMessage -&gt; Bool
 == :: ErrorMessage -&gt; ErrorMessage -&gt; Bool
 $c== :: ErrorMessage -&gt; ErrorMessage -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689247603"><span id="local-6989586621689247605"><span id="local-6989586621689247607"><span class="annot"><span class="annottext">b -&gt; ErrorMessage -&gt; ErrorMessage
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689302080"><span id="local-6989586621689302082"><span id="local-6989586621689302084"><span class="annot"><span class="annottext">b -&gt; ErrorMessage -&gt; ErrorMessage
 NonEmpty ErrorMessage -&gt; ErrorMessage
 ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
 (ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage)
@@ -57,7 +57,7 @@ sconcat :: NonEmpty ErrorMessage -&gt; ErrorMessage
 $csconcat :: NonEmpty ErrorMessage -&gt; ErrorMessage
 &lt;&gt; :: ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
 $c&lt;&gt; :: ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689247594"><span id="local-6989586621689247596"><span id="local-6989586621689247598"><span id="local-6989586621689247600"><span class="annot"><span class="annottext">[ErrorMessage] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Semigroup</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689302071"><span id="local-6989586621689302073"><span id="local-6989586621689302075"><span id="local-6989586621689302077"><span class="annot"><span class="annottext">[ErrorMessage] -&gt; Value
 [ErrorMessage] -&gt; Encoding
 ErrorMessage -&gt; Value
 ErrorMessage -&gt; Encoding
@@ -89,7 +89,7 @@ $ctoJSON :: ErrorMessage -&gt; Value
 </span><a href="Hasura.Base.ErrorMessage.html#ErrorMessage"><span class="hs-identifier hs-var">ErrorMessage</span></a></span><span>
 </span><span id="line-37"></span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- | Fails with the given message.</span><span>
-</span><span id="line-39"></span><span id="local-6989586621689247592"><span class="annot"><a href="Hasura.Base.ErrorMessage.html#failWithMessage"><span class="hs-identifier hs-type">failWithMessage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621689247592"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Base.ErrorMessage.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689247592"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-39"></span><span id="local-6989586621689302069"><span class="annot"><a href="Hasura.Base.ErrorMessage.html#failWithMessage"><span class="hs-identifier hs-type">failWithMessage</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621689302069"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Base.ErrorMessage.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689302069"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-40"></span><span id="failWithMessage"><span class="annot"><span class="annottext">failWithMessage :: ErrorMessage -&gt; m ()
 </span><a href="Hasura.Base.ErrorMessage.html#failWithMessage"><span class="hs-identifier hs-var hs-var">failWithMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; m ()
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -104,7 +104,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.Base.ErrorMessage.html#fromErrorMessage"><span class="hs-identifier hs-var hs-var">fromErrorMessage</span></a></span><span>
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="Hasura.Base.ErrorMessage.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621689247587"><span class="annot"><span class="annottext">fromString :: String -&gt; ErrorMessage
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621689302064"><span class="annot"><span class="annottext">fromString :: String -&gt; ErrorMessage
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="Hasura.Base.ErrorMessage.html#ErrorMessage"><span class="hs-identifier hs-var">ErrorMessage</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage)
 -&gt; (String -&gt; Text) -&gt; String -&gt; ErrorMessage
