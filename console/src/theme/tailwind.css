@@ -27,6 +27,13 @@
   transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
 }
 
+.search-bar-wrapper {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 5px 0 5px 5px;
+}
+
 /* reset some more bootstrap styles */
 .radio-inline input[type="checkbox"],
 .radio-inline input[type="radio"],

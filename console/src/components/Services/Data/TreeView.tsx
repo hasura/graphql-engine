@@ -241,7 +241,7 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
         !(databaseLoading || schemaLoading) ? (
           item.children?.length ? (
             <>
-              <div className="my-1 px-sm">
+              <div className="px-sm search-bar-wrapper">
                 <input
                   type="text"
                   onChange={onSearchChange}
