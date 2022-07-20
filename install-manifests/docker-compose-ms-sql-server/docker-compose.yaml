@@ -4,26 +4,37 @@ services:
     image: postgres:12
     restart: always
     volumes:
-    - db_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: postgrespassword
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: 'Y'
+      SA_PASSWORD: ${MSSQL_PASSWORD:-Password1}
+    volumes:
+      - mssql_data:/var/lib/mysql
   graphql-engine:
-    image: hasura/graphql-engine:v2.2.0
+    image: hasura/graphql-engine:v2.8.4
     ports:
-    - "8080:8080"
+      - '8080:8080'
     depends_on:
-    - "postgres"
+      - 'postgres'
+      - 'mssql'
     restart: always
     environment:
       ## postgres database to store Hasura metadata
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      ## this env var can be used to add the above ms sql server database to Hasura as a data source. this can be removed/updated based on your needs
+      MSSQL_DATABASE_URL:
+        Driver={ODBC Driver 17 for SQL Server};Server=tcp:mssql,1433;Database=tempdb;Uid=sa;Pwd=Password1;
       ## enable the console served by server
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true' # set to "false" to disable console
       ## enable debugging mode. It is recommended to disable this in production
-      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_DEV_MODE: 'true'
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       ## uncomment next line to set an admin secret
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 volumes:
-  db_data:
-
+  pg_data:
+  mssql_data:
