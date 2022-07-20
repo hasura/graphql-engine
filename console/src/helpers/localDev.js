@@ -1,8 +1,7 @@
-import { CLI_CONSOLE_MODE } from '../constants';
-
 const serverEnvVars = `
   dataApiUrl: '${process.env.DATA_API_URL}',
-  isAdminSecretSet: '${process.env.IS_ADMIN_SECRET_SET}',
+  adminSecret: '${process.env.ADMIN_SECRET}',
+  isAdminSecretSet: ${process.env.IS_ADMIN_SECRET_SET},
   consoleMode: '${process.env.CONSOLE_MODE}',
   nodeEnv: '${process.env.NODE_ENV}',
   serverVersion: '${process.env.SERVER_VERSION}',
@@ -37,9 +36,8 @@ const cliEnvVars = `
   cloudRootDomain: '${process.env.HASURA_CLOUD_ROOT_DOMAIN}'
 `;
 
-const envVars =
-  process.env.CONSOLE_MODE === CLI_CONSOLE_MODE ? cliEnvVars : serverEnvVars;
+const envVars = process.env.CONSOLE_MODE === 'cli' ? cliEnvVars : serverEnvVars;
 
-export const env = `
+module.exports.env = `
   window.__env = {${envVars}};
 `;
