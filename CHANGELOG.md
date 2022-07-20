@@ -5,6 +5,8 @@
 ### Bug fixes and improvements
 
 - server: fix bug where hasura SQL trigger was not dropped when MSSQL source is dropped
+- server: allow all argument types for BigQuery routines
+
 
 ## v2.9.0-beta.2
 

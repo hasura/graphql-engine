@@ -316,7 +316,14 @@ instance FromJSON RestArgument where
       ( \o -> do
           name <- o .:? "name"
           typeObject <- o .:? "dataType"
-          type' <- mapM (.: "typeKind") typeObject
+
+          -- (Hopefully) very temporary fix: right now, we don't have an
+          -- understanding of @ARRAY@ as a 'RestType', which is causing issues
+          -- in production. With this change, we ignore any BigQuery argument
+          -- types that we don't recognise. While not ideal, this should be
+          -- safe, as we shouldn't get types from BigQuery that it can't itself
+          -- understand.
+          type' <- mapM (.: "typeKind") typeObject <|> pure Nothing
           pure $ RestArgument name type'
       )
 
@@ -336,7 +343,14 @@ instance FromJSON RestStandardSqlField where
       ( \o -> do
           name <- o .:? "name"
           typeObject <- o .:? "type"
-          type' <- mapM (.: "typeKind") typeObject
+
+          -- (Hopefully) very temporary fix: right now, we don't have an
+          -- understanding of @ARRAY@ as a 'RestType', which is causing issues
+          -- in production. With this change, we ignore any BigQuery argument
+          -- types that we don't recognise. While not ideal, this should be
+          -- safe, as we shouldn't get types from BigQuery that it can't itself
+          -- understand.
+          type' <- mapM (.: "typeKind") typeObject <|> pure Nothing
           pure $ RestStandardSqlField name type'
       )
 
