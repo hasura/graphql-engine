@@ -1,5 +1,6 @@
 module Hasura.Backends.DataConnector.API.V0
-  ( module Capabilities,
+  ( module Aggregate,
+    module Capabilities,
     module Column,
     module ConfigSchema,
     module Expression,
@@ -13,6 +14,7 @@ module Hasura.Backends.DataConnector.API.V0
   )
 where
 
+import Hasura.Backends.DataConnector.API.V0.Aggregate as Aggregate
 import Hasura.Backends.DataConnector.API.V0.Capabilities as Capabilities
 import Hasura.Backends.DataConnector.API.V0.Column as Column
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema as ConfigSchema

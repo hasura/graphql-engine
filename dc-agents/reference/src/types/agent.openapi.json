@@ -592,13 +592,90 @@
         "type": "object"
       },
       "QueryResponse": {
-        "items": {
-          "additionalProperties": {
-            "additionalProperties": true
+        "properties": {
+          "aggregates": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ScalarValue"
+            },
+            "description": "The results of the aggregates returned by the query",
+            "nullable": true,
+            "type": "object"
           },
-          "type": "object"
+          "rows": {
+            "description": "The rows returned by the query, corresponding to the query's fields",
+            "items": {
+              "additionalProperties": {
+                "$ref": "#/components/schemas/FieldValue"
+              },
+              "type": "object"
+            },
+            "nullable": true,
+            "type": "array"
+          }
         },
-        "type": "array"
+        "type": "object"
+      },
+      "ScalarValue": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "FieldValue": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ColumnFieldValue"
+          },
+          {
+            "$ref": "#/components/schemas/RelationshipFieldValue"
+          }
+        ]
+      },
+      "ColumnFieldValue": {
+        "properties": {
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ScalarValue"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "type": "object"
+      },
+      "RelationshipFieldValue": {
+        "properties": {
+          "type": {
+            "enum": [
+              "relationship"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/QueryResponse"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "type": "object"
       },
       "QueryRequest": {
         "properties": {
@@ -677,11 +754,20 @@
       },
       "Query": {
         "properties": {
+          "aggregates": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Aggregate"
+            },
+            "description": "Aggregate fields of the query",
+            "nullable": true,
+            "type": "object"
+          },
           "fields": {
             "additionalProperties": {
               "$ref": "#/components/schemas/Field"
             },
             "description": "Fields of the query",
+            "nullable": true,
             "type": "object"
           },
           "limit": {
@@ -710,9 +796,6 @@
             "$ref": "#/components/schemas/Expression"
           }
         },
-        "required": [
-          "fields"
-        ],
         "type": "object"
       },
       "ColumnField": {
@@ -763,6 +846,96 @@
           },
           {
             "$ref": "#/components/schemas/RelationshipField"
+          }
+        ]
+      },
+      "SingleColumnAggregateFunction": {
+        "enum": [
+          "avg",
+          "max",
+          "min",
+          "stddev_pop",
+          "stddev_samp",
+          "sum",
+          "var_pop",
+          "var_samp"
+        ],
+        "type": "string"
+      },
+      "ColumnCountAggregate": {
+        "properties": {
+          "columns": {
+            "description": "The columns to apply the count aggregate function to",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "distinct": {
+            "description": "Whether or not only distinct items should be counted",
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "column_count"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "columns",
+          "distinct"
+        ],
+        "type": "object"
+      },
+      "StarCountAggregate": {
+        "properties": {
+          "type": {
+            "enum": [
+              "star_count"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      "SingleColumnAggregate": {
+        "properties": {
+          "column": {
+            "description": "The column to apply the aggregation function to",
+            "type": "string"
+          },
+          "function": {
+            "$ref": "#/components/schemas/SingleColumnAggregateFunction"
+          },
+          "type": {
+            "enum": [
+              "single_column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "function",
+          "column"
+        ],
+        "type": "object"
+      },
+      "Aggregate": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SingleColumnAggregate"
+          },
+          {
+            "$ref": "#/components/schemas/ColumnCountAggregate"
+          },
+          {
+            "$ref": "#/components/schemas/StarCountAggregate"
           }
         ]
       },
@@ -825,22 +998,6 @@
           "name"
         ],
         "type": "object"
-      },
-      "ScalarValue": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "number"
-          },
-          {
-            "type": "boolean"
-          },
-          {
-            "type": "null"
-          }
-        ]
       },
       "AnotherColumnComparison": {
         "properties": {

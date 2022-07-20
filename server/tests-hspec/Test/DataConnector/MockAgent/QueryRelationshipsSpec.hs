@@ -12,7 +12,7 @@ import Data.HashMap.Strict qualified as HashMap
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (yaml, yamlObjects)
+import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
@@ -71,38 +71,46 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [yamlObjects|
-                      - Genre:
-                          Name: "Rock"
-                        MediaType:
-                          Name: "MPEG audio file"
-                        Name: "For Those About To Rock (We Salute You)"
-                    |]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> API.QueryResponse albums},
+                          [ [ ("Name", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock (We Salute You)"),
+                              ( "Genre",
+                                API.RelationshipFieldValue . ValueWrapper $
+                                  rowsResponse
+                                    [ [("Name", API.ColumnFieldValue . ValueWrapper $ API.String "Rock")]
+                                    ]
+                              ),
+                              ( "MediaType",
+                                API.RelationshipFieldValue . ValueWrapper $
+                                  rowsResponse
+                                    [ [("Name", API.ColumnFieldValue . ValueWrapper $ API.String "MPEG audio file")]
+                                    ]
+                              )
+                            ]
+                          ]
+                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
                   _whenRequestRequired =
                     [graphql|
-                query getTrack {
-                  Track(limit: 1) {
-                    Name
-                    Genre {
-                      Name
-                    }
-                    MediaType {
-                      Name
-                    }
-                  }
-                }
-              |],
+                      query getTrack {
+                        Track(limit: 1) {
+                          Name
+                          Genre {
+                            Name
+                          }
+                          MediaType {
+                            Name
+                          }
+                        }
+                      }
+                    |],
                   _thenRequired =
                     [yaml|
-                data:
-                  Track:
-                    - Genre:
-                        Name: "Rock"
-                      MediaType:
-                        Name: "MPEG audio file"
-                      Name: "For Those About To Rock (We Salute You)"
-              |]
+                      data:
+                        Track:
+                          - Genre:
+                              Name: "Rock"
+                            MediaType:
+                              Name: "MPEG audio file"
+                            Name: "For Those About To Rock (We Salute You)"
+                    |]
                 }
          in (DataConnector.defaultTestCase required)
               { _whenQuery =
@@ -136,46 +144,55 @@ tests opts = do
                           _qrQuery =
                             API.Query
                               { _qFields =
-                                  KM.fromList
-                                    [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name"))),
-                                      ( "Genre",
-                                        API.RelField
-                                          ( API.RelationshipField
-                                              (API.RelationshipName "Genre")
-                                              API.Query
-                                                { _qFields =
-                                                    KM.fromList
-                                                      [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
-                                                      ],
-                                                  _qLimit = Nothing,
-                                                  _qOffset = Nothing,
-                                                  _qWhere = Just (API.And (ValueWrapper [])),
-                                                  _qOrderBy = Nothing
-                                                }
-                                          )
-                                      ),
-                                      ( "MediaType",
-                                        API.RelField
-                                          ( API.RelationshipField
-                                              (API.RelationshipName "MediaType")
-                                              API.Query
-                                                { _qFields =
-                                                    KM.fromList
-                                                      [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
-                                                      ],
-                                                  _qLimit = Nothing,
-                                                  _qOffset = Nothing,
-                                                  _qWhere = Just (API.And (ValueWrapper [])),
-                                                  _qOrderBy = Nothing
-                                                }
-                                          )
-                                      )
-                                    ],
+                                  Just $
+                                    KM.fromList
+                                      [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name"))),
+                                        ( "Genre",
+                                          API.RelField
+                                            ( API.RelationshipField
+                                                (API.RelationshipName "Genre")
+                                                API.Query
+                                                  { _qFields =
+                                                      Just $
+                                                        KM.fromList
+                                                          [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
+                                                          ],
+                                                    _qAggregates = Nothing,
+                                                    _qLimit = Nothing,
+                                                    _qOffset = Nothing,
+                                                    _qWhere = Just (API.And (ValueWrapper [])),
+                                                    _qOrderBy = Nothing
+                                                  }
+                                            )
+                                        ),
+                                        ( "MediaType",
+                                          API.RelField
+                                            ( API.RelationshipField
+                                                (API.RelationshipName "MediaType")
+                                                API.Query
+                                                  { _qFields =
+                                                      Just $
+                                                        KM.fromList
+                                                          [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
+                                                          ],
+                                                    _qAggregates = Nothing,
+                                                    _qLimit = Nothing,
+                                                    _qOffset = Nothing,
+                                                    _qWhere = Just (API.And (ValueWrapper [])),
+                                                    _qOrderBy = Nothing
+                                                  }
+                                            )
+                                        )
+                                      ],
+                                _qAggregates = Nothing,
                                 _qLimit = Just 1,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And (ValueWrapper {getValue = []})),
+                                _qWhere = Just (API.And (ValueWrapper [])),
                                 _qOrderBy = Nothing
                               }
                         }
                     )
               }
+
+rowsResponse :: [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
+rowsResponse rows = API.QueryResponse (Just $ KM.fromList <$> rows) Nothing

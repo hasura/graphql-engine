@@ -369,6 +369,7 @@ library dc-api
   exposed-modules:     Autodocodec.Extended
                      , Hasura.Backends.DataConnector.API
                      , Hasura.Backends.DataConnector.API.V0
+                     , Hasura.Backends.DataConnector.API.V0.Aggregate
                      , Hasura.Backends.DataConnector.API.V0.Capabilities
                      , Hasura.Backends.DataConnector.API.V0.Column
                      , Hasura.Backends.DataConnector.API.V0.ConfigSchema
@@ -572,6 +573,7 @@ library
                      , Hasura.Backends.DataConnector.Adapter.Transport
                      , Hasura.Backends.DataConnector.Adapter.Types
                      , Hasura.Backends.DataConnector.Agent.Client
+                     , Hasura.Backends.DataConnector.IR.Aggregate
                      , Hasura.Backends.DataConnector.IR.Column
                      , Hasura.Backends.DataConnector.IR.Expression
                      , Hasura.Backends.DataConnector.IR.Export
@@ -1017,6 +1019,7 @@ test-suite graphql-engine-tests
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
     Hasura.Base.ErrorMessageSpec
+    Hasura.Backends.DataConnector.API.V0.AggregateSpec
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec
     Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec

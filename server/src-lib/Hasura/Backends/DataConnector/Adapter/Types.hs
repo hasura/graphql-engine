@@ -6,6 +6,7 @@ module Hasura.Backends.DataConnector.Adapter.Types
     DataConnectorBackendConfig,
     DataConnectorName (..),
     DataConnectorOptions (..),
+    CountType (..),
   )
 where
 
@@ -15,6 +16,7 @@ import Data.Aeson.KeyMap qualified as J
 import Data.Text.Extended (ToTxt)
 import Data.Text.NonEmpty (NonEmptyText)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Network.HTTP.Client (Manager)
@@ -87,3 +89,9 @@ instance FromJSON DataConnectorOptions where
 
 instance ToJSON DataConnectorOptions where
   toJSON = genericToJSON hasuraJSON
+
+data CountType
+  = StarCount
+  | ColumnCount (NonEmpty IR.C.Name)
+  | ColumnDistinctCount (NonEmpty IR.C.Name)
+  deriving (Eq, Ord, Show, Generic, Data)

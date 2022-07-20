@@ -44,12 +44,16 @@ queryToAPI IR.Q.Query {..} = do
   fields' <- traverse fieldToAPI _qFields
   pure $
     API.Query
-      { _qFields = fromHashMapText fields',
+      { _qFields = memptyToNothing $ fromHashMapText fields',
+        _qAggregates = memptyToNothing $ fromHashMapText $ Witch.from <$> _qAggregates,
         _qLimit = _qLimit,
         _qOffset = _qOffset,
         _qWhere = fmap Witch.from _qWhere,
         _qOrderBy = nonEmpty $ fmap Witch.from _qOrderBy
       }
+
+memptyToNothing :: (Monoid m, Eq m) => m -> Maybe m
+memptyToNothing m = if m == mempty then Nothing else Just m
 
 fieldToAPI :: IR.Q.Field -> Either QueryError API.Field
 fieldToAPI = \case

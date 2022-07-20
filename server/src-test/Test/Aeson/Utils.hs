@@ -7,6 +7,7 @@ module Test.Aeson.Utils
     jsonProperties,
     validateAgainstOpenApiSchema,
     jsonOpenApiProperties,
+    genKeyMap,
     genObject,
     genValue,
   )
@@ -75,8 +76,12 @@ jsonOpenApiProperties gen = do
   jsonProperties gen
   validateAgainstOpenApiSchema gen
 
+genKeyMap :: MonadGen m => m value -> m (KM.KeyMap value)
+genKeyMap genKMValue =
+  KM.fromList . map (first K.fromText) <$> Gen.list (linear 0 5) ((,) <$> Gen.text (linear 0 5) Gen.unicode <*> genKMValue)
+
 genObject :: MonadGen m => m Object
-genObject = KM.fromList . map (first K.fromText) <$> Gen.list (linear 0 5) ((,) <$> Gen.text (linear 0 5) Gen.unicode <*> genValue)
+genObject = genKeyMap genValue
 
 genValue :: MonadGen m => m Value
 genValue =
