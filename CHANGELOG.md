@@ -8,6 +8,14 @@
 - server: allow all argument types for BigQuery routines
 
 
+## v2.9.0-beta.3
+
+### Bug fixes and improvements
+
+- server: Fix bug where Hasura SQL trigger was not dropped when an MS SQL Server database is dropped
+- server: Allow all argument types for BigQuery routines
+- console: Fix notifications not being shown in certain cases on the console on Hasura Cloud
+
 ## v2.9.0-beta.2
 
 ### Bug fixes and improvements
