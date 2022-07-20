@@ -1172,6 +1172,7 @@ test-suite tests-hspec
     Test.CustomRootFieldsSpec
     Test.DirectivesSpec
     Test.EventTriggersRunSQLSpec
+    Test.EventTriggerDropSourceCleanupSpec
     Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec

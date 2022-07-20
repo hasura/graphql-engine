@@ -39,6 +39,7 @@ import Hasura.RQL.Types.Backend (BackendConfig)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table (TableEventTriggers)
 import Hasura.SQL.Backend
 
 resolveSourceConfig :: (MonadIO m) => SourceName -> ConnSourceConfig -> BackendSourceKind 'MySQL -> BackendConfig 'MySQL -> Env.Environment -> m (Either QErr SourceConfig)
@@ -71,8 +72,9 @@ resolveDatabaseMetadata sc@SourceConfig {..} sourceCustomization =
 postDropSourceHook ::
   (MonadIO m) =>
   SourceConfig ->
+  TableEventTriggers 'MySQL ->
   m ()
-postDropSourceHook _ =
+postDropSourceHook _ _ =
   -- As of now, we do not add any Hasura related stuff to source DB hence
   -- no need to clean things up.
   pure ()

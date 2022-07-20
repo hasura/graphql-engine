@@ -53,7 +53,7 @@ instance BackendMetadata 'DataConnector where
   fetchAndValidateEnumValues = error "fetchAndValidateEnumValues: not implemented for the Data Connector backend."
   buildFunctionInfo = error "buildFunctionInfo: not implemented for the Data Connector backend."
   updateColumnInEventTrigger = error "updateColumnInEventTrigger: not implemented for the Data Connector backend."
-  postDropSourceHook _sourceConfig = pure ()
+  postDropSourceHook _sourceConfig _tableTriggerMap = pure ()
   buildComputedFieldBooleanExp _ _ _ _ _ _ =
     error "buildComputedFieldBooleanExp: not implemented for the Data Connector backend."
 

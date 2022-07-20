@@ -22,6 +22,7 @@ module Hasura.RQL.Types.Table
     TableConfig (..),
     TableCoreCache,
     TableCoreInfo,
+    TableEventTriggers,
     TableCoreInfoG (..),
     TableCustomRootFields (..),
     TableInfo (..),
@@ -922,6 +923,9 @@ getRolePermInfo role tableInfo
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 
 type TableCache b = M.HashMap (TableName b) (TableInfo b) -- info of all tables
+
+-- map of all event triggers on the table
+type TableEventTriggers b = M.HashMap (TableName b) [TriggerName]
 
 -- | Metadata of a Postgres foreign key constraint which is being
 -- extracted from database via 'src-rsr/pg_table_metadata.sql'
