@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const headersSchema = z.array(
+export const requestHeadersSelectorSchema = z.array(
   z.object({
     name: z.string(),
     value: z.string(),
@@ -8,4 +8,6 @@ export const headersSchema = z.array(
   })
 );
 
-export type THeaders = z.infer<typeof headersSchema>;
+export type RequestHeadersSelectorSchema = z.infer<
+  typeof requestHeadersSelectorSchema
+>;

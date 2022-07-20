@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { headersSchema } from '../Headers';
+import { requestHeadersSelectorSchema } from '@/new-components/RequestHeadersSelector';
 
 export const schema = z.object({
   name: z.string().min(1, 'Remote Schema name is a required field!'),
@@ -7,7 +7,7 @@ export const schema = z.object({
     value: z.string(),
     type: z.literal('from_url').or(z.literal('from_env')),
   }),
-  headers: headersSchema,
+  headers: requestHeadersSelectorSchema,
   forward_client_headers: z.preprocess(val => {
     if (val === 'true') return true;
     return false;
