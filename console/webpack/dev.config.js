@@ -1,26 +1,34 @@
 // Webpack config for development
+require('dotenv/config');
 const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const assetsPath = path.resolve(__dirname, '../static/dist');
 const hasuraConfig = require('../hasuraconfig');
-const host = hasuraConfig.hmrHost;
-const port = hasuraConfig.hmrPort;
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { env } = require('../src/helpers/localDev');
 
 const autoprefixer = require('autoprefixer');
 
-const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
-const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
-  require('./webpack-isomorphic-tools')
-);
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
+
 const commonConfig = require('./common.config');
 
 module.exports = {
   mode: 'development',
-  devtool: 'inline-source-map',
+  devtool: 'eval-source-map',
   context: path.resolve(__dirname, '..'),
+  devServer: {
+    port: hasuraConfig.port.development,
+    historyApiFallback: true,
+    client: {
+      overlay: {
+        warnings: false,
+        errors: true,
+      },
+    },
+  },
   node: {
     module: 'empty',
     fs: 'empty',
@@ -28,16 +36,13 @@ module.exports = {
     child_process: 'empty',
   },
   entry: {
-    main: [
-      `webpack-hot-middleware/client?path=http://${host}:${port}/__webpack_hmr`,
-      './src/client.js',
-    ],
+    main: ['./src/client.js'],
   },
   output: {
     path: assetsPath,
     filename: '[name]-[hash].js',
     chunkFilename: '[name]-[chunkhash].js',
-    publicPath: `http://${host}:${port}${hasuraConfig.webpackPrefix}`,
+    publicPath: '/',
   },
   module: {
     rules: [
@@ -90,13 +95,18 @@ module.exports = {
     plugins: commonConfig.resolvePlugins,
   },
   plugins: [
-    // hot reload
-    // new UnusedFilesWebpackPlugin({}),
+    new HtmlWebpackPlugin({
+      title: 'Hasura Console',
+      template: './public/index.html', // template file
+      filename: 'index.html', // output file
+      publicPath: '/',
+      favicon: './static/favicon_green.png',
+      env,
+    }),
     new webpack.ProvidePlugin({
       $: 'jquery',
       jQuery: 'jquery',
     }),
-    new webpack.HotModuleReplacementPlugin(),
     new webpack.LoaderOptionsPlugin({
       postcss: [autoprefixer],
     }),
@@ -107,13 +117,9 @@ module.exports = {
       __SERVER__: false,
       __DEVELOPMENT__: true,
       __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
-    }),
-    // set global consts
-    new webpack.DefinePlugin({
       CONSOLE_ASSET_VERSION: Date.now().toString(),
       'process.hrtime': () => null,
     }),
-    webpackIsomorphicToolsPlugin.development(),
     new ForkTsCheckerWebpackPlugin({
       compilerOptions: {
         allowJs: true,

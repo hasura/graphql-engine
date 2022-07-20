@@ -137,6 +137,9 @@ module.exports = {
       }),
     ],
   },
+  stats: {
+    errorDetails: true,
+  },
   plugins: [
     new CleanPlugin(['./lib/*.*'], cleanOptions),
 

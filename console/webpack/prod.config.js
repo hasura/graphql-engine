@@ -127,6 +127,9 @@ module.exports = {
       },
     },
   },
+  stats: {
+    errorDetails: true,
+  },
   plugins: [
     new CleanPlugin(['./static/dist/*.*'], cleanOptions),
 
@@ -165,5 +168,6 @@ module.exports = {
         checkJs: false,
       },
     }),
+    
   ],
 };
