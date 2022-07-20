@@ -17,7 +17,7 @@ import {
   RemoteSchemaToRemoteSchemaForm,
 } from '@/features/RemoteRelationships';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { fireNotification } from '@/new-components/Notifications';
+import { useFireNotification } from '@/new-components/Notifications';
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
 
 type RemoteSchemaRelationRendererProp = {
@@ -44,6 +44,7 @@ export const RemoteSchemaRelationRenderer = ({
   });
   const [formState, setFormState] = useState<RemoteRelOption>('remoteSchema');
 
+  const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
     onSuccess: () => {
       fireNotification({
