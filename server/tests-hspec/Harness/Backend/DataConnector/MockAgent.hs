@@ -213,7 +213,7 @@ chinookMock =
   MockConfig
     { _capabilitiesResponse = capabilities,
       _schemaResponse = schema,
-      _queryResponse = \_ -> API.QueryResponse []
+      _queryResponse = \_ -> API.QueryResponse (Just []) Nothing
     }
 
 --------------------------------------------------------------------------------

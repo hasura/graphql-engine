@@ -7,6 +7,7 @@ import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
 import Data.Text.Casing qualified as C
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
+import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Function qualified as IR.F
 import Hasura.Backends.DataConnector.IR.Name qualified as IR.N
@@ -18,7 +19,7 @@ import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw40
 import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
-import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable)
+import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -44,7 +45,7 @@ instance Backend 'DataConnector where
   type ConstraintName 'DataConnector = Unimplemented
   type BasicOrderType 'DataConnector = IR.O.OrderType
   type NullsOrderType 'DataConnector = Unimplemented
-  type CountType 'DataConnector = Unimplemented
+  type CountType 'DataConnector = IR.A.CountAggregate
   type Column 'DataConnector = IR.C.Name
   type ScalarValue 'DataConnector = IR.S.V.Value
   type ScalarType 'DataConnector = IR.S.T.Type
@@ -63,7 +64,7 @@ instance Backend 'DataConnector where
 
   type XComputedField 'DataConnector = XDisable
   type XRelay 'DataConnector = XDisable
-  type XNodesAgg 'DataConnector = XDisable
+  type XNodesAgg 'DataConnector = XEnable
   type XNestedInserts 'DataConnector = XDisable
   type XStreamingSubscription 'DataConnector = XDisable
 

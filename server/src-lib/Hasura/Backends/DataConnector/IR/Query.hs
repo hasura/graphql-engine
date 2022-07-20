@@ -8,6 +8,7 @@ where
 
 import Data.Aeson (ToJSON)
 import Data.Aeson qualified as J
+import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
@@ -29,8 +30,10 @@ instance ToJSON QueryRequest where
 
 -- | The details of a query against a table
 data Query = Query
-  { -- NOTE: We should clarify what the 'Text' key is supposed to indicate.
+  { -- Map of field name to Field definition.
     _qFields :: HashMap Text Field,
+    -- Map of aggregate field name to Aggregate definition
+    _qAggregates :: HashMap Text IR.A.Aggregate,
     -- | Optionally limit to N results.
     _qLimit :: Maybe Int,
     -- | Optionally offset from the Nth result.

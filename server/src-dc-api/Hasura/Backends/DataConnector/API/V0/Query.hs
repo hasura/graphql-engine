@@ -9,6 +9,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qrQuery,
     Query (..),
     qFields,
+    qAggregates,
     qLimit,
     qOffset,
     qWhere,
@@ -16,23 +17,29 @@ module Hasura.Backends.DataConnector.API.V0.Query
     Field (..),
     RelationshipField (..),
     QueryResponse (..),
+    qrRows,
+    qrAggregates,
+    FieldValue (..),
+    _ColumnFieldValue,
+    _RelationshipFieldValue,
   )
 where
 
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
-import Control.DeepSeq (NFData)
 import Control.Lens.TH (makeLenses, makePrisms)
-import Data.Aeson (FromJSON, Object, ToJSON)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Data (Data)
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
+import Hasura.Backends.DataConnector.API.V0.Aggregate qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.OrderBy qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Scalar.Value qualified as API.V0.Scalar
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
 import Prelude
 
@@ -47,7 +54,8 @@ data QueryRequest = QueryRequest
 
 -- | The details of a query against a table
 data Query = Query
-  { _qFields :: KM.KeyMap Field,
+  { _qFields :: Maybe (KM.KeyMap Field),
+    _qAggregates :: Maybe (KM.KeyMap API.V0.Aggregate),
     _qLimit :: Maybe Int,
     _qOffset :: Maybe Int,
     _qWhere :: Maybe API.V0.Expression,
@@ -73,7 +81,8 @@ instance HasCodec Query where
   codec =
     named "Query" . object "Query" $
       Query
-        <$> requiredField "fields" "Fields of the query" .= _qFields
+        <$> optionalFieldOrNull "fields" "Fields of the query" .= _qFields
+        <*> optionalFieldOrNull "aggregates" "Aggregate fields of the query" .= _qAggregates
         <*> optionalFieldOrNull "limit" "Optionally limit to N results" .= _qLimit
         <*> optionalFieldOrNull "offset" "Optionally offset from the Nth result" .= _qOffset
         <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate" .= _qWhere
@@ -121,12 +130,41 @@ deriving via Autodocodec Field instance ToSchema Field
 
 -- | The resolved query response provided by the 'POST /query'
 -- endpoint encoded as a list of JSON objects.
-newtype QueryResponse = QueryResponse {getQueryResponse :: [Object]}
-  deriving newtype (Eq, Ord, Show, NFData)
+data QueryResponse = QueryResponse
+  { _qrRows :: Maybe [KM.KeyMap FieldValue],
+    _qrAggregates :: Maybe (KM.KeyMap API.V0.Scalar.Value)
+  }
+  deriving stock (Eq, Ord, Show)
   deriving (ToJSON, FromJSON, ToSchema) via Autodocodec QueryResponse
 
 instance HasCodec QueryResponse where
-  codec = named "QueryResponse" $ dimapCodec QueryResponse getQueryResponse codec
+  codec =
+    object "QueryResponse" $
+      QueryResponse
+        <$> optionalFieldOrNull "rows" "The rows returned by the query, corresponding to the query's fields" .= _qrRows
+        <*> optionalFieldOrNull "aggregates" "The results of the aggregates returned by the query" .= _qrAggregates
+
+data FieldValue
+  = ColumnFieldValue (ValueWrapper "value" API.V0.Scalar.Value)
+  | RelationshipFieldValue (ValueWrapper "value" QueryResponse)
+  deriving stock (Eq, Ord, Show)
+
+$(makePrisms ''FieldValue)
+
+instance HasCodec FieldValue where
+  codec =
+    named "FieldValue" $
+      sumTypeCodec
+        [ TypeAlternative "ColumnFieldValue" "column" _ColumnFieldValue,
+          TypeAlternative "RelationshipFieldValue" "relationship" _RelationshipFieldValue
+        ]
+
+deriving via Autodocodec FieldValue instance FromJSON FieldValue
+
+deriving via Autodocodec FieldValue instance ToJSON FieldValue
+
+deriving via Autodocodec FieldValue instance ToSchema FieldValue
 
 $(makeLenses ''QueryRequest)
 $(makeLenses ''Query)
+$(makeLenses ''QueryResponse)

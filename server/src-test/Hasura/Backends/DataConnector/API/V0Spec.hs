@@ -1,5 +1,6 @@
 module Hasura.Backends.DataConnector.API.V0Spec (spec) where
 
+import Hasura.Backends.DataConnector.API.V0.AggregateSpec qualified as AggregateSpec
 import Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec qualified as CapabilitiesSpec
 import Hasura.Backends.DataConnector.API.V0.ColumnSpec qualified as ColumnSpec
 import Hasura.Backends.DataConnector.API.V0.ConfigSchemaSpec qualified as ConfigSchemaSpec
@@ -15,6 +16,7 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
+  describe "Capabilities" AggregateSpec.spec
   describe "Capabilities" CapabilitiesSpec.spec
   describe "Column" ColumnSpec.spec
   describe "ConfigSchema" ConfigSchemaSpec.spec

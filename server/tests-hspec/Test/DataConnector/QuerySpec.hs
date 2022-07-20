@@ -166,8 +166,8 @@ tests opts = describe "Queries" $ do
         [yaml|
           data:
             albums_by_pk:
-              - id: 1
-                title: "For Those About To Rock We Salute You"
+              id: 1
+              title: "For Those About To Rock We Salute You"
         |]
 
     it "works with non existent primary key" $ \(testEnvironment, _) ->
@@ -186,7 +186,7 @@ tests opts = describe "Queries" $ do
         )
         [yaml|
           data:
-            albums_by_pk: []
+            albums_by_pk: null
         |]
 
     it "works with a composite primary key" $ \(testEnvironment, _) ->
@@ -210,10 +210,10 @@ tests opts = describe "Queries" $ do
         [yaml|
           data:
             PlaylistTrack_by_pk:
-              - Playlist:
-                  Name: "Music"
-                Track:
-                  Name: "Balls to the Wall"
+              Playlist:
+                Name: "Music"
+              Track:
+                Name: "Balls to the Wall"
         |]
 
   it "works with pagination" $ \(testEnvironment, _) ->
@@ -258,11 +258,11 @@ tests opts = describe "Queries" $ do
         [yaml|
           data:
             artists_by_pk:
-              - name: AC/DC
-                id: 1
-                albums:
-                  - title: For Those About To Rock We Salute You
-                  - title: Let There Be Rock
+              name: AC/DC
+              id: 1
+              albums:
+                - title: For Those About To Rock We Salute You
+                - title: Let There Be Rock
         |]
 
   describe "Object Relationships" $ do
@@ -286,10 +286,10 @@ tests opts = describe "Queries" $ do
         [yaml|
           data:
             albums_by_pk:
-              - id: 1
-                title: "For Those About To Rock We Salute You"
-                artist:
-                  name: "AC/DC"
+              id: 1
+              title: "For Those About To Rock We Salute You"
+              artist:
+                name: "AC/DC"
         |]
 
   describe "Where Clause Tests" $ do

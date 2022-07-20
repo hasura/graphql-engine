@@ -11,6 +11,8 @@ import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty qualified as NET
 import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
+import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
+import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
@@ -27,7 +29,7 @@ import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select qualified as GS.S
 import Hasura.Name qualified as Name
 import Hasura.Prelude
-import Hasura.RQL.IR.Select (SelectArgsG (..))
+import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
@@ -54,7 +56,7 @@ instance BackendSchema 'DataConnector where
 
   -- backend extensions
   relayExtension = Nothing
-  nodesAggExtension = Nothing
+  nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
 
   -- individual components
@@ -63,10 +65,8 @@ instance BackendSchema 'DataConnector where
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
 
-  countTypeInput =
-    error "countTypeInput: not implemented for the Data Connector backend."
-  aggregateOrderByCountType =
-    error "aggregateOrderByCountType: not implemented for the Data Connector backend."
+  countTypeInput = countTypeInput'
+  aggregateOrderByCountType = IR.S.T.Number
   computedField =
     error "computedField: not implemented for the Data Connector backend."
 
@@ -178,12 +178,12 @@ tableArgs' ::
   MonadBuildSchema 'DataConnector r m n =>
   RQL.SourceInfo 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
-  m (P.InputFieldsParser n (SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
+  m (P.InputFieldsParser n (IR.SelectArgsG 'DataConnector (IR.UnpreparedValue 'DataConnector)))
 tableArgs' sourceName tableInfo = do
   whereParser <- GS.S.tableWhereArg sourceName tableInfo
   orderByParser <- GS.S.tableOrderByArg sourceName tableInfo
   let mkSelectArgs whereArg orderByArg limitArg offsetArg =
-        SelectArgs
+        IR.SelectArgs
           { _saWhere = whereArg,
             _saOrderBy = orderByArg,
             _saLimit = limitArg,
@@ -196,3 +196,16 @@ tableArgs' sourceName tableInfo = do
       <*> orderByParser
       <*> GS.S.tableLimitArg
       <*> GS.S.tableOffsetArg
+
+countTypeInput' ::
+  MonadParse n =>
+  Maybe (P.Parser 'P.Both n IR.C.Name) ->
+  P.InputFieldsParser n (IR.CountDistinct -> IR.A.CountAggregate)
+countTypeInput' = \case
+  Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._columns Nothing (P.list columnEnum)
+  Nothing -> pure $ mkCountAggregate Nothing
+  where
+    mkCountAggregate :: Maybe [IR.C.Name] -> IR.CountDistinct -> IR.A.CountAggregate
+    mkCountAggregate Nothing _ = IR.A.StarCount
+    mkCountAggregate (Just cols) IR.SelectCountDistinct = maybe IR.A.StarCount IR.A.ColumnDistinctCount $ nonEmpty cols
+    mkCountAggregate (Just cols) IR.SelectCountNonDistinct = maybe IR.A.StarCount IR.A.ColumnCount $ nonEmpty cols

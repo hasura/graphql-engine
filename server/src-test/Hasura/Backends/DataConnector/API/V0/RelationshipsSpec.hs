@@ -4,6 +4,7 @@
 module Hasura.Backends.DataConnector.API.V0.RelationshipsSpec
   ( spec,
     genRelationshipName,
+    genTableRelationships,
   )
 where
 
@@ -91,7 +92,7 @@ spec = do
           }
         }
       |]
-    jsonOpenApiProperties genRelationship
+    jsonOpenApiProperties genTableRelationships
 
 genRelationshipName :: MonadGen m => m RelationshipName
 genRelationshipName =
@@ -106,3 +107,9 @@ genRelationship =
     <$> genTableName
     <*> genRelationshipType
     <*> (HashMap.fromList <$> Gen.list (linear 0 5) ((,) <$> genColumnName <*> genColumnName))
+
+genTableRelationships :: MonadGen m => m TableRelationships
+genTableRelationships =
+  TableRelationships
+    <$> genTableName
+    <*> fmap HashMap.fromList (Gen.list (linear 0 5) ((,) <$> genRelationshipName <*> genRelationship))

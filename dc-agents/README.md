@@ -277,9 +277,27 @@ Let's break down the request:
 
 #### Response Body Structure
 
-The response body for a call to `POST /query` should always consist of a JSON array of JSON objects. Each of those JSON objects should contain all of the same keys as the `fields` property of the request body, even if the values of the corresponding fields may be `null`.
+The response body for a call to `POST /query` must conform to a specific query response format. Here's an example:
 
-In the case of fields appearing with type `relationship`, this property should apply recursively: such fields should appear in the response body as a nested array/object of record(s) (depending on whether the relationship is an object or array relationship), each with the appropriate fields described by the relationship field's `query` property.
+```json
+{
+  "rows": [
+    {
+      "ArtistId": { "type": "column", "value": 1 },
+      "Name": { "type": "column", "value": "AC/DC" }
+    },
+    {
+      "ArtistId": { "type": "column", "value": 2 },
+      "Name": { "type": "column", "value": "Accept" }
+    }
+  ]
+}
+```
+
+The rows returned by the query must be put into the `rows` property array in the query response object. Each object within this array represents a row, and the row object properties are the fields requested in the query. The value of the row object properties can be one of two types of object:
+
+- `column`: The field was a column field, then `value` must be the value of that column for this row
+- `relationship`: If the field was a relationship field, then the `value` must be a new query response object that contains the results of navigating that relationship for the current row. (The query response structure is recursive via relationship-typed field values). Examples of this can be seen in the Relationships section below.
 
 #### Pagination
 
@@ -419,9 +437,9 @@ _Note_ : if the `relationships` capability is not present then `graphql-engine` 
 
 Relationship fields are indicated by a `type` field containing the string `relationship`. Such fields will also include the name of the relationship in a field called `relationship`. This name refers to a relationship that is specified on the top-level query request object in the `table_relationships` field.
 
-This `table_relationships` is a list of tables, and for each table, a map of relationship name to relationship information. The information is an object that has a field `target_table` that specifies the name of the related table. It has a field called `relationship_type` that specified either an `object` (many to one) or an `array` (one to many) relationship. There  is also a `column_mapping` field that indicates the mapping from columns in the source table to columns in the related table.
+This `table_relationships` is a list of tables, and for each table, a map of relationship name to relationship information. The information is an object that has a field `target_table` that specifies the name of the related table. It has a field called `relationship_type` that specified either an `object` (many to one) or an `array` (one to many) relationship. There is also a `column_mapping` field that indicates the mapping from columns in the source table to columns in the related table.
 
-It is intended that the backend should execute the `query` contained in the relationship field and return the resulting record set as the value of this field, with the additional record-level predicate that any mapped columns should be equal in the context of the current record of the current table.
+It is intended that the backend should execute the `query` contained in the relationship field and return the resulting query response as the value of this field, with the additional record-level predicate that any mapped columns should be equal in the context of the current record of the current table.
 
 An example will illustrate this. Consider the following GraphQL query:
 
@@ -520,7 +538,49 @@ Note the `Albums` field in particular, which traverses the `Artists` -> `Albums`
 
 The top-level `table_relationships` can be looked up by starting from the source table (in this case `Artist`), locating the `ArtistAlbums` relationship under that table, then extracting the relationship information. This information includes the `target_table` field which indicates the table to be queried when following this relationship is the `Album` table. The `relationship_type` field indicates that this relationship is an `array` relationship (ie. that it will return zero to many Album rows per Artist row). The `column_mapping` field indicates the column mapping for this relationship, namely that the Artist's `ArtistId` must equal the Album's `ArtistId`.
 
-Back on the relationship field inside the query, there is another `query` field. This indicates the query that should be executed against the `Album` table, but we must remember to enforce the additional constraint between Artist's `ArtistId` and Album's `ArtistId`. That is, in the context of any single outer `Artist` record, we should populate the `Albums` field with the array of Album records for which the `ArtistId` field is equal to the outer record's `ArtistId` field.
+Back on the relationship field inside the query, there is another `query` field. This indicates the query that should be executed against the `Album` table, but we must remember to enforce the additional constraint between Artist's `ArtistId` and Album's `ArtistId`. That is, in the context of any single outer `Artist` record, we should populate the `Albums` field with the query response containing the array of Album records for which the `ArtistId` field is equal to the outer record's `ArtistId` field.
+
+Here's an example (truncated) response:
+
+```jsonc
+{
+  "rows": [
+    {
+      "Albums": {
+        "type": "relationship",
+        "value": {
+          "rows": [
+            {
+              "Title": { "type": "column", "value": "For Those About To Rock We Salute You" }
+            },
+            {
+              "Title": { "type": "column", "value": "Let There Be Rock" }
+            }
+          ]
+        }
+      },
+      "Name": { "type": "column", "value": "AC/DC" }
+    },
+    {
+      "Albums": {
+        "type": "relationship",
+        "value": {
+          "rows": [
+            {
+              "Title": { "type": "column", "value": "Balls to the Wall" }
+            },
+            {
+              "Title": { "type": "column", "value": "Restless and Wild" }
+            }
+          ]
+        }
+      },
+      "Name": { "type": "column", "value": "Accept" }
+    }
+    // Truncated, more Artist rows here
+  ]
+}
+```
 
 #### Cross-Table Filtering
 It is possible to form queries that filter their results by comparing columns across tables via relationships. One way this can happen in Hasura GraphQL Engine is when configuring permissions on a table. It is possible to configure a filter on a table such that it joins to another table in order to compare some data in the filter expression.
@@ -677,6 +737,261 @@ We would get the following query request JSON:
 ```
 
 The key point of interest here is in the `where` field where we are comparing between columns. The first column's `path` is `["SupportRep"]` indicating that the `Country` column specified there is on the other side of the `Customer` table's `SupportRep` relationship (ie. to the `Employee` table). The related `Employee`'s `Country` column is being compared with `equal` to `Customer`'s `Country` column (as indicated by the `[]` path). So, in order to evaluate this condition, we'd need to join the `Employee` table using the `column_mapping` specified in the `SupportRep` relationship and if any of the related rows (in this case, only one because it is an `object` relation) contain a `Country` that is equal to Employee row's `Country`, then the `binary_op` evaluates to True and we don't filter out the row.
+
+#### Aggregates
+HGE supports forming GraphQL queries that allow clients to aggregate over the data in their data sources. This type of query can be passed through to Data Connector agents as a part of the Query structure sent to `/query`.
+
+For example, consider the following GraphQL query:
+
+```graphql
+query {
+  Artist_aggregate {
+    aggregate {
+      max {
+        ArtistId
+      }
+    }
+  }
+}
+```
+
+This would cause the following query request to be performed:
+
+```json
+{
+  "table": "Artist",
+  "table_relationships": [],
+  "query": {
+    "aggregates": {
+      "aggregate_max_ArtistId": {
+        "type": "single_column",
+        "function": "max",
+        "column": "ArtistId"
+      }
+    }
+  }
+}
+```
+
+Notice the `Query` has an `aggregates` property; this property contains an object where the property name is the field name of the aggregate, and the value is a description of the aggregate. In the example above, we're using the `max` function on the `ArtistId` column. The `max` function is a function that operates on a single column, so the type of the aggregate is `single_column`.
+
+These are the supported `single_column` functions:
+- `avg`
+- `max`
+- `min`
+- `stddev_pop`
+- `stddev_samp`
+- `sum`
+- `var_pop`
+- `var_samp`
+
+The aggregate function is to be run over all rows that match the `Query`. In this case, the query has no filters on it (ie. no `where`, `limit` or `offset` properties), so the query would be selecting all rows in the Artist table.
+
+There are two other types of aggregates, `column_count` and `star_count`, as demonstrated in this GraphQL query, and its resultant `QueryRequest`:
+
+```graphql
+query {
+  Album_aggregate {
+    aggregate {
+      distinct_count: count(columns: Title, distinct: true)
+      count
+    }
+  }
+}
+```
+
+```json
+{
+  "table": "Album",
+  "table_relationships": [],
+  "query": {
+    "aggregates": {
+      "aggregate_distinct_count": {
+        "type": "column_count",
+        "columns": ["Title"],
+        "distinct": true
+      },
+      "aggregate_count": {
+        "type": "star_count"
+      }
+    }
+  }
+}
+```
+
+A `column_count` aggregate counts the number of rows that have non-null values in the specified `columns`. If `distinct` is set to `true`, then the count should only count unique values of those columns. This is like a `COUNT(x,y,z)` or a `COUNT(DISTINCT x,y,z)` in SQL.
+
+A `star_count` aggregate simply counts the number of rows matched by the query (similar to a `COUNT(*)` in SQL).
+
+The results of the aggregate functions must be returned in an `aggregates` property on the query response. For example:
+
+```json
+{
+  "aggregates": {
+    "aggregate_distinct_count": 347,
+    "aggregate_count": 347
+  }
+}
+```
+
+HGE's aggregate GraphQL queries can also return the rows involved in the aggregates, as well as apply all the standard filtering operations, for example:
+
+```graphql
+query {
+  Artist_aggregate(where: {Name: {_gt: "Z"}}) {
+    aggregate {
+      count
+    }
+    nodes {
+      ArtistId
+      Name
+    }
+  }
+}
+```
+
+The `nodes` part of the query ends up as standard `fields` in the `Query`, and therefore are treated exactly the same as discussed in previous sections:
+
+```json
+{
+  "table": "Artist",
+  "table_relationships": [],
+  "query": {
+    "aggregates": {
+      "aggregate_count": {
+        "type": "star_count"
+      }
+    },
+    "fields": {
+      "nodes_ArtistId": {
+        "type": "column",
+        "column": "ArtistId"
+      },
+      "nodes_Name": {
+        "type": "column",
+        "column": "Name"
+      }
+    },
+    "where": {
+      "type": "binary_op",
+      "operator": "greater_than",
+      "column": {
+        "path": [],
+        "name": "Name"
+      },
+      "value": {
+        "type": "scalar",
+        "value": "Z"
+      }
+    }
+  },
+}
+```
+
+The response from this query would include both the `aggregates` and the matching `rows` containing the specified `fields`:
+
+```json
+{
+  "aggregates": {
+    "aggregate_count": 1
+  },
+  "rows": [
+    {
+      "nodes_ArtistId": { "type": "column", "value": 155 },
+      "nodes_Name": { "type": "column", "value": "Zeca Pagodinho" }
+    }
+  ]
+}
+```
+
+Aggregate queries can also appear in relationship fields. Consider the following query:
+
+```graphql
+query {
+  Artist(limit: 2, offset: 1) {
+    Name
+    Albums_aggregate {
+      aggregate {
+        count
+      }
+    }
+  }
+}
+```
+
+This would generate the following `QueryRequest`:
+
+```json
+{
+  "table": "Artist",
+  "table_relationships": [
+    {
+      "source_table": "Artist",
+      "relationships": {
+        "Albums": {
+          "target_table": "Album",
+          "relationship_type": "array",
+          "column_mapping": {
+            "ArtistId": "ArtistId"
+          }
+        }
+      }
+    }
+  ],
+  "query": {
+    "fields": {
+      "Albums_aggregate": {
+        "type": "relationship",
+        "relationship": "Albums",
+        "query": {
+          "aggregates": {
+            "aggregate_count": {
+              "type": "star_count"
+            }
+          }
+        }
+      },
+      "Name": {
+        "type": "column",
+        "column": "Name"
+      }
+    },
+    "limit": 2,
+    "offset": 1
+  }
+}
+```
+
+This would be expected to return the following response, with the rows from the Artist table, and the aggregates from the related Albums nested under the `relationship` field values for each Album row:
+
+```json
+{
+  "rows": [
+    {
+      "Albums_aggregate": {
+        "type": "relationship",
+        "value": {
+          "aggregates": {
+            "aggregate_count": 2
+          }
+        }
+      },
+      "Name": { "type": "column", "value": "Accept" }
+    },
+    {
+      "Albums_aggregate": {
+        "type": "relationship",
+        "value": {
+          "aggregates": {
+            "aggregate_count": 1
+          }
+        }
+      },
+      "Name": { "type": "column", "value": "Aerosmith" }
+    }
+  ]
+}
+```
 
 #### Type Definitions
 

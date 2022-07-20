@@ -11,8 +11,7 @@ import Data.Environment qualified as Env
 import Data.HashMap.Strict qualified as M
 import Data.Text qualified as T
 import Hasura.Backends.DataConnector.API qualified as API
-import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (ConnSourceConfig, template, value), SourceConfig)
-import Hasura.Backends.DataConnector.Plan qualified as DC
+import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (ConnSourceConfig, template, value), SourceConfig (..))
 import Hasura.Base.Error (Code (NotSupported), QErr, throw400)
 import Hasura.Prelude
 import Kriti qualified
@@ -30,9 +29,9 @@ transformConfig config maybeTemplate scope env = do
         Right o -> throw400 NotSupported $ "transformConfig: Kriti did not decode into Object - " <> tshow o
 
 transformSourceConfig :: (MonadError QErr m) => SourceConfig -> [(T.Text, J.Value)] -> Env.Environment -> m SourceConfig
-transformSourceConfig sc@DC.SourceConfig {_scConfig, _scTemplate} scope env = do
+transformSourceConfig sc@SourceConfig {_scConfig, _scTemplate} scope env = do
   transformedConfig <- transformConfig _scConfig _scTemplate scope env
-  pure sc {DC._scConfig = transformedConfig}
+  pure sc {_scConfig = transformedConfig}
 
 transformConnSourceConfig :: (MonadError QErr m) => ConnSourceConfig -> [(T.Text, J.Value)] -> Env.Environment -> m API.Config
 transformConnSourceConfig ConnSourceConfig {value, template} scope env = transformConfig value template scope env

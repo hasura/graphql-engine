@@ -1,5 +1,5 @@
 module Hasura.Backends.DataConnector.Plan
-  ( SourceConfig (..),
+  ( QueryPlan (..),
     mkPlan,
     renderQuery,
     queryHasRelations,
@@ -8,14 +8,20 @@ where
 
 --------------------------------------------------------------------------------
 
+import Autodocodec.Extended (ValueWrapper (..))
 import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
+import Data.Aeson.Encoding qualified as JE
+import Data.Aeson.Key qualified as K
+import Data.Aeson.KeyMap (KeyMap)
+import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Min (..))
 import Data.Text.Encoding qualified as TE
 import Data.Text.Extended ((<>>))
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -41,6 +47,11 @@ import Hasura.Session
 
 --------------------------------------------------------------------------------
 
+data QueryPlan = QueryPlan
+  { _qpRequest :: IR.Q.QueryRequest,
+    _qpResponseReshaper :: forall m. (MonadError QErr m) => API.QueryResponse -> m J.Encoding
+  }
+
 -- | Error type for the postProcessor continuation. Failure can occur if the Agent
 -- returns bad data.
 data ResponseError
@@ -64,8 +75,10 @@ mkPlan ::
   SessionVariables ->
   SourceConfig ->
   QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  m IR.Q.QueryRequest
-mkPlan session (SourceConfig {}) ir = translateQueryDB ir
+  m QueryPlan
+mkPlan session (SourceConfig {}) ir = do
+  queryRequest <- translateQueryDB ir
+  pure $ QueryPlan queryRequest (reshapeResponseToQueryShape ir)
   where
     translateQueryDB ::
       QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
@@ -115,6 +128,7 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
       pure
         IR.Q.Query
           { _qFields = fields,
+            _qAggregates = mempty,
             _qLimit =
               fmap getMin $
                 foldMap
@@ -189,6 +203,7 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
             relationshipName
             ( IR.Q.Query
                 { _qFields = fields,
+                  _qAggregates = mempty,
                   _qWhere = Just whereClause,
                   _qLimit = Nothing,
                   _qOffset = Nothing,
@@ -357,3 +372,101 @@ mkPlan session (SourceConfig {}) ir = translateQueryDB ir
 -- | Validate if a 'IR.Q' contains any relationships.
 queryHasRelations :: IR.Q.QueryRequest -> Bool
 queryHasRelations IR.Q.QueryRequest {..} = _qrTableRelationships /= mempty
+
+data Cardinality
+  = Single
+  | Many
+
+reshapeResponseToQueryShape ::
+  MonadError QErr m =>
+  QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  API.QueryResponse ->
+  m J.Encoding
+reshapeResponseToQueryShape queryDb response =
+  case queryDb of
+    QDBMultipleRows simpleSelect -> reshapeToAnnSimpleSelect Many simpleSelect response
+    QDBSingleRow simpleSelect -> reshapeToAnnSimpleSelect Single simpleSelect response
+    QDBAggregation _aggregateSelect -> throw400 NotSupported "QDBAggregation: not supported"
+
+-- TODO(dchambers) Maybe inline this
+reshapeToAnnSimpleSelect ::
+  MonadError QErr m =>
+  Cardinality ->
+  AnnSimpleSelectG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  API.QueryResponse ->
+  m J.Encoding
+reshapeToAnnSimpleSelect cardinality simpleSelect queryResponse =
+  reshapeSimpleSelectRows cardinality (_asnFields simpleSelect) queryResponse
+
+reshapeSimpleSelectRows ::
+  MonadError QErr m =>
+  Cardinality ->
+  AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  API.QueryResponse ->
+  m J.Encoding
+reshapeSimpleSelectRows cardinality fields API.QueryResponse {..} =
+  case cardinality of
+    Single ->
+      case rows of
+        [] -> pure $ J.toEncoding J.Null
+        [singleRow] -> reshapeFields fields singleRow
+        _multipleRows ->
+          throw500 "Data Connector agent returned multiple rows when only one was expected" -- TODO(dchambers): Add pathing information for error clarity
+    Many -> do
+      reshapedRows <- traverse (reshapeFields fields) rows
+      pure $ JE.list id reshapedRows
+  where
+    rows = fromMaybe mempty _qrRows
+
+reshapeFields ::
+  MonadError QErr m =>
+  AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  KeyMap API.FieldValue ->
+  m J.Encoding
+reshapeFields fields responseRow = do
+  reshapedFields <- forM fields $ \((FieldName fieldName), field) -> do
+    let fieldNameKey = K.fromText fieldName
+    let responseField =
+          KM.lookup fieldNameKey responseRow
+            `onNothing` throw500 ("Unable to find expected field " <> fieldName <> " in row returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+    reshapedField <- reshapeField field responseField
+    pure (fieldName, reshapedField)
+
+  pure $ encodeAssocListAsObject reshapedFields
+
+encodeAssocListAsObject :: [(Text, J.Encoding)] -> J.Encoding
+encodeAssocListAsObject =
+  JE.dict
+    JE.text
+    id
+    (\fn -> foldr (uncurry fn))
+
+reshapeField ::
+  MonadError QErr m =>
+  AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
+  m API.FieldValue -> -- This lookup is lazy (behind the monad) so that we can _not_ do it when we've got an AFExpression
+  m J.Encoding
+reshapeField field responseFieldValue =
+  case field of
+    AFColumn _columnField -> do
+      responseFieldValue' <- responseFieldValue
+      case responseFieldValue' of
+        API.ColumnFieldValue (ValueWrapper responseColumnFieldValue) -> pure $ J.toEncoding responseColumnFieldValue
+        API.RelationshipFieldValue _ -> throw500 "Found relationship field value where column field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
+    AFObjectRelation objectRelationField -> do
+      responseFieldValue' <- responseFieldValue
+      case responseFieldValue' of
+        API.ColumnFieldValue _ -> throw500 "Found column field value where relationship field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
+        API.RelationshipFieldValue (ValueWrapper subqueryResponse) ->
+          let fields = _aosFields $ _aarAnnSelect objectRelationField
+           in reshapeSimpleSelectRows Single fields subqueryResponse
+    AFArrayRelation (ASSimple simpleArrayRelationField) -> do
+      responseFieldValue' <- responseFieldValue
+      case responseFieldValue' of
+        API.ColumnFieldValue _ -> throw500 "Found column field value where relationship field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
+        API.RelationshipFieldValue (ValueWrapper subqueryResponse) ->
+          let annSimpleSelect = _aarAnnSelect simpleArrayRelationField
+           in reshapeToAnnSimpleSelect Many annSimpleSelect subqueryResponse
+    AFArrayRelation (ASAggregate _aggregateArrayRelation) ->
+      throw400 NotSupported "reshapeField: AFArrayRelation ASAggregate not supported"
+    AFExpression txt -> pure $ JE.text txt

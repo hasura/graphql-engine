@@ -1,4 +1,4 @@
-﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse } from "./types";
+﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse, FieldValue } from "./types";
 import { coerceUndefinedToNull, crossProduct, unreachable, zip } from "./util";
 
 type StaticData = {
@@ -9,7 +9,7 @@ type TableName = string
 type RelationshipName = string
 
 type ProjectedRow = {
-  [fieldName: string]: ScalarValue | ProjectedRow[] | ProjectedRow
+  [fieldName: string]: FieldValue
 }
 
 const prettyPrintBinaryComparisonOperator = (operator: BinaryComparisonOperator): string => {
@@ -249,28 +249,26 @@ const buildFieldsForPathedComparisonColumn = (comparisonColumn: ComparisonColumn
   }
 };
 
-const extractScalarValuesFromFieldPath = (fieldPath: string[], value: ProjectedRow | ScalarValue | ProjectedRow[]): ScalarValue[] => {
+const extractScalarValuesFromFieldPath = (fieldPath: string[], row: ProjectedRow): ScalarValue[] => {
   const [fieldName, ...remainingPath] = fieldPath;
-  if (fieldName === undefined) {
-    if (value !== null && typeof value === "object") { // Yes, the typeof of null and arrays is "object" 😑
-      throw "Field path did not end in a ScalarValue";
+  const fieldValue = row[fieldName];
+
+  if (remainingPath.length === 0) {
+    if (fieldValue.type === "column") {
+      return [fieldValue.value];
     } else {
-      return [value]; // ScalarValues
+      throw new Error("Field path did not end in a column field value");
     }
   } else {
-    if (value === null) { // This can occur with optional object relationships
-      return [];
-    } else if (Array.isArray(value)) {
-      return value.flatMap(row => extractScalarValuesFromFieldPath(fieldPath, row));
-    } else if (typeof value === "object") {
-      return extractScalarValuesFromFieldPath(remainingPath, value[fieldName]);
+    if (fieldValue.type === "relationship") {
+      return (fieldValue.value.rows ?? []).flatMap(row => extractScalarValuesFromFieldPath(remainingPath, row));
     } else {
-      throw `Found a ScalarValue in the middle of a field path: ${fieldPath}`;
+      throw new Error(`Found a column field value in the middle of a field path: ${fieldPath}`);
     }
   }
 };
 
-const makeGetComparisonColumnValues = (findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => ProjectedRow[]) => (comparisonColumn: ComparisonColumn, row: Record<string, ScalarValue>): ScalarValue[] => {
+const makeGetComparisonColumnValues = (findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => QueryResponse) => (comparisonColumn: ComparisonColumn, row: Record<string, ScalarValue>): ScalarValue[] => {
   const [relationshipName, ...remainingPath] = comparisonColumn.path;
   if (relationshipName === undefined) {
     return [coerceUndefinedToNull(row[comparisonColumn.name])];
@@ -282,38 +280,32 @@ const makeGetComparisonColumnValues = (findRelationship: (relationshipName: Rela
     if (subquery === null) {
       return [];
     } else {
-      const rows = performQuery(relationship.target_table, subquery);
+      const rows = performQuery(relationship.target_table, subquery).rows ?? [];
       const fieldPath = remainingPath.concat(comparisonColumn.name);
       return rows.flatMap(row => extractScalarValuesFromFieldPath(fieldPath, row));
     }
   }
 };
 
-const projectRow = (fields: Record<string, Field>, findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => ProjectedRow[]) => (row: Record<string, ScalarValue>): ProjectedRow => {
+const projectRow = (fields: Record<string, Field>, findRelationship: (relationshipName: RelationshipName) => Relationship, performQuery: (tableName: TableName, query: Query) => QueryResponse) => (row: Record<string, ScalarValue>): ProjectedRow => {
   const projectedRow: ProjectedRow = {};
   for (const [fieldName, field] of Object.entries(fields)) {
 
     switch (field.type) {
       case "column":
-        projectedRow[fieldName] = coerceUndefinedToNull(row[field.column]);
+        projectedRow[fieldName] = {
+          type: "column",
+          value: coerceUndefinedToNull(row[field.column])
+        };
         break;
 
       case "relationship":
         const relationship = findRelationship(field.relationship);
         const subquery = addRelationshipFilterToQuery(row, relationship, field.query);
-        switch (relationship.relationship_type) {
-          case "object":
-            projectedRow[fieldName] = subquery ? coerceUndefinedToNull(performQuery(relationship.target_table, subquery)[0]) : null;
-            break;
-
-          case "array":
-            projectedRow[fieldName] = subquery ? performQuery(relationship.target_table, subquery) : [];
-            break;
-
-          default:
-            unreachable(relationship.relationship_type);
-            break;
-        }
+        projectedRow[fieldName] = {
+          type: "relationship",
+          value: subquery ? performQuery(relationship.target_table, subquery) : { aggregates: null, rows: null }
+        };
         break;
 
       default:
@@ -335,7 +327,13 @@ export const queryData = (staticData: StaticData, queryRequest: QueryRequest) =>
     const filteredRows = rows.filter(makeFilterPredicate(query.where ?? null, getComparisonColumnValues));
     const sortedRows = sortRows(filteredRows, query.order_by ?? []);
     const slicedRows = paginateRows(sortedRows, query.offset ?? null, query.limit ?? null);
-    return slicedRows.map(projectRow(query.fields, findRelationship, performQuery));
+    const projectedRows = query.fields
+      ? slicedRows.map(projectRow(query.fields, findRelationship, performQuery))
+      : [];
+    return {
+      aggregates: null, // TODO(dchambers): Aggregates support
+      rows: projectedRows,
+    }
   }
 
   return performQuery(queryRequest.table, queryRequest.query);

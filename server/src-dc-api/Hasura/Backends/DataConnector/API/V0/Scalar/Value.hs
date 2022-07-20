@@ -5,6 +5,10 @@
 
 module Hasura.Backends.DataConnector.API.V0.Scalar.Value
   ( Value (..),
+    _String,
+    _Number,
+    _Boolean,
+    _Null,
   )
 where
 

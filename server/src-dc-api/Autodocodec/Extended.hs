@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Autodocodec.Extended
   ( disjointEnumCodec,
@@ -9,15 +10,21 @@ module Autodocodec.Extended
     TypeAlternative (..),
     sumTypeCodec,
     ValueWrapper (..),
+    vwValue,
     ValueWrapper2 (..),
+    vw2Value1,
+    vw2Value2,
     ValueWrapper3 (..),
+    vw3Value1,
+    vw3Value2,
+    vw3Value3,
     module Autodocodec,
   )
 where
 
 import Autodocodec
 import Control.DeepSeq (NFData)
-import Control.Lens (Prism', review, (<&>), (^?))
+import Control.Lens (Prism', makeLenses, review, (<&>), (^?))
 import Control.Monad (void)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
@@ -91,6 +98,9 @@ disjointStringConstCodec =
 class HasObjectCodec a where
   objectCodec :: JSONObjectCodec a
 
+instance HasObjectCodec () where
+  objectCodec = PureCodec ()
+
 requiredTypeField :: Text -> ObjectCodec void ()
 requiredTypeField typeName =
   void $ lmapCodec (const typeName) $ requiredFieldWith' "type" $ literalTextCodec typeName
@@ -163,18 +173,18 @@ sumTypeCodec l =
 -- Some wrappers to help with sum types.
 -- TODO: can we generalize this using HList or something?
 -- TODO: add some usage examples
-newtype ValueWrapper (t :: Symbol) a = ValueWrapper {getValue :: a}
+newtype ValueWrapper (t :: Symbol) a = ValueWrapper {_vwValue :: a}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (Hashable, NFData)
 
 instance (KnownSymbol t, HasCodec a) => HasObjectCodec (ValueWrapper t a) where
   objectCodec =
     ValueWrapper
-      <$> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t)) .= getValue
+      <$> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t)) .= _vwValue
 
 data ValueWrapper2 (t1 :: Symbol) a1 (t2 :: Symbol) a2 = ValueWrapper2
-  { getValue1 :: a1,
-    getValue2 :: a2
+  { _vw2Value1 :: a1,
+    _vw2Value2 :: a2
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (Hashable, NFData)
@@ -182,13 +192,13 @@ data ValueWrapper2 (t1 :: Symbol) a1 (t2 :: Symbol) a2 = ValueWrapper2
 instance (KnownSymbol t1, KnownSymbol t2, HasCodec a1, HasCodec a2) => HasObjectCodec (ValueWrapper2 t1 a1 t2 a2) where
   objectCodec =
     ValueWrapper2
-      <$> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t1)) .= getValue1
-      <*> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t2)) .= getValue2
+      <$> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t1)) .= _vw2Value1
+      <*> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t2)) .= _vw2Value2
 
 data ValueWrapper3 (t1 :: Symbol) a1 (t2 :: Symbol) a2 (t3 :: Symbol) a3 = ValueWrapper3
-  { getValue1_ :: a1,
-    getValue2_ :: a2,
-    getValue3_ :: a3
+  { _vw3Value1 :: a1,
+    _vw3Value2 :: a2,
+    _vw3Value3 :: a3
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (Hashable, NFData)
@@ -199,6 +209,10 @@ instance
   where
   objectCodec =
     ValueWrapper3
-      <$> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t1)) .= getValue1_
-      <*> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t2)) .= getValue2_
-      <*> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t3)) .= getValue3_
+      <$> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t1)) .= _vw3Value1
+      <*> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t2)) .= _vw3Value2
+      <*> requiredField' (T.pack $ symbolVal (Proxy :: Proxy t3)) .= _vw3Value3
+
+$(makeLenses ''ValueWrapper)
+$(makeLenses ''ValueWrapper2)
+$(makeLenses ''ValueWrapper3)

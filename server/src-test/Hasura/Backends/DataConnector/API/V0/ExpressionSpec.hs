@@ -21,7 +21,7 @@ import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Internal.Range
-import Test.Aeson.Utils (jsonOpenApiProperties, jsonProperties, testToFromJSONToSchema)
+import Test.Aeson.Utils (jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Autodocodec.Extended (genValueWrapper, genValueWrapper2, genValueWrapper3)
 import Test.Hspec
 
@@ -171,10 +171,7 @@ spec = do
           }
         |]
 
-    -- Note: `validateAgainstOpenApiSchema` is very slow on arbitrary values of type `Expression`.
-    -- I think this is a bug in `Data.OpeanApi.Schema.Validation`.
-    -- To avoid tests taking too long we use `jsonProperties` instead of `jsonOpenApiProperties` for testing `Expression`s.
-    jsonProperties genExpression
+    jsonOpenApiProperties genExpression
 
 genBinaryComparisonOperator :: MonadGen m => m BinaryComparisonOperator
 genBinaryComparisonOperator =
@@ -212,14 +209,15 @@ genComparisonValue =
 
 genExpression :: MonadGen m => m Expression
 genExpression =
-  Gen.choice
-    [ And <$> genValueWrapper genExpressions,
-      Or <$> genValueWrapper genExpressions,
-      Not <$> genValueWrapper genSmallExpression,
-      ApplyBinaryComparisonOperator <$> genValueWrapper3 genBinaryComparisonOperator genComparisonColumn genComparisonValue,
+  Gen.recursive
+    Gen.choice
+    [ ApplyBinaryComparisonOperator <$> genValueWrapper3 genBinaryComparisonOperator genComparisonColumn genComparisonValue,
       ApplyBinaryArrayComparisonOperator <$> genValueWrapper3 genBinaryArrayComparisonOperator genComparisonColumn (Gen.list (linear 0 1) genValue),
       ApplyUnaryComparisonOperator <$> genValueWrapper2 genUnaryComparisonOperator genComparisonColumn
     ]
+    [ And <$> genValueWrapper genExpressions,
+      Or <$> genValueWrapper genExpressions,
+      Not <$> genValueWrapper genExpression
+    ]
   where
-    genExpressions = Gen.list (linear 0 1) genSmallExpression
-    genSmallExpression = Gen.small genExpression
+    genExpressions = Gen.list (linear 0 1) genExpression

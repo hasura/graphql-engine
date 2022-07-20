@@ -1,16 +1,13 @@
 module Test.QuerySpec.RelationshipsSpec (spec) where
 
-import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (..))
-import Control.Lens (ix, (&), (.~), (^.), (^..), (^?))
-import Data.Aeson (Object, Value (..))
-import Data.Aeson qualified as J
+import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (..), vwValue)
+import Control.Lens (Traversal', ix, (&), (.~), (^.), (^..), (^?), _Just)
+import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KeyMap
-import Data.Aeson.Lens (_Array, _Number, _String)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty (NonEmpty (..))
-import Data.Maybe (fromMaybe)
+import Data.Maybe (maybeToList)
 import Data.Text (Text)
-import Data.Vector qualified as Vector
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
@@ -23,30 +20,32 @@ spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
 spec api sourceName config = describe "Relationship Queries" $ do
   it "perform an object relationship query by joining artist to albums" $ do
     let query = albumsWithArtistQuery id
-    receivedAlbums <- (Data.sortBy "AlbumId" . getQueryResponse) <$> (api // _query) sourceName config query
+    receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
-    let joinInArtist (album :: Object) =
-          let artist = (album ^? ix "ArtistId" . _Number) >>= \artistId -> Data.artistsAsJsonById ^? ix artistId
-              artistPropVal = maybe J.Null Object artist
-           in KeyMap.insert "Artist" artistPropVal album
+    let joinInArtist (album :: KeyMap FieldValue) =
+          let artist = (album ^? ix "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> Data.artistsAsJsonById ^? ix artistId
+              artistPropVal = maybeToList artist
+           in KeyMap.insert "Artist" (mkSubqueryResponse artistPropVal) album
     let removeArtistId = KeyMap.delete "ArtistId"
 
     let expectedAlbums = (removeArtistId . joinInArtist) <$> Data.albumsAsJson
-    receivedAlbums `shouldBe` expectedAlbums
+    Data.responseRows receivedAlbums `shouldBe` expectedAlbums
+    _qrAggregates receivedAlbums `shouldBe` Nothing
 
   it "perform an array relationship query by joining albums to artists" $ do
     let query = artistsWithAlbumsQuery id
-    receivedArtists <- (Data.sortBy "ArtistId" . getQueryResponse) <$> (api // _query) sourceName config query
+    receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
-    let joinInAlbums (artist :: Object) =
-          let artistId = artist ^? ix "ArtistId" . _Number
-              albumFilter artistId' album = album ^? ix "ArtistId" . _Number == Just artistId'
+    let joinInAlbums (artist :: KeyMap FieldValue) =
+          let artistId = artist ^? ix "ArtistId" . Data._ColumnFieldNumber
+              albumFilter artistId' album = album ^? ix "ArtistId" . Data._ColumnFieldNumber == Just artistId'
               albums = maybe [] (\artistId' -> filter (albumFilter artistId') Data.albumsAsJson) artistId
-              albums' = Object . KeyMap.delete "ArtistId" <$> albums
-           in KeyMap.insert "Albums" (Array . Vector.fromList $ albums') artist
+              albums' = KeyMap.delete "ArtistId" <$> albums
+           in KeyMap.insert "Albums" (mkSubqueryResponse albums') artist
 
     let expectedAlbums = joinInAlbums <$> Data.artistsAsJson
-    receivedArtists `shouldBe` expectedAlbums
+    Data.responseRows receivedArtists `shouldBe` expectedAlbums
+    _qrAggregates receivedArtists `shouldBe` Nothing
 
   it "perform an object relationship query by joining employee to customers and filter comparing columns across the object relationship" $ do
     -- Join Employee to Customers via SupportRep, and only get those customers that have a rep
@@ -61,21 +60,21 @@ spec api sourceName config = describe "Relationship Queries" $ do
                 (AnotherColumn (ValueWrapper (comparisonColumn [] "Country")))
             )
     let query = customersWithSupportRepQuery id & qrQuery . qWhere .~ Just where'
-    receivedCustomers <- (Data.sortBy "CustomerId" . getQueryResponse) <$> (api // _query) sourceName config query
+    receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> (api // _query) sourceName config query
 
-    let joinInSupportRep (customer :: Object) =
-          let supportRep = (customer ^? ix "SupportRepId" . _Number) >>= \employeeId -> Data.employeesAsJsonById ^? ix employeeId
-              supportRepPropVal = maybe J.Null (Object . Data.filterColumnsByQueryFields employeesQuery) supportRep
-           in KeyMap.insert "SupportRep" supportRepPropVal customer
+    let joinInSupportRep (customer :: KeyMap FieldValue) =
+          let supportRep = (customer ^? ix "SupportRepId" . Data._ColumnFieldNumber) >>= \employeeId -> Data.employeesAsJsonById ^? ix employeeId
+              supportRepPropVal = maybeToList $ Data.filterColumnsByQueryFields employeesQuery <$> supportRep
+           in KeyMap.insert "SupportRep" (mkSubqueryResponse supportRepPropVal) customer
 
-    let filterCustomersBySupportRepCountry (customer :: Object) =
-          let customerCountry = customer ^? ix "Country" . _String
-              supportRepCountry = customer ^? ix "SupportRep" . ix "Country" . _String
-              comparison = (==) <$> customerCountry <*> supportRepCountry
-           in fromMaybe False comparison
+    let filterCustomersBySupportRepCountry (customer :: KeyMap FieldValue) =
+          let customerCountry = customer ^? ix "Country" . Data._ColumnFieldString
+              supportRepCountry = customer ^.. ix "SupportRep" . subqueryRows . ix "Country" . Data._ColumnFieldString
+           in maybe False (`elem` supportRepCountry) customerCountry
 
     let expectedCustomers = filter filterCustomersBySupportRepCountry $ Data.filterColumnsByQueryFields (query ^. qrQuery) . joinInSupportRep <$> Data.customersAsJson
-    receivedCustomers `shouldBe` expectedCustomers
+    Data.responseRows receivedCustomers `shouldBe` expectedCustomers
+    _qrAggregates receivedCustomers `shouldBe` Nothing
 
   it "perform an array relationship query by joining customers to employees and filter comparing columns across the array relationship" $ do
     -- Join Customers to Employees via SupportRepForCustomers, and only get those employees that are reps for
@@ -90,22 +89,23 @@ spec api sourceName config = describe "Relationship Queries" $ do
                 (AnotherColumn (ValueWrapper (comparisonColumn [] "Country")))
             )
     let query = employeesWithCustomersQuery id & qrQuery . qWhere .~ Just where'
-    receivedEmployees <- (Data.sortBy "EmployeeId" . getQueryResponse) <$> (api // _query) sourceName config query
+    receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> (api // _query) sourceName config query
 
-    let joinInCustomers (employee :: Object) =
-          let employeeId = employee ^? ix "EmployeeId" . _Number
-              customerFilter employeeId' customer = customer ^? ix "SupportRepId" . _Number == Just employeeId'
+    let joinInCustomers (employee :: KeyMap FieldValue) =
+          let employeeId = employee ^? ix "EmployeeId" . Data._ColumnFieldNumber
+              customerFilter employeeId' customer = customer ^? ix "SupportRepId" . Data._ColumnFieldNumber == Just employeeId'
               customers = maybe [] (\employeeId' -> filter (customerFilter employeeId') Data.customersAsJson) employeeId
-              customers' = Object . Data.filterColumnsByQueryFields customersQuery <$> customers
-           in KeyMap.insert "SupportRepForCustomers" (Array . Vector.fromList $ customers') employee
+              customers' = Data.filterColumnsByQueryFields customersQuery <$> customers
+           in KeyMap.insert "SupportRepForCustomers" (mkSubqueryResponse customers') employee
 
-    let filterEmployeesByCustomerCountry (employee :: Object) =
-          let employeeCountry = employee ^? ix "Country" . _String
-              customerCountries = employee ^.. ix "SupportRepForCustomers" . _Array . traverse . ix "Country" . _String
+    let filterEmployeesByCustomerCountry (employee :: KeyMap FieldValue) =
+          let employeeCountry = employee ^? ix "Country" . Data._ColumnFieldString
+              customerCountries = employee ^.. ix "SupportRepForCustomers" . subqueryRows . ix "Country" . Data._ColumnFieldString
            in maybe False (`elem` customerCountries) employeeCountry
 
     let expectedEmployees = filter filterEmployeesByCustomerCountry $ Data.filterColumnsByQueryFields (query ^. qrQuery) . joinInCustomers <$> Data.employeesAsJson
-    receivedEmployees `shouldBe` expectedEmployees
+    Data.responseRows receivedEmployees `shouldBe` expectedEmployees
+    _qrAggregates receivedEmployees `shouldBe` Nothing
 
 albumsWithArtistQuery :: (Query -> Query) -> QueryRequest
 albumsWithArtistQuery modifySubquery =
@@ -116,21 +116,21 @@ albumsWithArtistQuery modifySubquery =
             ("Title", columnField "Title"),
             ("Artist", RelField $ RelationshipField artistRelationshipName artistsSubquery)
           ]
-      query = albumsQuery {_qFields = fields}
+      query = albumsQuery {_qFields = Just fields}
    in QueryRequest albumsTableName [albumsTableRelationships] query
 
 artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
 artistsWithAlbumsQuery modifySubquery =
   let albumFields = KeyMap.fromList [("AlbumId", columnField "AlbumId"), ("Title", columnField "Title")]
       albumsSort = OrderBy (ColumnName "AlbumId") Ascending :| []
-      albumsSubquery = albumsQuery & qFields .~ albumFields & qOrderBy .~ Just albumsSort & modifySubquery
+      albumsSubquery = albumsQuery & qFields .~ Just albumFields & qOrderBy .~ Just albumsSort & modifySubquery
       fields =
         KeyMap.fromList
           [ ("ArtistId", columnField "ArtistId"),
             ("Name", columnField "Name"),
             ("Albums", RelField $ RelationshipField albumsRelationshipName albumsSubquery)
           ]
-      query = artistsQuery {_qFields = fields}
+      query = artistsQuery {_qFields = Just fields}
    in QueryRequest artistsTableName [artistsTableRelationships] query
 
 employeesWithCustomersQuery :: (Query -> Query) -> QueryRequest
@@ -138,22 +138,22 @@ employeesWithCustomersQuery modifySubquery =
   let customersSort = OrderBy (ColumnName "CustomerId") Ascending :| []
       customersSubquery = customersQuery & qOrderBy .~ Just customersSort & modifySubquery
       fields =
-        _qFields employeesQuery
+        Data.queryFields employeesQuery
           <> KeyMap.fromList
             [ ("SupportRepForCustomers", RelField $ RelationshipField supportRepForCustomersRelationshipName customersSubquery)
             ]
-      query = employeesQuery {_qFields = fields}
+      query = employeesQuery {_qFields = Just fields}
    in QueryRequest employeesTableName [employeesTableRelationships] query
 
 customersWithSupportRepQuery :: (Query -> Query) -> QueryRequest
 customersWithSupportRepQuery modifySubquery =
   let supportRepSubquery = employeesQuery & modifySubquery
       fields =
-        _qFields customersQuery
+        Data.queryFields customersQuery
           <> KeyMap.fromList
             [ ("SupportRep", RelField $ RelationshipField supportRepRelationshipName supportRepSubquery)
             ]
-      query = customersQuery {_qFields = fields}
+      query = customersQuery {_qFields = Just fields}
    in QueryRequest customersTableName [customersTableRelationships] query
 
 artistsTableName :: TableName
@@ -235,12 +235,12 @@ customersTableRelationships =
 artistsQuery :: Query
 artistsQuery =
   let fields = KeyMap.fromList [("ArtistId", columnField "ArtistId"), ("Name", columnField "Name")]
-   in Query fields Nothing Nothing Nothing Nothing
+   in Query (Just fields) Nothing Nothing Nothing Nothing Nothing
 
 albumsQuery :: Query
 albumsQuery =
   let fields = KeyMap.fromList [("AlbumId", columnField "AlbumId"), ("ArtistId", columnField "ArtistId"), ("Title", columnField "Title")]
-   in Query fields Nothing Nothing Nothing Nothing
+   in Query (Just fields) Nothing Nothing Nothing Nothing Nothing
 
 customersQuery :: Query
 customersQuery =
@@ -252,7 +252,7 @@ customersQuery =
             ("Country", columnField "Country"),
             ("SupportRepId", columnField "SupportRepId")
           ]
-   in Query fields Nothing Nothing Nothing Nothing
+   in Query (Just fields) Nothing Nothing Nothing Nothing Nothing
 
 employeesQuery :: Query
 employeesQuery =
@@ -263,10 +263,17 @@ employeesQuery =
             ("LastName", columnField "LastName"),
             ("Country", columnField "Country")
           ]
-   in Query fields Nothing Nothing Nothing Nothing
+   in Query (Just fields) Nothing Nothing Nothing Nothing Nothing
 
 columnField :: Text -> Field
 columnField = ColumnField . ValueWrapper . ColumnName
 
 comparisonColumn :: [RelationshipName] -> Text -> ComparisonColumn
 comparisonColumn path columnName = ComparisonColumn path $ ColumnName columnName
+
+mkSubqueryResponse :: [KeyMap FieldValue] -> FieldValue
+mkSubqueryResponse rows =
+  RelationshipFieldValue . ValueWrapper $ QueryResponse (Just rows) Nothing
+
+subqueryRows :: Traversal' FieldValue (KeyMap FieldValue)
+subqueryRows = _RelationshipFieldValue . vwValue . qrRows . _Just . traverse
