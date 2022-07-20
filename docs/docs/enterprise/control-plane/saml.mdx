@@ -1,0 +1,90 @@
+---
+sidebar_label: SSO Through SAML
+sidebar_position: 3
+description: SSO Through SAML for Hasura EE Control Plane
+title: 'EE: SSO Through SAML'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - sso
+  - saml
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: SSO Through SAML <HeadingIcon icon={`ee`} size={36} />
+
+## Introduction
+
+You can enable SSO with your identity management system through the
+
+<a href='http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html' target='__blank'>
+  SAML 2.0
+</a>
+protocol. Hasura Pro is a SAML 2.0 compliant service provider.
+
+<Thumbnail src='/img/graphql/enterprise/SSO_Login_demo.gif' alt='SSO Login Demo' />
+
+### Configuration
+
+#### Configuring the identity provider
+
+Create a new service provider on your SAML identity provider with the following configuration:
+
+1. Configure the ACS URL, Entity ID, Recipient and Audience to be the lux callback URL.
+
+   1. For path based deployments (`global.subDomain: false`), the lux callback URL is
+      `https://<LUX_DOMAIN>/auth/saml/callback`.
+   2. For sub-domain based deployments (`global.subDomain: true`), the lux callback URL is
+      `https://auth.<LUX_DOMAIN>/saml/callback`.
+
+2. Set the NameID format to `email address`.
+
+Once created, note the metadata in XML format. Dynamic metadata through IdP metadata URL is also supported.
+
+#### Configuring lux as the service provider
+
+1. Ensure the `configs.authMethods` is set to `saml` in the overrides file / configmap.
+
+2. If you require SAML AuthN requests to be signed, configure the auth service with a keypair,
+   [steps](/enterprise/control-plane/helm-configs.mdx#saml-request-signing-certs-configuration).
+
+3. Insert a row in the `saml_idp` table in lux database to add the IdP configuration to lux. Go to
+   `https://data.<LUX_DOMAIN>` and run the following mutation from the console:
+
+   ```graphql
+   mutation insertSamlIdp {
+     insert_saml_idp_one(
+       object: {
+         domain: "okta.com"
+         idp_metadata_xml: "<?xml version=\"1.0\" encoding=\"UTF-8\"xml>\n<md:EntityDescr...."
+         provider: "okta"
+         disable_request_signing: false
+       }
+     ) {
+       id
+     }
+   }
+   ```
+
+- `domain`: Domain tied to the email address of the users using SSO. If the emails of the users are tied to more than
+  one domain, make the same mutation multiple times while changing the `domain` value.
+- `idp_metadata_xml`: Metadata of your identity provider in XML format. If you want to configure the metadata through a
+  dynamic URL, you can keep this field empty and enter the metadata URL in the `idp_metadata_url` field.
+- `provider`: The name of this identity provider
+- `disable_request_signing`: Set this field to `true` if you want the SAML assertion request to be un-signed. (Default
+  value is `false`)
+
+### Caveats and limitations
+
+1. Only SP initiated flow is supported i.e. you can't have a `Launch` button in your IdP dashboard to launch the project
+   dashboard.
+2. Session expiry time is currently not configurable.
+3. Single logout is currently not supported.
+4. Once SSO is enabled for an org, it is enforced for that org. This means, if an org is enabled for SSO, the emails
+   from that org cannot use any other login mechanism such as google, github or email.
+5. Currently, only SAML with HTTP Post binding is supported.

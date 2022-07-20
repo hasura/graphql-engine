@@ -1,0 +1,23 @@
+---
+sidebar_label: Enable HTTPS
+sidebar_position: 2
+description: Enable HTTPS for Hasura EE Control Plane
+title: 'EE: Enable HTTPS for the Hasura EE Control Plane dashboard'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - https
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Enable HTTPS for the Hasura EE Control Plane dashboard <HeadingIcon icon={`ee`} size={36} />
+
+Modify the `global.uriScheme` value to `https` in the `overrides-values.yaml` and redeploy both lux and hge-pro using
+earlier instructions. Restart all non-stateful services to enable https.
+
+With the above steps, HTTPS ingress configs are created. Appropriate certificates can be generated using Cert Manager &
+LetsEncrypt, setup instructions can be found [here](https://cert-manager.io/docs/installation/kubernetes/).

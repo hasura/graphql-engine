@@ -1,0 +1,262 @@
+---
+sidebar_label: Metadata Format
+sidebar_position: 6
+description: Metadata Formats
+keywords:
+  - hasura
+  - format
+  - Metadata
+---
+
+# Metadata Format Reference
+
+With Metadata config `v3`, the Metadata that is exported from the server by the CLI is a directory of multiple files
+and directories as per the example below:
+
+  ```text
+  📂 metadata
+  ├─ 📂 databases
+  │  ├─ 📂 default
+  │  │  └─ 📂 tables
+  │  │     ├─ 📄 public_author.yaml
+  │  │     ├─ 📄 public_article.yaml
+  │  │     └─ 📄 tables.yaml
+  │  └── 📄 databases.yaml
+  ├─ 📄 actions.graphql
+  ├─ 📄 actions.yaml
+  ├─ 📄 allow_list.yaml
+  ├─ 📄 api_limits.yaml
+  ├─ 📄 cron_triggers.yaml
+  ├─ 📄 graphql_schema_introspection.yaml
+  ├─ 📄 inherited_roles.yaml
+  ├─ 📄 network.yaml
+  ├─ 📄 query_collections.yaml
+  ├─ 📄 remote_schemas.yaml
+  ├─ 📄 rest_endpoints.yaml
+  └─ 📄 version.yaml
+  ```
+
+Internally in Hasura Server, Metadata is maintained as a JSON blob in the `hdb_metadata` table of the Metadata database.
+
+:::info note
+
+For `config v2`, see [Metadata format reference (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx).
+
+:::
+
+## Metadata directory format
+
+The following files will be generated in the `metadata/` directory of your project:
+
+:::info Note
+
+The output of the [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata)
+Metadata API is a JSON version of the Metadata files.
+
+:::
+
+### databases
+
+```text
+📂 metadata
+├─ 📂 databases
+│  ├─ 📂 default
+│  │  └─ 📂 tables
+│  │     ├─ 📄 public_author.yaml
+│  │     ├─ 📄 public_article.yaml
+│  │     └─ 📄 tables.yaml
+│  └── 📄 databases.yaml
+```
+
+### databases.yaml
+
+```yaml
+- name: default
+  kind: postgres
+  configuration:
+    connection_info:
+      use_prepared_statements: false
+      database_url:
+        from_env: PG_DATABASE_URL
+      isolation_level: read-committed
+  tables: "!include default/tables/tables.yaml"
+```
+
+:::info Note
+
+`database_url` can be set as a string literal by omitting the `from_env` property.
+
+:::
+
+### actions.graphql
+
+The `actions.graphql` file contains all the GraphQL [Actions](/actions/index.mdx) and their
+[custom type](/actions/types.mdx) definitions.
+
+**Example**: A query action called `greet` and two custom types called `SampleInput` and `SampleOutput`.
+
+```graphql
+type Query {
+  greet(arg1: SampleInput!): SampleOutput
+}
+input SampleInput {
+  username: String!
+}
+type SampleOutput {
+  greetings: String!
+}
+```
+
+### actions.yaml
+
+The `actions.yaml` file contains Metadata related to [actions](/actions/index.mdx).
+
+**Example**: An action called `greet` with the `handler` set to `<base_url>/greet` and two custom types called
+`SampleInput` and `SampleOutput`.
+
+```yaml
+actions:
+  - name: greet
+    definition:
+      kind: ""
+      handler: <base_url>/greet
+      forward_client_headers: true
+      headers:
+        - value: application/json
+          name: Content-Type
+custom_types:
+  enums: []
+  input_objects:
+    - name: SampleInput
+  objects:
+    - name: SampleOutput
+  scalars: []
+```
+
+**Example**: Same example as above but with the base URL of the `handler` passed as an environment variable.
+
+```yaml
+actions:
+  - name: greet
+    definition:
+      kind: ""
+      handler: "{{ACTION_BASE_URL}}/greet"
+      forward_client_headers: true
+      headers:
+        - value: application/json
+          name: Content-Type
+custom_types:
+  enums: []
+  input_objects:
+    - name: SampleInput
+  objects:
+    - name: SampleOutput
+  scalars: []
+```
+
+### allow_list.yaml
+
+The `allow_list.yaml` file contains the Metadata related to the [allow list](/security/allow-list.mdx).
+
+**Example**: A query collection called `allowed-queries` set as the allow-list.
+
+```yaml
+- collection: allowed-queries
+```
+
+### cron_triggers.yaml
+
+The `cron_triggers.yaml` file contains Metadata related to
+[cron triggers](/scheduled-triggers/create-cron-trigger.mdx). The `webhook` can be an HTTP endpoint or
+an environment variable containing the HTTP endpoint.
+
+**Example**: A cron trigger called `test-trigger`.
+
+```yaml
+- name: test-trigger
+webhook: <webhook-url>
+schedule: 0 12 * * 1-5
+include_in_metadata: true
+payload: {}
+retry_conf:
+  num_retries: 1
+  timeout_seconds: 60
+  tolerance_seconds: 21600
+  retry_interval_seconds: 10
+```
+
+:::info Note
+
+The Metadata about a cron trigger will not be stored if `Include this trigger in Hasura Metadata` is disabled in the
+advanced option of `events` on the console or `include_in_metadata` is passed as `false` via the API.
+
+:::
+
+### query_collections.yaml
+
+The `query_collections.yaml` file contains Metadata information about
+[query collections](/api-reference/metadata-api/query-collections.mdx).
+
+**Example**: A query collection called `sample-collection` which contains two queries `test` and `test2`.
+
+```yaml
+- name: sample-collection
+  definition:
+    queries:
+      - name: test
+        query: |-
+          query test {
+            books {
+              id
+              author_id
+              title
+            }
+          }
+      - name: test2
+        query: |-
+          query test2 {
+              authors{
+                  id
+                  author_name
+              }
+          }
+```
+
+### remote_schemas.yaml
+
+The `remote_schemas.yaml` file contains the Metadata related to
+[remote schemas](/remote-schemas/index.mdx).
+
+**Example**: A remote schema called `my-remote-schema` with the URL `<remote-schema-url>`.
+
+```yaml
+- name: my-remote-schema
+  definition:
+    url: <remote-schema-url>
+    timeout_seconds: 40
+```
+
+**Example**: A remote schema called `my-remote-schema` with the URL passed as environment variable.
+
+```yaml
+- name: my-remote-schema
+  definition:
+    url_from_env: REMOTE_SCHEMA
+    timeout_seconds: 40
+```
+
+### version.yaml
+
+The `version.yaml` file contains the Metadata format version.
+
+```yaml
+version: 3
+```
+
+### public_t1.yaml OLD?
+
+```yaml
+table:
+name: t1
+schema: public
+```

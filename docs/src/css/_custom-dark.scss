@@ -86,6 +86,65 @@ html[data-theme='dark'] {
         border-left: none;
       }
     }
+    .theme-doc-sidebar-item-category.cloud-icon {
+      .menu__list-item-collapsible {
+        .menu__link {
+          &:after {
+            background: url('/icons/cloud-light.svg') no-repeat;
+          }
+        }
+      }
+    }
+    .theme-doc-sidebar-item-category.enterprise-icon {
+      .menu__list-item-collapsible {
+        .menu__link {
+          &:after {
+            background: url('/icons/enterprise-light.svg') no-repeat;
+          }
+        }
+      }
+    }
+    .theme-doc-sidebar-item-category.cloud-and-enterprise-icon {
+      .menu__list-item-collapsible {
+        .menu__link {
+          &:after {
+            background: url('/icons/ce_ee_light.svg') no-repeat;
+            margin-left: 5px;
+          }
+        }
+      }
+    }
+    .theme-doc-sidebar-item-link.cloud-icon {
+      .menu__link {
+        &:after {
+          background: url('/icons/cloud-light.svg') no-repeat;
+          background-position: right center;
+        }
+        &:hover {
+          &:before {
+            background-color: var(--color-gray-74);
+            color: var(--color-gray-0);
+            box-shadow: 0px 12px 66px rgba(12, 16, 21, 0.4);
+          }
+        }
+      }
+    }
+    .theme-doc-sidebar-item-category.cloud-icon, .theme-doc-sidebar-item-category.enterprise-icon {
+      .menu__list-item-collapsible {
+        .menu__link {
+          &:after {
+            background-position: right center;
+          }
+          &:hover {
+            &:before {
+              background-color: var(--color-gray-74);
+              color: var(--color-gray-0);
+              box-shadow: 0px 12px 66px rgba(12, 16, 21, 0.4);
+            }
+          }
+        }
+      }
+    }
   }
 
   .table-of-contents {

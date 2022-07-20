@@ -1,0 +1,25 @@
+---
+sidebar_label: Data Federation
+sidebar_position: 1
+description: Join data across remote data sources
+keywords:
+  - hasura
+  - docs
+  - remote join
+  - data federation
+---
+
+# Data Federation
+
+## Introduction
+
+Hasura’s data federation capabilities allow you to compose data from different sources that reside in independent data
+stores but are semantically related. This is done by creating a single GraphQL schema from multiple data sources thereby
+making the data access process self-serve, allowing you to query, mutate or federate real-time and stream data across
+services without writing any custom code.
+
+The remote data sources can either be a table from a [database source](/databases/index.mdx), a GraphQL API added as a
+[remote schema](/remote-schemas/index.mdx), or a REST API added as an [action](/actions/index.mdx). Once you create
+relationships between types from your database tables, remote schemas and actions, you can then "join" data across them
+by running GraphQL queries.
+

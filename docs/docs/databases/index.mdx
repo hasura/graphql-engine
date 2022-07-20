@@ -1,0 +1,106 @@
+---
+title: Databases
+description: Hasura databases support
+keywords:
+  - hasura
+  - docs
+  - databases
+slug: index
+---
+
+# Databases
+
+## Introduction
+
+The Hasura GraphQL engine automatically generates your GraphQL schema and resolvers based on tables/views in your
+database . **You don't need to write a GraphQL schema or resolvers.** See
+[How Hasura GraphQL engine works](/getting-started/how-it-works/index.mdx) for more details.
+
+The Hasura console gives you UI tools that speed up your data-modelling process, or working with your existing
+databases. The console also automatically generates migrations or metadata files that you can edit directly and check
+into your version control.
+
+## Supported databases
+
+Hasura GraphQL engine supports:
+
+- [Postgres](/databases/postgres/index.mdx)
+- [MS SQL Server](/databases/ms-sql-server/index.mdx)
+- [Citus / Hyperscale](/databases/postgres/citus-hyperscale-postgres/index.mdx)
+- [BigQuery](/databases/bigquery/index.mdx)
+- **MySQL** (in preview) - See the [preview guide](/guides/mysql-preview.mdx)
+
+### Feature support
+
+The below matrices show the database wise support for the different GraphQL features under schema, queries, mutations
+and subscriptions.
+
+:::tip Tip
+
+Each ✅ below links **directly** to the feature within a particular type of database.
+
+:::
+
+#### Schema
+
+|                      | Postgres                                              | Citus                                                 | SQL Server                                                 | BigQuery                                             |
+| -------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
+| Table Relationships  | [✅](/schema/postgres/table-relationships/index.mdx)  | [✅](/schema/postgres/table-relationships/index.mdx)  | [✅](/schema/ms-sql-server/table-relationships/index.mdx)  | [✅](/schema/bigquery/table-relationships/index.mdx) |
+| Remote Relationships | [✅](/schema/postgres/remote-relationships/index.mdx) | [✅](/schema/postgres/remote-relationships/index.mdx) | [✅](/schema/ms-sql-server/remote-relationships/index.mdx) | [✅](/schema/bigquery/index.mdx)                     |
+| Views                | [✅](/schema/postgres/views.mdx)                      | [✅](/schema/postgres/views.mdx)                      | [✅](/schema/ms-sql-server/views.mdx)                      | ❌                                                   |
+| Functions            | [✅](/schema/postgres/custom-functions.mdx)           | [✅](/schema/postgres/custom-functions.mdx)           | ❌                                                         | ❌                                                   |
+| Enums                | [✅](/schema/postgres/enums.mdx)                      | [✅](/schema/postgres/enums.mdx)                      | ❌                                                         | ❌                                                   |
+| Computed Fields      | [✅](/schema/postgres/computed-fields.mdx)            | [✅](/schema/postgres/computed-fields.mdx)            | ❌                                                         | [✅](/schema/bigquery/computed-fields.mdx)           |
+| Data Validations     | [✅](/schema/postgres/data-validations.mdx)           | [✅](/schema/postgres/data-validations.mdx)           | ✅                                                         | ❌                                                   |
+| Relay Schema         | [✅](/schema/postgres/relay-schema.mdx)               | [✅](/schema/postgres/relay-schema.mdx)               | ❌                                                         | ❌                                                   |
+| Naming Conventions   | [✅](/schema/postgres/naming-convention.mdx)          | ❌                                                    | ❌                                                         | ❌                                                   |
+
+#### Queries
+
+|                                 | Postgres                                                           | Citus                                                              | SQL Server                                                              | BigQuery                                          |
+| ------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------- |
+| Simple                          | [✅](/queries/postgres/simple-object-queries.mdx)                  | [✅](/queries/postgres/simple-object-queries.mdx)                  | [✅](/queries/ms-sql-server/simple-object-queries.mdx)                  | [✅](/queries/bigquery/simple-object-queries.mdx) |
+| Nested Object                   | [✅](/queries/postgres/nested-object-queries.mdx)                  | [✅](/queries/postgres/nested-object-queries.mdx)                  | [✅](/queries/ms-sql-server/nested-object-queries.mdx)                  | [✅](/queries/bigquery/nested-object-queries.mdx) |
+| Aggregation                     | [✅](/queries/postgres/aggregation-queries.mdx)                    | [✅](/queries/postgres/aggregation-queries.mdx)                    | [✅](/queries/ms-sql-server/aggregation-queries.mdx)                    | [✅](/queries/bigquery/aggregation-queries.mdx)   |
+| Filter / Search                 | [✅](/queries/postgres/query-filters.mdx)                          | [✅](/queries/postgres/query-filters.mdx)                          | [✅](/queries/ms-sql-server/query-filters.mdx)                          | [✅](/queries/bigquery/query-filters.mdx)         |
+| Sort                            | [✅](/queries/postgres/sorting.mdx)                                | [✅](/queries/postgres/sorting.mdx)                                | [✅](/queries/ms-sql-server/sorting.mdx)                                | [✅](/queries/bigquery/index.mdx)                 |
+| Distinct                        | [✅](/queries/postgres/distinct-queries.mdx)                       | [✅](/queries/postgres/distinct-queries.mdx)                       | [✅](/queries/ms-sql-server/index.mdx)                                  | [✅](/queries/bigquery/index.mdx)                 |
+| Paginate                        | [✅](/queries/postgres/pagination.mdx)                             | [✅](/queries/postgres/pagination.mdx)                             | [✅](/queries/ms-sql-server/pagination.mdx)                             | [✅](/queries/bigquery/index.mdx)                 |
+| Multiple Arguments              | [✅](/queries/postgres/multiple-arguments.mdx)                     | [✅](/queries/postgres/multiple-arguments.mdx)                     | [✅](/queries/ms-sql-server/multiple-arguments.mdx)                     | [✅](/queries/bigquery/index.mdx)                 |
+| Multiple Queries                | [✅](/queries/postgres/multiple-queries.mdx)                       | [✅](/queries/postgres/multiple-queries.mdx)                       | [✅](/queries/ms-sql-server/multiple-queries.mdx)                       | [✅](/queries/bigquery/index.mdx)                 |
+| Variables / Aliases / Fragments | [✅](/queries/postgres/variables-aliases-fragments-directives.mdx) | [✅](/queries/postgres/variables-aliases-fragments-directives.mdx) | [✅](/queries/ms-sql-server/variables-aliases-fragments-directives.mdx) | [✅](/queries/bigquery/index.mdx)                 |
+
+#### Mutations
+
+|                      | Postgres                                         | Citus                                            | SQL Server                                | BigQuery |
+| -------------------- | ------------------------------------------------ | ------------------------------------------------ | ----------------------------------------- | -------- |
+| Insert               | [✅](/mutations/postgres/insert.mdx)             | [✅](/mutations/postgres/insert.mdx)             | [✅](/mutations/ms-sql-server/insert.mdx) | ❌       |
+| Upsert               | [✅](/mutations/postgres/upsert.mdx)             | [✅](/mutations/postgres/upsert.mdx)             | [✅](/mutations/ms-sql-server/upsert.mdx) | ❌       |
+| Update               | [✅](/mutations/postgres/update.mdx)             | [✅](/mutations/postgres/update.mdx)             | [✅](/mutations/ms-sql-server/update.mdx) | ❌       |
+| Delete               | [✅](/mutations/postgres/delete.mdx)             | [✅](/mutations/postgres/delete.mdx)             | [✅](/mutations/ms-sql-server/delete.mdx) | ❌       |
+| Multiple per Request | [✅](/mutations/postgres/multiple-mutations.mdx) | [✅](/mutations/postgres/multiple-mutations.mdx) | ❌                                        | ❌       |
+
+#### Subscriptions
+
+|                         | Postgres                                                                   | Citus                                                                      | SQL Server                                                            | BigQuery |
+| ----------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------- |
+| Value of Field          | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-field)   | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-field)   | [✅](/subscriptions/ms-sql-server/use-cases.mdx#pg-subscribe-field)   | ❌       |
+| Updates to Rows         | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-table)   | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-table)   | ❌                                                                    | ❌       |
+| Value of Derived Field  | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-derived) | [✅](/subscriptions/postgres/livequery/use-cases.mdx#pg-subscribe-derived) | [✅](/subscriptions/ms-sql-server/use-cases.mdx#pg-subscribe-derived) | ❌       |
+| Streaming Subscriptions | [✅](/subscriptions/postgres/streaming/index.mdx)                          | ❌                                                                         | ❌                                                                    | ❌       |
+
+#### Event Triggers
+
+|        | Postgres                        | Citus | SQL Server                      | BigQuery |
+| ------ | ------------------------------- | ----- | ------------------------------- | -------- |
+| INSERT | [✅](/event-triggers/index.mdx) | ❌    | [✅](/event-triggers/index.mdx) | ❌       |
+| UPDATE | [✅](/event-triggers/index.mdx) | ❌    | [✅](/event-triggers/index.mdx) | ❌       |
+| DELETE | [✅](/event-triggers/index.mdx) | ❌    | [✅](/event-triggers/index.mdx) | ❌       |
+| MANUAL | [✅](/event-triggers/index.mdx) | ❌    | [✅](/event-triggers/index.mdx) | ❌       |
+
+:::info Additional Resources
+
+Get Started with Hasura today -
+[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
+
+:::

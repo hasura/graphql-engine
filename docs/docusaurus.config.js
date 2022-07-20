@@ -17,7 +17,7 @@ const config = {
   favicon: '/docs/img/favicon.png',
   organizationName: 'hasura',
   projectName: 'graphql-engine',
-  staticDirectories:["static", "public"],
+  staticDirectories: ['static', 'public'],
 
   presets: [
     [
@@ -25,7 +25,7 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          routeBasePath: "/",
+          routeBasePath: '/',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
           docItemComponent: require.resolve('./src/components/CustomDocItem/index.tsx'),
@@ -33,14 +33,14 @@ const config = {
           breadcrumbs: true,
           // showLastUpdateAuthor: true,
           // showLastUpdateTime: true,
-          lastVersion: "current",
+          lastVersion: 'current',
           versions: {
             current: {
-              label: "v2.x",
+              label: 'v2.x',
               badge: true,
-              path: 'latest'
+              path: 'latest',
             },
-          }
+          },
         },
         theme: {
           customCss: require.resolve('./src/css/custom.scss'),
@@ -56,7 +56,7 @@ const config = {
       ({
         id: 'wiki',
         path: 'wiki',
-        routeBasePath: "wiki",
+        routeBasePath: 'wiki',
         editUrl: ({ docPath }) => `https://github.com/hasura/graphql-engine/edit/master/docs/docs/${docPath}`,
         editCurrentVersion: true,
         docItemComponent: require.resolve('./src/components/CustomDocItem/CustomDocItemWiki.tsx'),
@@ -78,24 +78,14 @@ const config = {
         // number (defaults to 50); time to wait after a route update before it should
         // track the page change, to implement this, make sure your `trackPage` property is set to `true`
         // trackPageDelay: 50,
-      }
+      },
     ],
     [
       path.resolve(__dirname, './src/plugins/docusaurus-plugin-google-gtm'),
       {
-        trackingID: "GTM-PF5MQ2Z",
-      }
+        trackingID: 'GTM-PF5MQ2Z',
+      },
     ],
-  //   [
-  //     'ideal-image',
-  //     {
-  //       quality: 70,
-  //       max: 1030, // max resized image's size.
-  //       min: 640, // min resized image's size. if original is lower, use that size.
-  //       steps: 2, // the max number of images generated between min and max (inclusive)
-  //       disableInDev: false,
-  //     },
-  //   ],
   ],
 
   themeConfig:
@@ -131,13 +121,13 @@ const config = {
       //   id: 'announcementBar-3', // Increment on change
       //   content: `⭐️ If you like Docusaurus, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/facebook/docusaurus">GitHub</a> and follow us on <a target="_blank" rel="noopener noreferrer" href="https://twitter.com/docusaurus" >Twitter</a> ${TwitterSvg}`,
       // },
-      announcementBar: {
-        id: 'announcement-bar-3',
-        content:
-          '<a target="_blank" rel="noopener noreferrer" href="https://hasura.io/events/hasura-con-2022/">Check out the product announcements from HasuraCon’22</a>',
-        backgroundColor: "#511AAA",
-        textColor: '#fff',
-      },
+      // announcementBar: {
+      //   id: 'announcement-bar-3',
+      //   content:
+      //     '<a target="_blank" rel="noopener noreferrer" href="https://hasura.io/events/hasura-con-2022/">Check out the product announcements from HasuraCon’22</a>',
+      //   backgroundColor: '#511AAA',
+      //   textColor: '#fff',
+      // },
       navbar: {
         hideOnScroll: false,
         title: '',
@@ -145,26 +135,9 @@ const config = {
           alt: 'Hasura Logo',
           src: '/img/logo.svg',
           srcDark: '/img/logo-light.svg',
-          href: 'https://hasura.io'
+          href: 'https://hasura.io',
         },
         items: [
-          {
-            type: 'dropdown',
-            label: 'Docs',
-            position: 'left',
-            items: [
-              {
-                type: 'doc',
-                docId: 'graphql/core/index',
-                label: 'Hasura GraphQL Engine',
-              },
-              {
-                type: 'docSidebar',
-                sidebarId: 'cloudDocsSidebar',
-                label: 'Hasura Cloud',
-              },
-            ],
-          },
           {
             to: 'https://hasura.io/products/',
             label: 'Product',
@@ -210,192 +183,16 @@ const config = {
             to: 'https://cloud.hasura.io/login?pg=docs&plcmt=header&cta=log-in&tech=default',
             label: 'Login',
             position: 'right',
-            className: "nav-link_login",
+            className: 'nav-link_login',
           },
           {
             to: 'https://cloud.hasura.io/signup?pg=products&plcmt=header&cta=try-hasura&tech=default',
             label: 'Get Started',
             position: 'right',
-            className: "nav-link_getting-started",
+            className: 'nav-link_getting-started',
           },
         ],
       },
-      // footer: {
-      //   style: 'light',
-      //   links: [
-      //     {
-      //       title: 'Hasura',
-      //       items: [
-      //         {
-      //           label: 'About Us',
-      //           to: 'https://hasura.io/about/',
-      //         },
-      //         {
-      //           label: 'Press',
-      //           to: 'https://hasura.io/press/',
-      //         },
-      //         {
-      //           label: 'Careers',
-      //           to: 'https://hasura.io/careers/',
-      //         },
-      //         {
-      //           label: 'Contact Us',
-      //           to: 'https://hasura.io/contact-us/',
-      //         },
-      //         {
-      //           label: 'Legal Stuff',
-      //           to: 'https://hasura.io/legal/',
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       title: 'Support',
-      //       items: [
-      //         {
-      //           label: 'Documentation',
-      //           to: '/latest/graphql/core/index',
-      //         },
-      //         {
-      //           label: 'Community Forum',
-      //           to: 'https://discordapp.com/invite/hasura',
-      //         },
-      //         {
-      //           label: 'Help',
-      //           to: 'https://hasura.io/help/',
-      //         },
-      //         {
-      //           label: 'Github',
-      //           to: 'https://github.com/hasura',
-      //         },
-      //         {
-      //           label: 'Hasura Cloud Status',
-      //           to: 'https://status.hasura.io/',
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       title: 'Tools',
-      //       items: [
-      //         {
-      //           label: 'Graphqurl',
-      //           to: 'https://github.com/hasura/graphqurl',
-      //         },
-      //         {
-      //           label: 'Firebase2GraphQL',
-      //           to: 'https://github.com/hasura/firebase2graphql',
-      //         },
-      //         {
-      //           label: 'JSON2GraphQL',
-      //           to: 'https://github.com/hasura/json2graphql',
-      //         },
-      //         {
-      //           label: 'GraphQL2ChartJS',
-      //           to: 'https://github.com/hasura/graphql2chartjs',
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       title: 'Product',
-      //       items: [
-      //         {
-      //           label: 'Hasura Open Source',
-      //           to: 'https://hasura.io/opensource/',
-      //         },
-      //         {
-      //           label: 'Hasura Cloud',
-      //           to: 'https://hasura.io/cloud/',
-      //         },
-      //         {
-      //           label: 'Hasura Enterprise',
-      //           to: 'https://hasura.io/enterprise/',
-      //         },
-      //         {
-      //           label: 'Pricing',
-      //           to: 'https://hasura.io/pricing/',
-      //         },
-      //         {
-      //           label: 'Changelog',
-      //           to: 'https://github.com/hasura/graphql-engine/releases',
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       title: 'Resources',
-      //       items: [
-      //         {
-      //           label: 'Blog',
-      //           to: 'https://hasura.io/blog/',
-      //         },
-      //         {
-      //           label: 'Case Studies',
-      //           to: 'https://hasura.io/case-studies/',
-      //         },
-      //         {
-      //           label: '3Factor Apps',
-      //           to: 'https://3factor.app/',
-      //         },
-      //         {
-      //           label: 'Event Driven Programming',
-      //           to: 'https://hasura.io/event-driven-programming/',
-      //         },
-      //         {
-      //           label: 'React GraphQL',
-      //           to: 'https://hasura.io/react-graphql/',
-      //         },
-      //         {
-      //           label: 'Vue GraphQL',
-      //           to: 'https://hasura.io/vue-graphql/',
-      //         },
-      //         {
-      //           label: 'DIY GraphQL BaaS',
-      //           to: 'https://hasura.io/diy-graphql-baas/',
-      //         },
-      //         {
-      //           label: 'GraphQL & Hasura',
-      //           to: 'https://hasura.io/graphql/',
-      //         },
-      //         {
-      //           label: 'Hasura Cloud Security',
-      //           to: 'https://hasura.io/security/',
-      //         },
-      //       ],
-      //     },
-      //     {
-      //       title: 'Community',
-      //       items: [
-      //         {
-      //           label: 'Community Resources',
-      //           to: 'https://hasura.io/community/',
-      //         },
-      //         {
-      //           label: 'GraphQL Tutorials',
-      //           to: 'https://hasura.io/learn/',
-      //         },
-      //         {
-      //           label: 'Community Wiki',
-      //           to: 'https://github.com/hasura/graphql-engine/wiki',
-      //         },
-      //         {
-      //           label: 'Sample Apps',
-      //           to: 'https://hasura.io/sample-apps/',
-      //         },
-      //         {
-      //           label: 'Partnership Program',
-      //           to: 'https://hasura.io/partner-agencies/',
-      //         },
-      //         {
-      //           label: 'HasuraCon 2021',
-      //           to: 'https://hasura.io/events/hasura-con-2021/',
-      //         },
-      //         {
-      //           label: 'GraphQL Asia',
-      //           to: 'https://graphql.asia/',
-      //         },
-      //       ],
-      //     },
-      //   ],
-      //   copyright: `Copyright © ${new Date().getFullYear()} Hasura Inc. All rights reserved`,
-      // },
     }),
 };
 

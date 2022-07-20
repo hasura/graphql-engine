@@ -1,0 +1,236 @@
+---
+sidebar_label: Helm Configuration Reference
+sidebar_position: 4
+description: Helm Configs Hasura EE Control Plane
+title: 'EE: Helm Configuration Reference'
+keywords:
+  - hasura
+  - docs
+  - enterprise
+  - lux
+  - control plane
+  - helm config
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# EE: Helm Configuration Reference <HeadingIcon icon={`ee`} size={36} />
+
+## Lux Overrides
+
+The following table shows a configuration option's name, type, and the default value:
+
+| Parameter                           | Description                                                                                                                                                                                                                                                                                                                                                                            | Default                       | Example                                                                                                             |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `global.uriScheme`                  | Sets the uriScheme to be used, acceptable values are `http` and `https`. <br/>This setting deploys appropriate ingress configs and propogates the change to lux services.<br/><br/><i>Requires a restart of lux services. See [restart](#restart)</i>                                                                                                                                  | `http`                        | `http`                                                                                                              |
+| `global.domain`                     | Domain name to be used for ingress & CORS rules<br/><br/><i>Requires a restart of lux services. See [restart](#restart)</i>                                                                                                                                                                                                                                                            | `domain.nip.io`               | `domain.nip.io`                                                                                                     |
+| `global.subDomain`                  | Use a sub-domain based deployment. This will host various lux components on subdomains instead of paths. Following sub-domain ingress' are created,<br/><br/>auth.domain.nip.io<br/>logs.domain.nip.io<br/>accounts.domain.nip.io<br/>data.domain.nip.io<br/>metrics.domain.nip.io<br/>oauth.domain.nip.io<br/><br/><i>Requires a restart of lux services. See [restart](#restart)</i> | `domain.nip.io`               | `domain.nip.io`                                                                                                     |
+| `global.namespace`                  | Namespace to deploy resources to; the namespace should already exist                                                                                                                                                                                                                                                                                                                   | `default`                     | `hasura`                                                                                                            |
+| `global.certIssuer`                 | Cert Issuer to be used                                                                                                                                                                                                                                                                                                                                                                 | `letsencrypt-staging`         | `letsencrypt-prod`                                                                                                  |
+| `global.containerRegistry`          | Configure the container registry to be used                                                                                                                                                                                                                                                                                                                                            | `gcr.io/hasura-ee`            | `docker.io/yourcompany`                                                                                             |
+| `secrets.dbUrl`                     | External Postgres connection string to be used by Lux services<br/><i>By default, a Postgres container is deployed within kubernetes and used</i><br/><br/><i>Requires a restart of lux services. See [restart](#restart)</i>                                                                                                                                                          | ``                            | `postgres://ext-username:password@aws-rds-postgres.com:5432/lux_db`                                                 |
+| `secrets.timescaledbUrl`            | External Timescale DB connection string to be used by Lux metrics<br/><i>By default, a Timescale container is deployed within kubernetes and used</i><br/><br/><i>Requires a restart of lux metrics services. See [restart](#restart)</i>                                                                                                                                              | ``                            | `postgres://ext-username:password@aws-timescaledb.com:5432/dbname`                                                  |
+| `secrets.hgeDbUrl`                  | External Postgres connection string to be used by HGE Pro<br/><i>By default, a Postgres container deployed within kubernetes is shared between Lux and used</i><br/><br/><i>Requires a restart of HGE. See [restart](#restart)</i>                                                                                                                                                     | ``                            | `postgres://hasura%40test.postgres.database.azure.com:password@`<br/>`test.postgres.database.azure.com:5432/hasura` |
+| `configs.authMethods`               | Configure the authentication modes to be allowed to authenticate to Lux<br/><br/><i>Requires a restart of lux services. See [restart](#restart)</i>                                                                                                                                                                                                                                    | `password,google,github,saml` | `saml`                                                                                                              |
+| `configs.authRedisHost`             | Redis host to be used for caching Lux tokens<br/><i>By default, a Redis container deployed within kubernetes used</i><br/><br/><i>Requires a restart of lux services. See [restart](#restart)</i>                                                                                                                                                                                      | `auth-redis:6379`             | `test.ng.0001.use2.cache.amazonaws.com:6379`                                                                        |
+| `configs.authRedisUser`             | Redis username                                                                                                                                                                                                                                                                                                                                                                         | `default`                     | `default`                                                                                                           |
+| `secrets.data.AUTH_REDIS_PASSWORD`  | Redis Password to be used                                                                                                                                                                                                                                                                                                                                                              | ``                            | ``                                                                                                                  |
+| `configs.logsRedisHost`             | Redis host to be used for caching Lux logs / metrics<br/><i>By default, a Redis container deployed within kubernetes used</i><br/><br/><i>Requires a restart of lux metrics services. See [restart](#restart)</i>                                                                                                                                                                      | `logs-redis:6379`             | `test-logs.ng.0001.use2.cache.amazonaws.com:6379`                                                                   |
+| `configs.logsRedisUser`             | Redis username                                                                                                                                                                                                                                                                                                                                                                         | `default`                     | `default`                                                                                                           |
+| `secrets.data.LOGS_REDIS_PASSWORD`  | Redis Password to be used                                                                                                                                                                                                                                                                                                                                                              | ``                            | ``                                                                                                                  |
+| `configs.smtpHost`                  | SMTP host to be used to send out account related emails<br/><br/><i>Requires a restart of lux auth services. See [restart](#restart)</i>                                                                                                                                                                                                                                               | `smtp.org.com`                | `smtp.org.com`                                                                                                      |
+| `configs.smtpPort`                  | SMTP port                                                                                                                                                                                                                                                                                                                                                                              | `2525`                        | `25`                                                                                                                |
+| `configs.smtpUser`                  | SMTP user                                                                                                                                                                                                                                                                                                                                                                              | `email_user`                  | `user`                                                                                                              |
+| `secrets.data.SMTP_PASSWORD`        | SMTP password                                                                                                                                                                                                                                                                                                                                                                          | ``                            | ``                                                                                                                  |
+| `configs.smtpDisableAuth`           | Disable SMTP authentication, boolean type                                                                                                                                                                                                                                                                                                                                              | `false`                       | `true`                                                                                                              |
+| `configs.emailFromAddress`          | Email from address to be used                                                                                                                                                                                                                                                                                                                                                          | `hasura-pro-team@org.com`     | `accounts@org.com`                                                                                                  |
+| `configs.emailFromName`             | Email from name to be used                                                                                                                                                                                                                                                                                                                                                             | `Hasura Pro Team`             | `Org Delta Team`                                                                                                    |
+| `configs.emailSubjectPrefix`        | Email subject prefix to be used                                                                                                                                                                                                                                                                                                                                                        | `Hasura Pro`                  | `Hasura Pro`                                                                                                        |
+| `secrets.data.GITHUB_CLIENT_ID`     | Github Oauth Client ID                                                                                                                                                                                                                                                                                                                                                                 | `<github-client-id>`          | ``                                                                                                                  |
+| `secrets.data.GITHUB_CLIENT_SECRET` | Github Oauth Client Secret                                                                                                                                                                                                                                                                                                                                                             | `<github-client-secret>`      | ``                                                                                                                  |
+| `secrets.data.GOOGLE_CLIENT_ID`     | Google Oauth Client ID                                                                                                                                                                                                                                                                                                                                                                 | `<google-client-id>`          | ``                                                                                                                  |
+| `secrets.data.GOOGLE_CLIENT_SECRET` | Google Oauth Client Secret                                                                                                                                                                                                                                                                                                                                                             | `<google-client-secret>`      | ``                                                                                                                  |
+
+#### restart
+
+Due to the way kubernetes handles updates to configmaps and secrets pods have to be restarted to read the new values.
+
+One way is to scale the pods down and then do the lux deployment,
+
+`kubectl rollout restart deployment/cloud deployment/api deployment/auth deployment/logs-monitor deployment/data deployment/logs-grpc deployment/logs-worker deployment/metrics deployment/metricsapi deployment/oauth`
+
+There are other alternatives such as using [reloader](https://github.com/stakater/Reloader). In the upcoming release,
+lux will also provide a flag that can be used to force a rolling update of the above services.
+
+#### saml request signing certs configuration
+
+The below snippet is to be added to the overrides file, this assumes the certs are available in the kubernetes cluster
+under a secret named `secrets`,
+
+```yaml
+auth:
+  additionalEnv: |
+    - name: SAML_SIGNING_KEY
+      value: "/etc/ssl/saml-certs/private-key.pem"     
+    - name: SAML_SIGNING_CERT
+      value: "/etc/ssl/saml-certs/cert.pem"
+  extraVolumes: |
+    - name: saml-certs
+      secret:
+        secretName: secrets
+  extraVolumeMounts: |
+    - name: saml-certs
+      mountPath: "/etc/ssl/saml-certs/private-key.pem"
+      readOnly: true    
+      subPath: private-key.pem
+    - name: saml-certs
+      mountPath: "/etc/ssl/saml-certs/cert.pem"
+      readOnly: true    
+      subPath: cert.pem
+```
+
+#### connect to database with cert auth
+
+The below snippet is to be added to the overrides files, this assumes the certs are available in the kubernetes cluster
+under a secret named `secrets`:
+
+```yaml
+data:
+  extraVolumes: |
+    - name: certs
+      secret:
+        defaultMode: 0600
+        secretName: secrets
+        items:
+        - key: STAGE_PGSSLCERT
+          path: certs/client-cert.pem
+        - key: STAGE_PGSSLKEY
+          path: certs/client-key.pem
+        - key: STAGE_PGSSLROOTCERT
+          path: certs/server-ca.pem
+  extraVolumeMounts: |
+    - name: certs
+      mountPath: "/etc/pgcerts"
+      readOnly: true
+  additionalEnv: |
+    - name: PGSSLMODE
+      value: "verify-ca"   
+    - name: PGSSLCERT
+      value: "/etc/pgcerts/certs/client-cert.pem"   
+    - name: PGSSLKEY
+      value: "/etc/pgcerts/certs/client-key.pem"   
+    - name: PGSSLROOTCERT
+      value: "/etc/pgcerts/certs/server-ca.pem"
+```
+
+#### configure prometheus exporter
+
+You can configure prometheus exporter by adding the below snippet to enable it (disabled by default). Prometheus
+integration can be added to a project to export its metrics, in the EE dashboard.
+
+```yaml
+prometheus-exporter:
+  enabled: true
+```
+
+#### configure datadog trace exporter
+
+Datadog integration can be configured to publish traces (in addition to logs and metrics, which are exported by default
+when the integration is configured) by adding the below snippet to enable it (disabled by default).
+
+```yaml
+ddtrace:
+  enabled: true
+```
+
+#### configure self-hosted Github EE for OAuth2 login
+
+Self-Hosted Github EE can be configured to be used for OAuth2 login (by default, public Github is used) by adding the
+below snippet. Replace the values of the below ENV vars with self-hosted Github URLs. The example values are that of
+public Github.
+
+```yaml
+auth:
+  additionalEnv: |
+    - name: GITHUB_AUTH_URL
+      value: https://github.com/login/oauth/authorize
+    - name: GITHUB_TOKEN_URL
+      value: https://github.com/login/oauth/access_token
+    - name: GITHUB_INFO_ENDPOINT
+      value: https://api.github.com/user
+    - name: GITHUB_EMAIL_ENDPOINT
+      value: https://api.github.com/user/emails
+```
+
+#### configure rate-limit redis
+
+You can configure the rate limit redis on the graphql engine pro [if using provided helm chart] using the following
+snippet in the override file,
+
+```yaml
+hge-pro:
+  additionalEnv: |
+    - name: HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL
+      value: "redis://username:password@hostwithport"
+```
+
+#### configure caching redis
+
+You can configure the caching redis on the graphql engine pro [if using provided helm chart] using the following snippet
+in the override file,
+
+```yaml
+hge-pro:
+  additionalEnv: |
+    - name: HASURA_GRAPHQL_REDIS_URL
+      value: "redis://username:password@hostwithport"
+```
+
+## Common Overrides
+
+The below configs can be used to override per service configs and is applicable to all lux services; for example, using
+the below snippet in the override file we can override various aspects of the `hge-pro` service,
+
+```yaml
+hge-pro:
+  tag: 'v1.3.3-pro.3'
+  additionalEnv: |
+    - name: HASURA_GRAPHQL_ENABLED_APIS
+      value: "graphql,metadata,config,developer,pgdump"
+  resources: |
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      cpu: 1000m 
+      memory: 1Gi
+```
+
+| Parameter                                  | Description                                                                                                                                                                                          | Default                                         | Example                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `namespace`                                | Default namespace for the service                                                                                                                                                                    | `default`                                       | `hasura`                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `replicas`                                 | Number of Pods to be created                                                                                                                                                                         | `1`                                             | `2`                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `additionalEnv`                            | Additional env variables to be added                                                                                                                                                                 | ``                                              | additionalEnv:&nbsp;\| <br/> &nbsp;&nbsp;-&nbsp;name:&nbsp;HASURA_GRAPHQL_ENABLED_APIS <br/> &nbsp;&nbsp;&nbsp;&nbsp;value:&nbsp;"graphql,metadata,config,developer,pgdump"&nbsp;&nbsp; <br/> &nbsp;-&nbsp;&nbsp;name:&nbsp;USER_BEHAVIOUR_SERVICE_URL <br/> &nbsp;&nbsp;&nbsp;&nbsp; valueFrom: <br/> &nbsp; &nbsp; &nbsp; &nbsp; configMapKeyRef: <br/> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; name:&nbsp;configs <br/> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; key:&nbsp;DATA_HOST |
+| `args`                                     | Define the arguments to be passed to the command                                                                                                                                                     | ``                                              | args:&nbsp;\| <br/> &nbsp;&nbsp;-&nbsp;serve <br/>                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `httpPort`                                 | Default port number for the service                                                                                                                                                                  | `8080`                                          | `3000`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `labels`                                   | Labels for the service                                                                                                                                                                               | `''`                                            | labels:&nbsp;\|<br/>&nbsp;&nbsp;app: "postgres"<br/>&nbsp;&nbsp;group: "db"                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `ingress.enabled`                          | To add ingress controller for the service                                                                                                                                                            | `false`                                         | `true`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `ingress.context`                          | When ingress is enabled, exposes the following context path                                                                                                                                          | ``                                              | `auth`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `ingress.additionalAnnotations`            | Add additional annotations to the ingress resource                                                                                                                                                   | ``                                              | ingress: <br/> &nbsp;&nbsp;additionalAnnotations:&nbsp;\| <br/> &nbsp; &nbsp; "nginx.ingress.kubernetes.io/rewrite-target:&nbsp;/$2"                                                                                                                                                                                                                                                                                                                                         |
+| `ingress.waf.enabled`                      | When ingress is enabled, Enable Web Application Firewall for the service                                                                                                                             | `false`                                         | `true`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `image.pullPolicy`                         | To pull a Docker image from Docker repository, By default skip pulling an image if it already exists                                                                                                 | `IfNotPresent`                                  | `Always`                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `image.tag`                                | Docker image tag for the service                                                                                                                                                                     | `latest`                                        | `v1.3.3-pro.5`                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `initContainers.gitSync.enabled`           | To add a gitSync init container which clones a repository using configured ssh read token                                                                                                            | `false`                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `healthChecks.enabled`                     | To enable/disable healthchecks [Liveness probes and Readiness probes] for a pod                                                                                                                      | `false`                                         | `true`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `healthChecks.livenessProbe`               | Liveness probe to be added, advanced configuration, path and port override should suffice for most scenarios. Passed through the tpl function and thus to be configured a string                     | ``                                              | <br/> livenessProbe: \| <br/> &nbsp; &nbsp; httpGet: <br/> &nbsp; &nbsp; &nbsp; &nbsp; path: "{{ .Values.healthChecks.livenessProbePath }}" <br/> &nbsp; &nbsp; &nbsp; &nbsp; initialDelaySeconds: 60 <br/>                                                                                                                                                                                                                                                                  |
+| `healthChecks.livenessProbe.httpGet.path`  | Context path of the service to check the liveness of a pod                                                                                                                                           | `{{ .Values.healthChecks.livenessProbePath }}`  | `/healthz`                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `healthChecks.livenessProbe.httpGet.port`  | Port number of the service to check the liveness of a pod                                                                                                                                            | `{{ .Values.httpPort }}`                        | `8080`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `healthChecks.readinessProbe`              | Readiness probe to be added, advanced configuration. Passed through the tpl function and thus to be configured a string                                                                              | ``                                              | <br/> readinessProbe: \| <br/> &nbsp; &nbsp; httpGet: <br/> &nbsp; &nbsp; &nbsp; &nbsp; path: "{{ .Values.healthChecks.readinessProbePath }}" <br/> &nbsp; &nbsp; &nbsp; &nbsp; initialDelaySeconds: 60 <br/>                                                                                                                                                                                                                                                                |
+| `healthChecks.readinessProbe.httpGet.path` | Context path of the service to check the readiness of a pod                                                                                                                                          | `{{ .Values.healthChecks.readinessProbePath }}` | `/healthz`                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `healthChecks.readinessProbe.httpGet.port` | Port number of the service to check the readiness of a pod                                                                                                                                           | `{{ .Values.httpPort }}`                        | `8080`                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `lifecycle.preStop.exec.command`           | Executes the command in the pod before stopping                                                                                                                                                      | `- sh`<br/> `- -c` <br/> `- "sleep 10"`         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `resources`                                | To set the resource limits for the pod. Allows the specification of additional environment variables. Passed through the tpl function and thus to be configured a string                             | ``                                              | resources:&nbsp;\| <br /> &nbsp;&nbsp;requests: <br /> &nbsp;&nbsp;&nbsp;&nbsp;cpu:&nbsp;200m <br /> &nbsp;&nbsp;&nbsp;&nbsp;memory:&nbsp;1Gi <br /> &nbsp;&nbsp;limits: <br /> &nbsp;&nbsp;&nbsp;&nbsp;cpu:&nbsp;1000m&nbsp; <br /> &nbsp;&nbsp;&nbsp;&nbsp;memory:&nbsp;1Gi                                                                                                                                                                                                |
+| `extraVolumes`                             | To add additional volumes to the service. Allows the specification of additional environment variables. Passed through the tpl function and thus to be configured a string                           | ``                                              | extraVolumes: \| <br/> &nbsp; &nbsp; - name: new-volume <br/> &nbsp; &nbsp; &nbsp; &nbsp; configMap: <br/> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; name: service-new-volume                                                                                                                                                                                                                                                                                                |
+| `extraVolumeMounts`                        | To mount additional volumes to the service in a desired mount path. Allows the specification of additional environment variables. Passed through the tpl function and thus to be configured a string | ``                                              | extraVolumeMounts: \| <br/> &nbsp; &nbsp; - mountPath: /opt/service-path/file.conf <br/> &nbsp; &nbsp; &nbsp; &nbsp; configMap: <br/> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; name: new-volume <br/> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; subPath: file.conf                                                                                                                                                                                                          |
+| `extraInitContainers`                      | Additional init containers, e. g. for providing themes, etc. Passed through the `tpl` function and thus to be configured a string                                                                    | `""`                                            |                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `extraContainers`                          | Additional sidecar containers, e. g. for a database proxy, such as Google's cloudsql-proxy. Passed through the `tpl` function and thus to be configured a string                                     | `""`                                            |                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |

@@ -1,0 +1,45 @@
+---
+description: Manage schema on your database with Hasura
+keywords:
+  - hasura
+  - docs
+  - schema
+slug: index
+---
+
+# Schema
+
+## Introduction
+
+The Hasura GraphQL engine automatically generates your GraphQL schema and resolvers based on your tables/views in your
+database. **You don't need to write a GraphQL schema or resolvers.** See
+[How Hasura GraphQL engine works](/getting-started/how-it-works/index.mdx) for more details.
+
+The Hasura console gives you UI tools that speed up your data-modeling process, or working with your existing database.
+The console also automatically generates migrations or metadata files that you can edit directly and check into your
+version control.
+
+The Hasura GraphQL engine lets you do anything you would usually do with your database by giving you GraphQL over native
+constructs.
+
+## Explore schema
+
+- [Explore schema with Postgres / Citus / Hyperscale](/schema/postgres/index.mdx)
+- [Explore schema with MS SQL Server](/schema/ms-sql-server/index.mdx)
+- [Explore schema with BigQuery](/schema/bigquery/index.mdx)
+
+<!-- .. TODO: DB-COMPATIBILITY
+  .. toctree::
+    :maxdepth: 1
+
+    Tables basics <tables>
+    Table relationships <table-relationships/index>
+    Remote relationships <remote-relationships/index>
+    Extend with views <views>
+    Extend with SQL functions <custom-functions>
+    Enum type fields <enums>
+    Computed fields <computed-fields>
+    Customise auto-generated fields <custom-field-names>
+    Data validations <data-validations>
+    Using an existing database <using-existing-database>
+    Relay schema <relay-schema> -->

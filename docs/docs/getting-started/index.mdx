@@ -1,0 +1,61 @@
+---
+title: Getting started
+description: Get started with Hasura
+keywords:
+  - hasura
+  - docs
+  - start
+  - core
+  - cloud
+  - getting started
+slug: index
+---
+
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Getting Started
+
+## Introduction
+
+To use the Hasura GraphQL Engine, you'll need to:
+
+- Deploy the Hasura GraphQL engine, with access to a Postgres database to store its metadata.
+- Connect new/existing database(s) and set up and test your GraphQL API using the Hasura console UI (also possible via
+  CLI or API).
+- Consume the generated GraphQL API from your client apps.
+
+You have a couple of options when getting started.
+
+### Hasura Cloud <HeadingIcon icon={`cloud`} size={24} />
+
+[Hasura Cloud](https://cloud.hasura.io) is the preferred choice when getting started. Hasura Cloud is a hosted service
+for Hasura GraphQL Engine projects with added features for reliability and security. If you're looking for the least
+friction between trying out Hasura and moving into production,
+[check out this quickstart guide](/getting-started/getting-started-cloud.mdx) and **get started for free**.
+
+### Docker Compose
+
+Alternatively, if you'd like to get a local version up and running that you can eventually deploy to a host of your
+choice, [check out our quickstart using Docker Compose](/getting-started/docker-simple.mdx). At its heart, Hasura is
+open-source and within minutes you'll have a fully functional Hasura GraphQL Engine instance running locally with which
+you can experiment. If you're looking to learn more about Hasura GraphQL Engine's core features and see if it's right
+for you, consider this option.
+
+### Supported databases
+
+Regardless of which option above you choose, Hasura GraphQL Engine supports:
+
+- [Postgres](/databases/postgres/index.mdx)
+- [MS SQL Server](/databases/ms-sql-server/index.mdx)
+- [Citus / Hyperscale](/databases/postgres/citus-hyperscale-postgres/index.mdx)
+- [BigQuery](/databases/bigquery/index.mdx)
+- **MySQL** (in preview) - See the [preview guide](/guides/mysql-preview.mdx)
+
+<!-- Remove the admonition below? -->
+
+:::info Additional Resources
+
+Get Started with Hasura today -
+[Watch video guide](https://hasura.io/events/webinar/get-started-with-hasura/?pg=docs&plcmt=body&cta=getting-started&tech=).
+
+:::

@@ -1,0 +1,162 @@
+---
+sidebar_label: Docker
+sidebar_position: 2
+description: Hasura with Docker for MS SQL Server
+keywords:
+  - hasura
+  - docs
+  - databases
+  - ms sql
+  - sql server
+  - docker
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Get Started with Docker (Hasura & MS SQL Server)
+
+## Try it out
+
+### Pre-requisites
+
+- [Docker](https://docs.docker.com/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- An existing SQL Server database
+
+:::warning Note
+
+While Hasura supports M1 Macs, MS SQL Server is not currently supported by Microsoft on ARM chips.
+
+:::
+
+### Step 1: Get the docker-compose file
+
+Get the Hasura MS SQL Server docker compose file:
+
+```bash
+# in a new directory run
+wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-ms-sql-server/docker-compose.yaml
+# or run
+curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-ms-sql-server/docker-compose.yaml -o docker-compose.yaml
+```
+
+:::info Note
+
+This docker compose file utilizes the `tempdb mssql` database which is primarily used for testing. While this is a quick
+way to get up and running using MS SQL with the Hasura GraphQL Engine, other solutions should be utilized for production
+databases.
+
+:::
+
+### Step 2: Run Hasura GraphQL engine
+
+The following command will run:
+
+- The Hasura GraphQL Engine
+- The MS SQL Server to act as your local database
+- A Postgres database responsible for Hasura's metadata
+
+```bash
+$ docker-compose up -d
+```
+
+Check if the containers are running:
+
+```bash
+$ docker ps
+
+CONTAINER ID   IMAGE                                        COMMAND                  CREATED         STATUS         PORTS                    NAMES
+1bbfb6c6311d   hasura/graphql-engine:v2.8.4                 "graphql-engine serve"   4 seconds ago   Up 2 seconds   0.0.0.0:8080->8080/tcp   hasura-graphql-engine-1
+1ce5806438bb   mcr.microsoft.com/mssql/server:2022-latest   "/opt/mssql/bin/perm…"   4 seconds ago   Up 3 seconds   1433/tcp                 hasura-mssql-1
+0e09d1f31c0e   postgres:12                                  "docker-entrypoint.s…"   4 seconds ago   Up 3 seconds   5432/tcp                 hasura-postgres-1
+```
+
+### Step 3: Open the Hasura console
+
+Head to `http://localhost:8080/console` to open the Hasura console.
+
+### Step 4: Add your SQL Server database as a source to Hasura
+
+Head to the `Data > Manage databases` section on the console to add your MS SQL Server as a source to Hasura. You'll
+need your ODBC connection string. Make sure that your ODBC driver is set to version 17.
+
+Here are 2 examples of what your connection strings might look like:
+
+- Testing with SQL Server running locally on Mac:
+
+  `Driver={ODBC Driver 17 for SQL Server};Server=tcp:host.docker.internal,1433;Database=tempdb;Uid=sa;Pwd=Password123;`
+
+- A SQL Server instance on Azure SQL Serverless:
+
+  `Driver={ODBC Driver 17 for SQL Server};Server=tcp:db.<hostname>.com,1433;Database=<db-name>;Uid=<username>;Pwd=<password>;Encrypt=yes;TrustServerCertificate=no;ConnectionTimeout=30;`
+
+If you're testing Hasura with SQL Server running locally, [read this guide](/guides/docker-networking.mdx) on Docker
+networking in case you're not sure how to make sure that your SQL Server database is reachable from the Hasura docker
+container on Linux, Mac or Windows.
+
+<Thumbnail
+  src='/img/graphql/core/databases/ms-sql-server/1-manage-databases.png'
+  alt='Manage databases'
+  width='1000px'
+/>
+
+<Thumbnail src='/img/graphql/core/databases/ms-sql-server/2-add-source.png' alt='Add source' width='1000px' />
+
+Once you add the database, you'll see your database pop up on the sidebar.
+
+### Step 5: Option 1: Track existing tables
+
+If you have existing tables, head to the database page by clicking on the database name on the sidebar. You should see a
+list of tables.
+
+<Thumbnail src='/img/graphql/core/databases/ms-sql-server/3-manage-mydb.png' alt='Manage my-db' width='1000px' />
+
+Track tables selectively or all of them so that Hasura can introspect the tables and create the corresponding GraphQL
+schema.
+
+<Thumbnail src='/img/graphql/core/databases/ms-sql-server/4-track-tables.png' alt='Track tables' width='1000px' />
+
+If you have foreign keys, you'll also see suggested relationships. Again, you can choose to track them selectively or
+all at once.
+
+<Thumbnail src='/img/graphql/core/databases/ms-sql-server/5-track-rels.png' alt='Track relationships' width='1000px' />
+
+### Step 5: Option 2: Create new tables
+
+If you don't have existing tables, head to the Run SQL window to run SQL against your SQL Server database and create
+tables or hit the Create Table button to create a table.
+
+If you're running raw SQL queries to create your tables, Don't forget to check "track metadata" at the bottom of the Run
+SQL window to make sure Hasura tracks your new database objects in its GraphQL schema.
+
+<Thumbnail src='/img/graphql/core/databases/ms-sql-server/7-run-sql.png' alt='Run SQL to create table' width='1000px' />
+
+### Step 6: Try out a GraphQL query
+
+Head to the `API` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+creating a GraphQL query.
+
+<Thumbnail
+  src='/img/graphql/core/databases/ms-sql-server/6-make-graphql-query.png'
+  alt='Make GraphQL query'
+  width='1000px'
+/>
+
+## Keep up to date
+
+Hasura supports queries, subscriptions, relationships and permissions on MS SQL Server.
+
+Please watch this space to get the latest docs on how you can try these features out via the console or by manipulating
+metadata in JSON/YAML directly.
+
+If you'd like to stay informed about the status of SQL Server support, subscribe to our newsletter and join our discord!
+
+- [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
+- [https://discord.com/invite/hasura](https://discord.com/invite/hasura)
+
+:::info Additional Resources
+
+This Hands-on Demo walks you through Getting Started with Hasura on SQL Server & common use cases. -
+[View Recording here](https://hasura.io/events/webinar/hasura-sql-server/?pg=docs&plcmt=body&cta=view-recording&tech=).
+
+:::

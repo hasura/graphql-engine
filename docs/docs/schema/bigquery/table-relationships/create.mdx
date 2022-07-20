@@ -1,0 +1,286 @@
+---
+sidebar_label: Creating relationships
+sidebar_position: 1
+description: Create relationships between BigQuery tables/views in Hasura
+keywords:
+  - hasura
+  - docs
+  - bigquery
+  - schema
+  - relationship
+  - create
+---
+
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+import Thumbnail from '@site/src/components/Thumbnail';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# BigQuery: Creating relationships
+
+## Introduction
+
+A relationship from one table to another can be created by defining a link between a column of the table to a column of
+the other table.
+
+Typically, relationships are defined using foreign-key constraints. Because BigQuery doesn't support a notion of primary
+or foreign keys, we can instead model this relationship using manual object and array relationships.
+
+## Using manual relationships {#bq-create-manual-relationships}
+
+Say we created two tables, `authors(id, name)` and `articles(id, title, content, rating, author_id)`.
+
+Let us now connect these tables to enable nested queries using manual relationships.
+
+### Add an object relationship
+
+Each article has one author. This is an `object relationship`.
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+In the console, select the `articles` table and navigate to the `Relationships` tab, then click `Configure` under
+`Add a new relationship manually`.
+
+Add an `object relationship` named `author` for the `articles` table as shown here:
+
+<Thumbnail
+  src='/img/graphql/core/schema/relationships-add-object-article.png'
+  alt='Create an object relationship'
+  width='1100px'
+/>
+
+<Thumbnail
+  src='/img/graphql/core/schema/relationships-view-author-relationship.png'
+  alt='View object relationships'
+  width='1100px'
+/>
+
+</TabItem>
+<TabItem value="api" label="API">
+
+<!-- TODO: BigQuery metadata docs: https://github.com/hasura/graphql-engine/issues/8560 -->
+
+You can create an object relationship by using the
+[bigquery_create_object_relationship](/api-reference/metadata-api/relationship.mdx#metadata-bq-create-object-relationship)
+metadata API:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_create_object_relationship",
+  "args": {
+    "source": "bigquery",
+    "table": {
+      "dataset": "<dataset_name>",
+      "name": "articles"
+    },
+    "name": "author",
+    "using": {
+      "manual_configuration": {
+        "remote_table": {
+          "dataset": "<dataset_name>",
+          "name": "authors"
+        },
+        "column_mapping": {
+          "author_id": "id"
+        }
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+If we now click the `API` link along the top navigation bar, we should be able to see `GraphiQL`.
+
+If we run the following query, we can see that we've now added an `author` object relationship under the
+`bigquery_articles` table:
+
+<GraphiQLIDE
+  query={`query {
+    bigquery_articles {
+      id
+      title
+      author {
+        id
+        name
+      }
+    }
+  }`}
+  response={`{
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "sit amet",
+        "author": {
+          "name": "Anjela",
+          "id": 4
+        }
+      },
+      {
+        "id": 2,
+        "title": "a nibh",
+        "author": {
+          "name": "Beltran",
+          "id": 2
+        }
+      },
+      {
+        "id": 3,
+        "title": "amet justo morbi",
+        "author": {
+          "name": "Anjela",
+          "id": 4
+        }
+      }
+    ]
+  }
+}`}
+/>
+
+:::info Note
+
+The query field will be of the format `<dataset_name>_<table_name>`.
+
+:::
+
+### Add an array relationship
+
+For each author, there are many possible related articles. If we wanted to establish the articles for each author, we
+would return an array. We model this in the Hasura console using an array relationship (we can also think of this as
+being a one-to-many relationship between authors and articles).
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+In the console, select the `authors` table and navigate to the `Relationships` tab, then click `Configure` under
+`Add a new relationship manually`.
+
+<Thumbnail
+  src='/img/graphql/core/schema/relationships-add-array-articles.png'
+  alt='Add an array relationship'
+  width='700px'
+/>
+
+<Thumbnail
+  src='/img/graphql/core/schema/relationships-view-articles.png'
+  alt='View array relationships in Relationships tab'
+  width='700px'
+/>
+
+</TabItem>
+<TabItem value="api" label="API">
+
+<!-- TODO: BigQuery metadata docs: https://github.com/hasura/graphql-engine/issues/8560 -->
+
+You can create an array relationship by using the
+[bigquery_create_array_relationship](/api-reference/metadata-api/relationship.mdx#metadata-bq-create-array-relationship)
+metadata API:
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "bigquery_create_array_relationship",
+  "args": {
+    "source": "bigquery",
+    "table": {
+      "dataset": "hasura",
+      "name": "authors"
+    },
+    "name": "articles",
+    "using": {
+      "manual_configuration": {
+        "remote_table": {
+          "dataset": "hasura",
+          "name": "articles"
+        },
+        "column_mapping": {
+          "id": "author_id"
+        }
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+If we now click the `API` link along the top navigation bar, we should be able to see `GraphiQL`.
+
+If we run the following query, we can see that we've now added an `articles` array relationship under the
+`bigquery_authors` table:
+
+<GraphiQLIDE
+  query={`query {
+    bigquery_authors {
+      id
+      name
+      articles {
+        id
+        title
+      }
+    }
+  }`}
+  response={`{
+  "data": {
+    "bigquery_authors": [
+      {
+        "id": "3",
+        "name": "Author 3",
+        "articles": [
+          {
+            "id": "4",
+            "title": "cillum nostrud"
+          },
+          {
+            "id": "1",
+            "title": "dolore"
+          }
+        ]
+      },
+      {
+        "id": "5",
+        "name": "Author 5",
+        "articles": []
+      },
+      {
+        "id": "2",
+        "name": "Author 2",
+        "articles": [
+          {
+            "id": "3",
+            "title": "nostrud"
+          }
+        ]
+      },
+      {
+        "id": "1",
+        "name": "Author 1",
+        "articles": [
+          {
+            "id": "2",
+            "title": "veniam"
+          }
+        ]
+      }
+    ]
+  }
+}`}
+/>
+
+:::info Note
+
+The query field will be of the format `<dataset_name>_<table_name>`.
+
+:::
