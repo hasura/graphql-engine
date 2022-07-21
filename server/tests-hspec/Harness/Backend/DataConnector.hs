@@ -24,7 +24,8 @@ where
 
 --------------------------------------------------------------------------------
 
-import Control.Concurrent (ThreadId, forkIO, killThread)
+import Control.Concurrent.Async (Async)
+import Control.Concurrent.Async qualified as Async
 import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
 import Harness.Backend.DataConnector.MockAgent
@@ -109,7 +110,7 @@ teardown (testEnvironment, _) = do
 data MockAgentEnvironment = MockAgentEnvironment
   { maeConfig :: I.IORef MockConfig,
     maeQuery :: I.IORef (Maybe API.QueryRequest),
-    maeThreadId :: ThreadId,
+    maeThread :: Async (),
     maeQueryConfig :: I.IORef (Maybe API.Config)
   }
 
@@ -119,7 +120,7 @@ mkLocalTestEnvironmentMock _ = do
   maeConfig <- I.newIORef chinookMock
   maeQuery <- I.newIORef Nothing
   maeQueryConfig <- I.newIORef Nothing
-  maeThreadId <- forkIO $ runMockServer maeConfig maeQuery maeQueryConfig
+  maeThread <- Async.async $ runMockServer maeConfig maeQuery maeQueryConfig
   healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health"
   pure $ MockAgentEnvironment {..}
 
@@ -133,7 +134,7 @@ setupMock sourceMetadata backendConfig (testEnvironment, _mockAgentEnvironment) 
 teardownMock :: (TestEnvironment, MockAgentEnvironment) -> IO ()
 teardownMock (testEnvironment, MockAgentEnvironment {..}) = do
   GraphqlEngine.clearMetadata testEnvironment
-  killThread maeThreadId
+  Async.cancel maeThread
 
 -- | Mock Agent test case input.
 data TestCase = TestCase
