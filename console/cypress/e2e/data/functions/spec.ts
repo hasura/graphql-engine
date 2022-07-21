@@ -99,9 +99,10 @@ export const testSessVariable = () => {
     .clear()
     .type('invalid');
   cy.get(getElementFromAlias(`${fN}-session-argument-save`)).click();
-  cy.get('.notification-error', { timeout: 5000 })
-    .should('be.visible')
-    .and('contain', 'Updating Session argument variable failed');
+
+  cy.expectErrorNotificationWithTitle(
+    'Updating Session argument variable failed'
+  );
 
   cy.get(getElementFromAlias(`${fN}-session-argument-btn`), {
     timeout: 1000,

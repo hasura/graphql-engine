@@ -366,7 +366,6 @@ export const failBIUniqueKeys = () => {
   cy.get(getElementFromAlias(`typed-input-${textIndex}`)).type('name');
   cy.get(getElementFromAlias('insert-save-button')).click();
 
-  // cy.get('.notification-error').click();
   cy.wait(7000);
   validateInsert(getTableName(0, testName), 21);
 };

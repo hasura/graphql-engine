@@ -34,9 +34,12 @@ export const duplicateAndEmptyDomainError = () => {
   cy.get(getElementFromAlias('add-tls-allow-list')).click();
   cy.wait(1000);
   // duplicate error
-  cy.get('.notification-error', { timeout: 5000 })
-    .should('be.visible')
-    .and('contain', 'Adding domain to insecure TLS allow list failed');
+
+  // NOTE: is a timeout 5000 really needed?
+  cy.expectErrorNotificationWithTitle(
+    'Adding domain to insecure TLS allow list failed'
+  );
+
   // close add domain dialog box
   cy.get(getElementFromAlias('cancel-domain')).click();
   // click add domain
@@ -44,9 +47,8 @@ export const duplicateAndEmptyDomainError = () => {
   // click Add to Allow List with empty domain name
   cy.get(getElementFromAlias('add-tls-allow-list')).click();
   // empty domain error
-  cy.get('.notification-error', { timeout: 5000 })
-    .should('be.visible')
-    .and('contain', 'No domain found');
+  // NOTE: is a timeout 5000 really needed?
+  cy.expectErrorNotificationWithTitle('No domain found');
   cy.get(getElementFromAlias('cancel-domain')).click();
 };
 

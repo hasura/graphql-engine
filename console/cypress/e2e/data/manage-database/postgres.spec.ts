@@ -1,54 +1,69 @@
-import { driverSpecType } from './common.spec';
-
-// Use this config for running locally
-// const config = {
-//   host: 'postgres',
-//   port: '5432',
-//   dbName: 'postgres',
-//   username: 'postgres',
-//   password: 'postgrespassword',
-// };
-
 const config = {
-  host: 'localhost',
+  host: 'postgres',
   port: '5432',
-  dbName: 'gql_test',
-  username: 'gql_test',
-  password: '',
+  dbName: 'postgres',
+  username: 'postgres',
+  password: 'postgrespassword',
 };
 
 const dbUrl = `postgres://${config.username}:${config.password}@${config.host}:${config.port}/${config.dbName}`;
 
-const fillDetailsForDbUrlForm = (dbName: string) => {
+const graphqlCustomizationTest = () => {
+  cy.log('**--- Select a graphql naming convention**');
+  cy.get('[data-test="GraphQL Field Customization"]').within(() => {
+    cy.get('[data-test="radio-select-hasura-default"]').should('be.visible');
+    cy.get('[data-test="radio-select-graphql-default"]').should('be.visible');
+    cy.get('label[for="radio-select-graphql-default"]').click();
+  });
+
+  cy.log('**--- Fill Root Fields Customizations**');
+  cy.get('form[aria-label="rootFields"]').within(() => {
+    cy.findByPlaceholderText('Namespace...').type('name_space');
+    cy.findByPlaceholderText('prefix_').type('prefix_');
+    cy.findByPlaceholderText('_suffix').type('_suffix');
+  });
+
+  cy.log('**--- Fill Type Names Customizations**');
+  cy.get('form[aria-label="typeNames"]').within(() => {
+    cy.findByPlaceholderText('prefix_').type('prefix_');
+    cy.findByPlaceholderText('_suffix').type('_suffix');
+  });
+};
+
+export const fillDetailsForPgDbUrlForm = (dbName: string) => {
+  cy.log('**--- Fill Form using db url**');
   cy.getBySel('database-display-name').type(dbName);
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('database-url').type(dbUrl);
   cy.getBySel('max-connections').type('50');
   cy.getBySel('idle-timeout').type('180');
   cy.getBySel('retries').type('1');
+  graphqlCustomizationTest();
 };
 
-const fillDetailsForConnParamsForm = (dbName: string) => {
+export const fillDetailsForPgConnParamsForm = (dbName: string) => {
+  cy.log('**--- Fill Form using connection parameter**');
   cy.get("input[type='radio']").eq(2).click();
   cy.getBySel('database-display-name').type(dbName);
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('host').type(config.host);
   cy.getBySel('port').type(config.port);
   cy.getBySel('username').type(config.username);
-  if (config.password) {
-    cy.getBySel('password').type(config.password);
-  }
+  cy.getBySel('password').type(config.password);
   cy.getBySel('database-name').type(config.dbName);
+  graphqlCustomizationTest();
 };
 
-const fillDetailsForEnvVarForm = (dbName: string) => {
+export const fillDetailsForPgEnvVarForm = (dbName: string) => {
+  cy.log('**--- Fill Form using env vars**');
   cy.get("input[type='radio']").eq(0).click();
   cy.getBySel('database-display-name').type(dbName);
   cy.getBySel('database-type').select('postgres');
   cy.getBySel('database-url-env').type('HASURA_GRAPHQL_DATABASE_URL');
+  graphqlCustomizationTest();
 };
 
-const createDB = (dbName: string) => {
+export const createDB = (dbName: string) => {
   const postBody = {
     type: 'pg_add_source',
     args: {
@@ -67,7 +82,7 @@ const createDB = (dbName: string) => {
   );
 };
 
-const removeDB = (dbName: string) => {
+export const removeDB = (dbName: string) => {
   const postBody = { type: 'pg_drop_source', args: { name: dbName } };
   cy.request('POST', 'http://localhost:8080/v1/metadata', postBody).then(
     response => {
@@ -181,24 +196,3 @@ const deleteRemoteSchema = (remoteSchemaName: string) => {
     }
   );
 };
-
-const postgres: driverSpecType = {
-  name: 'postgres',
-  tests: {
-    fillDetailsForDbUrlForm,
-    fillDetailsForConnParamsForm,
-    fillDetailsForEnvVarForm,
-  },
-  helpers: {
-    createDB,
-    removeDB,
-    createTable,
-    createRemoteSchema,
-    deleteRemoteSchema,
-    deleteTable,
-    trackTable,
-    untrackTable,
-  },
-};
-
-export { postgres };
