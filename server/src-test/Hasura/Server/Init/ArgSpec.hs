@@ -69,7 +69,7 @@ mainParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap (preview (UUT.pciDatabaseConn . _Just . UUT._PGConnDatabaseUrl) . UUT.horDatabaseUrl) result `Hspec.shouldSatisfy` \case
+      fmap (preview (UUT.horDatabaseUrl . UUT.pciDatabaseConn . _Just . UUT._PGConnDatabaseUrl)) result `Hspec.shouldSatisfy` \case
         Opt.Success template -> template == eitherToMaybe (Template.parseURLTemplate "https://hasura.io/{{foo}}")
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
@@ -96,7 +96,7 @@ mainParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap (preview (UUT.pciDatabaseConn . _Just . UUT._PGConnDetails) . UUT.horDatabaseUrl) result `Hspec.shouldSatisfy` \case
+      fmap (preview (UUT.horDatabaseUrl . UUT.pciDatabaseConn . _Just . UUT._PGConnDetails)) result `Hspec.shouldSatisfy` \case
         Opt.Success template ->
           template
             == Just
@@ -120,7 +120,7 @@ mainParserSpec =
           -- Then
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
-      fmap UUT.horMetadataDbUrl result `Hspec.shouldSatisfy` \case
+      fmap UUT._horMetadataDbUrl result `Hspec.shouldSatisfy` \case
         Opt.Success metadataUrl -> metadataUrl == Just "postgres://user:password@localhost/hasura"
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
