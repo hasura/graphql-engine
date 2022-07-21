@@ -80,7 +80,6 @@ export const passTrackTable = () => {
     getElementFromAlias('add-track-table-author_average_rating_vt')
   ).click();
   cy.wait(7000);
-  // cy.get('.notification-error');
   validateView('author_average_rating_vt', ResultType.SUCCESS);
 };
 
@@ -401,7 +400,6 @@ export const passVDeleteMaterializedView = () => {
   cy.get(getElementFromAlias('delete-view')).click();
   cy.window().its('prompt').should('be.called');
   cy.wait(7000);
-  // cy.get('.notification-error');
   validateView('author_average_rating_vt', ResultType.FAILURE);
 };
 

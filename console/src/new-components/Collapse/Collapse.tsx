@@ -110,7 +110,7 @@ export const Collapse = ({
   };
 
   return (
-    <Collapsible.Root open={open} onOpenChange={onOpenChange}>
+    <Collapsible.Root open={open} onOpenChange={onOpenChange} data-test={title}>
       <CollapseCtx.Provider value={{ open }}>
         {!!title && (
           <CollapseHeader

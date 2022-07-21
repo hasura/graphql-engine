@@ -25,9 +25,11 @@
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
 import 'cypress-wait-until';
+import '@testing-library/cypress/add-commands';
 
 import './visitEmptyPage';
 import './clearConsoleTextarea';
+import './notifications'
 
 Cypress.Commands.add('getBySel', (selector, ...args) => {
   return cy.get(`[data-test=${selector}]`, ...args);

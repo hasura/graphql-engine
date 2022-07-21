@@ -1,7 +1,6 @@
 /* eslint no-unused-vars: 0 */
 /* eslint import/prefer-default-export: 0 */
 import { testMode } from '../../../helpers/common';
-import { expectNotif } from '../../data/manage-database/common.spec';
 import { setMetaData } from '../../validators/validators';
 import { modifyCustomization } from './spec';
 
@@ -87,9 +86,7 @@ const editSchemaTests = () => {
       });
 
       it('expect success notification', () => {
-        expectNotif('success', {
-          title: 'Remote schema modified',
-        });
+        cy.expectSuccessNotificationWithTitle('Remote schema modified');
       });
     });
 

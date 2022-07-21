@@ -20,5 +20,11 @@ declare namespace Cypress {
      * @example cy.visitEmptyPage()
      */
     visitEmptyPage(): Chainable<unknown>;
+    expectSuccessNotification(): Chainable<unknown>;
+    expectSuccessNotificationWithTitle(title: string): Chainable<unknown>;
+    expectSuccessNotificationWithMessage(message: string): Chainable<unknown>;
+    expectErrorNotification(): Chainable<unknown>;
+    expectErrorNotificationWithTitle(title: string): Chainable<unknown>;
+    expectErrorNotificationWithMessage(message: string): Chainable<unknown>;
   }
 }

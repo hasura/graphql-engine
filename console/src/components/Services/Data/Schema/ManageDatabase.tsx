@@ -266,7 +266,10 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   return (
     <RightContainer>
       <Helmet title="Manage - Data | Hasura" />
-      <div className={`container-fluid ${styles.manage_dbs_page}`}>
+      <div
+        className={`container-fluid ${styles.manage_dbs_page}`}
+        data-test="manage-database-section"
+      >
         <BreadCrumb breadCrumbs={crumbs} />
         <div className={styles.padd_top}>
           <div className={`${styles.display_flex} manage-db-header`}>
