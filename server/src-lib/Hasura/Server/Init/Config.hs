@@ -8,6 +8,9 @@ module Hasura.Server.Init.Config
     HGECommand (..),
     HGEOptions (..),
     HGEOptionsRaw (..),
+    horDatabaseUrl,
+    horMetadataDbUrl,
+    horCommand,
     KeepAliveDelay (..),
     OptionalInterval (..),
     PostgresConnInfo (..),
@@ -363,10 +366,19 @@ data HGECommand a
 
 -- | HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl = HGEOptionsRaw
-  { horDatabaseUrl :: !(PostgresConnInfo (Maybe PostgresRawConnInfo)),
-    horMetadataDbUrl :: !(Maybe String),
-    horCommand :: !(HGECommand impl)
+  { _horDatabaseUrl :: !(PostgresConnInfo (Maybe PostgresRawConnInfo)),
+    _horMetadataDbUrl :: !(Maybe String),
+    _horCommand :: !(HGECommand impl)
   }
+
+horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
+horDatabaseUrl = lens _horDatabaseUrl $ \hdu a -> hdu {_horDatabaseUrl = a}
+
+horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
+horMetadataDbUrl = lens _horMetadataDbUrl $ \hdu a -> hdu {_horMetadataDbUrl = a}
+
+horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
+horCommand = lens _horCommand $ \hdu a -> hdu {_horCommand = a}
 
 -- | The final processed HGE options.
 data HGEOptions impl = HGEOptions
