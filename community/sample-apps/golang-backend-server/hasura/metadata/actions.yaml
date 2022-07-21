@@ -1,0 +1,11 @@
+actions:
+  - name: login
+    definition:
+      kind: synchronous
+      handler: http://golang-backend-server:3000/action
+custom_types:
+  enums: []
+  input_objects: []
+  objects:
+    - name: LoginResponse
+  scalars: []

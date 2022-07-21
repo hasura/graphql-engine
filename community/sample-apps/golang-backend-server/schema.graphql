@@ -1,0 +1,407 @@
+schema {
+  query: query_root
+  mutation: mutation_root
+  subscription: subscription_root
+}
+
+"""whether this query should be cached (Hasura Cloud only)"""
+directive @cached(
+  """measured in seconds"""
+  ttl: Int! = 60
+
+  """refresh the cache entry"""
+  refresh: Boolean! = false
+) on QUERY
+
+type LoginResponse {
+  AccessToken: String!
+}
+
+input NewTodo {
+  text: String!
+  userId: String!
+}
+
+"""
+Boolean expression to compare columns of type "String". All fields are combined with logical 'AND'.
+"""
+input String_comparison_exp {
+  _eq: String
+  _gt: String
+  _gte: String
+
+  """does the column match the given case-insensitive pattern"""
+  _ilike: String
+  _in: [String!]
+
+  """
+  does the column match the given POSIX regular expression, case insensitive
+  """
+  _iregex: String
+  _is_null: Boolean
+
+  """does the column match the given pattern"""
+  _like: String
+  _lt: String
+  _lte: String
+  _neq: String
+
+  """does the column NOT match the given case-insensitive pattern"""
+  _nilike: String
+  _nin: [String!]
+
+  """
+  does the column NOT match the given POSIX regular expression, case insensitive
+  """
+  _niregex: String
+
+  """does the column NOT match the given pattern"""
+  _nlike: String
+
+  """
+  does the column NOT match the given POSIX regular expression, case sensitive
+  """
+  _nregex: String
+
+  """does the column NOT match the given SQL regular expression"""
+  _nsimilar: String
+
+  """
+  does the column match the given POSIX regular expression, case sensitive
+  """
+  _regex: String
+
+  """does the column match the given SQL regular expression"""
+  _similar: String
+}
+
+type Todo {
+  done: Boolean!
+  id: ID!
+  text: String!
+  user: User!
+}
+
+type User {
+  id: ID!
+  name: String!
+}
+
+"""mutation root"""
+type mutation_root {
+  createTodo(input: NewTodo!): Todo!
+
+  """
+  delete data from the table: "user"
+  """
+  delete_user(
+    """filter the rows which have to be deleted"""
+    where: user_bool_exp!
+  ): user_mutation_response
+
+  """
+  delete single row from the table: "user"
+  """
+  delete_user_by_pk(id: uuid!): user
+
+  """
+  insert data into the table: "user"
+  """
+  insert_user(
+    """the rows to be inserted"""
+    objects: [user_insert_input!]!
+
+    """upsert condition"""
+    on_conflict: user_on_conflict
+  ): user_mutation_response
+
+  """
+  insert a single row into the table: "user"
+  """
+  insert_user_one(
+    """the row to be inserted"""
+    object: user_insert_input!
+
+    """upsert condition"""
+    on_conflict: user_on_conflict
+  ): user
+  login(password: String!, username: String!): LoginResponse
+
+  """
+  update data of the table: "user"
+  """
+  update_user(
+    """sets the columns of the filtered rows to the given values"""
+    _set: user_set_input
+
+    """filter the rows which have to be updated"""
+    where: user_bool_exp!
+  ): user_mutation_response
+
+  """
+  update single row of the table: "user"
+  """
+  update_user_by_pk(
+    """sets the columns of the filtered rows to the given values"""
+    _set: user_set_input
+    pk_columns: user_pk_columns_input!
+  ): user
+}
+
+"""column ordering options"""
+enum order_by {
+  """in ascending order, nulls last"""
+  asc
+
+  """in ascending order, nulls first"""
+  asc_nulls_first
+
+  """in ascending order, nulls last"""
+  asc_nulls_last
+
+  """in descending order, nulls first"""
+  desc
+
+  """in descending order, nulls first"""
+  desc_nulls_first
+
+  """in descending order, nulls last"""
+  desc_nulls_last
+}
+
+type query_root {
+  todos: [Todo!]!
+
+  """
+  fetch data from the table: "user"
+  """
+  user(
+    """distinct select on columns"""
+    distinct_on: [user_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [user_order_by!]
+
+    """filter the rows returned"""
+    where: user_bool_exp
+  ): [user!]!
+
+  """
+  fetch aggregated fields from the table: "user"
+  """
+  user_aggregate(
+    """distinct select on columns"""
+    distinct_on: [user_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [user_order_by!]
+
+    """filter the rows returned"""
+    where: user_bool_exp
+  ): user_aggregate!
+
+  """fetch data from the table: "user" using primary key columns"""
+  user_by_pk(id: uuid!): user
+}
+
+type subscription_root {
+  """
+  fetch data from the table: "user"
+  """
+  user(
+    """distinct select on columns"""
+    distinct_on: [user_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [user_order_by!]
+
+    """filter the rows returned"""
+    where: user_bool_exp
+  ): [user!]!
+
+  """
+  fetch aggregated fields from the table: "user"
+  """
+  user_aggregate(
+    """distinct select on columns"""
+    distinct_on: [user_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [user_order_by!]
+
+    """filter the rows returned"""
+    where: user_bool_exp
+  ): user_aggregate!
+
+  """fetch data from the table: "user" using primary key columns"""
+  user_by_pk(id: uuid!): user
+}
+
+"""
+columns and relationships of "user"
+"""
+type user {
+  id: uuid!
+  name: String!
+}
+
+"""
+aggregated selection of "user"
+"""
+type user_aggregate {
+  aggregate: user_aggregate_fields
+  nodes: [user!]!
+}
+
+"""
+aggregate fields of "user"
+"""
+type user_aggregate_fields {
+  count(columns: [user_select_column!], distinct: Boolean): Int!
+  max: user_max_fields
+  min: user_min_fields
+}
+
+"""
+Boolean expression to filter rows from the table "user". All fields are combined with a logical 'AND'.
+"""
+input user_bool_exp {
+  _and: [user_bool_exp!]
+  _not: user_bool_exp
+  _or: [user_bool_exp!]
+  id: uuid_comparison_exp
+  name: String_comparison_exp
+}
+
+"""
+unique or primary key constraints on table "user"
+"""
+enum user_constraint {
+  """
+  unique or primary key constraint on columns "id"
+  """
+  user_pkey
+}
+
+"""
+input type for inserting data into table "user"
+"""
+input user_insert_input {
+  id: uuid
+  name: String
+}
+
+"""aggregate max on columns"""
+type user_max_fields {
+  id: uuid
+  name: String
+}
+
+"""aggregate min on columns"""
+type user_min_fields {
+  id: uuid
+  name: String
+}
+
+"""
+response of any mutation on the table "user"
+"""
+type user_mutation_response {
+  """number of rows affected by the mutation"""
+  affected_rows: Int!
+
+  """data from the rows affected by the mutation"""
+  returning: [user!]!
+}
+
+"""
+on_conflict condition type for table "user"
+"""
+input user_on_conflict {
+  constraint: user_constraint!
+  update_columns: [user_update_column!]! = []
+  where: user_bool_exp
+}
+
+"""Ordering options when selecting data from "user"."""
+input user_order_by {
+  id: order_by
+  name: order_by
+}
+
+"""primary key columns input for table: user"""
+input user_pk_columns_input {
+  id: uuid!
+}
+
+"""
+select columns of table "user"
+"""
+enum user_select_column {
+  """column name"""
+  id
+
+  """column name"""
+  name
+}
+
+"""
+input type for updating data in table "user"
+"""
+input user_set_input {
+  id: uuid
+  name: String
+}
+
+"""
+update columns of table "user"
+"""
+enum user_update_column {
+  """column name"""
+  id
+
+  """column name"""
+  name
+}
+
+scalar uuid
+
+"""
+Boolean expression to compare columns of type "uuid". All fields are combined with logical 'AND'.
+"""
+input uuid_comparison_exp {
+  _eq: uuid
+  _gt: uuid
+  _gte: uuid
+  _in: [uuid!]
+  _is_null: Boolean
+  _lt: uuid
+  _lte: uuid
+  _neq: uuid
+  _nin: [uuid!]
+}
+

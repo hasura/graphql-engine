@@ -1,0 +1,12 @@
+schema: schema.graphql
+operations:
+  - genqlient.graphql
+generated: generated/generated.go
+use_struct_references: true
+bindings:
+  DateTime:
+    type: time.Time
+  uuid:
+    type: string
+  Int:
+    type: int32

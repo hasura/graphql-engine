@@ -1,0 +1,14 @@
+table:
+  schema: public
+  name: user
+event_triggers:
+  - name: newUser
+    definition:
+      enable_manual: true
+      insert:
+        columns: "*"
+    retry_conf:
+      num_retries: 0
+      interval_sec: 10
+      timeout_sec: 60
+    webhook: http://golang-backend-server:3000/event

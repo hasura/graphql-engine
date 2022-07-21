@@ -1,0 +1,5 @@
+- name: go
+  definition:
+    url: http://golang-backend-server:3000/graphql
+    timeout_seconds: 60
+  comment: ""
