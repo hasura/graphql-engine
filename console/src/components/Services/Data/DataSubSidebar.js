@@ -244,7 +244,7 @@ const DataSubSidebar = props => {
   const databasesCount = treeViewItems?.length || 0;
 
   return (
-    <div className={`${styles.subSidebarList} ${styles.padd_top_small}`}>
+    <div className={`${styles.subSidebarList}`}>
       <div className={styles.sidebarHeadingWrapper}>
         <div
           className={`col-xs-8 ${styles.sidebarHeading} ${styles.padd_left_remove}`}
