@@ -13,6 +13,13 @@
   overflow: unset;
 }
 
+.ReactTable .pagination-top{
+  top:0;
+  position: sticky;
+  background-color: #f8fafb;
+  z-index: 1;
+}
+
 .ReactTable .rt-noData {
   padding: 0;
   top: 48px;
@@ -43,6 +50,9 @@
 .ReactTable .rt-thead.-header {
   box-shadow: none;
   min-height: 32px;
+  top: 55px;
+  position: sticky;
+  z-index: 1;
 }
 
 .ReactTable .-pagination {

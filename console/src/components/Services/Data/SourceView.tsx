@@ -118,7 +118,7 @@ const SourceView: React.FC<Props> = props => {
   };
 
   return (
-    <div style={{ paddingTop: '20px', paddingLeft: '15px' }}>
+    <div style={{paddingLeft: '15px' }}>
       <Helmet title="Source - Data | Hasura" />
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div>

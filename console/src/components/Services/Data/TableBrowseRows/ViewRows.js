@@ -998,7 +998,7 @@ const ViewRows = props => {
     const PaginationWithOnlyNav = () => {
       const newPage = curFilter.offset / curFilter.limit;
       return (
-        <div className="flex ml-sm mr-sm justify-around">
+        <div className="flex mt-xs ml-sm mr-sm mb-sm justify-around">
           <div>
             <button
               className="bg-gray-100 py-xs px-md rounded-sm text-gray-500 disabled:text-gray-300"
@@ -1079,6 +1079,8 @@ const ViewRows = props => {
         }
         defaultReorders={columnsOrder}
         showPagination={!shouldHidePagination || useCustomPagination}
+        showPaginationTop
+        showPaginationBottom={false}
         {...paginationProps}
       />
     );
