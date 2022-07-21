@@ -43,6 +43,7 @@ import Control.Arrow (left)
 import Control.Lens (bimap, view)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
+import Data.Aeson.Kriti.Functions as KFunc
 import Data.Binary.Builder (toLazyByteString)
 import Data.ByteString (ByteString)
 import Data.ByteString.Builder.Scientific (scientificBuilder)
@@ -54,9 +55,7 @@ import Data.Text.Encoding qualified as TE
 import Data.Validation (Validation, fromEither)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
-import Hasura.Session (SessionVariables, getSessionVariableValue, mkSessionVariable)
-import Kriti (runKritiWith)
-import Kriti.CustomFunctions qualified as Kriti (basicFuncMap)
+import Hasura.Session (SessionVariables)
 import Kriti.Error qualified as Kriti (CustomFunctionError (..), serialize)
 import Kriti.Parser qualified as Kriti (parser)
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -166,25 +165,14 @@ mkReqTransformCtx url sessionVars rtcEngine reqData =
               view HTTP.queryParams reqData & fmap \(key, val) ->
                 (TE.decodeUtf8 key, fmap TE.decodeUtf8 val)
          in Just $ J.toJSON queryParams
-      rtcFunctions = M.singleton "getSessionVariable" getSessionVar
    in RequestTransformCtx
         { rtcBaseUrl,
           rtcBody,
           rtcSessionVariables,
           rtcQueryParams,
           rtcEngine,
-          rtcFunctions = rtcFunctions <> Kriti.basicFuncMap
+          rtcFunctions = KFunc.sessionFunctions sessionVars
         }
-  where
-    getSessionVar :: J.Value -> Either Kriti.CustomFunctionError J.Value
-    getSessionVar inp = case inp of
-      J.String txt ->
-        case sessionVarValue of
-          Just x -> Right $ J.String x
-          Nothing -> Left . Kriti.CustomFunctionError $ "Session variable \"" <> txt <> "\" not found"
-        where
-          sessionVarValue = sessionVars >>= getSessionVariableValue (mkSessionVariable txt)
-      _ -> Left $ Kriti.CustomFunctionError "Session variable name should be a string"
 
 -- | Common context that is made available to all response transformations.
 data ResponseTransformCtx = ResponseTransformCtx
@@ -257,9 +245,9 @@ runRequestTemplateTransform template RequestTransformCtx {rtcEngine = Kriti, ..}
             [ ("$query_params",) <$> rtcQueryParams,
               ("$base_url",) <$> rtcBaseUrl
             ]
-      eResult = runKritiWith (unTemplate $ template) context rtcFunctions
+      eResult = KFunc.runKritiWith (unTemplate $ template) context rtcFunctions
    in eResult & left \kritiErr ->
-        let renderedErr = J.toJSON $ Kriti.serialize kritiErr
+        let renderedErr = J.toJSON kritiErr
          in TransformErrorBundle [renderedErr]
 
 -- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
@@ -291,9 +279,9 @@ runResponseTemplateTransform ::
   Either TransformErrorBundle J.Value
 runResponseTemplateTransform template ResponseTransformCtx {responseTransformEngine = Kriti, ..} =
   let context = [("$body", responseTransformBody), ("$request", responseTransformReqCtx)]
-      eResult = runKritiWith (unTemplate $ template) context responseTransformFunctions
+      eResult = KFunc.runKritiWith (unTemplate $ template) context responseTransformFunctions
    in eResult & left \kritiErr ->
-        let renderedErr = J.toJSON $ Kriti.serialize kritiErr
+        let renderedErr = J.toJSON kritiErr
          in TransformErrorBundle [renderedErr]
 
 -------------------------------------------------------------------------------

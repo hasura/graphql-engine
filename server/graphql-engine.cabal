@@ -395,6 +395,7 @@ library
                      , Control.Monad.Unique
                      , Data.Aeson.Extended
                      , Data.Aeson.KeyMap.Extended
+                     , Data.Aeson.Kriti.Functions
                      , Data.Environment
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.Multi
