@@ -620,7 +620,6 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     delete: {
       enabled: true,
     },
-    customizeSingleTableTrack: true,
   },
   tables: {
     create: {

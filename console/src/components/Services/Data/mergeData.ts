@@ -582,7 +582,7 @@ export const mergeDataBigQuery = (
         t.table.schema === table.table_schema &&
         t.table.name === table.table_name
     );
-
+    const configuration = metadataTable?.configuration ?? {};
     const relationships = [] as Table['relationships'];
     metadataTable?.array_relationships?.forEach(rel => {
       relationships.push({
@@ -659,7 +659,7 @@ export const mergeDataBigQuery = (
       view_info: null,
       remote_relationships: remoteRelationships,
       is_enum: false,
-      configuration: undefined,
+      configuration: configuration as Table['configuration'],
       computed_fields: [],
     };
     result.push(mergedInfo);

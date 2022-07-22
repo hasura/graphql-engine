@@ -91,6 +91,7 @@ const renameSourceAttributes = (sources: HasuraMetadataV3['sources']) =>
           },
           select_permissions: t.select_permissions,
           remote_relationships: t.remote_relationships,
+          configuration: t.configuration,
         };
       });
     }
