@@ -36,7 +36,7 @@ const CollapseHeader: React.FC<CollapseHeaderProps> = ({
     disabled ? 'text-gray-500' : ''
   }`;
 
-  const chevronClassName = `transition duration-200 ease-in-out ${
+  const chevronClassName = `transition duration-200 ease-in-out text-gray-600 ${
     open ? 'rotate-90' : 'rotate-0'
   }`;
 
@@ -64,8 +64,8 @@ const CollapseHeader: React.FC<CollapseHeaderProps> = ({
       >
         <FaChevronRight className={chevronClassName} />
 
-        {!!title && (
-          <p className="m-0">
+        {title && (
+          <p className="m-0 text-gray-600">
             <strong>{title}</strong>
           </p>
         )}
@@ -85,13 +85,14 @@ const CollapseHeader: React.FC<CollapseHeaderProps> = ({
 };
 
 const CollapseContent: React.FC = ({ children }) => (
-  <Collapsible.Content className="my-2 mx-1 py-2 px-4 border-solid border-l-2 border-gray-300">
+  <Collapsible.Content className="my-2 mx-1.5 py-2 px-4 border-solid border-l-2 border-gray-300">
     {children}
   </Collapsible.Content>
 );
 
 export interface CollapseProps extends CollapseHeaderProps {
   defaultOpen?: boolean;
+  rootClassName?: string;
 }
 
 export const Collapse = ({
@@ -102,6 +103,7 @@ export const Collapse = ({
   defaultOpen = false,
   disabled = false,
   disabledMessage,
+  rootClassName,
 }: CollapseProps): JSX.Element => {
   const [open, setOpen] = React.useState(defaultOpen);
 
@@ -110,7 +112,11 @@ export const Collapse = ({
   };
 
   return (
-    <Collapsible.Root open={open} onOpenChange={onOpenChange} data-test={title}>
+    <Collapsible.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      className={rootClassName}
+    >
       <CollapseCtx.Provider value={{ open }}>
         {!!title && (
           <CollapseHeader

@@ -447,6 +447,11 @@ export const getSupportedDrivers = (feature: Path<SupportedFeaturesType>) =>
     return driverList;
   }, []);
 
+export const isFeatureSupportedForDriver = (
+  feature: Path<SupportedFeaturesType>,
+  driver: Driver
+) => getSupportedDrivers(feature).includes(driver);
+
 class DataSourceChangedEvent extends Event {
   static type = 'data-source-changed';
   constructor(public driver: Driver) {

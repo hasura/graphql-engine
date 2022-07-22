@@ -25,6 +25,7 @@ export const allowedMetadataTypesArr = [
   'pg_create_delete_permission',
   'pg_drop_delete_permission',
   'pg_set_permission_comment',
+  'pg_track_table',
   'mssql_create_insert_permission',
   'mssql_drop_insert_permission',
   'mssql_create_select_permission',

@@ -35,6 +35,7 @@ import {
   dataSource,
   currentDriver,
   isFeatureSupported,
+  isFeatureSupportedForDriver,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -47,7 +48,11 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
-import { FaDatabase, FaFolder } from 'react-icons/fa';
+import { FaCog, FaDatabase, FaFolder } from 'react-icons/fa';
+import { TableTrackingCustomizationModalContainer } from './tableTrackCustomization/TableTrackingCustomizationContainer';
+import { modalKeySelector } from '../../../../store/modal/modal.selectors';
+import { showModal, hideModal } from '../../../../store/modal/modal.actions';
+import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -167,6 +172,7 @@ class Schema extends Component {
       createSchemaOpen: false,
       schemaNameEdit: '',
       loadingSchemas: false,
+      isTrackTableCustomizing: false,
     };
 
     this.props.dispatch(fetchFunctionInit());
@@ -189,6 +195,10 @@ class Schema extends Component {
 
   onCreateNewClick = () => {
     this.setState({ createSchemaOpen: true });
+  };
+
+  setCustomizedTableName = tableName => {
+    this.setState({ customizedTableName: tableName });
   };
 
   onChangeSchemaName = e => {
@@ -229,7 +239,11 @@ class Schema extends Component {
       nonTrackableFunctions,
       trackedFunctions,
       currentDataSource,
+      modalKey,
+      showTableTrackingModal,
+      hideTableTrackingModal,
     } = this.props;
+
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
@@ -246,6 +260,11 @@ class Schema extends Component {
 
     const allUntrackedTables = getUntrackedTables(
       getSchemaTables(schema, currentSchema)
+    );
+
+    const isTrackTableCustomizingSupported = isFeatureSupportedForDriver(
+      'schemas.customizeSingleTableTrack',
+      currentDriver
     );
 
     const trackableFuncs = getTrackableFunctions(
@@ -373,8 +392,14 @@ class Schema extends Component {
               const handleTrackTable = e => {
                 e.preventDefault();
 
+                this.setCustomizedTableName(tableName);
                 dispatch(setTableName(tableName));
                 dispatch(addExistingTableSql());
+              };
+
+              const onCustomizeTableButtonClick = () => {
+                this.setCustomizedTableName(tableName);
+                showTableTrackingModal();
               };
 
               return (
@@ -390,6 +415,17 @@ class Schema extends Component {
                   >
                     Track
                   </Button>
+
+                  {isTrackTableCustomizingSupported ? (
+                    <Button
+                      title="customize table before tracking"
+                      size="xs"
+                      className="ml-2"
+                      onClick={onCustomizeTableButtonClick}
+                    >
+                      <FaCog />
+                    </Button>
+                  ) : null}
                 </div>
               );
             };
@@ -649,9 +685,17 @@ class Schema extends Component {
         </div>
       );
     };
-
     return (
       <RightContainer>
+        {modalKey === TableTrackingCustomizationModalKey && (
+          <TableTrackingCustomizationModalContainer
+            onClose={() => hideTableTrackingModal()}
+            tableName={this.state.customizedTableName}
+            dataSource={currentDataSource}
+            schema={currentSchema}
+            driver={currentDriver}
+          />
+        )}
         <div className={`container-fluid ${styles.padd_left_remove}`}>
           <div className={styles.padd_left}>
             <Helmet title="Schema - Data | Hasura" />
@@ -703,6 +747,13 @@ Schema.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
+const mapDispatchToProps = dispatch => ({
+  showTableTrackingModal: () =>
+    dispatch(showModal(TableTrackingCustomizationModalKey)),
+  hideTableTrackingModal: () => dispatch(hideModal()),
+  dispatch: dispatch,
+});
+
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
@@ -716,8 +767,10 @@ const mapStateToProps = state => ({
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   metadata: state.metadata.metadataObject,
   currentDataSource: state.tables.currentDataSource,
+  modalKey: modalKeySelector(state),
 });
 
-const schemaConnector = connect => connect(mapStateToProps)(Schema);
+const schemaConnector = connect =>
+  connect(mapStateToProps, mapDispatchToProps)(Schema);
 
 export default schemaConnector;
