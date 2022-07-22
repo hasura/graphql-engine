@@ -16,7 +16,6 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientT)
-import Hasura.Backends.DataConnector.IR.Export as IR (QueryError (ExposedLiteral), queryRequestToAPI)
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.Plan qualified as DC
 import Hasura.Base.Error (Code (..), QErr, throw400, throw500)
@@ -30,7 +29,9 @@ import Hasura.SQL.Backend (BackendType (DataConnector))
 import Hasura.Session
 import Hasura.Tracing (MonadTrace)
 import Hasura.Tracing qualified as Tracing
+import Servant.Client.Core.HasClient ((//))
 import Servant.Client.Generic (genericClient)
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -81,11 +82,7 @@ buildAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
   when (DC.queryHasRelations _qpRequest && isNothing (API.cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
-  let API.Routes {..} = genericClient
-  case IR.queryRequestToAPI _qpRequest of
-    Right queryRequest' -> do
-      queryResponse <- _query (toTxt sourceName) _scConfig queryRequest'
-      reshapedResponse <- _qpResponseReshaper queryResponse
-      pure . encJFromBuilder $ J.fromEncoding reshapedResponse
-    Left (IR.ExposedLiteral lit) ->
-      throw500 $ "Invalid query constructed: Exposed IR Literal '" <> lit <> "'."
+  let apiQueryRequest = Witch.into @API.QueryRequest _qpRequest
+  queryResponse <- (genericClient // API._query) (toTxt sourceName) _scConfig apiQueryRequest
+  reshapedResponse <- _qpResponseReshaper queryResponse
+  pure . encJFromBuilder $ J.fromEncoding reshapedResponse

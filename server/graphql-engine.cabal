@@ -577,7 +577,6 @@ library
                      , Hasura.Backends.DataConnector.IR.Aggregate
                      , Hasura.Backends.DataConnector.IR.Column
                      , Hasura.Backends.DataConnector.IR.Expression
-                     , Hasura.Backends.DataConnector.IR.Export
                      , Hasura.Backends.DataConnector.IR.Function
                      , Hasura.Backends.DataConnector.IR.Name
                      , Hasura.Backends.DataConnector.IR.OrderBy
@@ -1233,9 +1232,11 @@ test-suite tests-hspec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.CustomRootFieldsSpec
+    Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
+    Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
     Test.DirectivesSpec
