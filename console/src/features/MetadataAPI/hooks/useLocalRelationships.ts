@@ -21,16 +21,19 @@ export const useLocalRelationships = (relDef: DataTarget) => {
   const {
     data: objRlns,
     isLoading: objRlnsIsLoading,
+    isSuccess: objRlnsIsSuccess,
     isError: objRlnsIsError,
   } = useObjectRelationships(relDef);
   const {
     data: arrRlns,
     isLoading: arrRlnsIsLoading,
+    isSuccess: arrRlnsIsSuccess,
     isError: arrRlnsIsError,
   } = useArrayRelationships(relDef);
   const {
     data: tableRlns,
     isLoading: tableRlnsIsLoading,
+    isSuccess: tableRlnsIsSuccess,
     isError: tableRlnsIsError,
   } = useTableRelationships({ target: relDef });
 
@@ -133,6 +136,7 @@ export const useLocalRelationships = (relDef: DataTarget) => {
   return {
     data: [...objRlnsData, ...arrRlnsData],
     isLoading: objRlnsIsLoading || arrRlnsIsLoading || tableRlnsIsLoading,
+    isSuccess: objRlnsIsSuccess && arrRlnsIsSuccess && tableRlnsIsSuccess,
     isError: objRlnsIsError || arrRlnsIsError || tableRlnsIsError,
   };
 };
