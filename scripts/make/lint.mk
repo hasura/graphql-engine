@@ -9,20 +9,28 @@ SHELL_FILES = $(shell git ls-files '*.sh')
 CHANGED_SHELL_FILES = $(shell git diff --diff-filter=d --name-only `git merge-base HEAD origin/main` | grep '.*\.sh$$')
 
 HLINT = hlint
+HLINT_VERSION = $(shell $(HLINT) --numeric-version)
+HLINT_CHECK_VERSION = $(shell jq '.hlint' ./server/VERSIONS.json)
 
 NIX_FMT = nixpkgs-fmt
 
-ORMOLU_CHECK_VERSION = 0.3.0.0
-ORMOLU_ARGS = --cabal-default-extensions
 ORMOLU = ormolu
+ORMOLU_ARGS = --cabal-default-extensions
 ORMOLU_VERSION = $(shell $(ORMOLU) --version | awk 'NR==1 { print $$2 }')
+ORMOLU_CHECK_VERSION = $(shell jq '.ormolu' ./server/VERSIONS.json)
 
 SHELLCHECK = shellcheck
+
+.PHONY: check-hlint-version
+check-hlint-version:
+	@if ! [ "$(HLINT_VERSION)" = "$(HLINT_CHECK_VERSION)" ]; then \
+		echo "WARNING: hlint version mismatch, expected $(HLINT_CHECK_VERSION) but got $(HLINT_VERSION)"; \
+	fi
 
 .PHONY: check-ormolu-version
 check-ormolu-version:
 	@if ! [ "$(ORMOLU_VERSION)" = "$(ORMOLU_CHECK_VERSION)" ]; then \
-		echo "WARNING: ormolu version mismatch, expected $(ORMOLU_CHECK_VERSION)"; \
+		echo "WARNING: ormolu version mismatch, expected $(ORMOLU_CHECK_VERSION) but got $(ORMOLU_VERSION)"; \
 	fi
 
 .PHONY: format-hs
@@ -89,13 +97,13 @@ check-format-changed: check-format-hs-changed check-format-nix
 
 .PHONY: lint-hs
 ## lint-hs: lint Haskell code using `hlint`
-lint-hs:
+lint-hs: check-hlint-version
 	@echo running hlint
 	@$(HLINT) $(HS_FILES)
 
 .PHONY: lint-hs-changed
 ## lint-hs-changed: lint Haskell code using `hlint` (changed files only)
-lint-hs-changed:
+lint-hs-changed: check-hlint-version
 	@echo running hlint
 	@if [ -n "$(CHANGED_HS_FILES)" ]; then \
 		$(HLINT) $(CHANGED_HS_FILES); \

@@ -8,6 +8,9 @@ own machine and how to contribute.
 - [GHC](https://www.haskell.org/ghc/) 8.10.7 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile)
+- Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
+  - [HLint](https://github.com/ndmitchell/hlint), for linting Haskell code
+  - [Ormolu](https://github.com/tweag/ormolu), for formatting Haskell code
 
 For building console and running test suite:
 
@@ -31,7 +34,6 @@ If your npm is too old (>= 5.7 required):
     $ npm install -g npm@latest   # sudo may be required
 
 or update your nodejs.
-
 
 ## Development workflow
 
@@ -58,6 +60,7 @@ To set up the project configuration to coincide with the testing scripts below, 
     $ ln -s cabal/dev-sh.project.local cabal.project.local
 
 #### Compiling on MacOS
+
 If you are on MacOS, or experiencing any errors related to missing dependencies on MacOS, please try [this alternative setup guide](COMPILING-ON-MACOS.md).
 
 ### IDE Support
@@ -97,7 +100,7 @@ You can run the test suite with:
 
     $ scripts/dev.sh test
 
-This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
+This should run in isolation. The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report). Errors and failures are indicated by `F`s and `E`s.
 
 Optionally, launch a new container for alternative (MSSQL) backend with:
 
@@ -127,11 +130,11 @@ This will launch a server on port 8080, and it will serve the console assets if 
 
 `graphql-engine` has several test suites, among them:
 
-  1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
+1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
 
-  2. A new integration test suite written in Haskell, in `server/tests-hspec`.
+2. A new integration test suite written in Haskell, in `server/tests-hspec`.
 
-  3. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
+3. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
 
 All sets of tests require running databases:
 
@@ -142,6 +145,7 @@ All sets of tests require running databases:
 ##### Running py tests
 
 The easiest way to run the Python integration test suite is by running:
+
 ```sh
 scripts/dev.sh test --integration
 ```
@@ -151,6 +155,7 @@ For more details please check out the [README](./tests-py/README.md).
 ##### Running the Haskell test suite
 
 There are three categories of unit tests:
+
 - true unit tests
 - Postgres unit tests (require a postgres instance)
 - MSSQL unit tests (require a MSSQL instance)
@@ -262,6 +267,7 @@ instructions help in setting up a local hoogle server that enables searching thr
 ### Step 1: Installing hoogle
 
 Installing `hoogle` is fairly simple with `cabal`.
+
 ```bash
 cabal install hoogle
 ```
