@@ -1260,6 +1260,7 @@ test-suite tests-hspec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec
+    Test.Queries.FilterSearchSpec
     Test.OrderingSpec
     Test.PostgresTypesSpec
     Test.PrimaryKeySpec
@@ -1279,7 +1280,6 @@ test-suite tests-hspec
     Test.ServiceLivenessSpec
     Test.UpdateManySpec
     Test.ViewsSpec
-    Test.WhereSpec
 
 test-suite tests-dc-api
   import: common-all, common-exe
