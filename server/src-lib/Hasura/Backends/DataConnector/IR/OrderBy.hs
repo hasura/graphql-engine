@@ -63,8 +63,8 @@ instance ToJSON OrderType where
 
 instance Witch.From API.OrderType OrderType where
   from API.Ascending = Ascending
-  from API.Descending = Ascending
+  from API.Descending = Descending
 
 instance Witch.From OrderType API.OrderType where
   from Ascending = API.Ascending
-  from Descending = API.Ascending
+  from Descending = API.Descending
