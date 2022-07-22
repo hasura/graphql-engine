@@ -211,6 +211,7 @@ common lib-depends
                      , uuid
                      , binary
                      , base16-bytestring
+                     , cryptohash-md5
 
                      -- Logging related
                      , network
@@ -513,7 +514,7 @@ library
                      , Hasura.Backends.Postgres.Schema.Select
                      , Hasura.Backends.Postgres.SQL.DML
                      , Hasura.Backends.Postgres.SQL.Error
-                     , Hasura.Backends.Postgres.SQL.IdentifierUniqueness
+                     , Hasura.Backends.Postgres.SQL.RenameIdentifiers
                      , Hasura.Backends.Postgres.SQL.Types
                      , Hasura.Backends.Postgres.SQL.Value
                      , Hasura.Backends.Postgres.Translate.BoolExp
@@ -1049,7 +1050,7 @@ test-suite graphql-engine-tests
     Hasura.Backends.Postgres.RQLGenerator.GenSelectFromG
     Hasura.Backends.Postgres.RQLGenerator.GenTablePermG
     Hasura.Backends.Postgres.SQL.EDSL
-    Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec
+    Hasura.Backends.Postgres.SQL.Select.RenameIdentifiersSpec
     Hasura.Backends.Postgres.SQL.ValueSpec
     Hasura.EventingSpec
     Hasura.Generator.Common
@@ -1257,6 +1258,7 @@ test-suite tests-hspec
     Test.InsertEnumColumnSpec
     Test.InsertOnConflictSpec
     Test.LimitOffsetSpec
+    Test.LongIdentifiersSpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
     Test.ObjectRelationshipsSpec

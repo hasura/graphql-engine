@@ -204,6 +204,12 @@ get_server_upgrade_tests() {
 		--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
 		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
 		--deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
+		--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
 		  1>/dev/null 2>/dev/null
 	set +x
 	# Choose the subset of jobs to run based on possible parallelism in this buildkite job
@@ -245,6 +251,12 @@ run_server_upgrade_pytest() {
 			--deselect test_graphql_queries.py::TestGraphQLExplainCommon::test_limit_offset_orderby_relationship_query \
 		    --deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_orderby_column_query \
 			--deselect test_graphql_queries.py::TestGraphQLQueryBoolExpBasicPostgres::test_select_cast_test_where_cast_string \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_simple_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_permissions_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_limit_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_orderby_array_relationship_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_query \
+			--deselect test_graphql_queries.py::TestGraphQLExplainPostgresMSSQLMySQL::test_documented_subscription \
 			-v $tests_to_run
 		set +x
 		cd -

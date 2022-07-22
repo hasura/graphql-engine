@@ -9,7 +9,7 @@ where
 import Control.Monad.Writer (runWriter)
 import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.IdentifierUniqueness (prefixNumToAliasesSelectWith)
+import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiersSelectWith)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (connectionToSelectWith)
@@ -58,7 +58,7 @@ mkConnectionSelect connectionSelect =
       selectNode =
         MultiRowSelectNode [topExtractor] $
           SelectNode nodeExtractors joinTree
-   in prefixNumToAliasesSelectWith $
+   in renameIdentifiersSelectWith $
         connectionToSelectWith (S.toTableAlias rootIdentifier) connectionSource selectNode
   where
     strfyNum = _asnStrfyNum $ _csSelect connectionSelect

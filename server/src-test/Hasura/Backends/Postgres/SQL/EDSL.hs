@@ -1,7 +1,7 @@
 -- | An EDSL for writing Postgres SQL expressions for testing purposes
 --   as they are defined in "Hasura.Backends.Postgres.SQL.DML".
 --
---   This is currently used in "Hasura.Backends.Postgres.SQL.Select.IdentifierUniquenessSpec".
+--   This is currently used in "Hasura.Backends.Postgres.SQL.Select.RenameIdentifiersSpec".
 module Hasura.Backends.Postgres.SQL.EDSL
   ( module Hasura.Backends.Postgres.SQL.EDSL,
     module Hasura.Backends.Postgres.SQL.DML,

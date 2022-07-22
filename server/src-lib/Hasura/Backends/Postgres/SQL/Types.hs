@@ -292,6 +292,7 @@ qualifiedObjectToName objectName = do
       "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
         <<> " is not a valid GraphQL identifier"
 
+-- | Represents a database table qualified with the schema name.
 type QualifiedTable = QualifiedObject TableName
 
 type QualifiedFunction = QualifiedObject FunctionName
