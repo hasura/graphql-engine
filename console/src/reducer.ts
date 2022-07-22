@@ -13,6 +13,7 @@ import apiExplorerReducer from './components/Services/ApiExplorer/Actions';
 import progressBarReducer from './components/App/Actions';
 import telemetryReducer from './telemetry/Actions';
 import { metadataReducer } from './metadata/reducer';
+import { modalReducer } from './store/modal/modal.reducer';
 
 const reducer = combineReducers({
   ...dataReducer,
@@ -28,6 +29,7 @@ const reducer = combineReducers({
   types: typesReducer,
   events: eventsReducer,
   invokeEventTrigger: invokeEventTriggerReducer,
+  modal: modalReducer,
 });
 
 export default reducer;

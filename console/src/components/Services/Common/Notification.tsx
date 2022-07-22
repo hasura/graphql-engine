@@ -5,6 +5,9 @@ import {
   show as displayNotification,
   NotificationLevel,
 } from 'react-notification-system-redux';
+import { showModal } from '@/store/modal/modal.actions';
+import { currentDriver, isFeatureSupportedForDriver } from '@/dataSources';
+import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import Button from '../../Common/Button/Button';
 import { Thunk } from '../../../types';
 import { Json } from '../../Common/utils/tsUtils';
@@ -172,14 +175,12 @@ const showErrorNotification = (
 
   return dispatch => {
     const getNotificationAction = () => {
-      let action;
-
       if (errorJson) {
         const errorDetails = [
           getNotificationDetails(errorJson, getRefreshBtn()),
         ];
 
-        action = {
+        const action = {
           label: 'Details',
           callback: () => {
             dispatch(
@@ -195,17 +196,39 @@ const showErrorNotification = (
             );
           },
         };
+        return action;
       }
 
-      return action;
+      const isCustomizeSingleTableTrack = isFeatureSupportedForDriver(
+        'schemas.customizeSingleTableTrack',
+        currentDriver
+      );
+
+      const isAddTableView = window.location.pathname.includes('table/add');
+      if (
+        errorMessage.includes('found duplicate fields') &&
+        !isAddTableView &&
+        isCustomizeSingleTableTrack
+      ) {
+        const action = {
+          label: 'Resolve Conflict',
+          callback: () => {
+            dispatch(showModal(TableTrackingCustomizationModalKey));
+          },
+        };
+        return action;
+      }
+
+      return undefined;
     };
 
+    const action = getNotificationAction();
     dispatch(
       showNotification(
         {
           title,
           message: errorMessage,
-          action: getNotificationAction(),
+          action,
         },
         'error'
       )

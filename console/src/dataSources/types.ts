@@ -299,6 +299,7 @@ export type SupportedFeaturesType = {
     delete: {
       enabled: boolean;
     };
+    customizeSingleTableTrack: boolean;
   };
   tables: {
     create: {
