@@ -30,7 +30,7 @@ const HandlerEditor: React.FC<HandlerEditorProps> = ({
   );
 
   return (
-    <div className="mb-lg w-4/12">
+    <div className="mb-lg w-8/12">
       <h2 className="text-lg font-semibold mb-xs flex items-center">
         {editorLabel}
         <span className="text-red-700 ml-xs mr-sm">*</span>
@@ -42,7 +42,7 @@ const HandlerEditor: React.FC<HandlerEditorProps> = ({
         value={localValue}
         onChange={e => setLocalValue(e.target.value)}
         placeholder="http://custom-logic.com/api"
-        className={inputStyles}
+        className={`${inputStyles} w-full`}
         data-test="action-create-handler-input"
       />
       <p className="text-sm text-gray-600">
