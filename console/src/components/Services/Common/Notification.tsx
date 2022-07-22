@@ -6,7 +6,6 @@ import {
   NotificationLevel,
 } from 'react-notification-system-redux';
 import { showModal } from '@/store/modal/modal.actions';
-import { currentDriver, isFeatureSupportedForDriver } from '@/dataSources';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
 import Button from '../../Common/Button/Button';
 import { Thunk } from '../../../types';
@@ -199,17 +198,8 @@ const showErrorNotification = (
         return action;
       }
 
-      const isCustomizeSingleTableTrack = isFeatureSupportedForDriver(
-        'schemas.customizeSingleTableTrack',
-        currentDriver
-      );
-
       const isAddTableView = window.location.pathname.includes('table/add');
-      if (
-        errorMessage.includes('found duplicate fields') &&
-        !isAddTableView &&
-        isCustomizeSingleTableTrack
-      ) {
+      if (errorMessage.includes('found duplicate fields') && !isAddTableView) {
         const action = {
           label: 'Resolve Conflict',
           callback: () => {

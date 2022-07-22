@@ -1,11 +1,17 @@
 import {
+  getFullQueryNameBase,
+  getGraphQLQueryBase,
+  QueryBody,
+} from '@/dataSources/common';
+import {
   OrderBy,
   WhereClause,
 } from '../../../components/Common/utils/v1QueryUtils';
 import Endpoints from '../../../Endpoints';
-import { TableEntry } from '../../../metadata/types';
+import { TableConfig } from '../../../metadata/types';
 import { ReduxState } from '../../../types';
 import { BaseTableColumn, Relationship, Table } from '../../types';
+import { isEmpty } from '../../../components/Common/utils/jsUtils';
 
 type Tables = ReduxState['tables'];
 interface GetGraphQLQuery {
@@ -14,6 +20,8 @@ interface GetGraphQLQuery {
   originalTable: string;
   currentSchema: string;
   isExport?: boolean;
+  tableConfiguration: TableConfig;
+  defaultSchema: string;
 }
 
 export const BigQueryDataTypes = {
@@ -29,6 +37,17 @@ export const BigQueryDataTypes = {
   dateTime: ['DATETIME', 'TIME', 'TIMESTAMP', 'DATE'],
   user_defined: [],
 };
+
+export const operators = [
+  { name: 'equals', value: '$eq', graphqlOp: '_eq' },
+  { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
+  { name: '>', value: '$gt', graphqlOp: '_gt' },
+  { name: '<', value: '$lt', graphqlOp: '_lt' },
+  { name: '>=', value: '$gte', graphqlOp: '_gte' },
+  { name: '<=', value: '$lte', graphqlOp: '_lte' },
+];
+
+const getFullQueryName = getFullQueryNameBase('');
 
 const getFormattedValue = (
   type: string,
@@ -47,21 +66,26 @@ const getFormattedValue = (
 
 const RqlToGraphQlOp = (op: string) => {
   if (!op || !op?.startsWith('$')) return 'none';
-  return op.replace('$', '_');
+  return (
+    operators.find(_op => _op.value === op)?.graphqlOp ?? op.replace('$', '_')
+  );
 };
 
 const generateWhereClauseQueryString = (
   wheres: WhereClause[],
-  columnTypeInfo: BaseTableColumn[]
+  columnTypeInfo: BaseTableColumn[],
+  tableConfiguration: TableConfig
 ): string | null => {
+  const columnConfig = tableConfiguration?.column_config ?? {};
   const whereClausesArr = wheres.map((i: Record<string, any>) => {
     const columnName = Object.keys(i)[0];
     const RqlOperator = Object.keys(i[columnName])[0];
     const value = i[columnName][RqlOperator];
     const type = columnTypeInfo?.find(c => c.column_name === columnName)
-      ?.data_type;
-
-    return `${columnName}: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(
+      ?.data_type_name;
+    return `${
+      columnConfig[columnName]?.custom_name ?? columnName
+    }: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(
       type || 'varchar',
       value
     )} }`;
@@ -71,9 +95,13 @@ const generateWhereClauseQueryString = (
     : null;
 };
 
-const generateSortClauseQueryString = (sorts: OrderBy[]): string | null => {
+const generateSortClauseQueryString = (
+  sorts: OrderBy[],
+  tableConfiguration: TableConfig
+): string | null => {
+  const columnConfig = tableConfiguration?.column_config ?? {};
   const sortClausesArr = sorts.map((i: OrderBy) => {
-    return `${i.column}: ${i.type}`;
+    return `${columnConfig[i.column]?.custom_name ?? i.column}: ${i.type}`;
   });
   return sortClausesArr.length
     ? `order_by: {${sortClausesArr.join(',')}}`
@@ -83,14 +111,19 @@ const generateSortClauseQueryString = (sorts: OrderBy[]): string | null => {
 const getColQuery = (
   cols: (string | { name: string; columns: string[] })[],
   limit: number,
-  relationships: Relationship[]
+  relationships: Relationship[],
+  tableConfiguration: TableConfig
 ): string[] => {
   return cols.map(c => {
-    if (typeof c === 'string') return c;
+    const columnConfig = tableConfiguration?.column_config ?? {};
+    if (typeof c === 'string') return columnConfig[c]?.custom_name ?? c;
     const rel = relationships.find((r: any) => r.rel_name === c.name);
-    return `${c.name} ${
+    return `${columnConfig[c.name]?.custom_name ?? c.name} ${
       rel?.rel_type === 'array' ? `(limit: ${limit})` : ''
-    } { ${getColQuery(c.columns, limit, relationships).join('\n')} }`;
+    } {
+      ${getColQuery(c.columns, limit, relationships, tableConfiguration).join(
+        '\n'
+      )} }`;
   });
 };
 
@@ -99,7 +132,9 @@ export const getGraphQLQueryForBrowseRows = ({
   view,
   originalTable,
   currentSchema,
-  isExport,
+  isExport = false,
+  tableConfiguration,
+  defaultSchema,
 }: GetGraphQLQuery) => {
   const currentTable: Table | undefined = allSchemas?.find(
     (t: Table) =>
@@ -133,38 +168,46 @@ export const getGraphQLQueryForBrowseRows = ({
     sortConditions.push(...view.query.order_by);
   }
   const limit = isExport ? null : `limit: ${view.curFilter.limit}`;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const offset = isExport
     ? null
     : `offset: ${!isRelationshipView ? view.curFilter.offset : 0}`;
   const clauses = `${[
-    generateWhereClauseQueryString(whereConditions, columnTypeInfo),
-    generateSortClauseQueryString(sortConditions),
+    generateWhereClauseQueryString(
+      whereConditions,
+      columnTypeInfo,
+      tableConfiguration
+    ),
+    generateSortClauseQueryString(sortConditions, tableConfiguration),
     limit,
-    // offset,
+    offset,
   ]
     .filter(Boolean)
     .join(',')}`;
 
   return `query TableRows {
-      ${`${currentSchema}_${originalTable}`} ${clauses && `(${clauses})`} {
+      ${
+        currentSchema === defaultSchema
+          ? originalTable
+          : `${currentSchema}_${originalTable}`
+      } ${clauses && `(${clauses})`} {
           ${getColQuery(
             view.query.columns,
             view.curFilter.limit,
-            relationshipInfo
+            relationshipInfo,
+            tableConfiguration
           ).join('\n')}
-      } 
     }
-  `;
+  }`;
 };
 
-const getTableRowRequestBody = ({
+export const getTableRowRequestBody = ({
   tables,
   isExport,
+  tableConfiguration,
 }: {
   tables: Tables;
   isExport?: boolean;
-  tableConfiguration?: TableEntry['configuration'];
+  tableConfiguration: TableConfig;
 }) => {
   const {
     currentTable: originalTable,
@@ -172,14 +215,47 @@ const getTableRowRequestBody = ({
     allSchemas,
     currentSchema,
   } = tables;
+  const tableName = tableConfiguration?.custom_name ?? originalTable;
+  const queryName = getFullQueryName({
+    tableName,
+    schema: currentSchema,
+    tableConfiguration,
+    operation: 'select',
+  });
+  const aggregateName = getFullQueryName({
+    tableName,
+    schema: currentSchema,
+    tableConfiguration,
+    operation: 'select_aggregate',
+  });
+  const queryBody = ({ clauses, relationshipInfo }: QueryBody) => {
+    return `query TableRows {
+      ${queryName} ${clauses && `(${clauses})`} {
+          ${getColQuery(
+            view.query.columns,
+            view.curFilter.limit,
+            relationshipInfo,
+            tableConfiguration
+          ).join('\n')}
+    }
+    ${aggregateName} {
+      aggregate {
+        count
+      }
+    }
+  }`;
+  };
 
   return {
-    query: getGraphQLQueryForBrowseRows({
+    query: getGraphQLQueryBase({
       allSchemas,
       view,
       originalTable,
       currentSchema,
       isExport,
+      tableConfiguration,
+      queryBody,
+      getFormattedValue,
     }),
     variables: null,
     operationName: 'TableRows',
@@ -188,17 +264,114 @@ const getTableRowRequestBody = ({
 
 const processTableRowData = (
   data: any,
-  config?: { originalTable: string; currentSchema: string }
+  config?: {
+    originalTable: string;
+    currentSchema: string;
+    tableConfiguration: TableConfig;
+  }
 ) => {
-  const { originalTable, currentSchema } = config!;
-  const rows = data.data[`${currentSchema}_${originalTable}`];
-  return { estimatedCount: rows.length, rows };
+  const { originalTable, currentSchema, tableConfiguration } = config!;
+
+  const reversedCustomColumns = Object.entries(
+    tableConfiguration?.column_config ?? {}
+  ).reduce((acc: Record<string, string>, [col, colConfig]) => {
+    if (colConfig.custom_name) acc[colConfig.custom_name] = col;
+    return acc;
+  }, {});
+
+  const tableName = tableConfiguration?.custom_name || originalTable;
+  const queryName = getFullQueryName({
+    tableName,
+    schema: currentSchema,
+    tableConfiguration,
+    operation: 'select',
+  });
+  const results = data?.data[queryName];
+
+  const rows = isEmpty(reversedCustomColumns)
+    ? results
+    : results?.map((row: Record<string, any>) =>
+        Object.entries(row).reduce(
+          (acc: Record<string, any>, [maybeCustomCol, col]) => {
+            acc[reversedCustomColumns[maybeCustomCol] ?? maybeCustomCol] = col;
+            return acc;
+          },
+          {}
+        )
+      );
+  const estimatedCount =
+    data?.data[`${queryName}_aggregate`]?.aggregate?.count ?? rows.length;
+  return { estimatedCount, rows };
 };
 
-export const generateTableRowRequest = () => {
+export const generateTableRowRequest = () => ({
+  endpoint: Endpoints.graphQLUrl,
+  getTableRowRequestBody,
+  processTableRowData,
+});
+
+export const getRowsCountRequestBody = ({
+  tables,
+  tableConfiguration,
+}: {
+  tables: Tables;
+  tableConfiguration: TableConfig;
+}) => {
+  const {
+    currentTable: originalTable,
+    currentSchema,
+    allSchemas,
+    view,
+  } = tables;
+  const queryBody = ({ clauses }: QueryBody) => {
+    const queryName = getFullQueryName({
+      tableName: originalTable,
+      schema: currentSchema,
+      tableConfiguration,
+      operation: 'select_aggregate',
+    });
+    return `query TableCount {
+      ${queryName} ${clauses && `(${clauses})`} {
+        aggregate {
+          count
+        }
+      }
+    }`;
+  };
+
   return {
-    endpoint: Endpoints.graphQLUrl,
-    getTableRowRequestBody,
-    processTableRowData,
+    query: getGraphQLQueryBase({
+      allSchemas,
+      view,
+      originalTable,
+      currentSchema,
+      isExport: true,
+      tableConfiguration,
+      queryBody,
+      getFormattedValue,
+    }),
+    variables: null,
+    operationName: 'TableCount',
   };
 };
+
+const processCount = (c: {
+  data: any;
+  currentSchema: string;
+  originalTable: string;
+  tableConfiguration: TableConfig;
+}): number => {
+  const key = getFullQueryName({
+    tableName: c.originalTable,
+    schema: c.currentSchema,
+    tableConfiguration: c.tableConfiguration,
+    operation: 'select_aggregate',
+  });
+  return c.data?.data?.[key]?.aggregate?.count;
+};
+
+export const generateRowsCountRequest = () => ({
+  getRowsCountRequestBody,
+  endpoint: Endpoints.graphQLUrl,
+  processCount,
+});

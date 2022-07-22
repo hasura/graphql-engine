@@ -35,7 +35,6 @@ import {
   dataSource,
   currentDriver,
   isFeatureSupported,
-  isFeatureSupportedForDriver,
 } from '../../../../dataSources';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -262,11 +261,6 @@ class Schema extends Component {
       getSchemaTables(schema, currentSchema)
     );
 
-    const isTrackTableCustomizingSupported = isFeatureSupportedForDriver(
-      'schemas.customizeSingleTableTrack',
-      currentDriver
-    );
-
     const trackableFuncs = getTrackableFunctions(
       functionsList,
       trackedFunctions
@@ -416,16 +410,14 @@ class Schema extends Component {
                     Track
                   </Button>
 
-                  {isTrackTableCustomizingSupported ? (
-                    <Button
-                      title="customize table before tracking"
-                      size="xs"
-                      className="ml-2"
-                      onClick={onCustomizeTableButtonClick}
-                    >
-                      <FaCog />
-                    </Button>
-                  ) : null}
+                  <Button
+                    title="customize table before tracking"
+                    size="xs"
+                    className="ml-2"
+                    onClick={onCustomizeTableButtonClick}
+                  >
+                    <FaCog />
+                  </Button>
                 </div>
               );
             };
