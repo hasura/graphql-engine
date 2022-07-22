@@ -36,7 +36,7 @@
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- | The properties that characterize this request. The dimensions over which</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- we collect metrics for each serviced request.</span><span>
-</span><span id="line-39"></span><span id="local-6989586621689309386"><span id="local-6989586621689309387"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span>
+</span><span id="line-39"></span><span id="local-6989586621689310163"><span id="local-6989586621689310164"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestDimensions"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-var">RequestDimensions</span></a></span></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AtelemQueryType%3ARequestDimensions"><span class="annot"><span class="annottext">RequestDimensions -&gt; QueryType
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemQueryType%3ARequestDimensions"><span class="hs-identifier hs-var hs-var">telemQueryType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-41"></span><span>    </span><span id="%24sel%3AtelemLocality%3ARequestDimensions"><span class="annot"><span class="annottext">RequestDimensions -&gt; Locality
@@ -44,7 +44,7 @@
 </span><span id="line-42"></span><span>    </span><span id="%24sel%3AtelemTransport%3ARequestDimensions"><span class="annot"><span class="annottext">RequestDimensions -&gt; Transport
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemTransport%3ARequestDimensions"><span class="hs-identifier hs-var hs-var">telemTransport</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309376"><span id="local-6989586621689309378"><span id="local-6989586621689309380"><span class="annot"><span class="annottext">Int -&gt; RequestDimensions -&gt; ShowS
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689310153"><span id="local-6989586621689310155"><span id="local-6989586621689310157"><span class="annot"><span class="annottext">Int -&gt; RequestDimensions -&gt; ShowS
 [RequestDimensions] -&gt; ShowS
 RequestDimensions -&gt; String
 (Int -&gt; RequestDimensions -&gt; ShowS)
@@ -68,7 +68,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RequestDimensions x -&gt; RequestDimensions
 $cfrom :: forall x. RequestDimensions -&gt; Rep RequestDimensions x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309368"><span id="local-6989586621689309370"><span class="annot"><span class="annottext">RequestDimensions -&gt; RequestDimensions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689310145"><span id="local-6989586621689310147"><span class="annot"><span class="annottext">RequestDimensions -&gt; RequestDimensions -&gt; Bool
 (RequestDimensions -&gt; RequestDimensions -&gt; Bool)
 -&gt; (RequestDimensions -&gt; RequestDimensions -&gt; Bool)
 -&gt; Eq RequestDimensions
@@ -77,7 +77,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RequestDimensions -&gt; RequestDimensions -&gt; Bool
 == :: RequestDimensions -&gt; RequestDimensions -&gt; Bool
 $c== :: RequestDimensions -&gt; RequestDimensions -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309352"><span id="local-6989586621689309354"><span id="local-6989586621689309356"><span id="local-6989586621689309358"><span id="local-6989586621689309360"><span id="local-6989586621689309362"><span id="local-6989586621689309364"><span class="annot"><span class="annottext">Eq RequestDimensions
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689310129"><span id="local-6989586621689310131"><span id="local-6989586621689310133"><span id="local-6989586621689310135"><span id="local-6989586621689310137"><span id="local-6989586621689310139"><span id="local-6989586621689310141"><span class="annot"><span class="annottext">Eq RequestDimensions
 Eq RequestDimensions
 -&gt; (RequestDimensions -&gt; RequestDimensions -&gt; Ordering)
 -&gt; (RequestDimensions -&gt; RequestDimensions -&gt; Bool)
@@ -117,7 +117,7 @@ $ccompare :: RequestDimensions -&gt; RequestDimensions -&gt; Ordering
 $cp1Ord :: Eq RequestDimensions
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309347"><span id="local-6989586621689309349"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span></span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689310124"><span id="local-6989586621689310126"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span></span></span><span>
 </span><span id="line-47"></span><span>
 </span><span id="line-48"></span><span class="hs-comment">-- | Accumulated time metrics.</span><span>
 </span><span id="line-49"></span><span class="hs-keyword">data</span><span> </span><span id="RequestTimings"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-var">RequestTimings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestTimings"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-var">RequestTimings</span></a></span></span><span>
@@ -130,25 +130,25 @@ $cp1Ord :: Eq RequestDimensions
 </span><span id="line-54"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span class="hs-comment">-- | Sum</span><span>
-</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309338"><span id="local-6989586621689309340"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621689309336"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309336"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689309335"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309335"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689309334"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimings -&gt; RequestTimings -&gt; RequestTimings
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621689309333"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309333"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621689309332"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309332"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; RequestTimings
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689310115"><span id="local-6989586621689310117"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621689310113"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310113"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689310112"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310112"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689310111"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimings -&gt; RequestTimings -&gt; RequestTimings
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span id="local-6989586621689310110"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310110"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621689310109"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310109"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; RequestTimings
 </span><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-var">RequestTimings</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309336"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><a href="#local-6989586621689310113"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309333"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309335"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><a href="#local-6989586621689310110"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310112"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309332"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689310109"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-comment">-- | 'RequestTimings' along with the count</span><span>
-</span><span id="line-61"></span><span id="local-6989586621689309329"><span id="local-6989586621689309330"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span>
+</span><span id="line-61"></span><span id="local-6989586621689310106"><span id="local-6989586621689310107"></span></span><span class="hs-keyword">data</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RequestTimingsCount"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span></span><span>
 </span><span id="line-62"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3AtelemTimeIO%3ARequestTimingsCount"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; Seconds
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemTimeIO%3ARequestTimingsCount"><span class="hs-identifier hs-var hs-var">telemTimeIO</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-63"></span><span>    </span><span id="%24sel%3AtelemTimeTot%3ARequestTimingsCount"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; Seconds
@@ -158,7 +158,7 @@ forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span id="line-66"></span><span>    </span><span id="%24sel%3AtelemCount%3ARequestTimingsCount"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; Word
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemCount%3ARequestTimingsCount"><span class="hs-identifier hs-var hs-var">telemCount</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309319"><span id="local-6989586621689309321"><span id="local-6989586621689309323"><span class="annot"><span class="annottext">Int -&gt; RequestTimingsCount -&gt; ShowS
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689310096"><span id="local-6989586621689310098"><span id="local-6989586621689310100"><span class="annot"><span class="annottext">Int -&gt; RequestTimingsCount -&gt; ShowS
 [RequestTimingsCount] -&gt; ShowS
 RequestTimingsCount -&gt; String
 (Int -&gt; RequestTimingsCount -&gt; ShowS)
@@ -182,7 +182,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RequestTimingsCount x -&gt; RequestTimingsCount
 $cfrom :: forall x. RequestTimingsCount -&gt; Rep RequestTimingsCount x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309313"><span id="local-6989586621689309315"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689310090"><span id="local-6989586621689310092"><span class="annot"><span class="annottext">RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
 (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool)
 -&gt; (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool)
 -&gt; Eq RequestTimingsCount
@@ -191,7 +191,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
 == :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
 $c== :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309298"><span id="local-6989586621689309300"><span id="local-6989586621689309302"><span id="local-6989586621689309304"><span id="local-6989586621689309306"><span id="local-6989586621689309308"><span id="local-6989586621689309310"><span class="annot"><span class="annottext">Eq RequestTimingsCount
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689310075"><span id="local-6989586621689310077"><span id="local-6989586621689310079"><span id="local-6989586621689310081"><span id="local-6989586621689310083"><span id="local-6989586621689310085"><span id="local-6989586621689310087"><span class="annot"><span class="annottext">Eq RequestTimingsCount
 Eq RequestTimingsCount
 -&gt; (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Ordering)
 -&gt; (RequestTimingsCount -&gt; RequestTimingsCount -&gt; Bool)
@@ -234,29 +234,29 @@ $cp1Ord :: Eq RequestTimingsCount
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="hs-comment">-- | Sum</span><span>
-</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309293"><span id="local-6989586621689309295"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621689309292"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309292"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689309291"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309291"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689309290"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689309290"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689309289"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621689309288"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309288"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621689309287"><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309287"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span id="local-6989586621689309286"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689309286"><span class="hs-identifier hs-var">z</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689310070"><span id="local-6989586621689310072"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621689310069"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310069"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689310068"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310068"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689310067"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621689310067"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689310066"><span class="annot"><span class="annottext">&lt;&gt; :: RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span id="local-6989586621689310065"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310065"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621689310064"><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310064"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span id="local-6989586621689310063"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621689310063"><span class="hs-identifier hs-var">z</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Word -&gt; RequestTimingsCount
 </span><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-var">RequestTimingsCount</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309292"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><a href="#local-6989586621689310069"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309288"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309291"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
+</span><a href="#local-6989586621689310065"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds
+</span><a href="#local-6989586621689310068"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; Seconds -&gt; Seconds
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309287"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689309290"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
+</span><a href="#local-6989586621689310064"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621689310067"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689309286"><span class="hs-identifier hs-var">z</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689310063"><span class="hs-identifier hs-var">z</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- | Internal. Counts and durations across many 'RequestDimensions'.</span><span>
 </span><span id="line-76"></span><span class="hs-comment">--</span><span>
@@ -317,8 +317,8 @@ forall a. IO a -&gt; a
 </span><span class="hs-identifier hs-var">getPOSIXTime</span></span><span>
 </span><span id="line-94"></span><span>
 </span><span id="line-95"></span><span class="hs-comment">-- | Was this request a mutation (involved DB writes)?</span><span>
-</span><span id="line-96"></span><span id="local-6989586621689309280"><span id="local-6989586621689309281"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryType"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-var">QueryType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Mutation"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Mutation"><span class="hs-identifier hs-var">Mutation</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span>
-</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309262"><span id="local-6989586621689309264"><span id="local-6989586621689309266"><span id="local-6989586621689309268"><span id="local-6989586621689309270"><span id="local-6989586621689309272"><span id="local-6989586621689309274"><span id="local-6989586621689309276"><span class="annot"><span class="annottext">Int -&gt; QueryType
+</span><span id="line-96"></span><span id="local-6989586621689310057"><span id="local-6989586621689310058"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryType"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-var">QueryType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Mutation"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Mutation"><span class="hs-identifier hs-var">Mutation</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Query"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Query"><span class="hs-identifier hs-var">Query</span></a></span></span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689310039"><span id="local-6989586621689310041"><span id="local-6989586621689310043"><span id="local-6989586621689310045"><span id="local-6989586621689310047"><span id="local-6989586621689310049"><span id="local-6989586621689310051"><span id="local-6989586621689310053"><span class="annot"><span class="annottext">Int -&gt; QueryType
 QueryType -&gt; Int
 QueryType -&gt; [QueryType]
 QueryType -&gt; QueryType
@@ -359,7 +359,7 @@ pred :: QueryType -&gt; QueryType
 $cpred :: QueryType -&gt; QueryType
 succ :: QueryType -&gt; QueryType
 $csucc :: QueryType -&gt; QueryType
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309255"><span id="local-6989586621689309257"><span id="local-6989586621689309259"><span class="annot"><span class="annottext">Int -&gt; QueryType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689310032"><span id="local-6989586621689310034"><span id="local-6989586621689310036"><span class="annot"><span class="annottext">Int -&gt; QueryType -&gt; ShowS
 [QueryType] -&gt; ShowS
 QueryType -&gt; String
 (Int -&gt; QueryType -&gt; ShowS)
@@ -374,7 +374,7 @@ show :: QueryType -&gt; String
 $cshow :: QueryType -&gt; String
 showsPrec :: Int -&gt; QueryType -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryType -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309251"><span id="local-6989586621689309253"><span class="annot"><span class="annottext">QueryType -&gt; QueryType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689310028"><span id="local-6989586621689310030"><span class="annot"><span class="annottext">QueryType -&gt; QueryType -&gt; Bool
 (QueryType -&gt; QueryType -&gt; Bool)
 -&gt; (QueryType -&gt; QueryType -&gt; Bool) -&gt; Eq QueryType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -382,7 +382,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: QueryType -&gt; QueryType -&gt; Bool
 == :: QueryType -&gt; QueryType -&gt; Bool
 $c== :: QueryType -&gt; QueryType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309236"><span id="local-6989586621689309238"><span id="local-6989586621689309240"><span id="local-6989586621689309242"><span id="local-6989586621689309244"><span id="local-6989586621689309246"><span id="local-6989586621689309248"><span class="annot"><span class="annottext">Eq QueryType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689310013"><span id="local-6989586621689310015"><span id="local-6989586621689310017"><span id="local-6989586621689310019"><span id="local-6989586621689310021"><span id="local-6989586621689310023"><span id="local-6989586621689310025"><span class="annot"><span class="annottext">Eq QueryType
 Eq QueryType
 -&gt; (QueryType -&gt; QueryType -&gt; Ordering)
 -&gt; (QueryType -&gt; QueryType -&gt; Bool)
@@ -430,14 +430,14 @@ $cto :: forall x. Rep QueryType x -&gt; QueryType
 $cfrom :: forall x. QueryType -&gt; Rep QueryType x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-98"></span><span>
-</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309230"><span id="local-6989586621689309232"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
+</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689310007"><span id="local-6989586621689310009"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
 </span><span id="line-100"></span><span>
-</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309222"><span id="local-6989586621689309224"><span id="local-6989586621689309226"><span id="local-6989586621689309228"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span></span></span><span>
+</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309999"><span id="local-6989586621689310001"><span id="local-6989586621689310003"><span id="local-6989586621689310005"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span></span></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309217"><span id="local-6989586621689309219"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
+</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309994"><span id="local-6989586621689309996"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#QueryType"><span class="hs-identifier hs-type">QueryType</span></a></span></span></span><span>
 </span><span id="line-104"></span><span>
 </span><span id="line-105"></span><span class="hs-comment">-- | Was this a PG local query, or did it involve remote execution?</span><span>
-</span><span id="line-106"></span><span id="local-6989586621689309214"><span id="local-6989586621689309215"></span></span><span class="hs-keyword">data</span><span> </span><span id="Locality"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-var">Locality</span></a></span></span><span>
+</span><span id="line-106"></span><span id="local-6989586621689309991"><span id="local-6989586621689309992"></span></span><span class="hs-keyword">data</span><span> </span><span id="Locality"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-var">Locality</span></a></span></span><span>
 </span><span id="line-107"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | No data was fetched</span><span>
 </span><span id="line-108"></span><span>    </span><span id="Empty"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | local DB data</span><span>
@@ -446,7 +446,7 @@ $cfrom :: forall x. QueryType -&gt; Rep QueryType x
 </span><span id="line-112"></span><span>    </span><span id="Remote"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Remote"><span class="hs-identifier hs-var">Remote</span></a></span></span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | mixed</span><span>
 </span><span id="line-114"></span><span>    </span><span id="Heterogeneous"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Heterogeneous"><span class="hs-identifier hs-var">Heterogeneous</span></a></span></span><span>
-</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309194"><span id="local-6989586621689309196"><span id="local-6989586621689309198"><span id="local-6989586621689309200"><span id="local-6989586621689309202"><span id="local-6989586621689309204"><span id="local-6989586621689309206"><span id="local-6989586621689309208"><span class="annot"><span class="annottext">Int -&gt; Locality
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309971"><span id="local-6989586621689309973"><span id="local-6989586621689309975"><span id="local-6989586621689309977"><span id="local-6989586621689309979"><span id="local-6989586621689309981"><span id="local-6989586621689309983"><span id="local-6989586621689309985"><span class="annot"><span class="annottext">Int -&gt; Locality
 Locality -&gt; Int
 Locality -&gt; [Locality]
 Locality -&gt; Locality
@@ -487,7 +487,7 @@ pred :: Locality -&gt; Locality
 $cpred :: Locality -&gt; Locality
 succ :: Locality -&gt; Locality
 $csucc :: Locality -&gt; Locality
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309188"><span id="local-6989586621689309190"><span id="local-6989586621689309192"><span class="annot"><span class="annottext">Int -&gt; Locality -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309965"><span id="local-6989586621689309967"><span id="local-6989586621689309969"><span class="annot"><span class="annottext">Int -&gt; Locality -&gt; ShowS
 [Locality] -&gt; ShowS
 Locality -&gt; String
 (Int -&gt; Locality -&gt; ShowS)
@@ -500,7 +500,7 @@ show :: Locality -&gt; String
 $cshow :: Locality -&gt; String
 showsPrec :: Int -&gt; Locality -&gt; ShowS
 $cshowsPrec :: Int -&gt; Locality -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309184"><span id="local-6989586621689309186"><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309961"><span id="local-6989586621689309963"><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
 (Locality -&gt; Locality -&gt; Bool)
 -&gt; (Locality -&gt; Locality -&gt; Bool) -&gt; Eq Locality
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -508,7 +508,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Locality -&gt; Locality -&gt; Bool
 == :: Locality -&gt; Locality -&gt; Bool
 $c== :: Locality -&gt; Locality -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309169"><span id="local-6989586621689309171"><span id="local-6989586621689309173"><span id="local-6989586621689309175"><span id="local-6989586621689309177"><span id="local-6989586621689309179"><span id="local-6989586621689309181"><span class="annot"><span class="annottext">Eq Locality
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309946"><span id="local-6989586621689309948"><span id="local-6989586621689309950"><span id="local-6989586621689309952"><span id="local-6989586621689309954"><span id="local-6989586621689309956"><span id="local-6989586621689309958"><span class="annot"><span class="annottext">Eq Locality
 Eq Locality
 -&gt; (Locality -&gt; Locality -&gt; Ordering)
 -&gt; (Locality -&gt; Locality -&gt; Bool)
@@ -556,43 +556,43 @@ $cto :: forall x. Rep Locality x -&gt; Locality
 $cfrom :: forall x. Locality -&gt; Rep Locality x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309163"><span id="local-6989586621689309165"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
+</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309940"><span id="local-6989586621689309942"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
 </span><span id="line-118"></span><span>
-</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309155"><span id="local-6989586621689309157"><span id="local-6989586621689309159"><span id="local-6989586621689309161"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span></span></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309932"><span id="local-6989586621689309934"><span id="local-6989586621689309936"><span id="local-6989586621689309938"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span></span></span><span>
 </span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309151"><span id="local-6989586621689309153"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
+</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309928"><span id="local-6989586621689309930"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span>
 </span><span id="line-122"></span><span>
-</span><span id="line-123"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309146"><span id="local-6989586621689309148"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-123"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309923"><span id="local-6989586621689309925"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-124"></span><span>  </span><span class="annot"><span class="annottext">Locality
-</span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span> </span><span id="local-6989586621689309145"><span class="annot"><span class="annottext">&lt;&gt; :: Locality -&gt; Locality -&gt; Locality
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span id="local-6989586621689309144"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309144"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309144"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-125"></span><span>  </span><span id="local-6989586621689309143"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309143"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span> </span><span id="local-6989586621689309922"><span class="annot"><span class="annottext">&lt;&gt; :: Locality -&gt; Locality -&gt; Locality
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span id="local-6989586621689309921"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621689309921"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621689309921"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span id="local-6989586621689309920"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621689309920"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Locality
 </span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309143"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-126"></span><span>  </span><span id="local-6989586621689309142"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309142"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span id="local-6989586621689309141"><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309141"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309142"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
+</span><a href="#local-6989586621689309920"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621689309919"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621689309919"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span id="local-6989586621689309918"><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621689309918"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621689309919"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Locality -&gt; Locality -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309141"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
-</span><a href="#local-6989586621689309142"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689309918"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
+</span><a href="#local-6989586621689309919"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-127"></span><span>  </span><span class="annot"><span class="annottext">Locality
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Locality
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
 </span><a href="Hasura.Server.Telemetry.Counters.html#Heterogeneous"><span class="hs-identifier hs-var">Heterogeneous</span></a></span><span>
 </span><span id="line-128"></span><span>
-</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309135"><span id="local-6989586621689309137"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-130"></span><span>  </span><span id="local-6989586621689309133"><span class="annot"><span class="annottext">mempty :: Locality
+</span><span id="line-129"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309912"><span id="local-6989586621689309914"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Locality"><span class="hs-identifier hs-type">Locality</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621689309910"><span class="annot"><span class="annottext">mempty :: Locality
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Locality
 </span><a href="Hasura.Server.Telemetry.Counters.html#Empty"><span class="hs-identifier hs-var">Empty</span></a></span><span>
 </span><span id="line-131"></span><span>
 </span><span id="line-132"></span><span class="hs-comment">-- | Was this a query over http or websockets?</span><span>
-</span><span id="line-133"></span><span id="local-6989586621689309131"><span id="local-6989586621689309132"></span></span><span class="hs-keyword">data</span><span> </span><span id="Transport"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-var">Transport</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HTTP"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#HTTP"><span class="hs-identifier hs-var">HTTP</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="WebSocket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#WebSocket"><span class="hs-identifier hs-var">WebSocket</span></a></span></span><span>
-</span><span id="line-134"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309113"><span id="local-6989586621689309115"><span id="local-6989586621689309117"><span id="local-6989586621689309119"><span id="local-6989586621689309121"><span id="local-6989586621689309123"><span id="local-6989586621689309125"><span id="local-6989586621689309127"><span class="annot"><span class="annottext">Int -&gt; Transport
+</span><span id="line-133"></span><span id="local-6989586621689309908"><span id="local-6989586621689309909"></span></span><span class="hs-keyword">data</span><span> </span><span id="Transport"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-var">Transport</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HTTP"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#HTTP"><span class="hs-identifier hs-var">HTTP</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="WebSocket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#WebSocket"><span class="hs-identifier hs-var">WebSocket</span></a></span></span><span>
+</span><span id="line-134"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309890"><span id="local-6989586621689309892"><span id="local-6989586621689309894"><span id="local-6989586621689309896"><span id="local-6989586621689309898"><span id="local-6989586621689309900"><span id="local-6989586621689309902"><span id="local-6989586621689309904"><span class="annot"><span class="annottext">Int -&gt; Transport
 Transport -&gt; Int
 Transport -&gt; [Transport]
 Transport -&gt; Transport
@@ -633,7 +633,7 @@ pred :: Transport -&gt; Transport
 $cpred :: Transport -&gt; Transport
 succ :: Transport -&gt; Transport
 $csucc :: Transport -&gt; Transport
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309107"><span id="local-6989586621689309109"><span id="local-6989586621689309111"><span class="annot"><span class="annottext">Int -&gt; Transport -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309884"><span id="local-6989586621689309886"><span id="local-6989586621689309888"><span class="annot"><span class="annottext">Int -&gt; Transport -&gt; ShowS
 [Transport] -&gt; ShowS
 Transport -&gt; String
 (Int -&gt; Transport -&gt; ShowS)
@@ -648,7 +648,7 @@ show :: Transport -&gt; String
 $cshow :: Transport -&gt; String
 showsPrec :: Int -&gt; Transport -&gt; ShowS
 $cshowsPrec :: Int -&gt; Transport -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309103"><span id="local-6989586621689309105"><span class="annot"><span class="annottext">Transport -&gt; Transport -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309880"><span id="local-6989586621689309882"><span class="annot"><span class="annottext">Transport -&gt; Transport -&gt; Bool
 (Transport -&gt; Transport -&gt; Bool)
 -&gt; (Transport -&gt; Transport -&gt; Bool) -&gt; Eq Transport
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -656,7 +656,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Transport -&gt; Transport -&gt; Bool
 == :: Transport -&gt; Transport -&gt; Bool
 $c== :: Transport -&gt; Transport -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309088"><span id="local-6989586621689309090"><span id="local-6989586621689309092"><span id="local-6989586621689309094"><span id="local-6989586621689309096"><span id="local-6989586621689309098"><span id="local-6989586621689309100"><span class="annot"><span class="annottext">Eq Transport
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309865"><span id="local-6989586621689309867"><span id="local-6989586621689309869"><span id="local-6989586621689309871"><span id="local-6989586621689309873"><span id="local-6989586621689309875"><span id="local-6989586621689309877"><span class="annot"><span class="annottext">Eq Transport
 Eq Transport
 -&gt; (Transport -&gt; Transport -&gt; Ordering)
 -&gt; (Transport -&gt; Transport -&gt; Bool)
@@ -704,17 +704,17 @@ $cto :: forall x. Rep Transport x -&gt; Transport
 $cfrom :: forall x. Transport -&gt; Rep Transport x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-135"></span><span>
-</span><span id="line-136"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309082"><span id="local-6989586621689309084"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
+</span><span id="line-136"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309859"><span id="local-6989586621689309861"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309074"><span id="local-6989586621689309076"><span id="local-6989586621689309078"><span id="local-6989586621689309080"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span></span></span><span>
+</span><span id="line-138"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309851"><span id="local-6989586621689309853"><span id="local-6989586621689309855"><span id="local-6989586621689309857"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span></span></span><span>
 </span><span id="line-139"></span><span>
-</span><span id="line-140"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309070"><span id="local-6989586621689309072"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
+</span><span id="line-140"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309847"><span id="local-6989586621689309849"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#Transport"><span class="hs-identifier hs-type">Transport</span></a></span></span></span><span>
 </span><span id="line-141"></span><span>
 </span><span id="line-142"></span><span class="hs-comment">-- | The timings and counts here were from requests with total time longer than</span><span>
 </span><span id="line-143"></span><span class="hs-comment">-- 'bucketGreaterThan' (but less than any larger bucket cutoff times).</span><span>
-</span><span id="line-144"></span><span id="local-6989586621689309068"><span id="local-6989586621689309069"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-special">{</span><span id="%24sel%3AbucketGreaterThan%3ARunningTimeBucket"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; Seconds
+</span><span id="line-144"></span><span id="local-6989586621689309845"><span id="local-6989586621689309846"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RunningTimeBucket"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RunningTimeBucket"><span class="hs-identifier hs-var">RunningTimeBucket</span></a></span></span><span> </span><span class="hs-special">{</span><span id="%24sel%3AbucketGreaterThan%3ARunningTimeBucket"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; Seconds
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AbucketGreaterThan%3ARunningTimeBucket"><span class="hs-identifier hs-var hs-var">bucketGreaterThan</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-145"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309051"><span id="local-6989586621689309053"><span id="local-6989586621689309055"><span id="local-6989586621689309057"><span id="local-6989586621689309059"><span id="local-6989586621689309061"><span id="local-6989586621689309063"><span class="annot"><span class="annottext">Eq RunningTimeBucket
+</span><span id="line-145"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309828"><span id="local-6989586621689309830"><span id="local-6989586621689309832"><span id="local-6989586621689309834"><span id="local-6989586621689309836"><span id="local-6989586621689309838"><span id="local-6989586621689309840"><span class="annot"><span class="annottext">Eq RunningTimeBucket
 Eq RunningTimeBucket
 -&gt; (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Ordering)
 -&gt; (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool)
@@ -752,7 +752,7 @@ $c&lt; :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 compare :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Ordering
 $ccompare :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Ordering
 $cp1Ord :: Eq RunningTimeBucket
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309047"><span id="local-6989586621689309049"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309824"><span id="local-6989586621689309826"><span class="annot"><span class="annottext">RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool)
 -&gt; (RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool)
 -&gt; Eq RunningTimeBucket
@@ -761,7 +761,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 == :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
 $c== :: RunningTimeBucket -&gt; RunningTimeBucket -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309041"><span id="local-6989586621689309043"><span id="local-6989586621689309045"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309818"><span id="local-6989586621689309820"><span id="local-6989586621689309822"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; ShowS
 [RunningTimeBucket] -&gt; ShowS
 RunningTimeBucket -&gt; String
 (Int -&gt; RunningTimeBucket -&gt; ShowS)
@@ -785,7 +785,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep RunningTimeBucket x -&gt; RunningTimeBucket
 $cfrom :: forall x. RunningTimeBucket -&gt; Rep RunningTimeBucket x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309031"><span id="local-6989586621689309033"><span id="local-6989586621689309035"><span id="local-6989586621689309037"><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309808"><span id="local-6989586621689309810"><span id="local-6989586621689309812"><span id="local-6989586621689309814"><span class="annot"><span class="annottext">[RunningTimeBucket] -&gt; Value
 [RunningTimeBucket] -&gt; Encoding
 RunningTimeBucket -&gt; Value
 RunningTimeBucket -&gt; Encoding
@@ -808,7 +808,7 @@ toEncoding :: RunningTimeBucket -&gt; Encoding
 $ctoEncoding :: RunningTimeBucket -&gt; Encoding
 toJSON :: RunningTimeBucket -&gt; Value
 $ctoJSON :: RunningTimeBucket -&gt; Value
-</span><a href="#local-6989586621689309031"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">A.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309027"><span id="local-6989586621689309029"><span class="annot"><span class="annottext">Value -&gt; Parser [RunningTimeBucket]
+</span><a href="#local-6989586621689309808"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">A.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309804"><span id="local-6989586621689309806"><span class="annot"><span class="annottext">Value -&gt; Parser [RunningTimeBucket]
 Value -&gt; Parser RunningTimeBucket
 (Value -&gt; Parser RunningTimeBucket)
 -&gt; (Value -&gt; Parser [RunningTimeBucket])
@@ -819,7 +819,7 @@ parseJSONList :: Value -&gt; Parser [RunningTimeBucket]
 $cparseJSONList :: Value -&gt; Parser [RunningTimeBucket]
 parseJSON :: Value -&gt; Parser RunningTimeBucket
 $cparseJSON :: Value -&gt; Parser RunningTimeBucket
-</span><a href="#local-6989586621689309027"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">A.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309023"><span id="local-6989586621689309025"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; Int
+</span><a href="#local-6989586621689309804"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">A.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309800"><span id="local-6989586621689309802"><span class="annot"><span class="annottext">Int -&gt; RunningTimeBucket -&gt; Int
 RunningTimeBucket -&gt; Int
 (Int -&gt; RunningTimeBucket -&gt; Int)
 -&gt; (RunningTimeBucket -&gt; Int) -&gt; Hashable RunningTimeBucket
@@ -828,7 +828,7 @@ hash :: RunningTimeBucket -&gt; Int
 $chash :: RunningTimeBucket -&gt; Int
 hashWithSalt :: Int -&gt; RunningTimeBucket -&gt; Int
 $chashWithSalt :: Int -&gt; RunningTimeBucket -&gt; Int
-</span><a href="#local-6989586621689309023"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689309800"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span class="hs-comment">-- NOTE: an HDR histogram is a nice way to collect metrics when you don't know</span><span>
 </span><span id="line-148"></span><span class="hs-comment">-- a priori what the most useful binning is. It's not clear how we'd make use</span><span>
@@ -846,21 +846,21 @@ $chashWithSalt :: Int -&gt; RunningTimeBucket -&gt; Int
 </span><span id="line-153"></span><span>
 </span><span id="line-154"></span><span class="hs-comment">-- | Save a timing metric sample in our in-memory store. These will be</span><span>
 </span><span id="line-155"></span><span class="hs-comment">-- accumulated and uploaded periodically in &quot;Hasura.Server.Telemetry&quot;.</span><span>
-</span><span id="line-156"></span><span id="local-6989586621689309021"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-type">recordTimingMetric</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689309021"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689309021"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-156"></span><span id="local-6989586621689309798"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-type">recordTimingMetric</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689309798"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689309798"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
 </span><span id="line-157"></span><span id="recordTimingMetric"><span class="annot"><span class="annottext">recordTimingMetric :: RequestDimensions -&gt; RequestTimings -&gt; m ()
-</span><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-var hs-var">recordTimingMetric</span></a></span></span><span> </span><span id="local-6989586621689309020"><span class="annot"><span class="annottext">RequestDimensions
-</span><a href="#local-6989586621689309020"><span class="hs-identifier hs-var">reqDimensions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689309018"><span id="local-6989586621689309019"><span class="annot"><span class="annottext">Seconds
+</span><a href="Hasura.Server.Telemetry.Counters.html#recordTimingMetric"><span class="hs-identifier hs-var hs-var">recordTimingMetric</span></a></span></span><span> </span><span id="local-6989586621689309797"><span class="annot"><span class="annottext">RequestDimensions
+</span><a href="#local-6989586621689309797"><span class="hs-identifier hs-var">reqDimensions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimings"><span class="hs-identifier hs-type">RequestTimings</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689309795"><span id="local-6989586621689309796"><span class="annot"><span class="annottext">Seconds
 telemTimeTot :: Seconds
 telemTimeIO :: Seconds
 $sel:telemTimeTot:RequestTimings :: RequestTimings -&gt; Seconds
 $sel:telemTimeIO:RequestTimings :: RequestTimings -&gt; Seconds
-</span><a href="#local-6989586621689309018"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+</span><a href="#local-6989586621689309795"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; IO () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-158"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689309016"><span class="annot"><span class="annottext">ourBucket :: RunningTimeBucket
-</span><a href="#local-6989586621689309016"><span class="hs-identifier hs-var hs-var">ourBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-158"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689309793"><span class="annot"><span class="annottext">ourBucket :: RunningTimeBucket
+</span><a href="#local-6989586621689309793"><span class="hs-identifier hs-var hs-var">ourBucket</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-159"></span><span>        </span><span class="annot"><span class="annottext">RunningTimeBucket -&gt; Maybe RunningTimeBucket -&gt; RunningTimeBucket
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Seconds -&gt; RunningTimeBucket
@@ -882,7 +882,7 @@ forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; RunningTimeBucket
 </span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">Seconds
-</span><a href="#local-6989586621689309018"><span class="hs-identifier hs-var">telemTimeTot</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; [RunningTimeBucket])
+</span><a href="#local-6989586621689309795"><span class="hs-identifier hs-var">telemTimeTot</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([RunningTimeBucket] -&gt; [RunningTimeBucket])
 -&gt; [RunningTimeBucket] -&gt; [RunningTimeBucket]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -950,8 +950,8 @@ forall k v.
 </span><span class="hs-identifier hs-var">HM.insertWith</span></span><span> </span><span class="annot"><span class="annottext">RequestTimingsCount -&gt; RequestTimingsCount -&gt; RequestTimingsCount
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">(&lt;&gt;)</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestDimensions
-</span><a href="#local-6989586621689309020"><span class="hs-identifier hs-var">reqDimensions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RunningTimeBucket
-</span><a href="#local-6989586621689309016"><span class="hs-identifier hs-var">ourBucket</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestTimingsCount :: Seconds -&gt; Seconds -&gt; Word -&gt; RequestTimingsCount
+</span><a href="#local-6989586621689309797"><span class="hs-identifier hs-var">reqDimensions</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RunningTimeBucket
+</span><a href="#local-6989586621689309793"><span class="hs-identifier hs-var">ourBucket</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestTimingsCount :: Seconds -&gt; Seconds -&gt; Word -&gt; RequestTimingsCount
 </span><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:telemCount:RequestTimingsCount :: Word
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AtelemCount%3ARequestTimingsCount"><span class="hs-identifier hs-var">telemCount</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
 </span><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Seconds
@@ -959,19 +959,19 @@ telemTimeTot :: Seconds
 telemTimeIO :: Seconds
 $sel:telemTimeTot:RequestTimingsCount :: Seconds
 $sel:telemTimeIO:RequestTimingsCount :: Seconds
-</span><a href="#local-6989586621689309018"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689309795"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-166"></span><span>
 </span><span id="line-167"></span><span class="hs-comment">-- | The final shape of this part of our metrics data JSON. This should allow</span><span>
 </span><span id="line-168"></span><span class="hs-comment">-- reasonably efficient querying using GIN indexes and JSONB containment</span><span>
 </span><span id="line-169"></span><span class="hs-comment">-- operations (which treat arrays as sets).</span><span>
-</span><span id="line-170"></span><span id="local-6989586621689309005"><span id="local-6989586621689309006"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span>
+</span><span id="line-170"></span><span id="local-6989586621689309782"><span id="local-6989586621689309783"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetrics"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-var">ServiceTimingMetrics</span></a></span></span><span>
 </span><span id="line-171"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | This is set to a new unique value when the counters reset (e.g. because of a restart)</span><span>
 </span><span id="line-172"></span><span>    </span><span id="%24sel%3AcollectionTag%3AServiceTimingMetrics"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; Int
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AcollectionTag%3AServiceTimingMetrics"><span class="hs-identifier hs-var hs-var">collectionTag</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-173"></span><span>    </span><span id="%24sel%3AserviceTimingMetrics%3AServiceTimingMetrics"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; [ServiceTimingMetric]
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3AserviceTimingMetrics%3AServiceTimingMetrics"><span class="hs-identifier hs-var hs-var">serviceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-174"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689308996"><span id="local-6989586621689308998"><span id="local-6989586621689309000"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetrics -&gt; ShowS
+</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309773"><span id="local-6989586621689309775"><span id="local-6989586621689309777"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetrics -&gt; ShowS
 [ServiceTimingMetrics] -&gt; ShowS
 ServiceTimingMetrics -&gt; String
 (Int -&gt; ServiceTimingMetrics -&gt; ShowS)
@@ -995,7 +995,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ServiceTimingMetrics x -&gt; ServiceTimingMetrics
 $cfrom :: forall x. ServiceTimingMetrics -&gt; Rep ServiceTimingMetrics x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689308990"><span id="local-6989586621689308992"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309767"><span id="local-6989586621689309769"><span class="annot"><span class="annottext">ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
 (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool)
 -&gt; (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool)
 -&gt; Eq ServiceTimingMetrics
@@ -1004,7 +1004,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
 == :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
 $c== :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689308975"><span id="local-6989586621689308977"><span id="local-6989586621689308979"><span id="local-6989586621689308981"><span id="local-6989586621689308983"><span id="local-6989586621689308985"><span id="local-6989586621689308987"><span class="annot"><span class="annottext">Eq ServiceTimingMetrics
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309752"><span id="local-6989586621689309754"><span id="local-6989586621689309756"><span id="local-6989586621689309758"><span id="local-6989586621689309760"><span id="local-6989586621689309762"><span id="local-6989586621689309764"><span class="annot"><span class="annottext">Eq ServiceTimingMetrics
 Eq ServiceTimingMetrics
 -&gt; (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Ordering)
 -&gt; (ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Bool)
@@ -1051,7 +1051,7 @@ $ccompare :: ServiceTimingMetrics -&gt; ServiceTimingMetrics -&gt; Ordering
 $cp1Ord :: Eq ServiceTimingMetrics
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span id="local-6989586621689308973"><span id="local-6989586621689308974"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span>
+</span><span id="line-177"></span><span id="local-6989586621689309750"><span id="local-6989586621689309751"></span></span><span class="hs-keyword">data</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServiceTimingMetric"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-var">ServiceTimingMetric</span></a></span></span><span>
 </span><span id="line-178"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="%24sel%3Adimensions%3AServiceTimingMetric"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; RequestDimensions
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3Adimensions%3AServiceTimingMetric"><span class="hs-identifier hs-var hs-var">dimensions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestDimensions"><span class="hs-identifier hs-type">RequestDimensions</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-179"></span><span>    </span><span id="%24sel%3Abucket%3AServiceTimingMetric"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; RunningTimeBucket
@@ -1059,7 +1059,7 @@ $cp1Ord :: Eq ServiceTimingMetrics
 </span><span id="line-180"></span><span>    </span><span id="%24sel%3Ametrics%3AServiceTimingMetric"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; RequestTimingsCount
 </span><a href="Hasura.Server.Telemetry.Counters.html#%24sel%3Ametrics%3AServiceTimingMetric"><span class="hs-identifier hs-var hs-var">metrics</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#RequestTimingsCount"><span class="hs-identifier hs-type">RequestTimingsCount</span></a></span><span>
 </span><span id="line-181"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-182"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689308963"><span id="local-6989586621689308965"><span id="local-6989586621689308967"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetric -&gt; ShowS
+</span><span id="line-182"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689309740"><span id="local-6989586621689309742"><span id="local-6989586621689309744"><span class="annot"><span class="annottext">Int -&gt; ServiceTimingMetric -&gt; ShowS
 [ServiceTimingMetric] -&gt; ShowS
 ServiceTimingMetric -&gt; String
 (Int -&gt; ServiceTimingMetric -&gt; ShowS)
@@ -1083,7 +1083,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ServiceTimingMetric x -&gt; ServiceTimingMetric
 $cfrom :: forall x. ServiceTimingMetric -&gt; Rep ServiceTimingMetric x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689308957"><span id="local-6989586621689308959"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309734"><span id="local-6989586621689309736"><span class="annot"><span class="annottext">ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
 (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool)
 -&gt; (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool)
 -&gt; Eq ServiceTimingMetric
@@ -1092,7 +1092,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
 == :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
 $c== :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689308942"><span id="local-6989586621689308944"><span id="local-6989586621689308946"><span id="local-6989586621689308948"><span id="local-6989586621689308950"><span id="local-6989586621689308952"><span id="local-6989586621689308954"><span class="annot"><span class="annottext">Eq ServiceTimingMetric
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309719"><span id="local-6989586621689309721"><span id="local-6989586621689309723"><span id="local-6989586621689309725"><span id="local-6989586621689309727"><span id="local-6989586621689309729"><span id="local-6989586621689309731"><span class="annot"><span class="annottext">Eq ServiceTimingMetric
 Eq ServiceTimingMetric
 -&gt; (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Ordering)
 -&gt; (ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Bool)
@@ -1134,18 +1134,18 @@ $ccompare :: ServiceTimingMetric -&gt; ServiceTimingMetric -&gt; Ordering
 $cp1Ord :: Eq ServiceTimingMetric
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-183"></span><span>
-</span><span id="line-184"></span><span class="hs-special">$(</span><span id="local-6989586621689308930"><span id="local-6989586621689308932"><span id="local-6989586621689308934"><span id="local-6989586621689308936"><span id="local-6989586621689308938"><span id="local-6989586621689308940"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestTimingsCount</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-185"></span><span class="hs-special">$(</span><span id="local-6989586621689308915"><span id="local-6989586621689308917"><span id="local-6989586621689308919"><span id="local-6989586621689308921"><span id="local-6989586621689308923"><span id="local-6989586621689308925"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestDimensions</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span class="hs-special">$(</span><span id="local-6989586621689309707"><span id="local-6989586621689309709"><span id="local-6989586621689309711"><span id="local-6989586621689309713"><span id="local-6989586621689309715"><span id="local-6989586621689309717"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestTimingsCount</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-185"></span><span class="hs-special">$(</span><span id="local-6989586621689309692"><span id="local-6989586621689309694"><span id="local-6989586621689309696"><span id="local-6989586621689309698"><span id="local-6989586621689309700"><span id="local-6989586621689309702"><span class="hs-identifier">A.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RequestDimensions</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-186"></span><span>
-</span><span id="line-187"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689308907"><span id="local-6989586621689308909"><span id="local-6989586621689308911"><span id="local-6989586621689308913"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span></span></span><span>
+</span><span id="line-187"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309684"><span id="local-6989586621689309686"><span id="local-6989586621689309688"><span id="local-6989586621689309690"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span></span></span><span>
 </span><span id="line-188"></span><span>
-</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689308903"><span id="local-6989586621689308905"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span><span>
+</span><span id="line-189"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309680"><span id="local-6989586621689309682"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span></span></span><span>
 </span><span id="line-190"></span><span>
-</span><span id="line-191"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689308895"><span id="local-6989586621689308897"><span id="local-6989586621689308899"><span id="local-6989586621689308901"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span></span></span><span>
+</span><span id="line-191"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309672"><span id="local-6989586621689309674"><span id="local-6989586621689309676"><span id="local-6989586621689309678"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span></span></span><span>
 </span><span id="line-192"></span><span>
-</span><span id="line-193"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689308891"><span id="local-6989586621689308893"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span><span>
+</span><span id="line-193"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689309668"><span id="local-6989586621689309670"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span></span><span>
 </span><span id="line-194"></span><span>
-</span><span id="line-195"></span><span id="local-6989586621689308890"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#dumpServiceTimingMetrics"><span class="hs-identifier hs-type">dumpServiceTimingMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689308890"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689308890"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span><span>
+</span><span id="line-195"></span><span id="local-6989586621689309667"><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#dumpServiceTimingMetrics"><span class="hs-identifier hs-type">dumpServiceTimingMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689309667"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689309667"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetrics"><span class="hs-identifier hs-type">ServiceTimingMetrics</span></a></span></span><span>
 </span><span id="line-196"></span><span id="dumpServiceTimingMetrics"><span class="annot"><span class="annottext">dumpServiceTimingMetrics :: m ServiceTimingMetrics
 </span><a href="Hasura.Server.Telemetry.Counters.html#dumpServiceTimingMetrics"><span class="hs-identifier hs-var hs-var">dumpServiceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO ServiceTimingMetrics -&gt; m ServiceTimingMetrics
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
@@ -1153,8 +1153,8 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 -&gt; IO ServiceTimingMetrics -&gt; m ServiceTimingMetrics
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-197"></span><span>  </span><span id="local-6989586621689308889"><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
-</span><a href="#local-6989586621689308889"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef
+</span><span id="line-197"></span><span>  </span><span id="local-6989586621689309666"><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
+</span><a href="#local-6989586621689309666"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IORef
   (HashMap
      (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 -&gt; IO
@@ -1165,8 +1165,8 @@ forall a. IORef a -&gt; IO a
   (HashMap
      (RequestDimensions, RunningTimeBucket) RequestTimingsCount)
 </span><a href="Hasura.Server.Telemetry.Counters.html#requestCounters"><span class="hs-identifier hs-var">requestCounters</span></a></span><span>
-</span><span id="line-198"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689308887"><span class="annot"><span class="annottext">serviceTimingMetrics :: [ServiceTimingMetric]
-</span><a href="#local-6989586621689308887"><span class="hs-identifier hs-var hs-var">serviceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
+</span><span id="line-198"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689309664"><span class="annot"><span class="annottext">serviceTimingMetrics :: [ServiceTimingMetric]
+</span><a href="#local-6989586621689309664"><span class="hs-identifier hs-var hs-var">serviceTimingMetrics</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
   -&gt; ServiceTimingMetric)
  -&gt; [((RequestDimensions, RunningTimeBucket), RequestTimingsCount)]
  -&gt; [ServiceTimingMetric])
@@ -1184,7 +1184,7 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 -&gt; [((RequestDimensions, RunningTimeBucket), RequestTimingsCount)]
 forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">HashMap (RequestDimensions, RunningTimeBucket) RequestTimingsCount
-</span><a href="#local-6989586621689308889"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
+</span><a href="#local-6989586621689309666"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
   -&gt; ServiceTimingMetric)
  -&gt; [ServiceTimingMetric])
 -&gt; (((RequestDimensions, RunningTimeBucket), RequestTimingsCount)
@@ -1192,10 +1192,10 @@ forall k v. HashMap k v -&gt; [(k, v)]
 -&gt; [ServiceTimingMetric]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-199"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621689308884"><span class="annot"><span class="annottext">RequestDimensions
-</span><a href="#local-6989586621689308884"><span class="hs-identifier hs-var">dimensions</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689308883"><span class="annot"><span class="annottext">RunningTimeBucket
-</span><a href="#local-6989586621689308883"><span class="hs-identifier hs-var">bucket</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621689308882"><span class="annot"><span class="annottext">RequestTimingsCount
-</span><a href="#local-6989586621689308882"><span class="hs-identifier hs-var">metrics</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetric :: RequestDimensions
+</span><span id="line-199"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621689309661"><span class="annot"><span class="annottext">RequestDimensions
+</span><a href="#local-6989586621689309661"><span class="hs-identifier hs-var">dimensions</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309660"><span class="annot"><span class="annottext">RunningTimeBucket
+</span><a href="#local-6989586621689309660"><span class="hs-identifier hs-var">bucket</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621689309659"><span class="annot"><span class="annottext">RequestTimingsCount
+</span><a href="#local-6989586621689309659"><span class="hs-identifier hs-var">metrics</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ServiceTimingMetric :: RequestDimensions
 -&gt; RunningTimeBucket -&gt; RequestTimingsCount -&gt; ServiceTimingMetric
 </span><a href="Hasura.Server.Telemetry.Counters.html#ServiceTimingMetric"><span class="hs-identifier hs-type">ServiceTimingMetric</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">RunningTimeBucket
 RequestTimingsCount
@@ -1206,9 +1206,9 @@ dimensions :: RequestDimensions
 $sel:metrics:ServiceTimingMetric :: RequestTimingsCount
 $sel:bucket:ServiceTimingMetric :: RunningTimeBucket
 $sel:dimensions:ServiceTimingMetric :: RequestDimensions
-</span><a href="#local-6989586621689308882"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-200"></span><span>      </span><span id="local-6989586621689308881"><span class="annot"><span class="annottext">collectionTag :: Int
-</span><a href="#local-6989586621689308881"><span class="hs-identifier hs-var hs-var">collectionTag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; Int
+</span><a href="#local-6989586621689309659"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-200"></span><span>      </span><span id="local-6989586621689309658"><span class="annot"><span class="annottext">collectionTag :: Int
+</span><a href="#local-6989586621689309658"><span class="hs-identifier hs-var hs-var">collectionTag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; Int
 forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">round</span></span><span> </span><span class="annot"><span class="annottext">POSIXTime
 </span><a href="Hasura.Server.Telemetry.Counters.html#approxStartTime"><span class="hs-identifier hs-var">approxStartTime</span></a></span><span>
@@ -1221,5 +1221,5 @@ collectionTag :: Int
 serviceTimingMetrics :: [ServiceTimingMetric]
 $sel:serviceTimingMetrics:ServiceTimingMetrics :: [ServiceTimingMetric]
 $sel:collectionTag:ServiceTimingMetrics :: Int
-</span><a href="#local-6989586621689308881"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689309658"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-202"></span></pre></body></html>
