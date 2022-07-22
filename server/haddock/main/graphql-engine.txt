@@ -29945,9 +29945,12 @@ HCDowngrade :: !DowngradeOptions -> HGECommand a
 -- | HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl
 HGEOptionsRaw :: !PostgresConnInfo (Maybe PostgresRawConnInfo) -> !Maybe String -> !HGECommand impl -> HGEOptionsRaw impl
-[horDatabaseUrl] :: HGEOptionsRaw impl -> !PostgresConnInfo (Maybe PostgresRawConnInfo)
-[horMetadataDbUrl] :: HGEOptionsRaw impl -> !Maybe String
-[horCommand] :: HGEOptionsRaw impl -> !HGECommand impl
+[_horDatabaseUrl] :: HGEOptionsRaw impl -> !PostgresConnInfo (Maybe PostgresRawConnInfo)
+[_horMetadataDbUrl] :: HGEOptionsRaw impl -> !Maybe String
+[_horCommand] :: HGEOptionsRaw impl -> !HGECommand impl
+horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
+horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
+horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
 
 -- | The final processed HGE options.
 data HGEOptions impl

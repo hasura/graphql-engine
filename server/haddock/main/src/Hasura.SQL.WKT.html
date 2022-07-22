@@ -12,12 +12,12 @@
 </span><span id="line-12"></span><span class="hs-keyword">newtype</span><span> </span><span id="WKT"><span class="annot"><a href="Hasura.SQL.WKT.html#WKT"><span class="hs-identifier hs-var">WKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WKT"><span class="annot"><a href="Hasura.SQL.WKT.html#WKT"><span class="hs-identifier hs-var">WKT</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getWKT"><span class="annot"><span class="annottext">WKT -&gt; Text
 </span><a href="Hasura.SQL.WKT.html#getWKT"><span class="hs-identifier hs-var hs-var">getWKT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
 </span><span id="line-13"></span><span>
-</span><span id="line-14"></span><span class="hs-keyword">class</span><span> </span><span id="ToWKT"><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-var">ToWKT</span></a></span></span><span> </span><span id="local-6989586621689307944"><span class="annot"><a href="#local-6989586621689307944"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-15"></span><span>  </span><span id="toWKT"><span class="annot"><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-type">toWKT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689307944"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#WKT"><span class="hs-identifier hs-type">WKT</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">class</span><span> </span><span id="ToWKT"><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-var">ToWKT</span></a></span></span><span> </span><span id="local-6989586621689308480"><span class="annot"><a href="#local-6989586621689308480"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-15"></span><span>  </span><span id="toWKT"><span class="annot"><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-type">toWKT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689308480"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#WKT"><span class="hs-identifier hs-type">WKT</span></a></span><span>
 </span><span id="line-16"></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Point"><span class="hs-identifier hs-type">G.Point</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621689307902"><span class="annot"><span class="annottext">toWKT :: Point -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307902"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621689308438"><span class="annot"><span class="annottext">toWKT :: Point -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308438"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var">mkWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;POINT&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Either QErr Text -&gt; Either QErr WKT)
 -&gt; (Point -&gt; Either QErr Text) -&gt; Point -&gt; Either QErr WKT
@@ -30,8 +30,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.SQL.GeoJSON.html#unPoint"><span class="hs-identifier hs-var hs-var">G.unPoint</span></a></span><span>
 </span><span id="line-19"></span><span>
 </span><span id="line-20"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiPoint"><span class="hs-identifier hs-type">G.MultiPoint</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621689307896"><span class="annot"><span class="annottext">toWKT :: MultiPoint -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307896"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621689308432"><span class="annot"><span class="annottext">toWKT :: MultiPoint -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308432"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var">mkWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MULTIPOINT&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Either QErr Text -&gt; Either QErr WKT)
 -&gt; (MultiPoint -&gt; Either QErr Text)
@@ -46,8 +46,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.SQL.GeoJSON.html#unMultiPoint"><span class="hs-identifier hs-var hs-var">G.unMultiPoint</span></a></span><span>
 </span><span id="line-22"></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">G.LineString</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>  </span><span id="local-6989586621689307892"><span class="annot"><span class="annottext">toWKT :: LineString -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307892"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621689308428"><span class="annot"><span class="annottext">toWKT :: LineString -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308428"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var">mkWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;LINESTRING&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Either QErr Text -&gt; Either QErr WKT)
 -&gt; (LineString -&gt; Either QErr Text)
@@ -58,8 +58,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.SQL.WKT.html#lineStringToText"><span class="hs-identifier hs-var">lineStringToText</span></a></span><span>
 </span><span id="line-25"></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiLineString"><span class="hs-identifier hs-type">G.MultiLineString</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>  </span><span id="local-6989586621689307889"><span class="annot"><span class="annottext">toWKT :: MultiLineString -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307889"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621689308425"><span class="annot"><span class="annottext">toWKT :: MultiLineString -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308425"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var">mkWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MULTILINESTRING&quot;</span></span><span>
@@ -107,8 +107,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.SQL.GeoJSON.html#unMultiLineString"><span class="hs-identifier hs-var hs-var">G.unMultiLineString</span></a></span><span>
 </span><span id="line-32"></span><span>
 </span><span id="line-33"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Polygon"><span class="hs-identifier hs-type">G.Polygon</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-34"></span><span>  </span><span id="local-6989586621689307884"><span class="annot"><span class="annottext">toWKT :: Polygon -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307884"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-34"></span><span>  </span><span id="local-6989586621689308420"><span class="annot"><span class="annottext">toWKT :: Polygon -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308420"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var">mkWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;POLYGON&quot;</span></span><span>
@@ -150,8 +150,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.SQL.GeoJSON.html#unPolygon"><span class="hs-identifier hs-var hs-var">G.unPolygon</span></a></span><span>
 </span><span id="line-39"></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#MultiPolygon"><span class="hs-identifier hs-type">G.MultiPolygon</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621689307880"><span class="annot"><span class="annottext">toWKT :: MultiPolygon -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307880"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621689308416"><span class="annot"><span class="annottext">toWKT :: MultiPolygon -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308416"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var">mkWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MULTIPOLYGON&quot;</span></span><span>
@@ -226,8 +226,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.SQL.GeoJSON.html#unMultiPolygon"><span class="hs-identifier hs-var hs-var">G.unMultiPolygon</span></a></span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryCollection"><span class="hs-identifier hs-type">G.GeometryCollection</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-52"></span><span>  </span><span id="local-6989586621689307877"><span class="annot"><span class="annottext">toWKT :: GeometryCollection -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307877"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621689308413"><span class="annot"><span class="annottext">toWKT :: GeometryCollection -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308413"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-53"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var">mkWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;GEOMETRYCOLLECTION&quot;</span></span><span>
@@ -282,48 +282,48 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="Hasura.SQL.GeoJSON.html#unGeometryCollection"><span class="hs-identifier hs-var hs-var">G.unGeometryCollection</span></a></span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Geometry"><span class="hs-identifier hs-type">G.Geometry</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621689307873"><span class="annot"><span class="annottext">toWKT :: Geometry -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307873"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621689308409"><span class="annot"><span class="annottext">toWKT :: Geometry -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308409"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-60"></span><span>    </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-61"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPoint"><span class="hs-identifier hs-type">G.GPoint</span></a></span><span> </span><span id="local-6989586621689307871"><span class="annot"><span class="annottext">Point
-</span><a href="#local-6989586621689307871"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Point -&gt; Either QErr WKT
+</span><span id="line-61"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPoint"><span class="hs-identifier hs-type">G.GPoint</span></a></span><span> </span><span id="local-6989586621689308407"><span class="annot"><span class="annottext">Point
+</span><a href="#local-6989586621689308407"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Point -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Point
-</span><a href="#local-6989586621689307871"><span class="hs-identifier hs-var">p</span></a></span><span>
-</span><span id="line-62"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPoint"><span class="hs-identifier hs-type">G.GMultiPoint</span></a></span><span> </span><span id="local-6989586621689307869"><span class="annot"><span class="annottext">MultiPoint
-</span><a href="#local-6989586621689307869"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MultiPoint -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308407"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><span id="line-62"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPoint"><span class="hs-identifier hs-type">G.GMultiPoint</span></a></span><span> </span><span id="local-6989586621689308405"><span class="annot"><span class="annottext">MultiPoint
+</span><a href="#local-6989586621689308405"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MultiPoint -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">MultiPoint
-</span><a href="#local-6989586621689307869"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-63"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GLineString"><span class="hs-identifier hs-type">G.GLineString</span></a></span><span> </span><span id="local-6989586621689307867"><span class="annot"><span class="annottext">LineString
-</span><a href="#local-6989586621689307867"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LineString -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308405"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-63"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GLineString"><span class="hs-identifier hs-type">G.GLineString</span></a></span><span> </span><span id="local-6989586621689308403"><span class="annot"><span class="annottext">LineString
+</span><a href="#local-6989586621689308403"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">LineString -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">LineString
-</span><a href="#local-6989586621689307867"><span class="hs-identifier hs-var">l</span></a></span><span>
-</span><span id="line-64"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiLineString"><span class="hs-identifier hs-type">G.GMultiLineString</span></a></span><span> </span><span id="local-6989586621689307865"><span class="annot"><span class="annottext">MultiLineString
-</span><a href="#local-6989586621689307865"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MultiLineString -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308403"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiLineString"><span class="hs-identifier hs-type">G.GMultiLineString</span></a></span><span> </span><span id="local-6989586621689308401"><span class="annot"><span class="annottext">MultiLineString
+</span><a href="#local-6989586621689308401"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MultiLineString -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">MultiLineString
-</span><a href="#local-6989586621689307865"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-65"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPolygon"><span class="hs-identifier hs-type">G.GPolygon</span></a></span><span> </span><span id="local-6989586621689307863"><span class="annot"><span class="annottext">Polygon
-</span><a href="#local-6989586621689307863"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Polygon -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308401"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-65"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GPolygon"><span class="hs-identifier hs-type">G.GPolygon</span></a></span><span> </span><span id="local-6989586621689308399"><span class="annot"><span class="annottext">Polygon
+</span><a href="#local-6989586621689308399"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Polygon -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">Polygon
-</span><a href="#local-6989586621689307863"><span class="hs-identifier hs-var">p</span></a></span><span>
-</span><span id="line-66"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPolygon"><span class="hs-identifier hs-type">G.GMultiPolygon</span></a></span><span> </span><span id="local-6989586621689307861"><span class="annot"><span class="annottext">MultiPolygon
-</span><a href="#local-6989586621689307861"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MultiPolygon -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308399"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><span id="line-66"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GMultiPolygon"><span class="hs-identifier hs-type">G.GMultiPolygon</span></a></span><span> </span><span id="local-6989586621689308397"><span class="annot"><span class="annottext">MultiPolygon
+</span><a href="#local-6989586621689308397"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MultiPolygon -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">MultiPolygon
-</span><a href="#local-6989586621689307861"><span class="hs-identifier hs-var">m</span></a></span><span>
-</span><span id="line-67"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GGeometryCollection"><span class="hs-identifier hs-type">G.GGeometryCollection</span></a></span><span> </span><span id="local-6989586621689307859"><span class="annot"><span class="annottext">GeometryCollection
-</span><a href="#local-6989586621689307859"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GeometryCollection -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308397"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-67"></span><span>      </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GGeometryCollection"><span class="hs-identifier hs-type">G.GGeometryCollection</span></a></span><span> </span><span id="local-6989586621689308395"><span class="annot"><span class="annottext">GeometryCollection
+</span><a href="#local-6989586621689308395"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">GeometryCollection -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">GeometryCollection
-</span><a href="#local-6989586621689307859"><span class="hs-identifier hs-var">g</span></a></span><span>
+</span><a href="#local-6989586621689308395"><span class="hs-identifier hs-var">g</span></a></span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#ToWKT"><span class="hs-identifier hs-type">ToWKT</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#GeometryWithCRS"><span class="hs-identifier hs-type">G.GeometryWithCRS</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-70"></span><span>  </span><span id="local-6989586621689307857"><span class="annot"><span class="annottext">toWKT :: GeometryWithCRS -&gt; Either QErr WKT
-</span><a href="#local-6989586621689307857"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Geometry -&gt; Either QErr WKT
+</span><span id="line-70"></span><span>  </span><span id="local-6989586621689308393"><span class="annot"><span class="annottext">toWKT :: GeometryWithCRS -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308393"><span class="hs-identifier hs-var hs-var hs-var hs-var">toWKT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Geometry -&gt; Either QErr WKT
 forall a. ToWKT a =&gt; a -&gt; Either QErr WKT
 </span><a href="Hasura.SQL.WKT.html#toWKT"><span class="hs-identifier hs-var">toWKT</span></a></span><span> </span><span class="annot"><span class="annottext">(Geometry -&gt; Either QErr WKT)
 -&gt; (GeometryWithCRS -&gt; Geometry)
@@ -335,38 +335,38 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-71"></span><span>
 </span><span id="line-72"></span><span class="annot"><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-type">mkWKT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.SQL.WKT.html#WKT"><span class="hs-identifier hs-type">WKT</span></a></span><span>
 </span><span id="line-73"></span><span id="mkWKT"><span class="annot"><span class="annottext">mkWKT :: Text -&gt; Either QErr Text -&gt; Either QErr WKT
-</span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var hs-var">mkWKT</span></a></span></span><span> </span><span id="local-6989586621689307856"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689307856"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689307855"><span class="annot"><span class="annottext">Either QErr Text
-</span><a href="#local-6989586621689307855"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; WKT
+</span><a href="Hasura.SQL.WKT.html#mkWKT"><span class="hs-identifier hs-var hs-var">mkWKT</span></a></span></span><span> </span><span id="local-6989586621689308392"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689308392"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689308391"><span class="annot"><span class="annottext">Either QErr Text
+</span><a href="#local-6989586621689308391"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; WKT
 </span><a href="Hasura.SQL.WKT.html#WKT"><span class="hs-identifier hs-var">WKT</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; WKT) -&gt; (Text -&gt; Text) -&gt; Text -&gt; WKT
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
-</span><a href="#local-6989586621689307854"><span class="hs-identifier hs-var">wktFormat</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; WKT) -&gt; Either QErr Text -&gt; Either QErr WKT
+</span><a href="#local-6989586621689308390"><span class="hs-identifier hs-var">wktFormat</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; WKT) -&gt; Either QErr Text -&gt; Either QErr WKT
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Either QErr Text
-</span><a href="#local-6989586621689307855"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><a href="#local-6989586621689308391"><span class="hs-identifier hs-var">args</span></a></span><span>
 </span><span id="line-74"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-75"></span><span>    </span><span class="annot"><a href="#local-6989586621689307854"><span class="hs-identifier hs-type">wktFormat</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-76"></span><span>    </span><span id="local-6989586621689307854"><span class="annot"><span class="annottext">wktFormat :: Text -&gt; Text
-</span><a href="#local-6989586621689307854"><span class="hs-identifier hs-var hs-var">wktFormat</span></a></span></span><span> </span><span id="local-6989586621689307852"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689307852"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689307856"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><span id="line-75"></span><span>    </span><span class="annot"><a href="#local-6989586621689308390"><span class="hs-identifier hs-type">wktFormat</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621689308390"><span class="annot"><span class="annottext">wktFormat :: Text -&gt; Text
+</span><a href="#local-6989586621689308390"><span class="hs-identifier hs-var hs-var">wktFormat</span></a></span></span><span> </span><span id="local-6989586621689308388"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689308388"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689308392"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><a href="Hasura.SQL.WKT.html#parens"><span class="hs-identifier hs-var">parens</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689307852"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621689308388"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="annot"><a href="Hasura.SQL.WKT.html#parens"><span class="hs-identifier hs-type">parens</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-79"></span><span id="parens"><span class="annot"><span class="annottext">parens :: Text -&gt; Text
-</span><a href="Hasura.SQL.WKT.html#parens"><span class="hs-identifier hs-var hs-var">parens</span></a></span></span><span> </span><span id="local-6989586621689307851"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689307851"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.SQL.WKT.html#parens"><span class="hs-identifier hs-var hs-var">parens</span></a></span></span><span> </span><span id="local-6989586621689308387"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689308387"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;(&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689307851"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689308387"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;)&quot;</span></span><span>
@@ -396,12 +396,12 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span id="line-83"></span><span>
 </span><span id="line-84"></span><span class="annot"><a href="Hasura.SQL.WKT.html#positionToText"><span class="hs-identifier hs-type">positionToText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">G.Position</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-85"></span><span id="positionToText"><span class="annot"><span class="annottext">positionToText :: Position -&gt; Either QErr Text
-</span><a href="Hasura.SQL.WKT.html#positionToText"><span class="hs-identifier hs-var hs-var">positionToText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">G.Position</span></a></span><span> </span><span id="local-6989586621689307849"><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621689307849"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621689307848"><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621689307848"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span id="local-6989586621689307847"><span class="annot"><span class="annottext">Maybe Double
-</span><a href="#local-6989586621689307847"><span class="hs-identifier hs-var">mz</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.SQL.WKT.html#positionToText"><span class="hs-identifier hs-var hs-var">positionToText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#Position"><span class="hs-identifier hs-type">G.Position</span></a></span><span> </span><span id="local-6989586621689308385"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621689308385"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621689308384"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621689308384"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span id="local-6989586621689308383"><span class="annot"><span class="annottext">Maybe Double
+</span><a href="#local-6989586621689308383"><span class="hs-identifier hs-var">mz</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-86"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe Double
-</span><a href="#local-6989586621689307847"><span class="hs-identifier hs-var">mz</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689308383"><span class="hs-identifier hs-var">mz</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">Maybe Double
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either QErr Text
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -410,7 +410,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621689307849"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689308385"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
@@ -418,7 +418,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Double -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Double
-</span><a href="#local-6989586621689307848"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><a href="#local-6989586621689308384"><span class="hs-identifier hs-var">y</span></a></span><span>
 </span><span id="line-88"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">Double
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">QErr -&gt; Either QErr Text
 forall a b. a -&gt; Either a b
@@ -431,38 +431,38 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-89"></span><span>
 </span><span id="line-90"></span><span class="annot"><a href="Hasura.SQL.WKT.html#lineStringToText"><span class="hs-identifier hs-type">lineStringToText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">G.LineString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-91"></span><span id="lineStringToText"><span class="annot"><span class="annottext">lineStringToText :: LineString -&gt; Either QErr Text
-</span><a href="Hasura.SQL.WKT.html#lineStringToText"><span class="hs-identifier hs-var hs-var">lineStringToText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">G.LineString</span></a></span><span> </span><span id="local-6989586621689307842"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307842"><span class="hs-identifier hs-var">ls1</span></a></span></span><span> </span><span id="local-6989586621689307841"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307841"><span class="hs-identifier hs-var">ls2</span></a></span></span><span> </span><span id="local-6989586621689307840"><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621689307840"><span class="hs-identifier hs-var">lsRest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Position] -&gt; Either QErr Text
+</span><a href="Hasura.SQL.WKT.html#lineStringToText"><span class="hs-identifier hs-var hs-var">lineStringToText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LineString"><span class="hs-identifier hs-type">G.LineString</span></a></span><span> </span><span id="local-6989586621689308378"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621689308378"><span class="hs-identifier hs-var">ls1</span></a></span></span><span> </span><span id="local-6989586621689308377"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621689308377"><span class="hs-identifier hs-var">ls2</span></a></span></span><span> </span><span id="local-6989586621689308376"><span class="annot"><span class="annottext">[Position]
+</span><a href="#local-6989586621689308376"><span class="hs-identifier hs-var">lsRest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Position] -&gt; Either QErr Text
 </span><a href="Hasura.SQL.WKT.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307842"><span class="hs-identifier hs-var">ls1</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621689308378"><span class="hs-identifier hs-var">ls1</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307841"><span class="hs-identifier hs-var">ls2</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621689308377"><span class="hs-identifier hs-var">ls2</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621689307840"><span class="hs-identifier hs-var">lsRest</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689308376"><span class="hs-identifier hs-var">lsRest</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>
 </span><span id="line-93"></span><span class="annot"><a href="Hasura.SQL.WKT.html#linearRingToText"><span class="hs-identifier hs-type">linearRingToText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">G.LinearRing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">E.QErr</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-94"></span><span id="linearRingToText"><span class="annot"><span class="annottext">linearRingToText :: LinearRing -&gt; Either QErr Text
-</span><a href="Hasura.SQL.WKT.html#linearRingToText"><span class="hs-identifier hs-var hs-var">linearRingToText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">G.LinearRing</span></a></span><span> </span><span id="local-6989586621689307838"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307838"><span class="hs-identifier hs-var">p1</span></a></span></span><span> </span><span id="local-6989586621689307837"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307837"><span class="hs-identifier hs-var">p2</span></a></span></span><span> </span><span id="local-6989586621689307836"><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307836"><span class="hs-identifier hs-var">p3</span></a></span></span><span> </span><span id="local-6989586621689307835"><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621689307835"><span class="hs-identifier hs-var">pRest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Position] -&gt; Either QErr Text
+</span><a href="Hasura.SQL.WKT.html#linearRingToText"><span class="hs-identifier hs-var hs-var">linearRingToText</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.GeoJSON.html#LinearRing"><span class="hs-identifier hs-type">G.LinearRing</span></a></span><span> </span><span id="local-6989586621689308374"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621689308374"><span class="hs-identifier hs-var">p1</span></a></span></span><span> </span><span id="local-6989586621689308373"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621689308373"><span class="hs-identifier hs-var">p2</span></a></span></span><span> </span><span id="local-6989586621689308372"><span class="annot"><span class="annottext">Position
+</span><a href="#local-6989586621689308372"><span class="hs-identifier hs-var">p3</span></a></span></span><span> </span><span id="local-6989586621689308371"><span class="annot"><span class="annottext">[Position]
+</span><a href="#local-6989586621689308371"><span class="hs-identifier hs-var">pRest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Position] -&gt; Either QErr Text
 </span><a href="Hasura.SQL.WKT.html#commaSeparated"><span class="hs-identifier hs-var">commaSeparated</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307838"><span class="hs-identifier hs-var">p1</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621689308374"><span class="hs-identifier hs-var">p1</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307837"><span class="hs-identifier hs-var">p2</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621689308373"><span class="hs-identifier hs-var">p2</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307836"><span class="hs-identifier hs-var">p3</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621689308372"><span class="hs-identifier hs-var">p3</span></a></span><span> </span><span class="annot"><span class="annottext">Position -&gt; [Position] -&gt; [Position]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Position]
-</span><a href="#local-6989586621689307835"><span class="hs-identifier hs-var">pRest</span></a></span><span> </span><span class="annot"><span class="annottext">[Position] -&gt; [Position] -&gt; [Position]
+</span><a href="#local-6989586621689308371"><span class="hs-identifier hs-var">pRest</span></a></span><span> </span><span class="annot"><span class="annottext">[Position] -&gt; [Position] -&gt; [Position]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Position
-</span><a href="#local-6989586621689307838"><span class="hs-identifier hs-var">p1</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689308374"><span class="hs-identifier hs-var">p1</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-95"></span></pre></body></html>
