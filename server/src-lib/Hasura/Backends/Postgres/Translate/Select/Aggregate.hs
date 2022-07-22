@@ -10,8 +10,8 @@ where
 import Control.Monad.Writer.Strict (runWriter)
 import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML (BoolExp (BELit), Select)
-import Hasura.Backends.Postgres.SQL.IdentifierUniqueness
-  ( prefixNumToAliases,
+import Hasura.Backends.Postgres.SQL.RenameIdentifiers
+  ( renameIdentifiers,
   )
 import Hasura.Backends.Postgres.SQL.Types
   ( IsIdentifier (toIdentifier),
@@ -59,7 +59,7 @@ mkAggregateSelect annAggSel =
             processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
       selectNode = SelectNode nodeExtractors joinTree
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
-   in prefixNumToAliases $
+   in renameIdentifiers $
         generateSQLSelectFromArrayNode selectSource arrayNode $ BELit True
   where
     strfyNum = _asnStrfyNum annAggSel

@@ -1160,7 +1160,12 @@ class TestGraphQLExplainPostgresMSSQL:
             else:
                 # Outputing response for embedding in test
                 assert p, \
-                    f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+                    f"""
+Unexpected explain SQL in response:
+{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}
+Expected:
+{textwrap.indent(json.dumps(conf['response'], indent=2), '  ')}
+"""
 
         elif explain_query_type == "subscription":
             # Comparing only with generated 'sql' since the 'plan' may differ.
@@ -1178,7 +1183,12 @@ class TestGraphQLExplainPostgresMSSQL:
             else:
                 # Outputing response for embedding in test
                 assert p, \
-                    f"Unexpected explain SQL in response:\n{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}"
+                    f"""
+Unexpected explain SQL in response:
+{textwrap.indent(json.dumps(resp_json, indent=2), '  ')}
+Expected:
+{textwrap.indent(json.dumps(conf['response'], indent=2), '  ')}
+"""
         else:
             assert False, "Test programmer error"
 

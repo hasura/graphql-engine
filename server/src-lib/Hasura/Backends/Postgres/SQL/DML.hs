@@ -14,6 +14,7 @@ module Hasura.Backends.Postgres.SQL.DML
     FromExp (..),
     FromItem (..),
     FunctionAlias (FunctionAlias),
+    FunctionDefinitionListItem (..),
     FunctionArgs (FunctionArgs),
     FunctionExp (FunctionExp),
     GroupByExp (GroupByExp),
@@ -505,7 +506,7 @@ columnAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
 
 -- | Represents an alias assignment for a table, relation or row
 newtype TableAlias = TableAlias {getTableAlias :: Identifier}
-  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
+  deriving (Show, Eq, NFData, Data, Generic, Cacheable, Hashable)
 
 instance IsIdentifier TableAlias where
   toIdentifier (TableAlias identifier) = identifier
@@ -664,21 +665,21 @@ instance ToSQL FunctionArgs where
           \(argName, argVal) -> SENamedArg (Identifier argName) argVal
      in parenB $ ", " <+> (positionalArgs <> namedArgs)
 
-data DefinitionListItem = DefinitionListItem
-  { _dliColumn :: PGCol,
+data FunctionDefinitionListItem = FunctionDefinitionListItem
+  { _dliColumn :: ColumnAlias,
     _dliType :: PGScalarType
   }
   deriving (Show, Eq, Data, Generic)
 
-instance NFData DefinitionListItem
+instance NFData FunctionDefinitionListItem
 
-instance Cacheable DefinitionListItem
+instance Cacheable FunctionDefinitionListItem
 
-instance Hashable DefinitionListItem
+instance Hashable FunctionDefinitionListItem
 
-instance ToSQL DefinitionListItem where
-  toSQL (DefinitionListItem column columnType) =
-    toSQL column <~> toSQL columnType
+instance ToSQL FunctionDefinitionListItem where
+  toSQL (FunctionDefinitionListItem column columnType) =
+    columnAliasToSqlWithoutAs column <~> toSQL columnType
 
 -- | We can alias the result of a function call that returns a @SETOF RECORD@
 --   by naming the result relation, and the columns and their types. For example:
@@ -690,7 +691,7 @@ instance ToSQL DefinitionListItem where
 --         as seen in the above example.
 data FunctionAlias = FunctionAlias
   { _faIdentifier :: !TableAlias,
-    _faDefinitionList :: !(Maybe [DefinitionListItem])
+    _faDefinitionList :: !(Maybe [FunctionDefinitionListItem])
   }
   deriving (Show, Eq, Data, Generic)
 
@@ -700,10 +701,10 @@ instance Cacheable FunctionAlias
 
 instance Hashable FunctionAlias
 
-mkFunctionAlias :: Identifier -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
-mkFunctionAlias identifier listM =
-  FunctionAlias (toTableAlias identifier) $
-    fmap (map (uncurry DefinitionListItem)) listM
+mkFunctionAlias :: TableAlias -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
+mkFunctionAlias alias listM =
+  FunctionAlias alias $
+    fmap (map (uncurry FunctionDefinitionListItem)) listM
 
 instance ToSQL FunctionAlias where
   toSQL (FunctionAlias tableAlias (Just definitionList)) =
@@ -748,7 +749,7 @@ data FromItem
     FIUnnest [SQLExp] TableAlias [ColumnAlias]
   | FISelect Lateral Select TableAlias
   | FISelectWith Lateral (SelectWithG Select) TableAlias
-  | FIValues ValuesExp TableAlias (Maybe [PGCol])
+  | FIValues ValuesExp TableAlias (Maybe [ColumnAlias])
   | FIJoin JoinExpr
   deriving (Show, Eq, Generic, Data)
 
@@ -767,10 +768,6 @@ mkSelectWithFromItem = FISelectWith (Lateral False)
 mkLateralFromItem :: Select -> TableAlias -> FromItem
 mkLateralFromItem = FISelect (Lateral True)
 
-toColTupExp :: [PGCol] -> SQLExp
-toColTupExp =
-  SETuple . TupleExp . map (SEIdentifier . Identifier . getPGColTxt)
-
 instance ToSQL FromItem where
   toSQL (FISimple qualifiedTable tableAlias) =
     toSQL qualifiedTable <~> maybe "" tableAliasToSqlWithAs tableAlias
@@ -787,9 +784,11 @@ instance ToSQL FromItem where
     toSQL isLateral <~> parenB (toSQL select) <~> tableAliasToSqlWithAs alias
   toSQL (FISelectWith isLateral selectWith alias) =
     toSQL isLateral <~> parenB (toSQL selectWith) <~> tableAliasToSqlWithAs alias
-  toSQL (FIValues valsExp alias cols) =
+  toSQL (FIValues valsExp alias columnAliases) =
     parenB (toSQL valsExp) <~> tableAliasToSqlWithAs alias
-      <~> toSQL (toColTupExp <$> cols)
+      <~> case columnAliases of
+        Nothing -> ""
+        Just cols -> parenB (", " <+> map columnAliasToSqlWithoutAs cols)
   toSQL (FIJoin je) =
     toSQL je
 
@@ -842,7 +841,7 @@ instance ToSQL JoinType where
 
 data JoinCond
   = JoinOn !BoolExp
-  | JoinUsing ![PGCol]
+  | JoinUsing ![Identifier]
   deriving (Show, Eq, Generic, Data)
 
 instance NFData JoinCond

@@ -96,7 +96,10 @@ selectFromToFromItem pfx = \case
   FromFunction qf args defListM ->
     S.FIFunc $
       S.FunctionExp qf (fromTableRowArgs pfx args) $
-        Just $ S.mkFunctionAlias (functionToIdentifier qf) defListM
+        Just $
+          S.mkFunctionAlias
+            (S.toTableAlias $ functionToIdentifier qf)
+            (fmap (fmap (first S.toColumnAlias)) defListM)
 
 -- | Converts a function name to an 'Identifier'.
 --

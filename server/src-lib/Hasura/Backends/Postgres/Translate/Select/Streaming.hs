@@ -15,7 +15,7 @@ where
 import Control.Monad.Writer.Strict (runWriter)
 import Database.PG.Query (Query, fromBuilder)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.IdentifierUniqueness (prefixNumToAliases)
+import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiers)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
@@ -125,7 +125,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             S.SEFnApp "json_build_object" colExp Nothing
       cursorLatestValueExtractor = S.Extractor cursorLatestValueExp (Just $ S.toColumnAlias $ Identifier "cursor")
       arrayNode = MultiRowSelectNode [topExtractor, cursorLatestValueExtractor] selectNode
-   in prefixNumToAliases $
+   in renameIdentifiers $
         generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
     rootFldIdentifier = toIdentifier rootFldName

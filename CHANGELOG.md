@@ -211,6 +211,7 @@ Please submit any feedback you may have for this feature at https://github.com/h
     - scalars other than UUID are more consistently inlined
     - objects now have a title and, when available, the same description as in the GraphQL schema
 - server: bump Kriti package version to support optional variable lookup in string interpolation (fixes #8574)
+- server: generate unique intermediate column names in postgres sql queries to workaround postgres' identifier length limitation (fixes #3796)
 - console: Hide TimescaleDB internal schema from data tab
 - console: support naming convention in source customization for postgres DB [CON-297]
 - console: fix bug where analyze button would stay in analyzing state after analyze failed
