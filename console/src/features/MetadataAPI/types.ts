@@ -69,16 +69,14 @@ export interface TableRelationship {
   name: string;
   comment: string;
   type: 'object' | 'array';
-  tableRelationships?: {
-    from: {
-      table: string;
-      column: string[];
-    };
-    to: {
-      table: string;
-      column: string[];
-    };
-  }[];
+  from: {
+    table: string;
+    column: string[];
+  };
+  to: {
+    table: string;
+    column: string[];
+  };
 }
 
 export type AllMetadataQueries = `${SupportedDataSourcesPrefix}${MetadataQueryType}`;
