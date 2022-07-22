@@ -1,21 +1,28 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Tests that `where' works.
-module Test.WhereSpec (spec) where
+-- |
+-- Test filtering and searching using "where" clauses.
+--
+-- https://hasura.io/docs/latest/queries/bigquery/query-filters/
+-- https://hasura.io/docs/latest/queries/ms-sql-server/query-filters/
+-- https://hasura.io/docs/latest/queries/postgres/query-filters/
+module Test.Queries.FilterSearchSpec (spec) where
 
-import Harness.Backend.BigQuery qualified as Bigquery
+import Data.Aeson (Value)
+import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
-import Harness.Backend.Mysql as Mysql
+import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.GraphqlEngine qualified as GraphqlEngine
-import Harness.Quoter.Graphql
-import Harness.Quoter.Yaml
+import Harness.GraphqlEngine (postGraphql)
+import Harness.Quoter.Graphql (graphql)
+import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
+import Harness.Test.Context (Options (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
-import Test.Hspec
+import Test.Hspec (SpecWith, it)
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -55,8 +62,8 @@ spec =
       Context.Context
         { name = Context.Backend Context.BigQuery,
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Bigquery.setup schema,
-          teardown = Bigquery.teardown schema,
+          setup = BigQuery.setup schema,
+          teardown = BigQuery.teardown schema,
           customOptions =
             Just $
               Context.Options
@@ -91,44 +98,30 @@ author =
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "Where id=1" \testEnvironment ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnvironment
-          [graphql|
-query {
-  hasura_author(where: {id: {_eq: 1}}) {
-    name
-    id
-  }
-}
-|]
-      )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-    id: 1
-|]
+  let shouldBe :: IO Value -> Value -> IO ()
+      shouldBe = shouldReturnYaml opts
 
-  it "Where Name=Author2" \testEnvironment ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnvironment
-          [graphql|
-query {
-  hasura_author(where: {name: {_eq: "Author 2"}}) {
-    name
-    id
-  }
-}
-|]
-      )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 2
-    id: 2
-|]
+  it "Select by id" \testEnvironment -> do
+    let expected :: Value
+        expected =
+          [yaml|
+            data:
+              hasura_author:
+              - name: Author 1
+                id: 1
+          |]
+
+        actual :: IO Value
+        actual =
+          postGraphql
+            testEnvironment
+            [graphql|
+              query {
+                hasura_author(where: {id: {_eq: 1}}) {
+                  name
+                  id
+                }
+              }
+            |]
+
+    actual `shouldBe` expected
