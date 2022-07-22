@@ -169,7 +169,8 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
     headers = {}
     if 'headers' in conf:
-        headers = conf['headers']
+        # Convert header values to strings, as the YAML parser might give us an internal class.
+        headers = {name: str(value) for name, value in conf['headers'].items()}
 
     # Test without admin secret
     code, resp, resp_hdrs = hge_ctx.anyq(conf['url'], conf['query'], headers)
@@ -241,7 +242,8 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
     hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
-        headers = conf['headers']
+        # Convert header values to strings, as the YAML parser might give us an internal class.
+        headers = {name: str(value) for name, value in conf['headers'].items()}
 
     # No headers in conf => Admin role
     # Set the X-Hasura-Role header randomly

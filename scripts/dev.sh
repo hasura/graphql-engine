@@ -83,7 +83,7 @@ try_jq() {
 
 # Bump this to:
 #  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.7
+DEVSH_VERSION=1.8
 
 case "${1-}" in
   graphql-engine)
@@ -590,7 +590,12 @@ elif [ "$MODE" = "test" ]; then
         pip3 install -r requirements.txt
       else
         pip3 install -r requirements-top-level.txt
-        pip3 freeze > requirements.txt
+        (
+          # shellcheck disable=SC2016
+          echo '# IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`'
+          echo '# Please add direct dependencies to requirements-top-level.txt'
+          pip3 freeze
+        ) > requirements.txt
       fi
       echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     else

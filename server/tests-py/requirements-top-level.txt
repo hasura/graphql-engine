@@ -1,16 +1,16 @@
 # IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`
-psycopg2-binary
-sqlalchemy
-pytest==6.2.5
-pytest-xdist
-requests
-pyyaml
-websocket-client
-pyjwt >= 1.5.3
-jsondiff
-cryptography
-graphene
-ruamel.yaml > 0.15
-graphql-core
-redis
 croniter
+cryptography == 3.*  # later versions require Rust support
+graphene == 2.*  # v3 has changed the API
+graphql-core
+jsondiff
+psycopg2-binary
+PyJWT == 2.3.*  # v2.4 disallows the key format we use
+pytest == 6.2.5
+pytest-xdist
+PyYAML
+redis
+requests
+ruamel.yaml
+sqlalchemy
+websocket-client == 0.56.0  # 0.58.0 and above changed the function signatures of callbacks
