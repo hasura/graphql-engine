@@ -124,7 +124,7 @@ tests opts = describe "Queries" $ do
                 title: For Those About To Rock We Salute You
         |]
 
-    it "works with order_by id" $ \(testEnvironment, _) ->
+    it "works with order_by id asc" $ \(testEnvironment, _) ->
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
@@ -147,6 +147,31 @@ tests opts = describe "Queries" $ do
                 title: Balls to the Wall
               - id: 3
                 title: Restless and Wild
+        |]
+
+    it "works with order_by id desc" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getAlbum {
+                albums(limit: 3, order_by: {id: desc}) {
+                  id
+                  title
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            albums:
+              - id: 347
+                title: Koyaanisqatsi (Soundtrack from the Motion Picture)
+              - id: 346
+                title: 'Mozart: Chamber Music'
+              - id: 345
+                title: 'Monteverdi: L''Orfeo'
         |]
 
     it "works with a primary key" $ \(testEnvironment, _) ->
