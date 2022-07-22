@@ -17,9 +17,9 @@
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span id="local-6989586621689353782"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-type">toTxtValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689353782"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">SQLExp</span></a></span></span><span>
+</span><span id="line-20"></span><span id="local-6989586621689353820"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-type">toTxtValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689353820"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">SQLExp</span></a></span></span><span>
 </span><span id="line-21"></span><span id="toTxtValue"><span class="annot"><span class="annottext">toTxtValue :: ColumnValue ('Postgres pgKind) -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-var hs-var">toTxtValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689353779"><span id="local-6989586621689353780"><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
+</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-var hs-var">toTxtValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689353817"><span id="local-6989586621689353818"><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
 ColumnType ('Postgres pgKind)
 cvValue :: forall (b :: BackendType). ColumnValue b -&gt; ScalarValue b
 cvType :: forall (b :: BackendType). ColumnValue b -&gt; ColumnType b
@@ -28,41 +28,41 @@ cvType :: ColumnType ('Postgres pgKind)
 </span><a href="Hasura.RQL.Types.Column.html#cvValue"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-22"></span><span>  </span><span class="annot"><span class="annottext">PGScalarType -&gt; SQLExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#withScalarTypeAnn"><span class="hs-identifier hs-var">withScalarTypeAnn</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621689353775"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; SQLExp) -&gt; (SQLExp -&gt; SQLExp) -&gt; SQLExp -&gt; SQLExp
+</span><a href="#local-6989586621689353813"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; SQLExp) -&gt; (SQLExp -&gt; SQLExp) -&gt; SQLExp -&gt; SQLExp
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">PGScalarType -&gt; SQLExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#withConstructorFn"><span class="hs-identifier hs-var">withConstructorFn</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621689353775"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; SQLExp) -&gt; SQLExp -&gt; SQLExp
+</span><a href="#local-6989586621689353813"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; SQLExp) -&gt; SQLExp -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGScalarValue -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#txtEncoder"><span class="hs-identifier hs-var">txtEncoder</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarValue ('Postgres pgKind)
 PGScalarValue
-</span><a href="#local-6989586621689353779"><span class="hs-identifier hs-var">cvValue</span></a></span><span>
+</span><a href="#local-6989586621689353817"><span class="hs-identifier hs-var">cvValue</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>    </span><span id="local-6989586621689353775"><span class="annot"><span class="annottext">ty :: PGScalarType
-</span><a href="#local-6989586621689353775"><span class="hs-identifier hs-var hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind) -&gt; PGScalarType
+</span><span id="line-24"></span><span>    </span><span id="local-6989586621689353813"><span class="annot"><span class="annottext">ty :: PGScalarType
+</span><a href="#local-6989586621689353813"><span class="hs-identifier hs-var hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind) -&gt; PGScalarType
 forall (pgKind :: PostgresKind).
 ColumnType ('Postgres pgKind) -&gt; PGScalarType
 </span><a href="Hasura.Backends.Postgres.Types.Column.html#unsafePGColumnToBackend"><span class="hs-identifier hs-var">unsafePGColumnToBackend</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689353780"><span class="hs-identifier hs-var">cvType</span></a></span><span>
+</span><a href="#local-6989586621689353818"><span class="hs-identifier hs-var">cvType</span></a></span><span>
 </span><span id="line-25"></span><span>
 </span><span id="line-26"></span><span class="hs-comment">-- | Formats each columns to appropriate SQL expression</span><span>
-</span><span id="line-27"></span><span id="local-6989586621689353770"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Column.html#toJSONableExp"><span class="hs-identifier hs-type">toJSONableExp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">Options.StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689353770"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">SQLExp</span></a></span></span><span>
+</span><span id="line-27"></span><span id="local-6989586621689353808"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Column.html#toJSONableExp"><span class="hs-identifier hs-type">toJSONableExp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">Options.StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689353808"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">SQLExp</span></a></span></span><span>
 </span><span id="line-28"></span><span id="toJSONableExp"><span class="annot"><span class="annottext">toJSONableExp :: StringifyNumbers
 -&gt; ColumnType ('Postgres pgKind)
 -&gt; Bool
 -&gt; Maybe NamingCase
 -&gt; SQLExp
 -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toJSONableExp"><span class="hs-identifier hs-var hs-var">toJSONableExp</span></a></span></span><span> </span><span id="local-6989586621689353769"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689353769"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621689353768"><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689353768"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621689353767"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689353767"><span class="hs-identifier hs-var">asText</span></a></span></span><span> </span><span id="local-6989586621689353766"><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621689353766"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span id="local-6989586621689353765"><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689353765"><span class="hs-identifier hs-var">expression</span></a></span></span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toJSONableExp"><span class="hs-identifier hs-var hs-var">toJSONableExp</span></a></span></span><span> </span><span id="local-6989586621689353807"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689353807"><span class="hs-identifier hs-var">stringifyNum</span></a></span></span><span> </span><span id="local-6989586621689353806"><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
+</span><a href="#local-6989586621689353806"><span class="hs-identifier hs-var">colType</span></a></span></span><span> </span><span id="local-6989586621689353805"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689353805"><span class="hs-identifier hs-var">asText</span></a></span></span><span> </span><span id="local-6989586621689353804"><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="#local-6989586621689353804"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span id="local-6989586621689353803"><span class="annot"><span class="annottext">SQLExp
+</span><a href="#local-6989586621689353803"><span class="hs-identifier hs-var">expression</span></a></span></span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-comment">-- If it's a numeric column greater than a 32-bit integer, we have to stringify it as JSON spec doesn't support &gt;32-bit integers</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689353767"><span class="hs-identifier hs-var">asText</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689353805"><span class="hs-identifier hs-var">asText</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ScalarType ('Postgres pgKind) -&gt; Bool)
 -&gt; ColumnType ('Postgres pgKind) -&gt; Bool
 forall (b :: BackendType).
@@ -70,15 +70,15 @@ forall (b :: BackendType).
 </span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var">isScalarColumnWhere</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind) -&gt; Bool
 PGScalarType -&gt; Bool
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#isBigNum"><span class="hs-identifier hs-var">isBigNum</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689353768"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689353806"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="hs-special">(</span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689353769"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689353807"><span class="hs-identifier hs-var">stringifyNum</span></a></span><span> </span><span class="hs-keyword">of</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">Options.StringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">;</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Options.Don'tStringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689353765"><span class="hs-identifier hs-var">expression</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; TypeAnn -&gt; SQLExp
+</span><a href="#local-6989586621689353803"><span class="hs-identifier hs-var">expression</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; TypeAnn -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SETyAnn"><span class="hs-operator hs-var">`SETyAnn`</span></a></span><span> </span><span class="annot"><span class="annottext">TypeAnn
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#textTypeAnn"><span class="hs-identifier hs-var">textTypeAnn</span></a></span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-comment">-- If the column is either a `Geometry` or `Geography` then apply the `ST_AsGeoJSON` function to convert it into GeoJSON format</span><span>
@@ -89,13 +89,13 @@ forall (b :: BackendType).
 </span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var">isScalarColumnWhere</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind) -&gt; Bool
 PGScalarType -&gt; Bool
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#isGeoType"><span class="hs-identifier hs-var">isGeoType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689353768"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689353806"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-34"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">SEFnApp</span></a></span><span>
 </span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ST_AsGeoJSON&quot;</span></span><span>
 </span><span id="line-36"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689353765"><span class="hs-identifier hs-var">expression</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689353803"><span class="hs-identifier hs-var">expression</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEUnsafe"><span class="hs-identifier hs-var">SEUnsafe</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;15&quot;</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- max decimal digits</span><span>
@@ -112,15 +112,15 @@ forall a. Maybe a
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind) -&gt; Bool
 forall (b :: BackendType). ColumnType b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Column.html#isEnumColumn"><span class="hs-identifier hs-var">isEnumColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689353768"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621689353806"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">(NamingCase -&gt; Bool) -&gt; Maybe NamingCase -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Bool
 </span><a href="Hasura.GraphQL.Schema.NamingCase.html#isGraphqlCase"><span class="hs-identifier hs-var">isGraphqlCase</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621689353766"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; SQLExp
+</span><a href="#local-6989586621689353804"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#applyUppercase"><span class="hs-identifier hs-var">applyUppercase</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689353765"><span class="hs-identifier hs-var">expression</span></a></span><span>
+</span><a href="#local-6989586621689353803"><span class="hs-identifier hs-var">expression</span></a></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SQLExp
-</span><a href="#local-6989586621689353765"><span class="hs-identifier hs-var">expression</span></a></span><span>
+</span><a href="#local-6989586621689353803"><span class="hs-identifier hs-var">expression</span></a></span><span>
 </span><span id="line-44"></span></pre></body></html>
