@@ -29959,6 +29959,7 @@ HCExport :: HGECommand a
 HCClean :: HGECommand a
 HCVersion :: HGECommand a
 HCDowngrade :: !DowngradeOptions -> HGECommand a
+_HCServe :: Prism' (HGECommand a) a
 
 -- | HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl
