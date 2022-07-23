@@ -6,6 +6,7 @@ module Hasura.Server.Init.Config
   ( API (..),
     DowngradeOptions (..),
     HGECommand (..),
+    _HCServe,
     HGEOptions (..),
     HGEOptionsRaw (..),
     horDatabaseUrl,
@@ -37,6 +38,7 @@ where
 
 --------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
 import Control.Lens (Lens', Prism', lens, prism')
 import Data.Aeson
 import Data.Aeson qualified as J
@@ -363,6 +365,11 @@ data HGECommand a
   | HCVersion
   | HCDowngrade !DowngradeOptions
   deriving (Show, Eq)
+
+_HCServe :: Prism' (HGECommand a) a
+_HCServe = prism' HCServe \case
+  HCServe a -> Just a
+  _ -> Nothing
 
 -- | HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl = HGEOptionsRaw
