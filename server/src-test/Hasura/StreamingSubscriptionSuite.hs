@@ -39,6 +39,7 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlEnv, runWithEnv)
 import Hasura.Server.Metrics (createServerMetrics)
+import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Types (RequestId (..))
 import Hasura.Session (RoleName, mkRoleName)
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -333,6 +334,7 @@ streamingSubscriptionPollingSpec srcConfig = do
     describe "Adding two subscribers concurrently" $ do
       dummyServerStore <- runIO newStore
       dummyServerMetrics <- runIO $ createServerMetrics dummyServerStore
+      dummyPromMetrics <- runIO makeDummyPrometheusMetrics
 
       subscriptionState <- do
         let subOptions = mkSubscriptionsOptions Nothing Nothing
@@ -367,6 +369,7 @@ streamingSubscriptionPollingSpec srcConfig = do
               @('Postgres 'Vanilla)
               logger
               dummyServerMetrics
+              dummyPromMetrics
               subscriberMetadata
               subscriptionState
               SNDefault

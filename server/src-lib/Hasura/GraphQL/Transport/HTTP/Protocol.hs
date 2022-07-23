@@ -151,6 +151,7 @@ renderGQLReqOutgoing = fmap (GQLQueryText . G.renderExecutableDoc . toExecDoc . 
 --
 --     https://spec.graphql.org/June2018/#sec-Executable-Definitions  and...
 --     https://graphql.org/learn/serving-over-http/
+{-# INLINEABLE getSingleOperation #-}
 getSingleOperation ::
   MonadError QErr m =>
   GQLReqParsed ->

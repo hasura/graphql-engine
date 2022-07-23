@@ -286,6 +286,7 @@ common lib-depends
                      -- for capturing various metrics
                      , ekg-core
                      , ekg-json
+                     , ekg-prometheus
 
                      -- metrics for CI integration
                      , ci-info
@@ -635,6 +636,7 @@ library
 
                      , Hasura.Server.API.Config
                      , Hasura.Server.Metrics
+                     , Hasura.Server.Prometheus
                      , Hasura.Server.Telemetry
                      , Hasura.Server.Telemetry.Types
                      , Hasura.Server.Telemetry.Counters
@@ -901,13 +903,14 @@ executable graphql-engine
   build-depends:     base
                    , graphql-engine
                    , bytestring
+                   , ekg-core
+                   , ekg-prometheus
                    , kan-extensions
                    , pg-client
                    , text
                    , text-conversions
                    , time
                    , unix
-                   , ekg-core
 
 -- The OpenAPI specification for metadata is experimental and incomplete. Please
 -- do not incorporate it into essential workflows at this time.

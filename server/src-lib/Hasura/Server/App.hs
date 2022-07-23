@@ -1,14 +1,14 @@
 {-# LANGUAGE CPP #-}
 
 module Hasura.Server.App
-  ( APIResp (JSONResp),
+  ( APIResp (JSONResp, RawResp),
     ConsoleRenderer (..),
     Handler,
     HandlerCtx (hcReqHeaders, hcServerCtx, hcUser),
     HasuraApp (HasuraApp),
     MonadConfigApiHandler (..),
     MonadMetadataApiAuthorization (..),
-    ServerCtx (scManager, scLoggingSettings),
+    ServerCtx (scManager, scLoggingSettings, scEnabledAPIs),
     boolToText,
     configApiGetHandler,
     isAdminSecretSet,
@@ -83,6 +83,7 @@ import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics)
 import Hasura.Server.Middleware (corsMiddleware)
 import Hasura.Server.OpenAPI (buildOpenAPI)
+import Hasura.Server.Prometheus (PrometheusMetrics)
 import Hasura.Server.Rest
 import Hasura.Server.SchemaCacheRef
   ( SchemaCacheRef,
@@ -129,7 +130,8 @@ data ServerCtx = ServerCtx
     scLoggingSettings :: !LoggingSettings,
     scEventingMode :: !EventingMode,
     scEnableReadOnlyMode :: !ReadOnlyMode,
-    scDefaultNamingConvention :: !(Maybe NamingCase)
+    scDefaultNamingConvention :: !(Maybe NamingCase),
+    scPrometheusMetrics :: !PrometheusMetrics
   }
 
 data HandlerCtx = HandlerCtx
@@ -572,7 +574,8 @@ mkExecutionContext = do
   enableAL <- asks (scEnableAllowlist . hcServerCtx)
   logger <- asks (scLogger . hcServerCtx)
   readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
-  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode
+  prometheusMetrics <- asks (scPrometheusMetrics . hcServerCtx)
+  pure $ E.ExecutionCtx logger sqlGenCtx (lastBuiltSchemaCache sc) scVer manager enableAL readOnlyMode prometheusMetrics
 
 v1GQHandler ::
   ( MonadIO m,
@@ -772,6 +775,7 @@ mkWaiApp ::
   SchemaCacheRef ->
   EKG.Store EKG.EmptyMetrics ->
   ServerMetrics ->
+  PrometheusMetrics ->
   Options.RemoteSchemaPermissions ->
   Options.InferFunctionPermissions ->
   WS.ConnectionOptions ->
@@ -809,6 +813,7 @@ mkWaiApp
   schemaCacheRef
   ekgStore
   serverMetrics
+  prometheusMetrics
   enableRSPermsCtx
   functionPermsCtx
   connectionOptions
@@ -840,6 +845,7 @@ mkWaiApp
         enableAL
         keepAliveDelay
         serverMetrics
+        prometheusMetrics
 
     let serverCtx =
           ServerCtx
@@ -862,7 +868,8 @@ mkWaiApp
               scLoggingSettings = LoggingSettings enabledLogTypes enableMetadataQueryLogging,
               scEventingMode = eventingMode,
               scEnableReadOnlyMode = readOnlyMode,
-              scDefaultNamingConvention = defaultNC
+              scDefaultNamingConvention = defaultNC,
+              scPrometheusMetrics = prometheusMetrics
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->

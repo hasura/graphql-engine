@@ -25,6 +25,7 @@ import Hasura.RQL.DDL.Schema
 import Hasura.Server.Init
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
 import Hasura.Server.Migrate (downgradeCatalog)
+import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Hasura.Server.Version
 import System.Exit qualified as Sys
 import System.Metrics qualified as EKG
@@ -60,6 +61,8 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
 
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
 
+      prometheusMetrics <- makeDummyPrometheusMetrics
+
       -- It'd be nice if we didn't have to call runManagedT twice here, but
       -- there is a data dependency problem since the call to runPGMetadataStorageApp
       -- below depends on serveCtx.
@@ -87,7 +90,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
             GC.ourIdleGC logger (seconds 0.3) (seconds 10) (seconds 60)
 
         flip runPGMetadataStorageAppT (_scMetadataDbPool serveCtx, pgLogger) . lowerManagedT $ do
-          runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore
+          runHGEServer (const $ pure ()) env serveOptions serveCtx initTime Nothing serverMetrics ekgStore prometheusMetrics
     HCExport -> do
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo fetchMetadataFromCatalog
       either (throwErrJExit MetadataExportError) printJSON res
