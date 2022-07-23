@@ -156,7 +156,8 @@ instance FromEnv [API] where
         "PGDUMP" -> Right PGDUMP
         "DEVELOPER" -> Right DEVELOPER
         "CONFIG" -> Right CONFIG
-        _ -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
+        "METRICS" -> Right METRICS
+        _ -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config,metrics"
 
 instance FromEnv NamingCase where
   fromEnv = parseNamingConventionFromText . T.pack

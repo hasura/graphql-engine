@@ -121,6 +121,11 @@ import Hasura.Server.Limits
 import Hasura.Server.Logging
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Migrate (migrateCatalog)
+import Hasura.Server.Prometheus
+  ( PrometheusMetrics (..),
+    decWarpThreads,
+    incWarpThreads,
+  )
 import Hasura.Server.SchemaCacheRef
   ( SchemaCacheRef,
     getSchemaCache,
@@ -553,10 +558,11 @@ runHGEServer ::
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
+  PrometheusMetrics ->
   ManagedT m ()
-runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore = do
+runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore
+    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics
 
   let warpSettings :: Warp.Settings
       warpSettings =
@@ -573,8 +579,14 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
           C.forkIOWithUnmask
             ( \unmask ->
                 bracket_
-                  (EKG.Gauge.inc $ smWarpThreads serverMetrics)
-                  (EKG.Gauge.dec $ smWarpThreads serverMetrics)
+                  ( do
+                      EKG.Gauge.inc (smWarpThreads serverMetrics)
+                      incWarpThreads (pmConnections prometheusMetrics)
+                  )
+                  ( do
+                      EKG.Gauge.dec (smWarpThreads serverMetrics)
+                      decWarpThreads (pmConnections prometheusMetrics)
+                  )
                   (f unmask)
             )
 
@@ -628,8 +640,9 @@ mkHGEServer ::
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
+  PrometheusMetrics ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore = do
+mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore prometheusMetrics = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -684,6 +697,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           _scSchemaCacheRef
           ekgStore
           serverMetrics
+          prometheusMetrics
           soEnableRemoteSchemaPermissions
           soInferFunctionPermissions
           soConnectionOptions

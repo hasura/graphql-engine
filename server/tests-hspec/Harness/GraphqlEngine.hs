@@ -59,6 +59,7 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Common (PGConnectionParams (..), UrlConf (..))
 import Hasura.Server.Init (PostgresConnInfo (..), ServeOptions (..))
 import Hasura.Server.Metrics (ServerMetricsSpec, createServerMetrics)
+import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
 import Network.Socket qualified as Socket
 import Network.Wai.Handler.Warp qualified as Warp
 import System.Metrics qualified as EKG
@@ -268,6 +269,7 @@ runApp serveOptions = do
         serverMetrics <-
           liftIO $ createServerMetrics $ EKG.subset ServerSubset store
         pure (EKG.subset EKG.emptyOf store, serverMetrics)
+    prometheusMetrics <- makeDummyPrometheusMetrics
     runManagedT (App.initialiseServeCtx env globalCtx serveOptions serverMetrics) $ \serveCtx ->
       do
         let Loggers _ _logger pgLogger = _scLoggers serveCtx
@@ -283,6 +285,7 @@ runApp serveOptions = do
               Nothing
               serverMetrics
               ekgStore
+              prometheusMetrics
 
 -- | Used only for 'runApp' above.
 data TestMetricsSpec name metricType tags

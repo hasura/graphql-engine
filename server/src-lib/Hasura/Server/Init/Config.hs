@@ -110,6 +110,7 @@ data API
   | PGDUMP
   | DEVELOPER
   | CONFIG
+  | METRICS
   deriving (Show, Eq, Read, Generic)
 
 $( J.deriveJSON

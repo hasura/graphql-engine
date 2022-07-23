@@ -87,6 +87,11 @@ source-repository-package
 
 source-repository-package
   type: git
+  location: https://github.com/hasura/ekg-prometheus.git
+  tag: 6761ea76820045aece82158d43d419ff2c20aa5f
+
+source-repository-package
+  type: git
   location: https://github.com/hasura/ekg-json.git
   tag: 84990712c165d7e3e76b2b289640ef8b5033f12f
 

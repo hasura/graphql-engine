@@ -90,7 +90,8 @@ explainGQLQuery sc (GQLExplain query userVarsRaw maybeIsRelay) = do
       UAdminSecretSent
       sessionVariables
   -- we don't need to check in allow list as we consider it an admin endpoint
-  (graphQLContext, queryParts) <- E.getExecPlanPartial userInfo sc queryType query
+  let graphQLContext = E.makeGQLContext userInfo sc queryType
+  queryParts <- GH.getSingleOperation query
   case queryParts of
     G.TypedOperationDefinition G.OperationTypeQuery _ varDefs directives inlinedSelSet -> do
       (unpreparedQueries, _, _) <-

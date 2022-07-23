@@ -3,7 +3,7 @@ module Hasura.GraphQL.Transport.WebSocket.Types
     WSConn,
     WSConnData (WSConnData, _wscOpMap, _wscUser),
     WSConnState (CSInitError, CSInitialised, CSNotInitialised),
-    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseSubscriptionState, _wseLogger, _wseServer, _wseServerMetrics),
+    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseSubscriptionState, _wseLogger, _wseServer, _wseServerMetrics, _wsePrometheusMetrics),
     WsClientState (WsClientState, wscsIpAddress, wscsReqHeaders, wscsTokenExpTime, wscsUserInfo),
     WsHeaders (WsHeaders, unWsHeaders),
     SubscriberType (..),
@@ -25,6 +25,7 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.Server.Cors
 import Hasura.Server.Init.Config (KeepAliveDelay (..))
 import Hasura.Server.Metrics (ServerMetrics (..))
+import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (ReadOnlyMode (..))
 import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
@@ -82,7 +83,8 @@ data WSServerEnv = WSServerEnv
     _wseServer :: !WSServer,
     _wseEnableAllowlist :: !Bool,
     _wseKeepAliveDelay :: !KeepAliveDelay,
-    _wseServerMetrics :: !ServerMetrics
+    _wseServerMetrics :: !ServerMetrics,
+    _wsePrometheusMetrics :: !PrometheusMetrics
   }
 
 data SubscriberType
