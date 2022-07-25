@@ -6,4 +6,7 @@ export const gdc: Database = {
       return Feature.NotImplemented;
     },
   },
+  introspectTables: async () => {
+    return Feature.NotImplemented;
+  },
 };

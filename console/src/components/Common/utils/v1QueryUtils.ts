@@ -1,4 +1,9 @@
-import { currentDriver, dataSource, terminateSql } from '../../../dataSources';
+import {
+  currentDriver,
+  dataSource,
+  Driver,
+  terminateSql,
+} from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
@@ -12,6 +17,18 @@ import {
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
+type AllowedRunSQLKeys =
+  | 'mssql_run_sql'
+  | 'bigquery_run_sql'
+  | 'citus_run_sql'
+  | 'mysql_run_sql'
+  | 'run_sql';
+
+export const getRunSqlType = (driver: Driver): AllowedRunSQLKeys => {
+  if (driver === 'postgres') return 'run_sql';
+
+  return `${driver}_run_sql`;
+};
 
 export const getRunSqlQuery = (
   sql: string,
@@ -20,13 +37,8 @@ export const getRunSqlQuery = (
   read_only = false,
   driver = currentDriver
 ) => {
-  let type = 'run_sql';
-  if (['mssql', 'bigquery', 'citus'].includes(driver)) {
-    type = `${driver}_run_sql`;
-  }
-
   return {
-    type,
+    type: getRunSqlType(driver),
     args: {
       source,
       sql: terminateSql(sql),
