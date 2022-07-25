@@ -17,7 +17,7 @@ const UseFormDataComponent = ({
 };
 
 export default {
-  title: 'Permissions Form/hooks/useFormData',
+  title: 'Features/Permissions Form/hooks/useFormData',
   component: UseFormDataComponent,
   decorators: [ReactQueryDecorator()],
   parameters: {

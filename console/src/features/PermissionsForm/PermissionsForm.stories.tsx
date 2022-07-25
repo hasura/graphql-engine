@@ -6,7 +6,7 @@ import { PermissionsForm, PermissionsFormProps } from './PermissionsForm';
 import { handlers } from './mocks/handlers.mock';
 
 export default {
-  title: 'Permissions Form/Form',
+  title: 'Features/Permissions Form/Form',
   component: PermissionsForm,
   decorators: [ReactQueryDecorator()],
   parameters: {

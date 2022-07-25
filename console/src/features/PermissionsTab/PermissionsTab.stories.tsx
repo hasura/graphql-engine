@@ -9,7 +9,7 @@ import { PermissionsTab, PermissionsTabProps } from './PermissionsTab';
 import { handlers } from '../PermissionsForm/mocks/handlers.mock';
 
 export default {
-  title: 'Permissions Tab/Permissions Tab',
+  title: 'Features/Permissions Tab/Permissions Tab',
   component: PermissionsTab,
   decorators: [ReactQueryDecorator()],
 } as Meta;

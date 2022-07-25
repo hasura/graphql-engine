@@ -25,7 +25,7 @@ const defaultValues = {
 };
 
 export default {
-  title: 'Remote Relationships/Components/Remote Schema Widget',
+  title: 'Features/Remote Relationships/Components/Remote Schema Widget',
   component: RemoteSchemaWidget,
   decorators: [
     ReactQueryDecorator(),

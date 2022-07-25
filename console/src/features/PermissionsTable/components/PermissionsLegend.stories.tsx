@@ -4,7 +4,7 @@ import { Story, Meta } from '@storybook/react';
 import { PermissionsLegend } from './PermissionsLegend';
 
 export default {
-  title: 'Permissions Table/Components/Permissions Legend',
+  title: 'Features/Permissions Table/Components/Permissions Legend',
   component: PermissionsLegend,
   parameters: { chromatic: { disableSnapshot: true } },
 } as Meta;

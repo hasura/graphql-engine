@@ -15,7 +15,7 @@ const defaultValues = {
 };
 
 export default {
-  title: 'Remote Relationships/Components/Remote Database Widget',
+  title: 'Features/Remote Relationships/Components/Remote Database Widget',
   component: RemoteDatabaseWidget,
   decorators: [
     ReactQueryDecorator(),

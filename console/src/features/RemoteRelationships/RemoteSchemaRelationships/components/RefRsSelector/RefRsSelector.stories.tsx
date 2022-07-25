@@ -13,7 +13,8 @@ const defaultValues = {
 };
 
 export default {
-  title: 'Remote Relationships/Components/Reference Remote Schema Selector',
+  title:
+    'Features/Remote Relationships/Components/Reference Remote Schema Selector',
   component: RefRsSelector,
   decorators: [
     StoryComponent => (

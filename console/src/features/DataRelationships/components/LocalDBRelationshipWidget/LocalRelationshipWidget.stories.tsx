@@ -11,7 +11,7 @@ import { handlers } from '../../../RemoteRelationships/RemoteSchemaRelationships
 
 export default {
   title:
-    'Data Relationships/Local DB Relationships/Local DB Relationships Form',
+    'Features/Data Relationships/Local DB Relationships/Local DB Relationships Form',
   component: LocalRelationshipWidget,
   decorators: [ReactQueryDecorator()],
   parameters: {

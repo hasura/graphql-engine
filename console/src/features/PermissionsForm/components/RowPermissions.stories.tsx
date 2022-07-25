@@ -14,7 +14,7 @@ import { allSchemas, allFunctions } from '../mocks/mockData';
 import { QueryType } from '../types';
 
 export default {
-  title: 'Permissions Form/Components/Row Section',
+  title: 'Features/Permissions Form/Components/Row Section',
   component: RowPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (

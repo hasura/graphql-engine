@@ -22,7 +22,7 @@ const UseDefaultValuesComponent = ({
 };
 
 export default {
-  title: 'Permissions Form/hooks/useDefaultValues',
+  title: 'Features/Permissions Form/hooks/useDefaultValues',
   component: UseDefaultValuesComponent,
   decorators: [ReactQueryDecorator()],
   parameters: {
