@@ -28,7 +28,6 @@ import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Ordered qualified as AO
-import Data.Aeson.Types qualified as J
 import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.Environment qualified as Env
@@ -36,7 +35,6 @@ import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.SerializableBlob qualified as SB
 import Data.Set (Set)
-import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
 import Database.PG.Query qualified as Q
@@ -169,6 +167,51 @@ resolveActionExecution env logger _userInfo IR.AnnActionExecution {..} ActionExe
           _aaeRequestTransform
           _aaeResponseTransform
 
+throwUnexpected :: (MonadError QErr m) => Text -> m ()
+throwUnexpected = throw400 Unexpected
+
+-- Webhook response object should conform to action output fields
+validateResponseObject :: MonadError QErr m => KM.KeyMap J.Value -> IR.ActionOutputFields -> m ()
+validateResponseObject obj outputField = do
+  -- Note: Fields not specified in the output are ignored
+  void $
+    flip Map.traverseWithKey outputField $ \fieldName fieldTy ->
+      -- When field is non-nullable, it has to present in the response with no null value
+      unless (G.isNullable fieldTy) $ case KM.lookup (K.fromText $ G.unName fieldName) obj of
+        Nothing ->
+          throwUnexpected $
+            "field " <> fieldName <<> " expected in webhook response, but not found"
+        Just v ->
+          when (v == J.Null) $
+            throwUnexpected $
+              "expecting not null value for field " <>> fieldName
+
+-- Validates the webhook response against the output type
+validateResponse :: (MonadError QErr m) => J.Value -> GraphQLType -> IR.ActionOutputFields -> m ()
+validateResponse webhookResponse' outputType outputF =
+  unless (isCustomScalar (unGraphQLType outputType) outputF) do
+    case (webhookResponse', outputType) of
+      (J.Null, _) -> do
+        unless (isNullableType outputType) $ throwUnexpected "got null for the action webhook response"
+      (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
+        unless (name == GName._Int || name == GName._Float) $
+          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+      (J.Bool _, (GraphQLType (G.TypeNamed _ name))) -> do
+        unless (name == GName._Boolean) $
+          throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
+      (J.String _, (GraphQLType (G.TypeNamed _ name))) -> do
+        unless (name == GName._String || name == GName._ID) $
+          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+      (J.Array _, (GraphQLType (G.TypeNamed _ name))) -> throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
+      (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) -> do
+        traverse_ (\o -> validateResponse o (GraphQLType outputType'') outputF) objs
+      ((J.Object obj), (GraphQLType (G.TypeNamed _ name))) -> do
+        when (isInBuiltScalar (G.unName name)) $
+          throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
+        validateResponseObject obj outputF
+      (_, (GraphQLType (G.TypeList _ _))) ->
+        throwUnexpected $ "expecting array for the action webhook response"
+
 -- | Build action response from the Webhook JSON response when there are no relationships defined
 makeActionResponseNoRelations :: IR.ActionFields -> GraphQLType -> IR.ActionOutputFields -> Bool -> ActionWebhookResponse -> AO.Value
 makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputField webhookResponse =
@@ -202,10 +245,10 @@ makeActionResponseNoRelations annFields outputType outputF shouldCheckOutputFiel
       if gTypeContains isCustomScalar (unGraphQLType outputType) outputF && shouldCheckOutputField
         then AO.toOrdered $ J.toJSON webhookResponse
         else case webhookResponse of
-          AWRArray objs -> AO.array $ map mkResponseArray objs
-          AWRObject obj ->
-            mkResponseObject annFields $ KM.fromHashMapText $ mapKeys G.unName obj
-          AWRNull -> AO.Null
+          J.Array objs -> AO.array $ toList $ fmap mkResponseArray objs
+          J.Object obj ->
+            mkResponseObject annFields obj
+          J.Null -> AO.Null
           _ -> AO.toOrdered $ J.toJSON webhookResponse
 
 gTypeContains :: (G.GType -> IR.ActionOutputFields -> Bool) -> G.GType -> IR.ActionOutputFields -> Bool
@@ -601,55 +644,6 @@ callWebhook
                   throw500WithDetail "internal error" $
                     J.toJSON $
                       ActionInternalError err requestInfo $ Just responseInfo
-    where
-      throwUnexpected = throw400 Unexpected
-
-      -- Webhook response object should conform to action output fields
-      validateResponseObject obj = do
-        -- Note: Fields not specified in the output are ignored
-        void $
-          flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
-            -- When field is non-nullable, it has to present in the response with no null value
-            unless (G.isNullable fieldTy) $ case Map.lookup fieldName obj of
-              Nothing ->
-                throwUnexpected $
-                  "field " <> fieldName <<> " expected in webhook response, but not found"
-              Just v ->
-                when (v == J.Null) $
-                  throwUnexpected $
-                    "expecting not null value for field " <>> fieldName
-
-      -- Validates the webhook response against the output type
-      validateResponse :: J.Value -> GraphQLType -> IR.ActionOutputFields -> m ()
-      validateResponse webhookResponse' outputType' outputF =
-        unless (isCustomScalar (unGraphQLType outputType') outputF) do
-          case (webhookResponse', outputType') of
-            (J.Null, _) -> unless (isNullableType outputType') $ throwUnexpected "got null for the action webhook response"
-            (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
-              unless (name == GName._Int || name == GName._Float) $
-                throwUnexpected $ "got scalar Number for the action webhook response, expecting " <> G.unName name
-            (J.Bool _, (GraphQLType (G.TypeNamed _ name))) ->
-              unless (name == GName._Boolean) $
-                throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
-            (J.String _, (GraphQLType (G.TypeNamed _ name))) ->
-              unless (name == GName._String || name == GName._ID) $
-                throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
-            (J.Array _, (GraphQLType (G.TypeNamed _ name))) ->
-              throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
-            (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) ->
-              traverse_ (\o -> validateResponse o (GraphQLType outputType'') outputF) objs
-            (ob@(J.Object _), (GraphQLType (G.TypeNamed _ name))) -> do
-              case J.parse (fmap AWRObject . J.parseJSON) ob of
-                J.Error s -> throwUnexpected $ "failed to parse webhookResponse as Object, error: " <> T.pack s -- This should never happen
-                J.Success (AWRObject awr) -> do
-                  when (isInBuiltScalar (G.unName name)) $
-                    throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
-                  validateResponseObject awr
-                J.Success _ ->
-                  throwUnexpected "Webhook response not an object" -- This should never happen
-                  -- Expected output type is an array and webhook response is not an array
-            (_, (GraphQLType (G.TypeList _ _))) ->
-              throwUnexpected $ "expecting array for the action webhook response"
 
 processOutputSelectionSet ::
   TF.ArgumentExp v ->
