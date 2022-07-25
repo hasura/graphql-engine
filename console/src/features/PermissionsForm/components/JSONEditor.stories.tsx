@@ -4,7 +4,7 @@ import { Story, Meta } from '@storybook/react';
 import { JSONEditor, JSONEditorProps } from './JSONEditor';
 
 export default {
-  title: 'Permissions Form/Components/JSON Editor',
+  title: 'Features/Permissions Form/Components/JSON Editor',
   component: JSONEditor,
 } as Meta;
 

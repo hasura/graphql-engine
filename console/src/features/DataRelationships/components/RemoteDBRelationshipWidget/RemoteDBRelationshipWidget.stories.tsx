@@ -11,7 +11,7 @@ import { handlers } from '../../../RemoteRelationships/RemoteSchemaRelationships
 
 export default {
   title:
-    'Data Relationships/Remote DB Relationships/Remote DB Relationships Form',
+    'Features/Data Relationships/Remote DB Relationships/Remote DB Relationships Form',
   component: RemoteDBRelationshipWidget,
   decorators: [ReactQueryDecorator()],
   parameters: {

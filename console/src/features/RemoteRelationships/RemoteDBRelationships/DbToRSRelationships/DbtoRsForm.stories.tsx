@@ -7,7 +7,7 @@ import { handlers } from '../../../RemoteRelationships/RemoteSchemaRelationships
 import { DbToRsForm, DbToRsFormProps } from './DbToRsForm';
 
 export default {
-  title: 'Data Relationships/DB to RS Relationship Form',
+  title: 'Features/Data Relationships/DB to RS Relationship Form',
   component: DbToRsForm,
   decorators: [ReactQueryDecorator()],
   parameters: {

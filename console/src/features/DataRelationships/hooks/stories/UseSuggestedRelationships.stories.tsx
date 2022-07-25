@@ -80,7 +80,7 @@ const UseSuggestedArrayRelationshipsComponent = () => {
 };
 
 export default {
-  title: 'Data Relationships/useSuggestedRelationships',
+  title: 'Features/Data Relationships/useSuggestedRelationships',
   decorators: [ReactQueryDecorator()],
   component: UseSuggestedRelationshipsComponent,
   parameters: {

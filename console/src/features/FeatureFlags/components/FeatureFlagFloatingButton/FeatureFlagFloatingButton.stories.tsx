@@ -3,7 +3,7 @@ import React from 'react';
 import { FeatureFlagFloatingButton } from './FeatureFlagFloatingButton';
 
 export default {
-  title: 'feature/FeatureFlags/FeatureFlagFloatingButton',
+  title: 'features/FeatureFlags/FeatureFlagFloatingButton',
   component: FeatureFlagFloatingButton,
 } as ComponentMeta<typeof FeatureFlagFloatingButton>;
 

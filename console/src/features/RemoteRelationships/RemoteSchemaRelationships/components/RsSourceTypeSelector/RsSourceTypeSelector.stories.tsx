@@ -14,7 +14,8 @@ const defaultValues = {
 };
 
 export default {
-  title: 'Remote Relationships/Components/Remote Schema Source Type Selector',
+  title:
+    'Features/Remote Relationships/Components/Remote Schema Source Type Selector',
   component: RsSourceTypeSelector,
   decorators: [
     StoryComponent => (

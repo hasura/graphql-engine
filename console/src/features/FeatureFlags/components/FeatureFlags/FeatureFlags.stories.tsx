@@ -5,7 +5,7 @@ import { FeatureFlags } from './FeatureFlags';
 import { FeatureFlagDefinition } from '../../types';
 
 export default {
-  title: 'feature/FeatureFlags',
+  title: 'features/FeatureFlags',
   component: FeatureFlags,
   decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof FeatureFlags>;

@@ -80,7 +80,7 @@ const tableWithLegacyAndNewRemoteSchemaRelations: any = {
 };
 
 export default {
-  title: 'Relationships/RemoteSchemaRelationshipTable',
+  title: 'Features/Relationships/RemoteSchemaRelationshipTable',
   component: RemoteSchemaRelationshipTable,
   argTypes: {
     onClick: { action: 'clicked' },

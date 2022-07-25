@@ -7,7 +7,7 @@ import { DatabaseRelationshipsTab } from './DatabaseRelationshipsTab';
 import { handlers } from './__mocks__';
 
 export default {
-  title: 'Data Relationships/Database Relationships Tab',
+  title: 'Features/Data Relationships/Database Relationships Tab',
   component: DatabaseRelationshipsTab,
   decorators: [ReactQueryDecorator()],
   parameters: {

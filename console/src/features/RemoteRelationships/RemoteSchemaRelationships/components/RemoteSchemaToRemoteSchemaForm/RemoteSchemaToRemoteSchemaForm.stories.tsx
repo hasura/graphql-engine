@@ -13,7 +13,8 @@ import {
 import { handlers } from '../../__mocks__';
 
 export default {
-  title: 'Remote Relationships/Components/Remote Schema To Remote Schema Form',
+  title:
+    'Features/Remote Relationships/Components/Remote Schema To Remote Schema Form',
   component: RemoteSchemaToRemoteSchemaForm,
   decorators: [ReactQueryDecorator()],
   parameters: {

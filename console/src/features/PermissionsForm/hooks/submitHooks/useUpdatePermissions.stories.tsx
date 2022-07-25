@@ -67,7 +67,7 @@ const UseUpdatePermissionsComponent = ({
 };
 
 export default {
-  title: 'Permissions Form/hooks/useUpdatePermissions',
+  title: 'Features/Permissions Form/hooks/useUpdatePermissions',
   component: UseUpdatePermissionsComponent,
   decorators: [ReactQueryDecorator()],
   parameters: {

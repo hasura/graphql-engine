@@ -8,7 +8,7 @@ import { expect } from '@storybook/jest';
 import { handlers } from './mocks/handlers.mock';
 
 export default {
-  title: 'RemoteSchema/components/Create',
+  title: 'Features/Remote Schema/components/Create',
   component: RemoteSchema.Create,
   decorators: [ReactQueryDecorator(), ReduxDecorator({})],
   parameters: {

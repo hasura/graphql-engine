@@ -13,7 +13,7 @@ import { metadata, relationshipQueryResponse } from './mocks';
 const url = 'http://localhost:8080';
 
 export default {
-  title: 'Relationships/Database Relationship Table',
+  title: 'Features/Relationships/Database Relationship Table',
   component: DatabaseRelationshipsTable,
   decorators: [ReactQueryDecorator()],
   parameters: {

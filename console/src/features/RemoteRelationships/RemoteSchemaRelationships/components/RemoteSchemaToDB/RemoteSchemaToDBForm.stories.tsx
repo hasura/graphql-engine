@@ -14,7 +14,7 @@ import {
 import { handlers } from '../../__mocks__';
 
 export default {
-  title: 'Remote Relationships/Components/Remote Schema To Db Form',
+  title: 'Features/Remote Relationships/Components/Remote Schema To Db Form',
   component: RemoteSchemaToDbForm,
   decorators: [
     ReactQueryDecorator(),
