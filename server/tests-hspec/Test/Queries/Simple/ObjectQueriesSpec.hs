@@ -1,16 +1,23 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Test querying an entity for a couple fields.
-module Test.BasicFieldsSpec (spec) where
+-- |
+-- Simple queries on single objects.
+--
+-- https://hasura.io/docs/latest/queries/postgres/simple-object-queries/
+-- https://hasura.io/docs/latest/queries/ms-sql-server/simple-object-queries/
+-- https://hasura.io/docs/latest/queries/bigquery/simple-object-queries/
+module Test.Queries.Simple.ObjectQueriesSpec (spec) where
 
-import Harness.Backend.BigQuery qualified as Bigquery
+import Data.Aeson (Value)
+import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
-import Harness.GraphqlEngine qualified as GraphqlEngine
+import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
+import Harness.Test.Context (Options (..))
 import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -18,11 +25,8 @@ import Harness.TestEnvironment (TestEnvironment)
 import Test.Hspec (SpecWith, describe, it)
 import Prelude
 
---------------------------------------------------------------------------------
--- Preamble
-
 spec :: SpecWith TestEnvironment
-spec =
+spec = do
   Context.run
     [ Context.Context
         { name = Context.Backend Context.MySQL,
@@ -55,8 +59,8 @@ spec =
       Context.Context
         { name = Context.Backend Context.BigQuery,
           mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Bigquery.setup schema,
-          teardown = Bigquery.teardown schema,
+          setup = BigQuery.setup schema,
+          teardown = BigQuery.teardown schema,
           customOptions =
             Just $
               Context.Options
@@ -70,100 +74,58 @@ spec =
 -- Schema
 
 schema :: [Schema.Table]
-schema = [author]
-
-author :: Schema.Table
-author =
-  (table "author")
-    { tableColumns =
-        [ Schema.column "id" Schema.TInt,
-          Schema.column "name" Schema.TStr
-        ],
-      tablePrimaryKey = ["id"],
-      tableData =
-        [ [Schema.VInt 1, Schema.VStr "Author 1"],
-          [Schema.VInt 2, Schema.VStr "Author 2"]
-        ]
-    }
+schema =
+  [ (table "author")
+      { tableColumns =
+          [ Schema.column "id" Schema.TInt,
+            Schema.column "name" Schema.TStr
+          ],
+        tablePrimaryKey = ["id"],
+        tableData =
+          [ [ Schema.VInt 1,
+              Schema.VStr "Author 1"
+            ],
+            [ Schema.VInt 2,
+              Schema.VStr "Author 2"
+            ]
+          ]
+      }
+  ]
 
 --------------------------------------------------------------------------------
 -- Tests
 
 tests :: Context.Options -> SpecWith TestEnvironment
-tests opts = describe "BasicFieldsSpec" $ do
-  it "Use operationName" $ \testEnvironment ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphqlYaml
-          testEnvironment
-          [yaml|
-operationName: chooseThisOne
-query: |
-  query ignoreThisOne {
-    MyQuery {
-      name
-    }
-  }
-  query chooseThisOne {
-    hasura_author(order_by:[{id:asc}]) {
-      id
-      name
-    }
-  }
-|]
-      )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-    id: 1
-  - name: Author 2
-    id: 2
-|]
+tests opts = do
+  let shouldBe :: IO Value -> Value -> IO ()
+      shouldBe = shouldReturnYaml opts
 
-  it "Missing field" $ \testEnvironment -> do
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnvironment
-          [graphql|
-query {
-  hasura_author {
-    id
-    name
-    notPresentCol
-  }
-}
-|]
-      )
-      [yaml|
-errors:
-- extensions:
-    code: validation-failed
-    path: $.selectionSet.hasura_author.selectionSet.notPresentCol
-  message: |-
-    field 'notPresentCol' not found in type: 'hasura_author'
-|]
+  describe "Simple object queries" do
+    it "Fetch a list of authors" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              data:
+                hasura_author:
+                - id: 1
+                  name: "Author 1"
+                - id: 2
+                  name: "Author 2"
+            |]
 
-  it "Missing table" $ \testEnvironment ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnvironment
-          [graphql|
-query {
-  random {
-    id
-    name
-  }
-}
-|]
-      )
-      [yaml|
-errors:
-- extensions:
-    code: validation-failed
-    path: $.selectionSet.random
-  message: |-
-    field 'random' not found in type: 'query_root'
-|]
+          -- We have to set an ordering for BigQuery, as return order isn't
+          -- guaranteed.
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  hasura_author(order_by: [{ id: asc }]) {
+                    id
+                    name
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
