@@ -798,11 +798,12 @@ parseExperimentalFeatures =
 experimentalFeaturesEnv :: (String, String)
 experimentalFeaturesEnv =
   ( "HASURA_GRAPHQL_EXPERIMENTAL_FEATURES",
-    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters and naming_convention, streaming_subscriptions). "
+    "Comma separated list of experimental features. (all: inherited_roles,optimize_permission_filters and naming_convention, streaming_subscriptions, apollo_federation). "
       <> "optimize_permission_filters: Use experimental SQL optimization"
       <> "transformations for permission filters. "
       <> "inherited_roles: ignored; inherited roles cannot be switched off"
       <> "naming_convention: apply naming convention (graphql-default/hasura-default) based on source customization"
+      <> "apollo_federation: use hasura as a subgraph in an Apollo gateway"
       -- TODO(SOLOMON): Write a description of this experimental feature:
       -- <> "streaming_subscriptions: ..."
   )

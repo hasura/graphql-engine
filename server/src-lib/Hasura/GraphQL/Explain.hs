@@ -61,6 +61,7 @@ explainQueryField userInfo fieldName rootField = do
     RFRemote _ -> throw400 InvalidParams "only hasura queries can be explained"
     RFAction _ -> throw400 InvalidParams "query actions cannot be explained"
     RFRaw _ -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
+    RFMulti _ -> pure $ encJFromJValue $ ExplainPlan fieldName Nothing Nothing
     RFDB sourceName exists -> do
       step <- AB.dispatchAnyBackend @BackendExecute
         exists

@@ -264,6 +264,7 @@ filterVariablesFromQuery = foldMap \case
   RFRemote remote -> foldOf (traverse . _SessionPresetVariable . to match) remote
   RFAction actionQ -> foldMap remoteFieldPred actionQ
   RFRaw {} -> mempty
+  RFMulti {} -> mempty
   where
     _SessionPresetVariable :: Traversal' RemoteSchemaVariable SessionVariable
     _SessionPresetVariable f (SessionPresetVariable a b c) =
@@ -484,6 +485,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.ExecStepRaw json -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
         buildRaw json
+      -- For `ExecStepMulti`, execute all steps and then concat them in a list
+      E.ExecStepMulti lst -> do
+        _all <- traverse (executeQueryStep httpManager fieldName) lst
+        pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse _all)) []
 
     executeMutationStep ::
       HTTP.Manager ->
@@ -514,6 +519,10 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
       E.ExecStepRaw json -> do
         logQueryLog logger $ QueryLog reqUnparsed Nothing reqId QueryLogKindIntrospection
         buildRaw json
+      -- For `ExecStepMulti`, execute all steps and then concat them in a list
+      E.ExecStepMulti lst -> do
+        _all <- traverse (executeQueryStep httpManager fieldName) lst
+        pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse _all)) []
 
     runRemoteGQ httpManager fieldName rsi resultCustomizer gqlReq remoteJoins = do
       (telemTimeIO_DT, remoteResponseHeaders, resp) <-

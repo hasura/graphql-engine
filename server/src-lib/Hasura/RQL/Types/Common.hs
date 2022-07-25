@@ -45,10 +45,14 @@ module Hasura.RQL.Types.Common
     commentToMaybeText,
     commentFromMaybeText,
     EnvRecord (..),
+    ApolloFederationConfig (..),
+    ApolloFederationVersion (..),
+    isApolloFedV1enabled,
   )
 where
 
 import Data.Aeson
+import Data.Aeson qualified as J
 import Data.Aeson.Casing
 import Data.Aeson.TH
 import Data.Aeson.Types (prependFailure, typeMismatch)
@@ -544,3 +548,34 @@ instance (ToJSON a) => ToJSON (EnvRecord a) where
   toJSON (EnvRecord envVar _envValue) = object ["env_var" .= envVar]
 
 instance (FromJSON a) => FromJSON (EnvRecord a)
+
+data ApolloFederationVersion = V1 deriving (Show, Eq, Generic)
+
+instance Cacheable ApolloFederationVersion
+
+instance ToJSON ApolloFederationVersion where
+  toJSON V1 = J.String "v1"
+
+instance FromJSON ApolloFederationVersion where
+  parseJSON = withText "ApolloFederationVersion" $
+    \case
+      "v1" -> pure V1
+      _ -> fail "enable takes the version of apollo federation. Supported value is v1 only."
+
+instance NFData ApolloFederationVersion
+
+data ApolloFederationConfig = ApolloFederationConfig
+  { enable :: !ApolloFederationVersion
+  }
+  deriving (Show, Eq, Generic)
+
+instance Cacheable ApolloFederationConfig
+
+instance ToJSON ApolloFederationConfig
+
+instance FromJSON ApolloFederationConfig
+
+instance NFData ApolloFederationConfig
+
+isApolloFedV1enabled :: Maybe ApolloFederationConfig -> Bool
+isApolloFedV1enabled = isJust

@@ -39,6 +39,7 @@ where
 import Data.Has
 import Data.Text.Casing (GQLNameIdentifier)
 import Hasura.Base.Error
+import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser hiding (Type)
@@ -104,7 +105,8 @@ class
     GQLNameIdentifier ->
     m
       ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
-        [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+        [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
+        Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
       )
   buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>

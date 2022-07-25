@@ -570,12 +570,12 @@ getInterfaceInfo t = case getTypeInfo t of
 data SomeDefinitionTypeInfo origin = forall k. SomeDefinitionTypeInfo (Definition origin (TypeInfo origin k))
 
 instance HasName (SomeDefinitionTypeInfo origin) where
-  getName (SomeDefinitionTypeInfo (Definition n _ _ _)) = n
+  getName (SomeDefinitionTypeInfo (Definition n _ _ _ _)) = n
 
 instance Eq (SomeDefinitionTypeInfo origin) where
   -- Same as instance Eq Definition
-  SomeDefinitionTypeInfo (Definition name1 _ _ ti1)
-    == SomeDefinitionTypeInfo (Definition name2 _ _ ti2) =
+  SomeDefinitionTypeInfo (Definition name1 _ _ _ ti1)
+    == SomeDefinitionTypeInfo (Definition name2 _ _ _ ti2) =
       name1 == name2 && eqTypeInfo ti1 ti2
 
 data Definition origin a = Definition
@@ -598,6 +598,8 @@ data Definition origin a = Definition
     -- Maybe, at some point, it makes sense to represent the above options more
     -- accurately in the type of 'dOrigin'.
     dOrigin :: Maybe origin,
+    -- | The directives for this object.
+    dDirectives :: [G.Directive Void],
     -- | Lazy to allow mutually-recursive type definitions.
     dInfo :: ~a
   }
@@ -613,8 +615,8 @@ instance Eq a => Eq (Definition origin a) where
 instance Eq1 (Definition origin) where
   liftEq
     eq
-    (Definition name1 _ _ info1)
-    (Definition name2 _ _ info2) =
+    (Definition name1 _ _ _ info1)
+    (Definition name2 _ _ _ info2) =
       name1 == name2 && eq info1 info2
 
 instance HasName (Definition origin a) where

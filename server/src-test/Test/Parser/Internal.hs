@@ -146,7 +146,8 @@ mkParser table cib =
           _tciViewInfo = Nothing,
           _tciEnumValues = Nothing,
           _tciCustomConfig = tableConfig,
-          _tciExtraTableMetadata = ()
+          _tciExtraTableMetadata = (),
+          _tciApolloFederationConfig = Nothing
         }
 
     pk :: Maybe (PrimaryKey PG (ColumnInfo PG))

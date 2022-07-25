@@ -1024,6 +1024,22 @@ insecure-webhook-with-admin-secret)
 	kill $WH_PID
 	;;
 
+apollo-federation)
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH APOLLO FEDERATION ########>\n"
+
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM"
+	export HASURA_GRAPHQL_EXPERIMENTAL_FEATURES="apollo_federation"
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest -n 1 --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" test_apollo_federation.py
+
+	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+	unset HASURA_GRAPHQL_ADMIN_SECRET
+
+	kill_hge_servers
+	;;
+
 allowlist-queries)
 	# allowlist queries test
 	# unset HASURA_GRAPHQL_AUTH_HOOK

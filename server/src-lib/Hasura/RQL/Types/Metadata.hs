@@ -91,6 +91,7 @@ module Hasura.RQL.Types.Metadata
     tmComputedFields,
     tmConfiguration,
     tmDeletePermissions,
+    tmApolloFederationConfig,
     tmEventTriggers,
     tmInsertPermissions,
     tmIsEnum,
@@ -323,7 +324,8 @@ data TableMetadata b = TableMetadata
     _tmSelectPermissions :: !(Permissions (SelPermDef b)),
     _tmUpdatePermissions :: !(Permissions (UpdPermDef b)),
     _tmDeletePermissions :: !(Permissions (DelPermDef b)),
-    _tmEventTriggers :: !(EventTriggers b)
+    _tmEventTriggers :: !(EventTriggers b),
+    _tmApolloFederationConfig :: !(Maybe ApolloFederationConfig)
   }
   deriving (Generic)
 
@@ -353,6 +355,7 @@ mkTableMeta qt isEnum config =
     mempty
     mempty
     mempty
+    Nothing
 
 instance (Backend b) => FromJSON (TableMetadata b) where
   parseJSON = withObject "Object" $ \o -> do
@@ -375,6 +378,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       <*> parseListAsMap "update permissions" _pdRole (o .:? upKey .!= [])
       <*> parseListAsMap "delete permissions" _pdRole (o .:? dpKey .!= [])
       <*> parseListAsMap "event triggers" etcName (o .:? etKey .!= [])
+      <*> o .:? enableAFKey
     where
       tableKey = "table"
       isEnumKey = "is_enum"
@@ -388,6 +392,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
       etKey = "event_triggers"
       cfKey = "computed_fields"
       rrKey = "remote_relationships"
+      enableAFKey = "apollo_federation_config"
 
       getUnexpectedKeys o =
         HS.fromList (KM.keys o) `HS.difference` expectedKeySet
@@ -405,7 +410,8 @@ instance (Backend b) => FromJSON (TableMetadata b) where
             dpKey,
             etKey,
             cfKey,
-            rrKey
+            rrKey,
+            enableAFKey
           ]
 
 data FunctionMetadata b = FunctionMetadata
@@ -932,6 +938,7 @@ metadataToOrdJSON
             updatePermissions
             deletePermissions
             eventTriggers
+            enableApolloFed
           ) =
           AO.object $
             [("table", AO.toOrdered table)]
@@ -946,10 +953,12 @@ metadataToOrdJSON
                   selectPermissionsPair,
                   updatePermissionsPair,
                   deletePermissionsPair,
-                  eventTriggersPair
+                  eventTriggersPair,
+                  apolloFedConfigPair
                 ]
           where
             isEnumPair = if isEnum then Just ("is_enum", AO.toOrdered isEnum) else Nothing
+            apolloFedConfigPair = fmap (\afConfig -> ("apollo_federation_config", AO.toOrdered afConfig)) enableApolloFed
             configPair =
               if config == emptyTableConfig
                 then Nothing

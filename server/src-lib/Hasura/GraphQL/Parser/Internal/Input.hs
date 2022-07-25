@@ -242,7 +242,7 @@ field ::
   InputFieldsParser origin m a
 field name description parser =
   InputFieldsParser
-    { ifDefinitions = [Definition name description Nothing $ InputFieldInfo (pType parser) Nothing],
+    { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) Nothing],
       ifParser = \values -> withKey (A.Key (K.fromText (unName name))) do
         value <-
           maybe (parseError ("missing required field " <> toErrorValue name)) pure $ M.lookup name values <|> nullableDefault
@@ -271,7 +271,7 @@ fieldOptional ::
 fieldOptional name description parser =
   InputFieldsParser
     { ifDefinitions =
-        [ Definition name description Nothing $
+        [ Definition name description Nothing [] $
             InputFieldInfo (nullableType $ pType parser) Nothing
         ],
       ifParser =
@@ -295,7 +295,7 @@ fieldWithDefault ::
   InputFieldsParser origin m a
 fieldWithDefault name description defaultValue parser =
   InputFieldsParser
-    { ifDefinitions = [Definition name description Nothing $ InputFieldInfo (pType parser) (Just defaultValue)],
+    { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) (Just defaultValue)],
       ifParser =
         M.lookup name
           >>> withKey (A.Key (K.fromText (unName name))) . \case
@@ -325,7 +325,7 @@ enum name description values =
           other -> typeMismatch name "an enum value" other
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description Nothing $ TIEnum (fst <$> values)
+    schemaType = TNamed NonNullable $ Definition name description Nothing [] $ TIEnum (fst <$> values)
     valuesMap = M.fromList $ over (traverse . _1) dName $ NonEmpty.toList values
     validate value =
       maybe invalidType pure $ M.lookup value valuesMap
@@ -369,7 +369,7 @@ object name description parser =
   where
     schemaType =
       TNamed NonNullable $
-        Definition name description Nothing $
+        Definition name description Nothing [] $
           TIInputObject (InputObjectInfo (ifDefinitions parser))
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
     parseFields fields = do

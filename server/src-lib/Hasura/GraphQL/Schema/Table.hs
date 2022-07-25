@@ -106,7 +106,7 @@ tableSelectColumnsEnum sourceInfo tableInfo = do
         ]
   where
     define name =
-      P.Definition name (Just $ G.Description "column name") Nothing P.EnumValueInfo
+      P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
 
 -- | Table update columns enum
 --
@@ -129,7 +129,7 @@ tableUpdateColumnsEnum tableInfo = do
         pure (define $ ciName column, ciColumn column)
   pure $ P.enum enumName enumDesc <$> nonEmpty enumValues
   where
-    define name = P.Definition name (Just $ G.Description "column name") Nothing P.EnumValueInfo
+    define name = P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
 
 -- If there's no column for which the current user has "update"
 -- permissions, this functions returns an enum that only contains a
@@ -148,7 +148,7 @@ updateColumnsPlaceholderParser tableInfo = do
       pure $
         P.enum enumName (Just $ G.Description $ "placeholder for update columns of table " <> tableInfoName tableInfo <<> " (current role has no relevant permissions)") $
           pure
-            ( P.Definition @_ @P.EnumValueInfo Name.__PLACEHOLDER (Just $ G.Description "placeholder (do not use)") Nothing P.EnumValueInfo,
+            ( P.Definition @_ @P.EnumValueInfo Name.__PLACEHOLDER (Just $ G.Description "placeholder (do not use)") Nothing [] P.EnumValueInfo,
               Nothing
             )
 

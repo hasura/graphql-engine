@@ -147,6 +147,7 @@ conflictConstraint constraints sourceInfo tableInfo =
               name
               (Just $ "unique or primary key constraint on columns " <> coerce (showPGCols (HS.toList cCols)))
               Nothing
+              []
               P.EnumValueInfo,
             c
           )

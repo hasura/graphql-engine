@@ -208,11 +208,11 @@ bqColumnParser columnType (G.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (G.Description <$> description) Nothing P.EnumValueInfo,
+      ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
         BigQuery.StringValue $ G.unName value
       )
     throughJSON scalarName =
-      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing P.TIScalar
+      let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar
        in P.Parser
             { pType = schemaType,
               pParser =
@@ -221,7 +221,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
             }
     stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
     stringBased scalarName =
-      P.string {P.pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing P.TIScalar}
+      P.string {P.pType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar}
 
 bqScalarSelectionArgumentsParser ::
   MonadParse n =>
@@ -261,7 +261,7 @@ bqOrderByOperators _tCase =
         )
       ]
   where
-    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing [] P.EnumValueInfo
 
 bqComparisonExps ::
   forall m n r.

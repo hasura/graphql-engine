@@ -5,7 +5,9 @@
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
 module Hasura.RQL.DDL.Schema.Cache.Common
-  ( BuildOutputs (..),
+  ( ApolloFederationConfig (..),
+    ApolloFederationVersion (..),
+    BuildOutputs (..),
     CacheBuild,
     CacheBuildParams (CacheBuildParams),
     InvalidationKeys (..),
@@ -112,9 +114,10 @@ invalidateKeys CacheInvalidations {..} InvalidationKeys {..} =
     invalidate = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
 data TableBuildInput b = TableBuildInput
-  { _tbiName :: !(TableName b),
-    _tbiIsEnum :: !Bool,
-    _tbiConfiguration :: !(TableConfig b)
+  { _tbiName :: TableName b,
+    _tbiIsEnum :: Bool,
+    _tbiConfiguration :: TableConfig b,
+    _tbiApolloFederationConfig :: Maybe ApolloFederationConfig
   }
   deriving (Show, Eq, Generic)
 
@@ -151,7 +154,7 @@ mkTableInputs ::
 mkTableInputs TableMetadata {..} =
   (buildInput, nonColumns, permissions)
   where
-    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration
+    buildInput = TableBuildInput _tmTable _tmIsEnum _tmConfiguration _tmApolloFederationConfig
     nonColumns =
       NonColumnTableInputs
         _tmTable

@@ -101,27 +101,31 @@ convertQuerySelSet
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 
+        resolveExecutionSteps rootFieldName rootFieldUnpreparedValue = do
+          case rootFieldUnpreparedValue of
+            RFMulti lst -> do
+              allSteps <- traverse (resolveExecutionSteps rootFieldName) lst
+              pure $ ExecStepMulti allSteps
+            RFDB sourceName exists ->
+              AB.dispatchAnyBackend @BackendExecute
+                exists
+                \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
+                  let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
+                      queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
+                      (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
+                  dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST
+                  pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
+            RFRemote rf -> do
+              RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
+              let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField remoteField
+              pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
+            RFAction action -> do
+              let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
+              (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
+                AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders (_uiSession userInfo)) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
+                AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
+              pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
+            RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
     -- 3. Transform the 'RootFieldMap' into an execution plan
-    executionPlan <- flip OMap.traverseWithKey unpreparedQueries $ \rootFieldName rootFieldUnpreparedValue -> do
-      case rootFieldUnpreparedValue of
-        RFDB sourceName exists ->
-          AB.dispatchAnyBackend @BackendExecute
-            exists
-            \(SourceConfigWith (sourceConfig :: (SourceConfig b)) queryTagsConfig (QDBR db)) -> do
-              let queryTagsAttributes = encodeQueryTags $ QTQuery $ QueryMetadata reqId maybeOperationName rootFieldName parameterizedQueryHash
-                  queryTagsComment = Tagged.untag $ createQueryTags @m queryTagsAttributes queryTagsConfig
-                  (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsQueryDB db
-              dbStepInfo <- flip runReaderT queryTagsComment $ mkDBQueryPlan @b userInfo env sourceName sourceConfig noRelsDBAST
-              pure $ ExecStepDB [] (AB.mkAnyBackend dbStepInfo) remoteJoins
-        RFRemote rf -> do
-          RemoteSchemaRootField remoteSchemaInfo resultCustomizer remoteField <- runVariableCache $ for rf $ resolveRemoteVariable userInfo
-          let (noRelsRemoteField, remoteJoins) = RJ.getRemoteJoinsGraphQLField remoteField
-          pure $ buildExecStepRemote remoteSchemaInfo resultCustomizer G.OperationTypeQuery noRelsRemoteField remoteJoins (GH._grOperationName gqlUnparsed)
-        RFAction action -> do
-          let (noRelsDBAST, remoteJoins) = RJ.getRemoteJoinsActionQuery action
-          (actionExecution, actionName, fch) <- pure $ case noRelsDBAST of
-            AQQuery s -> (AEPSync $ resolveActionExecution env logger userInfo s (ActionExecContext manager reqHeaders (_uiSession userInfo)) (Just (GH._grQuery gqlUnparsed)), _aaeName s, _aaeForwardClientHeaders s)
-            AQAsync s -> (AEPAsyncQuery $ AsyncActionQueryExecutionPlan (_aaaqActionId s) $ resolveAsyncActionQuery userInfo s, _aaaqName s, _aaaqForwardClientHeaders s)
-          pure $ ExecStepAction actionExecution (ActionsInfo actionName fch) remoteJoins
-        RFRaw r -> flip onLeft throwError =<< executeIntrospection userInfo r introspectionDisabledRoles
+    executionPlan <- flip OMap.traverseWithKey unpreparedQueries $ resolveExecutionSteps
     pure (executionPlan, OMap.elems unpreparedQueries, dirMap, parameterizedQueryHash)

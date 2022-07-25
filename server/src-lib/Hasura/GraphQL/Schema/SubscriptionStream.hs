@@ -78,7 +78,7 @@ cursorOrderingArgParser = do
   where
     define (name, val) =
       let orderingTypeDesc = bool "descending" "ascending" $ val == COAscending
-       in P.Definition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") Nothing P.EnumValueInfo
+       in P.Definition name (Just $ G.Description $ orderingTypeDesc <> " ordering of the cursor") Nothing [] P.EnumValueInfo
 
 -- | Argument to specify the ordering of the cursor.
 -- > ordering: cursor_ordering

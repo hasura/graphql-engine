@@ -42,6 +42,7 @@ data RootField (db :: BackendType -> Type) remote action raw where
   RFRemote :: remote -> RootField db remote action raw
   RFAction :: action -> RootField db remote action raw
   RFRaw :: raw -> RootField db remote action raw
+  RFMulti :: [RootField db remote action raw] -> RootField db remote action raw
 
 data MutationDB (b :: BackendType) (r :: Type) v
   = MDBInsert (AnnotatedInsert b r v)

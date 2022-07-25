@@ -125,7 +125,7 @@ orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
             )
           ]
   where
-    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing [] P.EnumValueInfo
 
 comparisonExps' ::
   forall m n r.

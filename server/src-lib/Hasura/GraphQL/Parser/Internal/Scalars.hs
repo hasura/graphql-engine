@@ -161,7 +161,7 @@ unsafeRawScalar ::
   Parser origin 'Both n (InputValue Variable)
 unsafeRawScalar name description =
   Parser
-    { pType = TNamed NonNullable $ Definition name description Nothing TIScalar,
+    { pType = TNamed NonNullable $ Definition name description Nothing [] TIScalar,
       pParser = pure
     }
 
@@ -174,7 +174,7 @@ jsonScalar name description =
       pParser = valueToJSON $ toGraphQLType schemaType
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description Nothing TIScalar
+    schemaType = TNamed NonNullable $ Definition name description Nothing [] TIScalar
 
 --------------------------------------------------------------------------------
 -- Local helpers
@@ -191,7 +191,7 @@ mkScalar name description parser =
       pParser = peelVariable (toGraphQLType schemaType) >=> parser
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description Nothing TIScalar
+    schemaType = TNamed NonNullable $ Definition name description Nothing [] TIScalar
 
 convertWith ::
   MonadParse m =>

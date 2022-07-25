@@ -1,5 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Hasura.GraphQL.Schema
   ( buildGQLContext,
@@ -17,6 +18,7 @@ import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Namespace
@@ -194,8 +196,9 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
           HasuraSchema
           (remoteRelationshipField sources (fst <$> remotes) remoteSchemaPermsCtx)
   runMonadSchema schemaOptions schemaContext role $ do
-    -- build all sources
-    (sourcesQueryFields, sourcesMutationFrontendFields, sourcesMutationBackendFields, subscriptionFields) <-
+    -- build all sources (`apolloFedTableParsers` contains all the parsers and
+    -- type names, which are eligible for the `_Entity` Union)
+    (sourcesQueryFields, sourcesMutationFrontendFields, sourcesMutationBackendFields, subscriptionFields, apolloFedTableParsers) <-
       fmap mconcat $ traverse (buildBackendSource buildSource) $ toList sources
     -- build all remote schemas
     -- we only keep the ones that don't result in a name conflict
@@ -204,6 +207,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
     let remotesQueryFields = concatMap piQuery remoteSchemaFields
         remotesMutationFields = concat $ mapMaybe piMutation remoteSchemaFields
         remotesSubscriptionFields = concat $ mapMaybe piSubscription remoteSchemaFields
+        apolloFields = apolloRootFields expFeatures apolloFedTableParsers
 
     mutationParserFrontend <-
       buildMutationParser remotesMutationFields allActionInfos customTypes sourcesMutationFrontendFields
@@ -212,9 +216,9 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
     subscriptionParser <-
       buildSubscriptionParser subscriptionFields allActionInfos customTypes remotesSubscriptionFields
     queryParserFrontend <-
-      buildQueryParser sourcesQueryFields remotesQueryFields allActionInfos customTypes mutationParserFrontend subscriptionParser
+      buildQueryParser sourcesQueryFields remotesQueryFields apolloFields allActionInfos customTypes mutationParserFrontend subscriptionParser
     queryParserBackend <-
-      buildQueryParser sourcesQueryFields remotesQueryFields allActionInfos customTypes mutationParserBackend subscriptionParser
+      buildQueryParser sourcesQueryFields remotesQueryFields apolloFields allActionInfos customTypes mutationParserBackend subscriptionParser
 
     -- In order to catch errors early, we attempt to generate the data
     -- required for introspection, which ends up doing a few correctness
@@ -228,6 +232,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
             (P.parserType <$> mutationParserBackend)
             (P.parserType <$> subscriptionParser)
       pure $
+        -- We don't need to persist the introspection schema for all the roles here.
         -- TODO(nicuveo): we treat the admin role differently in this function,
         -- which is a bit inelegant; we might want to refactor this function and
         -- split it into several steps, so that we can make a separate function for
@@ -235,6 +240,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         if role == adminRoleName
           then result
           else G.SchemaIntrospection mempty
+
     void $
       buildIntrospectionSchema
         (P.parserType queryParserFrontend)
@@ -268,16 +274,17 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         ( [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
-          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
+          [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
+          [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))]
         )
     buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
       withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
         makeTypename <- asks getter
-        (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
+        (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
           buildQueryAndSubscriptionFields sourceInfo validTables validFunctions streamingSubscriptionsCtx
-        (,,,)
+        (,,,,apolloFedTableParsers)
           <$> customizeFields
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__query))
@@ -571,7 +578,7 @@ buildQueryAndSubscriptionFields ::
   TableCache b ->
   FunctionCache b ->
   StreamingSubscriptionsCtx ->
-  m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)])
+  m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)], [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))])
 buildQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> functions) streamingSubsCtx = do
   roleName <- asks getter
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
@@ -585,8 +592,8 @@ buildQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> fun
         let targetTableName = _fiReturnType functionInfo
         lift $ mkRFs $ buildFunctionQueryFields sourceInfo functionName functionInfo targetTableName
 
-  (tableQueryFields, tableSubscriptionFields) <-
-    unzip . catMaybes
+  (tableQueryFields, tableSubscriptionFields, apolloFedTableParsers) <-
+    unzip3 . catMaybes
       <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT $ do
         tableIdentifierName <- getTableIdentifierName @b tableInfo
         lift $ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamingSubsCtx tableIdentifierName
@@ -596,7 +603,8 @@ buildQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> fun
 
   pure
     ( tableQueryRootFields <> functionSelectExpParsers,
-      tableSubscriptionRootFields <> functionSelectExpParsers
+      tableSubscriptionRootFields <> functionSelectExpParsers,
+      catMaybes apolloFedTableParsers
     )
   where
     mkRFs = mkRootFields sourceName sourceConfig queryTagsConfig QDBR
@@ -689,14 +697,35 @@ buildQueryParser ::
   MonadBuildSchemaBase r m n =>
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   [P.FieldParser n (NamespacedField (RemoteSchemaRootField (RemoteRelationshipField UnpreparedValue) RemoteSchemaVariable))] ->
+  [P.FieldParser n (G.SchemaIntrospection -> QueryRootField UnpreparedValue)] ->
   [ActionInfo] ->
   AnnotatedCustomTypes ->
   Maybe (Parser 'Output n (RootFieldMap (MutationRootField UnpreparedValue))) ->
   Maybe (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue))) ->
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
-buildQueryParser sourceQueryFields remoteQueryFields allActions customTypes mutationParser subscriptionParser = do
+buildQueryParser sourceQueryFields remoteQueryFields apolloFederationFields allActions customTypes mutationParser subscriptionParser = do
   actionQueryFields <- concat <$> traverse (buildActionQueryFields customTypes) allActions
-  let allQueryFields = sourceQueryFields <> fmap (fmap NotNamespaced) actionQueryFields <> fmap (fmap $ fmap RFRemote) remoteQueryFields
+  -- This method is aware of our rudimentary support for Apollo federation.
+  -- Apollo federation adds two fields, `_service` and `_entities`. The
+  -- `_service` field parser is a selection set that contains an `sdl` field.
+  -- The `sdl` field, exposes a _serialized_ introspection of the schema. So in
+  -- that sense it is similar to the `__type` and `__schema` introspection
+  -- fields. However, a few things must be excluded from this introspection
+  -- data, notably the Apollo federation fields `_service` and `_entities`
+  -- themselves. So in this method we build a version of the introspection for
+  -- Apollo federation purposes.
+  let partialApolloQueryFP = sourceQueryFields <> fmap (fmap NotNamespaced) actionQueryFields <> fmap (fmap $ fmap RFRemote) remoteQueryFields
+  basicQueryPForApollo <- queryRootFromFields partialApolloQueryFP
+  let buildApolloIntrospection buildQRF = do
+        partialSchema <-
+          parseBuildIntrospectionSchema
+            (P.parserType basicQueryPForApollo)
+            (P.parserType <$> mutationParser)
+            (P.parserType <$> subscriptionParser)
+        pure $ NotNamespaced $ buildQRF $ convertToSchemaIntrospection partialSchema
+      apolloFederationFieldsWithIntrospection :: [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))]
+      apolloFederationFieldsWithIntrospection = apolloFederationFields <&> (`P.bindField` buildApolloIntrospection)
+      allQueryFields = partialApolloQueryFP <> apolloFederationFieldsWithIntrospection
   queryWithIntrospectionHelper allQueryFields mutationParser subscriptionParser
 
 -- | Builds a @Schema@ at query parsing time
