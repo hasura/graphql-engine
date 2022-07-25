@@ -1,6 +1,6 @@
 This note is in [Hasura.Server.Init](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Init.hs#L48).
 It is referenced at:
-  - line 106 of [Hasura.Server.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Types.hs#L106)
+  - line 109 of [Hasura.Server.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/Types.hs#L109)
 
 # ReadOnly Mode
 
