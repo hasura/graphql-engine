@@ -81,10 +81,6 @@ try_jq() {
   fi
 }
 
-# Bump this to:
-#  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.8
-
 case "${1-}" in
   graphql-engine)
     case "${2-}" in
@@ -565,46 +561,9 @@ elif [ "$MODE" = "test" ]; then
       echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/node_modules\""
     fi
 
-    ### Check for and install dependencies in venv
     PY_VENV=.hasura-dev-python-venv
-    DEVSH_VERSION_FILE=.devsh_version
-    # Do we need to force reinstall?
-    if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
-      true # ok
-    else
-      echo_warn 'dev.sh version was bumped or fresh install. Forcing reinstallation of dependencies.'
-      rm -rf "$PY_VENV"
-    fi
-    # cryptography 3.4.7 version requires Rust dependencies by default. But we don't need them for our tests, hence disabling them via the following env var => https://stackoverflow.com/a/66334084
-    export CRYPTOGRAPHY_DONT_BUILD_RUST=1
-    set +u  # for venv activate
-    if [ ! -d "$PY_VENV" ]; then
-      python3 -m venv "$PY_VENV"
-      source "$PY_VENV/bin/activate"
-      pip3 install wheel
-      # If the maintainer of this script or pytests needs to change dependencies:
-      #  - alter requirements-top-level.txt as needed
-      #  - delete requirements.txt
-      #  - run this script, then check in the new frozen requirements.txt
-      if [ -f requirements.txt ]; then
-        pip3 install -r requirements.txt
-      else
-        pip3 install -r requirements-top-level.txt
-        (
-          # shellcheck disable=SC2016
-          echo '# IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`'
-          echo '# Please add direct dependencies to requirements-top-level.txt'
-          pip3 freeze
-        ) > requirements.txt
-      fi
-      echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
-    else
-      echo_pretty "It looks like python dependencies have been installed already. Skipping."
-      echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/$PY_VENV\""
-
-      source "$PY_VENV/bin/activate"
-    fi
+    make "$PY_VENV"
+    source "$PY_VENV/bin/activate"
 
     # TODO MAYBE: fix deprecation warnings, make them an error
     if ! pytest \
@@ -618,7 +577,6 @@ elif [ "$MODE" = "test" ]; then
       echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv
-    set -u
 
     cd "$PROJECT_ROOT/server"
     # Kill the cabal new-run and its children. INT so we get hpc report:

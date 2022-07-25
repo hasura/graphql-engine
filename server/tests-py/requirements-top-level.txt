@@ -1,4 +1,6 @@
-# IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`
+# Direct dependencies go here.
+# Regenerate requirements.txt by running `make` in this directory.
+
 croniter
 cryptography == 3.*  # later versions require Rust support
 graphene == 2.*  # v3 has changed the API
