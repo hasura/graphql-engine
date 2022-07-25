@@ -1255,7 +1255,6 @@ test-suite tests-hspec
     Test.EventTriggersRunSQLSpec
     Test.EventTriggerDropSourceCleanupSpec
     Test.GatheringUniqueConstraintsSpec
-    Test.HelloWorldSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
     Test.InsertEnumColumnSpec
