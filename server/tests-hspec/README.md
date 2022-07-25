@@ -154,22 +154,16 @@ features and backends.
 
 ## Adding a new test
 
-The module [Test.HelloWorldSpec](Test/HelloWorldSpec.hs) contains a starting point
-which can be built upon.
+Tests are written using [`hspec`](http://hspec.github.io/) and
+[`hspec-discover`](https://hackage.haskell.org/package/hspec-discover):
 
-To create a new test:
+- Modules are declared under the `Test` namespace.
+- Module names must end with `Spec` (e.g. `HelloWorldSpec`).
+- Module names must contain some value `spec :: SpecWith TestEnvironment`,
+  which serves as the entry point for the module.
 
-1. Create a new module based on `Test.HelloWorldSpec`
-2. Specify each relevant context on which the tests will run in `spec`
-3. Specify the tests and expectations in `tests`
-
-When creating a new test, make sure that:
-
-1. The module name is suffixed by the word `Spec`
-2. The module exports the entry point `spec :: SpecWith TestEnvironment`
-3. The module is listed in the cabal file under `other-modules`
-
-(1) and (2) are required for `hspec-discover` to find and run the test.
+See the documentation for `hspec` and `hspec-discover`, as well as other
+modules in the `Test` namespace, for more guidance.
 
 ### Specifying contexts
 
