@@ -1,5 +1,3 @@
-{-# LANGUAGE ViewPatterns #-}
-
 -- | This module defines all functions that convert between different
 -- representations of values in the schema; most commonly: GraphQL literals,
 -- JSON values, and 'InputValue', a type that provides an abstraction above both
@@ -10,18 +8,17 @@ module Hasura.GraphQL.Parser.Internal.Convert
   )
 where
 
-import Control.Monad.Except (MonadError, throwError)
 import Data.Aeson qualified as A
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as M
 import Data.Int (Int64)
 import Data.Scientific (toBoundedInteger)
-import Data.Text (Text)
-import Data.Text.Extended
 import Data.Traversable (for)
 import Data.Vector qualified as V
 import Data.Void (Void, absurd)
+import Hasura.Base.ErrorMessage
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Variable
@@ -53,19 +50,19 @@ valueToJSON expectedType inputVal = do
       G.VObject objects -> A.toJSON $ graphQLToJSON <$> objects
       G.VVariable variable -> valueToJSON' $ absurd <$> vValue variable
 
-jsonToGraphQL :: MonadError Text m => A.Value -> m (G.Value Void)
+jsonToGraphQL :: A.Value -> Either ErrorMessage (G.Value Void)
 jsonToGraphQL = \case
-  A.Null -> pure G.VNull
-  A.Bool val -> pure $ G.VBoolean val
-  A.String val -> pure $ G.VString val
+  A.Null -> Right G.VNull
+  A.Bool val -> Right $ G.VBoolean val
+  A.String val -> Right $ G.VString val
   A.Number val -> case toBoundedInteger val of
-    Just intVal -> pure $ G.VInt $ fromIntegral @Int64 intVal
-    Nothing -> pure $ G.VFloat val
+    Just intVal -> Right $ G.VInt $ fromIntegral @Int64 intVal
+    Nothing -> Right $ G.VFloat val
   A.Array vals -> G.VList <$> traverse jsonToGraphQL (V.toList vals)
   A.Object vals ->
-    G.VObject . M.fromList <$> for (KM.toList vals) \(K.toText -> key, val) -> do
-      graphQLName <- maybe (invalidName key) pure $ G.mkName key
+    G.VObject . M.fromList <$> for (KM.toList vals) \(key, val) -> do
+      graphQLName <- maybe (invalidName key) Right $ G.mkName (K.toText key)
       (graphQLName,) <$> jsonToGraphQL val
   where
     invalidName key =
-      throwError $ "variable value contains an object with key " <> key <<> ", which is not a legal GraphQL name"
+      Left $ "variable value contains an object with key " <> toErrorValue key <> ", which is not a legal GraphQL name"

@@ -12,9 +12,10 @@ import Data.HashMap.Strict qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Data.Text.Extended
 import Data.Vector qualified as V
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -248,10 +249,14 @@ collectTypes x =
   P.collectTypeDefinitions x
     `onLeft` \(P.ConflictingDefinitions (type1, origin1) (_type2, origins)) ->
       -- See Note [Collecting types from the GraphQL schema]
-      throw500 $
-        "Found conflicting definitions for " <> P.getName type1 <<> ".  The definition at " <> origin1
-          <<> " differs from the the definition at " <> commaSeparated origins
-          <<> "."
+      throw500 . fromErrorMessage $
+        "Found conflicting definitions for "
+          <> toErrorValue (P.getName type1)
+          <> ".  The definition at "
+          <> toErrorValue origin1
+          <> " differs from the the definitions "
+          <> toErrorValue origins
+          <> "."
 
 -- | Generate a __type introspection parser
 typeIntrospection ::

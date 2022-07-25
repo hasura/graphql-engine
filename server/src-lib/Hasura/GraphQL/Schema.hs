@@ -11,7 +11,6 @@ import Control.Lens
 import Data.Aeson.Ordered qualified as JO
 import Data.Has
 import Data.HashMap.Strict qualified as Map
-import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text.Extended
@@ -475,11 +474,11 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
           )
     mutationParser <-
       whenMaybe (not $ null mutationFields) $
-        safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
+        P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
           <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
     subscriptionParser <-
       whenMaybe (not $ null subscriptionFields) $
-        safeSelectionSet subscriptionRoot (Just $ G.Description "subscription root") subscriptionFields
+        P.safeSelectionSet subscriptionRoot (Just $ G.Description "subscription root") subscriptionFields
           <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
     queryParser <- queryWithIntrospectionHelper queryFields mutationParser Nothing
     void $
@@ -743,7 +742,7 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
       introspection = [schema, typeIntrospection] <&> (`P.bindField` buildIntrospectionResponse)
       {-# INLINE introspection #-}
       partialQueryFields = fixedQueryFP ++ introspection
-  safeSelectionSet queryRoot Nothing partialQueryFields
+  P.safeSelectionSet queryRoot Nothing partialQueryFields
     <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 queryRootFromFields ::
@@ -752,7 +751,7 @@ queryRootFromFields ::
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-  safeSelectionSet queryRoot Nothing fps <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
+  P.safeSelectionSet queryRoot Nothing fps <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 -- | Prepare the parser for subscriptions. Every postgres query field is
 -- exposed as a subscription along with fields to get the status of
@@ -769,7 +768,7 @@ buildSubscriptionParser sourceSubscriptionFields allActions customTypes remoteSu
   actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse (buildActionSubscriptionFields customTypes) allActions
   let subscriptionFields = sourceSubscriptionFields <> actionSubscriptionFields <> fmap (fmap $ fmap RFRemote) remoteSubscriptionFields
   whenMaybe (not $ null subscriptionFields) $
-    safeSelectionSet subscriptionRoot Nothing subscriptionFields
+    P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 buildMutationParser ::
@@ -787,7 +786,7 @@ buildMutationParser allRemotes allActions customTypes mutationFields = do
           <> (fmap NotNamespaced <$> actionParsers)
           <> (fmap (fmap RFRemote) <$> allRemotes)
   whenMaybe (not $ null mutationFieldsParser) $
-    safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
+    P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 -------------------------------------------------------------------------------
@@ -848,15 +847,6 @@ mkRootFields sourceName sourceConfig queryTagsConfig inj =
 
 takeExposedAs :: FunctionExposedAs -> FunctionCache b -> FunctionCache b
 takeExposedAs x = Map.filter ((== x) . _fiExposedAs)
-
-safeSelectionSet ::
-  forall n m a.
-  (MonadError QErr n, MonadParse m) =>
-  G.Name ->
-  Maybe G.Description ->
-  [FieldParser m a] ->
-  n (Parser 'Output m (OMap.InsOrdHashMap G.Name (P.ParsedSelection a)))
-safeSelectionSet = P.safeSelectionSet moiName
 
 subscriptionRoot :: G.Name
 subscriptionRoot = Name._subscription_root
