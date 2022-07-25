@@ -146,7 +146,7 @@ scalarType = \case
   Schema.TInt -> "INT64"
   Schema.TStr -> "STRING"
   Schema.TUTCTime -> "DATETIME"
-  Schema.TBool -> "BIT"
+  Schema.TBool -> "BOOLEAN"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstBigQuery
 
 -- | Create column. BigQuery doesn't support default values. Also,
@@ -164,7 +164,7 @@ serialize = \case
   VInt i -> tshow i
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "DATETIME '%F %T'" t
-  VBool b -> tshow @Int $ if b then 1 else 0
+  VBool b -> tshow b
   VNull -> "NULL"
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvBigQuery
 
