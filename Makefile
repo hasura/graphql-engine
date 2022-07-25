@@ -11,4 +11,5 @@ include ./scripts/make/build.mk
 include ./scripts/make/lint.mk
 include ./scripts/make/test-infrastructure.mk
 include ./scripts/make/tests.mk
+include ./scripts/make/legacy-tests.mk
 include ./scripts/make/ghcid.mk

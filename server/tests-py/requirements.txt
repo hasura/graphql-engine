@@ -1,5 +1,5 @@
-# IF YOU CHANGE THIS PLEASE INCREMENT DEVSH_VERSION in `scripts/dev.sh`
-# Please add direct dependencies to requirements-top-level.txt
+# Do not modify this file directly. Instead, modify server/tests-py/requirements-top-level.txt.
+# Then, run `make` in this directory to regenerate this file.
 aniso8601==7.0.0
 async-timeout==4.0.2
 attrs==21.4.0
