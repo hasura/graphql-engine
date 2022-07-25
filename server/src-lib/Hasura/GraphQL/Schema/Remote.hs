@@ -376,7 +376,7 @@ remoteFieldScalarParser customizeTypename (G.ScalarTypeDefinition description na
     }
   where
     customizedTypename = runMkTypename customizeTypename name
-    schemaType = TNamed NonNullable $ Definition customizedTypename description Nothing TIScalar
+    schemaType = TNamed NonNullable $ Definition customizedTypename description Nothing [] TIScalar
     gType = toGraphQLType schemaType
 
     mkRemoteGType = \case
@@ -391,7 +391,7 @@ remoteFieldEnumParser ::
 remoteFieldEnumParser customizeTypename (G.EnumTypeDefinition desc name _directives valueDefns) =
   let enumValDefns =
         valueDefns <&> \(G.EnumValueDefinition enumDesc enumName _) ->
-          ( Definition (G.unEnumValue enumName) enumDesc Nothing P.EnumValueInfo,
+          ( Definition (G.unEnumValue enumName) enumDesc Nothing [] P.EnumValueInfo,
             G.VEnum enumName
           )
    in fmap (Altered False,) $ P.enum (runMkTypename customizeTypename name) desc $ NE.fromList enumValDefns
@@ -839,12 +839,12 @@ remoteFieldFromDefinition schemaDoc parentTypeName remoteRelationships (G.FieldD
   convertType gType
   where
     addNullableList :: FieldParser n a -> FieldParser n a
-    addNullableList (P.FieldParser (Definition name' desc origin (FieldInfo args typ)) parser) =
-      P.FieldParser (Definition name' desc origin (FieldInfo args (TList Nullable typ))) parser
+    addNullableList (P.FieldParser (Definition name' desc origin dLst (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc origin dLst (FieldInfo args (TList Nullable typ))) parser
 
     addNonNullableList :: FieldParser n a -> FieldParser n a
-    addNonNullableList (P.FieldParser (Definition name' desc origin (FieldInfo args typ)) parser) =
-      P.FieldParser (Definition name' desc origin (FieldInfo args (TList NonNullable typ))) parser
+    addNonNullableList (P.FieldParser (Definition name' desc origin dLst (FieldInfo args typ)) parser) =
+      P.FieldParser (Definition name' desc origin dLst (FieldInfo args (TList NonNullable typ))) parser
 
     -- TODO add directives, deprecation
     convertType ::

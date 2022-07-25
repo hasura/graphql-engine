@@ -6,7 +6,6 @@ module Hasura.GraphQL.Parser.Schema.Convert
 where
 
 import Data.List.NonEmpty qualified as NonEmpty
-import Data.Void (Void)
 import Hasura.GraphQL.Parser.Schema
 import Language.GraphQL.Draft.Syntax qualified as G
 import Prelude
@@ -27,14 +26,14 @@ convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
       G.ScalarTypeDefinition
         { G._stdDescription = dDescription,
           G._stdName = dName,
-          G._stdDirectives = noDirectives
+          G._stdDirectives = dDirectives
         }
   TIEnum enumInfo ->
     G.TypeDefinitionEnum $
       G.EnumTypeDefinition
         { G._etdDescription = dDescription,
           G._etdName = dName,
-          G._etdDirectives = noDirectives,
+          G._etdDirectives = dDirectives,
           G._etdValueDefinitions = map convertEnumValue $ NonEmpty.toList enumInfo
         }
   TIInputObject (InputObjectInfo values) ->
@@ -42,7 +41,7 @@ convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
       G.InputObjectTypeDefinition
         { G._iotdDescription = dDescription,
           G._iotdName = dName,
-          G._iotdDirectives = noDirectives,
+          G._iotdDirectives = dDirectives,
           G._iotdValueDefinitions = map convertInputField values
         }
   TIObject (ObjectInfo fields interfaces) ->
@@ -50,7 +49,7 @@ convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
       G.ObjectTypeDefinition
         { G._otdDescription = dDescription,
           G._otdName = dName,
-          G._otdDirectives = noDirectives,
+          G._otdDirectives = dDirectives,
           G._otdImplementsInterfaces = map getDefinitionName interfaces,
           G._otdFieldsDefinition = map convertField fields
         }
@@ -59,7 +58,7 @@ convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
       G.InterfaceTypeDefinition
         { G._itdDescription = dDescription,
           G._itdName = dName,
-          G._itdDirectives = noDirectives,
+          G._itdDirectives = dDirectives,
           G._itdFieldsDefinition = map convertField fields,
           G._itdPossibleTypes = map getDefinitionName possibleTypes
         }
@@ -68,7 +67,7 @@ convertType (SomeDefinitionTypeInfo Definition {..}) = case dInfo of
       G.UnionTypeDefinition
         { G._utdDescription = dDescription,
           G._utdName = dName,
-          G._utdDirectives = noDirectives,
+          G._utdDirectives = dDirectives,
           G._utdMemberTypes = map getDefinitionName possibleTypes
         }
 
@@ -77,7 +76,7 @@ convertEnumValue Definition {..} =
   G.EnumValueDefinition
     { G._evdDescription = dDescription,
       G._evdName = G.EnumValue dName,
-      G._evdDirectives = noDirectives
+      G._evdDirectives = dDirectives
     }
 
 convertInputField :: Definition origin (InputFieldInfo origin) -> G.InputValueDefinition
@@ -88,7 +87,7 @@ convertInputField Definition {..} = case dInfo of
         G._ivdName = dName,
         G._ivdType = toGraphQLType typeInfo,
         G._ivdDefaultValue = defaultValue,
-        G._ivdDirectives = noDirectives
+        G._ivdDirectives = dDirectives
       }
 
 convertField :: Definition origin (FieldInfo origin) -> G.FieldDefinition G.InputValueDefinition
@@ -99,13 +98,10 @@ convertField Definition {..} = case dInfo of
         G._fldName = dName,
         G._fldArgumentsDefinition = map convertInputField arguments,
         G._fldType = toGraphQLType typeInfo,
-        G._fldDirectives = noDirectives
+        G._fldDirectives = dDirectives
       }
 
 -------------------------------------------------------------------------------
 
 getDefinitionName :: Definition origin a -> G.Name
 getDefinitionName = dName
-
-noDirectives :: [G.Directive Void]
-noDirectives = []

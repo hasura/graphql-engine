@@ -38,12 +38,12 @@ fakeInputFieldValue (InputFieldInfo t _) = go t
     go :: forall k. ('Input <: k) => Type k -> G.Value Variable
     go = \case
       TList _ t' -> G.VList [go t', go t']
-      TNamed _ (Definition name _ _ info) -> case (info, subKind @'Input @k) of
+      TNamed _ (Definition name _ _ _ info) -> case (info, subKind @'Input @k) of
         (TIScalar, _) -> fakeScalar name
         (TIEnum ei, _) -> G.VEnum $ G.EnumValue $ dName $ NE.head ei
         (TIInputObject (InputObjectInfo oi), _) -> G.VObject $
           M.fromList $ do
-            Definition fieldName _ _ fieldInfo <- oi
+            Definition fieldName _ _ _ fieldInfo <- oi
             pure (fieldName, fakeInputFieldValue fieldInfo)
         _ -> error "fakeInputFieldValue: non-exhaustive. FIXME"
 
@@ -51,5 +51,5 @@ fakeDirective :: DirectiveInfo -> G.Directive Variable
 fakeDirective DirectiveInfo {..} =
   G.Directive diName $
     M.fromList $
-      diArguments <&> \(Definition argName _ _ argInfo) ->
+      diArguments <&> \(Definition argName _ _ _ argInfo) ->
         (argName, fakeInputFieldValue argInfo)

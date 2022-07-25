@@ -57,14 +57,17 @@ where
 import Data.Has (getter)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Schema.Backend (BackendTableSelectSchema (..), MonadBuildSchema)
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Mutation
 import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser hiding (EnumValueInfo, field)
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.SubscriptionStream (selectStreamTable)
-import Hasura.GraphQL.Schema.Table (tableSelectPermissions)
+import Hasura.GraphQL.Schema.Table (getTableGQLName, tableSelectPermissions)
+import Hasura.GraphQL.Schema.Typename (mkTypename)
 import Hasura.GraphQL.Schema.Update (updateTable, updateTableByPk)
 import Hasura.Prelude
 import Hasura.RQL.IR
@@ -110,7 +113,8 @@ buildTableQueryAndSubscriptionFields ::
   C.GQLNameIdentifier ->
   m
     ( [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
-      [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
+      [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
+      Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
     )
 buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx gqlName = do
   tCase <- asks getter
@@ -130,7 +134,7 @@ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx
   case selectPermission of
     -- No select permission found for the current role, so
     -- no root fields will be accessible to the role
-    Nothing -> pure (mempty, mempty)
+    Nothing -> pure (mempty, mempty, Nothing)
     -- Filter the root fields which have been enabled
     Just SelPermInfo {..} -> do
       selectStreamParser <-
@@ -161,7 +165,19 @@ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx
             selectStreamParser
               <> catMaybes [subscriptionSelectTableParser, subscriptionSelectTableByPkParser, subscriptionSelectTableAggParser]
 
-      pure (queryRootFields, subscriptionRootFields)
+      -- This parser is for generating apollo federation field _entities
+      apolloFedTableParser <- runMaybeT do
+        guard $ isApolloFedV1enabled (_tciApolloFederationConfig (_tiCoreInfo tableInfo))
+        tableSelSet <- MaybeT $ tableSelectionSet sourceInfo tableInfo
+        selectPerm <- MaybeT $ tableSelectPermissions tableInfo
+        stringifyNumbers <- retrieve Options.soStringifyNumbers
+        primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
+        let tableSelPerm = tablePermissionsInfo selectPerm
+        tableGQLName <- getTableGQLName tableInfo
+        objectTypename <- mkTypename tableGQLName
+        pure $ (objectTypename, convertToApolloFedParserFunc sourceInfo tableInfo tableSelPerm stringifyNumbers (Just tCase) primaryKeys tableSelSet)
+
+      pure (queryRootFields, subscriptionRootFields, apolloFedTableParser)
   where
     selectDesc = buildFieldDescription defaultSelectDesc $ _crfComment _tcrfSelect
     selectPKDesc = buildFieldDescription defaultSelectPKDesc $ _crfComment _tcrfSelectByPk

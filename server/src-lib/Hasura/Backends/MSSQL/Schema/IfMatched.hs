@@ -132,7 +132,7 @@ tableInsertMatchColumnsEnum sourceInfo tableInfo = do
         ]
   where
     define name =
-      P.Definition name (Just $ G.Description "column name") Nothing P.EnumValueInfo
+      P.Definition name (Just $ G.Description "column name") Nothing [] P.EnumValueInfo
 
 -- | Check whether a column can be used for match_columns.
 isMatchColumnValid :: ColumnInfo 'MSSQL -> Bool

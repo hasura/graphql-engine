@@ -196,7 +196,7 @@ columnParser' columnType (GQL.Nullability isNullable) =
       MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
-        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
+        let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
         pure $
           P.Parser
             { pType = schemaType,
@@ -217,7 +217,7 @@ columnParser' columnType (GQL.Nullability isNullable) =
       | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
-      ( P.Definition value (GQL.Description <$> description) Nothing P.EnumValueInfo,
+      ( P.Definition value (GQL.Description <$> description) Nothing [] P.EnumValueInfo,
         MySQL.VarcharValue $ GQL.unName value
       )
 
@@ -252,7 +252,7 @@ orderByOperators' _tCase =
         )
       ]
   where
-    define name desc = P.Definition name (Just desc) Nothing P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing [] P.EnumValueInfo
 
 -- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL
 comparisonExps' ::

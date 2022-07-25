@@ -178,6 +178,8 @@ actionAsyncQuery objectTypes actionInfo = runMaybeT do
       actionOutputParser <- lift $ actionOutputFields outputType aot objectTypes
       let desc = G.Description $ "fields of action: " <>> actionName
           selectionSet =
+            -- Note: If we want support for Apollo Federation for Actions later,
+            -- we'd need to add support for "key" directive here as well.
             P.selectionSet outputTypeName (Just desc) (allFieldParsers actionOutputParser)
               <&> parsedSelectionsToFields IR.AsyncTypename
       pure $ P.subselection fieldName description actionIdInputField selectionSet
@@ -422,7 +424,7 @@ customScalarParser = \case
         | _stdName == GName._Boolean -> J.toJSON <$> P.boolean
         | otherwise -> P.jsonScalar _stdName _stdDescription
   ASTReusedScalar name backendScalarType ->
-    let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing P.TIScalar
+    let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
         backendScalarValidator =
           AB.dispatchAnyBackend @Backend backendScalarType \(scalarType :: ScalarWrapper b) jsonInput -> do
             -- We attempt to parse the value from JSON to validate it, but still
@@ -456,5 +458,6 @@ customEnumParser (EnumTypeDefinition typeName description enumValues) =
                   valueName
                   (_evdDescription enumValue)
                   Nothing
+                  []
                   P.EnumValueInfo
    in P.enum enumName description enumValueDefinitions

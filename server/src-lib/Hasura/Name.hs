@@ -577,3 +577,32 @@ _Node = [G.name|Node|]
 
 ___hasura_internal_typename :: G.Name
 ___hasura_internal_typename = [G.name|__hasura_internal_typename|]
+
+-- * Apollo Federation
+
+__service :: G.Name
+__service = [G.name|_service|]
+
+_key :: G.Name
+_key = [G.name|key|]
+
+_fields :: G.Name
+_fields = [G.name|fields|]
+
+_representations :: G.Name
+_representations = [G.name|representations|]
+
+__Any :: G.Name
+__Any = [G.name|_Any|]
+
+_sdl :: G.Name
+_sdl = [G.name|sdl|]
+
+__Service :: G.Name
+__Service = [G.name|_Service|]
+
+__Entity :: G.Name
+__Entity = [G.name|_Entity|]
+
+__entities :: G.Name
+__entities = [G.name|_entities|]

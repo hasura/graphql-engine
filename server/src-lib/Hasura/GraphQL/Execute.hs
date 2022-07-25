@@ -217,6 +217,7 @@ buildSubscriptionPlan userInfo rootFields parameterizedQueryHash = do
     go (accLiveQueryFields, accStreamingFields) (gName, field) = case field of
       IR.RFRemote _ -> throw400 NotSupported "subscription to remote server is not supported"
       IR.RFRaw _ -> throw400 NotSupported "Introspection not supported over subscriptions"
+      IR.RFMulti _ -> throw400 NotSupported "not supported over subscriptions"
       IR.RFDB src e -> do
         let subscriptionType =
               case AB.unpackAnyBackend @('Postgres 'Vanilla) e of

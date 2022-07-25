@@ -2,6 +2,48 @@
 
 ## Next release
 
+### Introducing Apollo Federation v1 support (experimental)
+
+HGE can now be used as a subgraph in an Apollo federated graphql server.
+You can read more about this feature in [the RFC](https://github.com/hasura/graphql-engine/blob/master/rfcs/apollo-federation.md).
+
+This is an experimental feature (can be enabled by setting 
+`HASURA_GRAPHQL_EXPERIMENTAL_FEATURES: apollo_federation`). This is supported
+over all databases. To expose a table in an Apollo federated gateway, we need
+to enable Apollo federation in its metadata. This can be done via the
+`*_track_table` metadata API and console support will be added soon.
+
+For example, given a table called `user` in a database which is not being
+tracked by Hasura, we can run `*_track_table` to enable Apollo federation for
+the table:
+
+```
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+```
+``` json
+{
+  "type": "pg_track_table",
+  "args": {
+    "table": "user",
+    "schema": "public",
+    "apollo_federation_config": {
+        "enable": "v1"
+    }
+  }
+}
+```
+The above API call would add the `@key` directive in the GraphQL schema with
+fields argument set to the primary key of the table (say `id`), i.e:
+```graphql
+type user @key(fields: "id") {
+  id: Int!
+  name: String
+  ...
+}
+```
+
 ### Behaviour changes
 
 - server: When providing a JSON path in a JWT claims map, you can now use

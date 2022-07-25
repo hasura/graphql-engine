@@ -26,6 +26,7 @@ module Data.Aeson.Ordered
     Data.Aeson.Ordered.lookup,
     toOrdered,
     fromOrdered,
+    fromOrderedHashMap,
   )
 where
 
@@ -101,6 +102,10 @@ safeUnion (Object_ x) (Object_ y) =
 -- | Empty object.
 empty :: Object
 empty = Object_ mempty
+
+-- | Ordered Value from ordered hashmap
+fromOrderedHashMap :: InsOrdHashMap Text Value -> Value
+fromOrderedHashMap = Object . Object_
 
 -- | Insert before the element at index i. Think of it in terms of
 -- 'splitAt', which is (take k, drop k). Deletes existing key, if any.

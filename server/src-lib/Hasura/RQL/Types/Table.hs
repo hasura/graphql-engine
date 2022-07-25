@@ -66,6 +66,7 @@ module Hasura.RQL.Types.Table
     tcColumnConfig,
     tciCustomConfig,
     tciDescription,
+    tciApolloFederationConfig,
     tciEnumValues,
     tciExtraTableMetadata,
     tciFieldInfoMap,
@@ -867,7 +868,8 @@ data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
     _tciViewInfo :: Maybe ViewInfo,
     _tciEnumValues :: Maybe EnumValues,
     _tciCustomConfig :: TableConfig b,
-    _tciExtraTableMetadata :: ExtraTableMetadata b
+    _tciExtraTableMetadata :: ExtraTableMetadata b,
+    _tciApolloFederationConfig :: Maybe ApolloFederationConfig
   }
   deriving (Generic)
 

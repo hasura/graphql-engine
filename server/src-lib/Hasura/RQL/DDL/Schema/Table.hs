@@ -64,7 +64,8 @@ import Language.GraphQL.Draft.Syntax qualified as G
 data TrackTable b = TrackTable
   { tSource :: !SourceName,
     tName :: !(TableName b),
-    tIsEnum :: !Bool
+    tIsEnum :: !Bool,
+    tApolloFedConfig :: !(Maybe ApolloFederationConfig)
   }
 
 deriving instance (Backend b) => Show (TrackTable b)
@@ -79,7 +80,8 @@ instance (Backend b) => FromJSON (TrackTable b) where
           <$> o .:? "source" .!= defaultSource
           <*> o .: "table"
           <*> o .:? "is_enum" .!= False
-      withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False
+          <*> o .:? "apollo_federation_config"
+      withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False <*> pure Nothing
 
 data SetTableIsEnum = SetTableIsEnum
   { stieSource :: !SourceName,
@@ -211,8 +213,9 @@ trackExistingTableOrViewP2 ::
   TableName b ->
   Bool ->
   TableConfig b ->
+  Maybe ApolloFederationConfig ->
   m EncJSON
-trackExistingTableOrViewP2 source tableName isEnum config = do
+trackExistingTableOrViewP2 source tableName isEnum config apolloFedConfig = do
   sc <- askSchemaCache
   {-
   The next line does more than what it says on the tin.  Removing the following
@@ -223,7 +226,7 @@ trackExistingTableOrViewP2 source tableName isEnum config = do
   memory usage happens even when no substantial GraphQL schema is generated.
   -}
   checkConflictingNode sc $ snakeCaseTableName @b tableName
-  let metadata = mkTableMeta tableName isEnum config
+  let metadata = tmApolloFederationConfig .~ apolloFedConfig $ mkTableMeta tableName isEnum config
   buildSchemaCacheFor
     ( MOSourceObjId source $
         AB.mkAnyBackend $
@@ -238,9 +241,9 @@ runTrackTableQ ::
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   TrackTable b ->
   m EncJSON
-runTrackTableQ (TrackTable source qt isEnum) = do
+runTrackTableQ (TrackTable source qt isEnum apolloFedConfig) = do
   trackExistingTableOrViewP1 @b source qt
-  trackExistingTableOrViewP2 @b source qt isEnum emptyTableConfig
+  trackExistingTableOrViewP2 @b source qt isEnum emptyTableConfig apolloFedConfig
 
 data TrackTableV2 b = TrackTableV2
   { ttv2Table :: !(TrackTable b),
@@ -259,9 +262,9 @@ runTrackTableV2Q ::
   (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) =>
   TrackTableV2 b ->
   m EncJSON
-runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum) config) = do
+runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum apolloFedConfig) config) = do
   trackExistingTableOrViewP1 @b source qt
-  trackExistingTableOrViewP2 @b source qt isEnum config
+  trackExistingTableOrViewP2 @b source qt isEnum config apolloFedConfig
 
 runSetExistingTableIsEnumQ :: (MonadError QErr m, CacheRWM m, MetadataM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
@@ -468,7 +471,7 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
         )
         (TableCoreInfoG b (RawColumnInfo b) (Column b))
     buildRawTableInfo = Inc.cache proc (tableBuildInput, maybeInfo, sourceConfig, reloadMetadataInvalidationKey) -> do
-      let TableBuildInput name isEnum config = tableBuildInput
+      let TableBuildInput name isEnum config apolloFedConfig = tableBuildInput
       metadataTable <-
         (|
           onNothingA
@@ -505,7 +508,8 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
               _tciEnumValues = enumValues,
               _tciCustomConfig = config,
               _tciDescription = description,
-              _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable
+              _tciExtraTableMetadata = _ptmiExtraTableMetadata metadataTable,
+              _tciApolloFederationConfig = apolloFedConfig
             }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column

@@ -30,6 +30,7 @@ import Data.Hashable (Hashable)
 import Data.Maybe qualified as Maybe
 import Data.Traversable (for)
 import Data.Type.Equality
+import Data.Void (Void)
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
@@ -100,17 +101,17 @@ nullable parser =
 
 -- | Decorate a schema field as NON_NULL
 nonNullableField :: forall m origin a. FieldParser origin m a -> FieldParser origin m a
-nonNullableField (FieldParser (Definition n d o (FieldInfo as t)) p) =
-  FieldParser (Definition n d o (FieldInfo as (nonNullableType t))) p
+nonNullableField (FieldParser (Definition n d o dLst (FieldInfo as t)) p) =
+  FieldParser (Definition n d o dLst (FieldInfo as (nonNullableType t))) p
 
 -- | Decorate a schema field as NULL
 nullableField :: forall m origin a. FieldParser origin m a -> FieldParser origin m a
-nullableField (FieldParser (Definition n d o (FieldInfo as t)) p) =
-  FieldParser (Definition n d o (FieldInfo as (nullableType t))) p
+nullableField (FieldParser (Definition n d o dLst (FieldInfo as t)) p) =
+  FieldParser (Definition n d o dLst (FieldInfo as (nullableType t))) p
 
 multipleField :: forall m origin a. FieldParser origin m a -> FieldParser origin m a
-multipleField (FieldParser (Definition n d o (FieldInfo as t)) p) =
-  FieldParser (Definition n d o (FieldInfo as (TList Nullable t))) p
+multipleField (FieldParser (Definition n d o dLst (FieldInfo as t)) p) =
+  FieldParser (Definition n d o dLst (FieldInfo as (TList Nullable t))) p
 
 -- | Decorate a schema field with reference to given @'G.GType'
 wrapFieldParser :: forall m origin a. G.GType -> FieldParser origin m a -> FieldParser origin m a
@@ -142,13 +143,32 @@ setParserOrigin o (Parser typ p) =
 
 -- | Set the metadata origin of a 'FieldParser'
 setFieldParserOrigin :: forall m origin a. origin -> FieldParser origin m a -> FieldParser origin m a
-setFieldParserOrigin o (FieldParser (Definition n d _ i) p) =
-  FieldParser (Definition n d (Just o) i) p
+setFieldParserOrigin o (FieldParser (Definition n d _ dLst i) p) =
+  FieldParser (Definition n d (Just o) dLst i) p
 
 -- | Set the metadata origin of the arguments in a 'InputFieldsParser'
 setInputFieldsParserOrigin :: forall m origin a. origin -> InputFieldsParser origin m a -> InputFieldsParser origin m a
 setInputFieldsParserOrigin o (InputFieldsParser defs p) =
   InputFieldsParser (map (setDefinitionOrigin o) defs) p
+
+-- | Set the directives of a 'Definition'
+setDefinitionDirectives :: [G.Directive Void] -> Definition origin a -> Definition origin a
+setDefinitionDirectives dLst def = def {dDirectives = dLst}
+
+-- | Set the directives of a 'Parser'
+setParserDirectives :: forall origin k m a. [G.Directive Void] -> Parser origin k m a -> Parser origin k m a
+setParserDirectives dLst (Parser typ p) =
+  Parser (onTypeDef (setDefinitionDirectives dLst) typ) p
+
+-- | Set the directives of a 'FieldParser'
+setFieldParserDirectives :: forall m origin a. [G.Directive Void] -> FieldParser origin m a -> FieldParser origin m a
+setFieldParserDirectives dLst (FieldParser (Definition n d o _ i) p) =
+  FieldParser (Definition n d o dLst i) p
+
+-- | Set the directives of the arguments in a 'InputFieldsParser'
+setInputFieldsParserDirectives :: forall m origin a. [G.Directive Void] -> InputFieldsParser origin m a -> InputFieldsParser origin m a
+setInputFieldsParserDirectives dLst (InputFieldsParser defs p) =
+  InputFieldsParser (map (setDefinitionDirectives dLst) defs) p
 
 -- | A variant of 'selectionSetObject' which doesn't implement any interfaces
 selectionSet ::
@@ -207,7 +227,7 @@ selectionSetObject name description parsers implementsInterfaces =
   Parser
     { pType =
         TNamed Nullable $
-          Definition name description Nothing $
+          Definition name description Nothing [] $
             TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
       pParser = \input -> withKey (Key "selectionSet") do
         -- Not all fields have a selection set, but if they have one, it
@@ -263,7 +283,7 @@ selectionSetInterface name description fields objectImplementations =
   Parser
     { pType =
         TNamed Nullable $
-          Definition name description Nothing $
+          Definition name description Nothing [] $
             TIInterface $ InterfaceInfo (map fDefinition fields) objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
       -- Note: This is somewhat suboptimal, since it parses a query against every
@@ -290,7 +310,7 @@ selectionSetUnion name description objectImplementations =
   Parser
     { pType =
         TNamed Nullable $
-          Definition name description Nothing $
+          Definition name description Nothing [] $
             TIUnion $ UnionInfo objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
@@ -330,7 +350,7 @@ rawSelection ::
 rawSelection name description argumentsParser resultParser =
   FieldParser
     { fDefinition =
-        Definition name description Nothing $
+        Definition name description Nothing [] $
           FieldInfo (ifDefinitions argumentsParser) (pType resultParser),
       fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
         unless (null _fSelectionSet) $
@@ -386,7 +406,7 @@ rawSubselection ::
 rawSubselection name description argumentsParser bodyParser =
   FieldParser
     { fDefinition =
-        Definition name description Nothing $
+        Definition name description Nothing [] $
           FieldInfo (ifDefinitions argumentsParser) (pType bodyParser),
       fParser = \Field {_fAlias, _fArguments, _fSelectionSet} -> do
         -- check for extraneous arguments here, since the InputFieldsParser just

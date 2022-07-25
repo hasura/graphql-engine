@@ -36,6 +36,7 @@ post-webhook
 get-webhook
 insecure-webhook
 insecure-webhook-with-admin-secret
+apollo-federation
 allowlist-queries
 jwk-url
 horizontal-scaling

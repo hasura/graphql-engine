@@ -35,6 +35,7 @@ import Data.Has
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.Int (Int64)
 import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Base.Error
@@ -383,6 +384,19 @@ defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
     let xRelay = relayExtension @b
         tableFields = Map.elems $ _tciFieldInfoMap tableCoreInfo
         tablePkeyColumns = _pkColumns <$> _tciPrimaryKey tableCoreInfo
+        pkFields = concatMap toList tablePkeyColumns
+        pkFieldDirective = T.intercalate " " $ map (G.unName . ciName) pkFields
+        -- Adding `@key` directives to type for apollo federation. An example
+        -- of type with key directive:
+        --  type Product @key(fields: "upc sku"){
+        --    upc: UPC!
+        --    sku: SKU!
+        --    name: String
+        --  }
+        pkDirectives =
+          if isApolloFedV1enabled (_tciApolloFederationConfig tableCoreInfo) && (not . null) pkFields
+            then [(G.Directive Name._key . Map.singleton Name._fields . G.VString) pkFieldDirective]
+            else mempty
         description = G.Description . PG.getPGDescription <$> _tciDescription tableCoreInfo
     fieldParsers <-
       concat
@@ -406,16 +420,19 @@ defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
             allFieldParsers = fieldParsers <> [nodeIdFieldParser]
         nodeInterface <- runNodeBuilder nodeBuilder
         pure $
-          P.selectionSetObject objectTypename description allFieldParsers [nodeInterface]
+          selectionSetObjectWithDirective objectTypename description allFieldParsers [nodeInterface] pkDirectives
             <&> parsedSelectionsToFields IR.AFExpression
       _ ->
         pure $
-          P.selectionSetObject objectTypename description fieldParsers []
+          selectionSetObjectWithDirective objectTypename description fieldParsers [] pkDirectives
             <&> parsedSelectionsToFields IR.AFExpression
   where
     sourceName = _siName sourceInfo
     tableName = tableInfoName tableInfo
     tableCoreInfo = _tiCoreInfo tableInfo
+    selectionSetObjectWithDirective name description parsers implementsInterfaces directives =
+      P.setParserDirectives directives $
+        P.selectionSetObject name description parsers implementsInterfaces
 
 -- | List of table fields object.
 -- Just a @'nonNullableObjectList' wrapper over @'tableSelectionSet'.
