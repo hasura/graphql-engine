@@ -2,7 +2,8 @@
 import pickBy from 'lodash.pickby';
 import get from 'lodash.get';
 import { z, ZodSchema } from 'zod';
-import { Property, Ref } from './types';
+import { IntrospectedTable, Property, Ref } from './types';
+import { RunSQLResponse } from './api';
 
 export const isProperty = (
   value: Ref | Property | { oneOf: (Property | Ref)[] }
@@ -111,4 +112,25 @@ export const getZodSchema = (
       .transform((value: any) => pickBy(value, (d: any) => d !== ''));
 
   return z.void();
+};
+
+export const adaptIntrospectedTables = (
+  runSqlResponse: RunSQLResponse
+): IntrospectedTable[] => {
+  /* 
+    The `slice(1)` on the result is done because the first item of the result is always the columns names from the SQL output.
+    It is not required for the final result and should be avoided 
+  */
+  const adaptedResponse = runSqlResponse?.result
+    ?.slice(1)
+    .map((row: string[]) => ({
+      name: `${row[1]}.${row[0]}`,
+      table: {
+        name: row[0],
+        schema: row[1],
+      },
+      type: row[2],
+    }));
+
+  return adaptedResponse ?? [];
 };

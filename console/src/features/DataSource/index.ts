@@ -5,19 +5,20 @@ import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { mssql } from './mssql';
 import { gdc } from './gdc';
-import { Property, Ref, OneOf } from './types';
+import type {
+  Property,
+  Ref,
+  OneOf,
+  IntrospectedTable,
+  Table,
+  SupportedDrivers,
+} from './types';
 import { getZodSchema } from './utils';
+import { exportMetadata } from './api';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
 }
-
-export type SupportedDrivers =
-  | 'postgres'
-  | 'bigquery'
-  | 'mssql'
-  | 'citus'
-  | 'gdc';
 
 export const supportedDrivers = [
   'postgres',
@@ -38,6 +39,10 @@ export type Database = {
       | Feature.NotImplemented
     >;
   };
+  introspectTables: (
+    dataSourceName: string,
+    configuration: any
+  ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
 };
 
 const drivers: Record<SupportedDrivers, Database> = {
@@ -104,6 +109,36 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
       return res;
     },
   },
+  introspectTables: async ({ dataSourceName }: { dataSourceName: string }) => {
+    const metadata = await exportMetadata();
+
+    const dataSource = metadata.sources.find(
+      source => source.name === dataSourceName
+    );
+
+    if (!dataSource) {
+      throw Error(
+        'DataSource.introspectTables data source not found in metadata'
+      );
+    }
+
+    /* 
+      NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
+      only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
+    */
+    return drivers[dataSource.kind].introspectTables(
+      dataSource.name,
+      (dataSource as any).configuration
+    );
+  },
 });
 
-export { Property, Ref, OneOf };
+export { exportMetadata };
+export type {
+  Property,
+  Ref,
+  OneOf,
+  SupportedDrivers,
+  IntrospectedTable,
+  Table,
+};
