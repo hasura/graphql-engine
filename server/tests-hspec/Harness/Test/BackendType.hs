@@ -20,7 +20,7 @@ data BackendType
   | BigQuery
   | Citus
   | DataConnector
-  deriving (Show)
+  deriving (Eq, Show)
 
 -- | The default hasura metadata source name used for a given backend in this test suite project.
 defaultSource :: BackendType -> String
