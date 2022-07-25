@@ -42,7 +42,7 @@ services:
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
 
   postgres:
-    image: postgres:14-alpine@sha256:1cf551de75fd602ebc94ccda93305a4e411f941bf9465f59d850bdcfd474ca52
+    image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
     ports:
       - "65002:5432"
     environment:
