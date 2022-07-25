@@ -59,9 +59,10 @@ import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Data.Text.Extended
 import Data.Void (Void)
 import GHC.Generics (Generic)
+import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Names
 import Language.GraphQL.Draft.Syntax
   ( Description (..),
@@ -772,8 +773,8 @@ typeRootRecurse :: Name -> TypeOriginStack -> TypeOriginStack
 typeRootRecurse rootName (TypeOriginStack []) = (TypeOriginStack [rootName])
 typeRootRecurse _ x = x
 
-instance ToTxt TypeOriginStack where
-  toTxt (TypeOriginStack fields) = T.intercalate "." $ toTxt <$> reverse fields
+instance ToErrorValue TypeOriginStack where
+  toErrorValue (TypeOriginStack fields) = toErrorMessage . T.intercalate "." . map unName . reverse $ fields
 
 -- | NOTE: it's not clear exactly where we'd get conflicting definitions at the
 -- point 'collectTypeDefinitions' is called, but conflicting names from

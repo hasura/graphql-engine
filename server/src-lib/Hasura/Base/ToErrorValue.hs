@@ -6,6 +6,7 @@ module Hasura.Base.ToErrorValue
 where
 
 import Data.Aeson qualified as Aeson
+import Data.Aeson.Key qualified as Aeson.Key
 import Data.Aeson.Text qualified as Aeson
 import Data.HashSet qualified as HashSet
 import Data.List qualified as List
@@ -51,6 +52,9 @@ instance ToErrorValue G.Name where
 -- | Will be printed with single quotes surrounding it
 instance ToErrorValue G.GType where
   toErrorValue = squote . G.showGT
+
+instance ToErrorValue Aeson.Key where
+  toErrorValue = dquote . Aeson.Key.toText
 
 instance ToErrorValue Aeson.Value where
   toErrorValue = toErrorMessage . Text.Lazy.toStrict . Aeson.encodeToLazyText

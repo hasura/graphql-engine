@@ -28,11 +28,10 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
 import Data.Hashable (Hashable)
 import Data.Maybe qualified as Maybe
-import Data.Text (Text)
-import Data.Text.Extended
 import Data.Traversable (for)
 import Data.Type.Equality
 import Hasura.Base.Error
+import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.Collect
@@ -162,17 +161,16 @@ selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
   forall n m origin a.
-  (MonadError QErr n, MonadParse m, Eq origin, Hashable origin) =>
-  (origin -> Text) ->
+  (MonadError QErr n, MonadParse m, Eq origin, Hashable origin, ToErrorValue origin) =>
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->
   n (Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
-safeSelectionSet printOrigin name desc fields
+safeSelectionSet name desc fields
   | null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise = throw500 $ case desc of
+  | otherwise = throw500 . fromErrorMessage $ case desc of
     Nothing -> "found duplicate fields in selection set: " <> duplicatesList
-    Just d -> "found duplicate fields in selection set for " <> unDescription d <> ": " <> duplicatesList
+    Just d -> "found duplicate fields in selection set for " <> toErrorMessage (unDescription d) <> ": " <> duplicatesList
   where
     namesOrigins :: HashMap Name [Maybe origin]
     namesOrigins = M.fromListWith (<>) $ (dName &&& (pure . dOrigin)) . fDefinition <$> fields
@@ -182,13 +180,12 @@ safeSelectionSet printOrigin name desc fields
     printEntry (fieldName, originsM) =
       let origins = uniques $ Maybe.catMaybes originsM
        in if
-              | null origins -> unName fieldName
+              | null origins -> toErrorValue fieldName
               | any Maybe.isNothing originsM ->
-                unName fieldName <> " (generated for " <> commaSeparated (map printOrigin origins)
-                  <> " and of unknown origin)"
+                toErrorValue fieldName <> " (generated for " <> toErrorValue origins <> " and of unknown origin)"
               | otherwise ->
-                unName fieldName <> " (generated for " <> commaSeparated (map printOrigin origins) <> ")"
-    duplicatesList = commaSeparated $ printEntry <$> M.toList duplicates
+                toErrorValue fieldName <> " (generated for " <> toErrorValue origins <> ")"
+    duplicatesList = toErrorValue $ printEntry <$> M.toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].

@@ -42,6 +42,8 @@ import Data.Aeson.Types
 import Data.HashMap.Strict.Extended qualified as M
 import Data.Text qualified as T
 import Data.Text.Extended
+import Hasura.Base.ErrorMessage
+import Hasura.Base.ToErrorValue
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Backend
@@ -104,6 +106,9 @@ data MetadataObjId
 $(makePrisms ''MetadataObjId)
 
 instance Hashable MetadataObjId
+
+instance ToErrorValue MetadataObjId where
+  toErrorValue = toErrorMessage . moiName
 
 moiTypeName :: MetadataObjId -> Text
 moiTypeName = \case

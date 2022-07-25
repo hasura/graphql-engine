@@ -28,7 +28,7 @@
   response:
     path: "$.args"
     code: unexpected
-    error: "found duplicate fields in selection set for mutation root: insert_user"
+    error: "found duplicate fields in selection set for mutation root: ['insert_user']"
   query:
     type: create_action
     args:
@@ -36,9 +36,9 @@
       definition:
         kind: synchronous
         arguments:
-        - name: email
-          type: Int!
-        - name: name
-          type: String!
+          - name: email
+            type: Int!
+          - name: name
+            type: String!
         output_type: UserId!
         handler: http://127.0.0.1:5593/create-user

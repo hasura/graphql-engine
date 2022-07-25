@@ -7,14 +7,10 @@
 --   or use the utility functions defined in the "Hasura.Base.ErrorValue" module.
 --
 --   'ErrorMessage's can also be composed using the 'Semigroup' interface.
---
---   To fail with an error message in monadic code, use the 'failWithMessage' function.
 module Hasura.Base.ErrorMessage
   ( ErrorMessage,
-    ErrorMessageOr,
     toErrorMessage,
     fromErrorMessage,
-    failWithMessage,
   )
 where
 
@@ -35,12 +31,5 @@ newtype ErrorMessage = ErrorMessage
 toErrorMessage :: Text -> ErrorMessage
 toErrorMessage = ErrorMessage
 
--- | Fails with the given message.
-failWithMessage :: MonadFail m => ErrorMessage -> m ()
-failWithMessage = fail . Text.unpack . fromErrorMessage
-
 instance IsString ErrorMessage where
   fromString = ErrorMessage . Text.pack
-
--- | A simple alias to prevent duplication.
-type ErrorMessageOr = Either ErrorMessage

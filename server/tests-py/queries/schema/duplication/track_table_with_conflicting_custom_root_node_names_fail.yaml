@@ -13,7 +13,7 @@
   status: 500
   response:
     code: unexpected
-    error: 'found duplicate fields in selection set: user (generated for source default)'
+    error: "found duplicate fields in selection set: ['user' (generated for [source default])]"
     path: $.args
   query:
     type: track_table
