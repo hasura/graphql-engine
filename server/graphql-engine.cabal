@@ -1227,7 +1227,6 @@ test-suite tests-hspec
 
  -- Test
     Test.ArrayParamPermissionSpec
-    Test.ArrayRelationshipsSpec
     Test.BackendOnlyPermissionsSpec
     Test.BasicFieldsSpec
     Test.BigQuery.ComputedFieldSpec
@@ -1264,7 +1263,6 @@ test-suite tests-hspec
     Test.LongIdentifiersSpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
-    Test.ObjectRelationshipsSpec
     Test.Queries.FilterSearchSpec
     Test.OrderingSpec
     Test.PostgresTypesSpec
@@ -1280,6 +1278,8 @@ test-suite tests-hspec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
     Test.RequestHeadersSpec
     Test.RunSQLSpec
+    Test.Schema.TableRelationships.ArrayRelationshipsSpec
+    Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.DataValidation.PermissionSpec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.SelectSpec
