@@ -42,14 +42,14 @@
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html"><span class="hs-identifier">Hasura.RQL.Types.QueryCollection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier">CollectionName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier">QueryName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Web.HttpApiData</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromHttpApiData</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span id="local-6989586621689335199"><span id="local-6989586621689335200"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMethod"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-var">EndpointMethod</span></a></span></span><span>
+</span><span id="line-45"></span><span id="local-6989586621689331997"><span id="local-6989586621689331998"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMethod"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-var">EndpointMethod</span></a></span></span><span>
 </span><span id="line-46"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GET"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#GET"><span class="hs-identifier hs-var">GET</span></a></span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="POST"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#POST"><span class="hs-identifier hs-var">POST</span></a></span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PUT"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#PUT"><span class="hs-identifier hs-var">PUT</span></a></span></span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DELETE"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DELETE"><span class="hs-identifier hs-var">DELETE</span></a></span></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PATCH"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#PATCH"><span class="hs-identifier hs-var">PATCH</span></a></span></span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-52"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689335188"><span id="local-6989586621689335190"><span id="local-6989586621689335192"><span class="annot"><span class="annottext">Int -&gt; EndpointMethod -&gt; ShowS
+</span><span id="line-52"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689331986"><span id="local-6989586621689331988"><span id="local-6989586621689331990"><span class="annot"><span class="annottext">Int -&gt; EndpointMethod -&gt; ShowS
 [EndpointMethod] -&gt; ShowS
 EndpointMethod -&gt; String
 (Int -&gt; EndpointMethod -&gt; ShowS)
@@ -64,7 +64,7 @@ show :: EndpointMethod -&gt; String
 $cshow :: EndpointMethod -&gt; String
 showsPrec :: Int -&gt; EndpointMethod -&gt; ShowS
 $cshowsPrec :: Int -&gt; EndpointMethod -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689335183"><span id="local-6989586621689335185"><span class="annot"><span class="annottext">EndpointMethod -&gt; EndpointMethod -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331981"><span id="local-6989586621689331983"><span class="annot"><span class="annottext">EndpointMethod -&gt; EndpointMethod -&gt; Bool
 (EndpointMethod -&gt; EndpointMethod -&gt; Bool)
 -&gt; (EndpointMethod -&gt; EndpointMethod -&gt; Bool) -&gt; Eq EndpointMethod
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -72,7 +72,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 == :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 $c== :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689335167"><span id="local-6989586621689335169"><span id="local-6989586621689335171"><span id="local-6989586621689335173"><span id="local-6989586621689335175"><span id="local-6989586621689335177"><span id="local-6989586621689335179"><span class="annot"><span class="annottext">Eq EndpointMethod
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331965"><span id="local-6989586621689331967"><span id="local-6989586621689331969"><span id="local-6989586621689331971"><span id="local-6989586621689331973"><span id="local-6989586621689331975"><span id="local-6989586621689331977"><span class="annot"><span class="annottext">Eq EndpointMethod
 Eq EndpointMethod
 -&gt; (EndpointMethod -&gt; EndpointMethod -&gt; Ordering)
 -&gt; (EndpointMethod -&gt; EndpointMethod -&gt; Bool)
@@ -110,7 +110,7 @@ $c&lt; :: EndpointMethod -&gt; EndpointMethod -&gt; Bool
 compare :: EndpointMethod -&gt; EndpointMethod -&gt; Ordering
 $ccompare :: EndpointMethod -&gt; EndpointMethod -&gt; Ordering
 $cp1Ord :: Eq EndpointMethod
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689335162"><span id="local-6989586621689335164"><span class="annot"><span class="annottext">Int -&gt; EndpointMethod -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331960"><span id="local-6989586621689331962"><span class="annot"><span class="annottext">Int -&gt; EndpointMethod -&gt; Int
 EndpointMethod -&gt; Int
 (Int -&gt; EndpointMethod -&gt; Int)
 -&gt; (EndpointMethod -&gt; Int) -&gt; Hashable EndpointMethod
@@ -119,7 +119,7 @@ hash :: EndpointMethod -&gt; Int
 $chash :: EndpointMethod -&gt; Int
 hashWithSalt :: Int -&gt; EndpointMethod -&gt; Int
 $chashWithSalt :: Int -&gt; EndpointMethod -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689335157"><span id="local-6989586621689335159"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointMethod]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331955"><span id="local-6989586621689331957"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointMethod]
 Value -&gt; Parser EndpointMethod
 (Value -&gt; Parser EndpointMethod)
 -&gt; (Value -&gt; Parser [EndpointMethod]) -&gt; FromJSON EndpointMethod
@@ -129,7 +129,7 @@ parseJSONList :: Value -&gt; Parser [EndpointMethod]
 $cparseJSONList :: Value -&gt; Parser [EndpointMethod]
 parseJSON :: Value -&gt; Parser EndpointMethod
 $cparseJSON :: Value -&gt; Parser EndpointMethod
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689335148"><span id="local-6989586621689335150"><span id="local-6989586621689335152"><span id="local-6989586621689335154"><span class="annot"><span class="annottext">[EndpointMethod] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331946"><span id="local-6989586621689331948"><span id="local-6989586621689331950"><span id="local-6989586621689331952"><span class="annot"><span class="annottext">[EndpointMethod] -&gt; Value
 [EndpointMethod] -&gt; Encoding
 EndpointMethod -&gt; Value
 EndpointMethod -&gt; Encoding
@@ -152,7 +152,7 @@ toEncoding :: EndpointMethod -&gt; Encoding
 $ctoEncoding :: EndpointMethod -&gt; Encoding
 toJSON :: EndpointMethod -&gt; Value
 $ctoJSON :: EndpointMethod -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689335143"><span id="local-6989586621689335145"><span class="annot"><span class="annottext">ToJSONKeyFunction [EndpointMethod]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331941"><span id="local-6989586621689331943"><span class="annot"><span class="annottext">ToJSONKeyFunction [EndpointMethod]
 ToJSONKeyFunction EndpointMethod
 ToJSONKeyFunction EndpointMethod
 -&gt; ToJSONKeyFunction [EndpointMethod] -&gt; ToJSONKey EndpointMethod
@@ -174,7 +174,7 @@ $cfrom :: forall x. EndpointMethod -&gt; Rep EndpointMethod x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621689335136"><span class="annot"><span class="annottext">toTxt :: EndpointMethod -&gt; Text
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621689331934"><span class="annot"><span class="annottext">toTxt :: EndpointMethod -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EndpointMethod -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span>
@@ -182,7 +182,7 @@ forall a. Show a =&gt; a -&gt; Text
 </span><span id="line-57"></span><span class="hs-keyword">newtype</span><span> </span><span id="EndpointName"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-var">EndpointName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointName"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-var">EndpointName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unEndpointName"><span class="annot"><span class="annottext">EndpointName -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.Endpoint.html#unEndpointName"><span class="hs-identifier hs-var hs-var">unEndpointName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689335126"><span id="local-6989586621689335128"><span id="local-6989586621689335130"><span class="annot"><span class="annottext">Int -&gt; EndpointName -&gt; ShowS
+</span><span id="line-59"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689331924"><span id="local-6989586621689331926"><span id="local-6989586621689331928"><span class="annot"><span class="annottext">Int -&gt; EndpointName -&gt; ShowS
 [EndpointName] -&gt; ShowS
 EndpointName -&gt; String
 (Int -&gt; EndpointName -&gt; ShowS)
@@ -198,7 +198,7 @@ $cshow :: EndpointName -&gt; String
 showsPrec :: Int -&gt; EndpointName -&gt; ShowS
 $cshowsPrec :: Int -&gt; EndpointName -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-60"></span><span>      </span><span id="local-6989586621689335122"><span id="local-6989586621689335124"><span class="annot"><span class="annottext">EndpointName -&gt; EndpointName -&gt; Bool
+</span><span id="line-60"></span><span>      </span><span id="local-6989586621689331920"><span id="local-6989586621689331922"><span class="annot"><span class="annottext">EndpointName -&gt; EndpointName -&gt; Bool
 (EndpointName -&gt; EndpointName -&gt; Bool)
 -&gt; (EndpointName -&gt; EndpointName -&gt; Bool) -&gt; Eq EndpointName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -207,7 +207,7 @@ $c/= :: EndpointName -&gt; EndpointName -&gt; Bool
 == :: EndpointName -&gt; EndpointName -&gt; Bool
 $c== :: EndpointName -&gt; EndpointName -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>      </span><span id="local-6989586621689335107"><span id="local-6989586621689335109"><span id="local-6989586621689335111"><span id="local-6989586621689335113"><span id="local-6989586621689335115"><span id="local-6989586621689335117"><span id="local-6989586621689335119"><span class="annot"><span class="annottext">Eq EndpointName
+</span><span id="line-61"></span><span>      </span><span id="local-6989586621689331905"><span id="local-6989586621689331907"><span id="local-6989586621689331909"><span id="local-6989586621689331911"><span id="local-6989586621689331913"><span id="local-6989586621689331915"><span id="local-6989586621689331917"><span class="annot"><span class="annottext">Eq EndpointName
 Eq EndpointName
 -&gt; (EndpointName -&gt; EndpointName -&gt; Ordering)
 -&gt; (EndpointName -&gt; EndpointName -&gt; Bool)
@@ -246,13 +246,13 @@ compare :: EndpointName -&gt; EndpointName -&gt; Ordering
 $ccompare :: EndpointName -&gt; EndpointName -&gt; Ordering
 $cp1Ord :: Eq EndpointName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>      </span><span id="local-6989586621689335105"><span class="annot"><span class="annottext">EndpointName -&gt; Text
+</span><span id="line-62"></span><span>      </span><span id="local-6989586621689331903"><span class="annot"><span class="annottext">EndpointName -&gt; Text
 (EndpointName -&gt; Text) -&gt; ToTxt EndpointName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: EndpointName -&gt; Text
 $ctoTxt :: EndpointName -&gt; Text
-</span><a href="#local-6989586621689335105"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-63"></span><span>      </span><span id="local-6989586621689335101"><span id="local-6989586621689335103"><span class="annot"><span class="annottext">Int -&gt; EndpointName -&gt; Int
+</span><a href="#local-6989586621689331903"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>      </span><span id="local-6989586621689331899"><span id="local-6989586621689331901"><span class="annot"><span class="annottext">Int -&gt; EndpointName -&gt; Int
 EndpointName -&gt; Int
 (Int -&gt; EndpointName -&gt; Int)
 -&gt; (EndpointName -&gt; Int) -&gt; Hashable EndpointName
@@ -261,8 +261,8 @@ hash :: EndpointName -&gt; Int
 $chash :: EndpointName -&gt; Int
 hashWithSalt :: Int -&gt; EndpointName -&gt; Int
 $chashWithSalt :: Int -&gt; EndpointName -&gt; Int
-</span><a href="#local-6989586621689335101"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-64"></span><span>      </span><span id="local-6989586621689335093"><span id="local-6989586621689335095"><span id="local-6989586621689335097"><span id="local-6989586621689335099"><span class="annot"><span class="annottext">[EndpointName] -&gt; Value
+</span><a href="#local-6989586621689331899"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-64"></span><span>      </span><span id="local-6989586621689331891"><span id="local-6989586621689331893"><span id="local-6989586621689331895"><span id="local-6989586621689331897"><span class="annot"><span class="annottext">[EndpointName] -&gt; Value
 [EndpointName] -&gt; Encoding
 EndpointName -&gt; Value
 EndpointName -&gt; Encoding
@@ -285,8 +285,8 @@ toEncoding :: EndpointName -&gt; Encoding
 $ctoEncoding :: EndpointName -&gt; Encoding
 toJSON :: EndpointName -&gt; Value
 $ctoJSON :: EndpointName -&gt; Value
-</span><a href="#local-6989586621689335093"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-65"></span><span>      </span><span id="local-6989586621689335089"><span id="local-6989586621689335091"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointName]
+</span><a href="#local-6989586621689331891"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>      </span><span id="local-6989586621689331887"><span id="local-6989586621689331889"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointName]
 Value -&gt; Parser EndpointName
 (Value -&gt; Parser EndpointName)
 -&gt; (Value -&gt; Parser [EndpointName]) -&gt; FromJSON EndpointName
@@ -296,13 +296,13 @@ parseJSONList :: Value -&gt; Parser [EndpointName]
 $cparseJSONList :: Value -&gt; Parser [EndpointName]
 parseJSON :: Value -&gt; Parser EndpointName
 $cparseJSON :: Value -&gt; Parser EndpointName
-</span><a href="#local-6989586621689335089"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
+</span><a href="#local-6989586621689331887"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
 </span><span id="line-66"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="hs-keyword">newtype</span><span> </span><span id="EndpointUrl"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointUrl"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unEndpointUrl"><span class="annot"><span class="annottext">EndpointUrl -&gt; NonEmptyText
 </span><a href="Hasura.RQL.Types.Endpoint.html#unEndpointUrl"><span class="hs-identifier hs-var hs-var">unEndpointUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689335082"><span id="local-6989586621689335084"><span id="local-6989586621689335086"><span class="annot"><span class="annottext">Int -&gt; EndpointUrl -&gt; ShowS
+</span><span id="line-70"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689331880"><span id="local-6989586621689331882"><span id="local-6989586621689331884"><span class="annot"><span class="annottext">Int -&gt; EndpointUrl -&gt; ShowS
 [EndpointUrl] -&gt; ShowS
 EndpointUrl -&gt; String
 (Int -&gt; EndpointUrl -&gt; ShowS)
@@ -318,7 +318,7 @@ $cshow :: EndpointUrl -&gt; String
 showsPrec :: Int -&gt; EndpointUrl -&gt; ShowS
 $cshowsPrec :: Int -&gt; EndpointUrl -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-71"></span><span>      </span><span id="local-6989586621689335078"><span id="local-6989586621689335080"><span class="annot"><span class="annottext">EndpointUrl -&gt; EndpointUrl -&gt; Bool
+</span><span id="line-71"></span><span>      </span><span id="local-6989586621689331876"><span id="local-6989586621689331878"><span class="annot"><span class="annottext">EndpointUrl -&gt; EndpointUrl -&gt; Bool
 (EndpointUrl -&gt; EndpointUrl -&gt; Bool)
 -&gt; (EndpointUrl -&gt; EndpointUrl -&gt; Bool) -&gt; Eq EndpointUrl
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -327,7 +327,7 @@ $c/= :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 == :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 $c== :: EndpointUrl -&gt; EndpointUrl -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-72"></span><span>      </span><span id="local-6989586621689335063"><span id="local-6989586621689335065"><span id="local-6989586621689335067"><span id="local-6989586621689335069"><span id="local-6989586621689335071"><span id="local-6989586621689335073"><span id="local-6989586621689335075"><span class="annot"><span class="annottext">Eq EndpointUrl
+</span><span id="line-72"></span><span>      </span><span id="local-6989586621689331861"><span id="local-6989586621689331863"><span id="local-6989586621689331865"><span id="local-6989586621689331867"><span id="local-6989586621689331869"><span id="local-6989586621689331871"><span id="local-6989586621689331873"><span class="annot"><span class="annottext">Eq EndpointUrl
 Eq EndpointUrl
 -&gt; (EndpointUrl -&gt; EndpointUrl -&gt; Ordering)
 -&gt; (EndpointUrl -&gt; EndpointUrl -&gt; Bool)
@@ -366,13 +366,13 @@ compare :: EndpointUrl -&gt; EndpointUrl -&gt; Ordering
 $ccompare :: EndpointUrl -&gt; EndpointUrl -&gt; Ordering
 $cp1Ord :: Eq EndpointUrl
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>      </span><span id="local-6989586621689335061"><span class="annot"><span class="annottext">EndpointUrl -&gt; Text
+</span><span id="line-73"></span><span>      </span><span id="local-6989586621689331859"><span class="annot"><span class="annottext">EndpointUrl -&gt; Text
 (EndpointUrl -&gt; Text) -&gt; ToTxt EndpointUrl
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: EndpointUrl -&gt; Text
 $ctoTxt :: EndpointUrl -&gt; Text
-</span><a href="#local-6989586621689335061"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>      </span><span id="local-6989586621689335057"><span id="local-6989586621689335059"><span class="annot"><span class="annottext">Int -&gt; EndpointUrl -&gt; Int
+</span><a href="#local-6989586621689331859"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>      </span><span id="local-6989586621689331855"><span id="local-6989586621689331857"><span class="annot"><span class="annottext">Int -&gt; EndpointUrl -&gt; Int
 EndpointUrl -&gt; Int
 (Int -&gt; EndpointUrl -&gt; Int)
 -&gt; (EndpointUrl -&gt; Int) -&gt; Hashable EndpointUrl
@@ -381,8 +381,8 @@ hash :: EndpointUrl -&gt; Int
 $chash :: EndpointUrl -&gt; Int
 hashWithSalt :: Int -&gt; EndpointUrl -&gt; Int
 $chashWithSalt :: Int -&gt; EndpointUrl -&gt; Int
-</span><a href="#local-6989586621689335057"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-75"></span><span>      </span><span id="local-6989586621689335049"><span id="local-6989586621689335051"><span id="local-6989586621689335053"><span id="local-6989586621689335055"><span class="annot"><span class="annottext">[EndpointUrl] -&gt; Value
+</span><a href="#local-6989586621689331855"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-75"></span><span>      </span><span id="local-6989586621689331847"><span id="local-6989586621689331849"><span id="local-6989586621689331851"><span id="local-6989586621689331853"><span class="annot"><span class="annottext">[EndpointUrl] -&gt; Value
 [EndpointUrl] -&gt; Encoding
 EndpointUrl -&gt; Value
 EndpointUrl -&gt; Encoding
@@ -405,8 +405,8 @@ toEncoding :: EndpointUrl -&gt; Encoding
 $ctoEncoding :: EndpointUrl -&gt; Encoding
 toJSON :: EndpointUrl -&gt; Value
 $ctoJSON :: EndpointUrl -&gt; Value
-</span><a href="#local-6989586621689335049"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-76"></span><span>      </span><span id="local-6989586621689335045"><span id="local-6989586621689335047"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointUrl]
+</span><a href="#local-6989586621689331847"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621689331843"><span id="local-6989586621689331845"><span class="annot"><span class="annottext">Value -&gt; Parser [EndpointUrl]
 Value -&gt; Parser EndpointUrl
 (Value -&gt; Parser EndpointUrl)
 -&gt; (Value -&gt; Parser [EndpointUrl]) -&gt; FromJSON EndpointUrl
@@ -416,13 +416,13 @@ parseJSONList :: Value -&gt; Parser [EndpointUrl]
 $cparseJSONList :: Value -&gt; Parser [EndpointUrl]
 parseJSON :: Value -&gt; Parser EndpointUrl
 $cparseJSON :: Value -&gt; Parser EndpointUrl
-</span><a href="#local-6989586621689335045"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
+</span><a href="#local-6989586621689331843"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span>
 </span><span id="line-77"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span id="local-6989586621689335044"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-type">mkEndpointUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689335044"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689335044"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span><span>
+</span><span id="line-79"></span><span id="local-6989586621689331842"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-type">mkEndpointUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689331842"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689331842"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span><span>
 </span><span id="line-80"></span><span id="mkEndpointUrl"><span class="annot"><span class="annottext">mkEndpointUrl :: a -&gt; Maybe EndpointUrl
-</span><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-var hs-var">mkEndpointUrl</span></a></span></span><span> </span><span id="local-6989586621689335043"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689335043"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; EndpointUrl
+</span><a href="Hasura.RQL.Types.Endpoint.html#mkEndpointUrl"><span class="hs-identifier hs-var hs-var">mkEndpointUrl</span></a></span></span><span> </span><span id="local-6989586621689331841"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689331841"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; EndpointUrl
 </span><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; EndpointUrl)
 -&gt; Maybe NonEmptyText -&gt; Maybe EndpointUrl
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -430,42 +430,42 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689335043"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689331841"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689335037"><span id="local-6989586621689335039"><span class="annot"><span class="hs-identifier hs-type">FromHttpApiData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span id="local-6989586621689335034"><span class="annot"><span class="annottext">parseQueryParam :: Text -&gt; Either Text EndpointUrl
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseQueryParam</span></span></span><span> </span><span id="local-6989586621689335032"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689335032"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689331835"><span id="local-6989586621689331837"><span class="annot"><span class="hs-identifier hs-type">FromHttpApiData</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621689331832"><span class="annot"><span class="annottext">parseQueryParam :: Text -&gt; Either Text EndpointUrl
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseQueryParam</span></span></span><span> </span><span id="local-6989586621689331830"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689331830"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Either Text Text
 forall a. FromHttpApiData a =&gt; Text -&gt; Either Text a
 </span><span class="hs-identifier hs-var">parseQueryParam</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689335032"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Either Text Text
+</span><a href="#local-6989586621689331830"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">Either Text Text
 -&gt; (Text -&gt; Either Text EndpointUrl) -&gt; Either Text EndpointUrl
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
-</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689335031"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689335031"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689331829"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689331829"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-85"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689335031"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689331829"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-86"></span><span>        </span><span class="annot"><span class="annottext">Maybe NonEmptyText
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text EndpointUrl
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Endpoint url must be non-empty&quot;</span></span><span>
-</span><span id="line-87"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689335030"><span class="annot"><span class="annottext">NonEmptyText
-</span><a href="#local-6989586621689335030"><span class="hs-identifier hs-var">net</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EndpointUrl -&gt; Either Text EndpointUrl
+</span><span id="line-87"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689331828"><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621689331828"><span class="hs-identifier hs-var">net</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EndpointUrl -&gt; Either Text EndpointUrl
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmptyText -&gt; EndpointUrl
 </span><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-var">EndpointUrl</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText
-</span><a href="#local-6989586621689335030"><span class="hs-identifier hs-var">net</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689331828"><span class="hs-identifier hs-var">net</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span id="local-6989586621689335028"><span id="local-6989586621689335029"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span>
+</span><span id="line-89"></span><span id="local-6989586621689331826"><span id="local-6989586621689331827"></span></span><span class="hs-keyword">data</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryReference"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-var">QueryReference</span></a></span></span><span>
 </span><span id="line-90"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_qrCollectionName"><span class="annot"><span class="annottext">QueryReference -&gt; CollectionName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_qrCollectionName"><span class="hs-identifier hs-var hs-var">_qrCollectionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#CollectionName"><span class="hs-identifier hs-type">CollectionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-91"></span><span>    </span><span id="_qrQueryName"><span class="annot"><span class="annottext">QueryReference -&gt; QueryName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_qrQueryName"><span class="hs-identifier hs-var hs-var">_qrQueryName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.QueryCollection.html#QueryName"><span class="hs-identifier hs-type">QueryName</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689335019"><span id="local-6989586621689335021"><span id="local-6989586621689335023"><span class="annot"><span class="annottext">Int -&gt; QueryReference -&gt; ShowS
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689331817"><span id="local-6989586621689331819"><span id="local-6989586621689331821"><span class="annot"><span class="annottext">Int -&gt; QueryReference -&gt; ShowS
 [QueryReference] -&gt; ShowS
 QueryReference -&gt; String
 (Int -&gt; QueryReference -&gt; ShowS)
@@ -480,7 +480,7 @@ show :: QueryReference -&gt; String
 $cshow :: QueryReference -&gt; String
 showsPrec :: Int -&gt; QueryReference -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryReference -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689335015"><span id="local-6989586621689335017"><span class="annot"><span class="annottext">QueryReference -&gt; QueryReference -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331813"><span id="local-6989586621689331815"><span class="annot"><span class="annottext">QueryReference -&gt; QueryReference -&gt; Bool
 (QueryReference -&gt; QueryReference -&gt; Bool)
 -&gt; (QueryReference -&gt; QueryReference -&gt; Bool) -&gt; Eq QueryReference
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -499,14 +499,14 @@ $cto :: forall x. Rep QueryReference x -&gt; QueryReference
 $cfrom :: forall x. QueryReference -&gt; Rep QueryReference x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="hs-special">$(</span><span id="local-6989586621689335001"><span id="local-6989586621689335003"><span id="local-6989586621689335005"><span id="local-6989586621689335007"><span id="local-6989586621689335009"><span id="local-6989586621689335011"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryReference</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span class="hs-special">$(</span><span id="local-6989586621689331799"><span id="local-6989586621689331801"><span id="local-6989586621689331803"><span id="local-6989586621689331805"><span id="local-6989586621689331807"><span id="local-6989586621689331809"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryReference</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-96"></span><span class="hs-special">$(</span><span id="qrQueryName"><span id="qrCollectionName"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">QueryReference</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span id="local-6989586621689334996"><span id="local-6989586621689334997"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span> </span><span id="local-6989586621689334995"><span class="annot"><a href="#local-6989586621689334995"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span>
+</span><span id="line-98"></span><span id="local-6989586621689331794"><span id="local-6989586621689331795"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span> </span><span id="local-6989586621689331793"><span class="annot"><a href="#local-6989586621689331793"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointDef"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-var">EndpointDef</span></a></span></span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_edQuery"><span class="annot"><span class="annottext">EndpointDef query -&gt; query
-</span><a href="Hasura.RQL.Types.Endpoint.html#_edQuery"><span class="hs-identifier hs-var hs-var">_edQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689334995"><span class="hs-identifier hs-type">query</span></a></span><span>
+</span><a href="Hasura.RQL.Types.Endpoint.html#_edQuery"><span class="hs-identifier hs-var hs-var">_edQuery</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689331793"><span class="hs-identifier hs-type">query</span></a></span><span>
 </span><span id="line-100"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689334987"><span id="local-6989586621689334989"><span id="local-6989586621689334991"><span class="annot"><span class="annottext">Int -&gt; EndpointDef query -&gt; ShowS
+</span><span id="line-101"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689331785"><span id="local-6989586621689331787"><span id="local-6989586621689331789"><span class="annot"><span class="annottext">Int -&gt; EndpointDef query -&gt; ShowS
 [EndpointDef query] -&gt; ShowS
 EndpointDef query -&gt; String
 (Int -&gt; EndpointDef query -&gt; ShowS)
@@ -524,7 +524,7 @@ show :: EndpointDef query -&gt; String
 $cshow :: forall query. Show query =&gt; EndpointDef query -&gt; String
 showsPrec :: Int -&gt; EndpointDef query -&gt; ShowS
 $cshowsPrec :: forall query. Show query =&gt; Int -&gt; EndpointDef query -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334983"><span id="local-6989586621689334985"><span class="annot"><span class="annottext">EndpointDef query -&gt; EndpointDef query -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331781"><span id="local-6989586621689331783"><span class="annot"><span class="annottext">EndpointDef query -&gt; EndpointDef query -&gt; Bool
 (EndpointDef query -&gt; EndpointDef query -&gt; Bool)
 -&gt; (EndpointDef query -&gt; EndpointDef query -&gt; Bool)
 -&gt; Eq (EndpointDef query)
@@ -540,7 +540,7 @@ EndpointDef query -&gt; EndpointDef query -&gt; Bool
 $c== :: forall query.
 Eq query =&gt;
 EndpointDef query -&gt; EndpointDef query -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334968"><span id="local-6989586621689334970"><span id="local-6989586621689334972"><span id="local-6989586621689334974"><span id="local-6989586621689334976"><span id="local-6989586621689334978"><span id="local-6989586621689334980"><span class="annot"><span class="annottext">Eq (EndpointDef query)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331766"><span id="local-6989586621689331768"><span id="local-6989586621689331770"><span id="local-6989586621689331772"><span id="local-6989586621689331774"><span id="local-6989586621689331776"><span id="local-6989586621689331778"><span class="annot"><span class="annottext">Eq (EndpointDef query)
 Eq (EndpointDef query)
 -&gt; (EndpointDef query -&gt; EndpointDef query -&gt; Ordering)
 -&gt; (EndpointDef query -&gt; EndpointDef query -&gt; Bool)
@@ -613,7 +613,7 @@ forall query x. Rep (EndpointDef query) x -&gt; EndpointDef query
 forall query x. EndpointDef query -&gt; Rep (EndpointDef query) x
 $cto :: forall query x. Rep (EndpointDef query) x -&gt; EndpointDef query
 $cfrom :: forall query x. EndpointDef query -&gt; Rep (EndpointDef query) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334962"><span id="local-6989586621689334964"><span class="annot"><span class="annottext">a -&gt; EndpointDef b -&gt; EndpointDef a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331760"><span id="local-6989586621689331762"><span class="annot"><span class="annottext">a -&gt; EndpointDef b -&gt; EndpointDef a
 (a -&gt; b) -&gt; EndpointDef a -&gt; EndpointDef b
 (forall a b. (a -&gt; b) -&gt; EndpointDef a -&gt; EndpointDef b)
 -&gt; (forall a b. a -&gt; EndpointDef b -&gt; EndpointDef a)
@@ -627,7 +627,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; EndpointDef b -&gt; EndpointDef a
 fmap :: (a -&gt; b) -&gt; EndpointDef a -&gt; EndpointDef b
 $cfmap :: forall a b. (a -&gt; b) -&gt; EndpointDef a -&gt; EndpointDef b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334927"><span id="local-6989586621689334929"><span id="local-6989586621689334931"><span id="local-6989586621689334933"><span id="local-6989586621689334935"><span id="local-6989586621689334937"><span id="local-6989586621689334939"><span id="local-6989586621689334941"><span id="local-6989586621689334943"><span id="local-6989586621689334945"><span id="local-6989586621689334947"><span id="local-6989586621689334949"><span id="local-6989586621689334951"><span id="local-6989586621689334953"><span id="local-6989586621689334955"><span id="local-6989586621689334957"><span id="local-6989586621689334959"><span class="annot"><span class="annottext">EndpointDef a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331725"><span id="local-6989586621689331727"><span id="local-6989586621689331729"><span id="local-6989586621689331731"><span id="local-6989586621689331733"><span id="local-6989586621689331735"><span id="local-6989586621689331737"><span id="local-6989586621689331739"><span id="local-6989586621689331741"><span id="local-6989586621689331743"><span id="local-6989586621689331745"><span id="local-6989586621689331747"><span id="local-6989586621689331749"><span id="local-6989586621689331751"><span id="local-6989586621689331753"><span id="local-6989586621689331755"><span id="local-6989586621689331757"><span class="annot"><span class="annottext">EndpointDef a -&gt; Bool
 (a -&gt; m) -&gt; EndpointDef a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; EndpointDef a -&gt; b
 (forall m. Monoid m =&gt; EndpointDef m -&gt; m)
@@ -712,7 +712,7 @@ foldMap :: (a -&gt; m) -&gt; EndpointDef a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; EndpointDef a -&gt; m
 fold :: EndpointDef m -&gt; m
 $cfold :: forall m. Monoid m =&gt; EndpointDef m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334916"><span id="local-6989586621689334918"><span id="local-6989586621689334920"><span id="local-6989586621689334922"><span class="annot"><span class="annottext">Functor EndpointDef
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331714"><span id="local-6989586621689331716"><span id="local-6989586621689331718"><span id="local-6989586621689331720"><span class="annot"><span class="annottext">Functor EndpointDef
 Foldable EndpointDef
 Functor EndpointDef
 -&gt; Foldable EndpointDef
@@ -774,12 +774,12 @@ $cp2Traversable :: Foldable EndpointDef
 $cp1Traversable :: Functor EndpointDef
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-special">$(</span><span id="local-6989586621689334903"><span id="local-6989586621689334905"><span id="local-6989586621689334907"><span id="local-6989586621689334909"><span id="local-6989586621689334911"><span id="local-6989586621689334913"><span id="local-6989586621689334995"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-104"></span><span class="hs-special">$(</span><span id="local-6989586621689334902"><span id="local-6989586621689334995"><span id="edQuery"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span class="hs-special">$(</span><span id="local-6989586621689331701"><span id="local-6989586621689331703"><span id="local-6989586621689331705"><span id="local-6989586621689331707"><span id="local-6989586621689331709"><span id="local-6989586621689331711"><span id="local-6989586621689331793"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span class="hs-special">$(</span><span id="local-6989586621689331700"><span id="local-6989586621689331793"><span id="edQuery"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointDef</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span class="hs-keyword">type</span><span> </span><span id="EndpointTrie"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-var">EndpointTrie</span></a></span></span><span> </span><span id="local-6989586621689334901"><span class="annot"><a href="#local-6989586621689334901"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-type">MultiMapPathTrie</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689334901"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span class="hs-keyword">type</span><span> </span><span id="EndpointTrie"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-var">EndpointTrie</span></a></span></span><span> </span><span id="local-6989586621689331699"><span class="annot"><a href="#local-6989586621689331699"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.Trie.html#MultiMapPathTrie"><span class="hs-identifier hs-type">MultiMapPathTrie</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689331699"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span id="local-6989586621689334899"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#buildEndpointsTrie"><span class="hs-identifier hs-type">buildEndpointsTrie</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689334899"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689334899"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-type">EndpointTrie</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689334899"><span class="hs-identifier hs-type">query</span></a></span></span><span>
+</span><span id="line-108"></span><span id="local-6989586621689331697"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#buildEndpointsTrie"><span class="hs-identifier hs-type">buildEndpointsTrie</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689331697"><span class="hs-identifier hs-type">query</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689331697"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointTrie"><span class="hs-identifier hs-type">EndpointTrie</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689331697"><span class="hs-identifier hs-type">query</span></a></span></span><span>
 </span><span id="line-109"></span><span id="buildEndpointsTrie"><span class="annot"><span class="annottext">buildEndpointsTrie :: [EndpointMetadata query] -&gt; EndpointTrie query
 </span><a href="Hasura.RQL.Types.Endpoint.html#buildEndpointsTrie"><span class="hs-identifier hs-var hs-var">buildEndpointsTrie</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EndpointTrie query
  -&gt; EndpointMetadata query -&gt; EndpointTrie query)
@@ -799,24 +799,24 @@ Trie
 -&gt; Trie
      (PathComponent Text)
      (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621689334897"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointTrie query
+</span><a href="#local-6989586621689331695"><span class="hs-identifier hs-var">insert</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointTrie query
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-111"></span><span>    </span><span id="local-6989586621689334897"><span class="annot"><span class="annottext">insert :: Trie
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621689331695"><span class="annot"><span class="annottext">insert :: Trie
   (PathComponent Text)
   (MultiMap EndpointMethod (EndpointMetadata query))
 -&gt; EndpointMetadata query
 -&gt; Trie
      (PathComponent Text)
      (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621689334897"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621689334896"><span class="annot"><span class="annottext">Trie
+</span><a href="#local-6989586621689331695"><span class="hs-identifier hs-var hs-var">insert</span></a></span></span><span> </span><span id="local-6989586621689331694"><span class="annot"><span class="annottext">Trie
   (PathComponent Text)
   (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621689334896"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621689334895"><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621689334895"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-112"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689334894"><span class="annot"><span class="annottext">endpointMap :: MultiMap EndpointMethod (EndpointMetadata query)
-</span><a href="#local-6989586621689334894"><span class="hs-identifier hs-var hs-var">endpointMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EndpointMethod
+</span><a href="#local-6989586621689331694"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621689331693"><span class="annot"><span class="annottext">EndpointMetadata query
+</span><a href="#local-6989586621689331693"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-112"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689331692"><span class="annot"><span class="annottext">endpointMap :: MultiMap EndpointMethod (EndpointMetadata query)
+</span><a href="#local-6989586621689331692"><span class="hs-identifier hs-var hs-var">endpointMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EndpointMethod
  -&gt; MultiMap EndpointMethod (EndpointMetadata query))
 -&gt; NonEmpty EndpointMethod
 -&gt; MultiMap EndpointMethod (EndpointMetadata query)
@@ -828,7 +828,7 @@ forall (t :: * -&gt; *) m a.
 -&gt; MultiMap EndpointMethod (EndpointMetadata query)
 forall k v. Hashable k =&gt; k -&gt; v -&gt; MultiMap k v
 </span><a href="Data.HashMap.Strict.Multi.html#singleton"><span class="hs-operator hs-var">`MM.singleton`</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621689334895"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NonEmpty EndpointMethod
+</span><a href="#local-6989586621689331693"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NonEmpty EndpointMethod
  -&gt; MultiMap EndpointMethod (EndpointMetadata query))
 -&gt; NonEmpty EndpointMethod
 -&gt; MultiMap EndpointMethod (EndpointMetadata query)
@@ -836,7 +836,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EndpointMetadata query -&gt; NonEmpty EndpointMethod
 forall query. EndpointMetadata query -&gt; NonEmpty EndpointMethod
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceMethods"><span class="hs-identifier hs-var hs-var">_ceMethods</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621689334895"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><a href="#local-6989586621689331693"><span class="hs-identifier hs-var">q</span></a></span><span>
 </span><span id="line-113"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(MultiMap EndpointMethod (EndpointMetadata query)
  -&gt; MultiMap EndpointMethod (EndpointMetadata query)
  -&gt; MultiMap EndpointMethod (EndpointMetadata query))
@@ -869,22 +869,22 @@ forall a. a -&gt; PathComponent a
 </span><a href="Hasura.RQL.Types.Endpoint.Trie.html#PathLiteral"><span class="hs-identifier hs-var">PathLiteral</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointUrl
 forall query. EndpointMetadata query -&gt; EndpointUrl
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceUrl"><span class="hs-identifier hs-var hs-var">_ceUrl</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointMetadata query
-</span><a href="#local-6989586621689334895"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MultiMap EndpointMethod (EndpointMetadata query)
-</span><a href="#local-6989586621689334894"><span class="hs-identifier hs-var">endpointMap</span></a></span><span> </span><span class="annot"><span class="annottext">Trie
+</span><a href="#local-6989586621689331693"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MultiMap EndpointMethod (EndpointMetadata query)
+</span><a href="#local-6989586621689331692"><span class="hs-identifier hs-var">endpointMap</span></a></span><span> </span><span class="annot"><span class="annottext">Trie
   (PathComponent Text)
   (MultiMap EndpointMethod (EndpointMetadata query))
-</span><a href="#local-6989586621689334896"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621689331694"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-comment">-- | Split a path and construct PathSegments based on callbacks for variables and literals</span><span>
 </span><span id="line-116"></span><span class="hs-comment">--   Var callback is passed the &quot;:&quot; prefix as part of the text.</span><span>
-</span><span id="line-117"></span><span id="local-6989586621689335291"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-type">splitPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689335291"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689335291"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689335291"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-117"></span><span id="local-6989586621689332089"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-type">splitPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689332089"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689332089"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointUrl"><span class="hs-identifier hs-type">EndpointUrl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689332089"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
 </span><span id="line-118"></span><span id="splitPath"><span class="annot"><span class="annottext">splitPath :: (Text -&gt; a) -&gt; (Text -&gt; a) -&gt; EndpointUrl -&gt; [a]
-</span><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-var hs-var">splitPath</span></a></span></span><span> </span><span id="local-6989586621689334885"><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621689334885"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span id="local-6989586621689334884"><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621689334884"><span class="hs-identifier hs-var">lit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; a) -&gt; [Text] -&gt; [a]
+</span><a href="Hasura.RQL.Types.Endpoint.html#splitPath"><span class="hs-identifier hs-var hs-var">splitPath</span></a></span></span><span> </span><span id="local-6989586621689331683"><span class="annot"><span class="annottext">Text -&gt; a
+</span><a href="#local-6989586621689331683"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span id="local-6989586621689331682"><span class="annot"><span class="annottext">Text -&gt; a
+</span><a href="#local-6989586621689331682"><span class="hs-identifier hs-var">lit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; a) -&gt; [Text] -&gt; [a]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621689334883"><span class="hs-identifier hs-var">toPathComponent</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; [a]) -&gt; (EndpointUrl -&gt; [Text]) -&gt; EndpointUrl -&gt; [a]
+</span><a href="#local-6989586621689331681"><span class="hs-identifier hs-var">toPathComponent</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; [a]) -&gt; (EndpointUrl -&gt; [Text]) -&gt; EndpointUrl -&gt; [a]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; Text -&gt; [Text]
 </span><span class="hs-identifier hs-var">T.split</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Char -&gt; Bool
@@ -896,23 +896,23 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-120"></span><span>    </span><span id="local-6989586621689334883"><span class="annot"><span class="annottext">toPathComponent :: Text -&gt; a
-</span><a href="#local-6989586621689334883"><span class="hs-identifier hs-var hs-var">toPathComponent</span></a></span></span><span> </span><span id="local-6989586621689334880"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689334880"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621689331681"><span class="annot"><span class="annottext">toPathComponent :: Text -&gt; a
+</span><a href="#local-6989586621689331681"><span class="hs-identifier hs-var hs-var">toPathComponent</span></a></span></span><span> </span><span id="local-6989586621689331678"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689331678"><span class="hs-identifier hs-var">x</span></a></span></span><span>
 </span><span id="line-121"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;:&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689334880"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621689334885"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689334880"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689331678"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
+</span><a href="#local-6989586621689331683"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689331678"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-122"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; a
-</span><a href="#local-6989586621689334884"><span class="hs-identifier hs-var">lit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689334880"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689331682"><span class="hs-identifier hs-var">lit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689331678"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span class="hs-keyword">type</span><span> </span><span id="CreateEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#CreateEndpoint"><span class="hs-identifier hs-var">CreateEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#QueryReference"><span class="hs-identifier hs-type">QueryReference</span></a></span><span>
 </span><span id="line-125"></span><span>
-</span><span id="line-126"></span><span id="local-6989586621689334877"><span id="local-6989586621689334878"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span> </span><span id="local-6989586621689335295"><span class="annot"><a href="#local-6989586621689335295"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span>
+</span><span id="line-126"></span><span id="local-6989586621689331675"><span id="local-6989586621689331676"></span></span><span class="hs-keyword">data</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span> </span><span id="local-6989586621689332093"><span class="annot"><a href="#local-6989586621689332093"><span class="hs-identifier hs-type">query</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EndpointMetadata"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-var">EndpointMetadata</span></a></span></span><span>
 </span><span id="line-127"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_ceName"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceName"><span class="hs-identifier hs-var hs-var">_ceName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-128"></span><span>    </span><span id="_ceUrl"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointUrl
@@ -920,11 +920,11 @@ forall a. ToTxt a =&gt; a -&gt; Text
 </span><span id="line-129"></span><span>    </span><span id="_ceMethods"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; NonEmpty EndpointMethod
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceMethods"><span class="hs-identifier hs-var hs-var">_ceMethods</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMethod"><span class="hs-identifier hs-type">EndpointMethod</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- TODO: Use a set for this?</span><span>
 </span><span id="line-130"></span><span>    </span><span id="_ceDefinition"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointDef query
-</span><a href="Hasura.RQL.Types.Endpoint.html#_ceDefinition"><span class="hs-identifier hs-var hs-var">_ceDefinition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-type">EndpointDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689335295"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.Types.Endpoint.html#_ceDefinition"><span class="hs-identifier hs-var hs-var">_ceDefinition</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointDef"><span class="hs-identifier hs-type">EndpointDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689332093"><span class="hs-identifier hs-type">query</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-131"></span><span>    </span><span id="_ceComment"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; Maybe Text
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceComment"><span class="hs-identifier hs-var hs-var">_ceComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-132"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689334867"><span id="local-6989586621689334869"><span id="local-6989586621689334871"><span class="annot"><span class="annottext">Int -&gt; EndpointMetadata query -&gt; ShowS
+</span><span id="line-133"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689331665"><span id="local-6989586621689331667"><span id="local-6989586621689331669"><span class="annot"><span class="annottext">Int -&gt; EndpointMetadata query -&gt; ShowS
 [EndpointMetadata query] -&gt; ShowS
 EndpointMetadata query -&gt; String
 (Int -&gt; EndpointMetadata query -&gt; ShowS)
@@ -942,7 +942,7 @@ show :: EndpointMetadata query -&gt; String
 $cshow :: forall query. Show query =&gt; EndpointMetadata query -&gt; String
 showsPrec :: Int -&gt; EndpointMetadata query -&gt; ShowS
 $cshowsPrec :: forall query. Show query =&gt; Int -&gt; EndpointMetadata query -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334863"><span id="local-6989586621689334865"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331661"><span id="local-6989586621689331663"><span class="annot"><span class="annottext">EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
 (EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool)
 -&gt; (EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool)
 -&gt; Eq (EndpointMetadata query)
@@ -958,7 +958,7 @@ EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
 $c== :: forall query.
 Eq query =&gt;
 EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334848"><span id="local-6989586621689334850"><span id="local-6989586621689334852"><span id="local-6989586621689334854"><span id="local-6989586621689334856"><span id="local-6989586621689334858"><span id="local-6989586621689334860"><span class="annot"><span class="annottext">Eq (EndpointMetadata query)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331646"><span id="local-6989586621689331648"><span id="local-6989586621689331650"><span id="local-6989586621689331652"><span id="local-6989586621689331654"><span id="local-6989586621689331656"><span id="local-6989586621689331658"><span class="annot"><span class="annottext">Eq (EndpointMetadata query)
 Eq (EndpointMetadata query)
 -&gt; (EndpointMetadata query -&gt; EndpointMetadata query -&gt; Ordering)
 -&gt; (EndpointMetadata query -&gt; EndpointMetadata query -&gt; Bool)
@@ -1045,7 +1045,7 @@ $cto :: forall query x.
 Rep (EndpointMetadata query) x -&gt; EndpointMetadata query
 $cfrom :: forall query x.
 EndpointMetadata query -&gt; Rep (EndpointMetadata query) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334842"><span id="local-6989586621689334844"><span class="annot"><span class="annottext">a -&gt; EndpointMetadata b -&gt; EndpointMetadata a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331640"><span id="local-6989586621689331642"><span class="annot"><span class="annottext">a -&gt; EndpointMetadata b -&gt; EndpointMetadata a
 (a -&gt; b) -&gt; EndpointMetadata a -&gt; EndpointMetadata b
 (forall a b. (a -&gt; b) -&gt; EndpointMetadata a -&gt; EndpointMetadata b)
 -&gt; (forall a b. a -&gt; EndpointMetadata b -&gt; EndpointMetadata a)
@@ -1059,7 +1059,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; EndpointMetadata b -&gt; EndpointMetadata a
 fmap :: (a -&gt; b) -&gt; EndpointMetadata a -&gt; EndpointMetadata b
 $cfmap :: forall a b. (a -&gt; b) -&gt; EndpointMetadata a -&gt; EndpointMetadata b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334808"><span id="local-6989586621689334810"><span id="local-6989586621689334812"><span id="local-6989586621689334814"><span id="local-6989586621689334816"><span id="local-6989586621689334818"><span id="local-6989586621689334820"><span id="local-6989586621689334822"><span id="local-6989586621689334824"><span id="local-6989586621689334826"><span id="local-6989586621689334828"><span id="local-6989586621689334830"><span id="local-6989586621689334832"><span id="local-6989586621689334834"><span id="local-6989586621689334836"><span id="local-6989586621689334838"><span id="local-6989586621689334840"><span class="annot"><span class="annottext">EndpointMetadata a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331606"><span id="local-6989586621689331608"><span id="local-6989586621689331610"><span id="local-6989586621689331612"><span id="local-6989586621689331614"><span id="local-6989586621689331616"><span id="local-6989586621689331618"><span id="local-6989586621689331620"><span id="local-6989586621689331622"><span id="local-6989586621689331624"><span id="local-6989586621689331626"><span id="local-6989586621689331628"><span id="local-6989586621689331630"><span id="local-6989586621689331632"><span id="local-6989586621689331634"><span id="local-6989586621689331636"><span id="local-6989586621689331638"><span class="annot"><span class="annottext">EndpointMetadata a -&gt; Bool
 (a -&gt; m) -&gt; EndpointMetadata a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; EndpointMetadata a -&gt; b
 (forall m. Monoid m =&gt; EndpointMetadata m -&gt; m)
@@ -1144,7 +1144,7 @@ foldMap :: (a -&gt; m) -&gt; EndpointMetadata a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; EndpointMetadata a -&gt; m
 fold :: EndpointMetadata m -&gt; m
 $cfold :: forall m. Monoid m =&gt; EndpointMetadata m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334798"><span id="local-6989586621689334800"><span id="local-6989586621689334802"><span id="local-6989586621689334804"><span class="annot"><span class="annottext">Functor EndpointMetadata
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331596"><span id="local-6989586621689331598"><span id="local-6989586621689331600"><span id="local-6989586621689331602"><span class="annot"><span class="annottext">Functor EndpointMetadata
 Foldable EndpointMetadata
 Functor EndpointMetadata
 -&gt; Foldable EndpointMetadata
@@ -1206,14 +1206,14 @@ $cp2Traversable :: Foldable EndpointMetadata
 $cp1Traversable :: Functor EndpointMetadata
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-134"></span><span>
-</span><span id="line-135"></span><span class="hs-special">$(</span><span id="local-6989586621689334786"><span id="local-6989586621689334788"><span id="local-6989586621689334790"><span id="local-6989586621689334792"><span id="local-6989586621689334794"><span id="local-6989586621689334796"><span id="local-6989586621689335295"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-136"></span><span class="hs-special">$(</span><span id="local-6989586621689334785"><span id="ceUrl"><span id="ceName"><span id="ceMethods"><span id="ceDefinition"><span id="ceComment"><span id="local-6989586621689335295"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span class="hs-special">$(</span><span id="local-6989586621689331584"><span id="local-6989586621689331586"><span id="local-6989586621689331588"><span id="local-6989586621689331590"><span id="local-6989586621689331592"><span id="local-6989586621689331594"><span id="local-6989586621689332093"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-136"></span><span class="hs-special">$(</span><span id="local-6989586621689331583"><span id="ceUrl"><span id="ceName"><span id="ceMethods"><span id="ceDefinition"><span id="ceComment"><span id="local-6989586621689332093"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">EndpointMetadata</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span id="local-6989586621689334783"><span id="local-6989586621689334784"></span></span><span class="hs-keyword">data</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span>
+</span><span id="line-138"></span><span id="local-6989586621689331581"><span id="local-6989586621689331582"></span></span><span class="hs-keyword">data</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="DropEndpoint"><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-var">DropEndpoint</span></a></span></span><span>
 </span><span id="line-139"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_deName"><span class="annot"><span class="annottext">DropEndpoint -&gt; EndpointName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_deName"><span class="hs-identifier hs-var hs-var">_deName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689334775"><span id="local-6989586621689334777"><span id="local-6989586621689334779"><span class="annot"><span class="annottext">Int -&gt; DropEndpoint -&gt; ShowS
+</span><span id="line-141"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689331573"><span id="local-6989586621689331575"><span id="local-6989586621689331577"><span class="annot"><span class="annottext">Int -&gt; DropEndpoint -&gt; ShowS
 [DropEndpoint] -&gt; ShowS
 DropEndpoint -&gt; String
 (Int -&gt; DropEndpoint -&gt; ShowS)
@@ -1228,7 +1228,7 @@ show :: DropEndpoint -&gt; String
 $cshow :: DropEndpoint -&gt; String
 showsPrec :: Int -&gt; DropEndpoint -&gt; ShowS
 $cshowsPrec :: Int -&gt; DropEndpoint -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689334771"><span id="local-6989586621689334773"><span class="annot"><span class="annottext">DropEndpoint -&gt; DropEndpoint -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689331569"><span id="local-6989586621689331571"><span class="annot"><span class="annottext">DropEndpoint -&gt; DropEndpoint -&gt; Bool
 (DropEndpoint -&gt; DropEndpoint -&gt; Bool)
 -&gt; (DropEndpoint -&gt; DropEndpoint -&gt; Bool) -&gt; Eq DropEndpoint
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1247,6 +1247,6 @@ $cto :: forall x. Rep DropEndpoint x -&gt; DropEndpoint
 $cfrom :: forall x. DropEndpoint -&gt; Rep DropEndpoint x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
-</span><span id="line-143"></span><span class="hs-special">$(</span><span id="local-6989586621689334757"><span id="local-6989586621689334759"><span id="local-6989586621689334761"><span id="local-6989586621689334763"><span id="local-6989586621689334765"><span id="local-6989586621689334767"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropEndpoint</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span class="hs-special">$(</span><span id="local-6989586621689331555"><span id="local-6989586621689331557"><span id="local-6989586621689331559"><span id="local-6989586621689331561"><span id="local-6989586621689331563"><span id="local-6989586621689331565"><span class="hs-identifier">deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">aesonDrop</span><span> </span><span class="hs-number">3</span><span> </span><span class="hs-identifier">snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropEndpoint</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-144"></span><span class="hs-special">$(</span><span id="deName"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">DropEndpoint</span></span><span class="hs-special">)</span><span>
 </span><span id="line-145"></span></pre></body></html>

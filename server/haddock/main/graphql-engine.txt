@@ -25865,13 +25865,7 @@ ActionWebhookErrorResponse :: !Text -> !Maybe Text -> !Maybe Value -> ActionWebh
 [_awerMessage] :: ActionWebhookErrorResponse -> !Text
 [_awerCode] :: ActionWebhookErrorResponse -> !Maybe Text
 [_awerExtensions] :: ActionWebhookErrorResponse -> !Maybe Value
-data ActionWebhookResponse
-AWRArray :: ![Value] -> ActionWebhookResponse
-AWRObject :: !HashMap Name Value -> ActionWebhookResponse
-AWRNum :: !Scientific -> ActionWebhookResponse
-AWRBool :: !Bool -> ActionWebhookResponse
-AWRString :: !Text -> ActionWebhookResponse
-AWRNull :: ActionWebhookResponse
+type ActionWebhookResponse = Value
 data ActionRequestInfo
 ActionRequestInfo :: !Text -> !Value -> ![HeaderConf] -> !Maybe Request -> ActionRequestInfo
 [_areqiUrl] :: ActionRequestInfo -> !Text
@@ -25905,11 +25899,7 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Action.Types.Acti
 instance GHC.Classes.Eq Hasura.GraphQL.Execute.Action.Types.ActionResponseInfo
 instance GHC.Show.Show Hasura.GraphQL.Execute.Action.Types.ActionResponseInfo
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Action.Types.ActionRequestInfo
-instance GHC.Classes.Eq Hasura.GraphQL.Execute.Action.Types.ActionWebhookResponse
-instance GHC.Show.Show Hasura.GraphQL.Execute.Action.Types.ActionWebhookResponse
 instance GHC.Show.Show Hasura.GraphQL.Execute.Action.Types.ActionRequestInfo
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.Action.Types.ActionWebhookResponse
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Action.Types.ActionWebhookResponse
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.GraphQL.Execute.Action.Types.ActionWebhookErrorResponse
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.GraphQL.Execute.Action.Types.ActionWebhookErrorResponse
 instance GHC.Classes.Eq Hasura.GraphQL.Execute.Action.Types.ActionWebhookErrorResponse
@@ -26323,9 +26313,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axOmQ. Lens' (QueryParametersInfo b_axOmQ) (Seq (ColumnValue b_axOmQ))
-qpiReusableVariableValues :: forall b_axOmQ. Lens' (QueryParametersInfo b_axOmQ) (HashMap Name (ColumnValue b_axOmQ))
-qpiReferencedSessionVariables :: forall b_axOmQ. Lens' (QueryParametersInfo b_axOmQ) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axNy6. Lens' (QueryParametersInfo b_axNy6) (Seq (ColumnValue b_axNy6))
+qpiReusableVariableValues :: forall b_axNy6. Lens' (QueryParametersInfo b_axNy6) (HashMap Name (ColumnValue b_axNy6))
+qpiReferencedSessionVariables :: forall b_axNy6. Lens' (QueryParametersInfo b_axNy6) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -29013,6 +29003,9 @@ asSingleRowJsonResp :: Query -> [PrepArg] -> TxE QErr EncJSON
 -- | Synchronously execute webhook handler and resolve response to action
 --   "output"
 resolveActionExecution :: Environment -> Logger Hasura -> UserInfo -> AnnActionExecution Void -> ActionExecContext -> Maybe GQLQueryText -> ActionExecution
+throwUnexpected :: MonadError QErr m => Text -> m ()
+validateResponseObject :: MonadError QErr m => KeyMap Value -> ActionOutputFields -> m ()
+validateResponse :: MonadError QErr m => Value -> GraphQLType -> ActionOutputFields -> m ()
 
 -- | Build action response from the Webhook JSON response when there are no
 --   relationships defined
