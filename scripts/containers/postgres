@@ -21,7 +21,7 @@ PG_DOCKER="docker exec -u postgres -it $PG_CONTAINER_NAME psql $PG_DB_URL"
 if [[ `uname -m` == 'arm64' ]]; then
   PG_CONTAINER_IMAGE=sayitsocial/postgis:raspi
 else
-  PG_CONTAINER_IMAGE=circleci/postgres:11.5-alpine-postgis
+  PG_CONTAINER_IMAGE=cimg/postgres:14.4-postgis
 fi
 
 # NOTE FWIW:
