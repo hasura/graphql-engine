@@ -283,21 +283,21 @@ The response body for a call to `POST /query` must conform to a specific query r
 {
   "rows": [
     {
-      "ArtistId": { "type": "column", "value": 1 },
-      "Name": { "type": "column", "value": "AC/DC" }
+      "ArtistId": 1,
+      "Name": "AC/DC"
     },
     {
-      "ArtistId": { "type": "column", "value": 2 },
-      "Name": { "type": "column", "value": "Accept" }
+      "ArtistId": 2,
+      "Name": "Accept"
     }
   ]
 }
 ```
 
-The rows returned by the query must be put into the `rows` property array in the query response object. Each object within this array represents a row, and the row object properties are the fields requested in the query. The value of the row object properties can be one of two types of object:
+The rows returned by the query must be put into the `rows` property array in the query response object. Each object within this array represents a row, and the row object properties are the fields requested in the query. The value of the row object properties can be one of two types:
 
-- `column`: The field was a column field, then `value` must be the value of that column for this row
-- `relationship`: If the field was a relationship field, then the `value` must be a new query response object that contains the results of navigating that relationship for the current row. (The query response structure is recursive via relationship-typed field values). Examples of this can be seen in the Relationships section below.
+- `column`: The field was a column field, then value of that column for this row is used
+- `relationship`: If the field was a relationship field, then a new query response object that contains the results of navigating that relationship for the current row must be used. (The query response structure is recursive via relationship-typed field values). Examples of this can be seen in the Relationships section below.
 
 #### Pagination
 
@@ -547,35 +547,29 @@ Here's an example (truncated) response:
   "rows": [
     {
       "Albums": {
-        "type": "relationship",
-        "value": {
-          "rows": [
-            {
-              "Title": { "type": "column", "value": "For Those About To Rock We Salute You" }
-            },
-            {
-              "Title": { "type": "column", "value": "Let There Be Rock" }
-            }
-          ]
-        }
+        "rows": [
+          {
+            "Title": "For Those About To Rock We Salute You"
+          },
+          {
+            "Title": "Let There Be Rock"
+          }
+        ]
       },
-      "Name": { "type": "column", "value": "AC/DC" }
+      "Name": "AC/DC"
     },
     {
       "Albums": {
-        "type": "relationship",
-        "value": {
-          "rows": [
-            {
-              "Title": { "type": "column", "value": "Balls to the Wall" }
-            },
-            {
-              "Title": { "type": "column", "value": "Restless and Wild" }
-            }
-          ]
-        }
+        "rows": [
+          {
+            "Title": "Balls to the Wall"
+          },
+          {
+            "Title": "Restless and Wild"
+          }
+        ]
       },
-      "Name": { "type": "column", "value": "Accept" }
+      "Name": "Accept"
     }
     // Truncated, more Artist rows here
   ]
@@ -897,8 +891,8 @@ The response from this query would include both the `aggregates` and the matchin
   },
   "rows": [
     {
-      "nodes_ArtistId": { "type": "column", "value": 155 },
-      "nodes_Name": { "type": "column", "value": "Zeca Pagodinho" }
+      "nodes_ArtistId": 155,
+      "nodes_Name": "Zeca Pagodinho"
     }
   ]
 }
@@ -962,32 +956,26 @@ This would generate the following `QueryRequest`:
 }
 ```
 
-This would be expected to return the following response, with the rows from the Artist table, and the aggregates from the related Albums nested under the `relationship` field values for each Album row:
+This would be expected to return the following response, with the rows from the Artist table, and the aggregates from the related Albums nested under the relationship field values for each Album row:
 
 ```json
 {
   "rows": [
     {
       "Albums_aggregate": {
-        "type": "relationship",
-        "value": {
-          "aggregates": {
-            "aggregate_count": 2
-          }
+        "aggregates": {
+          "aggregate_count": 2
         }
       },
-      "Name": { "type": "column", "value": "Accept" }
+      "Name": "Accept"
     },
     {
       "Albums_aggregate": {
-        "type": "relationship",
-        "value": {
-          "aggregates": {
-            "aggregate_count": 1
-          }
+        "aggregates": {
+          "aggregate_count": 1
         }
       },
-      "Name": { "type": "column", "value": "Aerosmith" }
+      "Name": "Aerosmith"
     }
   ]
 }

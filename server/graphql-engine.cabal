@@ -1036,8 +1036,6 @@ test-suite graphql-engine-tests
     Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec
     Hasura.Backends.DataConnector.API.V0.SchemaSpec
     Hasura.Backends.DataConnector.API.V0.TableSpec
-    Hasura.Backends.DataConnector.API.V0Spec
-    Hasura.Backends.DataConnector.API.V0Spec
     Hasura.Backends.DataConnector.RQLGenerator
     Hasura.Backends.DataConnector.RQLGenerator.GenAnnSelectG
     Hasura.Backends.DataConnector.RQLGenerator.GenCommon

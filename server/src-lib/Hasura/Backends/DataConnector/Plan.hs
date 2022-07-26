@@ -8,7 +8,6 @@ where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec.Extended (ValueWrapper (..))
 import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
@@ -513,15 +512,13 @@ reshapeField ::
 reshapeField field responseFieldValue =
   case field of
     AFColumn _columnField -> do
-      responseFieldValue' <- responseFieldValue
-      case responseFieldValue' of
-        API.ColumnFieldValue (ValueWrapper responseColumnFieldValue) -> pure $ J.toEncoding responseColumnFieldValue
-        API.RelationshipFieldValue _ -> throw500 "Found relationship field value where column field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
+      columnFieldValue <- API.deserializeAsColumnFieldValue <$> responseFieldValue
+      pure $ J.toEncoding columnFieldValue
     AFObjectRelation objectRelationField -> do
-      responseFieldValue' <- responseFieldValue
-      case responseFieldValue' of
-        API.ColumnFieldValue _ -> throw500 "Found column field value where relationship field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
-        API.RelationshipFieldValue (ValueWrapper subqueryResponse) ->
+      relationshipFieldValue <- API.deserializeAsRelationshipFieldValue <$> responseFieldValue
+      case relationshipFieldValue of
+        Left err -> throw500 $ "Found column field value where relationship field value was expected in field returned by Data Connector agent: " <> err -- TODO(dchambers): Add pathing information for error clarity
+        Right subqueryResponse ->
           let fields = _aosFields $ _aarAnnSelect objectRelationField
            in reshapeSimpleSelectRows Single fields subqueryResponse
     AFArrayRelation (ASSimple simpleArrayRelationField) ->
@@ -536,8 +533,9 @@ reshapeAnnRelationSelect ::
   AnnRelationSelectG 'DataConnector (AnnSelectG 'DataConnector fieldType (UnpreparedValue 'DataConnector)) ->
   API.FieldValue ->
   m J.Encoding
-reshapeAnnRelationSelect reshapeFields annRelationSelect = \case
-  API.ColumnFieldValue _ -> throw500 "Found column field value where relationship field value was expected in field returned by Data Connector agent" -- TODO(dchambers): Add pathing information for error clarity
-  API.RelationshipFieldValue (ValueWrapper subqueryResponse) ->
-    let annSimpleSelect = _aarAnnSelect annRelationSelect
-     in reshapeFields (_asnFields annSimpleSelect) subqueryResponse
+reshapeAnnRelationSelect reshapeFields annRelationSelect fieldValue =
+  case API.deserializeAsRelationshipFieldValue fieldValue of
+    Left err -> throw500 $ "Found column field value where relationship field value was expected in field returned by Data Connector agent: " <> err -- TODO(dchambers): Add pathing information for error clarity
+    Right subqueryResponse ->
+      let annSimpleSelect = _aarAnnSelect annRelationSelect
+       in reshapeFields (_asnFields annSimpleSelect) subqueryResponse

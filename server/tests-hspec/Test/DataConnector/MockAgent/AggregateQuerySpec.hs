@@ -70,12 +70,12 @@ tests opts = describe "Nodes Tests" $ do
             DataConnector.TestCaseRequired
               { _givenRequired =
                   let response =
-                        [ [ ("Artists_ArtistId", API.ColumnFieldValue . ValueWrapper $ API.Number 1),
+                        [ [ ("Artists_ArtistId", API.mkColumnFieldValue $ Aeson.Number 1),
                             ( "nodes_Albums",
-                              API.RelationshipFieldValue . ValueWrapper $
+                              API.mkRelationshipFieldValue $
                                 rowsResponse
-                                  [ [("nodes_Title", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock We Salute You")],
-                                    [("nodes_Title", API.ColumnFieldValue . ValueWrapper $ API.String "Let There Be Rock")]
+                                  [ [("nodes_Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")],
+                                    [("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")]
                                   ]
                             )
                           ]

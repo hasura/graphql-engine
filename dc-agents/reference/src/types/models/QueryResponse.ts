@@ -2,7 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { FieldValue } from './FieldValue';
+import type { ColumnFieldValue } from './ColumnFieldValue';
+import type { NullColumnFieldValue } from './NullColumnFieldValue';
 import type { ScalarValue } from './ScalarValue';
 
 export type QueryResponse = {
@@ -13,6 +14,6 @@ export type QueryResponse = {
   /**
    * The rows returned by the query, corresponding to the query's fields
    */
-  rows?: Array<Record<string, FieldValue>> | null;
+  rows?: Array<Record<string, (ColumnFieldValue | QueryResponse | NullColumnFieldValue)>> | null;
 };
 
