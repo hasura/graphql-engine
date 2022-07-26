@@ -9,9 +9,34 @@ import { ListMap } from '.';
 import { Button } from '../Button';
 import { Form } from '../Form';
 
+const submit = (values: Record<string, unknown>) => {
+  console.log(JSON.stringify(values));
+};
+
+const schema = z.object({
+  mapping: z.record(z.string()),
+});
+
 export default {
   title: 'components/ListMap',
   component: ListMap,
+  decorators: [
+    StoryComponent => {
+      return (
+        <Form
+          options={{
+            defaultValues: {
+              mapping: { apple: 'tomato', cherry: 'chilli' },
+            },
+          }}
+          onSubmit={submit}
+          schema={schema}
+        >
+          {() => <StoryComponent />}
+        </Form>
+      );
+    },
+  ],
 } as ComponentMeta<typeof ListMap>;
 
 export const ArrayToArray: Story = () => {
@@ -117,10 +142,6 @@ WithNoLabelsAndNoBackground.args = {
   className: 'bg-transparent border-none',
 };
 
-const schema = z.object({
-  mapping: z.record(z.string()),
-});
-
 const FormElements = () => {
   return (
     <>
@@ -143,31 +164,13 @@ const FormElements = () => {
 };
 
 export const WithReactFormHookNested: Story = () => {
-  const submit = (values: Record<string, unknown>) => {
-    console.log(JSON.stringify(values));
-  };
-
   return (
-    <Form
-      options={{
-        defaultValues: {
-          mapping: { apple: 'tomato', cherry: 'chilli' },
-        },
-      }}
-      onSubmit={submit}
-      schema={schema}
-    >
-      {() => {
-        return (
-          <>
-            <FormElements />
-            <Button type="submit" data-testid="submit">
-              Submit
-            </Button>
-          </>
-        );
-      }}
-    </Form>
+    <>
+      <FormElements />
+      <Button type="submit" data-testid="submit">
+        Submit
+      </Button>
+    </>
   );
 };
 

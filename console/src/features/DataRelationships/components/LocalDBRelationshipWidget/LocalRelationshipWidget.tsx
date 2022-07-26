@@ -2,18 +2,14 @@ import React from 'react';
 import {
   allowedMetadataTypes,
   useMetadataMigration,
+  useMetadataVersion,
 } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import { DataTarget } from '@/features/Datasources';
-import { InputField, Select, Form } from '@/new-components/Form';
+import { Form } from '@/new-components/Form';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import {
-  DataSourceDriver,
-  getDataSourcePrefix,
-  getMetadataQuery,
-  MetadataQueryType,
-} from '@/metadata/queryUtils';
+import { getMetadataQuery, MetadataQueryType } from '@/metadata/queryUtils';
 import { Driver } from '@/dataSources';
 import { schema, Schema } from './schema';
 import { FormElements } from './FormElements';
@@ -28,7 +24,7 @@ export type LocalRelationshipWidgetProps = {
    * optional callback function, can be used to get the onComplete event, this could be a onSuccess, or onError event.
    *
    */
-  onComplete?: (v: {
+  onComplete?: (callback: {
     title?: string;
     message?: string;
     type: 'success' | 'error' | 'cancel';
@@ -47,10 +43,13 @@ export const LocalRelationshipWidget = ({
   onComplete,
 }: LocalRelationshipWidgetProps) => {
   // hook to fetch data for existing relationship
-  const { data: defaultValues, isLoading, isError } = useDefaultValues({
+  const useValues = useDefaultValues({
     sourceTableInfo,
     existingRelationshipName,
   });
+
+  const { data: defaultValues, isLoading, isError } = useValues;
+
   const { fireNotification } = useFireNotification();
   const mutation = useMetadataMigration({
     onSuccess: () => {
@@ -71,23 +70,62 @@ export const LocalRelationshipWidget = ({
     },
   });
 
-  const renameRelationship = (values: Schema) => {
-    const sourcePrefix = getDataSourcePrefix(
-      sourceTableInfo.database as DataSourceDriver
-    );
+  const { data: resourceVersion } = useMetadataVersion();
 
-    const payload = {
-      type: `${sourcePrefix}rename_relationship`,
-      args: {
-        table: sourceTableInfo.table,
-        name: existingRelationshipName,
-        source: sourceTableInfo.database,
-        new_name: values.relationshipName,
+  const updateRelationship = (values: Schema) => {
+    const remote_table: {
+      database?: string;
+      schema?: string;
+      dataset?: string;
+      table: string;
+    } = { ...values.destination };
+    delete remote_table.database;
+
+    const args = {
+      source: sourceTableInfo.database,
+      table: {
+        [getSchemaKey(sourceTableInfo)]:
+          (sourceTableInfo as any).dataset ?? (sourceTableInfo as any).schema,
+        name: sourceTableInfo.table,
+      },
+      name: values.relationshipName,
+      using: {
+        manual_configuration: {
+          remote_table: {
+            [getSchemaKey(remote_table as DataTarget)]:
+              (remote_table as any).dataset ?? (remote_table as any).schema,
+            name: remote_table.table,
+          },
+          column_mapping: values.mapping,
+        },
       },
     };
 
+    const requestBody = getMetadataQuery(
+      values.relationshipType as MetadataQueryType,
+      sourceTableInfo.database,
+      args
+    );
+
+    const body = {
+      type: 'bulk' as allowedMetadataTypes,
+      source: sourceTableInfo.database,
+      resource_version: resourceVersion,
+      args: [
+        {
+          type: 'pg_drop_relationship',
+          args: {
+            table: sourceTableInfo.table,
+            source: sourceTableInfo.database,
+            relationship: existingRelationshipName,
+          },
+        },
+        requestBody,
+      ],
+    };
+
     mutation.mutate({
-      query: payload as MetadataPayloadType,
+      query: body as MetadataPayloadType,
     });
   };
 
@@ -129,9 +167,10 @@ export const LocalRelationshipWidget = ({
       query: requestBody as MetadataPayloadType,
     });
   };
+
   const submit = (values: Record<string, unknown>) => {
     if (existingRelationshipName) {
-      return renameRelationship(values as Schema);
+      return updateRelationship(values as Schema);
     }
     return createRelationship(values as Schema);
   };
@@ -149,37 +188,9 @@ export const LocalRelationshipWidget = ({
       {options => (
         <>
           <div>
-            <div className="w-full sm:w-6/12 mb-md">
-              <div className="mb-md">
-                <InputField
-                  name="relationshipName"
-                  label="Name"
-                  placeholder="Relationship name"
-                  dataTest="local-db-to-db-rel-name"
-                />
-              </div>
-              {!existingRelationshipName && (
-                <div className="mb-md">
-                  <Select
-                    name="relationshipType"
-                    label="Type"
-                    dataTest="local-db-to-db-select-rel-type"
-                    placeholder="Select a relationship type..."
-                    options={[
-                      {
-                        label: 'Object Relationship',
-                        value: 'create_object_relationship',
-                      },
-                      {
-                        label: 'Array Relationship',
-                        value: 'create_array_relationship',
-                      },
-                    ]}
-                  />
-                </div>
-              )}
-            </div>
-            {!existingRelationshipName && <FormElements />}
+            <FormElements
+              existingRelationshipName={existingRelationshipName || ''}
+            />
 
             <Button
               mode="primary"
@@ -188,7 +199,7 @@ export const LocalRelationshipWidget = ({
               loadingText="Saving relationship"
               data-test="add-local-db-relationship"
             >
-              {existingRelationshipName ? 'Rename ' : 'Save '} Relationship
+              Save Relationship
             </Button>
           </div>
 

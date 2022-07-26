@@ -111,8 +111,9 @@ export const ArgValueForm = ({
     >
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <p className="mb-xs text-muted font-semibold">Fill From</p>
+          <label htmlFor="fillFrom text-muted font-semibold">Fill From</label>
           <select
+            id="fillFrom"
             className={fieldStyle}
             value={localArgValue.kind}
             onChange={changeInputType}
@@ -129,11 +130,9 @@ export const ArgValueForm = ({
         <div>
           {localArgValue.kind === 'field' ? (
             <>
-              <label htmlFor="fromField">
-                <p className="mb-xs text-muted font-semibold">
-                  <FaCircle className="text-green-600 mr-2 mb-1" />
-                  From Field
-                </p>
+              <label htmlFor="fromField" className="text-muted font-semibold">
+                <FaCircle className="text-green-600 mr-2 mb-1" />
+                From Field
               </label>
               <select
                 className={fieldStyle}
@@ -154,7 +153,9 @@ export const ArgValueForm = ({
             </>
           ) : (
             <>
-              <p className="mb-xs text-muted font-semibold">Static Value</p>
+              <label htmlFor="argValue text-muted font-semibold">
+                Static Value
+              </label>
               <StaticArgValue
                 data-test="select-static-value"
                 argType={argType}

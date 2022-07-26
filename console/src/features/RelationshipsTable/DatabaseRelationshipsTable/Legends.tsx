@@ -36,7 +36,7 @@ const Legends = () => {
       {legend.map(item => {
         const { Icon, name } = item;
         return (
-          <span>
+          <span key={name}>
             <Icon className="mr-1 ml-4 text-sm" style={{ strokeWidth: 4.5 }} />
             {name}
           </span>

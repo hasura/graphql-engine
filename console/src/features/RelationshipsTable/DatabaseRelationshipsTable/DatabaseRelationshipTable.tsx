@@ -20,7 +20,7 @@ import { getRemoteFieldPath } from '../utils';
 import { RowData } from './types';
 import Legends from './Legends';
 
-export const columns = ['NAME', 'TARGET', 'TYPE', 'RELATIONSHIP', null];
+export const columns = ['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', null];
 
 // fetch the data from the relevant hooks
 const useTableData = (target: DataTarget) => {
@@ -69,7 +69,7 @@ const useTableData = (target: DataTarget) => {
         ...(relationship?.target?.table && {
           targetTable: relationship?.target?.table,
         }),
-        type: relationship.relationshipType,
+        type: relationship.relationshipType === 'array' ? 'Array' : 'Object',
         fieldsFrom: Object.keys(relationship.fieldMapping) || [],
         fieldsTo: Object.values(relationship.fieldMapping) || [],
         relationship,
@@ -123,7 +123,7 @@ export const DatabaseRelationshipsTable = ({
               <CardedTable.TableBodyCell>
                 <button
                   className="text-secondary cursor-pointer"
-                  onClick={() => onClick({ type: 'add', row })}
+                  onClick={() => onClick({ type: 'edit', row })}
                 >
                   {row.name}
                 </button>

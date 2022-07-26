@@ -120,6 +120,7 @@ export const DbToRsForm = ({
           <div className="w-full sm:w-6/12 mb-md">
             <div className="mb-md">
               <InputField
+                id="relationshipName"
                 name="relationshipName"
                 label="Name"
                 placeholder="Relationship name"
