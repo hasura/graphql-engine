@@ -1264,6 +1264,7 @@ test-suite tests-hspec
     Test.OrderingSpec
     Test.PostgresTypesSpec
     Test.PrimaryKeySpec
+    Test.Queries.Paginate.LimitSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec

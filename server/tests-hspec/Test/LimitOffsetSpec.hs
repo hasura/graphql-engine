@@ -57,27 +57,6 @@ author =
 
 tests :: Context.Options -> SpecWith TestEnvironment
 tests opts = do
-  it "limit 1" $ \testEnvironment ->
-    shouldReturnYaml
-      opts
-      ( GraphqlEngine.postGraphql
-          testEnvironment
-          [graphql|
-query {
-  hasura_author(limit: 1) {
-    name
-    id
-  }
-}
-|]
-      )
-      [yaml|
-data:
-  hasura_author:
-  - name: Author 1
-    id: 1
-|]
-
   -- Technically without an ORDER, the results are UB-ish. Keep an eye
   -- on ordering with tests like this.
   it "Basic offset query" $ \testEnvironment ->
