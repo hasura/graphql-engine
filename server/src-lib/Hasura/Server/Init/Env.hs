@@ -5,6 +5,7 @@ module Hasura.Server.Init.Env
     withEnv,
     withEnvs,
     withEnvBool,
+    withEnvList,
     considerEnv,
     runWithEnv,
   )
@@ -13,6 +14,8 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Char qualified as C
+import Data.Coerce (Coercible)
+import Data.Proxy (Proxy, asProxyTypeOf)
 import Data.String qualified as String
 import Data.Text qualified as T
 import Data.Time (NominalDiffTime)
@@ -70,6 +73,22 @@ withEnvBool bVal envVar =
     else do
       mVal <- considerEnv @Bool envVar
       pure $ fromMaybe False mVal
+
+-- | 'withEnv' for types isomorphic to an array. 'Proxy' is generally
+-- used to pass on the type info. Here 'Proxy' helps us to specify
+-- what the underlying array type should be.
+withEnvList ::
+  (FromEnv b, Coercible b [a]) =>
+  Proxy [a] ->
+  b ->
+  String ->
+  WithEnv b
+withEnvList proxy x env
+  | null (asArrayType $ coerce x) = fromMaybe emptyArr <$> considerEnv env
+  | otherwise = return x
+  where
+    asArrayType = flip asProxyTypeOf proxy
+    emptyArr = coerce $ asArrayType []
 
 --------------------------------------------------------------------------------
 
