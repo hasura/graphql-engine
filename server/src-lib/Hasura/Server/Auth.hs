@@ -5,6 +5,7 @@ module Hasura.Server.Auth
     AuthMode (..),
     setupAuthMode,
     AdminSecretHash,
+    unsafeMkAdminSecretHash,
     hashAdminSecret,
 
     -- * WebHook related
@@ -75,6 +76,9 @@ class (Monad m) => UserAuthentication m where
 --     - prevent misuse or inadvertent leaking of the secret
 newtype AdminSecretHash = AdminSecretHash (Crypto.Digest Crypto.SHA512)
   deriving (Ord, Eq)
+
+unsafeMkAdminSecretHash :: (Crypto.Digest Crypto.SHA512) -> AdminSecretHash
+unsafeMkAdminSecretHash = AdminSecretHash
 
 instance Hash.Hashable AdminSecretHash where
   hashWithSalt salt (AdminSecretHash h) = Hash.hashWithSalt @ByteString salt $ BA.convert h
