@@ -30092,6 +30092,7 @@ PostgresRawConnDetails :: !String -> !Int -> !String -> !String -> !String -> !M
 data PostgresRawConnInfo
 PGConnDatabaseUrl :: !URLTemplate -> PostgresRawConnInfo
 PGConnDetails :: !PostgresRawConnDetails -> PostgresRawConnInfo
+mkUrlConnInfo :: String -> PostgresRawConnInfo
 _PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
 _PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
 rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
@@ -30198,6 +30199,11 @@ withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
 -- | If <tt>bVal</tt> is <a>True</a> then return it, else lookup the
 --   <tt>envVar</tt> in the environment and return <a>False</a> if absent.
 withEnvBool :: Bool -> String -> WithEnv Bool
+
+-- | <a>withEnv</a> for types isomorphic to an array. <a>Proxy</a> is
+--   generally used to pass on the type info. Here <a>Proxy</a> helps us to
+--   specify what the underlying array type should be.
+withEnvList :: (FromEnv b, Coercible b [a]) => Proxy [a] -> b -> String -> WithEnv b
 
 -- | A <a>Read</a> style parser used for consuming envvars and building
 --   <tt>ReadM</tt> parsers for 'optparse-applicative'.
