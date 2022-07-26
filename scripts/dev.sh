@@ -156,18 +156,19 @@ echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
 # Note: this does not help at all on 'nix' environments since 'pyenv' is not
 # something you normally use under nix.
 if command -v pyenv >/dev/null; then
-  # For now I guess use the greatest python3 >= 3.5
-  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 && $1 < 3.8  { print $1 }' | tail -n1)
-  if [ -z "$v" ]; then
+  # Use the latest version of Python installed with `pyenv`.
+  # Ensure that it is at least v3.6, so that format strings are supported.
+  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.6 { print $1 }' | tail -n1)"
+  if [[ -z "$v" ]]; then
     # shellcheck disable=SC2016
     echo_error 'Please `pyenv install` a version of python >= 3.6 so we can use it'
     exit 2
   fi
-  echo_pretty "Pyenv found. Using python version: $v"
+  echo_pretty "Pyenv found. Using Python version: $v"
   export PYENV_VERSION=$v
   python3 --version
 else
-  echo_warn "Pyenv not installed. Proceeding with system python version: $(python3 --version)"
+  echo_warn "Pyenv not installed. Proceeding with Python from the path, version: $(python3 --version)"
 fi
 
 
@@ -550,7 +551,14 @@ elif [ "$MODE" = "test" ]; then
 
     add_sources $HASURA_GRAPHQL_SERVER_PORT
 
-    cd "$PROJECT_ROOT/server/tests-py"
+    TEST_DIR="server/tests-py"
+
+    # Install and load Python test dependencies
+    PY_VENV="${TEST_DIR}/.hasura-dev-python-venv"
+    make "$PY_VENV"
+    source "${PY_VENV}/bin/activate"
+
+    cd "$TEST_DIR"
 
     ## Install misc test dependencies:
     if [ ! -d "node_modules" ]; then
@@ -558,12 +566,8 @@ elif [ "$MODE" = "test" ]; then
     else
       echo_pretty "It looks like node dependencies have been installed already. Skipping."
       echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/node_modules\""
+      echo_pretty "  $ rm -r \"${TEST_DIR}/node_modules\""
     fi
-
-    PY_VENV=.hasura-dev-python-venv
-    make "$PY_VENV"
-    source "$PY_VENV/bin/activate"
 
     # TODO MAYBE: fix deprecation warnings, make them an error
     if ! pytest \
