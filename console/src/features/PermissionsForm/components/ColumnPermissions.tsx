@@ -108,6 +108,7 @@ export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> =
                   type="checkbox"
                   title={disabled ? 'Set a row permission first' : ''}
                   disabled={disabled}
+                  className="mt-0 rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
                   {...register(`columns.${fieldName}`)}
                 />
                 <i>{fieldName}</i>

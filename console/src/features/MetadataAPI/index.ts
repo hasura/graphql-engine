@@ -8,7 +8,10 @@ export {
 } from './hooks/useMetadataTables';
 export { useMetadataVersion } from './hooks/useMetadataVersion';
 export { useMetadataTableComputedFields } from './hooks/useMetadataTableComputedFields';
-export { useMetadataTablePermissions } from './hooks/useMetadataTablePermissions';
+export {
+  useMetadataTablePermissions,
+  useMetadataPermissions,
+} from './hooks/useMetadataTablePermissions';
 export { useMetadataSource } from './hooks/useMetadataSource';
 export {
   useListRemoteSchemas,

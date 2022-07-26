@@ -15,6 +15,9 @@ interface ClonePermissionsRowProps {
   remove: () => void;
 }
 
+const className =
+  'block w-full h-input px-md shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
+
 export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
   id,
   tables,
@@ -34,12 +37,12 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
     <div className="width-full grid grid-cols-4 gap-4">
       <div>
         <select
-          className="input-sm form-control"
+          className={className}
           disabled={allDisabled}
           title={allDisabled ? 'Set a row permission first' : ''}
           {...register(`${formKey}.${id}.tableName`)}
         >
-          <option key="default_table_name" value="default" disabled>
+          <option key="default_table_name" value="" disabled>
             Table Name
           </option>
 
@@ -53,15 +56,12 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
 
       <div>
         <select
-          id="presetType"
-          className="input-sm form-control"
+          className={className}
           disabled={allDisabled}
           title={allDisabled ? 'Set a row permission first' : ''}
           {...register(`${formKey}.${id}.queryType`)}
-          // data-index-id={index}
-          // data-test={`column-presets-column-${index}`}
         >
-          <option key="default_query_type" value="default" disabled>
+          <option key="default_query_type" value="" disabled>
             Select Action
           </option>
 
@@ -75,15 +75,12 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
 
       <div>
         <select
-          id="presetType"
-          className="input-sm form-control"
+          className={className}
           disabled={allDisabled}
           title={allDisabled ? 'Set a row permission first' : ''}
           {...register(`${formKey}.${id}.roleName`)}
-          // data-index-id={index}
-          // data-test={`column-presets-column-${index}`}
         >
-          <option key="default_role_type" value="default" disabled>
+          <option key="default_role_type" value="" disabled>
             Select Role
           </option>
 
@@ -94,9 +91,9 @@ export const ClonePermissionsRow: React.FC<ClonePermissionsRowProps> = ({
           ))}
         </select>
       </div>
-      {watched.tableName !== 'default' &&
-        watched.queryType !== 'default' &&
-        watched.roleName !== 'default' && (
+      {watched.tableName !== '' &&
+        watched.queryType !== '' &&
+        watched.roleName !== '' && (
           <div className="flex items-center">
             <Button type="button" size="sm" mode="destructive" onClick={remove}>
               Delete
@@ -149,16 +146,16 @@ export const ClonePermissionsSection: React.FC<ClonePermissionsSectionProps> = (
   React.useEffect(() => {
     const finalRow = controlledFields[controlledFields.length - 1];
 
-    const finalRowIsNotDefault =
-      finalRow?.tableName !== 'default' &&
-      finalRow?.queryType !== 'default' &&
-      finalRow?.roleName !== 'default';
+    const finalRowIsNotEmpty =
+      finalRow?.tableName !== '' &&
+      finalRow?.queryType !== '' &&
+      finalRow?.roleName !== '';
 
-    if (finalRowIsNotDefault) {
+    if (finalRowIsNotEmpty) {
       append({
-        tableName: 'default',
-        queryType: 'default',
-        roleName: 'default',
+        tableName: '',
+        queryType: '',
+        roleName: '',
       } as ClonePermission);
     }
   }, [controlledFields, append]);

@@ -51,7 +51,7 @@ export const InputCell: React.FC<InputCellProps> = ({
           type="checkbox"
           value={roleName}
           checked={isSelected}
-          className={`rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 ${
+          className={`rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 m-0 ${
             !isSelectable && 'cursor-not-allowed'
           }`}
           disabled={!isSelectable}

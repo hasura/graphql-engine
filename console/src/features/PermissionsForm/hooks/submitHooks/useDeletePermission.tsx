@@ -7,10 +7,10 @@ import { currentDriver } from '@/dataSources';
 
 import { QueryType } from '../../types';
 import { api } from '../../api';
+import { NewDataTarget } from '../../../PermissionsTab/types/types';
 
 export interface UseDeletePermissionArgs {
-  tableName: string;
-  schemaName: string;
+  dataTarget: NewDataTarget;
   roleName: string;
 }
 
@@ -37,13 +37,10 @@ const useDataTarget = () => {
 };
 
 export const useDeletePermission = ({
-  tableName,
-  schemaName,
+  dataTarget,
   roleName,
 }: UseDeletePermissionArgs) => {
   const {
-    driver,
-    dataSource,
     resourceVersion,
     isLoading: dataTargetLoading,
     isError: dataTargetError,
@@ -57,12 +54,7 @@ export const useDeletePermission = ({
     }
 
     const body = api.createDeleteBody({
-      driver,
-      dataTarget: {
-        database: dataSource,
-        table: tableName,
-        schema: schemaName,
-      },
+      dataTarget,
       roleName,
       resourceVersion,
       queries,

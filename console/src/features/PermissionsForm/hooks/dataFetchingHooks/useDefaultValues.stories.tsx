@@ -6,15 +6,22 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { useDefaultValues, UseDefaultValuesArgs } from './useDefaultValues';
 import { handlers } from '../../mocks/handlers.mock';
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
 const UseDefaultValuesComponent = ({
-  schemaName,
-  tableName,
+  dataTarget,
   roleName,
   queryType,
 }: UseDefaultValuesArgs) => {
   const results = useDefaultValues({
-    schemaName,
-    tableName,
+    dataTarget,
     roleName,
     queryType,
   });
@@ -26,21 +33,24 @@ export default {
   component: UseDefaultValuesComponent,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers,
+    msw: handlers(),
     chromatic: { disableSnapshot: true },
   },
 } as Meta;
 
-const schemaName = 'public';
-const tableName = 'users';
 const roleName = 'user';
 
 export const Insert: Story<UseDefaultValuesArgs> = args => (
   <UseDefaultValuesComponent {...args} />
 );
 Insert.args = {
-  schemaName,
-  tableName,
+  dataTarget: {
+    dataSource: {
+      driver: 'postgres',
+      database: 'default',
+    },
+    dataLeaf,
+  },
   roleName,
   queryType: 'insert',
 };

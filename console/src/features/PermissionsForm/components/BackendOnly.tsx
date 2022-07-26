@@ -29,9 +29,13 @@ export const BackendOnlySection: React.FC<BackEndOnlySectionProps> = ({
       />
       <Collapse.Content>
         <label className="flex items-center gap-4">
-          <input type="checkbox" {...register('backendOnly')} />
+          <input
+            type="checkbox"
+            className="rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400 m-0"
+            {...register('backendOnly')}
+          />
 
-          <p>Allow from backends only</p>
+          <span>Allow from backends only</span>
         </label>
       </Collapse.Content>
     </Collapse>

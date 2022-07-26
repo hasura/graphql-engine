@@ -1,9 +1,14 @@
 import { DataTarget } from '@/features/Datasources';
 import {
   ArrayRelationship,
+  DeletePermissionEntry,
+  InsertPermissionEntry,
   ObjectRelationship,
   RemoteRelationship,
+  SelectPermissionEntry,
+  TableEntry,
   ToRemoteSchema,
+  UpdatePermissionEntry,
 } from '@/metadata/types';
 import {
   TableRelationship,
@@ -16,6 +21,17 @@ export interface TransformDbToRemoteSchemaArgs {
   remote_relationships: RemoteRelationship[];
 }
 
+export interface Permission {
+  table: string;
+  role: string;
+  queryType: string;
+}
+
+type PermissionEntry =
+  | InsertPermissionEntry
+  | UpdatePermissionEntry
+  | SelectPermissionEntry
+  | DeletePermissionEntry;
 export namespace MetadataTransformer {
   // take object and array relationships input
   export const transformTableRelationships = ({
@@ -120,5 +136,35 @@ export namespace MetadataTransformer {
         fieldMapping: definition.to_source.field_mapping || {},
       };
     });
+  };
+
+  export const transformPermissions = (tables: TableEntry[]) => {
+    const permissions = tables.reduce((acc, tableEntry) => {
+      const containsPermissions = Object.keys(tableEntry).filter(key =>
+        key.match(/permission/)
+      );
+      if (!containsPermissions) {
+        return acc;
+      }
+
+      Object.entries(tableEntry).forEach(
+        ([key, value]: [string, PermissionEntry[]]) => {
+          if (key.match(/permission/)) {
+            value.forEach(({ role }) => {
+              acc.push({
+                table: tableEntry.table.name,
+                role,
+                // get the query type from the metadata
+                queryType: key.split('_')[0],
+              });
+            });
+          }
+        }
+      );
+
+      return acc;
+    }, [] as Permission[]);
+
+    return permissions;
   };
 }

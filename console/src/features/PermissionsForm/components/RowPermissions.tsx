@@ -16,6 +16,7 @@ import JSONEditor from './JSONEditor';
 import PermissionBuilder from '../PermissionBuilder/PermissionBuilder';
 
 import { QueryType } from '../types';
+import { DataLeaf } from '../../PermissionsTab/types/types';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">
@@ -36,10 +37,10 @@ const CustomLabel = () => (
 );
 
 export interface RowPermissionsProps {
+  dataLeaf: DataLeaf;
   queryType: QueryType;
   subQueryType?: string;
-  schemaName: string;
-  tableName: string;
+
   allRowChecks: Array<{ queryType: QueryType; value: string }>;
   allSchemas?: NormalizedTable[];
   allFunctions?: PGFunction[];
@@ -89,8 +90,7 @@ const getRowPermissionCheckType = (
 export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   queryType,
   subQueryType,
-  schemaName,
-  tableName,
+  dataLeaf,
   allRowChecks,
   allSchemas,
   allFunctions,
@@ -213,7 +213,10 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
                         onChange(output);
                       }}
                       loadSchemasFunc={() => {}}
-                      tableDef={generateTableDef(tableName, schemaName)}
+                      tableDef={generateTableDef(
+                        dataLeaf.leaf?.name || '',
+                        dataLeaf.name
+                      )}
                       allTableSchemas={allSchemas as Table[]}
                       allFunctions={allFunctions}
                       schemaList={schemaList}

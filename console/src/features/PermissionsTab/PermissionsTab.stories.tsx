@@ -18,10 +18,11 @@ export const Primary: Story<PermissionsTabProps> = args => (
   <PermissionsTab {...args} />
 );
 Primary.args = {
-  params: {
-    tab: '',
-    schema: 'public',
-    table: 'users',
+  tableType: 'table',
+  dataLeaf: {
+    type: 'schema',
+    name: 'public',
+    leaf: { type: 'table', name: 'users' },
   },
 };
 

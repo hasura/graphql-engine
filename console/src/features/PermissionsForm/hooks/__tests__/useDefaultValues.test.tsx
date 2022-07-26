@@ -12,20 +12,34 @@ const server = setupServer();
 server.use(metadata);
 server.use(query);
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'public',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
+const dataTarget = {
+  dataSource: {
+    driver: 'postgres' as const,
+    database: 'default',
+  },
+  dataLeaf,
+};
+
 beforeAll(() => server.listen());
 afterAll(() => server.close());
 
 describe("useDefaultValues hooks' postgres test", () => {
   test('useDefaultValues fetches data correctly', async () => {
-    const schemaName = 'public';
-    const tableName = 'users';
     const roleName = 'user';
 
     const { result, waitForValueToChange, waitFor } = renderHook(
       () =>
         useDefaultValues({
-          schemaName,
-          tableName,
+          dataTarget,
           roleName,
           queryType: 'insert',
         }),
@@ -35,26 +49,31 @@ describe("useDefaultValues hooks' postgres test", () => {
     await waitForValueToChange(() => result.current.data);
     await waitFor(() => result.current.isLoading === false);
 
-    const expectedResult = {
-      checkType: 'custom',
-      filterType: 'none',
-      check: '{"id":{"_eq":1}}',
-      filter: '',
-      rowCount: '0',
-      columns: {
-        id: false,
-        email: true,
-        name: false,
-        type: true,
-        username: false,
-      },
-      presets: [],
-      backendOnly: false,
-      aggregationEnabled: false,
-      clonePermissions: [],
-      allRowChecks: [{ queryType: 'select', value: '{"id":{"_eq":1}}' }],
-    };
-
-    expect(result.current.data!).toEqual(expectedResult);
+    expect(result.current.data!).toMatchInlineSnapshot(`
+      Object {
+        "aggregationEnabled": false,
+        "allRowChecks": Array [
+          Object {
+            "queryType": "select",
+            "value": "{\\"id\\":{\\"_eq\\":1}}",
+          },
+        ],
+        "backendOnly": false,
+        "check": "{\\"id\\":{\\"_eq\\":1}}",
+        "checkType": "custom",
+        "clonePermissions": Array [],
+        "columns": Object {
+          "email": true,
+          "id": false,
+          "name": false,
+          "type": true,
+          "username": false,
+        },
+        "filter": "",
+        "filterType": "none",
+        "presets": Array [],
+        "rowCount": "0",
+      }
+    `);
   });
 });

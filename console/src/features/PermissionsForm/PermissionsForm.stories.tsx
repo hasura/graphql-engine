@@ -14,9 +14,16 @@ export default {
   },
 } as Meta;
 
-const schemaName = 'public';
-const tableName = 'users';
 const roleName = 'user';
+
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
 
 export const Showcase: Story<PermissionsFormProps> = () => {
   return (
@@ -24,8 +31,7 @@ export const Showcase: Story<PermissionsFormProps> = () => {
       <p className="font-bold py-4">Query Type: Insert</p>
 
       <PermissionsForm
-        schemaName={schemaName}
-        tableName={tableName}
+        dataLeaf={dataLeaf}
         roleName={roleName}
         accessType="partialAccess"
         queryType="insert"
@@ -35,8 +41,7 @@ export const Showcase: Story<PermissionsFormProps> = () => {
       <p className="font-bold py-4">Query Type: Select</p>
 
       <PermissionsForm
-        schemaName={schemaName}
-        tableName={tableName}
+        dataLeaf={dataLeaf}
         roleName={roleName}
         accessType="partialAccess"
         queryType="select"
@@ -46,8 +51,7 @@ export const Showcase: Story<PermissionsFormProps> = () => {
       <p className="font-bold py-4">Query Type: Update</p>
 
       <PermissionsForm
-        schemaName={schemaName}
-        tableName={tableName}
+        dataLeaf={dataLeaf}
         roleName={roleName}
         accessType="noAccess"
         queryType="update"
@@ -57,8 +61,7 @@ export const Showcase: Story<PermissionsFormProps> = () => {
       <p className="font-bold py-4">Query Type: Delete</p>
 
       <PermissionsForm
-        schemaName={schemaName}
-        tableName={tableName}
+        dataLeaf={dataLeaf}
         roleName={roleName}
         accessType="noAccess"
         queryType="delete"
@@ -72,8 +75,7 @@ export const Insert: Story<PermissionsFormProps> = args => (
   <PermissionsForm {...args} />
 );
 Insert.args = {
-  schemaName,
-  tableName,
+  dataLeaf,
   roleName,
   accessType: 'partialAccess',
   queryType: 'insert',

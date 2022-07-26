@@ -12,23 +12,29 @@ import {
 } from './useUpdatePermissions';
 import { useDefaultValues } from '..';
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
 const UseUpdatePermissionsComponent = ({
-  schemaName,
-  tableName,
+  dataTarget,
   roleName,
   queryType,
   accessType,
 }: UseUpdatePermissionsArgs) => {
   const { data } = useDefaultValues({
-    schemaName,
-    tableName,
+    dataTarget,
     roleName,
     queryType,
   });
 
   const { updatePermissions, deletePermissions } = useUpdatePermissions({
-    schemaName,
-    tableName,
+    dataTarget,
     roleName,
     queryType,
     accessType,
@@ -76,16 +82,19 @@ export default {
   },
 } as Meta;
 
-const schemaName = 'public';
-const tableName = 'users';
 const roleName = 'user';
 
 export const Primary: Story<UseUpdatePermissionsArgs> = args => (
   <UseUpdatePermissionsComponent {...args} />
 );
 Primary.args = {
-  schemaName,
-  tableName,
+  dataTarget: {
+    dataSource: {
+      driver: 'postgres',
+      database: 'default',
+    },
+    dataLeaf,
+  },
   roleName,
   queryType: 'insert',
   accessType: 'fullAccess',

@@ -3,23 +3,17 @@ import {
   useMetadataMigration,
   useMetadataVersion,
 } from '@/features/MetadataAPI';
-import { useAppSelector } from '@/store';
-import { currentDriver } from '../../../../dataSources';
+
+import { NewDataTarget } from '../../../PermissionsTab/types/types';
 
 import { api } from '../../api';
 import { QueryType } from '../../types';
 
-export interface UseDeletePermissionArgs {
-  tableName: string;
-  schemaName: string;
-}
-
-const useDataTarget = ({ schemaName, tableName }: UseDeletePermissionArgs) => {
-  const dataSource: string = useAppSelector(
-    state => state.tables.currentDataSource || 'default'
-  );
-
-  const driver = currentDriver;
+const useDataTarget = (dataTarget: NewDataTarget) => {
+  const table = {
+    name: dataTarget.dataLeaf.leaf?.name || '',
+    schema: dataTarget.dataLeaf.name,
+  };
 
   const {
     data: resourceVersion,
@@ -35,20 +29,13 @@ const useDataTarget = ({ schemaName, tableName }: UseDeletePermissionArgs) => {
     data: permissions,
     isLoading: permissionsLoading,
     isError: permissionsError,
-  } = useMetadataTablePermissions(
-    {
-      schema: schemaName,
-      name: tableName,
-    },
-    dataSource
-  );
+  } = useMetadataTablePermissions(table, dataTarget.dataSource.database);
 
   const isLoading = permissionsLoading || metadataLoading;
   const isError = permissionsError || metadataError;
 
   return {
-    driver,
-    dataSource,
+    dataTarget,
     resourceVersion,
     permissions,
     isLoading,
@@ -61,18 +48,13 @@ interface RoleList {
   queries: QueryType[];
 }
 
-export const useBulkDeletePermissions = ({
-  tableName,
-  schemaName,
-}: UseDeletePermissionArgs) => {
+export const useBulkDeletePermissions = (dataTarget: NewDataTarget) => {
   const {
-    driver,
     resourceVersion,
     permissions,
-    dataSource,
     isLoading: dataTargetLoading,
     isError: dataTargetError,
-  } = useDataTarget({ schemaName, tableName });
+  } = useDataTarget(dataTarget);
 
   const {
     mutateAsync,
@@ -99,12 +81,7 @@ export const useBulkDeletePermissions = ({
     }, []);
 
     const body = api.createBulkDeleteBody({
-      driver,
-      dataTarget: {
-        database: dataSource,
-        table: tableName,
-        schema: schemaName,
-      },
+      dataTarget,
       roleName: '',
       resourceVersion,
       roleList,
