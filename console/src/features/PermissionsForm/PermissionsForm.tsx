@@ -13,6 +13,8 @@ import {
   BackendOnlySection,
   ClonePermissionsSection,
 } from './components';
+import { DataLeaf } from '../PermissionsTab/types/types';
+import { useDataSource } from '../PermissionsTab/types/useDataSource';
 
 import { useDefaultValues, useFormData, useUpdatePermissions } from './hooks';
 import { schema } from './utils/formSchema';
@@ -20,8 +22,7 @@ import { schema } from './utils/formSchema';
 import { AccessType, FormOutput, QueryType } from './types';
 
 export interface PermissionsFormProps {
-  schemaName: string;
-  tableName: string;
+  dataLeaf: DataLeaf;
   queryType: QueryType;
   roleName: string;
   accessType: AccessType;
@@ -51,38 +52,48 @@ const Resetter: React.FC<ResetterProps> = ({ defaultValues }) => {
 };
 
 export const PermissionsForm: React.FC<PermissionsFormProps> = ({
-  schemaName,
-  tableName,
+  dataLeaf,
   queryType,
   roleName,
   accessType,
   handleClose,
 }) => {
+  const dataSource = useDataSource();
+  // loads all information about selected table
+  // e.g. column names, supported queries etc.
   const {
     data,
     isLoading: loadingFormData,
     isError: formDataError,
   } = useFormData({
-    schemaName,
-    tableName,
+    dataTarget: {
+      dataSource,
+      dataLeaf,
+    },
     queryType,
     roleName,
   });
 
+  // loads any existing permissions from the metadata
   const {
     data: defaults,
     isLoading: defaultValuesLoading,
     isError: defaultValuesError,
   } = useDefaultValues({
-    schemaName,
-    tableName,
+    dataTarget: {
+      dataSource,
+      dataLeaf,
+    },
     roleName,
     queryType,
   });
 
+  // functions fired when the form is submitted
   const { updatePermissions, deletePermissions } = useUpdatePermissions({
-    schemaName,
-    tableName,
+    dataTarget: {
+      dataSource,
+      dataLeaf,
+    },
     queryType,
     roleName,
     accessType,
@@ -100,32 +111,16 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
 
   const isError = formDataError || defaultValuesError;
 
-  // these will be replaced by components once spec is decided
-  if (isError) {
-    return <div>Error loading form data</div>;
-  }
-
   const isSubmittingError =
     updatePermissions.isError || deletePermissions.isError;
 
-  // these will be replaced by components once spec is decided
-  if (isSubmittingError) {
-    return <div>Error submitting form data</div>;
-  }
-
   const isLoading = loadingFormData || defaultValuesLoading;
 
-  // these will be replaced by components once spec is decided
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   const {
-    // i.e. tables that are not the currently open table (this is for cloning permissions)
-    otherTableNames,
     allFunctions,
     roles,
     tables,
+    tableNames,
     supportedQueries,
     columns,
   } = data;
@@ -136,6 +131,30 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
 
   // for update it is possible to set pre update and post update row checks
   const rowPermissions = queryType === 'update' ? ['pre', 'post'] : [queryType];
+
+  // add new role to list of roles for clone permissions
+  const allRoles = React.useMemo(() => {
+    if (roles) {
+      return !roles.includes(roleName) ? [...roles, roleName] : roles;
+    }
+
+    return [roleName];
+  }, [roleName, roles]);
+
+  // these will be replaced by components once spec is decided
+  if (isSubmittingError) {
+    return <div>Error submitting form data</div>;
+  }
+
+  // these will be replaced by components once spec is decided
+  if (isError) {
+    return <div>Error loading form data</div>;
+  }
+
+  // these will be replaced by components once spec is decided
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Form
@@ -176,12 +195,11 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
                   </p>
                 )}
                 <RowPermissionsSection
+                  dataLeaf={dataLeaf}
                   queryType={queryType}
                   subQueryType={
                     queryType === 'update' ? permissionName : undefined
                   }
-                  schemaName={schemaName}
-                  tableName={tableName}
                   allRowChecks={allRowChecks}
                   allSchemas={tables}
                   allFunctions={allFunctions}
@@ -212,12 +230,12 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
 
           <hr className="my-4" />
 
-          {otherTableNames && roles && (
+          {!!tableNames?.length && (
             <ClonePermissionsSection
               queryType={queryType}
-              tables={otherTableNames}
+              tables={tableNames}
               supportedQueryTypes={supportedQueries}
-              roles={roles}
+              roles={allRoles}
             />
           )}
 

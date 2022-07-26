@@ -9,6 +9,8 @@ import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';
 import { TableMachine } from './hooks';
+import { DataLeaf } from '../PermissionsTab/types/types';
+import { useDataSource } from '../PermissionsTab/types/useDataSource';
 
 type QueryType = 'insert' | 'select' | 'update' | 'delete';
 
@@ -40,8 +42,7 @@ export const ViewPermissionsNote: React.FC<ViewPermissionsNoteProps> = ({
 };
 
 export interface PermissionsTableProps {
-  schemaName: string;
-  tableName: string;
+  dataLeaf: DataLeaf;
   machine: ReturnType<TableMachine>;
 }
 
@@ -53,14 +54,15 @@ export interface Selection {
 }
 
 export const PermissionsTable: React.FC<PermissionsTableProps> = ({
-  schemaName,
-  tableName,
+  dataLeaf,
   machine,
 }) => {
   const [state, send] = machine;
+
+  const dataSource = useDataSource();
   const { supportedQueries, rolePermissions } = useRolePermissions({
-    schema: schemaName,
-    name: tableName,
+    dataSource,
+    dataLeaf,
   });
 
   return (

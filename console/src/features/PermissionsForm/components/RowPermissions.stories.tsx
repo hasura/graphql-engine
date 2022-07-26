@@ -28,6 +28,15 @@ export default {
 
 const roleName = 'two';
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
 // this will be moved into a utils folder
 const allRowChecks = [
   {
@@ -53,8 +62,7 @@ export const Insert: Story<Props> = args => (
 Insert.args = {
   wrapper: { roleName, queryType: 'insert', defaultOpen: true },
   section: {
-    schemaName: 'public',
-    tableName: 'users',
+    dataLeaf,
     queryType: 'delete',
     allRowChecks,
     allSchemas,

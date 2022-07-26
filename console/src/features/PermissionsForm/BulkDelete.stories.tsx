@@ -13,12 +13,20 @@ export default {
   decorators: [ReactQueryDecorator()],
 } as Meta;
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
 export const Primary: Story<BulkDeleteProps> = args => {
   return <BulkDelete {...args} />;
 };
 Primary.args = {
-  schemaName: 'public',
-  tableName: 'users',
+  dataLeaf,
   roles: ['user'],
   handleClose: () => {},
 };

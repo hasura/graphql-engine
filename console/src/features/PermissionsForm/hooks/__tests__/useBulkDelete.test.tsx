@@ -12,17 +12,27 @@ const server = setupServer(...mocks);
 beforeAll(() => server.listen());
 afterAll(() => server.close());
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
+const dataTarget = {
+  dataSource: {
+    driver: 'postgres' as const,
+    database: 'default',
+  },
+  dataLeaf,
+};
+
 describe("useBulkDeletePermissions hooks' postgres test", () => {
   test('bulk delete permissions submits correctly', async () => {
-    const schemaName = 'public';
-    const tableName = 'users';
-
     const { result, waitFor } = renderHook(
-      () =>
-        useBulkDeletePermissions({
-          schemaName,
-          tableName,
-        }),
+      () => useBulkDeletePermissions(dataTarget),
       { wrapper }
     );
 

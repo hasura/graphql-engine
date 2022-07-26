@@ -6,13 +6,21 @@ import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { useFormData, UseFormDataArgs } from './useFormData';
 import { handlers } from '../../mocks/handlers.mock';
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
 const UseFormDataComponent = ({
-  schemaName,
-  tableName,
+  dataTarget,
   roleName,
   queryType,
 }: UseFormDataArgs) => {
-  const results = useFormData({ schemaName, tableName, roleName, queryType });
+  const results = useFormData({ dataTarget, roleName, queryType });
   return <ReactJson src={results} />;
 };
 
@@ -21,20 +29,23 @@ export default {
   component: UseFormDataComponent,
   decorators: [ReactQueryDecorator()],
   parameters: {
-    msw: handlers,
+    msw: handlers(),
   },
 } as Meta;
 
-const schemaName = 'public';
-const tableName = 'users';
-const roleName = 'two';
+const roleName = 'user';
 
 export const Primary: Story<UseFormDataArgs> = args => (
   <UseFormDataComponent {...args} />
 );
 Primary.args = {
-  schemaName,
-  tableName,
+  dataTarget: {
+    dataSource: {
+      driver: 'postgres',
+      database: 'default',
+    },
+    dataLeaf,
+  },
   roleName,
   queryType: 'insert',
 };

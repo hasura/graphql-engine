@@ -1,12 +1,13 @@
 import { NormalizedTable } from '@/dataSources/types';
 import { useMetadataTablePermissions } from '@/features/MetadataAPI';
 import { useSingleTable } from '@/hooks';
-import { useAppSelector } from '@/store';
+
 import { currentDriver } from '@/dataSources';
 
 import { getCurrentRole } from '../../utils';
 
 import { QueryType } from '../../types';
+import { NewDataTarget } from '../../../PermissionsTab/types/types';
 
 namespace Format {
   export const getCheckType = (check?: string | null) => {
@@ -104,42 +105,36 @@ namespace Format {
 }
 
 export interface UseDefaultValuesArgs {
-  schemaName: string;
-  tableName: string;
+  dataTarget: NewDataTarget;
   roleName: string;
   queryType: QueryType;
 }
 
 const useLoadPermissions = ({
-  schemaName,
-  tableName,
+  dataTarget,
   roleName,
   queryType,
 }: UseDefaultValuesArgs) => {
-  const dataSource: string =
-    useAppSelector(state => state.tables.currentDataSource) || 'default';
+  const table = {
+    name: dataTarget.dataLeaf.leaf?.name || '',
+    schema: dataTarget.dataLeaf.name,
+  };
 
   const {
-    data: table,
+    data: tableData,
     isLoading: tableLoading,
     isError: tableError,
   } = useSingleTable({
-    source: dataSource,
+    source: dataTarget.dataSource.database,
     driver: currentDriver,
-    table: { name: tableName, schema: schemaName },
+    table,
   });
 
   const {
     data: permissions,
     isLoading: permissionsLoading,
     isError: permissionsError,
-  } = useMetadataTablePermissions(
-    {
-      schema: schemaName,
-      name: tableName,
-    },
-    dataSource
-  );
+  } = useMetadataTablePermissions(table, dataTarget.dataSource.database);
 
   const currentRolePermissions = getCurrentRole({ permissions, roleName });
 
@@ -158,7 +153,7 @@ const useLoadPermissions = ({
     data: {
       currentQueryPermissions,
       allRowChecks,
-      table,
+      table: tableData,
     },
     isLoading,
     isError,

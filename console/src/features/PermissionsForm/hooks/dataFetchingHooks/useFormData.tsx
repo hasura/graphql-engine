@@ -5,23 +5,23 @@ import {
   useDataSourceTables,
   useSingleTable,
 } from '@/hooks';
-import { useAppSelector } from '@/store';
 import { currentDriver, dataSource } from '@/dataSources';
 
 import { useRoles } from '../../../MetadataAPI';
 import { QueryType } from '../../types';
+import { NewDataTarget } from '../../../PermissionsTab/types/types';
 
 export interface UseFormDataArgs {
-  schemaName: string;
-  tableName: string;
+  dataTarget: NewDataTarget;
   roleName: string;
   queryType: QueryType;
 }
 
-const useLoadSchemas = ({ schemaName, tableName }: UseFormDataArgs) => {
-  const source: string = useAppSelector(
-    state => state.tables.currentDataSource
-  );
+const useLoadSchemas = ({ dataTarget }: UseFormDataArgs) => {
+  const schemaName = dataTarget.dataLeaf.name;
+  const tableName = dataTarget.dataLeaf.leaf?.name || '';
+
+  const source = dataTarget.dataSource.database;
 
   const {
     data: tables,
@@ -44,6 +44,7 @@ const useLoadSchemas = ({ schemaName, tableName }: UseFormDataArgs) => {
     driver: currentDriver,
     table: { name: tableName, schema: schemaName },
   });
+
   const { data: roles } = useRoles();
 
   const { data: allFunctions } = useTrackableFunctions(
@@ -82,18 +83,21 @@ const useLoadSchemas = ({ schemaName, tableName }: UseFormDataArgs) => {
 
 export const useFormData = (props: UseFormDataArgs) => {
   const {
-    data: { table, tables, roles, allFunctions },
+    data: { table, tables: allTables, roles, allFunctions },
     isLoading,
     isError,
   } = useLoadSchemas(props);
 
-  const otherTableNames = React.useMemo(
-    () =>
-      tables
-        ?.filter(({ table_name }) => table_name !== table?.table_name)
-        .map(({ table_name }) => table_name),
-    [tables, table]
+  const tables = React.useMemo(
+    () => allTables?.filter(({ is_table_tracked }) => is_table_tracked),
+    [allTables]
   );
+
+  const tableNames = React.useMemo(
+    () => tables?.map(({ table_name }) => table_name),
+    [tables]
+  );
+
   const columns = React.useMemo(
     () => table?.columns.map(({ column_name }) => column_name),
     [table]
@@ -101,7 +105,6 @@ export const useFormData = (props: UseFormDataArgs) => {
 
   let supportedQueries: string[] = [];
   if (table) {
-    // supportedQueries = ['insert', 'select', 'update', 'delete'];
     supportedQueries = dataSource.getTableSupportedQueries(table);
   }
 
@@ -109,7 +112,7 @@ export const useFormData = (props: UseFormDataArgs) => {
     data: {
       table,
       tables,
-      otherTableNames,
+      tableNames,
       columns,
       allFunctions,
       roles,

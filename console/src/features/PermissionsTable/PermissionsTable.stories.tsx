@@ -19,8 +19,14 @@ export const Default: Story<PermissionsTableProps> = args => {
 };
 
 Default.args = {
-  schemaName: 'public',
-  tableName: 'users',
+  dataLeaf: {
+    type: 'schema',
+    name: 'public',
+    leaf: {
+      type: 'table',
+      name: 'users',
+    },
+  },
 };
 
 Default.parameters = {

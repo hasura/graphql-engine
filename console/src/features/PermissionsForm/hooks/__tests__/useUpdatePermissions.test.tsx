@@ -12,6 +12,23 @@ const server = setupServer(...mocks);
 beforeAll(() => server.listen());
 afterAll(() => server.close());
 
+const dataLeaf = {
+  type: 'schema',
+  name: 'users',
+  leaf: {
+    type: 'table',
+    name: 'users',
+  },
+};
+
+const dataTarget = {
+  dataSource: {
+    driver: 'postgres' as const,
+    database: 'default',
+  },
+  dataLeaf,
+};
+
 beforeEach(() => {
   jest.spyOn(console, 'error').mockImplementation(() => null);
 });
@@ -22,15 +39,12 @@ afterEach(() => {
 
 describe("useUpdatePermissions hooks' postgres test", () => {
   test('update permissions submits correctly', async () => {
-    const schemaName = 'public';
-    const tableName = 'users';
     const roleName = 'user';
 
     const { result, waitFor } = renderHook(
       () =>
         useUpdatePermissions({
-          schemaName,
-          tableName,
+          dataTarget,
           roleName,
           queryType: 'insert',
           accessType: 'partialAccess',
@@ -67,15 +81,12 @@ describe("useUpdatePermissions hooks' postgres test", () => {
   });
 
   test('delete permissions submits correctly', async () => {
-    const schemaName = 'public';
-    const tableName = 'users';
     const roleName = 'user';
 
     const { result, waitFor } = renderHook(
       () =>
         useUpdatePermissions({
-          schemaName,
-          tableName,
+          dataTarget,
           roleName,
           queryType: 'insert',
           accessType: 'partialAccess',

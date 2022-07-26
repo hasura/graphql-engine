@@ -1,13 +1,12 @@
-import { currentDriver, dataSource, Operations } from '@/dataSources';
+import { dataSource, Operations } from '@/dataSources';
 import { ComputedField, TableColumn } from '@/dataSources/types';
 import {
   useMetadataTableComputedFields,
   useMetadataTablePermissions,
-  useRoles,
 } from '@/features/MetadataAPI';
 import { useAllFunctions, useSchemaList, useSingleTable } from '@/hooks';
-import { QualifiedTable } from '@/metadata/types';
-import { useAppSelector } from '@/store';
+
+import { NewDataTarget } from '../../PermissionsTab/types/types';
 
 export type RolePermissions = {
   [role: string]: {
@@ -96,38 +95,47 @@ interface RolePermission {
   };
 }
 
-export const useRolePermissions = (table: QualifiedTable) => {
-  const source: string = useAppSelector(s => s.tables.currentDataSource);
+export const useRolePermissions = (dataTarget: NewDataTarget) => {
+  const table = {
+    name: dataTarget.dataLeaf.leaf?.name || '',
+    schema: dataTarget.dataLeaf.name,
+  };
+
   const { data: schemas } = useSchemaList({
-    source,
-    driver: currentDriver,
+    source: dataTarget.dataSource.database,
+    driver: dataTarget.dataSource.driver,
   });
   const { data: currentTableSchema } = useSingleTable({
     table,
-    source,
-    driver: currentDriver,
+    source: dataTarget.dataSource.database,
+    driver: dataTarget.dataSource.driver,
   });
-  const { data: permissions } = useMetadataTablePermissions(table, source);
+  const { data: permissions } = useMetadataTablePermissions(
+    table,
+    dataTarget.dataSource.database
+  );
   const { data: computedFields } = useMetadataTableComputedFields(
     table,
-    source
+    dataTarget.dataSource.database
   );
   const { data: allFunctions } = useAllFunctions(
     {
       schemas: schemas!,
-      driver: currentDriver,
-      source,
+      driver: dataTarget.dataSource.driver,
+      source: dataTarget.dataSource.database,
     },
     { enabled: !!schemas }
   );
-  const { data: roles } = useRoles();
 
   if (!permissions || !allFunctions) {
     return { supportedQueries: [], rolePermissions: [] };
   }
 
   const currentRolePermissions = permissions.reduce((acc, p) => {
-    acc[p.role_name] = p.permissions;
+    // only add the role if it exists on the current table
+    if (p.table_name === table.name) {
+      acc[p.role_name] = p.permissions;
+    }
     return acc;
   }, {} as Record<string, any>);
 
@@ -141,7 +149,7 @@ export const useRolePermissions = (table: QualifiedTable) => {
     allFunctions
   );
 
-  const currentRoles = roles.map(roleName => ({
+  const currentRoles = Object.keys(currentRolePermissions).map(roleName => ({
     roleName,
     isNewRole: false,
   }));
