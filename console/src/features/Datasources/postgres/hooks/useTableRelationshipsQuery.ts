@@ -3,7 +3,7 @@ import { DataTarget, TUseTableRelationshipsQuery } from '../../drivers';
 import { RunSQLQueryOptions } from '../../types';
 import { isPostgresDataTarget } from '../types';
 
-const getSQL = (tableName: string) => {
+const getSQL = (schema: string, tableName: string) => {
   return `SELECT conrelid::regclass AS "source_table"
     ,CASE WHEN pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY %' THEN substring(pg_get_constraintdef(c.oid), 14, position(')' in pg_get_constraintdef(c.oid))-14) END AS "source_column"
     ,CASE WHEN pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY %' THEN substring(pg_get_constraintdef(c.oid), position(' REFERENCES ' in pg_get_constraintdef(c.oid))+12, position('(' in substring(pg_get_constraintdef(c.oid), 14))-position(' REFERENCES ' in pg_get_constraintdef(c.oid))+1) END AS "target_table"
@@ -11,7 +11,9 @@ const getSQL = (tableName: string) => {
     FROM   pg_constraint c
     JOIN   pg_namespace n ON n.oid = c.connamespace
     WHERE  contype IN ('f', 'p') 
-    AND (conrelid::regclass = '"${tableName}"'::regclass OR substring(pg_get_constraintdef(c.oid), position(' REFERENCES ' in pg_get_constraintdef(c.oid))+12, position('(' in substring(pg_get_constraintdef(c.oid), 14))-position(' REFERENCES ' in pg_get_constraintdef(c.oid))+1) = '"${tableName}"')
+    AND (conrelid::regclass = '"${schema}"."${tableName}"'::regclass OR substring(pg_get_constraintdef(c.oid), position(' REFERENCES ' in pg_get_constraintdef(c.oid))+12, position('(' in substring(pg_get_constraintdef(c.oid), 14))-position(' REFERENCES ' in pg_get_constraintdef(c.oid))+1) = '${
+    schema === 'public' ? `"${tableName}"` : `${schema}.${tableName}`
+  }')
     AND pg_get_constraintdef(c.oid) LIKE 'FOREIGN KEY %';
   `;
 };
@@ -41,7 +43,7 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
       };
     }[]
   >({
-    sql: getSQL(table),
+    sql: getSQL(schema, table),
     queryKey: ['postgres', 'fk_relationships', database, schema, table],
     transformFn: data => {
       const { result } = data;
@@ -56,11 +58,11 @@ export const useTableRelationshipsQuery: TUseTableRelationshipsQuery = ({
       try {
         const rows = result.slice(1).map(row => ({
           from: {
-            table: row[0]?.replace(/"/g, ''),
+            table: row[0]?.replace(/"/g, '').replace(`${schema}.`, ''),
             column: row[1].split(',')?.map(i => i?.replace(/"/g, '')),
           },
           to: {
-            table: row[2]?.replace(/"/g, ''),
+            table: row[2]?.replace(/"/g, '').replace(`${schema}.`, ''),
             column: row[3].split(',')?.map(i => i?.replace(/"/g, '')),
           },
         }));
