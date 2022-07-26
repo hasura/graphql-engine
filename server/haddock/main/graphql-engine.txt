@@ -29874,6 +29874,7 @@ resolveUserInfo :: UserAuthentication m => Logger Hasura -> Manager -> [Header] 
 --   </ul>
 newtype AdminSecretHash
 AdminSecretHash :: Digest SHA512 -> AdminSecretHash
+unsafeMkAdminSecretHash :: Digest SHA512 -> AdminSecretHash
 hashAdminSecret :: Text -> AdminSecretHash
 
 -- | The methods we'll use to derive roles for authenticating requests.
@@ -30121,9 +30122,10 @@ horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
 -- | The final processed HGE options.
 data HGEOptions impl
 HGEOptions :: !PostgresConnInfo (Maybe UrlConf) -> !Maybe String -> !HGECommand impl -> HGEOptions impl
-[hoDatabaseUrl] :: HGEOptions impl -> !PostgresConnInfo (Maybe UrlConf)
-[hoMetadataDbUrl] :: HGEOptions impl -> !Maybe String
-[hoCommand] :: HGEOptions impl -> !HGECommand impl
+[_hoDatabaseUrl] :: HGEOptions impl -> !PostgresConnInfo (Maybe UrlConf)
+[_hoMetadataDbUrl] :: HGEOptions impl -> !Maybe String
+[_hoCommand] :: HGEOptions impl -> !HGECommand impl
+hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnInfo
 instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnInfo
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Server.Init.Config.HGECommand a)
