@@ -4,6 +4,7 @@
 module Hasura.Backends.DataConnector.API.V0.QuerySpec (spec) where
 
 import Autodocodec.Extended
+import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Hasura.Backends.DataConnector.API.V0
@@ -12,13 +13,13 @@ import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
-import Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec (genValue)
+import Hasura.Backends.DataConnector.API.V0.Scalar.ValueSpec qualified as Scalar
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
 import Hedgehog.Range (linear)
-import Test.Aeson.Utils (genKeyMap, jsonOpenApiProperties, testToFromJSONToSchema)
+import Test.Aeson.Utils (genKeyMap, genValue, jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
 spec :: Spec
@@ -92,6 +93,45 @@ spec = do
       |]
     jsonOpenApiProperties genQueryResponse
 
+  describe "FieldValue" $ do
+    describe "ColumnFieldValue - Object" $ do
+      testToFromJSONToSchema
+        (mkColumnFieldValue $ J.Object [("property", "Wow")])
+        [aesonQQ|
+          { "property": "Wow" }
+        |]
+    describe "ColumnFieldValue - String" $ do
+      testToFromJSONToSchema
+        (mkColumnFieldValue $ J.String "Test")
+        [aesonQQ|
+          "Test"
+        |]
+    describe "ColumnFieldValue - Number" $ do
+      testToFromJSONToSchema
+        (mkColumnFieldValue $ J.Number 123)
+        [aesonQQ|
+          123
+        |]
+    describe "ColumnFieldValue - Bool" $ do
+      testToFromJSONToSchema
+        (mkColumnFieldValue $ J.Bool True)
+        [aesonQQ|
+          true
+        |]
+    describe "ColumnFieldValue - Null" $ do
+      testToFromJSONToSchema
+        (mkColumnFieldValue J.Null)
+        [aesonQQ|
+          null
+        |]
+    describe "RelationshipFieldValue" $ do
+      testToFromJSONToSchema
+        (mkRelationshipFieldValue (QueryResponse (Just []) (Just mempty)))
+        [aesonQQ|
+          { "rows": [],
+            "aggregates": {} }
+        |]
+
 genField :: MonadGen m => m Field
 genField =
   Gen.recursive
@@ -126,11 +166,11 @@ genFieldValue :: MonadGen m => m FieldValue
 genFieldValue =
   Gen.recursive
     Gen.choice
-    [ColumnFieldValue . ValueWrapper <$> genValue]
-    [RelationshipFieldValue . ValueWrapper <$> genQueryResponse]
+    [mkColumnFieldValue <$> genValue]
+    [mkRelationshipFieldValue <$> genQueryResponse]
 
 genQueryResponse :: MonadGen m => m QueryResponse
 genQueryResponse =
   QueryResponse
     <$> Gen.maybe (Gen.list (linear 0 5) (genKeyMap genFieldValue))
-    <*> Gen.maybe (genKeyMap genValue)
+    <*> Gen.maybe (genKeyMap Scalar.genValue)

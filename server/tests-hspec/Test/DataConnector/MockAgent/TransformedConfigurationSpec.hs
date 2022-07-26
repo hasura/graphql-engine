@@ -104,8 +104,8 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 1),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock We Salute You")
+                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},

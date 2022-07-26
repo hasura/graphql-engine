@@ -605,7 +605,18 @@
             "description": "The rows returned by the query, corresponding to the query's fields",
             "items": {
               "additionalProperties": {
-                "$ref": "#/components/schemas/FieldValue"
+                "additionalProperties": true,
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ColumnFieldValue"
+                  },
+                  {
+                    "$ref": "#/components/schemas/QueryResponse"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NullColumnFieldValue"
+                  }
+                ]
               },
               "type": "object"
             },
@@ -614,6 +625,12 @@
           }
         },
         "type": "object"
+      },
+      "ColumnFieldValue": {
+        "additionalProperties": true
+      },
+      "NullColumnFieldValue": {
+        "type": "null"
       },
       "ScalarValue": {
         "oneOf": [
@@ -630,52 +647,6 @@
             "type": "null"
           }
         ]
-      },
-      "FieldValue": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/ColumnFieldValue"
-          },
-          {
-            "$ref": "#/components/schemas/RelationshipFieldValue"
-          }
-        ]
-      },
-      "ColumnFieldValue": {
-        "properties": {
-          "type": {
-            "enum": [
-              "column"
-            ],
-            "type": "string"
-          },
-          "value": {
-            "$ref": "#/components/schemas/ScalarValue"
-          }
-        },
-        "required": [
-          "type",
-          "value"
-        ],
-        "type": "object"
-      },
-      "RelationshipFieldValue": {
-        "properties": {
-          "type": {
-            "enum": [
-              "relationship"
-            ],
-            "type": "string"
-          },
-          "value": {
-            "$ref": "#/components/schemas/QueryResponse"
-          }
-        },
-        "required": [
-          "type",
-          "value"
-        ],
-        "type": "object"
       },
       "QueryRequest": {
         "properties": {

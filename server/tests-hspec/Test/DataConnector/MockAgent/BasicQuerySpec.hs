@@ -96,8 +96,8 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 1),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock We Salute You")
+                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -148,14 +148,14 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 1),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock We Salute You")
+                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ],
-                            [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 2),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "Balls to the Wall")
+                            [ ("id", API.mkColumnFieldValue $ Aeson.Number 2),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
                             ],
-                            [ ("id", API.ColumnFieldValue . ValueWrapper $ API.Number 3),
-                              ("title", API.ColumnFieldValue . ValueWrapper $ API.String "Restless and Wild")
+                            [ ("id", API.mkColumnFieldValue $ Aeson.Number 3),
+                              ("title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},

@@ -1,4 +1,4 @@
-﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse, FieldValue } from "./types";
+﻿import { QueryRequest, TableRelationships, Relationship, Query, Field, OrderBy, Expression, BinaryComparisonOperator, UnaryComparisonOperator, BinaryArrayComparisonOperator, ComparisonColumn, ComparisonValue, ScalarValue, QueryResponse } from "./types";
 import { coerceUndefinedToNull, crossProduct, unreachable, zip } from "./util";
 
 type StaticData = {
@@ -9,7 +9,7 @@ type TableName = string
 type RelationshipName = string
 
 type ProjectedRow = {
-  [fieldName: string]: FieldValue
+  [fieldName: string]: ScalarValue | QueryResponse
 }
 
 const prettyPrintBinaryComparisonOperator = (operator: BinaryComparisonOperator): string => {
@@ -254,14 +254,14 @@ const extractScalarValuesFromFieldPath = (fieldPath: string[], row: ProjectedRow
   const fieldValue = row[fieldName];
 
   if (remainingPath.length === 0) {
-    if (fieldValue.type === "column") {
-      return [fieldValue.value];
+    if (fieldValue === null || typeof fieldValue !== "object") {
+      return [fieldValue];
     } else {
       throw new Error("Field path did not end in a column field value");
     }
   } else {
-    if (fieldValue.type === "relationship") {
-      return (fieldValue.value.rows ?? []).flatMap(row => extractScalarValuesFromFieldPath(remainingPath, row));
+    if (fieldValue !== null && typeof fieldValue === "object") {
+      return (fieldValue.rows ?? []).flatMap(row => extractScalarValuesFromFieldPath(remainingPath, row));
     } else {
       throw new Error(`Found a column field value in the middle of a field path: ${fieldPath}`);
     }
@@ -293,19 +293,13 @@ const projectRow = (fields: Record<string, Field>, findRelationship: (relationsh
 
     switch (field.type) {
       case "column":
-        projectedRow[fieldName] = {
-          type: "column",
-          value: coerceUndefinedToNull(row[field.column])
-        };
+        projectedRow[fieldName] = coerceUndefinedToNull(row[field.column]);
         break;
 
       case "relationship":
         const relationship = findRelationship(field.relationship);
         const subquery = addRelationshipFilterToQuery(row, relationship, field.query);
-        projectedRow[fieldName] = {
-          type: "relationship",
-          value: subquery ? performQuery(relationship.target_table, subquery) : { aggregates: null, rows: null }
-        };
+        projectedRow[fieldName] = subquery ? performQuery(relationship.target_table, subquery) : { aggregates: null, rows: null };
         break;
 
       default:

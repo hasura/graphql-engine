@@ -1,6 +1,6 @@
 module Test.QuerySpec.RelationshipsSpec (spec) where
 
-import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (..), vwValue)
+import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (..))
 import Control.Lens (Traversal', ix, (&), (.~), (^.), (^..), (^?), _Just)
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KeyMap
@@ -273,7 +273,7 @@ comparisonColumn path columnName = ComparisonColumn path $ ColumnName columnName
 
 mkSubqueryResponse :: [KeyMap FieldValue] -> FieldValue
 mkSubqueryResponse rows =
-  RelationshipFieldValue . ValueWrapper $ QueryResponse (Just rows) Nothing
+  mkRelationshipFieldValue $ QueryResponse (Just rows) Nothing
 
 subqueryRows :: Traversal' FieldValue (KeyMap FieldValue)
-subqueryRows = _RelationshipFieldValue . vwValue . qrRows . _Just . traverse
+subqueryRows = _RelationshipFieldValue . qrRows . _Just . traverse

@@ -20,13 +20,14 @@ module Test.Data
   )
 where
 
-import Autodocodec.Extended (ValueWrapper (..), vwValue)
 import Codec.Compression.GZip qualified as GZip
-import Control.Lens (Index, IxValue, Ixed, Prism', ix, (%~), (&), (^.), (^..), (^?))
+import Control.Lens (Index, IxValue, Ixed, Traversal', ix, (%~), (&), (^.), (^..), (^?))
 import Data.Aeson (Key, eitherDecodeStrict)
+import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.Lens (_Bool, _Number, _String)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
 import Data.CaseInsensitive qualified as CI
@@ -75,8 +76,8 @@ readTableFromXmlIntoRows tableName =
           textValue = Text.concat $ columnElement ^.. XML.text
           value =
             case eitherDecodeStrict $ Text.encodeUtf8 textValue of
-              Left _ -> API.ColumnFieldValue . ValueWrapper $ API.String textValue
-              Right scientific -> API.ColumnFieldValue . ValueWrapper $ API.Number scientific
+              Left _ -> API.mkColumnFieldValue $ J.String textValue
+              Right scientific -> API.mkColumnFieldValue $ J.Number scientific
        in (name, value)
 
 artistsAsJson :: [KeyMap API.FieldValue]
@@ -117,11 +118,11 @@ responseRows = fromMaybe [] . API._qrRows
 sortResponseRowsBy :: Key -> API.QueryResponse -> API.QueryResponse
 sortResponseRowsBy columnName response = response & API.qrRows %~ (fmap (sortBy columnName))
 
-_ColumnFieldNumber :: Prism' API.FieldValue Scientific
-_ColumnFieldNumber = API._ColumnFieldValue . vwValue . API._Number
+_ColumnFieldNumber :: Traversal' API.FieldValue Scientific
+_ColumnFieldNumber = API._ColumnFieldValue . _Number
 
-_ColumnFieldString :: Prism' API.FieldValue Text
-_ColumnFieldString = API._ColumnFieldValue . vwValue . API._String
+_ColumnFieldString :: Traversal' API.FieldValue Text
+_ColumnFieldString = API._ColumnFieldValue . _String
 
-_ColumnFieldBoolean :: Prism' API.FieldValue Bool
-_ColumnFieldBoolean = API._ColumnFieldValue . vwValue . API._Boolean
+_ColumnFieldBoolean :: Traversal' API.FieldValue Bool
+_ColumnFieldBoolean = API._ColumnFieldValue . _Bool

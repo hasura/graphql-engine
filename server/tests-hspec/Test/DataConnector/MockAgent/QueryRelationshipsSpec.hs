@@ -71,17 +71,17 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("Name", API.ColumnFieldValue . ValueWrapper $ API.String "For Those About To Rock (We Salute You)"),
+                          [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock (We Salute You)"),
                               ( "Genre",
-                                API.RelationshipFieldValue . ValueWrapper $
+                                API.mkRelationshipFieldValue $
                                   rowsResponse
-                                    [ [("Name", API.ColumnFieldValue . ValueWrapper $ API.String "Rock")]
+                                    [ [("Name", API.mkColumnFieldValue $ Aeson.String "Rock")]
                                     ]
                               ),
                               ( "MediaType",
-                                API.RelationshipFieldValue . ValueWrapper $
+                                API.mkRelationshipFieldValue $
                                   rowsResponse
-                                    [ [("Name", API.ColumnFieldValue . ValueWrapper $ API.String "MPEG audio file")]
+                                    [ [("Name", API.mkColumnFieldValue $ Aeson.String "MPEG audio file")]
                                     ]
                               )
                             ]
