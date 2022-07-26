@@ -4,6 +4,7 @@ import { Button } from '@/new-components/Button';
 import { useFireNotification } from '@/new-components/Notifications';
 import { getConfirmation } from '@/components/Common/utils/jsUtils';
 import { Driver } from '@/dataSources';
+import { FaPlusCircle } from 'react-icons/fa';
 
 import { NormalizedTable } from '@/dataSources/types';
 import { DataSourceDriver, getDataSourcePrefix } from '@/metadata/queryUtils';
@@ -212,12 +213,13 @@ export const DatabaseRelationshipsTab = ({
       />
 
       {isOpen ? null : (
-        <Button mode="primary" onClick={() => onClick({ type: 'add' })}>
-          Add Relationship
+        <Button
+          onClick={() => onClick({ type: 'add' })}
+          icon={<FaPlusCircle />}
+        >
+          Add New Relationship
         </Button>
       )}
-      <br />
-      <br />
 
       {isOpen && (
         <Form

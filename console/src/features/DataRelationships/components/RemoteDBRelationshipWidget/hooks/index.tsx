@@ -49,7 +49,9 @@ export const useDefaultValues = ({
     },
     destination: {
       database: relationship?.definition?.to_source?.source ?? '',
-      [getSchemaKey(sourceTableInfo)]:
+      [relationship?.definition?.to_source.source === 'bigquery'
+        ? 'dataset'
+        : 'schema']:
         (relationship?.definition?.to_source?.table as MetadataTableType)
           ?.dataset ??
         (relationship?.definition?.to_source?.table as MetadataTableType)

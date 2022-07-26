@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
   allowedMetadataTypes,
   useMetadataMigration,
@@ -150,6 +151,7 @@ export const RemoteDBRelationshipWidget = ({
                   label="Name"
                   placeholder="Relationship name"
                   dataTest="local-db-to-db-rel-name"
+                  disabled={!!existingRelationshipName}
                 />
               </div>
 

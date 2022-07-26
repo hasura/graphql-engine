@@ -12,7 +12,7 @@ export const RelationshipCell = ({ row }: RelationshipCellProps) => {
   // these will be updated when the table also handles other db to x relationships
   const secondaryIconFromType = 'table_leaf';
   const secondaryIconToType =
-    row.type === 'remoteSchema' ? 'remote_schema_leaf' : 'table_leaf';
+    row.toType === 'remote_schema' ? 'remote_schema_leaf' : 'table_leaf';
 
   return (
     <div className="flex items-center gap-4">

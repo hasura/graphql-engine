@@ -25,6 +25,7 @@ interface Props {
   onChange?: (e: Record<string, string>) => void;
   name: string;
   className?: string;
+  existingRelationshipName?: string;
 }
 
 const getIcon = (
@@ -49,22 +50,34 @@ const getIcon = (
   }
 };
 
+const initLocalMaps = (values: Record<string, string>) => {
+  if (Object.entries(values).length)
+    return [
+      ...Object.entries(values).map(([from, to]) => ({
+        from,
+        to,
+      })),
+    ];
+  return [{ from: '', to: '' }];
+};
+
 export const ListMap = (props: Props) => {
-  const { from: source, to: target, onChange, name, className } = props;
+  const {
+    from: source,
+    to: target,
+    onChange,
+    name,
+    className,
+    existingRelationshipName,
+  } = props;
 
   const formContext = useFormContext();
-  const initValue = props.value ?? formContext?.watch(name) ?? {};
 
-  const initLocalMaps = (values: Record<string, string>) => {
-    if (Object.entries(values).length)
-      return [
-        ...Object.entries(values).map(([from, to]) => ({
-          from,
-          to,
-        })),
-      ];
-    return [{ from: '', to: '' }];
-  };
+  const mapping = formContext.watch(name);
+  const initValue = React.useMemo(() => props.value ?? mapping ?? {}, [
+    props,
+    mapping,
+  ]);
 
   const [localMaps, setLocalMaps] = useState<{ from: string; to: string }[]>(
     initLocalMaps(initValue)
@@ -90,6 +103,12 @@ export const ListMap = (props: Props) => {
         .reduce((resultMap, { from, to }) => ({ ...resultMap, [from]: to }), {})
     );
   };
+
+  React.useEffect(() => {
+    if (existingRelationshipName) {
+      setLocalMaps(initLocalMaps(initValue));
+    }
+  }, [existingRelationshipName, initValue]);
 
   return (
     <div
