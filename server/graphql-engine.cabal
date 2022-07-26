@@ -1229,7 +1229,6 @@ test-suite tests-hspec
     Test.BackendOnlyPermissionsSpec
     Test.BasicFieldsSpec
     Test.BigQuery.ComputedFieldSpec
-    Test.BigQuery.GraphQLQueryBasicSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
