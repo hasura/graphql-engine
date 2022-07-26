@@ -138,6 +138,14 @@ Restricts the time that a GraphQL operation is allowed to take. The duration is 
 Any upstream database queries are also cancelled for supported sources. Currently, cancellation only works for Postgres
 sources.
 
+:::info Time limits on Hasura Cloud projects
+
+All Hasura Cloud projects get a default time limit of 60 seconds. When the
+cloud limit is hit, the error contains the code `tenant-time-limit-exceeded` in
+the error message.
+
+:::
+
 ## Manage API limits
 
 API limits can have a _global_ or _per role_ configuration. If an incoming request does not contain a valid role then
