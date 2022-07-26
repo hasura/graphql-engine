@@ -22,6 +22,7 @@ module Hasura.Server.Init.Config
     PostgresRawConnInfo (..),
     _PGConnDatabaseUrl,
     _PGConnDetails,
+    mkUrlConnInfo,
     RawAuthHook,
     RawConnParams (..),
     RawServeOptions (..),
@@ -326,6 +327,9 @@ data PostgresRawConnInfo
   = PGConnDatabaseUrl !URLTemplate
   | PGConnDetails !PostgresRawConnDetails
   deriving (Show, Eq)
+
+mkUrlConnInfo :: String -> PostgresRawConnInfo
+mkUrlConnInfo = PGConnDatabaseUrl . mkPlainURLTemplate . T.pack
 
 _PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
 _PGConnDatabaseUrl = prism' PGConnDatabaseUrl $ \case
