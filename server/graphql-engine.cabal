@@ -1280,7 +1280,6 @@ test-suite tests-hspec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.DataValidation.PermissionSpec
     Test.SQLServer.InsertVarcharColumnSpec
-    Test.SelectSpec
     Test.SerializationSpec
     Test.ServiceLivenessSpec
     Test.UpdateManySpec

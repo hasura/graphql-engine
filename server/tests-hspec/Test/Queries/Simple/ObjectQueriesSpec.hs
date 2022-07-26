@@ -129,3 +129,27 @@ tests opts = do
               |]
 
       actual `shouldBe` expected
+
+    it "Removes `no_queries_available` when queries are available" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              errors:
+              - extensions:
+                  code: validation-failed
+                  path: $.selectionSet.no_queries_available
+                message: |-
+                  field 'no_queries_available' not found in type: 'query_root'
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  no_queries_available
+                }
+              |]
+
+      actual `shouldBe` expected
