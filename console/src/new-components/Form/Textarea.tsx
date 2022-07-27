@@ -62,7 +62,7 @@ export const Textarea: React.FC<TextareaProps> = ({
           aria-label={wrapperProps.label}
           data-test={dataTest}
           className={clsx(
-            'block w-full max-w-xl shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 placeholder-gray-500',
+            'block w-full max-w-xl shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500',
             maybeError
               ? 'border-red-600 hover:border-red-700'
               : 'border-gray-300',

@@ -79,7 +79,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
                     ? 'border-red-600 hover:border-red-700'
                     : disabled || optionDisabled
                     ? 'cursor-not-allowed bg-gray-200 border-gray-300'
-                    : ' border-gray-400 hover:border-gray-500 focus:ring-yellow-400'
+                    : ' border-gray-400 hover:border-gray-500 focus-visible:ring-yellow-400'
                 )}
                 // Force margin to mitigate bug introduced by a too much restrictive reset
                 style={{ marginTop: '0' }}

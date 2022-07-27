@@ -93,7 +93,7 @@ export const InputField: React.FC<InputFieldProps> = ({
           aria-label={wrapperProps.label}
           data-test={dataTest}
           className={clsx(
-            'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 placeholder-gray-500',
+            'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400 placeholder-gray-500',
             prependLabel !== '' ? 'rounded-l-none' : '',
             appendLabel !== '' ? 'rounded-r-none' : '',
             maybeError

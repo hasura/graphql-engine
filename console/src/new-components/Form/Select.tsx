@@ -66,7 +66,7 @@ export const Select: React.VFC<SelectProps> = ({
       <select
         id={name}
         className={clsx(
-          'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400',
+          'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400',
           watchValue && watchValue !== '' ? 'text-black' : 'text-gray-500',
           disabled
             ? 'cursor-not-allowed bg-gray-100 border-gray-100'
