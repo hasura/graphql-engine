@@ -22577,9 +22577,9 @@ ResourceLimits :: (forall m a. (MonadBaseControl IO m, MonadError QErr m) => m a
 -- | Monads which support resource (memory, CPU time, etc.) limiting
 class Monad m => HasResourceLimits m
 askHTTPHandlerLimit :: HasResourceLimits m => m ResourceLimits
-askGraphqlOperationLimit :: HasResourceLimits m => m (UserInfo -> ApiLimit -> ResourceLimits)
+askGraphqlOperationLimit :: HasResourceLimits m => RequestId -> m (UserInfo -> ApiLimit -> ResourceLimits)
 askHTTPHandlerLimit :: (HasResourceLimits m, m ~ t n, MonadTrans t, HasResourceLimits n) => m ResourceLimits
-askGraphqlOperationLimit :: (HasResourceLimits m, m ~ t n, MonadTrans t, HasResourceLimits n) => m (UserInfo -> ApiLimit -> ResourceLimits)
+askGraphqlOperationLimit :: (HasResourceLimits m, m ~ t n, MonadTrans t, HasResourceLimits n) => RequestId -> m (UserInfo -> ApiLimit -> ResourceLimits)
 instance Hasura.Server.Limits.HasResourceLimits m => Hasura.Server.Limits.HasResourceLimits (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.Limits.HasResourceLimits m => Hasura.Server.Limits.HasResourceLimits (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.Server.Limits.HasResourceLimits m => Hasura.Server.Limits.HasResourceLimits (Hasura.Tracing.TraceT m)
@@ -26349,9 +26349,9 @@ QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> 
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axTz0. Lens' (QueryParametersInfo b_axTz0) (Seq (ColumnValue b_axTz0))
-qpiReusableVariableValues :: forall b_axTz0. Lens' (QueryParametersInfo b_axTz0) (HashMap Name (ColumnValue b_axTz0))
-qpiReferencedSessionVariables :: forall b_axTz0. Lens' (QueryParametersInfo b_axTz0) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axTBN. Lens' (QueryParametersInfo b_axTBN) (Seq (ColumnValue b_axTBN))
+qpiReusableVariableValues :: forall b_axTBN. Lens' (QueryParametersInfo b_axTBN) (HashMap Name (ColumnValue b_axTBN))
+qpiReferencedSessionVariables :: forall b_axTBN. Lens' (QueryParametersInfo b_axTBN) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
