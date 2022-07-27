@@ -1,6 +1,6 @@
-This note is in [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L100).
+This note is in [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L99).
 It is referenced at:
-  - line 44 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L44)
+  - line 43 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L43)
 
 # SchemaT requires MonadIO
 

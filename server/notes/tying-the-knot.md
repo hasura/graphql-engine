@@ -1,11 +1,11 @@
-This note is in [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L15).
+This note is in [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L16).
 It is referenced at:
-  - line 83 of [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L83)
+  - line 84 of [Hasura.GraphQL.Parser.Class](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Class.hs#L84)
   - line 56 of [Hasura.GraphQL.Parser.Internal.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Types.hs#L56)
-  - line 104 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L104)
+  - line 103 of [Hasura.GraphQL.Parser.Monad](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Monad.hs#L103)
   - line 411 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L411)
-  - line 823 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L823)
-  - line 842 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L842)
+  - line 833 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L833)
+  - line 852 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L852)
 
 # Tying the knot
 
