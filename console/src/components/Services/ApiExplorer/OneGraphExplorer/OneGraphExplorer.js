@@ -60,23 +60,25 @@ class OneGraphExplorer extends React.Component {
     const { urlParams, numberOfTables, dispatch } = this.props;
 
     const queryFile = urlParams ? urlParams.query_file : null;
-
+    const localStorageQuery = getGraphiQLQueryFromLocalStorage();
     if (queryFile) {
       getRemoteQueries(
         queryFile,
         remoteQuery => this.setState({ query: remoteQuery }),
         dispatch
       );
-    } else if (numberOfTables === 0) {
+    } else if (numberOfTables === 0 && !localStorageQuery) {
+      // when there are no tables and nothing in the localstorage, show the following comment in the graphiQL
       const NO_TABLES_MESSAGE = `# Looks like you do not have any tables.
 # Click on the "Data" tab on top to create tables
 # Try out GraphQL queries here after you create tables
 `;
+      // FIX ME : this message will be shown, whenever there are no tables tracked and nothing in history (LS),
+      // there could still be a possibility when there are no tables but remote schemas even then this message will be shown only for the first time
+      // after that when the user type something, the LS gets populated and this message will not be shown afterwards
 
       this.setState({ query: NO_TABLES_MESSAGE });
     } else {
-      const localStorageQuery = getGraphiQLQueryFromLocalStorage();
-
       if (localStorageQuery) {
         if (localStorageQuery.includes('do not have')) {
           const FRESH_GRAPHQL_MSG = '# Try out GraphQL queries here\n';
