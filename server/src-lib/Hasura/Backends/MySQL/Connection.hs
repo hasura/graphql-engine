@@ -16,7 +16,6 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Text (encodeToTextBuilder)
 import Data.ByteString (ByteString)
-import Data.Environment qualified as Env
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Pool
 import Data.Scientific (fromFloatDigits)
@@ -43,8 +42,8 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (TableEventTriggers)
 import Hasura.SQL.Backend
 
-resolveSourceConfig :: (MonadIO m) => Logger Hasura -> SourceName -> ConnSourceConfig -> BackendSourceKind 'MySQL -> BackendConfig 'MySQL -> Env.Environment -> m (Either QErr SourceConfig)
-resolveSourceConfig _logger _name csc@ConnSourceConfig {_cscPoolSettings = ConnPoolSettings {..}, ..} _backendKind _backendConfig _env = do
+resolveSourceConfig :: (MonadIO m) => Logger Hasura -> SourceName -> ConnSourceConfig -> BackendSourceKind 'MySQL -> BackendConfig 'MySQL -> environment -> manager -> m (Either QErr SourceConfig)
+resolveSourceConfig _logger _name csc@ConnSourceConfig {_cscPoolSettings = ConnPoolSettings {..}, ..} _backendKind _backendConfig _env _manager = do
   let connectInfo =
         defaultConnectInfo
           { connectHost = T.unpack _cscHost,

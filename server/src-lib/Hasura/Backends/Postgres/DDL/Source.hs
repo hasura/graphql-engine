@@ -77,8 +77,9 @@ resolveSourceConfig ::
   BackendSourceKind ('Postgres pgKind) ->
   BackendConfig ('Postgres pgKind) ->
   Env.Environment ->
+  manager ->
   m (Either QErr (SourceConfig ('Postgres pgKind)))
-resolveSourceConfig _logger name config _backendKind _backendConfig _env = runExceptT do
+resolveSourceConfig _logger name config _backendKind _backendConfig _env _manager = runExceptT do
   sourceResolver <- getPGSourceResolver
   liftEitherM $ liftIO $ sourceResolver name config
 

@@ -26,6 +26,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.SQL.Types
+import Network.HTTP.Client qualified as HTTP
 
 class
   ( Backend b,
@@ -65,6 +66,7 @@ class
     BackendSourceKind b ->
     BackendConfig b ->
     Env.Environment ->
+    HTTP.Manager ->
     m (Either QErr (SourceConfig b))
 
   -- | Function that introspects a database for tables, columns, functions etc.
