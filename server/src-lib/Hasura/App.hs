@@ -327,6 +327,15 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
   instanceId <- liftIO generateInstanceId
   latch <- liftIO newShutdownLatch
   loggers@(Loggers loggerCtx logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
+  when (null soAdminSecret) $ do
+    let errMsg :: Text
+        errMsg = "WARNING: No admin secret provided"
+    unLogger logger $
+      StartupLog
+        { slLogLevel = LevelWarn,
+          slKind = "no_admin_secret",
+          slInfo = A.toJSON errMsg
+        }
   -- log serve options
   unLogger logger $ serveOptsToLog so
 
