@@ -1254,7 +1254,6 @@ test-suite tests-hspec
     Test.InsertDefaultsSpec
     Test.InsertEnumColumnSpec
     Test.InsertOnConflictSpec
-    Test.LimitOffsetSpec
     Test.LongIdentifiersSpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
@@ -1263,6 +1262,7 @@ test-suite tests-hspec
     Test.PostgresTypesSpec
     Test.PrimaryKeySpec
     Test.Queries.Paginate.LimitSpec
+    Test.Queries.Paginate.OffsetSpec
     Test.Queries.Simple.ObjectQueriesSpec
     Test.Queries.Simple.OperationNameSpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
