@@ -2,9 +2,13 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+## v2.10.0-beta.1
+
 ### Introducing Apollo Federation v1 support (experimental)
 
-HGE can now be used as a subgraph in an Apollo federated graphql server.
+HGE can now be used as a subgraph in an Apollo federated GraphQL server.
 You can read more about this feature in [the RFC](https://github.com/hasura/graphql-engine/blob/master/rfcs/apollo-federation.md).
 
 This is an experimental feature (can be enabled by setting 
@@ -50,12 +54,12 @@ type user @key(fields: "id") {
   double-quotes as well as single-quotes. Escaped characters in strings will now
   be honored appropriately, in the same way as JSON.
 
-- server: in certain error messages, JSON paths will use double-quotes instead
+- server: In certain error messages, JSON paths will use double-quotes instead
   of single-quotes to represent field access.
 
   For example, instead of `$.args['$set']`, you will see `$.args["$set"]`.
 
-- cli: use 2-spaces indent for graphql content in metadata instead of tabs(#8469)
+- cli: Use 2-spaces indent for GraphQL content in metadata instead of tabs (#8469)
 
   Example:
   <table>
@@ -240,29 +244,56 @@ Please submit any feedback you may have for this feature at https://github.com/h
 
 ### Bug fixes and improvements
 
-- server: delete event trigger related database SQL triggers from tables when they are untracked
-- server: fix bug where hasura SQL trigger was not dropped when MSSQL source is dropped
+
 - server: Kriti `basicFunctions` now available for REST Connectors and Webhook Transforms
-- server: use `root_field_namespace` as prefix for remote schema (fixes #8438)
-- server: allow all argument types for BigQuery routines
-- server: fix prefix/suffix behaviour for `graphql-default` naming convention (fixes #8544)
-- server: fix namespace visibility during introspection (fix #8434)
+- server: Fix bug where Hasura SQL trigger was not dropped when MS SQL Server source is dropped
+- server: Delete event trigger related database SQL triggers from tables when they are untracked
+- server: Use `root_field_namespace` as prefix for remote schema (fix #8438)
+- server: Fix prefix/suffix behaviour for `graphql-default` naming convention (fix #8544)
+- server: Fix namespace visibility during introspection (fix #8434)
 - server: Create missing SQL triggers, if any, while reloading metadata and startup.
-- server: fix name/enum transformation bugs in `graphql-default` naming convention (fixes #8640)
-- server: changes to the Rest Endpoints OpenAPI specification:
-    - the nullability of items in the output is now always correctly reported
-    - scalars other than UUID are more consistently inlined
-    - objects now have a title and, when available, the same description as in the GraphQL schema
-- server: bump Kriti package version to support optional variable lookup in string interpolation (fixes #8574)
-- server: generate unique intermediate column names in postgres sql queries to workaround postgres' identifier length limitation (fixes #3796)
-- console: Hide TimescaleDB internal schema from data tab
-- console: support naming convention in source customization for postgres DB [CON-297]
-- console: fix bug where analyze button would stay in analyzing state after analyze failed
-- console: fix broken table relationship query on non-default schema
-- build: changes to the `hasura/graphql-engine` docker image:
-  - Debian graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use a ubuntu base instead of debian.
+- server: Fix name/enum transformation bugs in `graphql-default` naming convention (fix #8640)
+- server: Parameterize array variables in generated SQL for queries and subscriptions
+- server: Make postgres-client-cert fields: `sslcert`, `sslkey` and `sslpassword` optional
+- server: Add `*_update_source` API to update configuration of a connected database (See [docs](https://hasura.io/docs/latest/graphql/core/api-reference/metadata-api/source/))
+- server: Changes to the Rest Endpoints OpenAPI specification:
+    - The nullability of items in the output is now always correctly reported
+    - Scalars other than UUID are more consistently inlined
+    - Objects now have a title and, when available, the same description as in the GraphQL schema
+- server: Bump Kriti package version to support optional variable lookup in string interpolation (fix #8574)
+- server: Generate unique intermediate column names in PostgreSQL SQL queries to workaround PostgreSQL's identifier length limitation (fix #3796)
+- console: Hide TimescaleDB internal schemas from data tab for connected TimescaleDB databases
+- console: Support naming convention in source customization for PostgreSQL DBs
+- console: Fix bug where "Analyze" button in the API explorer would stay in analyzing state after analyze failed
+- console: Fix missing remote database relationship info for databases other than default on new table relationships page
+- build: Changes to the `hasura/graphql-engine` Docker image:
+  - Default graphql-engine docker images (`hasura/graphql-engine:<VERSION>`) now use an Ubuntu base instead of Debian.
   - Debian flavour of images (`hasura/graphql-engine:<VERSION>.debian`) are still published to Docker Hub.
-  - Centos flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
+  - CentOS flavour of images (`hasura/graphql-engine:<VERSION>.centos`) are no longer supported.
+  
+## v2.9.0
+
+### Event Triggers for MS SQL Server
+
+(closes https://github.com/hasura/graphql-engine/issues/7228)
+
+Event Triggers support has been added for MS SQL Server. Now, you can invoke external webhooks on insert/update/delete events on your MS SQL Server tables. See the [docs](https://hasura.io/docs/latest/graphql/core/event-triggers/index/) for more details.
+
+### Bug fixes and improvements
+
+- server: Support limit in BigQuery computed fields (fix #8562)
+- server: Improve GraphQL query parsing time and per-query memory allocation
+- server: Fix dropping column from a table that has update permissions (fix #8415)
+- server: Fix `unsupported/unknown datatype was returned` error thrown when using `mssql_redeliver_event` API
+- server: Fix bug with MS SQL Server events and shutdown handler
+- server: Fix bug where Hasura SQL trigger was not dropped when an MS SQL Server database is dropped
+- server: Allow all argument types for BigQuery routines
+- console: Add support for computed fields with session arg in permission builder (fix #8321)
+- console: Add GraphQL field customization for new database connections (root fields namespace, prefix, and suffix, and type names prefix and suffix)
+- console: Fix notifications not being shown in certain cases on the console on Hasura Cloud
+- console: Allow schemas prefixed with `pg`, but not `pg_` (fix #8435)
+- console: Introduce new table relationships UI in alpha
+- cli: Fix error reporting in `metadata apply` command (#8280)
 
 ## v2.9.0-beta.3
 
