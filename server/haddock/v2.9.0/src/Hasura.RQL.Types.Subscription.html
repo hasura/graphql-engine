@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.RQL.Types.Subscription</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier">CursorOrdering</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#SubscriptionType"><span class="hs-identifier">SubscriptionType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- | CursorOrdering is used in the streaming subscriptions to specify how to order the cursor.</span><span>
+</span><span id="line-10"></span><span id="local-6989586621689106196"><span id="local-6989586621689106197"></span></span><span class="hs-keyword">data</span><span> </span><span id="CursorOrdering"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-var">CursorOrdering</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="COAscending"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#COAscending"><span class="hs-identifier hs-var">COAscending</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="CODescending"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CODescending"><span class="hs-identifier hs-var">CODescending</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689106188"><span id="local-6989586621689106190"><span id="local-6989586621689106192"><span class="annot"><span class="annottext">Int -&gt; CursorOrdering -&gt; ShowS
+[CursorOrdering] -&gt; ShowS
+CursorOrdering -&gt; String
+(Int -&gt; CursorOrdering -&gt; ShowS)
+-&gt; (CursorOrdering -&gt; String)
+-&gt; ([CursorOrdering] -&gt; ShowS)
+-&gt; Show CursorOrdering
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [CursorOrdering] -&gt; ShowS
+$cshowList :: [CursorOrdering] -&gt; ShowS
+show :: CursorOrdering -&gt; String
+$cshow :: CursorOrdering -&gt; String
+showsPrec :: Int -&gt; CursorOrdering -&gt; ShowS
+$cshowsPrec :: Int -&gt; CursorOrdering -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689106183"><span id="local-6989586621689106185"><span class="annot"><span class="annottext">CursorOrdering -&gt; CursorOrdering -&gt; Bool
+(CursorOrdering -&gt; CursorOrdering -&gt; Bool)
+-&gt; (CursorOrdering -&gt; CursorOrdering -&gt; Bool) -&gt; Eq CursorOrdering
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
+$c/= :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
+== :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
+$c== :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. CursorOrdering -&gt; Rep CursorOrdering x)
+-&gt; (forall x. Rep CursorOrdering x -&gt; CursorOrdering)
+-&gt; Generic CursorOrdering
+forall x. Rep CursorOrdering x -&gt; CursorOrdering
+forall x. CursorOrdering -&gt; Rep CursorOrdering x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep CursorOrdering x -&gt; CursorOrdering
+$cfrom :: forall x. CursorOrdering -&gt; Rep CursorOrdering x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689106175"><span id="local-6989586621689106177"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-type">CursorOrdering</span></a></span></span></span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span id="local-6989586621689106172"><span id="local-6989586621689106173"></span></span><span class="hs-keyword">data</span><span> </span><span id="SubscriptionType"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#SubscriptionType"><span class="hs-identifier hs-var">SubscriptionType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Streaming"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#Streaming"><span class="hs-identifier hs-var">Streaming</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="LiveQuery"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#LiveQuery"><span class="hs-identifier hs-var">LiveQuery</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689106164"><span id="local-6989586621689106166"><span id="local-6989586621689106168"><span class="annot"><span class="annottext">Int -&gt; SubscriptionType -&gt; ShowS
+[SubscriptionType] -&gt; ShowS
+SubscriptionType -&gt; String
+(Int -&gt; SubscriptionType -&gt; ShowS)
+-&gt; (SubscriptionType -&gt; String)
+-&gt; ([SubscriptionType] -&gt; ShowS)
+-&gt; Show SubscriptionType
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [SubscriptionType] -&gt; ShowS
+$cshowList :: [SubscriptionType] -&gt; ShowS
+show :: SubscriptionType -&gt; String
+$cshow :: SubscriptionType -&gt; String
+showsPrec :: Int -&gt; SubscriptionType -&gt; ShowS
+$cshowsPrec :: Int -&gt; SubscriptionType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689106160"><span id="local-6989586621689106162"><span class="annot"><span class="annottext">SubscriptionType -&gt; SubscriptionType -&gt; Bool
+(SubscriptionType -&gt; SubscriptionType -&gt; Bool)
+-&gt; (SubscriptionType -&gt; SubscriptionType -&gt; Bool)
+-&gt; Eq SubscriptionType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
+$c/= :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
+== :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
+$c== :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SubscriptionType -&gt; Rep SubscriptionType x)
+-&gt; (forall x. Rep SubscriptionType x -&gt; SubscriptionType)
+-&gt; Generic SubscriptionType
+forall x. Rep SubscriptionType x -&gt; SubscriptionType
+forall x. SubscriptionType -&gt; Rep SubscriptionType x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+$cto :: forall x. Rep SubscriptionType x -&gt; SubscriptionType
+$cfrom :: forall x. SubscriptionType -&gt; Rep SubscriptionType x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span></pre></body></html>
