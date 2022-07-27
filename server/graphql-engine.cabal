@@ -158,6 +158,7 @@ common lib-depends
                      , dc-api
                      , free
                      , hashable
+                     , hasura-error-message
                      , http-client-tls
                      , http-conduit
                      , http-media
@@ -424,10 +425,7 @@ library
                      , Hasura.Metadata.Class
 
                      , Hasura.Base.Error
-                     , Hasura.Base.ErrorMessage
-                     , Hasura.Base.ErrorValue
                      , Hasura.Base.Instances
-                     , Hasura.Base.ToErrorValue
 
                      , Hasura.Backends.BigQuery.Connection
                      , Hasura.Backends.BigQuery.Execute
@@ -1023,7 +1021,6 @@ test-suite graphql-engine-tests
     Discover
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
-    Hasura.Base.ErrorMessageSpec
     Hasura.Backends.DataConnector.API.V0.AggregateSpec
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec

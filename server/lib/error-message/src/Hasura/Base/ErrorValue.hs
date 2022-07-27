@@ -8,9 +8,9 @@ module Hasura.Base.ErrorValue
   )
 where
 
+import Data.Text (Text)
 import Data.Text qualified as Text
 import Hasura.Base.ErrorMessage
-import Hasura.Prelude
 
 -- | Wrap error text in backticks
 bquote :: Text -> ErrorMessage

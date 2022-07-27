@@ -1,0 +1,53 @@
+spec-version: 0.34.7
+
+name: hasura-error-message
+description: >
+  An error message type that makes it difficult to convert back to text.
+version: 1.0.0
+author:
+  - Hasura, Inc.
+github: hasura/github-engine
+
+extra-source-files:
+  - ../../../LICENSE
+
+ghc-options:
+  - "-Wall"
+  - "-Werror"
+
+default-extensions:
+  - BlockArguments
+  - DerivingStrategies
+  - GeneralizedNewtypeDeriving
+  - ImportQualifiedPost
+  - OverloadedStrings
+  - ScopedTypeVariables
+
+library:
+  source-dirs:
+    - src
+  dependencies:
+    - base
+
+    - aeson
+    - graphql-parser
+    - text
+    - unordered-containers
+
+tests:
+  tests:
+    source-dirs:
+      - test
+    main: Main
+    dependencies:
+      - hasura-error-message
+
+      - base
+      - hspec
+
+      - aeson
+      - graphql-parser
+      - hashable
+      - text
+      - unordered-containers
+      - vector
