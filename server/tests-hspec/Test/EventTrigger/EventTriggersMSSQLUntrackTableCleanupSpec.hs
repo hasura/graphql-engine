@@ -1,10 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
--- | Test that when a source is dropped any event trigger information  such as
--- 'hdb_catalog' schema and the SQL triggers that were created on the tables is also
--- removed
-module Test.EventTriggerDropSourceCleanupSpec (spec) where
+-- | Test that when a table is untracked,  SQL triggers that were created on the
+-- tables is also removed
+module Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -31,7 +30,7 @@ spec =
           -- setup the webhook server as the local test environment,
           -- so that the server can be referenced while testing
           mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-          setup = mssqlSetupWithEventTriggers,
+          setup = mssqlSetup,
           teardown = mssqlTeardown,
           customOptions = Nothing
         }
@@ -66,11 +65,11 @@ authorsTable tableName =
 
 tests :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
 tests opts = do
-  cleanupEventTriggersWhenSourceDropped opts
+  cleanupEventTriggersWhenTableUntracked opts
 
-cleanupEventTriggersWhenSourceDropped :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
-cleanupEventTriggersWhenSourceDropped opts =
-  describe "dropping a source with event triggers should remove 'hdb_catalog' schema and the SQL triggers created on the table" do
+cleanupEventTriggersWhenTableUntracked :: Context.Options -> SpecWith (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue))
+cleanupEventTriggersWhenTableUntracked opts =
+  describe "untrack a table with event triggers should remove the SQL triggers created on the table" do
     it "check: inserting a new row invokes a event trigger" $
       \(testEnvironment, (_, (Webhook.EventsQueue eventsQueue))) -> do
         let insertQuery =
@@ -109,71 +108,65 @@ cleanupEventTriggersWhenSourceDropped opts =
 
         eventPayload `shouldBeYaml` expectedEventPayload
 
-    it "drop source, check the table works as it was before event trigger was created on it" $
+    it "untrack table, check the SQL triggers are deleted from the table" $
       \(testEnvironment, _) -> do
-        let dropSourceQuery =
+        let untrackTableQuery =
               [yaml|
-              type: mssql_drop_source
+              type: mssql_untrack_table
               args:
-                name: mssql
-                cascade: true
+                source: mssql
+                table: 
+                  schema: hasura
+                  name: authors
             |]
 
-            dropSourceQueryExpectedRespnse = [yaml| message: success |]
+            untrackTableQueryExpectedResponse = [yaml| message: success |]
 
-        -- Dropping the source should remove 'hdb_catalog' and SQL triggers related to it
+        -- Untracking the table should remove the SQL triggers on the table
         shouldReturnYaml
           opts
-          (GraphqlEngine.postMetadata testEnvironment dropSourceQuery)
-          dropSourceQueryExpectedRespnse
+          (GraphqlEngine.postMetadata testEnvironment untrackTableQuery)
+          untrackTableQueryExpectedResponse
 
-        -- Test that the table works as it was before the event trigger was created
-        -- on it. To test that the tables are working, we need to test if
-        -- INSERT/DELETE/UPDATE operations on the table works as expected.
-        -- We do this in following steps:
-        --    1. Reconnect the source, but without event triggers on any tables. We
-        --       do this so that we can use run_sql to make SQL queries
-        --    2. Do an insert statement and see that it goes through
-
-        -- Sqlserver.setup (schema "authors" ) (testEnvironment, ())
-        let sourceConfig = Sqlserver.defaultSourceConfiguration
-            addSourceQuery =
-              [yaml|
-              type: mssql_add_source
-              args:
-                name: mssql
-                configuration: *sourceConfig
-            |]
-        _ <- GraphqlEngine.postMetadata testEnvironment addSourceQuery
-
-        let insertQuery =
+        let checkIfTriggerExists =
               [yaml|
               type: mssql_run_sql
               args:
                 source: mssql
-                sql: "INSERT INTO authors (id, name) values (4, N'harry')"
+                sql: "SELECT 
+                        (CASE WHEN EXISTS
+                          ( SELECT 1
+                          FROM sys.triggers tr
+                          INNER join sys.tables tb on tr.parent_id = tb.object_id
+                          INNER join sys.schemas s on tb.schema_id = s.schema_id
+                          WHERE tb.name = 'authors' AND tr.name = 'notify_hasura_insert_author_INSERT' AND s.name = 'hasura'
+                          )
+                        THEN CAST(1 AS BIT)
+                        ELSE CAST(0 AS BIT)
+                        END) AS 'exists';"
             |]
 
             expectedResponse =
               [yaml|
-              result_type: CommandOk
-              result: null
+              result_type: TuplesOk
+              result:
+                - - exists
+                - - false
             |]
 
-        -- If the clean-up did not happen properly this insert query would fail
-        -- because the SQL triggers that were created by event triggers might try
-        -- to write to a non existent 'hdb_catalog' schema.
+        -- If the clean-up did not happen properly this insert query would add
+        -- entries to the 'hdb_catalog.event_log' table
         shouldReturnYaml
           opts
-          (GraphqlEngine.postV2Query 200 testEnvironment insertQuery)
+          (GraphqlEngine.postV2Query 200 testEnvironment checkIfTriggerExists)
           expectedResponse
 
 --------------------------------------------------------------------------------
 
 -- ** Setup and teardown override
 
-mssqlSetupWithEventTriggers :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-mssqlSetupWithEventTriggers (testEnvironment, (webhookServer, _)) = do
+mssqlSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
+mssqlSetup (testEnvironment, (webhookServer, _)) = do
   Sqlserver.setup (schema "authors") (testEnvironment, ())
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
@@ -190,7 +183,7 @@ mssqlSetupWithEventTriggers (testEnvironment, (webhookServer, _)) = do
           webhook: *webhookServerEchoEndpoint
           insert:
             columns: "*"
-      |]
+    |]
 
 mssqlTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
 mssqlTeardown (_, (server, _)) = do

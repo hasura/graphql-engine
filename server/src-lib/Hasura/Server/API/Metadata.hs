@@ -433,7 +433,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRenameSource q -> runRenameSource q
   RMUpdateSource q -> dispatchMetadata runUpdateSource q
   RMTrackTable q -> dispatchMetadata runTrackTableV2Q q
-  RMUntrackTable q -> dispatchMetadata runUntrackTableQ q
+  RMUntrackTable q -> dispatchMetadataAndEventTrigger runUntrackTableQ q
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q

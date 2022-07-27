@@ -1245,9 +1245,11 @@ test-suite tests-hspec
     Test.DisableRootFields.SelectPermission.EnableAggSpec
     Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.EventTriggersRecreationSpec
-    Test.EventTriggersRunSQLSpec
-    Test.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.EventTriggersRecreationSpec
+    Test.EventTrigger.EventTriggersRunSQLSpec
+    Test.EventTrigger.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.EventTriggersPGUntrackTableCleanupSpec
+    Test.EventTrigger.EventTriggersMSSQLUntrackTableCleanupSpec
     Test.GatheringUniqueConstraintsSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
