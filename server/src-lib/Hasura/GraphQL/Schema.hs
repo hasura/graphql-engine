@@ -12,12 +12,14 @@ import Control.Lens
 import Data.Aeson.Ordered qualified as JO
 import Data.Has
 import Data.HashMap.Strict qualified as Map
+import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.List.Extended (duplicates)
 import Data.Text.Extended
 import Data.Text.NonEmpty qualified as NT
 import Hasura.Base.Error
-import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.Base.ErrorMessage
+import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
 import Hasura.GraphQL.Execute.Types
@@ -226,11 +228,12 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
     -- information in the case of the admin role.
     introspectionSchema <- do
       result <-
-        convertToSchemaIntrospection
-          <$> buildIntrospectionSchema
-            (P.parserType queryParserBackend)
-            (P.parserType <$> mutationParserBackend)
-            (P.parserType <$> subscriptionParser)
+        throwOnConflictingDefinitions $
+          convertToSchemaIntrospection
+            <$> buildIntrospectionSchema
+              (P.parserType queryParserBackend)
+              (P.parserType <$> mutationParserBackend)
+              (P.parserType <$> subscriptionParser)
       pure $
         -- We don't need to persist the introspection schema for all the roles here.
         -- TODO(nicuveo): we treat the admin role differently in this function,
@@ -241,7 +244,7 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
           then result
           else G.SchemaIntrospection mempty
 
-    void $
+    void . throwOnConflictingDefinitions $
       buildIntrospectionSchema
         (P.parserType queryParserFrontend)
         (P.parserType <$> mutationParserFrontend)
@@ -358,12 +361,12 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
     -- In order to catch errors early, we attempt to generate the data
     -- required for introspection, which ends up doing a few correctness
     -- checks in the GraphQL schema.
-    void $
+    void . throwOnConflictingDefinitions $
       buildIntrospectionSchema
         (P.parserType queryParserBackend)
         (P.parserType <$> mutationParserBackend)
         (P.parserType <$> subscriptionParser)
-    void $
+    void . throwOnConflictingDefinitions $
       buildIntrospectionSchema
         (P.parserType queryParserFrontend)
         (P.parserType <$> mutationParserFrontend)
@@ -481,14 +484,14 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
           )
     mutationParser <-
       whenMaybe (not $ null mutationFields) $
-        P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
+        safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFields
           <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
     subscriptionParser <-
       whenMaybe (not $ null subscriptionFields) $
-        P.safeSelectionSet subscriptionRoot (Just $ G.Description "subscription root") subscriptionFields
+        safeSelectionSet subscriptionRoot (Just $ G.Description "subscription root") subscriptionFields
           <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
     queryParser <- queryWithIntrospectionHelper queryFields mutationParser Nothing
-    void $
+    void . throwOnConflictingDefinitions $
       buildIntrospectionSchema
         (P.parserType queryParser)
         (P.parserType <$> mutationParser)
@@ -735,13 +738,8 @@ parseBuildIntrospectionSchema ::
   Maybe (P.Type 'Output) ->
   Maybe (P.Type 'Output) ->
   m Schema
-parseBuildIntrospectionSchema q m s = qerrAsMonadParse $ buildIntrospectionSchema q m s
-  where
-    qerrAsMonadParse :: MonadParse m => Except QErr a -> m a
-    qerrAsMonadParse action =
-      case runExcept action of
-        Right a -> pure a
-        Left QErr {..} -> foldr P.withKey (P.parseErrorWith qeCode (toErrorMessage qeError)) qePath
+parseBuildIntrospectionSchema q m s =
+  buildIntrospectionSchema q m s `onLeft` (P.parseErrorWith P.ConflictingDefinitionsError . toErrorValue)
 
 queryWithIntrospectionHelper ::
   forall n m.
@@ -761,18 +759,16 @@ queryWithIntrospectionHelper basicQueryFP mutationP subscriptionP = do
       placeholderField = NotNamespaced (RFRaw $ JO.String placeholderText) <$ P.selection_ Name._no_queries_available (Just $ G.Description placeholderText) P.string
       fixedQueryFP = if null basicQueryFP then [placeholderField] else basicQueryFP
   basicQueryP <- queryRootFromFields fixedQueryFP
-  let buildIntrospectionResponse printResponseFromSchema = do
-        partialSchema <-
-          parseBuildIntrospectionSchema
+  let buildIntrospectionResponse printResponseFromSchema =
+        NotNamespaced . RFRaw . printResponseFromSchema
+          <$> parseBuildIntrospectionSchema
             (P.parserType basicQueryP)
             (P.parserType <$> mutationP)
             (P.parserType <$> subscriptionP)
-        pure $ NotNamespaced $ RFRaw $ printResponseFromSchema partialSchema
       introspection = [schema, typeIntrospection] <&> (`P.bindField` buildIntrospectionResponse)
       {-# INLINE introspection #-}
       partialQueryFields = fixedQueryFP ++ introspection
-  P.safeSelectionSet queryRoot Nothing partialQueryFields
-    <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
+  safeSelectionSet queryRoot Nothing partialQueryFields <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 queryRootFromFields ::
   forall n m.
@@ -780,7 +776,7 @@ queryRootFromFields ::
   [P.FieldParser n (NamespacedField (QueryRootField UnpreparedValue))] ->
   m (Parser 'Output n (RootFieldMap (QueryRootField UnpreparedValue)))
 queryRootFromFields fps =
-  P.safeSelectionSet queryRoot Nothing fps <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
+  safeSelectionSet queryRoot Nothing fps <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 -- | Prepare the parser for subscriptions. Every postgres query field is
 -- exposed as a subscription along with fields to get the status of
@@ -797,7 +793,7 @@ buildSubscriptionParser sourceSubscriptionFields allActions customTypes remoteSu
   actionSubscriptionFields <- fmap (fmap NotNamespaced) . concat <$> traverse (buildActionSubscriptionFields customTypes) allActions
   let subscriptionFields = sourceSubscriptionFields <> actionSubscriptionFields <> fmap (fmap $ fmap RFRemote) remoteSubscriptionFields
   whenMaybe (not $ null subscriptionFields) $
-    P.safeSelectionSet subscriptionRoot Nothing subscriptionFields
+    safeSelectionSet subscriptionRoot Nothing subscriptionFields
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 buildMutationParser ::
@@ -815,11 +811,22 @@ buildMutationParser allRemotes allActions customTypes mutationFields = do
           <> (fmap NotNamespaced <$> actionParsers)
           <> (fmap (fmap RFRemote) <$> allRemotes)
   whenMaybe (not $ null mutationFieldsParser) $
-    P.safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
+    safeSelectionSet mutationRoot (Just $ G.Description "mutation root") mutationFieldsParser
       <&> fmap (flattenNamespaces . fmap typenameToNamespacedRawRF)
 
 -------------------------------------------------------------------------------
 -- Local helpers
+
+-- | Calls 'P.safeSelectionSet', and rethrows any error as a 'QErr'.
+safeSelectionSet ::
+  forall n m a.
+  (QErrM n, MonadParse m) =>
+  G.Name ->
+  Maybe G.Description ->
+  [FieldParser m a] ->
+  n (Parser 'Output m (OMap.InsOrdHashMap G.Name (P.ParsedSelection a)))
+safeSelectionSet name description fields =
+  P.safeSelectionSet name description fields `onLeft` (throw500 . fromErrorMessage)
 
 -- | Apply a source's customization options to a list of its fields.
 customizeFields ::
@@ -887,7 +894,10 @@ queryRoot :: G.Name
 queryRoot = Name._query_root
 
 finalizeParser :: Parser 'Output P.Parse a -> ParserFn a
-finalizeParser parser = P.runParse . P.runParser parser
+finalizeParser parser = P.toQErr . P.runParse . P.runParser parser
+
+throwOnConflictingDefinitions :: QErrM m => Either P.ConflictingDefinitions a -> m a
+throwOnConflictingDefinitions = either (throw500 . fromErrorMessage . toErrorValue) pure
 
 type ConcreteSchemaT m a =
   P.SchemaT

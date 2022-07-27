@@ -796,6 +796,16 @@ data ConflictingDefinitions origin
       (SomeDefinitionTypeInfo origin, TypeOriginStack)
       (SomeDefinitionTypeInfo origin, NonEmpty TypeOriginStack)
 
+instance ToErrorValue (ConflictingDefinitions origin) where
+  toErrorValue (ConflictingDefinitions (type1, origin1) (_type2, origins)) =
+    "Found conflicting definitions for "
+      <> toErrorValue (getName type1)
+      <> ".  The definition at "
+      <> toErrorValue origin1
+      <> " differs from the the definitions "
+      <> toErrorValue origins
+      <> "."
+
 -- | Although the majority of graphql-engine is written in terms of abstract
 -- mtl-style effect monads, we figured out that this particular codepath is
 -- quite hot, and that mtl has a measurable negative effect for accumulating

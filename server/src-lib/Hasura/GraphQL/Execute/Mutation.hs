@@ -18,8 +18,8 @@ import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Directives
+import Hasura.GraphQL.Schema.Parser (runParse, toQErr)
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
@@ -111,9 +111,7 @@ convertMutationSelectionSet
       liftEither $ mutationParser resolvedSelSet
 
     -- Process directives on the mutation
-    _dirMap <-
-      runParse
-        (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
+    _dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLMUTATION) resolvedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash resolvedSelSet
 

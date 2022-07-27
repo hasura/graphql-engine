@@ -21,8 +21,6 @@ import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
 import Hasura.Backends.Postgres.Types.Function qualified as PG
 import Hasura.Base.Error
-import Hasura.GraphQL.Parser qualified as P
-import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.Common
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -30,6 +28,7 @@ import Hasura.GraphQL.Schema.Parser
   ( FieldParser,
     InputFieldsParser,
   )
+import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
 import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (mkTypename)
@@ -421,10 +420,10 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
       IAUserProvided arg -> case Map.lookup name dictionary of
         Just parsedValue -> case PG.faName arg of
           Just _ -> pure $ Just (name, parsedValue)
-          Nothing -> parseErrorWith NotSupported "Only last set of positional arguments can be omitted"
+          Nothing -> P.parseErrorWith P.NotSupported "Only last set of positional arguments can be omitted"
         Nothing ->
           whenMaybe (not $ PG.unHasDefault $ PG.faHasDefault arg) $
-            parseErrorWith NotSupported "Non default arguments cannot be omitted"
+            P.parseErrorWith P.NotSupported "Non default arguments cannot be omitted"
 
 buildFunctionQueryFieldsPG ::
   forall r m n pgKind.

@@ -13,9 +13,6 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Vector qualified as V
-import Hasura.Base.Error
-import Hasura.Base.ErrorMessage
-import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
 import Hasura.GraphQL.Parser.Name qualified as GName
@@ -196,11 +193,10 @@ query_root obtained in (B). -}
 --
 -- See Note [What introspection exposes]
 buildIntrospectionSchema ::
-  MonadError QErr m =>
   P.Type 'Output ->
   Maybe (P.Type 'Output) ->
   Maybe (P.Type 'Output) ->
-  m P.Schema
+  Either P.ConflictingDefinitions P.Schema
 buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
   let -- The only directives that we currently expose over introspection are our
       -- statically defined ones.  So, for instance, we don't correctly expose
@@ -212,7 +208,7 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
 
   -- Collect type information of all non-introspection fields
   allBasicTypes <-
-    collectTypes
+    P.collectTypeDefinitions
       [ P.TypeDefinitionsWrapper queryRoot',
         P.TypeDefinitionsWrapper mutationRoot',
         P.TypeDefinitionsWrapper subscriptionRoot',
@@ -224,7 +220,7 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
   -- the types here are always the same and specified by the GraphQL spec
 
   -- Pull all the introspection types out (__Type, __Schema, etc)
-  allIntrospectionTypes <- collectTypes (map fDefinition introspection)
+  allIntrospectionTypes <- P.collectTypeDefinitions (map fDefinition introspection)
 
   let allTypes =
         Map.unions
@@ -240,23 +236,6 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
         sSubscriptionType = subscriptionRoot',
         sDirectives = directives
       }
-
-collectTypes ::
-  (MonadError QErr m, P.HasTypeDefinitions a) =>
-  a ->
-  m (HashMap G.Name P.SomeDefinitionTypeInfo)
-collectTypes x =
-  P.collectTypeDefinitions x
-    `onLeft` \(P.ConflictingDefinitions (type1, origin1) (_type2, origins)) ->
-      -- See Note [Collecting types from the GraphQL schema]
-      throw500 . fromErrorMessage $
-        "Found conflicting definitions for "
-          <> toErrorValue (P.getName type1)
-          <> ".  The definition at "
-          <> toErrorValue origin1
-          <> " differs from the the definitions "
-          <> toErrorValue origins
-          <> "."
 
 -- | Generate a __type introspection parser
 typeIntrospection ::

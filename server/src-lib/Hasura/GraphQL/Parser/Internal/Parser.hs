@@ -15,7 +15,7 @@ where
 
 import Control.Arrow ((&&&))
 import Control.Monad (unless, when, (>=>))
-import Control.Monad.Except (MonadError)
+import Control.Monad.Except (MonadError (..))
 import Data.Aeson qualified as A
 import Data.Aeson.Key qualified as K
 import Data.Aeson.Types (JSONPathElement (Key))
@@ -31,7 +31,6 @@ import Data.Maybe qualified as Maybe
 import Data.Traversable (for)
 import Data.Type.Equality
 import Data.Void (Void)
-import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Class.Parse
@@ -181,16 +180,17 @@ selectionSet name desc fields = selectionSetObject name desc fields []
 
 safeSelectionSet ::
   forall n m origin a.
-  (MonadError QErr n, MonadParse m, Eq origin, Hashable origin, ToErrorValue origin) =>
+  (MonadError ErrorMessage n, MonadParse m, Eq origin, Hashable origin, ToErrorValue origin) =>
   Name ->
   Maybe Description ->
   [FieldParser origin m a] ->
   n (Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
-safeSelectionSet name desc fields
-  | null duplicates = pure $ selectionSetObject name desc fields []
-  | otherwise = throw500 . fromErrorMessage $ case desc of
-    Nothing -> "found duplicate fields in selection set: " <> duplicatesList
-    Just d -> "found duplicate fields in selection set for " <> toErrorMessage (unDescription d) <> ": " <> duplicatesList
+safeSelectionSet name description fields
+  | null duplicates = pure $ selectionSetObject name description fields []
+  | otherwise =
+    throwError $ case description of
+      Nothing -> "found duplicate fields in selection set: " <> duplicatesList
+      Just (Description d) -> "found duplicate fields in selection set for " <> toErrorMessage d <> ": " <> duplicatesList
   where
     namesOrigins :: HashMap Name [Maybe origin]
     namesOrigins = M.fromListWith (<>) $ (dName &&& (pure . dOrigin)) . fDefinition <$> fields

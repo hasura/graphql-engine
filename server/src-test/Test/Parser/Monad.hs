@@ -14,9 +14,10 @@ where
 import Data.Aeson.Internal (JSONPathElement)
 import Data.Has (Has (..))
 import Data.Text qualified as T
-import Hasura.Base.Error (Code, QErr)
+import Hasura.Base.Error (QErr)
 import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class (MonadParse (..), MonadSchema (..))
+import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Schema.Common (SchemaContext (..), SchemaKind (..), ignoreRemoteRelationship)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options (SchemaOptions (..))
@@ -145,6 +146,6 @@ instance MonadParse ParserTestT where
   withKey :: JSONPathElement -> ParserTestT a -> ParserTestT a
   withKey = const id
 
-  parseErrorWith :: Code -> ErrorMessage -> ParserTestT a
+  parseErrorWith :: ParseErrorCode -> ErrorMessage -> ParserTestT a
   parseErrorWith code text =
     ParserTestT . Left . expectationFailure $ show code <> ": " <> T.unpack (fromErrorMessage text)

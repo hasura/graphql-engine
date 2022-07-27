@@ -35,6 +35,8 @@ module Hasura.GraphQL.Schema.Parser
     pattern P.Parser,
     Schema,
     pattern P.Schema,
+    ConflictingDefinitions,
+    pattern P.ConflictingDefinitions,
     Definition,
     pattern P.Definition,
     Type,
@@ -51,14 +53,21 @@ module Hasura.GraphQL.Schema.Parser
     pattern P.SomeDefinitionTypeInfo,
     TypeDefinitionsWrapper,
     pattern TypeDefinitionsWrapper,
+    P.ParseErrorCode (..),
+    toQErr,
     module Hasura.GraphQL.Parser,
   )
 where
 
 -- Re-export everything, except types whose type parameter we want to fill in in
 -- this module.
+
+import Control.Monad.Error.Class
+import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (ErrorMessage (fromErrorMessage))
 import Hasura.GraphQL.Parser hiding
-  ( Definition,
+  ( ConflictingDefinitions (..),
+    Definition,
     Directive,
     DirectiveInfo,
     FieldInfo,
@@ -66,6 +75,7 @@ import Hasura.GraphQL.Parser hiding
     HasTypeDefinitions,
     InputFieldInfo,
     InputFieldsParser,
+    ParseErrorCode (..),
     Parser,
     Schema,
     SomeDefinitionTypeInfo,
@@ -73,6 +83,7 @@ import Hasura.GraphQL.Parser hiding
     TypeDefinitionsWrapper,
   )
 import Hasura.GraphQL.Parser qualified as P
+import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Object
 
 type FieldParser = P.FieldParser MetadataObjId
@@ -80,6 +91,8 @@ type FieldParser = P.FieldParser MetadataObjId
 type Parser = P.Parser MetadataObjId
 
 type Schema = P.Schema MetadataObjId
+
+type ConflictingDefinitions = P.ConflictingDefinitions MetadataObjId
 
 type Type = P.Type MetadataObjId
 
@@ -106,3 +119,16 @@ type TypeDefinitionsWrapper = P.TypeDefinitionsWrapper MetadataObjId
 -- 'MetadataObjId' set for its origin type parameter.
 pattern TypeDefinitionsWrapper :: () => forall a. HasTypeDefinitions a => a -> TypeDefinitionsWrapper
 pattern TypeDefinitionsWrapper typeDef = P.TypeDefinitionsWrapper typeDef
+
+toQErr :: (MonadError QErr m) => Either ParseError a -> m a
+toQErr = either (throwError . parseErrorToQErr) pure
+  where
+    parseErrorToQErr :: ParseError -> QErr
+    parseErrorToQErr ParseError {pePath, peMessage, peCode} =
+      (err400 (parseErrorCodeToCode peCode) (fromErrorMessage peMessage)) {qePath = pePath}
+
+    parseErrorCodeToCode :: P.ParseErrorCode -> Code
+    parseErrorCodeToCode P.ValidationFailed = ValidationFailed
+    parseErrorCodeToCode P.ParseFailed = ParseFailed
+    parseErrorCodeToCode P.ConflictingDefinitionsError = Unexpected
+    parseErrorCodeToCode P.NotSupported = NotSupported

@@ -8,7 +8,6 @@ module Hasura.GraphQL.Parser.Monad
   )
 where
 
-import Control.Arrow ((<<<))
 import Control.Monad.Except
 import Control.Monad.Reader (MonadReader, ReaderT, mapReaderT)
 import Control.Monad.State.Strict (MonadState (..), StateT, evalStateT)
@@ -19,9 +18,9 @@ import Data.GADT.Compare.Extended
 import Data.IORef
 import Data.Kind qualified as K
 import Data.Proxy (Proxy (..))
-import Hasura.Base.Error
 import Hasura.Base.ErrorMessage
 import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Parser.ErrorCode
 import Language.Haskell.TH qualified as TH
 import System.IO.Unsafe (unsafeInterleaveIO)
 import Type.Reflection (Typeable, typeRep, (:~:) (..))
@@ -173,11 +172,11 @@ newtype Parse a = Parse
   deriving (Functor, Applicative, Monad)
 
 runParse ::
-  MonadError QErr m =>
+  MonadError ParseError m =>
   Parse a ->
   m a
 runParse parse =
-  either reportParseErrors pure (runExcept <<< unParse $ parse)
+  either throwError pure . runExcept $ unParse parse
 
 instance MonadParse Parse where
   withKey key = Parse . withExceptT (\pe -> pe {pePath = key : pePath pe}) . unParse
@@ -187,12 +186,5 @@ instance MonadParse Parse where
 data ParseError = ParseError
   { pePath :: JSONPath,
     peMessage :: ErrorMessage,
-    peCode :: Code
+    peCode :: ParseErrorCode
   }
-
-reportParseErrors ::
-  MonadError QErr m =>
-  ParseError ->
-  m a
-reportParseErrors (ParseError {pePath, peMessage, peCode}) =
-  throwError (err400 peCode (fromErrorMessage peMessage)) {qePath = pePath}
