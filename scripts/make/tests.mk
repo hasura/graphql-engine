@@ -7,13 +7,13 @@ test-bigquery: start-postgres remove-tix-file
 
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for SQL Server backend
-test-sqlserver: start-postgres start-sqlserver remove-tix-file
+test-sqlserver: spawn-postgres spawn-sqlserver wait-for-postgres wait-for-sqlserver remove-tix-file
 	$(call stop_after, \
 		cabal run tests-hspec -- -m 'SQLServer')
 
 .PHONY: test-mysql
 ## test-mysql: run tests for MySQL backend
-test-mysql: start-postgres start-mysql remove-tix-file
+test-mysql: spawn-postgres spawn-mysql wait-for-postgres wait-for-mysql remove-tix-file
 	$(call stop_after, \
 		cabal run tests-hspec -- -m 'MySQL')
 
