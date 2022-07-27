@@ -1224,7 +1224,6 @@ test-suite tests-hspec
  -- Test
     Test.ArrayParamPermissionSpec
     Test.BackendOnlyPermissionsSpec
-    Test.BasicFieldsSpec
     Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
     Test.ColumnPresetsSpec
@@ -1265,6 +1264,7 @@ test-suite tests-hspec
     Test.PrimaryKeySpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Simple.ObjectQueriesSpec
+    Test.Queries.Simple.OperationNameSpec
     Test.RemoteRelationship.FromRemoteSchemaSpec
     Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
     Test.RemoteRelationship.MetadataAPI.Common
