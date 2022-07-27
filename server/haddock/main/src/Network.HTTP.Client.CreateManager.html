@@ -15,13 +15,13 @@
 </span><span id="line-15"></span><span class="hs-comment">-- | A mechanism to block IPs (both IPv4 and IPv6) has also been added to it.</span><span>
 </span><span id="line-16"></span><span class="annot"><a href="Network.HTTP.Client.CreateManager.html#mkHttpManager"><span class="hs-identifier hs-type">mkHttpManager</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Network.html#TlsAllow"><span class="hs-identifier hs-type">TlsAllow</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Blocklisting.html#Blocklist"><span class="hs-identifier hs-type">Blocklist</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span>
 </span><span id="line-17"></span><span id="mkHttpManager"><span class="annot"><span class="annottext">mkHttpManager :: IO [TlsAllow] -&gt; Blocklist -&gt; IO Manager
-</span><a href="Network.HTTP.Client.CreateManager.html#mkHttpManager"><span class="hs-identifier hs-var hs-var">mkHttpManager</span></a></span></span><span> </span><span id="local-6989586621689353740"><span class="annot"><span class="annottext">IO [TlsAllow]
-</span><a href="#local-6989586621689353740"><span class="hs-identifier hs-var">currentAllow</span></a></span></span><span> </span><span id="local-6989586621689353739"><span class="annot"><span class="annottext">Blocklist
-</span><a href="#local-6989586621689353739"><span class="hs-identifier hs-var">blocklist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621689353738"><span class="annot"><span class="annottext">TLSSettings
-</span><a href="#local-6989586621689353738"><span class="hs-identifier hs-var">tlsSettings</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [TlsAllow] -&gt; IO TLSSettings
+</span><a href="Network.HTTP.Client.CreateManager.html#mkHttpManager"><span class="hs-identifier hs-var hs-var">mkHttpManager</span></a></span></span><span> </span><span id="local-6989586621689362031"><span class="annot"><span class="annottext">IO [TlsAllow]
+</span><a href="#local-6989586621689362031"><span class="hs-identifier hs-var">currentAllow</span></a></span></span><span> </span><span id="local-6989586621689362030"><span class="annot"><span class="annottext">Blocklist
+</span><a href="#local-6989586621689362030"><span class="hs-identifier hs-var">blocklist</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621689362029"><span class="annot"><span class="annottext">TLSSettings
+</span><a href="#local-6989586621689362029"><span class="hs-identifier hs-var">tlsSettings</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [TlsAllow] -&gt; IO TLSSettings
 </span><a href="Network.HTTP.Client.DynamicTlsPermissions.html#dynamicTlsSettings"><span class="hs-identifier hs-var">HTTP.dynamicTlsSettings</span></a></span><span> </span><span class="annot"><span class="annottext">IO [TlsAllow]
-</span><a href="#local-6989586621689353740"><span class="hs-identifier hs-var">currentAllow</span></a></span><span>
+</span><a href="#local-6989586621689362031"><span class="hs-identifier hs-var">currentAllow</span></a></span><span>
 </span><span id="line-19"></span><span>  </span><span class="annot"><span class="annottext">ManagerSettings -&gt; IO Manager
 </span><span class="hs-identifier hs-var">HTTP.newManager</span></span><span> </span><span class="annot"><span class="annottext">(ManagerSettings -&gt; IO Manager) -&gt; ManagerSettings -&gt; IO Manager
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -30,10 +30,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Maybe ConnectionContext -&gt; Maybe TLSSettings -&gt; ManagerSettings
 </span><a href="Network.HTTP.Client.Restricted.html#mkRestrictedManagerSettings"><span class="hs-identifier hs-var">Restricted.mkRestrictedManagerSettings</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Blocklist -&gt; Restriction
 </span><a href="Network.HTTP.Client.Blocklisting.html#block"><span class="hs-identifier hs-var">block</span></a></span><span> </span><span class="annot"><span class="annottext">Blocklist
-</span><a href="#local-6989586621689353739"><span class="hs-identifier hs-var">blocklist</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
+</span><a href="#local-6989586621689362030"><span class="hs-identifier hs-var">blocklist</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe ConnectionContext
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TLSSettings -&gt; Maybe TLSSettings
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TLSSettings
-</span><a href="#local-6989586621689353738"><span class="hs-identifier hs-var">tlsSettings</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689362029"><span class="hs-identifier hs-var">tlsSettings</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-21"></span></pre></body></html>

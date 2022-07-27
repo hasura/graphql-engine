@@ -84,7 +84,7 @@
 </span><span id="line-79"></span><span>    </span><span id="rcpPoolTimeout"><span class="annot"><span class="annottext">RawConnParams -&gt; Maybe NominalDiffTime
 </span><a href="Hasura.Server.Init.Config.html#rcpPoolTimeout"><span class="hs-identifier hs-var hs-var">rcpPoolTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NominalDiffTime</span></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507983"><span id="local-6989586621689507985"><span id="local-6989586621689507987"><span class="annot"><span class="annottext">Int -&gt; RawConnParams -&gt; ShowS
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516423"><span id="local-6989586621689516425"><span id="local-6989586621689516427"><span class="annot"><span class="annottext">Int -&gt; RawConnParams -&gt; ShowS
 [RawConnParams] -&gt; ShowS
 RawConnParams -&gt; String
 (Int -&gt; RawConnParams -&gt; ShowS)
@@ -99,7 +99,7 @@ show :: RawConnParams -&gt; String
 $cshow :: RawConnParams -&gt; String
 showsPrec :: Int -&gt; RawConnParams -&gt; ShowS
 $cshowsPrec :: Int -&gt; RawConnParams -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507978"><span id="local-6989586621689507980"><span class="annot"><span class="annottext">RawConnParams -&gt; RawConnParams -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516418"><span id="local-6989586621689516420"><span class="annot"><span class="annottext">RawConnParams -&gt; RawConnParams -&gt; Bool
 (RawConnParams -&gt; RawConnParams -&gt; Bool)
 -&gt; (RawConnParams -&gt; RawConnParams -&gt; Bool) -&gt; Eq RawConnParams
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -119,7 +119,7 @@ $c== :: RawConnParams -&gt; RawConnParams -&gt; Bool
 </span><span id="line-90"></span><span>    </span><span id="Skip"><span class="annot"><a href="Hasura.Server.Init.Config.html#Skip"><span class="hs-identifier hs-var">Skip</span></a></span></span><span>
 </span><span id="line-91"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Interval time</span><span>
 </span><span id="line-92"></span><span>    </span><span id="Interval"><span class="annot"><a href="Hasura.Server.Init.Config.html#Interval"><span class="hs-identifier hs-var">Interval</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-type">Milliseconds</span></a></span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507967"><span id="local-6989586621689507969"><span id="local-6989586621689507971"><span class="annot"><span class="annottext">Int -&gt; OptionalInterval -&gt; ShowS
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516407"><span id="local-6989586621689516409"><span id="local-6989586621689516411"><span class="annot"><span class="annottext">Int -&gt; OptionalInterval -&gt; ShowS
 [OptionalInterval] -&gt; ShowS
 OptionalInterval -&gt; String
 (Int -&gt; OptionalInterval -&gt; ShowS)
@@ -134,7 +134,7 @@ show :: OptionalInterval -&gt; String
 $cshow :: OptionalInterval -&gt; String
 showsPrec :: Int -&gt; OptionalInterval -&gt; ShowS
 $cshowsPrec :: Int -&gt; OptionalInterval -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507963"><span id="local-6989586621689507965"><span class="annot"><span class="annottext">OptionalInterval -&gt; OptionalInterval -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516403"><span id="local-6989586621689516405"><span class="annot"><span class="annottext">OptionalInterval -&gt; OptionalInterval -&gt; Bool
 (OptionalInterval -&gt; OptionalInterval -&gt; Bool)
 -&gt; (OptionalInterval -&gt; OptionalInterval -&gt; Bool)
 -&gt; Eq OptionalInterval
@@ -151,45 +151,45 @@ $c== :: OptionalInterval -&gt; OptionalInterval -&gt; Bool
 </span><span id="line-97"></span><span>  </span><span class="annot"><span class="annottext">Milliseconds
 </span><span class="hs-number">0</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OptionalInterval
 </span><a href="Hasura.Server.Init.Config.html#Skip"><span class="hs-identifier hs-var">Skip</span></a></span><span>
-</span><span id="line-98"></span><span>  </span><span id="local-6989586621689507962"><span class="annot"><span class="annottext">Milliseconds
-</span><a href="#local-6989586621689507962"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; OptionalInterval
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621689516402"><span class="annot"><span class="annottext">Milliseconds
+</span><a href="#local-6989586621689516402"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; OptionalInterval
 </span><a href="Hasura.Server.Init.Config.html#Interval"><span class="hs-identifier hs-var">Interval</span></a></span><span> </span><span class="annot"><span class="annottext">Milliseconds
-</span><a href="#local-6989586621689507962"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689516402"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689507959"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#OptionalInterval"><span class="hs-identifier hs-type">OptionalInterval</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621689507957"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OptionalInterval
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621689507955"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689507955"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; OptionalInterval
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689516399"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#OptionalInterval"><span class="hs-identifier hs-type">OptionalInterval</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621689516397"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OptionalInterval
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span id="local-6989586621689516395"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689516395"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; OptionalInterval
 </span><a href="Hasura.Server.Init.Config.html#msToOptionalInterval"><span class="hs-identifier hs-var">msToOptionalInterval</span></a></span><span> </span><span class="annot"><span class="annottext">(Milliseconds -&gt; OptionalInterval)
 -&gt; Parser Milliseconds -&gt; Parser OptionalInterval
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser Milliseconds
 forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689507955"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689516395"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689507947"><span id="local-6989586621689507949"><span id="local-6989586621689507951"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#OptionalInterval"><span class="hs-identifier hs-type">OptionalInterval</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-104"></span><span>  </span><span id="local-6989586621689507945"><span class="annot"><span class="annottext">toJSON :: OptionalInterval -&gt; Value
+</span><span id="line-103"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689516387"><span id="local-6989586621689516389"><span id="local-6989586621689516391"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#OptionalInterval"><span class="hs-identifier hs-type">OptionalInterval</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621689516385"><span class="annot"><span class="annottext">toJSON :: OptionalInterval -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-105"></span><span>    </span><span class="annot"><span class="annottext">OptionalInterval
 </span><a href="Hasura.Server.Init.Config.html#Skip"><span class="hs-identifier hs-var">Skip</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Data.Time.Clock.Units.html#Milliseconds"><span class="hs-identifier hs-type">Milliseconds</span></a></span><span> </span><span class="annot"><span class="annottext">Milliseconds
 </span><span class="hs-number">0</span></span><span>
-</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Interval"><span class="hs-identifier hs-type">Interval</span></a></span><span> </span><span id="local-6989586621689507943"><span class="annot"><span class="annottext">Milliseconds
-</span><a href="#local-6989586621689507943"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; Value
+</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#Interval"><span class="hs-identifier hs-type">Interval</span></a></span><span> </span><span id="local-6989586621689516383"><span class="annot"><span class="annottext">Milliseconds
+</span><a href="#local-6989586621689516383"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Milliseconds -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">Milliseconds
-</span><a href="#local-6989586621689507943"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621689516383"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span id="local-6989586621689507941"><span id="local-6989586621689507942"></span></span><span class="hs-keyword">data</span><span> </span><span id="API"><span class="annot"><a href="Hasura.Server.Init.Config.html#API"><span class="hs-identifier hs-var">API</span></a></span></span><span>
+</span><span id="line-108"></span><span id="local-6989586621689516381"><span id="local-6989586621689516382"></span></span><span class="hs-keyword">data</span><span> </span><span id="API"><span class="annot"><a href="Hasura.Server.Init.Config.html#API"><span class="hs-identifier hs-var">API</span></a></span></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="METADATA"><span class="annot"><a href="Hasura.Server.Init.Config.html#METADATA"><span class="hs-identifier hs-var">METADATA</span></a></span></span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="GRAPHQL"><span class="annot"><a href="Hasura.Server.Init.Config.html#GRAPHQL"><span class="hs-identifier hs-var">GRAPHQL</span></a></span></span><span>
 </span><span id="line-111"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGDUMP"><span class="annot"><a href="Hasura.Server.Init.Config.html#PGDUMP"><span class="hs-identifier hs-var">PGDUMP</span></a></span></span><span>
 </span><span id="line-112"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DEVELOPER"><span class="annot"><a href="Hasura.Server.Init.Config.html#DEVELOPER"><span class="hs-identifier hs-var">DEVELOPER</span></a></span></span><span>
 </span><span id="line-113"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CONFIG"><span class="annot"><a href="Hasura.Server.Init.Config.html#CONFIG"><span class="hs-identifier hs-var">CONFIG</span></a></span></span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="METRICS"><span class="annot"><a href="Hasura.Server.Init.Config.html#METRICS"><span class="hs-identifier hs-var">METRICS</span></a></span></span><span>
-</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507929"><span id="local-6989586621689507931"><span id="local-6989586621689507933"><span class="annot"><span class="annottext">Int -&gt; API -&gt; ShowS
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516369"><span id="local-6989586621689516371"><span id="local-6989586621689516373"><span class="annot"><span class="annottext">Int -&gt; API -&gt; ShowS
 [API] -&gt; ShowS
 API -&gt; String
 (Int -&gt; API -&gt; ShowS)
@@ -202,14 +202,14 @@ show :: API -&gt; String
 $cshow :: API -&gt; String
 showsPrec :: Int -&gt; API -&gt; ShowS
 $cshowsPrec :: Int -&gt; API -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507925"><span id="local-6989586621689507927"><span class="annot"><span class="annottext">API -&gt; API -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516365"><span id="local-6989586621689516367"><span class="annot"><span class="annottext">API -&gt; API -&gt; Bool
 (API -&gt; API -&gt; Bool) -&gt; (API -&gt; API -&gt; Bool) -&gt; Eq API
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: API -&gt; API -&gt; Bool
 $c/= :: API -&gt; API -&gt; Bool
 == :: API -&gt; API -&gt; Bool
 $c== :: API -&gt; API -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507917"><span id="local-6989586621689507919"><span id="local-6989586621689507921"><span id="local-6989586621689507923"><span class="annot"><span class="annottext">ReadPrec [API]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516357"><span id="local-6989586621689516359"><span id="local-6989586621689516361"><span id="local-6989586621689516363"><span class="annot"><span class="annottext">ReadPrec [API]
 ReadPrec API
 Int -&gt; ReadS API
 ReadS [API]
@@ -236,15 +236,15 @@ $cto :: forall x. Rep API x -&gt; API
 $cfrom :: forall x. API -&gt; Rep API x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-116"></span><span>
-</span><span id="line-117"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689507901"><span id="local-6989586621689507903"><span id="local-6989586621689507905"><span id="local-6989586621689507907"><span id="local-6989586621689507909"><span id="local-6989586621689507911"><span class="hs-identifier">J.deriveJSON</span><span>
+</span><span id="line-117"></span><span class="hs-special">$(</span><span> </span><span id="local-6989586621689516341"><span id="local-6989586621689516343"><span id="local-6989586621689516345"><span id="local-6989586621689516347"><span id="local-6989586621689516349"><span id="local-6989586621689516351"><span class="hs-identifier">J.deriveJSON</span><span>
 </span><span id="line-118"></span><span>     </span><span class="hs-special">(</span><span class="hs-identifier">J.defaultOptions</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">map</span><span> </span><span class="hs-identifier">toLower</span><span class="hs-special">}</span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>     </span><span class="hs-special">''</span><span class="hs-identifier">API</span></span></span></span></span></span></span><span>
 </span><span id="line-120"></span><span> </span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689507896"><span id="local-6989586621689507898"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#API"><span class="hs-identifier hs-type">API</span></a></span></span></span><span>
+</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689516336"><span id="local-6989586621689516338"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#API"><span class="hs-identifier hs-type">API</span></a></span></span></span><span>
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span class="hs-comment">-- | The Serve Command options accumulated from the arg parser and env.</span><span>
-</span><span id="line-125"></span><span class="hs-keyword">data</span><span> </span><span id="RawServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-var">RawServeOptions</span></a></span></span><span> </span><span id="local-6989586621689507894"><span class="annot"><a href="#local-6989586621689507894"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RawServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-var">RawServeOptions</span></a></span></span><span>
+</span><span id="line-125"></span><span class="hs-keyword">data</span><span> </span><span id="RawServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-var">RawServeOptions</span></a></span></span><span> </span><span id="local-6989586621689516334"><span class="annot"><a href="#local-6989586621689516334"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RawServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-var">RawServeOptions</span></a></span></span><span>
 </span><span id="line-126"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="rsoPort"><span class="annot"><span class="annottext">RawServeOptions impl -&gt; Maybe Int
 </span><a href="Hasura.Server.Init.Config.html#rsoPort"><span class="hs-identifier hs-var hs-var">rsoPort</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-127"></span><span>    </span><span id="rsoHost"><span class="annot"><span class="annottext">RawServeOptions impl -&gt; Maybe HostPreference
@@ -289,7 +289,7 @@ $cfrom :: forall x. API -&gt; Rep API x
 </span><span id="line-147"></span><span>    </span><span id="rsoEnableAllowlist"><span class="annot"><span class="annottext">RawServeOptions impl -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#rsoEnableAllowlist"><span class="hs-identifier hs-var hs-var">rsoEnableAllowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-148"></span><span>    </span><span id="rsoEnabledLogTypes"><span class="annot"><span class="annottext">RawServeOptions impl -&gt; Maybe [EngineLogType impl]
-</span><a href="Hasura.Server.Init.Config.html#rsoEnabledLogTypes"><span class="hs-identifier hs-var hs-var">rsoEnabledLogTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">L.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507894"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Server.Init.Config.html#rsoEnabledLogTypes"><span class="hs-identifier hs-var hs-var">rsoEnabledLogTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">L.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516334"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
 </span><span id="line-149"></span><span>    </span><span id="rsoLogLevel"><span class="annot"><span class="annottext">RawServeOptions impl -&gt; Maybe LogLevel
 </span><a href="Hasura.Server.Init.Config.html#rsoLogLevel"><span class="hs-identifier hs-var hs-var">rsoLogLevel</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Logging.html#LogLevel"><span class="hs-identifier hs-type">L.LogLevel</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-150"></span><span>    </span><span id="rsoDevMode"><span class="annot"><span class="annottext">RawServeOptions impl -&gt; Bool
@@ -368,7 +368,7 @@ a stable feature, so it was removed as an experimental feature but the code was 
 </span><span id="line-206"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="InternalErrorsAllRequests"><span class="annot"><a href="Hasura.Server.Init.Config.html#InternalErrorsAllRequests"><span class="hs-identifier hs-var">InternalErrorsAllRequests</span></a></span></span><span>
 </span><span id="line-207"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="InternalErrorsAdminOnly"><span class="annot"><a href="Hasura.Server.Init.Config.html#InternalErrorsAdminOnly"><span class="hs-identifier hs-var">InternalErrorsAdminOnly</span></a></span></span><span>
 </span><span id="line-208"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="InternalErrorsDisabled"><span class="annot"><a href="Hasura.Server.Init.Config.html#InternalErrorsDisabled"><span class="hs-identifier hs-var">InternalErrorsDisabled</span></a></span></span><span>
-</span><span id="line-209"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507844"><span id="local-6989586621689507846"><span id="local-6989586621689507848"><span class="annot"><span class="annottext">Int -&gt; ResponseInternalErrorsConfig -&gt; ShowS
+</span><span id="line-209"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516284"><span id="local-6989586621689516286"><span id="local-6989586621689516288"><span class="annot"><span class="annottext">Int -&gt; ResponseInternalErrorsConfig -&gt; ShowS
 [ResponseInternalErrorsConfig] -&gt; ShowS
 ResponseInternalErrorsConfig -&gt; String
 (Int -&gt; ResponseInternalErrorsConfig -&gt; ShowS)
@@ -383,7 +383,7 @@ show :: ResponseInternalErrorsConfig -&gt; String
 $cshow :: ResponseInternalErrorsConfig -&gt; String
 showsPrec :: Int -&gt; ResponseInternalErrorsConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; ResponseInternalErrorsConfig -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507840"><span id="local-6989586621689507842"><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516280"><span id="local-6989586621689516282"><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 -&gt; ResponseInternalErrorsConfig -&gt; Bool
 (ResponseInternalErrorsConfig
  -&gt; ResponseInternalErrorsConfig -&gt; Bool)
@@ -403,14 +403,14 @@ $c== :: ResponseInternalErrorsConfig
 </span><span id="line-210"></span><span>
 </span><span id="line-211"></span><span class="annot"><a href="Hasura.Server.Init.Config.html#shouldIncludeInternal"><span class="hs-identifier hs-type">shouldIncludeInternal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#RoleName"><span class="hs-identifier hs-type">RoleName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ResponseInternalErrorsConfig"><span class="hs-identifier hs-type">ResponseInternalErrorsConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-212"></span><span id="shouldIncludeInternal"><span class="annot"><span class="annottext">shouldIncludeInternal :: RoleName -&gt; ResponseInternalErrorsConfig -&gt; Bool
-</span><a href="Hasura.Server.Init.Config.html#shouldIncludeInternal"><span class="hs-identifier hs-var hs-var">shouldIncludeInternal</span></a></span></span><span> </span><span id="local-6989586621689507839"><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689507839"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="Hasura.Server.Init.Config.html#shouldIncludeInternal"><span class="hs-identifier hs-var hs-var">shouldIncludeInternal</span></a></span></span><span> </span><span id="local-6989586621689516279"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689516279"><span class="hs-keyword hs-var">role</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-213"></span><span>  </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsAllRequests"><span class="hs-identifier hs-var">InternalErrorsAllRequests</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-214"></span><span>  </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsAdminOnly"><span class="hs-identifier hs-var">InternalErrorsAdminOnly</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RoleName
-</span><a href="#local-6989586621689507839"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
+</span><a href="#local-6989586621689516279"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; RoleName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="Hasura.Session.html#adminRoleName"><span class="hs-identifier hs-var">adminRoleName</span></a></span><span>
@@ -420,7 +420,7 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span id="line-216"></span><span>
 </span><span id="line-217"></span><span class="hs-keyword">newtype</span><span> </span><span id="KeepAliveDelay"><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier hs-var">KeepAliveDelay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="KeepAliveDelay"><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier hs-var">KeepAliveDelay</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unKeepAliveDelay"><span class="annot"><span class="annottext">KeepAliveDelay -&gt; Seconds
 </span><a href="Hasura.Server.Init.Config.html#unKeepAliveDelay"><span class="hs-identifier hs-var hs-var">unKeepAliveDelay</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-218"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507832"><span id="local-6989586621689507834"><span class="annot"><span class="annottext">KeepAliveDelay -&gt; KeepAliveDelay -&gt; Bool
+</span><span id="line-218"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516272"><span id="local-6989586621689516274"><span class="annot"><span class="annottext">KeepAliveDelay -&gt; KeepAliveDelay -&gt; Bool
 (KeepAliveDelay -&gt; KeepAliveDelay -&gt; Bool)
 -&gt; (KeepAliveDelay -&gt; KeepAliveDelay -&gt; Bool) -&gt; Eq KeepAliveDelay
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -428,7 +428,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: KeepAliveDelay -&gt; KeepAliveDelay -&gt; Bool
 == :: KeepAliveDelay -&gt; KeepAliveDelay -&gt; Bool
 $c== :: KeepAliveDelay -&gt; KeepAliveDelay -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507826"><span id="local-6989586621689507828"><span id="local-6989586621689507830"><span class="annot"><span class="annottext">Int -&gt; KeepAliveDelay -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516266"><span id="local-6989586621689516268"><span id="local-6989586621689516270"><span class="annot"><span class="annottext">Int -&gt; KeepAliveDelay -&gt; ShowS
 [KeepAliveDelay] -&gt; ShowS
 KeepAliveDelay -&gt; String
 (Int -&gt; KeepAliveDelay -&gt; ShowS)
@@ -445,7 +445,7 @@ showsPrec :: Int -&gt; KeepAliveDelay -&gt; ShowS
 $cshowsPrec :: Int -&gt; KeepAliveDelay -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-219"></span><span>
-</span><span id="line-220"></span><span class="hs-special">$(</span><span id="local-6989586621689507814"><span id="local-6989586621689507816"><span id="local-6989586621689507818"><span id="local-6989586621689507820"><span id="local-6989586621689507822"><span id="local-6989586621689507824"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">KeepAliveDelay</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-220"></span><span class="hs-special">$(</span><span id="local-6989586621689516254"><span id="local-6989586621689516256"><span id="local-6989586621689516258"><span id="local-6989586621689516260"><span id="local-6989586621689516262"><span id="local-6989586621689516264"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">KeepAliveDelay</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-221"></span><span>
 </span><span id="line-222"></span><span class="annot"><a href="Hasura.Server.Init.Config.html#defaultKeepAliveDelay"><span class="hs-identifier hs-type">defaultKeepAliveDelay</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#KeepAliveDelay"><span class="hs-identifier hs-type">KeepAliveDelay</span></a></span><span>
 </span><span id="line-223"></span><span id="defaultKeepAliveDelay"><span class="annot"><span class="annottext">defaultKeepAliveDelay :: KeepAliveDelay
@@ -459,7 +459,7 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-224"></span><span>
 </span><span id="line-225"></span><span class="hs-keyword">newtype</span><span> </span><span id="WSConnectionInitTimeout"><span class="annot"><a href="Hasura.Server.Init.Config.html#WSConnectionInitTimeout"><span class="hs-identifier hs-var">WSConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WSConnectionInitTimeout"><span class="annot"><a href="Hasura.Server.Init.Config.html#WSConnectionInitTimeout"><span class="hs-identifier hs-var">WSConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unWSConnectionInitTimeout"><span class="annot"><span class="annottext">WSConnectionInitTimeout -&gt; Seconds
 </span><a href="Hasura.Server.Init.Config.html#unWSConnectionInitTimeout"><span class="hs-identifier hs-var hs-var">unWSConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Time.Clock.Units.html#Seconds"><span class="hs-identifier hs-type">Seconds</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-226"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507808"><span id="local-6989586621689507810"><span class="annot"><span class="annottext">WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Bool
+</span><span id="line-226"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516248"><span id="local-6989586621689516250"><span class="annot"><span class="annottext">WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Bool
 (WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Bool)
 -&gt; (WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Bool)
 -&gt; Eq WSConnectionInitTimeout
@@ -468,7 +468,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Bool
 == :: WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Bool
 $c== :: WSConnectionInitTimeout -&gt; WSConnectionInitTimeout -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507802"><span id="local-6989586621689507804"><span id="local-6989586621689507806"><span class="annot"><span class="annottext">Int -&gt; WSConnectionInitTimeout -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516242"><span id="local-6989586621689516244"><span id="local-6989586621689516246"><span class="annot"><span class="annottext">Int -&gt; WSConnectionInitTimeout -&gt; ShowS
 [WSConnectionInitTimeout] -&gt; ShowS
 WSConnectionInitTimeout -&gt; String
 (Int -&gt; WSConnectionInitTimeout -&gt; ShowS)
@@ -485,7 +485,7 @@ showsPrec :: Int -&gt; WSConnectionInitTimeout -&gt; ShowS
 $cshowsPrec :: Int -&gt; WSConnectionInitTimeout -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-227"></span><span>
-</span><span id="line-228"></span><span class="hs-special">$(</span><span id="local-6989586621689507790"><span id="local-6989586621689507792"><span id="local-6989586621689507794"><span id="local-6989586621689507796"><span id="local-6989586621689507798"><span id="local-6989586621689507800"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">WSConnectionInitTimeout</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-228"></span><span class="hs-special">$(</span><span id="local-6989586621689516230"><span id="local-6989586621689516232"><span id="local-6989586621689516234"><span id="local-6989586621689516236"><span id="local-6989586621689516238"><span id="local-6989586621689516240"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">WSConnectionInitTimeout</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-229"></span><span>
 </span><span id="line-230"></span><span class="annot"><a href="Hasura.Server.Init.Config.html#defaultWSConnectionInitTimeout"><span class="hs-identifier hs-type">defaultWSConnectionInitTimeout</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#WSConnectionInitTimeout"><span class="hs-identifier hs-type">WSConnectionInitTimeout</span></a></span><span>
 </span><span id="line-231"></span><span id="defaultWSConnectionInitTimeout"><span class="annot"><span class="annottext">defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
@@ -503,7 +503,7 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-235"></span><span class="hs-comment">-- | The final Serve Command options accummulated from the Arg Parser</span><span>
 </span><span id="line-236"></span><span class="hs-comment">-- and the Environment, fully processed and ready to apply when</span><span>
 </span><span id="line-237"></span><span class="hs-comment">-- running the server.</span><span>
-</span><span id="line-238"></span><span class="hs-keyword">data</span><span> </span><span id="ServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-var">ServeOptions</span></a></span></span><span> </span><span id="local-6989586621689507789"><span class="annot"><a href="#local-6989586621689507789"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-var">ServeOptions</span></a></span></span><span>
+</span><span id="line-238"></span><span class="hs-keyword">data</span><span> </span><span id="ServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-var">ServeOptions</span></a></span></span><span> </span><span id="local-6989586621689516229"><span class="annot"><a href="#local-6989586621689516229"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ServeOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-var">ServeOptions</span></a></span></span><span>
 </span><span id="line-239"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="soPort"><span class="annot"><span class="annottext">ServeOptions impl -&gt; Int
 </span><a href="Hasura.Server.Init.Config.html#soPort"><span class="hs-identifier hs-var hs-var">soPort</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
 </span><span id="line-240"></span><span>    </span><span id="soHost"><span class="annot"><span class="annottext">ServeOptions impl -&gt; HostPreference
@@ -541,7 +541,7 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-256"></span><span>    </span><span id="soEnableAllowlist"><span class="annot"><span class="annottext">ServeOptions impl -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#soEnableAllowlist"><span class="hs-identifier hs-var hs-var">soEnableAllowlist</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
 </span><span id="line-257"></span><span>    </span><span id="soEnabledLogTypes"><span class="annot"><span class="annottext">ServeOptions impl -&gt; HashSet (EngineLogType impl)
-</span><a href="Hasura.Server.Init.Config.html#soEnabledLogTypes"><span class="hs-identifier hs-var hs-var">soEnabledLogTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">L.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507789"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Server.Init.Config.html#soEnabledLogTypes"><span class="hs-identifier hs-var hs-var">soEnabledLogTypes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.HashSet</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">L.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516229"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-258"></span><span>    </span><span id="soLogLevel"><span class="annot"><span class="annottext">ServeOptions impl -&gt; LogLevel
 </span><a href="Hasura.Server.Init.Config.html#soLogLevel"><span class="hs-identifier hs-var hs-var">soLogLevel</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#LogLevel"><span class="hs-identifier hs-type">L.LogLevel</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-259"></span><span>    </span><span id="soResponseInternalErrorsConfig"><span class="annot"><span class="annottext">ServeOptions impl -&gt; ResponseInternalErrorsConfig
@@ -592,7 +592,7 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-284"></span><span>    </span><span id="dgoDryRun"><span class="annot"><span class="annottext">DowngradeOptions -&gt; Bool
 </span><a href="Hasura.Server.Init.Config.html#dgoDryRun"><span class="hs-identifier hs-var hs-var">dgoDryRun</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-285"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-286"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507739"><span id="local-6989586621689507741"><span id="local-6989586621689507743"><span class="annot"><span class="annottext">Int -&gt; DowngradeOptions -&gt; ShowS
+</span><span id="line-286"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516179"><span id="local-6989586621689516181"><span id="local-6989586621689516183"><span class="annot"><span class="annottext">Int -&gt; DowngradeOptions -&gt; ShowS
 [DowngradeOptions] -&gt; ShowS
 DowngradeOptions -&gt; String
 (Int -&gt; DowngradeOptions -&gt; ShowS)
@@ -607,7 +607,7 @@ show :: DowngradeOptions -&gt; String
 $cshow :: DowngradeOptions -&gt; String
 showsPrec :: Int -&gt; DowngradeOptions -&gt; ShowS
 $cshowsPrec :: Int -&gt; DowngradeOptions -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507735"><span id="local-6989586621689507737"><span class="annot"><span class="annottext">DowngradeOptions -&gt; DowngradeOptions -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516175"><span id="local-6989586621689516177"><span class="annot"><span class="annottext">DowngradeOptions -&gt; DowngradeOptions -&gt; Bool
 (DowngradeOptions -&gt; DowngradeOptions -&gt; Bool)
 -&gt; (DowngradeOptions -&gt; DowngradeOptions -&gt; Bool)
 -&gt; Eq DowngradeOptions
@@ -628,13 +628,13 @@ $c== :: DowngradeOptions -&gt; DowngradeOptions -&gt; Bool
 </span><span id="line-295"></span><span class="hs-comment">--</span><span>
 </span><span id="line-296"></span><span class="hs-comment">-- If it contains a 'Maybe PostgresRawConnInfo' then you have not yet</span><span>
 </span><span id="line-297"></span><span class="hs-comment">-- processed your arg parser results.</span><span>
-</span><span id="line-298"></span><span class="hs-keyword">data</span><span> </span><span id="PostgresConnInfo"><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">PostgresConnInfo</span></a></span></span><span> </span><span id="local-6989586621689508063"><span class="annot"><a href="#local-6989586621689508063"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresConnInfo"><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">PostgresConnInfo</span></a></span></span><span>
+</span><span id="line-298"></span><span class="hs-keyword">data</span><span> </span><span id="PostgresConnInfo"><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">PostgresConnInfo</span></a></span></span><span> </span><span id="local-6989586621689516503"><span class="annot"><a href="#local-6989586621689516503"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PostgresConnInfo"><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">PostgresConnInfo</span></a></span></span><span>
 </span><span id="line-299"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_pciDatabaseConn"><span class="annot"><span class="annottext">PostgresConnInfo a -&gt; a
-</span><a href="Hasura.Server.Init.Config.html#_pciDatabaseConn"><span class="hs-identifier hs-var hs-var">_pciDatabaseConn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689508063"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Server.Init.Config.html#_pciDatabaseConn"><span class="hs-identifier hs-var hs-var">_pciDatabaseConn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689516503"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-300"></span><span>    </span><span id="_pciRetries"><span class="annot"><span class="annottext">PostgresConnInfo a -&gt; Maybe Int
 </span><a href="Hasura.Server.Init.Config.html#_pciRetries"><span class="hs-identifier hs-var hs-var">_pciRetries</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
 </span><span id="line-301"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-302"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507726"><span id="local-6989586621689507728"><span id="local-6989586621689507730"><span class="annot"><span class="annottext">Int -&gt; PostgresConnInfo a -&gt; ShowS
+</span><span id="line-302"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516166"><span id="local-6989586621689516168"><span id="local-6989586621689516170"><span class="annot"><span class="annottext">Int -&gt; PostgresConnInfo a -&gt; ShowS
 [PostgresConnInfo a] -&gt; ShowS
 PostgresConnInfo a -&gt; String
 (Int -&gt; PostgresConnInfo a -&gt; ShowS)
@@ -652,7 +652,7 @@ show :: PostgresConnInfo a -&gt; String
 $cshow :: forall a. Show a =&gt; PostgresConnInfo a -&gt; String
 showsPrec :: Int -&gt; PostgresConnInfo a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; PostgresConnInfo a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507722"><span id="local-6989586621689507724"><span class="annot"><span class="annottext">PostgresConnInfo a -&gt; PostgresConnInfo a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516162"><span id="local-6989586621689516164"><span class="annot"><span class="annottext">PostgresConnInfo a -&gt; PostgresConnInfo a -&gt; Bool
 (PostgresConnInfo a -&gt; PostgresConnInfo a -&gt; Bool)
 -&gt; (PostgresConnInfo a -&gt; PostgresConnInfo a -&gt; Bool)
 -&gt; Eq (PostgresConnInfo a)
@@ -662,7 +662,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: forall a. Eq a =&gt; PostgresConnInfo a -&gt; PostgresConnInfo a -&gt; Bool
 == :: PostgresConnInfo a -&gt; PostgresConnInfo a -&gt; Bool
 $c== :: forall a. Eq a =&gt; PostgresConnInfo a -&gt; PostgresConnInfo a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507718"><span id="local-6989586621689507720"><span class="annot"><span class="annottext">a -&gt; PostgresConnInfo b -&gt; PostgresConnInfo a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516158"><span id="local-6989586621689516160"><span class="annot"><span class="annottext">a -&gt; PostgresConnInfo b -&gt; PostgresConnInfo a
 (a -&gt; b) -&gt; PostgresConnInfo a -&gt; PostgresConnInfo b
 (forall a b. (a -&gt; b) -&gt; PostgresConnInfo a -&gt; PostgresConnInfo b)
 -&gt; (forall a b. a -&gt; PostgresConnInfo b -&gt; PostgresConnInfo a)
@@ -676,7 +676,7 @@ forall (f :: * -&gt; *).
 $c&lt;$ :: forall a b. a -&gt; PostgresConnInfo b -&gt; PostgresConnInfo a
 fmap :: (a -&gt; b) -&gt; PostgresConnInfo a -&gt; PostgresConnInfo b
 $cfmap :: forall a b. (a -&gt; b) -&gt; PostgresConnInfo a -&gt; PostgresConnInfo b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507683"><span id="local-6989586621689507685"><span id="local-6989586621689507687"><span id="local-6989586621689507689"><span id="local-6989586621689507691"><span id="local-6989586621689507693"><span id="local-6989586621689507695"><span id="local-6989586621689507697"><span id="local-6989586621689507699"><span id="local-6989586621689507701"><span id="local-6989586621689507703"><span id="local-6989586621689507705"><span id="local-6989586621689507707"><span id="local-6989586621689507709"><span id="local-6989586621689507711"><span id="local-6989586621689507713"><span id="local-6989586621689507715"><span class="annot"><span class="annottext">PostgresConnInfo a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516123"><span id="local-6989586621689516125"><span id="local-6989586621689516127"><span id="local-6989586621689516129"><span id="local-6989586621689516131"><span id="local-6989586621689516133"><span id="local-6989586621689516135"><span id="local-6989586621689516137"><span id="local-6989586621689516139"><span id="local-6989586621689516141"><span id="local-6989586621689516143"><span id="local-6989586621689516145"><span id="local-6989586621689516147"><span id="local-6989586621689516149"><span id="local-6989586621689516151"><span id="local-6989586621689516153"><span id="local-6989586621689516155"><span class="annot"><span class="annottext">PostgresConnInfo a -&gt; Bool
 (a -&gt; m) -&gt; PostgresConnInfo a -&gt; m
 (a -&gt; b -&gt; b) -&gt; b -&gt; PostgresConnInfo a -&gt; b
 (forall m. Monoid m =&gt; PostgresConnInfo m -&gt; m)
@@ -761,7 +761,7 @@ foldMap :: (a -&gt; m) -&gt; PostgresConnInfo a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; PostgresConnInfo a -&gt; m
 fold :: PostgresConnInfo m -&gt; m
 $cfold :: forall m. Monoid m =&gt; PostgresConnInfo m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507672"><span id="local-6989586621689507674"><span id="local-6989586621689507676"><span id="local-6989586621689507678"><span class="annot"><span class="annottext">Functor PostgresConnInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516112"><span id="local-6989586621689516114"><span id="local-6989586621689516116"><span id="local-6989586621689516118"><span class="annot"><span class="annottext">Functor PostgresConnInfo
 Foldable PostgresConnInfo
 Functor PostgresConnInfo
 -&gt; Foldable PostgresConnInfo
@@ -823,7 +823,7 @@ $cp2Traversable :: Foldable PostgresConnInfo
 $cp1Traversable :: Functor PostgresConnInfo
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-303"></span><span>
-</span><span id="line-304"></span><span id="local-6989586621689507670"><span class="annot"><a href="Hasura.Server.Init.Config.html#pciDatabaseConn"><span class="hs-identifier hs-type">pciDatabaseConn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507670"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689507670"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-304"></span><span id="local-6989586621689516110"><span class="annot"><a href="Hasura.Server.Init.Config.html#pciDatabaseConn"><span class="hs-identifier hs-type">pciDatabaseConn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516110"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689516110"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-305"></span><span id="pciDatabaseConn"><span class="annot"><span class="annottext">pciDatabaseConn :: (a -&gt; f a) -&gt; PostgresConnInfo a -&gt; f (PostgresConnInfo a)
 </span><a href="Hasura.Server.Init.Config.html#pciDatabaseConn"><span class="hs-identifier hs-var hs-var">pciDatabaseConn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PostgresConnInfo a -&gt; a)
 -&gt; (PostgresConnInfo a -&gt; a -&gt; PostgresConnInfo a)
@@ -836,14 +836,14 @@ forall a. PostgresConnInfo a -&gt; a
 -&gt; (PostgresConnInfo a -&gt; a -&gt; PostgresConnInfo a)
 -&gt; Lens (PostgresConnInfo a) (PostgresConnInfo a) a a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689507669"><span class="annot"><span class="annottext">PostgresConnInfo a
-</span><a href="#local-6989586621689507669"><span class="hs-identifier hs-var">pci</span></a></span></span><span> </span><span id="local-6989586621689507668"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689507668"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo a
-</span><a href="#local-6989586621689507669"><span class="hs-identifier hs-var">pci</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_pciDatabaseConn :: a
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689516109"><span class="annot"><span class="annottext">PostgresConnInfo a
+</span><a href="#local-6989586621689516109"><span class="hs-identifier hs-var">pci</span></a></span></span><span> </span><span id="local-6989586621689516108"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689516108"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo a
+</span><a href="#local-6989586621689516109"><span class="hs-identifier hs-var">pci</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_pciDatabaseConn :: a
 </span><a href="Hasura.Server.Init.Config.html#_pciDatabaseConn"><span class="hs-identifier hs-var">_pciDatabaseConn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689507668"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689516108"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-306"></span><span>
-</span><span id="line-307"></span><span id="local-6989586621689507667"><span class="annot"><a href="Hasura.Server.Init.Config.html#pciRetries"><span class="hs-identifier hs-type">pciRetries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507667"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-307"></span><span id="local-6989586621689516107"><span class="annot"><a href="Hasura.Server.Init.Config.html#pciRetries"><span class="hs-identifier hs-type">pciRetries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516107"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span></span><span>
 </span><span id="line-308"></span><span id="pciRetries"><span class="annot"><span class="annottext">pciRetries :: (Maybe Int -&gt; f (Maybe Int))
 -&gt; PostgresConnInfo a -&gt; f (PostgresConnInfo a)
 </span><a href="Hasura.Server.Init.Config.html#pciRetries"><span class="hs-identifier hs-var hs-var">pciRetries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(PostgresConnInfo a -&gt; Maybe Int)
@@ -860,12 +860,12 @@ forall a. PostgresConnInfo a -&gt; Maybe Int
 -&gt; Lens
      (PostgresConnInfo a) (PostgresConnInfo a) (Maybe Int) (Maybe Int)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689507666"><span class="annot"><span class="annottext">PostgresConnInfo a
-</span><a href="#local-6989586621689507666"><span class="hs-identifier hs-var">pci</span></a></span></span><span> </span><span id="local-6989586621689507665"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689507665"><span class="hs-identifier hs-var">mi</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo a
-</span><a href="#local-6989586621689507666"><span class="hs-identifier hs-var">pci</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_pciRetries :: Maybe Int
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689516106"><span class="annot"><span class="annottext">PostgresConnInfo a
+</span><a href="#local-6989586621689516106"><span class="hs-identifier hs-var">pci</span></a></span></span><span> </span><span id="local-6989586621689516105"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689516105"><span class="hs-identifier hs-var">mi</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo a
+</span><a href="#local-6989586621689516106"><span class="hs-identifier hs-var">pci</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_pciRetries :: Maybe Int
 </span><a href="Hasura.Server.Init.Config.html#_pciRetries"><span class="hs-identifier hs-var">_pciRetries</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689507665"><span class="hs-identifier hs-var">mi</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689516105"><span class="hs-identifier hs-var">mi</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-309"></span><span>
 </span><span id="line-310"></span><span class="hs-comment">-- | Structured Postgres connection information as provided by the arg</span><span>
 </span><span id="line-311"></span><span class="hs-comment">-- parser or env vars.</span><span>
@@ -883,7 +883,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-318"></span><span>    </span><span id="connOptions"><span class="annot"><span class="annottext">PostgresRawConnDetails -&gt; Maybe String
 </span><a href="Hasura.Server.Init.Config.html#connOptions"><span class="hs-identifier hs-var hs-var">connOptions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
 </span><span id="line-319"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-320"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507654"><span id="local-6989586621689507656"><span class="annot"><span class="annottext">PostgresRawConnDetails -&gt; PostgresRawConnDetails -&gt; Bool
+</span><span id="line-320"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516094"><span id="local-6989586621689516096"><span class="annot"><span class="annottext">PostgresRawConnDetails -&gt; PostgresRawConnDetails -&gt; Bool
 (PostgresRawConnDetails -&gt; PostgresRawConnDetails -&gt; Bool)
 -&gt; (PostgresRawConnDetails -&gt; PostgresRawConnDetails -&gt; Bool)
 -&gt; Eq PostgresRawConnDetails
@@ -892,7 +892,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: PostgresRawConnDetails -&gt; PostgresRawConnDetails -&gt; Bool
 == :: PostgresRawConnDetails -&gt; PostgresRawConnDetails -&gt; Bool
 $c== :: PostgresRawConnDetails -&gt; PostgresRawConnDetails -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507646"><span id="local-6989586621689507648"><span id="local-6989586621689507650"><span id="local-6989586621689507652"><span class="annot"><span class="annottext">ReadPrec [PostgresRawConnDetails]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516086"><span id="local-6989586621689516088"><span id="local-6989586621689516090"><span id="local-6989586621689516092"><span class="annot"><span class="annottext">ReadPrec [PostgresRawConnDetails]
 ReadPrec PostgresRawConnDetails
 Int -&gt; ReadS PostgresRawConnDetails
 ReadS [PostgresRawConnDetails]
@@ -912,7 +912,7 @@ readList :: ReadS [PostgresRawConnDetails]
 $creadList :: ReadS [PostgresRawConnDetails]
 readsPrec :: Int -&gt; ReadS PostgresRawConnDetails
 $creadsPrec :: Int -&gt; ReadS PostgresRawConnDetails
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507640"><span id="local-6989586621689507642"><span id="local-6989586621689507644"><span class="annot"><span class="annottext">Int -&gt; PostgresRawConnDetails -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516080"><span id="local-6989586621689516082"><span id="local-6989586621689516084"><span class="annot"><span class="annottext">Int -&gt; PostgresRawConnDetails -&gt; ShowS
 [PostgresRawConnDetails] -&gt; ShowS
 PostgresRawConnDetails -&gt; String
 (Int -&gt; PostgresRawConnDetails -&gt; ShowS)
@@ -929,14 +929,14 @@ showsPrec :: Int -&gt; PostgresRawConnDetails -&gt; ShowS
 $cshowsPrec :: Int -&gt; PostgresRawConnDetails -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-321"></span><span>
-</span><span id="line-322"></span><span class="hs-special">$(</span><span id="local-6989586621689507628"><span id="local-6989586621689507630"><span id="local-6989586621689507632"><span id="local-6989586621689507634"><span id="local-6989586621689507636"><span id="local-6989586621689507638"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresRawConnDetails</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-322"></span><span class="hs-special">$(</span><span id="local-6989586621689516068"><span id="local-6989586621689516070"><span id="local-6989586621689516072"><span id="local-6989586621689516074"><span id="local-6989586621689516076"><span id="local-6989586621689516078"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonPrefix</span><span> </span><span class="hs-identifier">J.camelCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">PostgresRawConnDetails</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-323"></span><span>
 </span><span id="line-324"></span><span class="hs-comment">-- | Postgres Connection info can come in the form of a templated URI</span><span>
 </span><span id="line-325"></span><span class="hs-comment">-- string or structured data.</span><span>
 </span><span id="line-326"></span><span class="hs-keyword">data</span><span> </span><span id="PostgresRawConnInfo"><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnInfo"><span class="hs-identifier hs-var">PostgresRawConnInfo</span></a></span></span><span>
 </span><span id="line-327"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="PGConnDatabaseUrl"><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-var">PGConnDatabaseUrl</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span><span>
 </span><span id="line-328"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="PGConnDetails"><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-var">PGConnDetails</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-type">PostgresRawConnDetails</span></a></span><span>
-</span><span id="line-329"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507620"><span id="local-6989586621689507622"><span id="local-6989586621689507624"><span class="annot"><span class="annottext">Int -&gt; PostgresRawConnInfo -&gt; ShowS
+</span><span id="line-329"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516060"><span id="local-6989586621689516062"><span id="local-6989586621689516064"><span class="annot"><span class="annottext">Int -&gt; PostgresRawConnInfo -&gt; ShowS
 [PostgresRawConnInfo] -&gt; ShowS
 PostgresRawConnInfo -&gt; String
 (Int -&gt; PostgresRawConnInfo -&gt; ShowS)
@@ -951,7 +951,7 @@ show :: PostgresRawConnInfo -&gt; String
 $cshow :: PostgresRawConnInfo -&gt; String
 showsPrec :: Int -&gt; PostgresRawConnInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; PostgresRawConnInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507616"><span id="local-6989586621689507618"><span class="annot"><span class="annottext">PostgresRawConnInfo -&gt; PostgresRawConnInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516056"><span id="local-6989586621689516058"><span class="annot"><span class="annottext">PostgresRawConnInfo -&gt; PostgresRawConnInfo -&gt; Bool
 (PostgresRawConnInfo -&gt; PostgresRawConnInfo -&gt; Bool)
 -&gt; (PostgresRawConnInfo -&gt; PostgresRawConnInfo -&gt; Bool)
 -&gt; Eq PostgresRawConnInfo
@@ -991,11 +991,11 @@ forall b s a. (b -&gt; s) -&gt; (s -&gt; Maybe a) -&gt; Prism s s a b
      PostgresRawConnInfo PostgresRawConnInfo URLTemplate URLTemplate
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-336"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-type">PGConnDatabaseUrl</span></a></span><span> </span><span id="local-6989586621689507612"><span class="annot"><span class="annottext">URLTemplate
-</span><a href="#local-6989586621689507612"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; Maybe URLTemplate
+</span><span id="line-336"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-type">PGConnDatabaseUrl</span></a></span><span> </span><span id="local-6989586621689516052"><span class="annot"><span class="annottext">URLTemplate
+</span><a href="#local-6989586621689516052"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; Maybe URLTemplate
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">URLTemplate
-</span><a href="#local-6989586621689507612"><span class="hs-identifier hs-var">template</span></a></span><span>
+</span><a href="#local-6989586621689516052"><span class="hs-identifier hs-var">template</span></a></span><span>
 </span><span id="line-337"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-type">PGConnDetails</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresRawConnDetails
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe URLTemplate
 forall a. Maybe a
@@ -1031,11 +1031,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresRawConnDetails
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-342"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-type">PGConnDetails</span></a></span><span> </span><span id="local-6989586621689507611"><span class="annot"><span class="annottext">PostgresRawConnDetails
-</span><a href="#local-6989586621689507611"><span class="hs-identifier hs-var">prcd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresRawConnDetails -&gt; Maybe PostgresRawConnDetails
+</span><span id="line-342"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-type">PGConnDetails</span></a></span><span> </span><span id="local-6989586621689516051"><span class="annot"><span class="annottext">PostgresRawConnDetails
+</span><a href="#local-6989586621689516051"><span class="hs-identifier hs-var">prcd</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresRawConnDetails -&gt; Maybe PostgresRawConnDetails
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">PostgresRawConnDetails
-</span><a href="#local-6989586621689507611"><span class="hs-identifier hs-var">prcd</span></a></span><span>
+</span><a href="#local-6989586621689516051"><span class="hs-identifier hs-var">prcd</span></a></span><span>
 </span><span id="line-343"></span><span>
 </span><span id="line-344"></span><span class="annot"><a href="Hasura.Server.Init.Config.html#rawConnDetailsToUrl"><span class="hs-identifier hs-type">rawConnDetailsToUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-type">PostgresRawConnDetails</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.URL.Template.html#URLTemplate"><span class="hs-identifier hs-type">URLTemplate</span></a></span><span>
 </span><span id="line-345"></span><span id="rawConnDetailsToUrl"><span class="annot"><span class="annottext">rawConnDetailsToUrl :: PostgresRawConnDetails -&gt; URLTemplate
@@ -1051,7 +1051,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-347"></span><span>
 </span><span id="line-348"></span><span class="annot"><a href="Hasura.Server.Init.Config.html#rawConnDetailsToUrlText"><span class="hs-identifier hs-type">rawConnDetailsToUrlText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-type">PostgresRawConnDetails</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-349"></span><span id="rawConnDetailsToUrlText"><span class="annot"><span class="annottext">rawConnDetailsToUrlText :: PostgresRawConnDetails -&gt; Text
-</span><a href="Hasura.Server.Init.Config.html#rawConnDetailsToUrlText"><span class="hs-identifier hs-var hs-var">rawConnDetailsToUrlText</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-type">PostgresRawConnDetails</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689507605"><span id="local-6989586621689507606"><span id="local-6989586621689507607"><span id="local-6989586621689507608"><span id="local-6989586621689507609"><span id="local-6989586621689507610"><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.Server.Init.Config.html#rawConnDetailsToUrlText"><span class="hs-identifier hs-var hs-var">rawConnDetailsToUrlText</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-type">PostgresRawConnDetails</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689516045"><span id="local-6989586621689516046"><span id="local-6989586621689516047"><span id="local-6989586621689516048"><span id="local-6989586621689516049"><span id="local-6989586621689516050"><span class="annot"><span class="annottext">Int
 String
 Maybe String
 connOptions :: Maybe String
@@ -1066,7 +1066,7 @@ connPassword :: PostgresRawConnDetails -&gt; String
 connUser :: PostgresRawConnDetails -&gt; String
 connPort :: PostgresRawConnDetails -&gt; Int
 connHost :: PostgresRawConnDetails -&gt; String
-</span><a href="#local-6989586621689507605"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689516045"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-350"></span><span>  </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Text) -&gt; String -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1075,7 +1075,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;postgresql://&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689507608"><span class="hs-identifier hs-var">connUser</span></a></span><span>
+</span><a href="#local-6989586621689516048"><span class="hs-identifier hs-var">connUser</span></a></span><span>
 </span><span id="line-352"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1083,7 +1083,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-353"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689507607"><span class="hs-identifier hs-var">connPassword</span></a></span><span>
+</span><a href="#local-6989586621689516047"><span class="hs-identifier hs-var">connPassword</span></a></span><span>
 </span><span id="line-354"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1091,7 +1091,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-355"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689507610"><span class="hs-identifier hs-var">connHost</span></a></span><span>
+</span><a href="#local-6989586621689516050"><span class="hs-identifier hs-var">connHost</span></a></span><span>
 </span><span id="line-356"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1101,7 +1101,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689507609"><span class="hs-identifier hs-var">connPort</span></a></span><span>
+</span><a href="#local-6989586621689516049"><span class="hs-identifier hs-var">connPort</span></a></span><span>
 </span><span id="line-358"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -1109,7 +1109,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-359"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689507606"><span class="hs-identifier hs-var">connDatabase</span></a></span><span>
+</span><a href="#local-6989586621689516046"><span class="hs-identifier hs-var">connDatabase</span></a></span><span>
 </span><span id="line-360"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS -&gt; Maybe String -&gt; String
@@ -1119,19 +1119,19 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-string">&quot;?options=&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689507605"><span class="hs-identifier hs-var">connOptions</span></a></span><span>
+</span><a href="#local-6989586621689516045"><span class="hs-identifier hs-var">connOptions</span></a></span><span>
 </span><span id="line-361"></span><span>
 </span><span id="line-362"></span><span class="hs-comment">-- | The HGE Arg parser Command choices.</span><span>
 </span><span id="line-363"></span><span class="hs-comment">--</span><span>
 </span><span id="line-364"></span><span class="hs-comment">-- This is polymorphic so that we can pack either 'RawServeOptions' or</span><span>
 </span><span id="line-365"></span><span class="hs-comment">-- 'RawProServeOptions' in it.</span><span>
-</span><span id="line-366"></span><span class="hs-keyword">data</span><span> </span><span id="HGECommand"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-var">HGECommand</span></a></span></span><span> </span><span id="local-6989586621689508036"><span class="annot"><a href="#local-6989586621689508036"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-367"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="HCServe"><span class="annot"><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-var">HCServe</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689508036"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-366"></span><span class="hs-keyword">data</span><span> </span><span id="HGECommand"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-var">HGECommand</span></a></span></span><span> </span><span id="local-6989586621689516476"><span class="annot"><a href="#local-6989586621689516476"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-367"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="HCServe"><span class="annot"><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-var">HCServe</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689516476"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-368"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="HCExport"><span class="annot"><a href="Hasura.Server.Init.Config.html#HCExport"><span class="hs-identifier hs-var">HCExport</span></a></span></span><span>
 </span><span id="line-369"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="HCClean"><span class="annot"><a href="Hasura.Server.Init.Config.html#HCClean"><span class="hs-identifier hs-var">HCClean</span></a></span></span><span>
 </span><span id="line-370"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="HCVersion"><span class="annot"><a href="Hasura.Server.Init.Config.html#HCVersion"><span class="hs-identifier hs-var">HCVersion</span></a></span></span><span>
 </span><span id="line-371"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="HCDowngrade"><span class="annot"><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-var">HCDowngrade</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.Server.Init.Config.html#DowngradeOptions"><span class="hs-identifier hs-type">DowngradeOptions</span></a></span><span>
-</span><span id="line-372"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689507592"><span id="local-6989586621689507594"><span id="local-6989586621689507596"><span class="annot"><span class="annottext">Int -&gt; HGECommand a -&gt; ShowS
+</span><span id="line-372"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689516032"><span id="local-6989586621689516034"><span id="local-6989586621689516036"><span class="annot"><span class="annottext">Int -&gt; HGECommand a -&gt; ShowS
 [HGECommand a] -&gt; ShowS
 HGECommand a -&gt; String
 (Int -&gt; HGECommand a -&gt; ShowS)
@@ -1149,7 +1149,7 @@ show :: HGECommand a -&gt; String
 $cshow :: forall a. Show a =&gt; HGECommand a -&gt; String
 showsPrec :: Int -&gt; HGECommand a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; HGECommand a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689507588"><span id="local-6989586621689507590"><span class="annot"><span class="annottext">HGECommand a -&gt; HGECommand a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689516028"><span id="local-6989586621689516030"><span class="annot"><span class="annottext">HGECommand a -&gt; HGECommand a -&gt; Bool
 (HGECommand a -&gt; HGECommand a -&gt; Bool)
 -&gt; (HGECommand a -&gt; HGECommand a -&gt; Bool) -&gt; Eq (HGECommand a)
 forall a. Eq a =&gt; HGECommand a -&gt; HGECommand a -&gt; Bool
@@ -1160,7 +1160,7 @@ $c/= :: forall a. Eq a =&gt; HGECommand a -&gt; HGECommand a -&gt; Bool
 $c== :: forall a. Eq a =&gt; HGECommand a -&gt; HGECommand a -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-373"></span><span>
-</span><span id="line-374"></span><span id="local-6989586621689507587"><span class="annot"><a href="Hasura.Server.Init.Config.html#_HCServe"><span class="hs-identifier hs-type">_HCServe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Prism'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507587"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689507587"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-374"></span><span id="local-6989586621689516027"><span class="annot"><a href="Hasura.Server.Init.Config.html#_HCServe"><span class="hs-identifier hs-type">_HCServe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Prism'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516027"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689516027"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-375"></span><span id="_HCServe"><span class="annot"><span class="annottext">_HCServe :: p a (f a) -&gt; p (HGECommand a) (f (HGECommand a))
 </span><a href="Hasura.Server.Init.Config.html#_HCServe"><span class="hs-identifier hs-var hs-var">_HCServe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; HGECommand a)
 -&gt; (HGECommand a -&gt; Maybe a)
@@ -1169,27 +1169,27 @@ forall b s a. (b -&gt; s) -&gt; (s -&gt; Maybe a) -&gt; Prism s s a b
 </span><span class="hs-identifier hs-var">prism'</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; HGECommand a
 forall a. a -&gt; HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-var">HCServe</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-376"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-type">HCServe</span></a></span><span> </span><span id="local-6989586621689507586"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689507586"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
+</span><span id="line-376"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-type">HCServe</span></a></span><span> </span><span id="local-6989586621689516026"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689516026"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Maybe a
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689507586"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><a href="#local-6989586621689516026"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-377"></span><span>  </span><span class="annot"><span class="annottext">HGECommand a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Maybe a
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-378"></span><span>
 </span><span id="line-379"></span><span class="hs-comment">-- | HGE Options from the arg parser and the env.</span><span>
-</span><span id="line-380"></span><span class="hs-keyword">data</span><span> </span><span id="HGEOptionsRaw"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-var">HGEOptionsRaw</span></a></span></span><span> </span><span id="local-6989586621689508029"><span class="annot"><a href="#local-6989586621689508029"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HGEOptionsRaw"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-var">HGEOptionsRaw</span></a></span></span><span>
+</span><span id="line-380"></span><span class="hs-keyword">data</span><span> </span><span id="HGEOptionsRaw"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-var">HGEOptionsRaw</span></a></span></span><span> </span><span id="local-6989586621689516469"><span class="annot"><a href="#local-6989586621689516469"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HGEOptionsRaw"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-var">HGEOptionsRaw</span></a></span></span><span>
 </span><span id="line-381"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_horDatabaseUrl"><span class="annot"><span class="annottext">HGEOptionsRaw impl -&gt; PostgresConnInfo (Maybe PostgresRawConnInfo)
 </span><a href="Hasura.Server.Init.Config.html#_horDatabaseUrl"><span class="hs-identifier hs-var hs-var">_horDatabaseUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnInfo"><span class="hs-identifier hs-type">PostgresRawConnInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-382"></span><span>    </span><span id="_horMetadataDbUrl"><span class="annot"><span class="annottext">HGEOptionsRaw impl -&gt; Maybe String
 </span><a href="Hasura.Server.Init.Config.html#_horMetadataDbUrl"><span class="hs-identifier hs-var hs-var">_horMetadataDbUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-383"></span><span>    </span><span id="_horCommand"><span class="annot"><span class="annottext">HGEOptionsRaw impl -&gt; HGECommand impl
-</span><a href="Hasura.Server.Init.Config.html#_horCommand"><span class="hs-identifier hs-var hs-var">_horCommand</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689508029"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Server.Init.Config.html#_horCommand"><span class="hs-identifier hs-var hs-var">_horCommand</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516469"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-384"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-385"></span><span>
-</span><span id="line-386"></span><span id="local-6989586621689507581"><span class="annot"><a href="Hasura.Server.Init.Config.html#horDatabaseUrl"><span class="hs-identifier hs-type">horDatabaseUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507581"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnInfo"><span class="hs-identifier hs-type">PostgresRawConnInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-386"></span><span id="local-6989586621689516021"><span class="annot"><a href="Hasura.Server.Init.Config.html#horDatabaseUrl"><span class="hs-identifier hs-type">horDatabaseUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516021"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnInfo"><span class="hs-identifier hs-type">PostgresRawConnInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-387"></span><span id="horDatabaseUrl"><span class="annot"><span class="annottext">horDatabaseUrl :: (PostgresConnInfo (Maybe PostgresRawConnInfo)
  -&gt; f (PostgresConnInfo (Maybe PostgresRawConnInfo)))
 -&gt; HGEOptionsRaw impl -&gt; f (HGEOptionsRaw impl)
@@ -1224,14 +1224,14 @@ HGEOptionsRaw impl -&gt; PostgresConnInfo (Maybe PostgresRawConnInfo)
      (PostgresConnInfo (Maybe PostgresRawConnInfo))
      (PostgresConnInfo (Maybe PostgresRawConnInfo))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689507580"><span class="annot"><span class="annottext">HGEOptionsRaw impl
-</span><a href="#local-6989586621689507580"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689507579"><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresRawConnInfo)
-</span><a href="#local-6989586621689507579"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw impl
-</span><a href="#local-6989586621689507580"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_horDatabaseUrl :: PostgresConnInfo (Maybe PostgresRawConnInfo)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689516020"><span class="annot"><span class="annottext">HGEOptionsRaw impl
+</span><a href="#local-6989586621689516020"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689516019"><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresRawConnInfo)
+</span><a href="#local-6989586621689516019"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw impl
+</span><a href="#local-6989586621689516020"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_horDatabaseUrl :: PostgresConnInfo (Maybe PostgresRawConnInfo)
 </span><a href="Hasura.Server.Init.Config.html#_horDatabaseUrl"><span class="hs-identifier hs-var">_horDatabaseUrl</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresRawConnInfo)
-</span><a href="#local-6989586621689507579"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689516019"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-388"></span><span>
-</span><span id="line-389"></span><span id="local-6989586621689507578"><span class="annot"><a href="Hasura.Server.Init.Config.html#horMetadataDbUrl"><span class="hs-identifier hs-type">horMetadataDbUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507578"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-389"></span><span id="local-6989586621689516018"><span class="annot"><a href="Hasura.Server.Init.Config.html#horMetadataDbUrl"><span class="hs-identifier hs-type">horMetadataDbUrl</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516018"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span></span><span>
 </span><span id="line-390"></span><span id="horMetadataDbUrl"><span class="annot"><span class="annottext">horMetadataDbUrl :: (Maybe String -&gt; f (Maybe String))
 -&gt; HGEOptionsRaw impl -&gt; f (HGEOptionsRaw impl)
 </span><a href="Hasura.Server.Init.Config.html#horMetadataDbUrl"><span class="hs-identifier hs-var hs-var">horMetadataDbUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HGEOptionsRaw impl -&gt; Maybe String)
@@ -1257,14 +1257,14 @@ forall impl. HGEOptionsRaw impl -&gt; Maybe String
      (Maybe String)
      (Maybe String)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689507577"><span class="annot"><span class="annottext">HGEOptionsRaw impl
-</span><a href="#local-6989586621689507577"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689507576"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689507576"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw impl
-</span><a href="#local-6989586621689507577"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_horMetadataDbUrl :: Maybe String
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689516017"><span class="annot"><span class="annottext">HGEOptionsRaw impl
+</span><a href="#local-6989586621689516017"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689516016"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621689516016"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw impl
+</span><a href="#local-6989586621689516017"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_horMetadataDbUrl :: Maybe String
 </span><a href="Hasura.Server.Init.Config.html#_horMetadataDbUrl"><span class="hs-identifier hs-var">_horMetadataDbUrl</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621689507576"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689516016"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-391"></span><span>
-</span><span id="line-392"></span><span id="local-6989586621689507575"><span class="annot"><a href="Hasura.Server.Init.Config.html#horCommand"><span class="hs-identifier hs-type">horCommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507575"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507575"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-392"></span><span id="local-6989586621689516015"><span class="annot"><a href="Hasura.Server.Init.Config.html#horCommand"><span class="hs-identifier hs-type">horCommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516015"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516015"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-393"></span><span id="horCommand"><span class="annot"><span class="annottext">horCommand :: (HGECommand impl -&gt; f (HGECommand impl))
 -&gt; HGEOptionsRaw impl -&gt; f (HGEOptionsRaw impl)
 </span><a href="Hasura.Server.Init.Config.html#horCommand"><span class="hs-identifier hs-var hs-var">horCommand</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HGEOptionsRaw impl -&gt; HGECommand impl)
@@ -1290,24 +1290,24 @@ forall impl. HGEOptionsRaw impl -&gt; HGECommand impl
      (HGECommand impl)
      (HGECommand impl)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689507574"><span class="annot"><span class="annottext">HGEOptionsRaw impl
-</span><a href="#local-6989586621689507574"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689507573"><span class="annot"><span class="annottext">HGECommand impl
-</span><a href="#local-6989586621689507573"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw impl
-</span><a href="#local-6989586621689507574"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_horCommand :: HGECommand impl
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689516014"><span class="annot"><span class="annottext">HGEOptionsRaw impl
+</span><a href="#local-6989586621689516014"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689516013"><span class="annot"><span class="annottext">HGECommand impl
+</span><a href="#local-6989586621689516013"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw impl
+</span><a href="#local-6989586621689516014"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_horCommand :: HGECommand impl
 </span><a href="Hasura.Server.Init.Config.html#_horCommand"><span class="hs-identifier hs-var">_horCommand</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HGECommand impl
-</span><a href="#local-6989586621689507573"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689516013"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-394"></span><span>
 </span><span id="line-395"></span><span class="hs-comment">-- | The final processed HGE options.</span><span>
-</span><span id="line-396"></span><span class="hs-keyword">data</span><span> </span><span id="HGEOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-var">HGEOptions</span></a></span></span><span> </span><span id="local-6989586621689508017"><span class="annot"><a href="#local-6989586621689508017"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HGEOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-var">HGEOptions</span></a></span></span><span>
+</span><span id="line-396"></span><span class="hs-keyword">data</span><span> </span><span id="HGEOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-var">HGEOptions</span></a></span></span><span> </span><span id="local-6989586621689516457"><span class="annot"><a href="#local-6989586621689516457"><span class="hs-identifier hs-type">impl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HGEOptions"><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-var">HGEOptions</span></a></span></span><span>
 </span><span id="line-397"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_hoDatabaseUrl"><span class="annot"><span class="annottext">HGEOptions impl -&gt; PostgresConnInfo (Maybe UrlConf)
 </span><a href="Hasura.Server.Init.Config.html#_hoDatabaseUrl"><span class="hs-identifier hs-var hs-var">_hoDatabaseUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#UrlConf"><span class="hs-identifier hs-type">UrlConf</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-398"></span><span>    </span><span id="_hoMetadataDbUrl"><span class="annot"><span class="annottext">HGEOptions impl -&gt; Maybe String
 </span><a href="Hasura.Server.Init.Config.html#_hoMetadataDbUrl"><span class="hs-identifier hs-var hs-var">_hoMetadataDbUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-399"></span><span>    </span><span id="_hoCommand"><span class="annot"><span class="annottext">HGEOptions impl -&gt; HGECommand impl
-</span><a href="Hasura.Server.Init.Config.html#_hoCommand"><span class="hs-identifier hs-var hs-var">_hoCommand</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689508017"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Server.Init.Config.html#_hoCommand"><span class="hs-identifier hs-var hs-var">_hoCommand</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516457"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-400"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-401"></span><span>
-</span><span id="line-402"></span><span id="local-6989586621689507568"><span class="annot"><a href="Hasura.Server.Init.Config.html#hoCommand"><span class="hs-identifier hs-type">hoCommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-type">HGEOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507568"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689507568"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-402"></span><span id="local-6989586621689516008"><span class="annot"><a href="Hasura.Server.Init.Config.html#hoCommand"><span class="hs-identifier hs-type">hoCommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-type">HGEOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516008"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">HGECommand</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689516008"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-403"></span><span id="hoCommand"><span class="annot"><span class="annottext">hoCommand :: (HGECommand impl -&gt; f (HGECommand impl))
 -&gt; HGEOptions impl -&gt; f (HGEOptions impl)
 </span><a href="Hasura.Server.Init.Config.html#hoCommand"><span class="hs-identifier hs-var hs-var">hoCommand</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HGEOptions impl -&gt; HGECommand impl)
@@ -1333,10 +1333,10 @@ forall impl. HGEOptions impl -&gt; HGECommand impl
      (HGECommand impl)
      (HGECommand impl)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689507567"><span class="annot"><span class="annottext">HGEOptions impl
-</span><a href="#local-6989586621689507567"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689507566"><span class="annot"><span class="annottext">HGECommand impl
-</span><a href="#local-6989586621689507566"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptions impl
-</span><a href="#local-6989586621689507567"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_hoCommand :: HGECommand impl
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689516007"><span class="annot"><span class="annottext">HGEOptions impl
+</span><a href="#local-6989586621689516007"><span class="hs-identifier hs-var">hdu</span></a></span></span><span> </span><span id="local-6989586621689516006"><span class="annot"><span class="annottext">HGECommand impl
+</span><a href="#local-6989586621689516006"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HGEOptions impl
+</span><a href="#local-6989586621689516007"><span class="hs-identifier hs-var">hdu</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_hoCommand :: HGECommand impl
 </span><a href="Hasura.Server.Init.Config.html#_hoCommand"><span class="hs-identifier hs-var">_hoCommand</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HGECommand impl
-</span><a href="#local-6989586621689507566"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689516006"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-404"></span></pre></body></html>
