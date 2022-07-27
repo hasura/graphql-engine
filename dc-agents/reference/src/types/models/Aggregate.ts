@@ -6,5 +6,5 @@ import type { ColumnCountAggregate } from './ColumnCountAggregate';
 import type { SingleColumnAggregate } from './SingleColumnAggregate';
 import type { StarCountAggregate } from './StarCountAggregate';
 
-export type Aggregate = (SingleColumnAggregate | ColumnCountAggregate | StarCountAggregate);
+export type Aggregate = (ColumnCountAggregate | SingleColumnAggregate | StarCountAggregate);
 

@@ -5,7 +5,6 @@ module Test.DataConnector.MockAgent.AggregateQuerySpec
   )
 where
 
-import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
@@ -136,7 +135,7 @@ tests opts = describe "Nodes Tests" $ do
                             { _qFields =
                                 Just $
                                   KM.fromList
-                                    [ ("Artists_ArtistId", API.ColumnField (ValueWrapper (API.ColumnName "ArtistId"))),
+                                    [ ("Artists_ArtistId", API.ColumnField (API.ColumnName "ArtistId")),
                                       ( "nodes_Albums",
                                         API.RelField
                                           ( API.RelationshipField
@@ -145,12 +144,12 @@ tests opts = describe "Nodes Tests" $ do
                                                 { _qFields =
                                                     Just $
                                                       KM.fromList
-                                                        [ ("nodes_Title", API.ColumnField (ValueWrapper (API.ColumnName "Title")))
+                                                        [ ("nodes_Title", API.ColumnField (API.ColumnName "Title"))
                                                         ],
                                                   _qAggregates = Nothing,
                                                   _qLimit = Nothing,
                                                   _qOffset = Nothing,
-                                                  _qWhere = Just (API.And (ValueWrapper [])),
+                                                  _qWhere = Just (API.And []),
                                                   _qOrderBy = Nothing
                                                 }
                                           )
@@ -159,7 +158,7 @@ tests opts = describe "Nodes Tests" $ do
                               _qAggregates = Nothing,
                               _qLimit = Just 1,
                               _qOffset = Nothing,
-                              _qWhere = Just (API.And (ValueWrapper [])),
+                              _qWhere = Just (API.And []),
                               _qOrderBy = Nothing
                             }
                       }

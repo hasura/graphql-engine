@@ -769,24 +769,6 @@
         },
         "type": "object"
       },
-      "ColumnField": {
-        "properties": {
-          "column": {
-            "type": "string"
-          },
-          "type": {
-            "enum": [
-              "column"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "type",
-          "column"
-        ],
-        "type": "object"
-      },
       "RelationshipField": {
         "properties": {
           "query": {
@@ -804,34 +786,46 @@
           }
         },
         "required": [
-          "type",
           "relationship",
-          "query"
+          "query",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ColumnField": {
+        "properties": {
+          "column": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "type"
         ],
         "type": "object"
       },
       "Field": {
+        "discriminator": {
+          "mapping": {
+            "column": "ColumnField",
+            "relationship": "RelationshipField"
+          },
+          "propertyName": "type"
+        },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/ColumnField"
+            "$ref": "#/components/schemas/RelationshipField"
           },
           {
-            "$ref": "#/components/schemas/RelationshipField"
+            "$ref": "#/components/schemas/ColumnField"
           }
         ]
-      },
-      "SingleColumnAggregateFunction": {
-        "enum": [
-          "avg",
-          "max",
-          "min",
-          "stddev_pop",
-          "stddev_samp",
-          "sum",
-          "var_pop",
-          "var_samp"
-        ],
-        "type": "string"
       },
       "ColumnCountAggregate": {
         "properties": {
@@ -854,25 +848,24 @@
           }
         },
         "required": [
-          "type",
           "columns",
-          "distinct"
-        ],
-        "type": "object"
-      },
-      "StarCountAggregate": {
-        "properties": {
-          "type": {
-            "enum": [
-              "star_count"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
+          "distinct",
           "type"
         ],
         "type": "object"
+      },
+      "SingleColumnAggregateFunction": {
+        "enum": [
+          "avg",
+          "max",
+          "min",
+          "stddev_pop",
+          "stddev_samp",
+          "sum",
+          "var_pop",
+          "var_samp"
+        ],
+        "type": "string"
       },
       "SingleColumnAggregate": {
         "properties": {
@@ -891,57 +884,53 @@
           }
         },
         "required": [
-          "type",
           "function",
-          "column"
+          "column",
+          "type"
+        ],
+        "type": "object"
+      },
+      "StarCountAggregate": {
+        "properties": {
+          "type": {
+            "enum": [
+              "star_count"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
         ],
         "type": "object"
       },
       "Aggregate": {
+        "discriminator": {
+          "mapping": {
+            "column_count": "ColumnCountAggregate",
+            "single_column": "SingleColumnAggregate",
+            "star_count": "StarCountAggregate"
+          },
+          "propertyName": "type"
+        },
         "oneOf": [
           {
-            "$ref": "#/components/schemas/SingleColumnAggregate"
+            "$ref": "#/components/schemas/ColumnCountAggregate"
           },
           {
-            "$ref": "#/components/schemas/ColumnCountAggregate"
+            "$ref": "#/components/schemas/SingleColumnAggregate"
           },
           {
             "$ref": "#/components/schemas/StarCountAggregate"
           }
         ]
       },
-      "Expression": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/AndExpression"
-          },
-          {
-            "$ref": "#/components/schemas/OrExpression"
-          },
-          {
-            "$ref": "#/components/schemas/NotExpression"
-          },
-          {
-            "$ref": "#/components/schemas/ApplyBinaryComparisonOperator"
-          },
-          {
-            "$ref": "#/components/schemas/ApplyBinaryArrayComparisonExpression"
-          },
-          {
-            "$ref": "#/components/schemas/ApplyUnaryComparisonOperator"
-          }
-        ]
-      },
-      "BinaryComparisonOperator": {
+      "BinaryArrayComparisonOperator": {
         "additionalProperties": true,
         "anyOf": [
           {
             "enum": [
-              "less_than",
-              "less_than_or_equal",
-              "greater_than",
-              "greater_than_or_equal",
-              "equal"
+              "in"
             ],
             "type": "string"
           },
@@ -970,81 +959,7 @@
         ],
         "type": "object"
       },
-      "AnotherColumnComparison": {
-        "properties": {
-          "column": {
-            "$ref": "#/components/schemas/ComparisonColumn"
-          },
-          "type": {
-            "enum": [
-              "column"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "type",
-          "column"
-        ],
-        "type": "object"
-      },
-      "ScalarValueComparison": {
-        "properties": {
-          "type": {
-            "enum": [
-              "scalar"
-            ],
-            "type": "string"
-          },
-          "value": {
-            "$ref": "#/components/schemas/ScalarValue"
-          }
-        },
-        "required": [
-          "type",
-          "value"
-        ],
-        "type": "object"
-      },
-      "ComparisonValue": {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/AnotherColumnComparison"
-          },
-          {
-            "$ref": "#/components/schemas/ScalarValueComparison"
-          }
-        ]
-      },
-      "BinaryArrayComparisonOperator": {
-        "additionalProperties": true,
-        "anyOf": [
-          {
-            "enum": [
-              "in"
-            ],
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
-      "UnaryComparisonOperator": {
-        "additionalProperties": true,
-        "anyOf": [
-          {
-            "enum": [
-              "is_null"
-            ],
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
-      "ApplyBinaryArrayComparisonExpression": {
+      "ApplyBinaryArrayComparisonOperator": {
         "properties": {
           "column": {
             "$ref": "#/components/schemas/ComparisonColumn"
@@ -1066,12 +981,80 @@
           }
         },
         "required": [
-          "type",
           "operator",
           "column",
-          "values"
+          "values",
+          "type"
         ],
         "type": "object"
+      },
+      "Expression": {
+        "discriminator": {
+          "mapping": {
+            "and": "AndExpression",
+            "binary_arr_op": "ApplyBinaryArrayComparisonOperator",
+            "binary_op": "ApplyBinaryComparisonOperator",
+            "not": "NotExpression",
+            "or": "OrExpression",
+            "unary_op": "ApplyUnaryComparisonOperator"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ApplyBinaryArrayComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/OrExpression"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyUnaryComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/ApplyBinaryComparisonOperator"
+          },
+          {
+            "$ref": "#/components/schemas/NotExpression"
+          },
+          {
+            "$ref": "#/components/schemas/AndExpression"
+          }
+        ]
+      },
+      "OrExpression": {
+        "properties": {
+          "expressions": {
+            "items": {
+              "$ref": "#/components/schemas/Expression"
+            },
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "or"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "expressions",
+          "type"
+        ],
+        "type": "object"
+      },
+      "UnaryComparisonOperator": {
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "is_null"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
       },
       "ApplyUnaryComparisonOperator": {
         "properties": {
@@ -1089,11 +1072,82 @@
           }
         },
         "required": [
-          "type",
           "operator",
-          "column"
+          "column",
+          "type"
         ],
         "type": "object"
+      },
+      "BinaryComparisonOperator": {
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "less_than",
+              "less_than_or_equal",
+              "greater_than",
+              "greater_than_or_equal",
+              "equal"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "ScalarValueComparison": {
+        "properties": {
+          "type": {
+            "enum": [
+              "scalar"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ScalarValue"
+          }
+        },
+        "required": [
+          "value",
+          "type"
+        ],
+        "type": "object"
+      },
+      "AnotherColumnComparison": {
+        "properties": {
+          "column": {
+            "$ref": "#/components/schemas/ComparisonColumn"
+          },
+          "type": {
+            "enum": [
+              "column"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "column",
+          "type"
+        ],
+        "type": "object"
+      },
+      "ComparisonValue": {
+        "discriminator": {
+          "mapping": {
+            "column": "AnotherColumnComparison",
+            "scalar": "ScalarValueComparison"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ScalarValueComparison"
+          },
+          {
+            "$ref": "#/components/schemas/AnotherColumnComparison"
+          }
+        ]
       },
       "ApplyBinaryComparisonOperator": {
         "properties": {
@@ -1114,10 +1168,10 @@
           }
         },
         "required": [
-          "type",
           "operator",
           "column",
-          "value"
+          "value",
+          "type"
         ],
         "type": "object"
       },
@@ -1134,29 +1188,8 @@
           }
         },
         "required": [
-          "type",
-          "expression"
-        ],
-        "type": "object"
-      },
-      "OrExpression": {
-        "properties": {
-          "expressions": {
-            "items": {
-              "$ref": "#/components/schemas/Expression"
-            },
-            "type": "array"
-          },
-          "type": {
-            "enum": [
-              "or"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "type",
-          "expressions"
+          "expression",
+          "type"
         ],
         "type": "object"
       },
@@ -1176,8 +1209,8 @@
           }
         },
         "required": [
-          "type",
-          "expressions"
+          "expressions",
+          "type"
         ],
         "type": "object"
       },

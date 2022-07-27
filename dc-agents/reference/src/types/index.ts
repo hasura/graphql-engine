@@ -5,7 +5,7 @@
 export type { Aggregate } from './models/Aggregate';
 export type { AndExpression } from './models/AndExpression';
 export type { AnotherColumnComparison } from './models/AnotherColumnComparison';
-export type { ApplyBinaryArrayComparisonExpression } from './models/ApplyBinaryArrayComparisonExpression';
+export type { ApplyBinaryArrayComparisonOperator } from './models/ApplyBinaryArrayComparisonOperator';
 export type { ApplyBinaryComparisonOperator } from './models/ApplyBinaryComparisonOperator';
 export type { ApplyUnaryComparisonOperator } from './models/ApplyUnaryComparisonOperator';
 export type { BinaryArrayComparisonOperator } from './models/BinaryArrayComparisonOperator';

@@ -8,7 +8,6 @@ where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.List.NonEmpty qualified as NE
@@ -129,13 +128,13 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     KM.fromList
-                                      [ ("id", API.ColumnField (ValueWrapper (API.ColumnName "AlbumId"))),
-                                        ("title", API.ColumnField (ValueWrapper (API.ColumnName "Title")))
+                                      [ ("id", API.ColumnField (API.ColumnName "AlbumId")),
+                                        ("title", API.ColumnField (API.ColumnName "Title"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And (ValueWrapper [])),
+                                _qWhere = Just (API.And []),
                                 _qOrderBy = Nothing
                               }
                         }
@@ -191,13 +190,13 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     KM.fromList
-                                      [ ("id", API.ColumnField (ValueWrapper (API.ColumnName "AlbumId"))),
-                                        ("title", API.ColumnField (ValueWrapper (API.ColumnName "Title")))
+                                      [ ("id", API.ColumnField (API.ColumnName "AlbumId")),
+                                        ("title", API.ColumnField (API.ColumnName "Title"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 3,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And (ValueWrapper [])),
+                                _qWhere = Just (API.And []),
                                 _qOrderBy = Just (API.OrderBy (API.ColumnName "AlbumId") API.Ascending NE.:| [])
                               }
                         }

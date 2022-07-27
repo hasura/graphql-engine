@@ -1,6 +1,5 @@
 module Test.QuerySpec.BasicSpec (spec) where
 
-import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (ValueWrapper3))
 import Control.Arrow ((>>>))
 import Control.Lens (ix, (%~), (&), (.~), (^?))
 import Data.Aeson.KeyMap qualified as KeyMap
@@ -102,7 +101,7 @@ spec api sourceName config = describe "Basic Queries" $ do
 
   describe "Where" $ do
     it "can filter using an equality expression" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 2))))
+      let where' = ApplyBinaryComparisonOperator Equal (localComparisonColumn "AlbumId") (ScalarValue (Number 2))
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -113,7 +112,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can filter using an inequality expression" $ do
-      let where' = Not (ValueWrapper (ApplyBinaryComparisonOperator (ValueWrapper3 Equal (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 2))))))
+      let where' = Not (ApplyBinaryComparisonOperator Equal (localComparisonColumn "AlbumId") (ScalarValue (Number 2)))
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -124,7 +123,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can filter using an in expression" $ do
-      let where' = ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (localComparisonColumn "AlbumId") [Number 2, Number 3])
+      let where' = ApplyBinaryArrayComparisonOperator In (localComparisonColumn "AlbumId") [Number 2, Number 3]
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -135,7 +134,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can negate an in expression filter using a not expression" $ do
-      let where' = Not (ValueWrapper (ApplyBinaryArrayComparisonOperator (ValueWrapper3 In (localComparisonColumn "AlbumId") [Number 2, Number 3])))
+      let where' = Not (ApplyBinaryArrayComparisonOperator In (localComparisonColumn "AlbumId") [Number 2, Number 3])
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -146,9 +145,9 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can combine filters using an and expression" $ do
-      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (localComparisonColumn "ArtistId") (ScalarValue (ValueWrapper (Number 58))))
-      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (localComparisonColumn "Title") (ScalarValue (ValueWrapper (String "Stormbringer"))))
-      let where' = And (ValueWrapper [where1, where2])
+      let where1 = ApplyBinaryComparisonOperator Equal (localComparisonColumn "ArtistId") (ScalarValue (Number 58))
+      let where2 = ApplyBinaryComparisonOperator Equal (localComparisonColumn "Title") (ScalarValue (String "Stormbringer"))
+      let where' = And [where1, where2]
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -163,9 +162,9 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can combine filters using an or expression" $ do
-      let where1 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 2))))
-      let where2 = ApplyBinaryComparisonOperator (ValueWrapper3 Equal (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 3))))
-      let where' = Or (ValueWrapper [where1, where2])
+      let where1 = ApplyBinaryComparisonOperator Equal (localComparisonColumn "AlbumId") (ScalarValue (Number 2))
+      let where2 = ApplyBinaryComparisonOperator Equal (localComparisonColumn "AlbumId") (ScalarValue (Number 3))
+      let where' = Or [where1, where2]
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -176,7 +175,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can filter by applying the greater than operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 300))))
+      let where' = ApplyBinaryComparisonOperator GreaterThan (localComparisonColumn "AlbumId") (ScalarValue (Number 300))
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -187,7 +186,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can filter by applying the greater than or equal operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThanOrEqual (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 300))))
+      let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (localComparisonColumn "AlbumId") (ScalarValue (Number 300))
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -198,7 +197,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can filter by applying the less than operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThan (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 100))))
+      let where' = ApplyBinaryComparisonOperator LessThan (localComparisonColumn "AlbumId") (ScalarValue (Number 100))
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -209,7 +208,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can filter by applying the less than or equal operator" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 LessThanOrEqual (localComparisonColumn "AlbumId") (ScalarValue (ValueWrapper (Number 100))))
+      let where' = ApplyBinaryComparisonOperator LessThanOrEqual (localComparisonColumn "AlbumId") (ScalarValue (Number 100))
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -220,7 +219,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedAlbums `shouldBe` Nothing
 
     it "can filter using a greater than operator with a column comparison" $ do
-      let where' = ApplyBinaryComparisonOperator (ValueWrapper3 GreaterThan (localComparisonColumn "AlbumId") (AnotherColumn (ValueWrapper (localComparisonColumn "ArtistId"))))
+      let where' = ApplyBinaryComparisonOperator GreaterThan (localComparisonColumn "AlbumId") (AnotherColumn (localComparisonColumn "ArtistId"))
       let query = albumsQueryRequest & qrQuery . qWhere .~ Just where'
       receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
@@ -245,7 +244,7 @@ albumsQueryRequest =
    in QueryRequest tableName [] query
 
 columnField :: Text -> Field
-columnField = ColumnField . ValueWrapper . ColumnName
+columnField = ColumnField . ColumnName
 
 localComparisonColumn :: Text -> ComparisonColumn
 localComparisonColumn columnName = ComparisonColumn [] $ ColumnName columnName

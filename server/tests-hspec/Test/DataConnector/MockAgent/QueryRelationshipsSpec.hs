@@ -5,7 +5,6 @@ module Test.DataConnector.MockAgent.QueryRelationshipsSpec
   )
 where
 
-import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
@@ -146,7 +145,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     KM.fromList
-                                      [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name"))),
+                                      [ ("Name", API.ColumnField (API.ColumnName "Name")),
                                         ( "Genre",
                                           API.RelField
                                             ( API.RelationshipField
@@ -155,12 +154,12 @@ tests opts = do
                                                   { _qFields =
                                                       Just $
                                                         KM.fromList
-                                                          [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
+                                                          [ ("Name", API.ColumnField (API.ColumnName "Name"))
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
                                                     _qOffset = Nothing,
-                                                    _qWhere = Just (API.And (ValueWrapper [])),
+                                                    _qWhere = Just (API.And []),
                                                     _qOrderBy = Nothing
                                                   }
                                             )
@@ -173,12 +172,12 @@ tests opts = do
                                                   { _qFields =
                                                       Just $
                                                         KM.fromList
-                                                          [ ("Name", API.ColumnField (ValueWrapper (API.ColumnName "Name")))
+                                                          [ ("Name", API.ColumnField (API.ColumnName "Name"))
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
                                                     _qOffset = Nothing,
-                                                    _qWhere = Just (API.And (ValueWrapper [])),
+                                                    _qWhere = Just (API.And []),
                                                     _qOrderBy = Nothing
                                                   }
                                             )
@@ -187,7 +186,7 @@ tests opts = do
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
                                 _qOffset = Nothing,
-                                _qWhere = Just (API.And (ValueWrapper [])),
+                                _qWhere = Just (API.And []),
                                 _qOrderBy = Nothing
                               }
                         }

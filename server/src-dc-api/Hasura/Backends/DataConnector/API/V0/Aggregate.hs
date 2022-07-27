@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Aggregate
   ( Aggregate (..),
@@ -9,10 +8,10 @@ module Hasura.Backends.DataConnector.API.V0.Aggregate
   )
 where
 
-import Autodocodec.Extended
-import Control.Lens.TH (makePrisms)
+import Autodocodec
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
@@ -25,11 +24,11 @@ data SingleColumnAggregate = SingleColumnAggregate
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
 
-instance HasObjectCodec SingleColumnAggregate where
-  objectCodec =
-    SingleColumnAggregate
-      <$> requiredField "function" "The aggregation function" .= _scaFunction
-      <*> requiredField "column" "The column to apply the aggregation function to" .= _scaColumn
+singleColumnAggregateObjectCodec :: JSONObjectCodec SingleColumnAggregate
+singleColumnAggregateObjectCodec =
+  SingleColumnAggregate
+    <$> requiredField "function" "The aggregation function" .= _scaFunction
+    <*> requiredField "column" "The column to apply the aggregation function to" .= _scaColumn
 
 data SingleColumnAggregateFunction
   = Average
@@ -46,7 +45,7 @@ data SingleColumnAggregateFunction
 instance HasCodec SingleColumnAggregateFunction where
   codec =
     named "SingleColumnAggregateFunction" $
-      disjointStringConstCodec
+      stringConstCodec
         [ (Average, "avg"),
           (Max, "max"),
           (Min, "min"),
@@ -63,31 +62,31 @@ data ColumnCountAggregate = ColumnCountAggregate
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
 
-instance HasObjectCodec ColumnCountAggregate where
-  objectCodec =
-    ColumnCountAggregate
-      <$> requiredField "columns" "The columns to apply the count aggregate function to" .= _ccaColumns
-      <*> requiredField "distinct" "Whether or not only distinct items should be counted" .= _ccaDistinct
+columnCountAggregateObjectCodec :: JSONObjectCodec ColumnCountAggregate
+columnCountAggregateObjectCodec =
+  ColumnCountAggregate
+    <$> requiredField "columns" "The columns to apply the count aggregate function to" .= _ccaColumns
+    <*> requiredField "distinct" "Whether or not only distinct items should be counted" .= _ccaDistinct
 
 data Aggregate
   = SingleColumn SingleColumnAggregate
   | ColumnCount ColumnCountAggregate
   | StarCount
   deriving stock (Eq, Ord, Show, Generic, Data)
-
-$(makePrisms ''Aggregate)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Aggregate
 
 instance HasCodec Aggregate where
   codec =
-    named "Aggregate" $
-      sumTypeCodec
-        [ TypeAlternative "SingleColumnAggregate" "single_column" _SingleColumn,
-          TypeAlternative "ColumnCountAggregate" "column_count" _ColumnCount,
-          TypeAlternative "StarCountAggregate" "star_count" _StarCount
-        ]
-
-deriving via Autodocodec Aggregate instance FromJSON Aggregate
-
-deriving via Autodocodec Aggregate instance ToJSON Aggregate
-
-deriving via Autodocodec Aggregate instance ToSchema Aggregate
+    object "Aggregate" $
+      discriminatedUnionCodec "type" enc dec
+    where
+      enc = \case
+        SingleColumn sca -> ("single_column", mapToEncoder sca singleColumnAggregateObjectCodec)
+        ColumnCount cca -> ("column_count", mapToEncoder cca columnCountAggregateObjectCodec)
+        StarCount -> ("star_count", mapToEncoder () (pureCodec ()))
+      dec =
+        HashMap.fromList
+          [ ("single_column", ("SingleColumnAggregate", mapToDecoder SingleColumn singleColumnAggregateObjectCodec)),
+            ("column_count", ("ColumnCountAggregate", mapToDecoder ColumnCount columnCountAggregateObjectCodec)),
+            ("star_count", ("StarCountAggregate", mapToDecoder (const StarCount) (pureCodec ())))
+          ]

@@ -10,7 +10,7 @@ where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec.Extended
+import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
 import Data.Aeson (FromJSON, ToJSON)
@@ -50,4 +50,4 @@ data OrderType
 instance HasCodec OrderType where
   codec =
     named "OrderType" $
-      disjointStringConstCodec [(Ascending, "asc"), (Descending, "desc")]
+      stringConstCodec [(Ascending, "asc"), (Descending, "desc")]
