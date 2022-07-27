@@ -153,3 +153,58 @@ tests opts = do
               |]
 
       actual `shouldBe` expected
+
+    it "Fails on missing tables" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              errors:
+              - extensions:
+                  code: validation-failed
+                  path: $.selectionSet.random
+                message: |-
+                  field 'random' not found in type: 'query_root'
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  random {
+                    id
+                    name
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
+
+    it "Fails on missing fields" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              errors:
+              - extensions:
+                  code: validation-failed
+                  path: $.selectionSet.hasura_author.selectionSet.notPresentCol
+                message: |-
+                  field 'notPresentCol' not found in type: 'hasura_author'
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  hasura_author {
+                    id
+                    name
+                    notPresentCol
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
