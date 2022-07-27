@@ -2,6 +2,8 @@
 
 ## Next release
 
+- cli-migrations: add apply seeds if directory exists
+
 ### Introducing Apollo Federation v1 support (experimental)
 
 HGE can now be used as a subgraph in an Apollo federated graphql server.

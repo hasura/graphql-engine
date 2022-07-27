@@ -1,8 +1,8 @@
 # CLI Migrations
 
-This docker image provides a method to run migrations and metadata at docker entrypoint.
+This docker image provides a method to run migrations, metadata and seeds at docker entrypoint.
 A temporary server is booted, with the migrations API allowed, securely through localhost.
-Once migrations and metadata have been applied, the server will reboot in a secure mode for inbound graphql usage.
+Once migrations, metadata and seeds have been applied, the server will reboot in a secure mode for inbound graphql usage.
 
 See [./docker-entrypoint.sh](docker-entrypoint.sh)
 
@@ -15,6 +15,7 @@ See [./docker-entrypoint.sh](docker-entrypoint.sh)
   - [Configuration](#configuration)
     - [Migrations Directory (Optional)](#migrations-directory-optional)
     - [Metadata Directory (Optional)](#metadata-directory-optional)
+    - [Seeds Directory (Optional)](#seeds-directory-optional)
     - [Database (One of required)](#database-one-of-them-required)
     - [GraphQL Server (Optional)](#graphql-server-optional)
 
@@ -96,6 +97,16 @@ If it has been stored in a directory other than the default then it can be confi
 - `HASURA_GRAPHQL_METADATA_DIR` (default=`/hasura-metadata`)
 
   A path to the metadata directory.
+
+### Seeds Directory (Optional)
+
+Seeds are either mounted or built into the image.
+
+If it has been stored in a directory other than the default then it can be configured using the following:
+
+- `HASURA_GRAPHQL_SEEDS_DIR` (default=`/hasura-seeds`)
+
+  A path to the seeds directory.
 
 ### GraphQL Server (Optional)
 

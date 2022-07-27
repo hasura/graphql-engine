@@ -1,10 +1,10 @@
 .. meta::
    :description: Auto-apply migrations and metadata when the server starts
-   :keywords: hasura, docs, auto-apply, migration, metadata, server
+   :keywords: hasura, docs, auto-apply, migration, metadata, seeds, server
 
 .. _auto_apply_migrations:
 
-Auto-apply migrations/metadata when the server starts
+Auto-apply migrations/metadata/seeds when the server starts
 =====================================================
 
 .. contents:: Table of contents
@@ -16,7 +16,7 @@ Auto-apply migrations/metadata when the server starts
 ------------------------
 
 Hasura ships a special Docker image which can be used to
-automatically apply migrations/metadata when the server starts:
+automatically apply migrations/metadata/seeds when the server starts:
 
 .. code-block:: bash
 
@@ -32,21 +32,22 @@ used for running any other CI/CD scripts in your workflow.
 Applying migrations
 -------------------
 
-The ``migrations`` and ``metadata`` directories created by the Hasura CLI in a
-Hasura project can be mounted at the ``/hasura-migrations`` and ``/hasura-metadata``
+The ``migrations``, ``metadata`` and ``seeds`` directories created by the Hasura CLI in a
+Hasura project can be mounted at the ``/hasura-migrations``, ``/hasura-metadata`` and ``/hasura-seeds``
 path of this Docker container and the container's entry point script will apply the
-migrations and metadata before starting the server. If no directory is mounted at
-the designated paths, the server will start ignoring the migrations and/or metadata.
+migrations, metadata and seeds before starting the server. If no directory is mounted at
+the designated paths, the server will start ignoring the migrations and/or metadata and/or seeds.
 
-If you want to mount the migrations/metadata directories at some location other
+If you want to mount the migrations/metadata/seeds directories at some location other
 than the above, set the following environment variables:
 
 .. code-block:: bash
 
    HASURA_GRAPHQL_MIGRATIONS_DIR=/custom-path-for-migrations
    HASURA_GRAPHQL_METADATA_DIR=/custom-path-for-metadata
+   HASURA_GRAPHQL_SEEDS_DIR=/custom-path-for-seeds
 
-Once the migrations and metadata are applied, the container resumes operation as
+Once the migrations metadata and seeds are applied, the container resumes operation as
 a normal Hasura GraphQL engine server.
 
 Example:
@@ -57,6 +58,7 @@ Example:
    docker run -p 8080:8080 \
           -v /home/me/my-project/migrations:/hasura-migrations \
           -v /home/me/my-project/metadata:/hasura-metadata \
+          -v /home/me/my-project/seeds:/hasura-seeds \
           -e HASURA_GRAPHQL_DATABASE_URL=postgres://postgres:@postgres:5432/postgres \
           hasura/graphql-engine:<version>.cli-migrations-v3
 
