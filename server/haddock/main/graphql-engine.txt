@@ -28100,8 +28100,8 @@ SetTableCustomFields :: !SourceName -> !QualifiedTable -> !TableCustomRootFields
 runSetTableCustomFieldsQV2 :: (QErrM m, CacheRWM m, MetadataM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomization :: forall b m. (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) => SetTableCustomization b -> m EncJSON
 unTrackExistingTableOrViewP1 :: forall b m. (CacheRM m, QErrM m, Backend b) => UntrackTable b -> m ()
-unTrackExistingTableOrViewP2 :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b) => UntrackTable b -> m EncJSON
-runUntrackTableQ :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b) => UntrackTable b -> m EncJSON
+unTrackExistingTableOrViewP2 :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) => UntrackTable b -> m EncJSON
+runUntrackTableQ :: forall b m. (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) => UntrackTable b -> m EncJSON
 
 -- | Builds an initial table cache. Does not fill in permissions or event
 --   triggers, and the returned <tt>FieldInfoMap</tt>s only contain
