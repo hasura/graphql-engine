@@ -58,7 +58,7 @@ runDBQuery' requestId query fieldName _userInfo logger SourceConfig {..} action 
   withElapsedTime
     . Tracing.trace ("Data Connector backend query for root field " <>> fieldName)
     . Tracing.interpTraceT (liftEitherM . liftIO . runExceptT)
-    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager)
+    . flip runAgentClientT (AgentClientContext logger _scEndpoint _scManager _scTimeoutMicroseconds)
     $ action
 
 mkQueryLog ::
@@ -82,5 +82,5 @@ runDBQueryExplain' (DBStepInfo _ SourceConfig {..} _ action) =
   liftEitherM . liftIO
     . runExceptT
     . Tracing.runTraceTWithReporter Tracing.noReporter "explain"
-    . flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager)
+    . flip runAgentClientT (AgentClientContext nullLogger _scEndpoint _scManager _scTimeoutMicroseconds)
     $ action

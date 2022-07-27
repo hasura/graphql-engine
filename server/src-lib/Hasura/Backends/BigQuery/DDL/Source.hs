@@ -48,8 +48,9 @@ resolveSourceConfig ::
   BackendSourceKind 'BigQuery ->
   BackendConfig 'BigQuery ->
   Env.Environment ->
+  manager ->
   m (Either QErr BigQuerySourceConfig)
-resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _backendConfig env = runExceptT $ do
+resolveSourceConfig _logger _name BigQueryConnSourceConfig {..} _backendKind _backendConfig env _manager = runExceptT $ do
   eSA <- resolveConfigurationJson env _cscServiceAccount
   case eSA of
     Left e -> throw400 Unexpected $ T.pack e

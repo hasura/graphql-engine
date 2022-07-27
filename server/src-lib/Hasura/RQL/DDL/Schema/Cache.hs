@@ -355,6 +355,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         ArrowWriter (Seq CollectedInfo) arr,
         MonadIO m,
         MonadResolveSource m,
+        HasHttpManagerM m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),
@@ -366,10 +367,11 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         `arr` Maybe (SourceConfig b)
     getSourceConfigIfNeeded = Inc.cache proc (invalidationKeys, sourceName, sourceConfig, backendKind, backendConfig) -> do
       let metadataObj = MetadataObject (MOSource sourceName) $ toJSON sourceName
+      httpMgr <- bindA -< askHttpManager
       Inc.dependOn -< Inc.selectKeyD sourceName invalidationKeys
       (|
         withRecordInconsistency
-          ( liftEitherA <<< bindA -< resolveSourceConfig @b logger sourceName sourceConfig backendKind backendConfig env
+          ( liftEitherA <<< bindA -< resolveSourceConfig @b logger sourceName sourceConfig backendKind backendConfig env httpMgr
           )
         |) metadataObj
 
@@ -381,6 +383,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadIO m,
         MonadBaseControl IO m,
         MonadResolveSource m,
+        HasHttpManagerM m,
         BackendMetadata b
       ) =>
       ( Inc.Dependency (HashMap SourceName Inc.InvalidationKey),

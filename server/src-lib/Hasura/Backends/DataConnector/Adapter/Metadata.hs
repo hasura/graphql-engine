@@ -69,27 +69,27 @@ resolveSourceConfig' ::
   BackendSourceKind 'DataConnector ->
   DC.DataConnectorBackendConfig ->
   Environment ->
+  HTTP.Manager ->
   m (Either QErr DC.SourceConfig)
-resolveSourceConfig' logger sourceName csc@ConnSourceConfig {template, value = originalConfig} (DataConnectorKind dataConnectorName) backendConfig env = runExceptT do
+resolveSourceConfig' logger sourceName csc@ConnSourceConfig {template, timeout, value = originalConfig} (DataConnectorKind dataConnectorName) backendConfig env manager = runExceptT do
   DC.DataConnectorOptions {..} <-
     OMap.lookup dataConnectorName backendConfig
       `onNothing` throw400 DataConnectorError ("Data connector named " <> toTxt dataConnectorName <> " was not found in the data connector backend config")
 
   transformedConfig <- transformConnSourceConfig csc [("$session", J.object []), ("$env", J.toJSON env)] env
-  manager <- liftIO $ HTTP.newManager HTTP.defaultManagerSettings
 
   -- TODO: capabilities applies to all sources for an agent.
   -- We should be able to call it once per agent and store it in the SchemaCache
   API.CapabilitiesResponse {..} <-
     runTraceTWithReporter noReporter "capabilities"
-      . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
+      . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
       $ genericClient // API._capabilities
 
   validateConfiguration sourceName dataConnectorName crConfigSchemaResponse transformedConfig
 
   schemaResponse <-
     runTraceTWithReporter noReporter "resolve source"
-      . flip runAgentClientT (AgentClientContext logger _dcoUri manager)
+      . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
       $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
 
   pure
@@ -100,6 +100,7 @@ resolveSourceConfig' logger sourceName csc@ConnSourceConfig {template, value = o
         _scCapabilities = crCapabilities,
         _scSchema = schemaResponse,
         _scManager = manager,
+        _scTimeoutMicroseconds = (DC.sourceTimeoutMicroseconds <$> timeout),
         _scDataConnectorName = dataConnectorName
       }
 
