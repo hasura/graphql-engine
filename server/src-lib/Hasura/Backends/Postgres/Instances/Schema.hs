@@ -377,7 +377,7 @@ columnParser columnType (G.Nullability isNullable) = do
                   J.Null -> P.parseError $ "unexpected null value for type " <> toErrorValue name
                   value ->
                     runAesonParser (parsePGValue scalarType) value
-                      `onLeft` (P.parseErrorWith ParseFailed . toErrorMessage . qeError)
+                      `onLeft` (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError)
             }
     ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
       case nonEmpty (Map.toList enumValues) of

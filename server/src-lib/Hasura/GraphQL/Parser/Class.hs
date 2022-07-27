@@ -3,6 +3,7 @@ module Hasura.GraphQL.Parser.Class
   ( MonadSchema (..),
     memoize,
     MonadParse (..),
+    withPath,
     parseError,
   )
 where

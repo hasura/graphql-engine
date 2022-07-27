@@ -53,6 +53,7 @@ module Hasura.GraphQL.Parser
     jsonToGraphQL,
     valueToJSON,
     module Hasura.GraphQL.Parser.Class,
+    module Hasura.GraphQL.Parser.ErrorCode,
     module Hasura.GraphQL.Parser.Monad,
     module Hasura.GraphQL.Parser.Names,
     module Hasura.GraphQL.Parser.Schema,
@@ -62,6 +63,7 @@ where
 
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Parser.Directives
+import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Parser.Internal.Convert
 import Hasura.GraphQL.Parser.Internal.Parser
 import Hasura.GraphQL.Parser.Internal.Scalars

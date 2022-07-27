@@ -20,8 +20,8 @@ import Hasura.GraphQL.Execute.RemoteJoin.Collect qualified as RJ
 import Hasura.GraphQL.Execute.Resolve
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
-import Hasura.GraphQL.Parser
 import Hasura.GraphQL.Parser.Directives
+import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -95,9 +95,7 @@ convertQuerySelSet
       parseGraphQLQuery gqlContext varDefs (GH._grVariables gqlUnparsed) directives fields
 
     -- 2. Parse directives on the query
-    dirMap <-
-      runParse
-        (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
+    dirMap <- toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLQUERY) normalizedDirectives)
 
     let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
 

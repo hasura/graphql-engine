@@ -799,6 +799,7 @@ library
                      , Hasura.GraphQL.Parser.Collect
                      , Hasura.GraphQL.Parser.DirectiveName
                      , Hasura.GraphQL.Parser.Directives
+                     , Hasura.GraphQL.Parser.ErrorCode
                      , Hasura.GraphQL.Parser.Internal.Convert
                      , Hasura.GraphQL.Parser.Internal.Input
                      , Hasura.GraphQL.Parser.Internal.Parser
@@ -1057,6 +1058,7 @@ test-suite graphql-engine-tests
     Hasura.GraphQL.NamespaceSpec
     Hasura.GraphQL.Parser.DirectivesTest
     Hasura.GraphQL.Parser.MonadParseTest
+    Hasura.GraphQL.Parser.TestInstances
     Hasura.GraphQL.Parser.TestUtils
     Hasura.GraphQL.Schema.Build.UpdateSpec
     Hasura.GraphQL.Schema.RemoteTest

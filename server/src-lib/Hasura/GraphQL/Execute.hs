@@ -40,8 +40,8 @@ import Hasura.GraphQL.Execute.Types qualified as ET
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.ParameterizedQueryHash
 import Hasura.GraphQL.Parser.Directives
-import Hasura.GraphQL.Parser.Monad
 import Hasura.GraphQL.RemoteServer (execRemoteGQ)
+import Hasura.GraphQL.Schema.Parser (runParse, toQErr)
 import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
@@ -394,8 +394,7 @@ getResolvedExecPlan
           let parameterizedQueryHash = calculateParameterizedQueryHash normalizedSelectionSet
           -- Process directives on the subscription
           dirMap <-
-            runParse
-              (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
+            toQErr $ runParse (parseDirectives customDirectives (G.DLExecutable G.EDLSUBSCRIPTION) normalizedDirectives)
 
           -- A subscription should have exactly one root field.
           -- However, for testing purposes, we may allow several root fields; we check for this by

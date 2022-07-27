@@ -220,7 +220,7 @@ nodeField sourceCache = do
         let columnType = ciType columnInfo
         parsedValue <-
           parseScalarValueColumnType columnType columnValue `onLeft` \e ->
-            P.parseErrorWith ParseFailed $ "value of column " <> toErrorValue (ciColumn columnInfo) <> " in node id: " <> toErrorMessage (qeError e)
+            P.parseErrorWith P.ParseFailed $ "value of column " <> toErrorValue (ciColumn columnInfo) <> " in node id: " <> toErrorMessage (qeError e)
         pure $
           IR.BoolField $
             IR.AVColumn

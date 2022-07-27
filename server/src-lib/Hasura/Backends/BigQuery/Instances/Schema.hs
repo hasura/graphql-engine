@@ -217,7 +217,7 @@ bqColumnParser columnType (G.Nullability isNullable) =
             { pType = schemaType,
               pParser =
                 P.valueToJSON (P.toGraphQLType schemaType)
-                  >=> either (P.parseErrorWith ParseFailed . toErrorMessage . qeError) pure . runAesonParser J.parseJSON
+                  >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . runAesonParser J.parseJSON
             }
     stringBased :: MonadParse m => G.Name -> Parser 'Both m Text
     stringBased scalarName =

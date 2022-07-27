@@ -437,7 +437,7 @@ customScalarParser = \case
             -- well.
             void $
               parseScalarValue @b (unwrapScalar scalarType) jsonInput
-                `onLeft` \e -> parseErrorWith ParseFailed . toErrorMessage $ qeError e
+                `onLeft` \e -> parseErrorWith P.ParseFailed . toErrorMessage $ qeError e
             pure jsonInput
      in P.Parser
           { pType = schemaType,

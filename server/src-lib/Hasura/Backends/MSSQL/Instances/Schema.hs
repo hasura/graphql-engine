@@ -289,7 +289,7 @@ msColumnParser columnType (G.Nullability isNullable) =
               { pType = schemaType,
                 pParser =
                   P.valueToJSON (P.toGraphQLType schemaType)
-                    >=> either (P.parseErrorWith ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
+                    >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
               }
     ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
       case nonEmpty (Map.toList enumValues) of

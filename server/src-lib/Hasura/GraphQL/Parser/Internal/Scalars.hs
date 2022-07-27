@@ -24,6 +24,7 @@ where
 
 import Control.Monad ((>=>))
 import Data.Aeson qualified as A
+import Data.Aeson.Internal qualified as A.Internal
 import Data.Aeson.Types qualified as A
 import Data.Int (Int32, Int64)
 import Data.Scientific (Scientific)
@@ -33,9 +34,9 @@ import Data.Text qualified as Text
 import Data.Text.Read (decimal)
 import Data.UUID qualified as UUID
 import Hasura.Backends.Postgres.SQL.Value
-import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser.Class.Parse
+import Hasura.GraphQL.Parser.ErrorCode
 import Hasura.GraphQL.Parser.Internal.Convert
 import Hasura.GraphQL.Parser.Internal.TypeChecking
 import Hasura.GraphQL.Parser.Internal.Types
@@ -193,8 +194,7 @@ mkScalar name description parser =
   where
     schemaType = TNamed NonNullable $ Definition name description Nothing [] TIScalar
 
-convertWith ::
-  MonadParse m =>
-  (a -> A.Parser b) ->
-  (a -> m b)
-convertWith f x = either (parseErrorWith ParseFailed . toErrorMessage . qeError) pure $ runAesonParser f x
+convertWith :: MonadParse m => (a -> A.Parser b) -> a -> m b
+convertWith f x = case A.Internal.iparse f x of
+  A.Internal.IError path message -> withPath path $ parseErrorWith ParseFailed (toErrorMessage (Text.pack message))
+  A.Internal.ISuccess result -> pure result
