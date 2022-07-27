@@ -1557,3 +1557,9 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | retry_interval_seconds | false    | Integer | Number of seconds to wait between each retry. Default: 10                                                                                                                           |
 | timeout_seconds        | false    | Integer | Number of seconds to wait for response before timing out. Default: 60                                                                                                               |
 | tolerance_seconds      | false    | Integer | Number of seconds between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped. Default: 21600 (6 hours) |
+
+## ApolloFederationConfig {#apollofederationconfig}
+
+| Key    | required | Schema  | Description                                    |
+|--------|----------|---------|------------------------------------------------|
+| enable | true     | String  | Apollo federation version (can be `"v1"` only) |
