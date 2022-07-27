@@ -1,11 +1,12 @@
 import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
 import { FiSearch } from 'react-icons/fi';
 
 import { TemplateStoriesFactory } from '@/utils/StoryUtils';
 import { Button } from '@/new-components/Button/';
 
 <Meta
-  title="components/Button ✨"
+  title="components/Button ⚛️"
   component={Button}
   parameters={{
     docs: { source: { type: 'code' } },
@@ -21,7 +22,7 @@ import { Button } from '@/new-components/Button/';
   }}
 />
 
-# Button
+# Button ⚛️
 
 - [🧰 Overview](#-overview)
 - [🔁 States](#-states)
@@ -51,13 +52,17 @@ import { Button } from '@/new-components/Button';
 
 <Canvas>
   <Story name="Overview">
-    <Button mode={'primary'}>
+    <Button mode={'primary'} onClick={action('onClick')}>
       <span>The button label</span>
     </Button>
   </Story>
 </Canvas>
 
-export const Template = args => <Button {...args}>{args.content}</Button>;
+export const Template = args => (
+  <Button {...args} onClick={action('onClick')}>
+    {args.content}
+  </Button>
+);
 
 export const stories = {
   'States - Loading': {
