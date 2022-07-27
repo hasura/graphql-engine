@@ -1,0 +1,73 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hasura-error-message
+version:        1.0.0
+description:    An error message type that makes it difficult to convert back to text.
+homepage:       https://github.com/hasura/github-engine#readme
+bug-reports:    https://github.com/hasura/github-engine/issues
+author:         Hasura, Inc.
+maintainer:     Hasura, Inc.
+build-type:     Simple
+extra-source-files:
+    ../../../LICENSE
+
+source-repository head
+  type: git
+  location: https://github.com/hasura/github-engine
+
+library
+  exposed-modules:
+      Hasura.Base.ErrorMessage
+      Hasura.Base.ErrorValue
+      Hasura.Base.ToErrorValue
+  other-modules:
+      Paths_hasura_error_message
+  hs-source-dirs:
+      src
+  default-extensions:
+      BlockArguments
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      OverloadedStrings
+      ScopedTypeVariables
+  ghc-options: -Wall -Werror
+  build-depends:
+      aeson
+    , base
+    , graphql-parser
+    , text
+    , unordered-containers
+  default-language: Haskell2010
+
+test-suite tests
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Hasura.Base.ErrorMessageSpec
+      Paths_hasura_error_message
+  hs-source-dirs:
+      test
+  default-extensions:
+      BlockArguments
+      DerivingStrategies
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      OverloadedStrings
+      ScopedTypeVariables
+  ghc-options: -Wall -Werror -main-is Main
+  build-depends:
+      aeson
+    , base
+    , graphql-parser
+    , hashable
+    , hasura-error-message
+    , hspec
+    , text
+    , unordered-containers
+    , vector
+  default-language: Haskell2010

@@ -1,12 +1,13 @@
 -- | Error messages
 --
---   This module defines a type for user facing error messages.
+-- This module defines a type for user facing error messages.
 --
---   To construct a value of this type, use `toErrorMessage` or the 'IsString' interface,
---   the type class 'ToErrorValue' defined in the "Hasura.Base.ToErrorValue" module,
---   or use the utility functions defined in the "Hasura.Base.ErrorValue" module.
+-- To construct a value of this type, use `toErrorMessage` or the 'IsString'
+-- interface, the type class 'Hasura.Base.ToErrorValue' defined in the
+-- "Hasura.Base.ToErrorValue" module, or use the utility functions defined in
+-- the "Hasura.Base.ErrorValue" module.
 --
---   'ErrorMessage's can also be composed using the 'Semigroup' interface.
+-- 'ErrorMessage's can also be composed using the 'Semigroup' interface.
 module Hasura.Base.ErrorMessage
   ( ErrorMessage,
     toErrorMessage,
@@ -16,8 +17,8 @@ where
 
 import Data.Aeson
 import Data.String (IsString (..))
+import Data.Text (Text)
 import Data.Text qualified as Text
-import Hasura.Prelude
 
 -- | 'ErrorMessage' wraps a 'Text' value such that it's easy to build up,
 -- but difficult to break apart or extract the underlying text value.

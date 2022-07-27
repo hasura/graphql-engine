@@ -1,17 +1,30 @@
 cradle:
   cabal:
+    - path: "./server/src-dc-api"
+      component: "graphql-engine:lib:dc-api"
+    - path: "./server/tests-dc-api"
+      component: "graphql-engine:test:tests-dc-api"
+
     - path: "./server/src-lib"
       component: "graphql-engine:lib:graphql-engine"
     - path: "./server/src-exec"
       component: "graphql-engine:exe:graphql-engine"
     - path: "./server/src-test"
       component: "graphql-engine:test:graphql-engine-tests"
+
     - path: "./server/src-bench-cache"
       component: "graphql-engine:bench:cache"
     - path: "server/tests-hspec"
       component: "graphql-engine:test:tests-hspec"
+
     - path: "server/src-emit-metadata-openapi"
       component: "graphql-engine:exe:emit-metadata-openapi"
+
     - path: "server/lib/aeson-ordered/src"
-      component: "lib:aeson-ordered"
+      component: "aeson-ordered:lib:aeson-ordered"
+
+    - path: "server/lib/error-message/src"
+      component: "hasura-error-message:lib:hasura-error-message"
+    - path: "server/lib/error-message/test"
+      component: "hasura-error-message:test:tests"
 

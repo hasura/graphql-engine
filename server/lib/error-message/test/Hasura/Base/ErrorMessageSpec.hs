@@ -7,7 +7,10 @@ module Hasura.Base.ErrorMessageSpec (spec) where
 import Data.Aeson
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KeyMap
+import Data.HashSet (HashSet)
 import Data.HashSet qualified as HashSet
+import Data.Hashable (Hashable)
+import Data.List.NonEmpty (NonEmpty (..))
 import Data.Text qualified as Text
 import Data.Text.Lazy (unpack)
 import Data.Text.Lazy.Encoding (decodeUtf8)
@@ -15,10 +18,12 @@ import Data.Vector qualified as Vector
 import Hasura.Base.ErrorMessage
 import Hasura.Base.ErrorValue
 import Hasura.Base.ToErrorValue
-import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Hspec
+
+-- Suppress Hasura.Prelude warnings.
+{-# ANN module ("HLint: ignore Use tshow" :: String) #-}
 
 -- Orphan instance to avoid implementing `Show ErrorMessage` in production code.
 instance Show ErrorMessage where
@@ -53,7 +58,7 @@ spec =
           x = DoubleQuoted 'x'
           y = BacktickQuoted 'y'
           z = Parenthesized 'z'
-          message = sconcat $ "errors in " :| [toErrorValue w, ", ", toErrorValue x, ", ", toErrorValue y, ", and ", toErrorValue z]
+          message = "errors in " <> foldr1 (<>) [toErrorValue w, ", ", toErrorValue x, ", ", toErrorValue y, ", and ", toErrorValue z]
        in message `shouldBe` "errors in 'w', \"x\", `y`, and (z)"
 
     it "serializes GraphQL names" do
@@ -101,7 +106,7 @@ newtype Thing a = Thing a
   deriving newtype (Eq, Hashable)
 
 instance Show a => ToErrorValue (Thing a) where
-  toErrorValue (Thing x) = toErrorMessage $ "Thing " <> tshow x
+  toErrorValue (Thing x) = toErrorMessage $ "Thing " <> Text.pack (show x)
 
 newtype SingleQuoted = SingleQuoted Char
 
