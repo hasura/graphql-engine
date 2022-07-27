@@ -26,8 +26,8 @@
 </span><span id="line-26"></span><span class="hs-comment">-- Generated OpenAPI documentation for 'PlaceholderArray' will permit an array</span><span>
 </span><span id="line-27"></span><span class="hs-comment">-- of values of any type, and a note will be appended to the documentation</span><span>
 </span><span id="line-28"></span><span class="hs-comment">-- string for the value explaining that this is a temporary placeholder.</span><span>
-</span><span id="line-29"></span><span id="local-6989586621689352431"><span id="local-6989586621689352432"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PlaceholderArray"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-var">PlaceholderArray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PlaceholderArray"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-var">PlaceholderArray</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSON.Array</span></span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352424"><span id="local-6989586621689352426"><span id="local-6989586621689352428"><span class="annot"><span class="annottext">Int -&gt; PlaceholderArray -&gt; ShowS
+</span><span id="line-29"></span><span id="local-6989586621689352850"><span id="local-6989586621689352851"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PlaceholderArray"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-var">PlaceholderArray</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PlaceholderArray"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-var">PlaceholderArray</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSON.Array</span></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352843"><span id="local-6989586621689352845"><span id="local-6989586621689352847"><span class="annot"><span class="annottext">Int -&gt; PlaceholderArray -&gt; ShowS
 [PlaceholderArray] -&gt; ShowS
 PlaceholderArray -&gt; String
 (Int -&gt; PlaceholderArray -&gt; ShowS)
@@ -42,7 +42,7 @@ show :: PlaceholderArray -&gt; String
 $cshow :: PlaceholderArray -&gt; String
 showsPrec :: Int -&gt; PlaceholderArray -&gt; ShowS
 $cshowsPrec :: Int -&gt; PlaceholderArray -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352419"><span id="local-6989586621689352421"><span class="annot"><span class="annottext">PlaceholderArray -&gt; PlaceholderArray -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352838"><span id="local-6989586621689352840"><span class="annot"><span class="annottext">PlaceholderArray -&gt; PlaceholderArray -&gt; Bool
 (PlaceholderArray -&gt; PlaceholderArray -&gt; Bool)
 -&gt; (PlaceholderArray -&gt; PlaceholderArray -&gt; Bool)
 -&gt; Eq PlaceholderArray
@@ -51,7 +51,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: PlaceholderArray -&gt; PlaceholderArray -&gt; Bool
 == :: PlaceholderArray -&gt; PlaceholderArray -&gt; Bool
 $c== :: PlaceholderArray -&gt; PlaceholderArray -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352414"><span id="local-6989586621689352416"><span class="annot"><span class="annottext">Value -&gt; Parser [PlaceholderArray]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352833"><span id="local-6989586621689352835"><span class="annot"><span class="annottext">Value -&gt; Parser [PlaceholderArray]
 Value -&gt; Parser PlaceholderArray
 (Value -&gt; Parser PlaceholderArray)
 -&gt; (Value -&gt; Parser [PlaceholderArray])
@@ -62,7 +62,7 @@ parseJSONList :: Value -&gt; Parser [PlaceholderArray]
 $cparseJSONList :: Value -&gt; Parser [PlaceholderArray]
 parseJSON :: Value -&gt; Parser PlaceholderArray
 $cparseJSON :: Value -&gt; Parser PlaceholderArray
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352405"><span id="local-6989586621689352407"><span id="local-6989586621689352409"><span id="local-6989586621689352411"><span class="annot"><span class="annottext">[PlaceholderArray] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352824"><span id="local-6989586621689352826"><span id="local-6989586621689352828"><span id="local-6989586621689352830"><span class="annot"><span class="annottext">[PlaceholderArray] -&gt; Value
 [PlaceholderArray] -&gt; Encoding
 PlaceholderArray -&gt; Value
 PlaceholderArray -&gt; Encoding
@@ -96,7 +96,7 @@ forall a.
 $cto :: forall x. Rep PlaceholderArray x -&gt; PlaceholderArray
 $cfrom :: forall x. PlaceholderArray -&gt; Rep PlaceholderArray x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352398"><span class="annot"><span class="annottext">Typeable PlaceholderArray
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352817"><span class="annot"><span class="annottext">Typeable PlaceholderArray
 Typeable PlaceholderArray
 -&gt; (Proxy PlaceholderArray
     -&gt; Declare (Definitions Schema) NamedSchema)
@@ -116,8 +116,8 @@ $cp1ToSchema :: Typeable PlaceholderArray
 </span><span id="line-36"></span><span class="hs-comment">-- with any keys with any types of values. A note will be appended to the</span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- documentation string for the value explaining that this is a temporary</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- placeholder.</span><span>
-</span><span id="line-39"></span><span id="local-6989586621689352395"><span id="local-6989586621689352396"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PlaceholderObject"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-var">PlaceholderObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PlaceholderObject"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-var">PlaceholderObject</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSON.Object</span></span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352388"><span id="local-6989586621689352390"><span id="local-6989586621689352392"><span class="annot"><span class="annottext">Int -&gt; PlaceholderObject -&gt; ShowS
+</span><span id="line-39"></span><span id="local-6989586621689352814"><span id="local-6989586621689352815"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="PlaceholderObject"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-var">PlaceholderObject</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="PlaceholderObject"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-var">PlaceholderObject</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSON.Object</span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352807"><span id="local-6989586621689352809"><span id="local-6989586621689352811"><span class="annot"><span class="annottext">Int -&gt; PlaceholderObject -&gt; ShowS
 [PlaceholderObject] -&gt; ShowS
 PlaceholderObject -&gt; String
 (Int -&gt; PlaceholderObject -&gt; ShowS)
@@ -132,7 +132,7 @@ show :: PlaceholderObject -&gt; String
 $cshow :: PlaceholderObject -&gt; String
 showsPrec :: Int -&gt; PlaceholderObject -&gt; ShowS
 $cshowsPrec :: Int -&gt; PlaceholderObject -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352384"><span id="local-6989586621689352386"><span class="annot"><span class="annottext">PlaceholderObject -&gt; PlaceholderObject -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352803"><span id="local-6989586621689352805"><span class="annot"><span class="annottext">PlaceholderObject -&gt; PlaceholderObject -&gt; Bool
 (PlaceholderObject -&gt; PlaceholderObject -&gt; Bool)
 -&gt; (PlaceholderObject -&gt; PlaceholderObject -&gt; Bool)
 -&gt; Eq PlaceholderObject
@@ -141,7 +141,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: PlaceholderObject -&gt; PlaceholderObject -&gt; Bool
 == :: PlaceholderObject -&gt; PlaceholderObject -&gt; Bool
 $c== :: PlaceholderObject -&gt; PlaceholderObject -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352380"><span id="local-6989586621689352382"><span class="annot"><span class="annottext">Value -&gt; Parser [PlaceholderObject]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352799"><span id="local-6989586621689352801"><span class="annot"><span class="annottext">Value -&gt; Parser [PlaceholderObject]
 Value -&gt; Parser PlaceholderObject
 (Value -&gt; Parser PlaceholderObject)
 -&gt; (Value -&gt; Parser [PlaceholderObject])
@@ -152,7 +152,7 @@ parseJSONList :: Value -&gt; Parser [PlaceholderObject]
 $cparseJSONList :: Value -&gt; Parser [PlaceholderObject]
 parseJSON :: Value -&gt; Parser PlaceholderObject
 $cparseJSON :: Value -&gt; Parser PlaceholderObject
-</span><a href="#local-6989586621689352380"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352372"><span id="local-6989586621689352374"><span id="local-6989586621689352376"><span id="local-6989586621689352378"><span class="annot"><span class="annottext">[PlaceholderObject] -&gt; Value
+</span><a href="#local-6989586621689352799"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689352791"><span id="local-6989586621689352793"><span id="local-6989586621689352795"><span id="local-6989586621689352797"><span class="annot"><span class="annottext">[PlaceholderObject] -&gt; Value
 [PlaceholderObject] -&gt; Encoding
 PlaceholderObject -&gt; Value
 PlaceholderObject -&gt; Encoding
@@ -175,7 +175,7 @@ toEncoding :: PlaceholderObject -&gt; Encoding
 $ctoEncoding :: PlaceholderObject -&gt; Encoding
 toJSON :: PlaceholderObject -&gt; Value
 $ctoJSON :: PlaceholderObject -&gt; Value
-</span><a href="#local-6989586621689352372"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689352791"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. PlaceholderObject -&gt; Rep PlaceholderObject x)
 -&gt; (forall x. Rep PlaceholderObject x -&gt; PlaceholderObject)
 -&gt; Generic PlaceholderObject
@@ -186,7 +186,7 @@ forall a.
 $cto :: forall x. Rep PlaceholderObject x -&gt; PlaceholderObject
 $cfrom :: forall x. PlaceholderObject -&gt; Rep PlaceholderObject x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352367"><span class="annot"><span class="annottext">Typeable PlaceholderObject
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689352786"><span class="annot"><span class="annottext">Typeable PlaceholderObject
 Typeable PlaceholderObject
 -&gt; (Proxy PlaceholderObject
     -&gt; Declare (Definitions Schema) NamedSchema)
@@ -199,11 +199,11 @@ Typeable a
 declareNamedSchema :: Proxy PlaceholderObject -&gt; Declare (Definitions Schema) NamedSchema
 $cdeclareNamedSchema :: Proxy PlaceholderObject -&gt; Declare (Definitions Schema) NamedSchema
 $cp1ToSchema :: Typeable PlaceholderObject
-</span><a href="#local-6989586621689352367"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689352786"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689352364"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621689352362"><span class="annot"><span class="annottext">codec :: JSONCodec PlaceholderArray
-</span><a href="#local-6989586621689352362"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Array -&gt; PlaceholderArray)
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689352783"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621689352781"><span class="annot"><span class="annottext">codec :: JSONCodec PlaceholderArray
+</span><a href="#local-6989586621689352781"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Array -&gt; PlaceholderArray)
 -&gt; (PlaceholderArray -&gt; Array)
 -&gt; Codec Value Array Array
 -&gt; JSONCodec PlaceholderArray
@@ -213,8 +213,8 @@ forall oldOutput newOutput newInput oldInput context.
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">dimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Array -&gt; PlaceholderArray
-</span><a href="#local-6989586621689352361"><span class="hs-identifier hs-var">mapOutput</span></a></span><span> </span><span class="annot"><span class="annottext">PlaceholderArray -&gt; Array
-</span><a href="#local-6989586621689352360"><span class="hs-identifier hs-var">mapInput</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ValueCodec Value Value -&gt; Codec Value Array Array
+</span><a href="#local-6989586621689352780"><span class="hs-identifier hs-var">mapOutput</span></a></span><span> </span><span class="annot"><span class="annottext">PlaceholderArray -&gt; Array
+</span><a href="#local-6989586621689352779"><span class="hs-identifier hs-var">mapInput</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ValueCodec Value Value -&gt; Codec Value Array Array
 forall input output.
 ValueCodec input output
 -&gt; ValueCodec (Vector input) (Vector output)
@@ -223,39 +223,39 @@ ValueCodec input output
 forall input output.
 ValueCodec input output -&gt; Text -&gt; ValueCodec input output
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689352359"><span class="hs-identifier hs-var">documentation</span></a></span><span>
+</span><a href="#local-6989586621689352778"><span class="hs-identifier hs-var">documentation</span></a></span><span>
 </span><span id="line-46"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>      </span><span id="local-6989586621689352361"><span class="annot"><span class="annottext">mapOutput :: Array -&gt; PlaceholderArray
-</span><a href="#local-6989586621689352361"><span class="hs-identifier hs-var hs-var">mapOutput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Array -&gt; PlaceholderArray
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621689352780"><span class="annot"><span class="annottext">mapOutput :: Array -&gt; PlaceholderArray
+</span><a href="#local-6989586621689352780"><span class="hs-identifier hs-var hs-var">mapOutput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Array -&gt; PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-var">PlaceholderArray</span></a></span><span>
-</span><span id="line-48"></span><span>      </span><span id="local-6989586621689352360"><span class="annot"><span class="annottext">mapInput :: PlaceholderArray -&gt; Array
-</span><a href="#local-6989586621689352360"><span class="hs-identifier hs-var hs-var">mapInput</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span> </span><span id="local-6989586621689352358"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689352358"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689352358"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-49"></span><span>      </span><span id="local-6989586621689352359"><span class="annot"><span class="annottext">documentation :: Text
-</span><a href="#local-6989586621689352359"><span class="hs-identifier hs-var hs-var">documentation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-48"></span><span>      </span><span id="local-6989586621689352779"><span class="annot"><span class="annottext">mapInput :: PlaceholderArray -&gt; Array
+</span><a href="#local-6989586621689352779"><span class="hs-identifier hs-var hs-var">mapInput</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span> </span><span id="local-6989586621689352777"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689352777"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689352777"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-49"></span><span>      </span><span id="local-6989586621689352778"><span class="annot"><span class="annottext">documentation :: Text
+</span><a href="#local-6989586621689352778"><span class="hs-identifier hs-var hs-var">documentation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\n\narray of values of unspecified type - this is a placeholder that will eventually be replaced with a more detailed description&quot;</span></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689352355"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621689352354"><span class="annot"><span class="annottext">codec :: JSONCodec PlaceholderObject
-</span><a href="#local-6989586621689352354"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec PlaceholderObject
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689352774"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621689352773"><span class="annot"><span class="annottext">codec :: JSONCodec PlaceholderObject
+</span><a href="#local-6989586621689352773"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; JSONCodec PlaceholderObject
 forall a. (FromJSON a, ToJSON a) =&gt; Text -&gt; JSONCodec a
 </span><span class="hs-identifier hs-var">codecViaAeson</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\n\nobject with unspecified properties - this is a placeholder that will eventually be replaced with a more detailed description&quot;</span></span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span class="hs-keyword">class</span><span> </span><span id="IsPlaceholder"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#IsPlaceholder"><span class="hs-identifier hs-var">IsPlaceholder</span></a></span></span><span> </span><span id="local-6989586621689352441"><span class="annot"><a href="#local-6989586621689352441"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621689352442"><span class="annot"><a href="#local-6989586621689352442"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="#local-6989586621689352442"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689352441"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">class</span><span> </span><span id="IsPlaceholder"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#IsPlaceholder"><span class="hs-identifier hs-var">IsPlaceholder</span></a></span></span><span> </span><span id="local-6989586621689352860"><span class="annot"><a href="#local-6989586621689352860"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621689352861"><span class="annot"><a href="#local-6989586621689352861"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="#local-6989586621689352861"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689352860"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-comment">-- | Use this function to mark an Aeson type (Array or Object) as</span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-comment">-- a temporary placeholder in a larger data structure.</span><span>
-</span><span id="line-58"></span><span>  </span><span id="placeholder"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#placeholder"><span class="hs-identifier hs-type">placeholder</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689352442"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689352441"><span class="hs-identifier hs-type">p</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span id="placeholder"><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#placeholder"><span class="hs-identifier hs-type">placeholder</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689352861"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689352860"><span class="hs-identifier hs-type">p</span></a></span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#IsPlaceholder"><span class="hs-identifier hs-type">IsPlaceholder</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSON.Array</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-61"></span><span>  </span><span id="local-6989586621689352350"><span class="annot"><span class="annottext">placeholder :: Array -&gt; PlaceholderArray
-</span><a href="#local-6989586621689352350"><span class="hs-identifier hs-var hs-var hs-var hs-var">placeholder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Array -&gt; PlaceholderArray
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621689352769"><span class="annot"><span class="annottext">placeholder :: Array -&gt; PlaceholderArray
+</span><a href="#local-6989586621689352769"><span class="hs-identifier hs-var hs-var hs-var hs-var">placeholder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Array -&gt; PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-var">PlaceholderArray</span></a></span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#IsPlaceholder"><span class="hs-identifier hs-type">IsPlaceholder</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSON.Object</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621689352348"><span class="annot"><span class="annottext">placeholder :: Object -&gt; PlaceholderObject
-</span><a href="#local-6989586621689352348"><span class="hs-identifier hs-var hs-var hs-var hs-var">placeholder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Object -&gt; PlaceholderObject
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621689352767"><span class="annot"><span class="annottext">placeholder :: Object -&gt; PlaceholderObject
+</span><a href="#local-6989586621689352767"><span class="hs-identifier hs-var hs-var hs-var hs-var">placeholder</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Object -&gt; PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-var">PlaceholderObject</span></a></span><span>
 </span><span id="line-65"></span></pre></body></html>

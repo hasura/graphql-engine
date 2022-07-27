@@ -74,10 +74,10 @@ each input parser constructor needs to be able to parse both GraphQL values and
 JSON values, but fortunately, the duplication of logic is minimal. -}</span><span>
 </span><span id="line-75"></span><span>
 </span><span id="line-76"></span><span class="hs-comment">-- | See Note [Parsing variable values].</span><span>
-</span><span id="line-77"></span><span id="local-6989586621689378759"><span id="local-6989586621689378760"></span></span><span class="hs-keyword">data</span><span> </span><span id="InputValue"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-var">InputValue</span></a></span></span><span> </span><span id="local-6989586621689378758"><span class="annot"><a href="#local-6989586621689378758"><span class="hs-identifier hs-type">v</span></a></span></span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GraphQLValue"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-var">GraphQLValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><a href="#local-6989586621689378758"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span id="local-6989586621689379178"><span id="local-6989586621689379179"></span></span><span class="hs-keyword">data</span><span> </span><span id="InputValue"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-var">InputValue</span></a></span></span><span> </span><span id="local-6989586621689379177"><span class="annot"><a href="#local-6989586621689379177"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="GraphQLValue"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-var">GraphQLValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><a href="#local-6989586621689379177"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="JSONValue"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-var">JSONValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
-</span><span id="line-80"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378749"><span id="local-6989586621689378751"><span id="local-6989586621689378753"><span class="annot"><span class="annottext">Int -&gt; InputValue v -&gt; ShowS
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689379168"><span id="local-6989586621689379170"><span id="local-6989586621689379172"><span class="annot"><span class="annottext">Int -&gt; InputValue v -&gt; ShowS
 [InputValue v] -&gt; ShowS
 InputValue v -&gt; String
 (Int -&gt; InputValue v -&gt; ShowS)
@@ -95,7 +95,7 @@ show :: InputValue v -&gt; String
 $cshow :: forall v. Show v =&gt; InputValue v -&gt; String
 showsPrec :: Int -&gt; InputValue v -&gt; ShowS
 $cshowsPrec :: forall v. Show v =&gt; Int -&gt; InputValue v -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378744"><span id="local-6989586621689378746"><span class="annot"><span class="annottext">InputValue v -&gt; InputValue v -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379163"><span id="local-6989586621689379165"><span class="annot"><span class="annottext">InputValue v -&gt; InputValue v -&gt; Bool
 (InputValue v -&gt; InputValue v -&gt; Bool)
 -&gt; (InputValue v -&gt; InputValue v -&gt; Bool) -&gt; Eq (InputValue v)
 forall v. Eq v =&gt; InputValue v -&gt; InputValue v -&gt; Bool
@@ -104,7 +104,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: forall v. Eq v =&gt; InputValue v -&gt; InputValue v -&gt; Bool
 == :: InputValue v -&gt; InputValue v -&gt; Bool
 $c== :: forall v. Eq v =&gt; InputValue v -&gt; InputValue v -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378739"><span id="local-6989586621689378741"><span class="annot"><span class="annottext">a -&gt; InputValue b -&gt; InputValue a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379158"><span id="local-6989586621689379160"><span class="annot"><span class="annottext">a -&gt; InputValue b -&gt; InputValue a
 (a -&gt; b) -&gt; InputValue a -&gt; InputValue b
 (forall a b. (a -&gt; b) -&gt; InputValue a -&gt; InputValue b)
 -&gt; (forall a b. a -&gt; InputValue b -&gt; InputValue a)
@@ -129,7 +129,7 @@ forall v x. Rep (InputValue v) x -&gt; InputValue v
 forall v x. InputValue v -&gt; Rep (InputValue v) x
 $cto :: forall v x. Rep (InputValue v) x -&gt; InputValue v
 $cfrom :: forall v x. InputValue v -&gt; Rep (InputValue v) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378720"><span id="local-6989586621689378722"><span id="local-6989586621689378724"><span id="local-6989586621689378726"><span id="local-6989586621689378728"><span id="local-6989586621689378730"><span id="local-6989586621689378732"><span class="annot"><span class="annottext">Eq (InputValue v)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379139"><span id="local-6989586621689379141"><span id="local-6989586621689379143"><span id="local-6989586621689379145"><span id="local-6989586621689379147"><span id="local-6989586621689379149"><span id="local-6989586621689379151"><span class="annot"><span class="annottext">Eq (InputValue v)
 Eq (InputValue v)
 -&gt; (InputValue v -&gt; InputValue v -&gt; Ordering)
 -&gt; (InputValue v -&gt; InputValue v -&gt; Bool)
@@ -171,7 +171,7 @@ $c&lt; :: forall v. Ord v =&gt; InputValue v -&gt; InputValue v -&gt; Bool
 compare :: InputValue v -&gt; InputValue v -&gt; Ordering
 $ccompare :: forall v. Ord v =&gt; InputValue v -&gt; InputValue v -&gt; Ordering
 $cp1Ord :: forall v. Ord v =&gt; Eq (InputValue v)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378715"><span id="local-6989586621689378717"><span class="annot"><span class="annottext">InputValue v -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379134"><span id="local-6989586621689379136"><span class="annot"><span class="annottext">InputValue v -&gt; Q Exp
 InputValue v -&gt; Q (TExp (InputValue v))
 (InputValue v -&gt; Q Exp)
 -&gt; (InputValue v -&gt; Q (TExp (InputValue v))) -&gt; Lift (InputValue v)
@@ -184,11 +184,11 @@ lift :: InputValue v -&gt; Q Exp
 $clift :: forall v. Lift v =&gt; InputValue v -&gt; Q Exp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">TH.Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span id="local-6989586621689378713"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689378709"><span id="local-6989586621689378711"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689378713"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378713"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-82"></span><span id="local-6989586621689379132"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689379128"><span id="local-6989586621689379130"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="#local-6989586621689379132"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379132"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span id="local-6989586621689378707"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689378704"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378707"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689378707"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-84"></span><span id="local-6989586621689379126"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689379123"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379126"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689379126"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span id="local-6989586621689378701"><span id="local-6989586621689378702"></span></span><span class="hs-keyword">data</span><span> </span><span id="Variable"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Variable"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span>
+</span><span id="line-86"></span><span id="local-6989586621689379120"><span id="local-6989586621689379121"></span></span><span class="hs-keyword">data</span><span> </span><span id="Variable"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Variable"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-var">Variable</span></a></span></span><span>
 </span><span id="line-87"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="vInfo"><span class="annot"><span class="annottext">Variable -&gt; VariableInfo
 </span><a href="Hasura.GraphQL.Parser.Variable.html#vInfo"><span class="hs-identifier hs-var hs-var">vInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-type">VariableInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-88"></span><span>    </span><span id="vType"><span class="annot"><span class="annottext">Variable -&gt; GType
@@ -198,7 +198,7 @@ $clift :: forall v. Lift v =&gt; InputValue v -&gt; Q Exp
 </span><span id="line-91"></span><span>    </span><span id="vValue"><span class="annot"><span class="annottext">Variable -&gt; InputValue Void
 </span><a href="Hasura.GraphQL.Parser.Variable.html#vValue"><span class="hs-identifier hs-var hs-var">vValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378691"><span id="local-6989586621689378693"><span id="local-6989586621689378695"><span class="annot"><span class="annottext">Int -&gt; Variable -&gt; ShowS
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689379110"><span id="local-6989586621689379112"><span id="local-6989586621689379114"><span class="annot"><span class="annottext">Int -&gt; Variable -&gt; ShowS
 [Variable] -&gt; ShowS
 Variable -&gt; String
 (Int -&gt; Variable -&gt; ShowS)
@@ -211,7 +211,7 @@ show :: Variable -&gt; String
 $cshow :: Variable -&gt; String
 showsPrec :: Int -&gt; Variable -&gt; ShowS
 $cshowsPrec :: Int -&gt; Variable -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378687"><span id="local-6989586621689378689"><span class="annot"><span class="annottext">Variable -&gt; Variable -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379106"><span id="local-6989586621689379108"><span class="annot"><span class="annottext">Variable -&gt; Variable -&gt; Bool
 (Variable -&gt; Variable -&gt; Bool)
 -&gt; (Variable -&gt; Variable -&gt; Bool) -&gt; Eq Variable
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -227,7 +227,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Variable x -&gt; Variable
 $cfrom :: forall x. Variable -&gt; Rep Variable x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378670"><span id="local-6989586621689378672"><span id="local-6989586621689378674"><span id="local-6989586621689378676"><span id="local-6989586621689378678"><span id="local-6989586621689378680"><span id="local-6989586621689378682"><span class="annot"><span class="annottext">Eq Variable
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379089"><span id="local-6989586621689379091"><span id="local-6989586621689379093"><span id="local-6989586621689379095"><span id="local-6989586621689379097"><span id="local-6989586621689379099"><span id="local-6989586621689379101"><span class="annot"><span class="annottext">Eq Variable
 Eq Variable
 -&gt; (Variable -&gt; Variable -&gt; Ordering)
 -&gt; (Variable -&gt; Variable -&gt; Bool)
@@ -265,7 +265,7 @@ $c&lt; :: Variable -&gt; Variable -&gt; Bool
 compare :: Variable -&gt; Variable -&gt; Ordering
 $ccompare :: Variable -&gt; Variable -&gt; Ordering
 $cp1Ord :: Eq Variable
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378666"><span id="local-6989586621689378668"><span class="annot"><span class="annottext">Variable -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379085"><span id="local-6989586621689379087"><span class="annot"><span class="annottext">Variable -&gt; Q Exp
 Variable -&gt; Q (TExp Variable)
 (Variable -&gt; Q Exp)
 -&gt; (Variable -&gt; Q (TExp Variable)) -&gt; Lift Variable
@@ -276,12 +276,12 @@ lift :: Variable -&gt; Q Exp
 $clift :: Variable -&gt; Q Exp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">TH.Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689378662"><span id="local-6989586621689378664"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span></span><span>
+</span><span id="line-95"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689379081"><span id="local-6989586621689379083"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span></span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689378659"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span><span>
+</span><span id="line-97"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689379078"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span></span><span>
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Names.html#HasName"><span class="hs-identifier hs-type">HasName</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621689378656"><span class="annot"><span class="annottext">getName :: Variable -&gt; Name
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621689379075"><span class="annot"><span class="annottext">getName :: Variable -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Names.html#getName"><span class="hs-identifier hs-var hs-var hs-var hs-var">getName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">VariableInfo -&gt; Name
 forall a. HasName a =&gt; a -&gt; Name
 </span><a href="Hasura.GraphQL.Parser.Names.html#getName"><span class="hs-identifier hs-var">getName</span></a></span><span> </span><span class="annot"><span class="annottext">(VariableInfo -&gt; Name)
@@ -290,13 +290,13 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Variable -&gt; VariableInfo
 </span><a href="Hasura.GraphQL.Parser.Variable.html#vInfo"><span class="hs-identifier hs-var hs-var">vInfo</span></a></span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span id="local-6989586621689378652"><span id="local-6989586621689378653"></span></span><span class="hs-keyword">data</span><span> </span><span id="VariableInfo"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-var">VariableInfo</span></a></span></span><span>
+</span><span id="line-102"></span><span id="local-6989586621689379071"><span id="local-6989586621689379072"></span></span><span class="hs-keyword">data</span><span> </span><span id="VariableInfo"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-var">VariableInfo</span></a></span></span><span>
 </span><span id="line-103"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="VIRequired"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VIRequired"><span class="hs-identifier hs-var">VIRequired</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span>
 </span><span id="line-104"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Unlike fields (see 'InputFieldInfo'), nullable variables with no</span><span>
 </span><span id="line-105"></span><span>    </span><span class="hs-comment">-- default value are indistinguishable from variables with a default value</span><span>
 </span><span id="line-106"></span><span>    </span><span class="hs-comment">-- of null, so we don&#8217;t distinguish those cases here.</span><span>
 </span><span id="line-107"></span><span>    </span><span id="VIOptional"><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VIOptional"><span class="hs-identifier hs-var">VIOptional</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span class="hs-special">)</span><span>
-</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689378644"><span id="local-6989586621689378646"><span id="local-6989586621689378648"><span class="annot"><span class="annottext">Int -&gt; VariableInfo -&gt; ShowS
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689379063"><span id="local-6989586621689379065"><span id="local-6989586621689379067"><span class="annot"><span class="annottext">Int -&gt; VariableInfo -&gt; ShowS
 [VariableInfo] -&gt; ShowS
 VariableInfo -&gt; String
 (Int -&gt; VariableInfo -&gt; ShowS)
@@ -311,7 +311,7 @@ show :: VariableInfo -&gt; String
 $cshow :: VariableInfo -&gt; String
 showsPrec :: Int -&gt; VariableInfo -&gt; ShowS
 $cshowsPrec :: Int -&gt; VariableInfo -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378640"><span id="local-6989586621689378642"><span class="annot"><span class="annottext">VariableInfo -&gt; VariableInfo -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379059"><span id="local-6989586621689379061"><span class="annot"><span class="annottext">VariableInfo -&gt; VariableInfo -&gt; Bool
 (VariableInfo -&gt; VariableInfo -&gt; Bool)
 -&gt; (VariableInfo -&gt; VariableInfo -&gt; Bool) -&gt; Eq VariableInfo
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -328,7 +328,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep VariableInfo x -&gt; VariableInfo
 $cfrom :: forall x. VariableInfo -&gt; Rep VariableInfo x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378623"><span id="local-6989586621689378625"><span id="local-6989586621689378627"><span id="local-6989586621689378629"><span id="local-6989586621689378631"><span id="local-6989586621689378633"><span id="local-6989586621689378635"><span class="annot"><span class="annottext">Eq VariableInfo
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379042"><span id="local-6989586621689379044"><span id="local-6989586621689379046"><span id="local-6989586621689379048"><span id="local-6989586621689379050"><span id="local-6989586621689379052"><span id="local-6989586621689379054"><span class="annot"><span class="annottext">Eq VariableInfo
 Eq VariableInfo
 -&gt; (VariableInfo -&gt; VariableInfo -&gt; Ordering)
 -&gt; (VariableInfo -&gt; VariableInfo -&gt; Bool)
@@ -366,7 +366,7 @@ $c&lt; :: VariableInfo -&gt; VariableInfo -&gt; Bool
 compare :: VariableInfo -&gt; VariableInfo -&gt; Ordering
 $ccompare :: VariableInfo -&gt; VariableInfo -&gt; Ordering
 $cp1Ord :: Eq VariableInfo
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689378619"><span id="local-6989586621689378621"><span class="annot"><span class="annottext">VariableInfo -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689379038"><span id="local-6989586621689379040"><span class="annot"><span class="annottext">VariableInfo -&gt; Q Exp
 VariableInfo -&gt; Q (TExp VariableInfo)
 (VariableInfo -&gt; Q Exp)
 -&gt; (VariableInfo -&gt; Q (TExp VariableInfo)) -&gt; Lift VariableInfo
@@ -377,17 +377,17 @@ lift :: VariableInfo -&gt; Q Exp
 $clift :: VariableInfo -&gt; Q Exp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">TH.Lift</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-109"></span><span>
-</span><span id="line-110"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689378615"><span id="local-6989586621689378617"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-type">VariableInfo</span></a></span></span></span><span>
+</span><span id="line-110"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689379034"><span id="local-6989586621689379036"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-type">VariableInfo</span></a></span></span></span><span>
 </span><span id="line-111"></span><span>
-</span><span id="line-112"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689378612"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-type">VariableInfo</span></a></span></span><span>
+</span><span id="line-112"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689379031"><span class="annot"><a href="Hasura.Incremental.Internal.Dependency.html#Cacheable"><span class="hs-identifier hs-type">Cacheable</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-type">VariableInfo</span></a></span></span><span>
 </span><span id="line-113"></span><span>
 </span><span id="line-114"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Names.html#HasName"><span class="hs-identifier hs-type">HasName</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VariableInfo"><span class="hs-identifier hs-type">VariableInfo</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-115"></span><span>  </span><span id="local-6989586621689378610"><span class="annot"><span class="annottext">getName :: VariableInfo -&gt; Name
-</span><a href="#local-6989586621689378610"><span class="hs-identifier hs-var hs-var hs-var hs-var">getName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VIRequired"><span class="hs-identifier hs-type">VIRequired</span></a></span><span> </span><span id="local-6989586621689378609"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378609"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378609"><span class="hs-identifier hs-var">name</span></a></span><span>
-</span><span id="line-116"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Names.html#getName"><span class="hs-identifier hs-var">getName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VIOptional"><span class="hs-identifier hs-type">VIOptional</span></a></span><span> </span><span id="local-6989586621689378608"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378608"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value Void
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621689379029"><span class="annot"><span class="annottext">getName :: VariableInfo -&gt; Name
+</span><a href="#local-6989586621689379029"><span class="hs-identifier hs-var hs-var hs-var hs-var">getName</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VIRequired"><span class="hs-identifier hs-type">VIRequired</span></a></span><span> </span><span id="local-6989586621689379028"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689379028"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689379028"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-116"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Parser.Names.html#getName"><span class="hs-identifier hs-var">getName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#VIOptional"><span class="hs-identifier hs-type">VIOptional</span></a></span><span> </span><span id="local-6989586621689379027"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689379027"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">Value Void
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689378608"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621689379027"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-117"></span></pre></body></html>

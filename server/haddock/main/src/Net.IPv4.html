@@ -66,12 +66,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </span><span id="line-66"></span><span class="hs-comment">--   This expectation is not in any way enforced by this library because</span><span>
 </span><span id="line-67"></span><span class="hs-comment">--   it does not cause errors. A mask length greater than 32 will be</span><span>
 </span><span id="line-68"></span><span class="hs-comment">--   treated as if it were 32.</span><span>
-</span><span id="line-69"></span><span id="local-6989586621689363698"><span id="local-6989586621689363699"></span></span><span class="hs-keyword">data</span><span> </span><span id="IPv4Range"><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-var">IPv4Range</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv4Range"><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-var">IPv4Range</span></a></span></span><span>
+</span><span id="line-69"></span><span id="local-6989586621689364117"><span id="local-6989586621689364118"></span></span><span class="hs-keyword">data</span><span> </span><span id="IPv4Range"><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-var">IPv4Range</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv4Range"><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-var">IPv4Range</span></a></span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ipv4RangeBase"><span class="annot"><span class="annottext">IPv4Range -&gt; IPv4
 </span><a href="Net.IPv4.html#ipv4RangeBase"><span class="hs-identifier hs-var hs-var">ipv4RangeBase</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="hs-pragma">{-# UNPACK</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="ipv4RangeLength"><span class="annot"><span class="annottext">IPv4Range -&gt; Word8
 </span><a href="Net.IPv4.html#ipv4RangeLength"><span class="hs-identifier hs-var hs-var">ipv4RangeLength</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-pragma">{-# UNPACK</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689363691"><span id="local-6989586621689363693"><span class="annot"><span class="annottext">IPv4Range -&gt; IPv4Range -&gt; Bool
+</span><span id="line-72"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689364110"><span id="local-6989586621689364112"><span class="annot"><span class="annottext">IPv4Range -&gt; IPv4Range -&gt; Bool
 (IPv4Range -&gt; IPv4Range -&gt; Bool)
 -&gt; (IPv4Range -&gt; IPv4Range -&gt; Bool) -&gt; Eq IPv4Range
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -79,7 +79,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: IPv4Range -&gt; IPv4Range -&gt; Bool
 == :: IPv4Range -&gt; IPv4Range -&gt; Bool
 $c== :: IPv4Range -&gt; IPv4Range -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363675"><span id="local-6989586621689363677"><span id="local-6989586621689363679"><span id="local-6989586621689363681"><span id="local-6989586621689363683"><span id="local-6989586621689363685"><span id="local-6989586621689363687"><span class="annot"><span class="annottext">Eq IPv4Range
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689364094"><span id="local-6989586621689364096"><span id="local-6989586621689364098"><span id="local-6989586621689364100"><span id="local-6989586621689364102"><span id="local-6989586621689364104"><span id="local-6989586621689364106"><span class="annot"><span class="annottext">Eq IPv4Range
 Eq IPv4Range
 -&gt; (IPv4Range -&gt; IPv4Range -&gt; Ordering)
 -&gt; (IPv4Range -&gt; IPv4Range -&gt; Bool)
@@ -117,7 +117,7 @@ $c&lt; :: IPv4Range -&gt; IPv4Range -&gt; Bool
 compare :: IPv4Range -&gt; IPv4Range -&gt; Ordering
 $ccompare :: IPv4Range -&gt; IPv4Range -&gt; Ordering
 $cp1Ord :: Eq IPv4Range
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363668"><span id="local-6989586621689363670"><span id="local-6989586621689363672"><span class="annot"><span class="annottext">Int -&gt; IPv4Range -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689364087"><span id="local-6989586621689364089"><span id="local-6989586621689364091"><span class="annot"><span class="annottext">Int -&gt; IPv4Range -&gt; ShowS
 [IPv4Range] -&gt; ShowS
 IPv4Range -&gt; String
 (Int -&gt; IPv4Range -&gt; ShowS)
@@ -132,7 +132,7 @@ show :: IPv4Range -&gt; String
 $cshow :: IPv4Range -&gt; String
 showsPrec :: Int -&gt; IPv4Range -&gt; ShowS
 $cshowsPrec :: Int -&gt; IPv4Range -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363659"><span id="local-6989586621689363661"><span id="local-6989586621689363663"><span id="local-6989586621689363665"><span class="annot"><span class="annottext">ReadPrec [IPv4Range]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689364078"><span id="local-6989586621689364080"><span id="local-6989586621689364082"><span id="local-6989586621689364084"><span class="annot"><span class="annottext">ReadPrec [IPv4Range]
 ReadPrec IPv4Range
 Int -&gt; ReadS IPv4Range
 ReadS [IPv4Range]
@@ -166,9 +166,9 @@ $cfrom :: forall x. IPv4Range -&gt; Rep IPv4Range x
 </span><span id="line-75"></span><span class="hs-comment">--   @network@ library, it is necessary to use @Network.Socket.htonl@ to</span><span>
 </span><span id="line-76"></span><span class="hs-comment">--   convert the underlying 'Word32' from host byte order to network byte</span><span>
 </span><span id="line-77"></span><span class="hs-comment">--   order.</span><span>
-</span><span id="line-78"></span><span id="local-6989586621689363653"><span id="local-6989586621689363654"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="IPv4"><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-var">IPv4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv4"><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-var">IPv4</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="getIPv4"><span class="annot"><span class="annottext">IPv4 -&gt; Word32
+</span><span id="line-78"></span><span id="local-6989586621689364072"><span id="local-6989586621689364073"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="IPv4"><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-var">IPv4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="IPv4"><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-var">IPv4</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="getIPv4"><span class="annot"><span class="annottext">IPv4 -&gt; Word32
 </span><a href="Net.IPv4.html#getIPv4"><span class="hs-identifier hs-var hs-var">getIPv4</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span> </span><span class="hs-special">}</span><span>
-</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689363606"><span id="local-6989586621689363608"><span id="local-6989586621689363610"><span id="local-6989586621689363612"><span id="local-6989586621689363614"><span id="local-6989586621689363616"><span id="local-6989586621689363618"><span id="local-6989586621689363620"><span id="local-6989586621689363622"><span id="local-6989586621689363624"><span id="local-6989586621689363626"><span id="local-6989586621689363628"><span id="local-6989586621689363630"><span id="local-6989586621689363632"><span id="local-6989586621689363634"><span id="local-6989586621689363636"><span id="local-6989586621689363638"><span id="local-6989586621689363640"><span id="local-6989586621689363642"><span id="local-6989586621689363644"><span id="local-6989586621689363646"><span id="local-6989586621689363648"><span class="annot"><span class="annottext">Eq IPv4
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689364025"><span id="local-6989586621689364027"><span id="local-6989586621689364029"><span id="local-6989586621689364031"><span id="local-6989586621689364033"><span id="local-6989586621689364035"><span id="local-6989586621689364037"><span id="local-6989586621689364039"><span id="local-6989586621689364041"><span id="local-6989586621689364043"><span id="local-6989586621689364045"><span id="local-6989586621689364047"><span id="local-6989586621689364049"><span id="local-6989586621689364051"><span id="local-6989586621689364053"><span id="local-6989586621689364055"><span id="local-6989586621689364057"><span id="local-6989586621689364059"><span id="local-6989586621689364061"><span id="local-6989586621689364063"><span id="local-6989586621689364065"><span id="local-6989586621689364067"><span class="annot"><span class="annottext">Eq IPv4
 IPv4
 Eq IPv4
 -&gt; (IPv4 -&gt; IPv4 -&gt; IPv4)
@@ -272,14 +272,14 @@ $c.|. :: IPv4 -&gt; IPv4 -&gt; IPv4
 .&amp;. :: IPv4 -&gt; IPv4 -&gt; IPv4
 $c.&amp;. :: IPv4 -&gt; IPv4 -&gt; IPv4
 $cp1Bits :: Eq IPv4
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Bits.Bits</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363601"><span id="local-6989586621689363603"><span class="annot"><span class="annottext">IPv4
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Bits.Bits</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689364020"><span id="local-6989586621689364022"><span class="annot"><span class="annottext">IPv4
 IPv4 -&gt; IPv4 -&gt; Bounded IPv4
 forall a. a -&gt; a -&gt; Bounded a
 maxBound :: IPv4
 $cmaxBound :: IPv4
 minBound :: IPv4
 $cminBound :: IPv4
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363584"><span id="local-6989586621689363586"><span id="local-6989586621689363588"><span id="local-6989586621689363590"><span id="local-6989586621689363592"><span id="local-6989586621689363594"><span id="local-6989586621689363596"><span id="local-6989586621689363598"><span class="annot"><span class="annottext">Int -&gt; IPv4
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689364003"><span id="local-6989586621689364005"><span id="local-6989586621689364007"><span id="local-6989586621689364009"><span id="local-6989586621689364011"><span id="local-6989586621689364013"><span id="local-6989586621689364015"><span id="local-6989586621689364017"><span class="annot"><span class="annottext">Int -&gt; IPv4
 IPv4 -&gt; Int
 IPv4 -&gt; [IPv4]
 IPv4 -&gt; IPv4
@@ -320,14 +320,14 @@ pred :: IPv4 -&gt; IPv4
 $cpred :: IPv4 -&gt; IPv4
 succ :: IPv4 -&gt; IPv4
 $csucc :: IPv4 -&gt; IPv4
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363579"><span id="local-6989586621689363581"><span class="annot"><span class="annottext">IPv4 -&gt; IPv4 -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363998"><span id="local-6989586621689364000"><span class="annot"><span class="annottext">IPv4 -&gt; IPv4 -&gt; Bool
 (IPv4 -&gt; IPv4 -&gt; Bool) -&gt; (IPv4 -&gt; IPv4 -&gt; Bool) -&gt; Eq IPv4
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: IPv4 -&gt; IPv4 -&gt; Bool
 $c/= :: IPv4 -&gt; IPv4 -&gt; Bool
 == :: IPv4 -&gt; IPv4 -&gt; Bool
 $c== :: IPv4 -&gt; IPv4 -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363572"><span id="local-6989586621689363574"><span id="local-6989586621689363576"><span class="annot"><span class="annottext">Bits IPv4
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363991"><span id="local-6989586621689363993"><span id="local-6989586621689363995"><span class="annot"><span class="annottext">Bits IPv4
 Bits IPv4
 -&gt; (IPv4 -&gt; Int)
 -&gt; (IPv4 -&gt; Int)
@@ -351,7 +351,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep IPv4 x -&gt; IPv4
 $cfrom :: forall x. IPv4 -&gt; Rep IPv4 x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span id="local-6989586621689363565"><span id="local-6989586621689363567"><span class="annot"><span class="annottext">Int -&gt; IPv4 -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span id="local-6989586621689363984"><span id="local-6989586621689363986"><span class="annot"><span class="annottext">Int -&gt; IPv4 -&gt; Int
 IPv4 -&gt; Int
 (Int -&gt; IPv4 -&gt; Int) -&gt; (IPv4 -&gt; Int) -&gt; Hashable IPv4
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -359,7 +359,7 @@ hash :: IPv4 -&gt; Int
 $chash :: IPv4 -&gt; Int
 hashWithSalt :: Int -&gt; IPv4 -&gt; Int
 $chashWithSalt :: Int -&gt; IPv4 -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363551"><span id="local-6989586621689363553"><span id="local-6989586621689363555"><span id="local-6989586621689363557"><span id="local-6989586621689363559"><span id="local-6989586621689363561"><span class="annot"><span class="annottext">Ord IPv4
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363970"><span id="local-6989586621689363972"><span id="local-6989586621689363974"><span id="local-6989586621689363976"><span id="local-6989586621689363978"><span id="local-6989586621689363980"><span class="annot"><span class="annottext">Ord IPv4
 Ord IPv4
 -&gt; ((IPv4, IPv4) -&gt; [IPv4])
 -&gt; ((IPv4, IPv4) -&gt; IPv4 -&gt; Int)
@@ -394,7 +394,7 @@ $cindex :: (IPv4, IPv4) -&gt; IPv4 -&gt; Int
 range :: (IPv4, IPv4) -&gt; [IPv4]
 $crange :: (IPv4, IPv4) -&gt; [IPv4]
 $cp1Ix :: Ord IPv4
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ix</span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363535"><span id="local-6989586621689363537"><span id="local-6989586621689363539"><span id="local-6989586621689363541"><span id="local-6989586621689363543"><span id="local-6989586621689363545"><span id="local-6989586621689363547"><span class="annot"><span class="annottext">Eq IPv4
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ix</span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363954"><span id="local-6989586621689363956"><span id="local-6989586621689363958"><span id="local-6989586621689363960"><span id="local-6989586621689363962"><span id="local-6989586621689363964"><span id="local-6989586621689363966"><span class="annot"><span class="annottext">Eq IPv4
 Eq IPv4
 -&gt; (IPv4 -&gt; IPv4 -&gt; Ordering)
 -&gt; (IPv4 -&gt; IPv4 -&gt; Bool)
@@ -432,7 +432,7 @@ $c&lt; :: IPv4 -&gt; IPv4 -&gt; Bool
 compare :: IPv4 -&gt; IPv4 -&gt; Ordering
 $ccompare :: IPv4 -&gt; IPv4 -&gt; Ordering
 $cp1Ord :: Eq IPv4
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363527"><span id="local-6989586621689363529"><span id="local-6989586621689363531"><span id="local-6989586621689363533"><span class="annot"><span class="annottext">ReadPrec [IPv4]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363946"><span id="local-6989586621689363948"><span id="local-6989586621689363950"><span id="local-6989586621689363952"><span class="annot"><span class="annottext">ReadPrec [IPv4]
 ReadPrec IPv4
 Int -&gt; ReadS IPv4
 ReadS [IPv4]
@@ -449,7 +449,7 @@ readList :: ReadS [IPv4]
 $creadList :: ReadS [IPv4]
 readsPrec :: Int -&gt; ReadS IPv4
 $creadsPrec :: Int -&gt; ReadS IPv4
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363521"><span id="local-6989586621689363523"><span id="local-6989586621689363525"><span class="annot"><span class="annottext">Int -&gt; IPv4 -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621689363940"><span id="local-6989586621689363942"><span id="local-6989586621689363944"><span class="annot"><span class="annottext">Int -&gt; IPv4 -&gt; ShowS
 [IPv4] -&gt; ShowS
 IPv4 -&gt; String
 (Int -&gt; IPv4 -&gt; ShowS)
@@ -493,34 +493,34 @@ forall t. Chunk t =&gt; Parser t ()
 </span><span id="line-94"></span><span class="annot"><a href="Net.IPv4.html#parserRange"><span class="hs-identifier hs-type">parserRange</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">AT.Parser</span></span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span>
 </span><span id="line-95"></span><span id="parserRange"><span class="annot"><span class="annottext">parserRange :: Parser IPv4Range
 </span><a href="Net.IPv4.html#parserRange"><span class="hs-identifier hs-var hs-var">parserRange</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-96"></span><span>  </span><span id="local-6989586621689363514"><span class="annot"><span class="annottext">IPv4
-</span><a href="#local-6989586621689363514"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser IPv4
+</span><span id="line-96"></span><span>  </span><span id="local-6989586621689363933"><span class="annot"><span class="annottext">IPv4
+</span><a href="#local-6989586621689363933"><span class="hs-identifier hs-var">ip</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser IPv4
 </span><a href="Net.IPv4.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-97"></span><span>  </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">AT.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'/'</span></span><span>
-</span><span id="line-98"></span><span>  </span><span id="local-6989586621689363512"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363512"><span class="hs-identifier hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
+</span><span id="line-98"></span><span>  </span><span id="local-6989586621689363931"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363931"><span class="hs-identifier hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word8
 forall a. Integral a =&gt; Parser a
 </span><span class="hs-identifier hs-var">AT.decimal</span></span><span> </span><span class="annot"><span class="annottext">Parser Word8 -&gt; (Word8 -&gt; Parser Word8) -&gt; Parser Word8
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Parser Word8
 forall a (m :: * -&gt; *). (Ord a, Num a, MonadFail m) =&gt; a -&gt; m a
-</span><a href="#local-6989586621689363510"><span class="hs-identifier hs-var">limitSize</span></a></span><span>
+</span><a href="#local-6989586621689363929"><span class="hs-identifier hs-var">limitSize</span></a></span><span>
 </span><span id="line-99"></span><span>  </span><span class="annot"><span class="annottext">IPv4Range -&gt; Parser IPv4Range
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv4Range -&gt; IPv4Range
 </span><a href="Net.IPv4.html#normalize"><span class="hs-identifier hs-var">normalize</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IPv4 -&gt; Word8 -&gt; IPv4Range
 </span><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-var">IPv4Range</span></a></span><span> </span><span class="annot"><span class="annottext">IPv4
-</span><a href="#local-6989586621689363514"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363512"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689363933"><span class="hs-identifier hs-var">ip</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363931"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621689363510"><span class="annot"><span class="annottext">limitSize :: a -&gt; m a
-</span><a href="#local-6989586621689363510"><span class="hs-identifier hs-var hs-var">limitSize</span></a></span></span><span> </span><span id="local-6989586621689363508"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689363508"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621689363929"><span class="annot"><span class="annottext">limitSize :: a -&gt; m a
+</span><a href="#local-6989586621689363929"><span class="hs-identifier hs-var hs-var">limitSize</span></a></span></span><span> </span><span id="local-6989586621689363927"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689363927"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-102"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689363508"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621689363927"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-number">32</span></span><span>
@@ -531,7 +531,7 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span id="line-104"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">a -&gt; m a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689363508"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621689363927"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-105"></span><span>
 </span><span id="line-106"></span><span class="hs-comment">-- | Parse an 'IPv4' address using a 'AT.Parser'.</span><span>
 </span><span id="line-107"></span><span class="hs-comment">--</span><span>
@@ -560,7 +560,7 @@ forall a. Integral a =&gt; Parser a
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Parser Text Word
 forall a (m :: * -&gt; *). (Ord a, Num a, MonadFail m) =&gt; a -&gt; m a
-</span><a href="#local-6989586621689363503"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689363922"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span>  </span><span class="annot"><span class="annottext">Parser Text (Word -&gt; Word -&gt; Word -&gt; IPv4)
 -&gt; Parser Char -&gt; Parser Text (Word -&gt; Word -&gt; Word -&gt; IPv4)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
@@ -576,7 +576,7 @@ forall a. Integral a =&gt; Parser a
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Parser Text Word
 forall a (m :: * -&gt; *). (Ord a, Num a, MonadFail m) =&gt; a -&gt; m a
-</span><a href="#local-6989586621689363503"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689363922"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span>  </span><span class="annot"><span class="annottext">Parser Text (Word -&gt; Word -&gt; IPv4)
 -&gt; Parser Char -&gt; Parser Text (Word -&gt; Word -&gt; IPv4)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
@@ -592,7 +592,7 @@ forall a. Integral a =&gt; Parser a
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Parser Text Word
 forall a (m :: * -&gt; *). (Ord a, Num a, MonadFail m) =&gt; a -&gt; m a
-</span><a href="#local-6989586621689363503"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689363922"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-125"></span><span>  </span><span class="annot"><span class="annottext">Parser Text (Word -&gt; IPv4)
 -&gt; Parser Char -&gt; Parser Text (Word -&gt; IPv4)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
@@ -607,13 +607,13 @@ forall a. Integral a =&gt; Parser a
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Parser Text Word
 forall a (m :: * -&gt; *). (Ord a, Num a, MonadFail m) =&gt; a -&gt; m a
-</span><a href="#local-6989586621689363503"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689363922"><span class="hs-identifier hs-var">limitSize</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-128"></span><span>  </span><span id="local-6989586621689363503"><span class="annot"><span class="annottext">limitSize :: a -&gt; m a
-</span><a href="#local-6989586621689363503"><span class="hs-identifier hs-var hs-var">limitSize</span></a></span></span><span> </span><span id="local-6989586621689363502"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689363502"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-128"></span><span>  </span><span id="local-6989586621689363922"><span class="annot"><span class="annottext">limitSize :: a -&gt; m a
+</span><a href="#local-6989586621689363922"><span class="hs-identifier hs-var hs-var">limitSize</span></a></span></span><span> </span><span id="local-6989586621689363921"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689363921"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-129"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689363502"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621689363921"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-number">255</span></span><span>
@@ -624,7 +624,7 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span id="line-131"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">a -&gt; m a
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689363502"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621689363921"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-132"></span><span>
 </span><span id="line-133"></span><span>
 </span><span id="line-134"></span><span class="hs-comment">-- | Checks to see if an 'IPv4' address belongs in the 'IPv4Range'.</span><span>
@@ -653,28 +653,28 @@ forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span id="line-157"></span><span class="hs-comment">-- They are reused as the list is iterated.</span><span>
 </span><span id="line-158"></span><span class="annot"><a href="Net.IPv4.html#contains"><span class="hs-identifier hs-type">contains</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
 </span><span id="line-159"></span><span id="contains"><span class="annot"><span class="annottext">contains :: IPv4Range -&gt; IPv4 -&gt; Bool
-</span><a href="Net.IPv4.html#contains"><span class="hs-identifier hs-var hs-var">contains</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621689363499"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363499"><span class="hs-identifier hs-var">wsubnet</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689363498"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363498"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-160"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689363497"><span class="annot"><span class="annottext">theMask :: Word32
-</span><a href="#local-6989586621689363497"><span class="hs-identifier hs-var hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word32
+</span><a href="Net.IPv4.html#contains"><span class="hs-identifier hs-var hs-var">contains</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621689363918"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689363918"><span class="hs-identifier hs-var">wsubnet</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689363917"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363917"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-160"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689363916"><span class="annot"><span class="annottext">theMask :: Word32
+</span><a href="#local-6989586621689363916"><span class="hs-identifier hs-var hs-var">theMask</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word32
 </span><a href="Net.IPv4.html#mask"><span class="hs-identifier hs-var">mask</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363498"><span class="hs-identifier hs-var">len</span></a></span><span>
-</span><span id="line-161"></span><span>      </span><span id="local-6989586621689363495"><span class="annot"><span class="annottext">wsubnetNormalized :: Word32
-</span><a href="#local-6989586621689363495"><span class="hs-identifier hs-var hs-var">wsubnetNormalized</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363499"><span class="hs-identifier hs-var">wsubnet</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+</span><a href="#local-6989586621689363917"><span class="hs-identifier hs-var">len</span></a></span><span>
+</span><span id="line-161"></span><span>      </span><span id="local-6989586621689363914"><span class="annot"><span class="annottext">wsubnetNormalized :: Word32
+</span><a href="#local-6989586621689363914"><span class="hs-identifier hs-var hs-var">wsubnetNormalized</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689363918"><span class="hs-identifier hs-var">wsubnet</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
 forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363497"><span class="hs-identifier hs-var">theMask</span></a></span><span>
-</span><span id="line-162"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621689363493"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363493"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363493"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+</span><a href="#local-6989586621689363916"><span class="hs-identifier hs-var">theMask</span></a></span><span>
+</span><span id="line-162"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621689363912"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689363912"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689363912"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
 forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363497"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Bool
+</span><a href="#local-6989586621689363916"><span class="hs-identifier hs-var">theMask</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363495"><span class="hs-identifier hs-var">wsubnetNormalized</span></a></span><span>
+</span><a href="#local-6989586621689363914"><span class="hs-identifier hs-var">wsubnetNormalized</span></a></span><span>
 </span><span id="line-163"></span><span>
 </span><span id="line-164"></span><span class="annot"><a href="Net.IPv4.html#mask"><span class="hs-identifier hs-type">mask</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
 </span><span id="line-165"></span><span id="mask"><span class="annot"><span class="annottext">mask :: Word8 -&gt; Word32
@@ -705,39 +705,39 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><span id="line-174"></span><span class="hs-comment">-- | An alias for the 'ipv4' smart constructor.</span><span>
 </span><span id="line-175"></span><span class="annot"><a href="Net.IPv4.html#fromOctets"><span class="hs-identifier hs-type">fromOctets</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span>
 </span><span id="line-176"></span><span id="fromOctets"><span class="annot"><span class="annottext">fromOctets :: Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; IPv4
-</span><a href="Net.IPv4.html#fromOctets"><span class="hs-identifier hs-var hs-var">fromOctets</span></a></span></span><span> </span><span id="local-6989586621689363488"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363488"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689363487"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363487"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689363486"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363486"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689363485"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363485"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word -&gt; Word -&gt; IPv4
+</span><a href="Net.IPv4.html#fromOctets"><span class="hs-identifier hs-var hs-var">fromOctets</span></a></span></span><span> </span><span id="local-6989586621689363907"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363907"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689363906"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363906"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689363905"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363905"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689363904"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363904"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word -&gt; Word -&gt; IPv4
 </span><a href="Net.IPv4.html#fromOctets%27"><span class="hs-identifier hs-var">fromOctets'</span></a></span><span>
 </span><span id="line-177"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Word
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363488"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Word
+</span><a href="#local-6989586621689363907"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Word
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363487"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Word
+</span><a href="#local-6989586621689363906"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Word
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363486"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Word
+</span><a href="#local-6989586621689363905"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8 -&gt; Word
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363485"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689363904"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-178"></span><span>
 </span><span id="line-179"></span><span class="hs-comment">-- | An uncurried variant of 'fromOctets'.</span><span>
 </span><span id="line-180"></span><span class="annot"><a href="Net.IPv4.html#fromTupleOctets"><span class="hs-identifier hs-type">fromTupleOctets</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span>
 </span><span id="line-181"></span><span id="fromTupleOctets"><span class="annot"><span class="annottext">fromTupleOctets :: (Word8, Word8, Word8, Word8) -&gt; IPv4
-</span><a href="Net.IPv4.html#fromTupleOctets"><span class="hs-identifier hs-var hs-var">fromTupleOctets</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689363484"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363484"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621689363483"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363483"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621689363482"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363482"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621689363481"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363481"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; IPv4
+</span><a href="Net.IPv4.html#fromTupleOctets"><span class="hs-identifier hs-var hs-var">fromTupleOctets</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689363903"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363903"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621689363902"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363902"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621689363901"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363901"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621689363900"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363900"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; IPv4
 </span><a href="Net.IPv4.html#fromOctets"><span class="hs-identifier hs-var">fromOctets</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363484"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363483"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363482"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363481"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621689363903"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363902"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363901"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363900"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-182"></span><span>
 </span><span id="line-183"></span><span class="hs-comment">-- | This is sort of a misnomer. It takes Word to make</span><span>
 </span><span id="line-184"></span><span class="hs-comment">--   dotDecimalParser perform better. This is mostly</span><span>
@@ -745,11 +745,11 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-186"></span><span class="hs-comment">--   in a Word8.</span><span>
 </span><span id="line-187"></span><span class="annot"><a href="Net.IPv4.html#fromOctets%27"><span class="hs-identifier hs-type">fromOctets'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span>
 </span><span id="line-188"></span><span id="fromOctets%27"><span class="annot"><span class="annottext">fromOctets' :: Word -&gt; Word -&gt; Word -&gt; Word -&gt; IPv4
-</span><a href="Net.IPv4.html#fromOctets%27"><span class="hs-identifier hs-var hs-var">fromOctets'</span></a></span></span><span> </span><span id="local-6989586621689363480"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363480"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689363479"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363479"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689363478"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363478"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689363477"><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363477"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; IPv4
+</span><a href="Net.IPv4.html#fromOctets%27"><span class="hs-identifier hs-var hs-var">fromOctets'</span></a></span></span><span> </span><span id="local-6989586621689363899"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621689363899"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621689363898"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621689363898"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621689363897"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621689363897"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span id="local-6989586621689363896"><span class="annot"><span class="annottext">Word
+</span><a href="#local-6989586621689363896"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; IPv4
 </span><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-var">IPv4</span></a></span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; IPv4) -&gt; Word32 -&gt; IPv4
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Word32
@@ -758,26 +758,26 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-189"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Word -&gt; Int -&gt; Word
 forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><span class="hs-identifier hs-var">shiftL</span></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363480"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689363899"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">24</span></span><span>
 </span><span id="line-190"></span><span>  </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
 forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">.|.</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Int -&gt; Word
 forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><span class="hs-identifier hs-var">shiftL</span></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363479"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689363898"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">16</span></span><span>
 </span><span id="line-191"></span><span>  </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
 forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">.|.</span></span><span> </span><span class="annot"><span class="annottext">Word -&gt; Int -&gt; Word
 forall a. Bits a =&gt; a -&gt; Int -&gt; a
 </span><span class="hs-identifier hs-var">shiftL</span></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363478"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689363897"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">8</span></span><span>
 </span><span id="line-192"></span><span>  </span><span class="annot"><span class="annottext">Word -&gt; Word -&gt; Word
 forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">.|.</span></span><span> </span><span class="annot"><span class="annottext">Word
-</span><a href="#local-6989586621689363477"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><a href="#local-6989586621689363896"><span class="hs-identifier hs-var">d</span></a></span><span>
 </span><span id="line-193"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-194"></span><span>
 </span><span id="line-195"></span><span class="annot"><a href="Net.IPv4.html#ipOctetSizeErrorMsg"><span class="hs-identifier hs-type">ipOctetSizeErrorMsg</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
@@ -805,30 +805,30 @@ forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><span id="line-215"></span><span class="hs-comment">-- prop&gt; IPv4.normalize r == (IPv4.normalize . IPv4.normalize) r</span><span>
 </span><span id="line-216"></span><span class="annot"><a href="Net.IPv4.html#normalize"><span class="hs-identifier hs-type">normalize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span>
 </span><span id="line-217"></span><span id="normalize"><span class="annot"><span class="annottext">normalize :: IPv4Range -&gt; IPv4Range
-</span><a href="Net.IPv4.html#normalize"><span class="hs-identifier hs-var hs-var">normalize</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621689363474"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363474"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689363473"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363473"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-218"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689363472"><span class="annot"><span class="annottext">len' :: Word8
-</span><a href="#local-6989586621689363472"><span class="hs-identifier hs-var hs-var">len'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8
+</span><a href="Net.IPv4.html#normalize"><span class="hs-identifier hs-var hs-var">normalize</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-type">IPv4Range</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-type">IPv4</span></a></span><span> </span><span id="local-6989586621689363893"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689363893"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689363892"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363892"><span class="hs-identifier hs-var">len</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-218"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689363891"><span class="annot"><span class="annottext">len' :: Word8
+</span><a href="#local-6989586621689363891"><span class="hs-identifier hs-var hs-var">len'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8
 forall a. Ord a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-identifier hs-var">min</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363473"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363892"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
 </span><span class="hs-number">32</span></span><span>
-</span><span id="line-219"></span><span>      </span><span id="local-6989586621689363470"><span class="annot"><span class="annottext">w' :: Word32
-</span><a href="#local-6989586621689363470"><span class="hs-identifier hs-var hs-var">w'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363474"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+</span><span id="line-219"></span><span>      </span><span id="local-6989586621689363889"><span class="annot"><span class="annottext">w' :: Word32
+</span><a href="#local-6989586621689363889"><span class="hs-identifier hs-var hs-var">w'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621689363893"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
 forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">.&amp;.</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word32
 </span><a href="Net.IPv4.html#mask"><span class="hs-identifier hs-var">mask</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363472"><span class="hs-identifier hs-var">len'</span></a></span><span>
+</span><a href="#local-6989586621689363891"><span class="hs-identifier hs-var">len'</span></a></span><span>
 </span><span id="line-220"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">IPv4 -&gt; Word8 -&gt; IPv4Range
 </span><a href="Net.IPv4.html#IPv4Range"><span class="hs-identifier hs-var">IPv4Range</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32 -&gt; IPv4
 </span><a href="Net.IPv4.html#IPv4"><span class="hs-identifier hs-var">IPv4</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621689363470"><span class="hs-identifier hs-var">w'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621689363472"><span class="hs-identifier hs-var">len'</span></a></span><span>
+</span><a href="#local-6989586621689363889"><span class="hs-identifier hs-var">w'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621689363891"><span class="hs-identifier hs-var">len'</span></a></span><span>
 </span><span id="line-221"></span><span>
 </span><span id="line-222"></span><span>
-</span><span id="line-223"></span><span id="local-6989586621689363747"><span id="local-6989586621689363748"><span class="annot"><a href="Net.IPv4.html#rightToMaybe"><span class="hs-identifier hs-type">rightToMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="#local-6989586621689363748"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689363747"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689363747"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-223"></span><span id="local-6989586621689364166"><span id="local-6989586621689364167"><span class="annot"><a href="Net.IPv4.html#rightToMaybe"><span class="hs-identifier hs-type">rightToMaybe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="#local-6989586621689364167"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689364166"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689364166"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
 </span><span id="line-224"></span><span id="rightToMaybe"><span class="annot"><span class="annottext">rightToMaybe :: Either a b -&gt; Maybe b
 </span><a href="Net.IPv4.html#rightToMaybe"><span class="hs-identifier hs-var hs-var">rightToMaybe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(a -&gt; Maybe b) -&gt; (b -&gt; Maybe b) -&gt; Either a b -&gt; Maybe b
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
