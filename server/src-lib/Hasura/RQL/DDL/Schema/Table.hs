@@ -26,6 +26,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Ordered qualified as JO
 import Data.Align (align)
+import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as S
@@ -47,6 +48,7 @@ import Hasura.RQL.IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Eventing.Backend (BackendEventTrigger, dropTriggerAndArchiveEvents)
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
@@ -343,17 +345,19 @@ unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
 
 unTrackExistingTableOrViewP2 ::
   forall b m.
-  (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b) =>
+  (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) =>
   UntrackTable b ->
   m EncJSON
-unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsistentObjsCheck do
+unTrackExistingTableOrViewP2 (UntrackTable source tableName cascade) = do
   sc <- askSchemaCache
-
+  sourceConfig <- askSourceConfig @b source
+  sourceInfo <- askTableInfo @b source tableName
+  let triggers = HM.keys $ _tiEventTriggerInfoMap sourceInfo
   -- Get relational, query template and function dependants
   let allDeps =
         getDependentObjs
           sc
-          (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b qtn)
+          (SOSourceObj source $ AB.mkAnyBackend $ SOITable @b tableName)
       indirectDeps = mapMaybe getIndirectDep allDeps
 
   -- Report bach with an error if cascade is not set
@@ -362,9 +366,12 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
   -- Purge all the dependents from state
   metadataModifier <- execWriterT do
     traverse_ purgeSourceAndSchemaDependencies indirectDeps
-    tell $ dropTableInMetadata @b source qtn
+    tell $ dropTableInMetadata @b source tableName
   -- delete the table and its direct dependencies
   withNewInconsistentObjsCheck $ buildSchemaCache metadataModifier
+  -- drop all the hasura SQL triggers present on the table
+  for_ triggers $ \triggerName -> do
+    dropTriggerAndArchiveEvents @b sourceConfig triggerName tableName
   pure successMsg
   where
     getIndirectDep :: SchemaObjId -> Maybe SchemaObjId
@@ -374,8 +381,8 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
         -- indirect dependency, hence the cast is safe here. However, we don't
         -- have these cross source dependencies yet
         AB.unpackAnyBackend @b exists >>= \case
-          (SOITableObj dtn _) ->
-            if not (s == source && qtn == dtn) then Just sourceObj else Nothing
+          (SOITableObj dependentTableName _) ->
+            if not (s == source && tableName == dependentTableName) then Just sourceObj else Nothing
           _ -> Just sourceObj
       -- A remote schema can have a remote relationship with a table. So when a
       -- table is dropped, the remote relationship in remote schema also needs to
@@ -385,7 +392,7 @@ unTrackExistingTableOrViewP2 (UntrackTable source qtn cascade) = withNewInconsis
 
 runUntrackTableQ ::
   forall b m.
-  (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b) =>
+  (CacheRWM m, QErrM m, MetadataM m, BackendMetadata b, BackendEventTrigger b, MonadIO m) =>
   UntrackTable b ->
   m EncJSON
 runUntrackTableQ q = do

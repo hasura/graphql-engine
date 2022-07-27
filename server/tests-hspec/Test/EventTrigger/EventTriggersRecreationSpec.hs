@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.EventTriggersRecreationSpec (spec) where
+module Test.EventTrigger.EventTriggersRecreationSpec (spec) where
 
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postV2Query_)

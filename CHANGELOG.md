@@ -240,6 +240,7 @@ Please submit any feedback you may have for this feature at https://github.com/h
 
 ### Bug fixes and improvements
 
+- server: delete event trigger related database SQL triggers from tables when they are untracked
 - server: fix bug where hasura SQL trigger was not dropped when MSSQL source is dropped
 - server: Kriti `basicFunctions` now available for REST Connectors and Webhook Transforms
 - server: use `root_field_namespace` as prefix for remote schema (fixes #8438)

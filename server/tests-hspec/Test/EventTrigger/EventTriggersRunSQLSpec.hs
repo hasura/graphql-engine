@@ -2,7 +2,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Testing the `run_sql` API
-module Test.EventTriggersRunSQLSpec (spec) where
+module Test.EventTrigger.EventTriggersRunSQLSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
 import Data.Aeson (eitherDecode)
