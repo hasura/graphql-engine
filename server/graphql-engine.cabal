@@ -353,6 +353,7 @@ library dc-api
                      , base
                      , bytestring
                      , deepseq
+                     , extra
                      , hashable
                      , insert-ordered-containers
                      , lens
@@ -1085,7 +1086,6 @@ test-suite graphql-engine-tests
     Hasura.StreamingSubscriptionSuite
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Utils
-    Test.Autodocodec.Extended
     Test.Parser.Expectation
     Test.Parser.Field
     Test.Parser.Internal

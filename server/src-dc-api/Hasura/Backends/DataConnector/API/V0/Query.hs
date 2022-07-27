@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Query
@@ -38,6 +37,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Data (Data)
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
@@ -61,6 +61,15 @@ data QueryRequest = QueryRequest
     _qrQuery :: Query
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryRequest
+
+instance HasCodec QueryRequest where
+  codec =
+    object "QueryRequest" $
+      QueryRequest
+        <$> requiredField "table" "The name of the table to query" .= _qrTable
+        <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request" .= _qrTableRelationships
+        <*> requiredField "query" "The details of the query against the table" .= _qrQuery
 
 -- | The details of a query against a table
 data Query = Query
@@ -72,20 +81,7 @@ data Query = Query
     _qOrderBy :: Maybe (NonEmpty API.V0.OrderBy)
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
-
-data RelationshipField = RelationshipField
-  { _rfRelationship :: API.V0.RelationshipName,
-    _rfQuery :: Query
-  }
-  deriving stock (Eq, Ord, Show, Generic, Data)
-
--- | A serializable field targeted by a 'Query'.
-data Field
-  = ColumnField (ValueWrapper "column" API.V0.ColumnName)
-  | RelField RelationshipField
-  deriving stock (Eq, Ord, Show, Generic, Data)
-
-$(makePrisms ''Field)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Query
 
 instance HasCodec Query where
   codec =
@@ -98,45 +94,40 @@ instance HasCodec Query where
         <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate" .= _qWhere
         <*> optionalFieldOrNull "order_by" "Optionally order the results by the value of one or more fields" .= _qOrderBy
 
-deriving via (Autodocodec Query) instance FromJSON Query
+data RelationshipField = RelationshipField
+  { _rfRelationship :: API.V0.RelationshipName,
+    _rfQuery :: Query
+  }
+  deriving stock (Eq, Ord, Show, Generic, Data)
 
-deriving via (Autodocodec Query) instance ToJSON Query
+relationshipFieldObjectCodec :: JSONObjectCodec RelationshipField
+relationshipFieldObjectCodec =
+  RelationshipField
+    <$> requiredField "relationship" "The name of the relationship to follow for the subquery" .= _rfRelationship
+    <*> requiredField "query" "Relationship query" .= _rfQuery
 
-deriving via (Autodocodec Query) instance ToSchema Query
-
-instance HasObjectCodec RelationshipField where
-  objectCodec =
-    RelationshipField
-      <$> requiredField "relationship" "The name of the relationship to follow for the subquery" .= _rfRelationship
-      <*> requiredField "query" "Relationship query" .= _rfQuery
-
-instance HasCodec QueryRequest where
-  codec =
-    object "QueryRequest" $
-      QueryRequest
-        <$> requiredField "table" "The name of the table to query" .= _qrTable
-        <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request" .= _qrTableRelationships
-        <*> requiredField "query" "The details of the query against the table" .= _qrQuery
-
-deriving via (Autodocodec QueryRequest) instance FromJSON QueryRequest
-
-deriving via (Autodocodec QueryRequest) instance ToJSON QueryRequest
-
-deriving via (Autodocodec QueryRequest) instance ToSchema QueryRequest
+-- | A serializable field targeted by a 'Query'.
+data Field
+  = ColumnField API.V0.ColumnName
+  | RelField RelationshipField
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Field
 
 instance HasCodec Field where
   codec =
     named "Field" $
-      sumTypeCodec
-        [ TypeAlternative "ColumnField" "column" _ColumnField,
-          TypeAlternative "RelationshipField" "relationship" _RelField
-        ]
-
-deriving via Autodocodec Field instance FromJSON Field
-
-deriving via Autodocodec Field instance ToJSON Field
-
-deriving via Autodocodec Field instance ToSchema Field
+      object "Field" $
+        discriminatedUnionCodec "type" enc dec
+    where
+      columnCodec = requiredField' "column"
+      enc = \case
+        ColumnField columnName -> ("column", mapToEncoder columnName columnCodec)
+        RelField relField -> ("relationship", mapToEncoder relField relationshipFieldObjectCodec)
+      dec =
+        HashMap.fromList
+          [ ("column", ("ColumnField", mapToDecoder ColumnField columnCodec)),
+            ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec))
+          ]
 
 -- | The resolved query response provided by the 'POST /query'
 -- endpoint encoded as a list of JSON objects.
@@ -244,3 +235,4 @@ _RelationshipFieldValue = prism' mkRelationshipFieldValue (either (const Nothing
 $(makeLenses ''QueryRequest)
 $(makeLenses ''Query)
 $(makeLenses ''QueryResponse)
+$(makePrisms ''FieldValue)

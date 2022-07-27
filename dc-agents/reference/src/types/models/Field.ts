@@ -5,5 +5,5 @@
 import type { ColumnField } from './ColumnField';
 import type { RelationshipField } from './RelationshipField';
 
-export type Field = (ColumnField | RelationshipField);
+export type Field = (RelationshipField | ColumnField);
 

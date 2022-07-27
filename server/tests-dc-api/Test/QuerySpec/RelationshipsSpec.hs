@@ -1,6 +1,5 @@
 module Test.QuerySpec.RelationshipsSpec (spec) where
 
-import Autodocodec.Extended (ValueWrapper (..), ValueWrapper3 (..))
 import Control.Lens (Traversal', ix, (&), (.~), (^.), (^..), (^?), _Just)
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KeyMap
@@ -54,11 +53,9 @@ spec api sourceName config = describe "Relationship Queries" $ do
     -- { SupportRep: { Country: { _ceq: [ "$", "Country" ] } } }
     let where' =
           ApplyBinaryComparisonOperator
-            ( ValueWrapper3
-                Equal
-                (comparisonColumn [supportRepRelationshipName] "Country")
-                (AnotherColumn (ValueWrapper (comparisonColumn [] "Country")))
-            )
+            Equal
+            (comparisonColumn [supportRepRelationshipName] "Country")
+            (AnotherColumn (comparisonColumn [] "Country"))
     let query = customersWithSupportRepQuery id & qrQuery . qWhere .~ Just where'
     receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> (api // _query) sourceName config query
 
@@ -83,11 +80,9 @@ spec api sourceName config = describe "Relationship Queries" $ do
     -- { SupportRepForCustomers: { Country: { _ceq: [ "$", "Country" ] } } }
     let where' =
           ApplyBinaryComparisonOperator
-            ( ValueWrapper3
-                Equal
-                (comparisonColumn [supportRepForCustomersRelationshipName] "Country")
-                (AnotherColumn (ValueWrapper (comparisonColumn [] "Country")))
-            )
+            Equal
+            (comparisonColumn [supportRepForCustomersRelationshipName] "Country")
+            (AnotherColumn (comparisonColumn [] "Country"))
     let query = employeesWithCustomersQuery id & qrQuery . qWhere .~ Just where'
     receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> (api // _query) sourceName config query
 
@@ -266,7 +261,7 @@ employeesQuery =
    in Query (Just fields) Nothing Nothing Nothing Nothing Nothing
 
 columnField :: Text -> Field
-columnField = ColumnField . ValueWrapper . ColumnName
+columnField = ColumnField . ColumnName
 
 comparisonColumn :: [RelationshipName] -> Text -> ComparisonColumn
 comparisonColumn path columnName = ComparisonColumn path $ ColumnName columnName

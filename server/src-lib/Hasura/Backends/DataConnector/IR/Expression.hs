@@ -12,7 +12,6 @@ where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec.Extended (ValueWrapper (..), ValueWrapper2 (..), ValueWrapper3 (..))
 import Data.Aeson (FromJSON, ToJSON)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
@@ -68,26 +67,26 @@ data Expression
 
 instance Witch.From Expression API.Expression where
   from = \case
-    And exprs -> API.And . ValueWrapper $ Witch.from <$> exprs
-    Or exprs -> API.Or . ValueWrapper $ Witch.from <$> exprs
-    Not expr -> API.Not . ValueWrapper $ Witch.from expr
+    And exprs -> API.And $ Witch.from <$> exprs
+    Or exprs -> API.Or $ Witch.from <$> exprs
+    Not expr -> API.Not $ Witch.from expr
     ApplyBinaryComparisonOperator op column value ->
-      API.ApplyBinaryComparisonOperator $ ValueWrapper3 (Witch.from op) (Witch.from column) (Witch.from value)
+      API.ApplyBinaryComparisonOperator (Witch.from op) (Witch.from column) (Witch.from value)
     ApplyUnaryComparisonOperator op column ->
-      API.ApplyUnaryComparisonOperator $ ValueWrapper2 (Witch.from op) (Witch.from column)
+      API.ApplyUnaryComparisonOperator (Witch.from op) (Witch.from column)
     ApplyBinaryArrayComparisonOperator op column values ->
-      API.ApplyBinaryArrayComparisonOperator $ ValueWrapper3 (Witch.from op) (Witch.from column) (Witch.from <$> values)
+      API.ApplyBinaryArrayComparisonOperator (Witch.from op) (Witch.from column) (Witch.from <$> values)
 
 instance Witch.From API.Expression Expression where
   from = \case
-    API.And (ValueWrapper exprs) -> And $ Witch.from <$> exprs
-    API.Or (ValueWrapper exprs) -> Or $ Witch.from <$> exprs
-    API.Not (ValueWrapper expr) -> Not $ Witch.from expr
-    API.ApplyBinaryComparisonOperator (ValueWrapper3 op column value) ->
+    API.And exprs -> And $ Witch.from <$> exprs
+    API.Or exprs -> Or $ Witch.from <$> exprs
+    API.Not expr -> Not $ Witch.from expr
+    API.ApplyBinaryComparisonOperator op column value ->
       ApplyBinaryComparisonOperator (Witch.from op) (Witch.from column) (Witch.from value)
-    API.ApplyBinaryArrayComparisonOperator (ValueWrapper3 op column values) ->
+    API.ApplyBinaryArrayComparisonOperator op column values ->
       ApplyBinaryArrayComparisonOperator (Witch.from op) (Witch.from column) (Witch.from <$> values)
-    API.ApplyUnaryComparisonOperator (ValueWrapper2 op column) ->
+    API.ApplyUnaryComparisonOperator op column ->
       ApplyUnaryComparisonOperator (Witch.from op) (Witch.from column)
 
 --------------------------------------------------------------------------------
@@ -183,9 +182,9 @@ data ComparisonValue
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)
 
 instance Witch.From ComparisonValue API.ComparisonValue where
-  from (AnotherColumn column) = API.AnotherColumn $ ValueWrapper (Witch.from column)
-  from (ScalarValue value) = API.ScalarValue . ValueWrapper $ Witch.from value
+  from (AnotherColumn column) = API.AnotherColumn $ Witch.from column
+  from (ScalarValue value) = API.ScalarValue $ Witch.from value
 
 instance Witch.From API.ComparisonValue ComparisonValue where
-  from (API.AnotherColumn (ValueWrapper column)) = AnotherColumn (Witch.from column)
-  from (API.ScalarValue (ValueWrapper value)) = ScalarValue $ Witch.from value
+  from (API.AnotherColumn column) = AnotherColumn (Witch.from column)
+  from (API.ScalarValue value) = ScalarValue $ Witch.from value

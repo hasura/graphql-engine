@@ -3,7 +3,6 @@
 
 module Hasura.Backends.DataConnector.API.V0.QuerySpec (spec) where
 
-import Autodocodec.Extended
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.QQ.Simple (aesonQQ)
@@ -27,7 +26,7 @@ spec = do
   describe "Field" $ do
     describe "ColumnField" $
       testToFromJSONToSchema
-        (ColumnField (ValueWrapper $ ColumnName "my_column_name"))
+        (ColumnField $ ColumnName "my_column_name")
         [aesonQQ|
         { "type": "column",
           "column": "my_column_name"
@@ -48,11 +47,11 @@ spec = do
   describe "Query" $ do
     let query =
           Query
-            { _qFields = Just $ KM.fromList [("my_field_alias", ColumnField $ ValueWrapper $ ColumnName "my_field_name")],
+            { _qFields = Just $ KM.fromList [("my_field_alias", ColumnField $ ColumnName "my_field_name")],
               _qAggregates = Just $ KM.fromList [("my_aggregate", StarCount)],
               _qLimit = Just 10,
               _qOffset = Just 20,
-              _qWhere = Just . And $ ValueWrapper [],
+              _qWhere = Just $ And [],
               _qOrderBy = Just [OrderBy (ColumnName "my_column_name") Ascending]
             }
     testToFromJSONToSchema
@@ -136,7 +135,7 @@ genField :: MonadGen m => m Field
 genField =
   Gen.recursive
     Gen.choice
-    [ColumnField . ValueWrapper <$> genColumnName]
+    [ColumnField <$> genColumnName]
     [RelField <$> genRelationshipField]
 
 genRelationshipField :: MonadGen m => m RelationshipField

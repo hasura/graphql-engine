@@ -9,7 +9,7 @@ where
 
 --------------------------------------------------------------------------------
 
-import Autodocodec.Extended
+import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
 import Data.Aeson (FromJSON, ToJSON)
@@ -32,4 +32,4 @@ data Type
 instance HasCodec Type where
   codec =
     named "ScalarType" $
-      disjointStringConstCodec [(StringTy, "string"), (NumberTy, "number"), (BoolTy, "bool")]
+      stringConstCodec [(StringTy, "string"), (NumberTy, "number"), (BoolTy, "bool")]

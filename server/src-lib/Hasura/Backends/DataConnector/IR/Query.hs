@@ -6,7 +6,6 @@ module Hasura.Backends.DataConnector.IR.Query
   )
 where
 
-import Autodocodec.Extended (ValueWrapper (..))
 import Data.Aeson (ToJSON)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as Key
@@ -102,7 +101,7 @@ instance ToJSON Field where
   toJSON = J.genericToJSON J.defaultOptions
 
 instance Witch.From Field API.Field where
-  from (ColumnField name) = API.ColumnField . ValueWrapper $ Witch.from name
+  from (ColumnField name) = API.ColumnField $ Witch.from name
   from (RelField relationshipField) = API.RelField $ Witch.from relationshipField
 
 -- | A relationship consists of the following components:

@@ -1,7 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Expression
   ( Expression (..),
@@ -16,12 +14,13 @@ where
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
-import Control.Lens.TH (makePrisms)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
+import Data.HashMap.Strict qualified as HashMap
 import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
+import Data.Tuple.Extra
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
@@ -46,7 +45,7 @@ instance HasCodec BinaryComparisonOperator where
   codec =
     named "BinaryComparisonOperator" $
       matchChoiceCodec
-        ( disjointStringConstCodec
+        ( stringConstCodec
             [ (LessThan, "less_than"),
               (LessThanOrEqual, "less_than_or_equal"),
               (GreaterThan, "greater_than"),
@@ -71,7 +70,7 @@ instance HasCodec BinaryArrayComparisonOperator where
   codec =
     named "BinaryArrayComparisonOperator" $
       matchChoiceCodec
-        ( disjointStringConstCodec
+        ( stringConstCodec
             [ (In, "in")
             ]
         )
@@ -92,7 +91,7 @@ instance HasCodec UnaryComparisonOperator where
   codec =
     named "UnaryComparisonOperator" $
       matchChoiceCodec
-        ( disjointStringConstCodec
+        ( stringConstCodec
             [ (IsNull, "is_null")
             ]
         )
@@ -103,14 +102,69 @@ instance HasCodec UnaryComparisonOperator where
 
 -- | A serializable representation of query expressions.
 data Expression
-  = And (ValueWrapper "expressions" [Expression])
-  | Or (ValueWrapper "expressions" [Expression])
-  | Not (ValueWrapper "expression" Expression)
-  | ApplyBinaryComparisonOperator (ValueWrapper3 "operator" BinaryComparisonOperator "column" ComparisonColumn "value" ComparisonValue)
-  | ApplyBinaryArrayComparisonOperator (ValueWrapper3 "operator" BinaryArrayComparisonOperator "column" ComparisonColumn "values" [API.V0.Scalar.Value])
-  | ApplyUnaryComparisonOperator (ValueWrapper2 "operator" UnaryComparisonOperator "column" ComparisonColumn)
+  = And [Expression]
+  | Or [Expression]
+  | Not Expression
+  | ApplyBinaryComparisonOperator BinaryComparisonOperator ComparisonColumn ComparisonValue
+  | ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [API.V0.Scalar.Value]
+  | ApplyUnaryComparisonOperator UnaryComparisonOperator ComparisonColumn
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Expression
+
+instance HasCodec Expression where
+  codec =
+    named "Expression" $
+      object "Expression" $
+        discriminatedUnionCodec "type" enc dec
+    where
+      expressionsCodec = requiredField' "expressions"
+      expressionCodec = requiredField' "expression"
+      binaryOperatorCodec =
+        (,,)
+          <$> requiredField' "operator" .= fst3
+          <*> requiredField' "column" .= snd3
+          <*> requiredField' "value" .= thd3
+      binaryArrayOperatorCodec =
+        (,,)
+          <$> requiredField' "operator" .= fst3
+          <*> requiredField' "column" .= snd3
+          <*> requiredField' "values" .= thd3
+      unaryOperatorCodec =
+        (,)
+          <$> requiredField' "operator" .= fst
+          <*> requiredField' "column" .= snd
+      enc = \case
+        And expressions -> ("and", mapToEncoder expressions expressionsCodec)
+        Or expressions -> ("or", mapToEncoder expressions expressionsCodec)
+        Not expression -> ("not", mapToEncoder expression expressionCodec)
+        ApplyBinaryComparisonOperator o c v ->
+          ("binary_op", mapToEncoder (o, c, v) binaryOperatorCodec)
+        ApplyBinaryArrayComparisonOperator o c vs ->
+          ("binary_arr_op", mapToEncoder (o, c, vs) binaryArrayOperatorCodec)
+        ApplyUnaryComparisonOperator o c ->
+          ("unary_op", mapToEncoder (o, c) unaryOperatorCodec)
+      dec =
+        HashMap.fromList
+          [ ("and", ("AndExpression", mapToDecoder And expressionsCodec)),
+            ("or", ("OrExpression", mapToDecoder Or expressionsCodec)),
+            ("not", ("NotExpression", mapToDecoder Not expressionCodec)),
+            ( "binary_op",
+              ( "ApplyBinaryComparisonOperator",
+                mapToDecoder (uncurry3 ApplyBinaryComparisonOperator) binaryOperatorCodec
+              )
+            ),
+            ( "binary_arr_op",
+              ( "ApplyBinaryArrayComparisonOperator",
+                mapToDecoder (uncurry3 ApplyBinaryArrayComparisonOperator) binaryArrayOperatorCodec
+              )
+            ),
+            ( "unary_op",
+              ( "ApplyUnaryComparisonOperator",
+                mapToDecoder (uncurry ApplyUnaryComparisonOperator) unaryOperatorCodec
+              )
+            )
+          ]
 
 -- | Specifies a particular column to use in a comparison via its path and name
 data ComparisonColumn = ComparisonColumn
@@ -133,42 +187,24 @@ instance HasCodec ComparisonColumn where
 -- | A serializable representation of comparison values used in comparisons inside 'Expression's.
 data ComparisonValue
   = -- | Allows a comparison to a column on the current table or another table
-    AnotherColumn (ValueWrapper "column" ComparisonColumn)
-  | ScalarValue (ValueWrapper "value" API.V0.Scalar.Value)
+    AnotherColumn ComparisonColumn
+  | ScalarValue API.V0.Scalar.Value
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Hashable, NFData)
-
-$(makePrisms ''ComparisonValue)
-$(makePrisms ''Expression)
-
-instance HasCodec Expression where
-  codec =
-    named "Expression" $
-      sumTypeCodec
-        [ TypeAlternative "AndExpression" "and" _And,
-          TypeAlternative "OrExpression" "or" _Or,
-          TypeAlternative "NotExpression" "not" _Not,
-          TypeAlternative "ApplyBinaryComparisonOperator" "binary_op" _ApplyBinaryComparisonOperator,
-          TypeAlternative "ApplyBinaryArrayComparisonExpression" "binary_arr_op" _ApplyBinaryArrayComparisonOperator,
-          TypeAlternative "ApplyUnaryComparisonOperator" "unary_op" _ApplyUnaryComparisonOperator
-        ]
-
-deriving via Autodocodec Expression instance FromJSON Expression
-
-deriving via Autodocodec Expression instance ToJSON Expression
-
-deriving via Autodocodec Expression instance ToSchema Expression
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonValue
 
 instance HasCodec ComparisonValue where
   codec =
-    named "ComparisonValue" $
-      sumTypeCodec
-        [ TypeAlternative "AnotherColumnComparison" "column" _AnotherColumn,
-          TypeAlternative "ScalarValueComparison" "scalar" _ScalarValue
-        ]
-
-deriving via Autodocodec ComparisonValue instance FromJSON ComparisonValue
-
-deriving via Autodocodec ComparisonValue instance ToJSON ComparisonValue
-
-deriving via Autodocodec ComparisonValue instance ToSchema ComparisonValue
+    object "ComparisonValue" $
+      discriminatedUnionCodec "type" enc dec
+    where
+      columnCodec = requiredField' "column"
+      scalarValueCodec = requiredField' "value"
+      enc = \case
+        AnotherColumn c -> ("column", mapToEncoder c columnCodec)
+        ScalarValue v -> ("scalar", mapToEncoder v scalarValueCodec)
+      dec =
+        HashMap.fromList
+          [ ("column", ("AnotherColumnComparison", mapToDecoder AnotherColumn columnCodec)),
+            ("scalar", ("ScalarValueComparison", mapToDecoder ScalarValue scalarValueCodec))
+          ]

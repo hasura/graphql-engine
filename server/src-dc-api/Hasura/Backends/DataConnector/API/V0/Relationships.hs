@@ -69,7 +69,7 @@ data RelationshipType = ObjectRelationship | ArrayRelationship
 instance HasCodec RelationshipType where
   codec =
     named "RelationshipType" $
-      disjointStringConstCodec [(ObjectRelationship, "object"), (ArrayRelationship, "array")]
+      stringConstCodec [(ObjectRelationship, "object"), (ArrayRelationship, "array")]
 
 type SourceColumnName = API.V0.ColumnName
 
