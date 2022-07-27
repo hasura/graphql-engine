@@ -78,7 +78,7 @@
 </span><span id="line-76"></span><span>    </span><span id="wantedFields"><span class="annot"><span class="annottext">RecordSet -&gt; Maybe [Text]
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#wantedFields"><span class="hs-identifier hs-var hs-var">wantedFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689438668"><span id="local-6989586621689438670"><span id="local-6989586621689438672"><span class="annot"><span class="annottext">Int -&gt; RecordSet -&gt; ShowS
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689442793"><span id="local-6989586621689442795"><span id="local-6989586621689442797"><span class="annot"><span class="annottext">Int -&gt; RecordSet -&gt; ShowS
 [RecordSet] -&gt; ShowS
 RecordSet -&gt; String
 (Int -&gt; RecordSet -&gt; ShowS)
@@ -95,8 +95,8 @@ showsPrec :: Int -&gt; RecordSet -&gt; ShowS
 $cshowsPrec :: Int -&gt; RecordSet -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689438660"><span id="local-6989586621689438662"><span id="local-6989586621689438664"><span class="annot"><span class="hs-identifier hs-type">GHC.TypeLits.TypeError</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">GHC.TypeLits.Text</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Aeson loses key order, so you can't use this instance.&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621689438658"><span class="annot"><span class="annottext">toJSON :: RecordSet -&gt; Value
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689442785"><span id="local-6989586621689442787"><span id="local-6989586621689442789"><span class="annot"><span class="hs-identifier hs-type">GHC.TypeLits.TypeError</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><span class="hs-identifier hs-type">GHC.TypeLits.Text</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Aeson loses key order, so you can't use this instance.&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621689442783"><span class="annot"><span class="annottext">toJSON :: RecordSet -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -120,7 +120,7 @@ forall a. HasCallStack =&gt; String -&gt; a
 </span><span id="line-96"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UnsupportedJoinBug"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#UnsupportedJoinBug"><span class="hs-identifier hs-var">UnsupportedJoinBug</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#JoinType"><span class="hs-identifier hs-type">JoinType</span></a></span><span>
 </span><span id="line-97"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="MissingRecordSetBug"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#MissingRecordSetBug"><span class="hs-identifier hs-var">MissingRecordSetBug</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span>
 </span><span id="line-98"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BrokenJoinInvariant"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#BrokenJoinInvariant"><span class="hs-identifier hs-var">BrokenJoinInvariant</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689438641"><span id="local-6989586621689438643"><span id="local-6989586621689438645"><span class="annot"><span class="annottext">Int -&gt; ExecuteProblem -&gt; ShowS
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689442766"><span id="local-6989586621689442768"><span id="local-6989586621689442770"><span class="annot"><span class="annottext">Int -&gt; ExecuteProblem -&gt; ShowS
 [ExecuteProblem] -&gt; ShowS
 ExecuteProblem -&gt; String
 (Int -&gt; ExecuteProblem -&gt; ShowS)
@@ -139,11 +139,11 @@ $cshowsPrec :: Int -&gt; ExecuteProblem -&gt; ShowS
 </span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span class="hs-comment">-- | Execute monad; as queries are performed, the record sets are</span><span>
 </span><span id="line-102"></span><span class="hs-comment">-- stored in the map.</span><span>
-</span><span id="line-103"></span><span class="hs-keyword">newtype</span><span> </span><span id="Execute"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-var">Execute</span></a></span></span><span> </span><span id="local-6989586621689438769"><span class="annot"><a href="#local-6989586621689438769"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Execute"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-var">Execute</span></a></span></span><span>
+</span><span id="line-103"></span><span class="hs-keyword">newtype</span><span> </span><span id="Execute"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-var">Execute</span></a></span></span><span> </span><span id="local-6989586621689442894"><span class="annot"><a href="#local-6989586621689442894"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Execute"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-var">Execute</span></a></span></span><span>
 </span><span id="line-104"></span><span>  </span><span class="hs-special">{</span><span id="unExecute"><span class="annot"><span class="annottext">Execute a -&gt; ReaderT ExecuteReader (ExceptT ExecuteProblem IO) a
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#unExecute"><span class="hs-identifier hs-var hs-var">unExecute</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteReader"><span class="hs-identifier hs-type">ExecuteReader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689438769"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#unExecute"><span class="hs-identifier hs-var hs-var">unExecute</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteReader"><span class="hs-identifier hs-type">ExecuteReader</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689442894"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-105"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689438635"><span id="local-6989586621689438637"><span class="annot"><span class="annottext">a -&gt; Execute b -&gt; Execute a
+</span><span id="line-106"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689442760"><span id="local-6989586621689442762"><span class="annot"><span class="annottext">a -&gt; Execute b -&gt; Execute a
 (a -&gt; b) -&gt; Execute a -&gt; Execute b
 (forall a b. (a -&gt; b) -&gt; Execute a -&gt; Execute b)
 -&gt; (forall a b. a -&gt; Execute b -&gt; Execute a) -&gt; Functor Execute
@@ -157,7 +157,7 @@ $c&lt;$ :: forall a b. a -&gt; Execute b -&gt; Execute a
 fmap :: (a -&gt; b) -&gt; Execute a -&gt; Execute b
 $cfmap :: forall a b. (a -&gt; b) -&gt; Execute a -&gt; Execute b
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-107"></span><span>      </span><span id="local-6989586621689438623"><span id="local-6989586621689438625"><span id="local-6989586621689438627"><span id="local-6989586621689438629"><span id="local-6989586621689438631"><span class="annot"><span class="annottext">Functor Execute
+</span><span id="line-107"></span><span>      </span><span id="local-6989586621689442748"><span id="local-6989586621689442750"><span id="local-6989586621689442752"><span id="local-6989586621689442754"><span id="local-6989586621689442756"><span class="annot"><span class="annottext">Functor Execute
 a -&gt; Execute a
 Functor Execute
 -&gt; (forall a. a -&gt; Execute a)
@@ -196,7 +196,7 @@ pure :: a -&gt; Execute a
 $cpure :: forall a. a -&gt; Execute a
 $cp1Applicative :: Functor Execute
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-108"></span><span>      </span><span id="local-6989586621689438615"><span id="local-6989586621689438617"><span id="local-6989586621689438619"><span class="annot"><span class="annottext">Applicative Execute
+</span><span id="line-108"></span><span>      </span><span id="local-6989586621689442740"><span id="local-6989586621689442742"><span id="local-6989586621689442744"><span class="annot"><span class="annottext">Applicative Execute
 a -&gt; Execute a
 Applicative Execute
 -&gt; (forall a b. Execute a -&gt; (a -&gt; Execute b) -&gt; Execute b)
@@ -222,8 +222,8 @@ $c&gt;&gt; :: forall a b. Execute a -&gt; Execute b -&gt; Execute b
 $c&gt;&gt;= :: forall a b. Execute a -&gt; (a -&gt; Execute b) -&gt; Execute b
 $cp1Monad :: Applicative Execute
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-109"></span><span>      </span><span id="local-6989586621689438607"><span id="local-6989586621689438609"><span id="local-6989586621689438611"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteReader"><span class="hs-identifier hs-type">ExecuteReader</span></a></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-110"></span><span>      </span><span id="local-6989586621689438603"><span class="annot"><span class="annottext">Monad Execute
+</span><span id="line-109"></span><span>      </span><span id="local-6989586621689442732"><span id="local-6989586621689442734"><span id="local-6989586621689442736"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteReader"><span class="hs-identifier hs-type">ExecuteReader</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-110"></span><span>      </span><span id="local-6989586621689442728"><span class="annot"><span class="annottext">Monad Execute
 Monad Execute -&gt; (forall a. IO a -&gt; Execute a) -&gt; MonadIO Execute
 IO a -&gt; Execute a
 forall a. IO a -&gt; Execute a
@@ -233,16 +233,16 @@ liftIO :: IO a -&gt; Execute a
 $cliftIO :: forall a. IO a -&gt; Execute a
 $cp1MonadIO :: Monad Execute
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-111"></span><span>      </span><span id="local-6989586621689438597"><span id="local-6989586621689438599"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span></span></span><span>
+</span><span id="line-111"></span><span>      </span><span id="local-6989586621689442722"><span id="local-6989586621689442724"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span></span></span><span>
 </span><span id="line-112"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>
 </span><span id="line-114"></span><span class="hs-comment">-- | A value outputted by this execute module in a record set.</span><span>
-</span><span id="line-115"></span><span id="local-6989586621689438594"><span id="local-6989586621689438595"></span></span><span class="hs-keyword">data</span><span> </span><span id="OutputValue"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-var">OutputValue</span></a></span></span><span>
+</span><span id="line-115"></span><span id="local-6989586621689442719"><span id="local-6989586621689442720"></span></span><span class="hs-keyword">data</span><span> </span><span id="OutputValue"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-var">OutputValue</span></a></span></span><span>
 </span><span id="line-116"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ArrayOutputValue"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ArrayOutputValue"><span class="hs-identifier hs-var">ArrayOutputValue</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="RecordOutputValue"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordOutputValue"><span class="hs-identifier hs-var">RecordOutputValue</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-118"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ScalarOutputValue"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ScalarOutputValue"><span class="hs-identifier hs-var">ScalarOutputValue</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-comment">-- TODO: switch to 'MySQL.Scalar...'?</span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NullOutputValue"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#NullOutputValue"><span class="hs-identifier hs-var">NullOutputValue</span></a></span></span><span>
-</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689438584"><span id="local-6989586621689438586"><span id="local-6989586621689438588"><span class="annot"><span class="annottext">Int -&gt; OutputValue -&gt; ShowS
+</span><span id="line-120"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689442709"><span id="local-6989586621689442711"><span id="local-6989586621689442713"><span class="annot"><span class="annottext">Int -&gt; OutputValue -&gt; ShowS
 [OutputValue] -&gt; ShowS
 OutputValue -&gt; String
 (Int -&gt; OutputValue -&gt; ShowS)
@@ -257,7 +257,7 @@ show :: OutputValue -&gt; String
 $cshow :: OutputValue -&gt; String
 showsPrec :: Int -&gt; OutputValue -&gt; ShowS
 $cshowsPrec :: Int -&gt; OutputValue -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689438580"><span id="local-6989586621689438582"><span class="annot"><span class="annottext">OutputValue -&gt; OutputValue -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689442705"><span id="local-6989586621689442707"><span class="annot"><span class="annottext">OutputValue -&gt; OutputValue -&gt; Bool
 (OutputValue -&gt; OutputValue -&gt; Bool)
 -&gt; (OutputValue -&gt; OutputValue -&gt; Bool) -&gt; Eq OutputValue
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -276,27 +276,27 @@ $cto :: forall x. Rep OutputValue x -&gt; OutputValue
 $cfrom :: forall x. OutputValue -&gt; Rep OutputValue x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689438572"><span id="local-6989586621689438574"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span></span></span><span>
+</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689442697"><span id="local-6989586621689442699"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span></span></span><span>
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-125"></span><span class="hs-comment">-- Main entry points</span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span class="hs-comment">-- | Using the config, run the execute action. Finally, resolve the</span><span>
 </span><span id="line-128"></span><span class="hs-comment">-- head-and-tail to a record set.</span><span>
-</span><span id="line-129"></span><span id="local-6989586621689438569"><span id="local-6989586621689438570"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#runExecute"><span class="hs-identifier hs-type">runExecute</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-130"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689438570"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-129"></span><span id="local-6989586621689442694"><span id="local-6989586621689442695"><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#runExecute"><span class="hs-identifier hs-type">runExecute</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-130"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689442695"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-132"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#HeadAndTail"><span class="hs-identifier hs-type">HeadAndTail</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-133"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689438569"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-134"></span><span>  </span><span class="annot"><a href="#local-6989586621689438570"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-133"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689442694"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><a href="#local-6989586621689442695"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-135"></span><span id="runExecute"><span class="annot"><span class="annottext">runExecute :: SourceConfig
 -&gt; HeadAndTail -&gt; Execute a -&gt; m (Either ExecuteProblem RecordSet)
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#runExecute"><span class="hs-identifier hs-var hs-var">runExecute</span></a></span></span><span> </span><span id="local-6989586621689438568"><span class="annot"><span class="annottext">SourceConfig
-</span><a href="#local-6989586621689438568"><span class="hs-identifier hs-var">credentials</span></a></span></span><span> </span><span id="local-6989586621689438567"><span class="annot"><span class="annottext">HeadAndTail
-</span><a href="#local-6989586621689438567"><span class="hs-identifier hs-var">headAndTail</span></a></span></span><span> </span><span id="local-6989586621689438566"><span class="annot"><span class="annottext">Execute a
-</span><a href="#local-6989586621689438566"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-136"></span><span>  </span><span id="local-6989586621689438565"><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
-</span><a href="#local-6989586621689438565"><span class="hs-identifier hs-var">recordSets</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (IORef (InsOrdHashMap Ref RecordSet))
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#runExecute"><span class="hs-identifier hs-var hs-var">runExecute</span></a></span></span><span> </span><span id="local-6989586621689442693"><span class="annot"><span class="annottext">SourceConfig
+</span><a href="#local-6989586621689442693"><span class="hs-identifier hs-var">credentials</span></a></span></span><span> </span><span id="local-6989586621689442692"><span class="annot"><span class="annottext">HeadAndTail
+</span><a href="#local-6989586621689442692"><span class="hs-identifier hs-var">headAndTail</span></a></span></span><span> </span><span id="local-6989586621689442691"><span class="annot"><span class="annottext">Execute a
+</span><a href="#local-6989586621689442691"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621689442690"><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
+</span><a href="#local-6989586621689442690"><span class="hs-identifier hs-var">recordSets</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (IORef (InsOrdHashMap Ref RecordSet))
 -&gt; m (IORef (InsOrdHashMap Ref RecordSet))
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InsOrdHashMap Ref RecordSet
@@ -332,20 +332,20 @@ forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 forall a.
 Execute a -&gt; ReaderT ExecuteReader (ExceptT ExecuteProblem IO) a
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#unExecute"><span class="hs-identifier hs-var hs-var">unExecute</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Execute a
-</span><a href="#local-6989586621689438566"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">Execute a -&gt; Execute RecordSet -&gt; Execute RecordSet
+</span><a href="#local-6989586621689442691"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">Execute a -&gt; Execute RecordSet -&gt; Execute RecordSet
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HeadAndTail -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getFinalRecordSet"><span class="hs-identifier hs-var">getFinalRecordSet</span></a></span><span> </span><span class="annot"><span class="annottext">HeadAndTail
-</span><a href="#local-6989586621689438567"><span class="hs-identifier hs-var">headAndTail</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442692"><span class="hs-identifier hs-var">headAndTail</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-141"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExecuteReader :: IORef (InsOrdHashMap Ref RecordSet)
 -&gt; SourceConfig -&gt; ExecuteReader
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteReader"><span class="hs-identifier hs-type">ExecuteReader</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">SourceConfig
 credentials :: SourceConfig
 credentials :: SourceConfig
-</span><a href="#local-6989586621689438568"><span class="hs-identifier hs-var hs-var">credentials</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
+</span><a href="#local-6989586621689442693"><span class="hs-identifier hs-var hs-var">credentials</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
 recordSets :: IORef (InsOrdHashMap Ref RecordSet)
 recordSets :: IORef (InsOrdHashMap Ref RecordSet)
-</span><a href="#local-6989586621689438565"><span class="hs-identifier hs-var hs-var">recordSets</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442690"><span class="hs-identifier hs-var hs-var">recordSets</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
 </span><span id="line-142"></span><span>
 </span><span id="line-143"></span><span class="hs-comment">-- | Execute the forest of actions.</span><span>
 </span><span id="line-144"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#execute"><span class="hs-identifier hs-type">execute</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Forest</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#PlannedAction"><span class="hs-identifier hs-type">PlannedAction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -365,39 +365,39 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><span id="line-147"></span><span class="hs-comment">-- | Execute an action, then store its result in the ref assigned to it.</span><span>
 </span><span id="line-148"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#executePlannedAction"><span class="hs-identifier hs-type">executePlannedAction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#PlannedAction"><span class="hs-identifier hs-type">PlannedAction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span id="executePlannedAction"><span class="annot"><span class="annottext">executePlannedAction :: PlannedAction -&gt; Execute ()
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#executePlannedAction"><span class="hs-identifier hs-var hs-var">executePlannedAction</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#PlannedAction"><span class="hs-identifier hs-type">PlannedAction</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689438556"><span class="annot"><span class="annottext">Ref
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#executePlannedAction"><span class="hs-identifier hs-var hs-var">executePlannedAction</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#PlannedAction"><span class="hs-identifier hs-type">PlannedAction</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689442681"><span class="annot"><span class="annottext">Ref
 $sel:ref:PlannedAction :: PlannedAction -&gt; Ref
 ref :: Ref
-</span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3Aref%3APlannedAction"><span class="hs-identifier hs-var hs-var">ref</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689438554"><span class="annot"><span class="annottext">Action
+</span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3Aref%3APlannedAction"><span class="hs-identifier hs-var hs-var">ref</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689442679"><span class="annot"><span class="annottext">Action
 $sel:action:PlannedAction :: PlannedAction -&gt; Action
 action :: Action
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3Aaction%3APlannedAction"><span class="hs-identifier hs-var hs-var">action</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-150"></span><span>  </span><span class="annot"><span class="annottext">Action -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#fetchRecordSetForAction"><span class="hs-identifier hs-var">fetchRecordSetForAction</span></a></span><span> </span><span class="annot"><span class="annottext">Action
-</span><a href="#local-6989586621689438554"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">Execute RecordSet -&gt; (RecordSet -&gt; Execute ()) -&gt; Execute ()
+</span><a href="#local-6989586621689442679"><span class="hs-identifier hs-var">action</span></a></span><span> </span><span class="annot"><span class="annottext">Execute RecordSet -&gt; (RecordSet -&gt; Execute ()) -&gt; Execute ()
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Ref -&gt; RecordSet -&gt; Execute ()
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#saveRecordSet"><span class="hs-identifier hs-var">saveRecordSet</span></a></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438556"><span class="hs-identifier hs-var">ref</span></a></span><span>
+</span><a href="#local-6989586621689442681"><span class="hs-identifier hs-var">ref</span></a></span><span>
 </span><span id="line-151"></span><span>
 </span><span id="line-152"></span><span class="hs-comment">-- | Fetch the record set for the given action.</span><span>
 </span><span id="line-153"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#fetchRecordSetForAction"><span class="hs-identifier hs-type">fetchRecordSetForAction</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#Action"><span class="hs-identifier hs-type">Action</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span>
 </span><span id="line-154"></span><span id="fetchRecordSetForAction"><span class="annot"><span class="annottext">fetchRecordSetForAction :: Action -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#fetchRecordSetForAction"><span class="hs-identifier hs-var hs-var">fetchRecordSetForAction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-155"></span><span>  </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-156"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#SelectAction"><span class="hs-identifier hs-type">SelectAction</span></a></span><span> </span><span id="local-6989586621689438549"><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689438549"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-157"></span><span>      </span><span id="local-6989586621689438548"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438548"><span class="hs-identifier hs-var">recordSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-158"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689438546"><span class="annot"><span class="annottext">Pool Connection
+</span><span id="line-156"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#SelectAction"><span class="hs-identifier hs-type">SelectAction</span></a></span><span> </span><span id="local-6989586621689442674"><span class="annot"><span class="annottext">Select
+</span><a href="#local-6989586621689442674"><span class="hs-identifier hs-var">select</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-157"></span><span>      </span><span id="local-6989586621689442673"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442673"><span class="hs-identifier hs-var">recordSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-158"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689442671"><span class="annot"><span class="annottext">Pool Connection
 scConnectionPool :: SourceConfig -&gt; Pool Connection
 scConnectionPool :: Pool Connection
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#scConnectionPool"><span class="hs-identifier hs-var hs-var">scConnectionPool</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ExecuteReader -&gt; SourceConfig) -&gt; Execute SourceConfig
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">ExecuteReader -&gt; SourceConfig
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#credentials"><span class="hs-identifier hs-var hs-var">credentials</span></a></span><span>
-</span><span id="line-159"></span><span>        </span><span id="local-6989586621689438543"><span class="annot"><span class="annottext">Either ExecuteProblem (Vector (InsOrdHashMap FieldName Value))
-</span><a href="#local-6989586621689438543"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-159"></span><span>        </span><span id="local-6989586621689442668"><span class="annot"><span class="annottext">Either ExecuteProblem (Vector (InsOrdHashMap FieldName Value))
+</span><a href="#local-6989586621689442668"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-160"></span><span>          </span><span class="annot"><span class="annottext">IO (Either ExecuteProblem (Vector (InsOrdHashMap FieldName Value)))
 -&gt; Execute
      (Either ExecuteProblem (Vector (InsOrdHashMap FieldName Value)))
@@ -435,41 +435,41 @@ Pool Connection
 -&gt; Query -&gt; m (Vector (InsOrdHashMap FieldName Value))
 </span><a href="Hasura.Backends.MySQL.Connection.html#runQueryYieldingRows"><span class="hs-identifier hs-var">runQueryYieldingRows</span></a></span><span>
 </span><span id="line-163"></span><span>                </span><span class="annot"><span class="annottext">Pool Connection
-</span><a href="#local-6989586621689438546"><span class="hs-identifier hs-var">scConnectionPool</span></a></span><span>
+</span><a href="#local-6989586621689442671"><span class="hs-identifier hs-var">scConnectionPool</span></a></span><span>
 </span><span id="line-164"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MySQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Printer
 </span><a href="Hasura.Backends.MySQL.ToQuery.html#fromSelect"><span class="hs-identifier hs-var">fromSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Select -&gt; Select
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#selectQuery"><span class="hs-identifier hs-var">selectQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689438549"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442674"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-165"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either ExecuteProblem (Vector (InsOrdHashMap FieldName Value))
-</span><a href="#local-6989586621689438543"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-166"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689438542"><span class="annot"><span class="annottext">ExecuteProblem
-</span><a href="#local-6989586621689438542"><span class="hs-identifier hs-var">problem</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ExecuteProblem -&gt; Execute RecordSet
+</span><a href="#local-6989586621689442668"><span class="hs-identifier hs-var">result</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-166"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689442667"><span class="annot"><span class="annottext">ExecuteProblem
+</span><a href="#local-6989586621689442667"><span class="hs-identifier hs-var">problem</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ExecuteProblem -&gt; Execute RecordSet
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ExecuteProblem -&gt; ExecuteProblem
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#JoinProblem"><span class="hs-identifier hs-var">JoinProblem</span></a></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem
-</span><a href="#local-6989586621689438542"><span class="hs-identifier hs-var">problem</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-167"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689438540"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName Value)
-</span><a href="#local-6989586621689438540"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RecordSet -&gt; Execute RecordSet
+</span><a href="#local-6989586621689442667"><span class="hs-identifier hs-var">problem</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-167"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689442665"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName Value)
+</span><a href="#local-6989586621689442665"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RecordSet -&gt; Execute RecordSet
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName Value) -&gt; RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#makeRecordSet"><span class="hs-identifier hs-var">makeRecordSet</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName Value)
-</span><a href="#local-6989586621689438540"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442665"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span>      </span><span class="hs-comment">-- Update the wanted fields from the original select. This lets</span><span>
 </span><span id="line-169"></span><span>      </span><span class="hs-comment">-- the executor know which fields to include after performing a</span><span>
 </span><span id="line-170"></span><span>      </span><span class="hs-comment">-- join.</span><span>
 </span><span id="line-171"></span><span>      </span><span class="annot"><span class="annottext">RecordSet -&gt; Execute RecordSet
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438548"><span class="hs-identifier hs-var">recordSet</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">wantedFields :: Maybe [Text]
+</span><a href="#local-6989586621689442673"><span class="hs-identifier hs-var">recordSet</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">wantedFields :: Maybe [Text]
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#wantedFields"><span class="hs-identifier hs-var">wantedFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select -&gt; Maybe [Text]
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3AselectWantedFields%3ASelect"><span class="hs-identifier hs-var hs-var">Plan.selectWantedFields</span></a></span><span> </span><span class="annot"><span class="annottext">Select
-</span><a href="#local-6989586621689438549"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689442674"><span class="hs-identifier hs-var">select</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-172"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#JoinAction"><span class="hs-identifier hs-type">JoinAction</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#Join"><span class="hs-identifier hs-type">Plan.Join</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">$sel:joinType:Join :: Join -&gt; JoinType
-</span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3AjoinType%3AJoin"><span class="hs-identifier hs-var">joinType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621689438535"><span class="annot"><span class="annottext">JoinType
-</span><a href="#local-6989586621689438535"><span class="hs-identifier hs-var">joinType'</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:joinFieldName:Join :: Join -&gt; Text
-</span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3AjoinFieldName%3AJoin"><span class="hs-identifier hs-var">joinFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621689438534"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438534"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689438529"><span id="local-6989586621689438530"><span id="local-6989586621689438531"><span id="local-6989586621689438532"><span id="local-6989586621689438533"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3AjoinType%3AJoin"><span class="hs-identifier hs-var">joinType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621689442660"><span class="annot"><span class="annottext">JoinType
+</span><a href="#local-6989586621689442660"><span class="hs-identifier hs-var">joinType'</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">$sel:joinFieldName:Join :: Join -&gt; Text
+</span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3AjoinFieldName%3AJoin"><span class="hs-identifier hs-var">joinFieldName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621689442659"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442659"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689442654"><span id="local-6989586621689442655"><span id="local-6989586621689442656"><span id="local-6989586621689442657"><span id="local-6989586621689442658"><span class="annot"><span class="annottext">Maybe Int
 Maybe [Text]
 Top
 Ref
@@ -484,18 +484,18 @@ $sel:leftRecordSet:Join :: Join -&gt; Ref
 $sel:joinRhsTop:Join :: Join -&gt; Top
 $sel:joinRhsOffset:Join :: Join -&gt; Maybe Int
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3AwantedFields%3AJoin"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-173"></span><span>      </span><span id="local-6989586621689438527"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438527"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Execute RecordSet
+</span><span id="line-173"></span><span>      </span><span id="local-6989586621689442652"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442652"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getRecordSet"><span class="hs-identifier hs-var">getRecordSet</span></a></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438533"><span class="hs-identifier hs-var">leftRecordSet</span></a></span><span>
-</span><span id="line-174"></span><span>      </span><span id="local-6989586621689438525"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438525"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Execute RecordSet
+</span><a href="#local-6989586621689442658"><span class="hs-identifier hs-var">leftRecordSet</span></a></span><span>
+</span><span id="line-174"></span><span>      </span><span id="local-6989586621689442650"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442650"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getRecordSet"><span class="hs-identifier hs-var">getRecordSet</span></a></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438532"><span class="hs-identifier hs-var">rightRecordSet</span></a></span><span>
+</span><a href="#local-6989586621689442657"><span class="hs-identifier hs-var">rightRecordSet</span></a></span><span>
 </span><span id="line-175"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JoinType
-</span><a href="#local-6989586621689438535"><span class="hs-identifier hs-var">joinType'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-176"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ArrayJoin"><span class="hs-identifier hs-type">ArrayJoin</span></a></span><span> </span><span id="local-6989586621689438523"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438523"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689442660"><span class="hs-identifier hs-var">joinType'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-176"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ArrayJoin"><span class="hs-identifier hs-type">ArrayJoin</span></a></span><span> </span><span id="local-6989586621689442648"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
+</span><a href="#local-6989586621689442648"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-177"></span><span>          </span><span class="annot"><span class="annottext">Maybe [Text]
 -&gt; Text
 -&gt; [(FieldName, FieldName)]
@@ -506,20 +506,20 @@ $sel:joinRhsOffset:Join :: Join -&gt; Maybe Int
 -&gt; Either ExecuteProblem RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#leftArrayJoin"><span class="hs-identifier hs-var">leftArrayJoin</span></a></span><span>
 </span><span id="line-178"></span><span>            </span><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438529"><span class="hs-identifier hs-var">wantedFields</span></a></span><span>
+</span><a href="#local-6989586621689442654"><span class="hs-identifier hs-var">wantedFields</span></a></span><span>
 </span><span id="line-179"></span><span>            </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438534"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621689442659"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-180"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(FieldName, FieldName)] -&gt; [(FieldName, FieldName)]
-</span><a href="#local-6989586621689438521"><span class="hs-identifier hs-var">toFieldNames</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438523"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442646"><span class="hs-identifier hs-var">toFieldNames</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
+</span><a href="#local-6989586621689442648"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-181"></span><span>            </span><span class="annot"><span class="annottext">Top
-</span><a href="#local-6989586621689438531"><span class="hs-identifier hs-var">joinRhsTop</span></a></span><span>
+</span><a href="#local-6989586621689442656"><span class="hs-identifier hs-var">joinRhsTop</span></a></span><span>
 </span><span id="line-182"></span><span>            </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689438530"><span class="hs-identifier hs-var">joinRhsOffset</span></a></span><span>
+</span><a href="#local-6989586621689442655"><span class="hs-identifier hs-var">joinRhsOffset</span></a></span><span>
 </span><span id="line-183"></span><span>            </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438527"><span class="hs-identifier hs-var">left</span></a></span><span>
+</span><a href="#local-6989586621689442652"><span class="hs-identifier hs-var">left</span></a></span><span>
 </span><span id="line-184"></span><span>            </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438525"><span class="hs-identifier hs-var">right</span></a></span><span>
+</span><a href="#local-6989586621689442650"><span class="hs-identifier hs-var">right</span></a></span><span>
 </span><span id="line-185"></span><span>            </span><span class="annot"><span class="annottext">Either ExecuteProblem RecordSet
 -&gt; (ExecuteProblem -&gt; Execute RecordSet) -&gt; Execute RecordSet
 forall (m :: * -&gt; *) e a.
@@ -534,8 +534,8 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem -&gt; ExecuteProblem
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#JoinProblem"><span class="hs-identifier hs-var">JoinProblem</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-186"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ObjectJoin"><span class="hs-identifier hs-type">ObjectJoin</span></a></span><span> </span><span id="local-6989586621689438517"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438517"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-186"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ObjectJoin"><span class="hs-identifier hs-type">ObjectJoin</span></a></span><span> </span><span id="local-6989586621689442642"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
+</span><a href="#local-6989586621689442642"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-187"></span><span>          </span><span class="annot"><span class="annottext">Maybe [Text]
 -&gt; Text
 -&gt; [(FieldName, FieldName)]
@@ -544,16 +544,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; Either ExecuteProblem RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#leftObjectJoin"><span class="hs-identifier hs-var">leftObjectJoin</span></a></span><span>
 </span><span id="line-188"></span><span>            </span><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438529"><span class="hs-identifier hs-var">wantedFields</span></a></span><span>
+</span><a href="#local-6989586621689442654"><span class="hs-identifier hs-var">wantedFields</span></a></span><span>
 </span><span id="line-189"></span><span>            </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438534"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
+</span><a href="#local-6989586621689442659"><span class="hs-identifier hs-var">fieldName</span></a></span><span>
 </span><span id="line-190"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(FieldName, FieldName)] -&gt; [(FieldName, FieldName)]
-</span><a href="#local-6989586621689438521"><span class="hs-identifier hs-var">toFieldNames</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438517"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442646"><span class="hs-identifier hs-var">toFieldNames</span></a></span><span> </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
+</span><a href="#local-6989586621689442642"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-191"></span><span>            </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438527"><span class="hs-identifier hs-var">left</span></a></span><span>
+</span><a href="#local-6989586621689442652"><span class="hs-identifier hs-var">left</span></a></span><span>
 </span><span id="line-192"></span><span>            </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438525"><span class="hs-identifier hs-var">right</span></a></span><span>
+</span><a href="#local-6989586621689442650"><span class="hs-identifier hs-var">right</span></a></span><span>
 </span><span id="line-193"></span><span>            </span><span class="annot"><span class="annottext">Either ExecuteProblem RecordSet
 -&gt; (ExecuteProblem -&gt; Execute RecordSet) -&gt; Execute RecordSet
 forall (m :: * -&gt; *) e a.
@@ -573,10 +573,10 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JoinType -&gt; ExecuteProblem
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#UnsupportedJoinBug"><span class="hs-identifier hs-var">UnsupportedJoinBug</span></a></span><span> </span><span class="annot"><span class="annottext">JoinType
-</span><a href="#local-6989586621689438535"><span class="hs-identifier hs-var">joinType'</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442660"><span class="hs-identifier hs-var">joinType'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-195"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-196"></span><span>    </span><span id="local-6989586621689438521"><span class="annot"><span class="annottext">toFieldNames :: [(FieldName, FieldName)] -&gt; [(FieldName, FieldName)]
-</span><a href="#local-6989586621689438521"><span class="hs-identifier hs-var hs-var">toFieldNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((FieldName, FieldName) -&gt; (FieldName, FieldName))
+</span><span id="line-196"></span><span>    </span><span id="local-6989586621689442646"><span class="annot"><span class="annottext">toFieldNames :: [(FieldName, FieldName)] -&gt; [(FieldName, FieldName)]
+</span><a href="#local-6989586621689442646"><span class="hs-identifier hs-var hs-var">toFieldNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((FieldName, FieldName) -&gt; (FieldName, FieldName))
 -&gt; [(FieldName, FieldName)] -&gt; [(FieldName, FieldName)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(FieldName -&gt; FieldName)
@@ -593,8 +593,8 @@ Bifunctor p =&gt;
 </span><span id="line-198"></span><span class="hs-comment">-- | Make a record set from a flat record from the DB.</span><span>
 </span><span id="line-199"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#makeRecordSet"><span class="hs-identifier hs-type">makeRecordSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Vector</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span>
 </span><span id="line-200"></span><span id="makeRecordSet"><span class="annot"><span class="annottext">makeRecordSet :: Vector (InsOrdHashMap FieldName Value) -&gt; RecordSet
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#makeRecordSet"><span class="hs-identifier hs-var hs-var">makeRecordSet</span></a></span></span><span> </span><span id="local-6989586621689438515"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName Value)
-</span><a href="#local-6989586621689438515"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#makeRecordSet"><span class="hs-identifier hs-var hs-var">makeRecordSet</span></a></span></span><span> </span><span id="local-6989586621689442640"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName Value)
+</span><a href="#local-6989586621689442640"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-201"></span><span>  </span><span class="annot"><span class="annottext">RecordSet :: Maybe PlannedAction
 -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; Maybe [Text]
@@ -617,7 +617,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; OutputValue
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ScalarOutputValue"><span class="hs-identifier hs-var">ScalarOutputValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName Value)
-</span><a href="#local-6989586621689438515"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689442640"><span class="hs-identifier hs-var">rows</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-205"></span><span>      </span><span class="annot"><span class="annottext">wantedFields :: Maybe [Text]
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#wantedFields"><span class="hs-identifier hs-var">wantedFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
 forall a. Maybe a
@@ -626,11 +626,11 @@ forall a. Maybe a
 </span><span id="line-207"></span><span>
 </span><span id="line-208"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#saveRecordSet"><span class="hs-identifier hs-type">saveRecordSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-209"></span><span id="saveRecordSet"><span class="annot"><span class="annottext">saveRecordSet :: Ref -&gt; RecordSet -&gt; Execute ()
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#saveRecordSet"><span class="hs-identifier hs-var hs-var">saveRecordSet</span></a></span></span><span> </span><span id="local-6989586621689438514"><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438514"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span id="local-6989586621689438513"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438513"><span class="hs-identifier hs-var">recordSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-210"></span><span>  </span><span id="local-6989586621689438512"><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
-</span><a href="#local-6989586621689438512"><span class="hs-identifier hs-var">recordSetsRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ExecuteReader -&gt; IORef (InsOrdHashMap Ref RecordSet))
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#saveRecordSet"><span class="hs-identifier hs-var hs-var">saveRecordSet</span></a></span></span><span> </span><span id="local-6989586621689442639"><span class="annot"><span class="annottext">Ref
+</span><a href="#local-6989586621689442639"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span id="local-6989586621689442638"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442638"><span class="hs-identifier hs-var">recordSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-210"></span><span>  </span><span id="local-6989586621689442637"><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
+</span><a href="#local-6989586621689442637"><span class="hs-identifier hs-var">recordSetsRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ExecuteReader -&gt; IORef (InsOrdHashMap Ref RecordSet))
 -&gt; Execute (IORef (InsOrdHashMap Ref RecordSet))
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">ExecuteReader -&gt; IORef (InsOrdHashMap Ref RecordSet)
@@ -642,7 +642,7 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 -&gt; IO ()
 forall a. IORef a -&gt; (a -&gt; a) -&gt; IO ()
 </span><span class="hs-identifier hs-var">modifyIORef'</span></span><span> </span><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
-</span><a href="#local-6989586621689438512"><span class="hs-identifier hs-var">recordSetsRef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ref
+</span><a href="#local-6989586621689442637"><span class="hs-identifier hs-var">recordSetsRef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ref
 -&gt; RecordSet
 -&gt; InsOrdHashMap Ref RecordSet
 -&gt; InsOrdHashMap Ref RecordSet
@@ -650,72 +650,72 @@ forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438514"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438513"><span class="hs-identifier hs-var">recordSet</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442639"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442638"><span class="hs-identifier hs-var">recordSet</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-212"></span><span>
 </span><span id="line-213"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getRecordSet"><span class="hs-identifier hs-type">getRecordSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span>
 </span><span id="line-214"></span><span id="getRecordSet"><span class="annot"><span class="annottext">getRecordSet :: Ref -&gt; Execute RecordSet
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getRecordSet"><span class="hs-identifier hs-var hs-var">getRecordSet</span></a></span></span><span> </span><span id="local-6989586621689438509"><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438509"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-215"></span><span>  </span><span id="local-6989586621689438508"><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
-</span><a href="#local-6989586621689438508"><span class="hs-identifier hs-var">recordSetsRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ExecuteReader -&gt; IORef (InsOrdHashMap Ref RecordSet))
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getRecordSet"><span class="hs-identifier hs-var hs-var">getRecordSet</span></a></span></span><span> </span><span id="local-6989586621689442634"><span class="annot"><span class="annottext">Ref
+</span><a href="#local-6989586621689442634"><span class="hs-identifier hs-var">ref</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-215"></span><span>  </span><span id="local-6989586621689442633"><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
+</span><a href="#local-6989586621689442633"><span class="hs-identifier hs-var">recordSetsRef</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(ExecuteReader -&gt; IORef (InsOrdHashMap Ref RecordSet))
 -&gt; Execute (IORef (InsOrdHashMap Ref RecordSet))
 forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
 </span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">ExecuteReader -&gt; IORef (InsOrdHashMap Ref RecordSet)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#recordSets"><span class="hs-identifier hs-var hs-var">recordSets</span></a></span><span>
-</span><span id="line-216"></span><span>  </span><span id="local-6989586621689438507"><span class="annot"><span class="annottext">InsOrdHashMap Ref RecordSet
-</span><a href="#local-6989586621689438507"><span class="hs-identifier hs-var">hash</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (InsOrdHashMap Ref RecordSet)
+</span><span id="line-216"></span><span>  </span><span id="local-6989586621689442632"><span class="annot"><span class="annottext">InsOrdHashMap Ref RecordSet
+</span><a href="#local-6989586621689442632"><span class="hs-identifier hs-var">hash</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (InsOrdHashMap Ref RecordSet)
 -&gt; Execute (InsOrdHashMap Ref RecordSet)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
 -&gt; IO (InsOrdHashMap Ref RecordSet)
 forall a. IORef a -&gt; IO a
 </span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef (InsOrdHashMap Ref RecordSet)
-</span><a href="#local-6989586621689438508"><span class="hs-identifier hs-var">recordSetsRef</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442633"><span class="hs-identifier hs-var">recordSetsRef</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-217"></span><span>  </span><span class="annot"><span class="annottext">Ref -&gt; InsOrdHashMap Ref RecordSet -&gt; Maybe RecordSet
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438509"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Ref RecordSet
-</span><a href="#local-6989586621689438507"><span class="hs-identifier hs-var">hash</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RecordSet -&gt; Execute RecordSet -&gt; Execute RecordSet
+</span><a href="#local-6989586621689442634"><span class="hs-identifier hs-var">ref</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap Ref RecordSet
+</span><a href="#local-6989586621689442632"><span class="hs-identifier hs-var">hash</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RecordSet -&gt; Execute RecordSet -&gt; Execute RecordSet
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="Hasura.Prelude.html#onNothing"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">ExecuteProblem -&gt; Execute RecordSet
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ref -&gt; ExecuteProblem
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#MissingRecordSetBug"><span class="hs-identifier hs-var">MissingRecordSetBug</span></a></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438509"><span class="hs-identifier hs-var">ref</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442634"><span class="hs-identifier hs-var">ref</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-218"></span><span>
 </span><span id="line-219"></span><span class="hs-comment">-- | See documentation for 'HeadAndTail'.</span><span>
 </span><span id="line-220"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getFinalRecordSet"><span class="hs-identifier hs-type">getFinalRecordSet</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#HeadAndTail"><span class="hs-identifier hs-type">HeadAndTail</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#Execute"><span class="hs-identifier hs-type">Execute</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordSet"><span class="hs-identifier hs-type">RecordSet</span></a></span><span>
 </span><span id="line-221"></span><span id="getFinalRecordSet"><span class="annot"><span class="annottext">getFinalRecordSet :: HeadAndTail -&gt; Execute RecordSet
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getFinalRecordSet"><span class="hs-identifier hs-var hs-var">getFinalRecordSet</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#HeadAndTail"><span class="hs-identifier hs-type">HeadAndTail</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689438501"><span id="local-6989586621689438502"><span class="annot"><span class="annottext">Ref
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getFinalRecordSet"><span class="hs-identifier hs-var hs-var">getFinalRecordSet</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#HeadAndTail"><span class="hs-identifier hs-type">HeadAndTail</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689442626"><span id="local-6989586621689442627"><span class="annot"><span class="annottext">Ref
 $sel:tail:HeadAndTail :: HeadAndTail -&gt; Ref
 $sel:head:HeadAndTail :: HeadAndTail -&gt; Ref
 tail :: Ref
 head :: Ref
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#%24sel%3Atail%3AHeadAndTail"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-222"></span><span>  </span><span id="local-6989586621689438498"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438498"><span class="hs-identifier hs-var">headSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Execute RecordSet
+</span><span id="line-222"></span><span>  </span><span id="local-6989586621689442623"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442623"><span class="hs-identifier hs-var">headSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getRecordSet"><span class="hs-identifier hs-var">getRecordSet</span></a></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438502"><span class="hs-identifier hs-var">head</span></a></span><span>
-</span><span id="line-223"></span><span>  </span><span id="local-6989586621689438497"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438497"><span class="hs-identifier hs-var">tailSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689442627"><span class="hs-identifier hs-var">head</span></a></span><span>
+</span><span id="line-223"></span><span>  </span><span id="local-6989586621689442622"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442622"><span class="hs-identifier hs-var">tailSet</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-224"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438501"><span class="hs-identifier hs-var">tail</span></a></span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Ref -&gt; Bool
+</span><a href="#local-6989586621689442626"><span class="hs-identifier hs-var">tail</span></a></span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Ref -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438502"><span class="hs-identifier hs-var">head</span></a></span><span>
+</span><a href="#local-6989586621689442627"><span class="hs-identifier hs-var">head</span></a></span><span>
 </span><span id="line-225"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Ref -&gt; Execute RecordSet
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#getRecordSet"><span class="hs-identifier hs-var">getRecordSet</span></a></span><span> </span><span class="annot"><span class="annottext">Ref
-</span><a href="#local-6989586621689438501"><span class="hs-identifier hs-var">tail</span></a></span><span>
+</span><a href="#local-6989586621689442626"><span class="hs-identifier hs-var">tail</span></a></span><span>
 </span><span id="line-226"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">RecordSet -&gt; Execute RecordSet
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438498"><span class="hs-identifier hs-var">headSet</span></a></span><span>
+</span><a href="#local-6989586621689442623"><span class="hs-identifier hs-var">headSet</span></a></span><span>
 </span><span id="line-227"></span><span>  </span><span class="annot"><span class="annottext">RecordSet -&gt; Execute RecordSet
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span>
 </span><span id="line-228"></span><span>    </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438497"><span class="hs-identifier hs-var">tailSet</span></a></span><span>
+</span><a href="#local-6989586621689442622"><span class="hs-identifier hs-var">tailSet</span></a></span><span>
 </span><span id="line-229"></span><span>      </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">rows :: Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#rows"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-230"></span><span>          </span><span class="annot"><span class="annottext">(InsOrdHashMap FieldName OutputValue
@@ -730,8 +730,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall k v.
 (k -&gt; v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.filterWithKey</span></span><span>
-</span><span id="line-232"></span><span>                </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span id="local-6989586621689438493"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438493"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
+</span><span id="line-232"></span><span>                </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span id="local-6989586621689442618"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442618"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-233"></span><span>                    </span><span class="annot"><span class="annottext">Bool -&gt; ([Text] -&gt; Bool) -&gt; Maybe [Text] -&gt; Bool
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
@@ -739,14 +739,14 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">elem</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438493"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecordSet -&gt; Maybe [Text]
+</span><a href="#local-6989586621689442618"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecordSet -&gt; Maybe [Text]
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#wantedFields"><span class="hs-identifier hs-var hs-var">wantedFields</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438498"><span class="hs-identifier hs-var">headSet</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442623"><span class="hs-identifier hs-var">headSet</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-234"></span><span>                </span><span class="hs-special">)</span><span>
 </span><span id="line-235"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-236"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecordSet -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#rows"><span class="hs-identifier hs-var hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438497"><span class="hs-identifier hs-var">tailSet</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442622"><span class="hs-identifier hs-var">tailSet</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-237"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-238"></span><span>
 </span><span id="line-239"></span><span class="hs-comment">{- WIP, it seems:
@@ -788,14 +788,14 @@ planFieldNameToQueryFieldName (EntityAlias fieldNameEntity) (FieldName fieldName
 -&gt; RecordSet
 -&gt; RecordSet
 -&gt; Either ExecuteProblem RecordSet
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#leftObjectJoin"><span class="hs-identifier hs-var hs-var">leftObjectJoin</span></a></span></span><span> </span><span id="local-6989586621689438491"><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438491"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689438490"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438490"><span class="hs-identifier hs-var">joinAlias</span></a></span></span><span> </span><span id="local-6989586621689438489"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438489"><span class="hs-identifier hs-var">joinFields</span></a></span></span><span> </span><span id="local-6989586621689438488"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438488"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span id="local-6989586621689438487"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438487"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-273"></span><span>  </span><span id="local-6989586621689438486"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438486"><span class="hs-identifier hs-var">rows'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">([InsOrdHashMap FieldName OutputValue]
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#leftObjectJoin"><span class="hs-identifier hs-var hs-var">leftObjectJoin</span></a></span></span><span> </span><span id="local-6989586621689442616"><span class="annot"><span class="annottext">Maybe [Text]
+</span><a href="#local-6989586621689442616"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689442615"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442615"><span class="hs-identifier hs-var">joinAlias</span></a></span></span><span> </span><span id="local-6989586621689442614"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
+</span><a href="#local-6989586621689442614"><span class="hs-identifier hs-var">joinFields</span></a></span></span><span> </span><span id="local-6989586621689442613"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442613"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span id="local-6989586621689442612"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442612"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-273"></span><span>  </span><span id="local-6989586621689442611"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442611"><span class="hs-identifier hs-var">rows'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">([InsOrdHashMap FieldName OutputValue]
  -&gt; Vector (InsOrdHashMap FieldName OutputValue))
 -&gt; Either ExecuteProblem [InsOrdHashMap FieldName OutputValue]
 -&gt; Either
@@ -822,7 +822,7 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
 -&gt; Either ExecuteProblem (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438483"><span class="hs-identifier hs-var">makeRows</span></a></span><span> </span><span class="annot"><span class="annottext">([InsOrdHashMap FieldName OutputValue]
+</span><a href="#local-6989586621689442608"><span class="hs-identifier hs-var">makeRows</span></a></span><span> </span><span class="annot"><span class="annottext">([InsOrdHashMap FieldName OutputValue]
  -&gt; Either ExecuteProblem [InsOrdHashMap FieldName OutputValue])
 -&gt; (Vector (InsOrdHashMap FieldName OutputValue)
     -&gt; [InsOrdHashMap FieldName OutputValue])
@@ -841,7 +841,7 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RecordSet -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#rows"><span class="hs-identifier hs-var hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438488"><span class="hs-identifier hs-var">left</span></a></span><span>
+</span><a href="#local-6989586621689442613"><span class="hs-identifier hs-var">left</span></a></span><span>
 </span><span id="line-274"></span><span>  </span><span class="annot"><span class="annottext">RecordSet -&gt; Either ExecuteProblem RecordSet
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span>
@@ -860,41 +860,41 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span>
 </span><span id="line-278"></span><span>        </span><span class="annot"><span class="annottext">rows :: Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#rows"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438486"><span class="hs-identifier hs-var">rows'</span></a></span><span>
+</span><a href="#local-6989586621689442611"><span class="hs-identifier hs-var">rows'</span></a></span><span>
 </span><span id="line-279"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-280"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-281"></span><span>    </span><span class="annot"><a href="#local-6989586621689438483"><span class="hs-identifier hs-type">makeRows</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-282"></span><span>    </span><span id="local-6989586621689438483"><span class="annot"><span class="annottext">makeRows :: InsOrdHashMap FieldName OutputValue
+</span><span id="line-281"></span><span>    </span><span class="annot"><a href="#local-6989586621689442608"><span class="hs-identifier hs-type">makeRows</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ExecuteProblem"><span class="hs-identifier hs-type">ExecuteProblem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">InsOrdHashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#OutputValue"><span class="hs-identifier hs-type">OutputValue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-282"></span><span>    </span><span id="local-6989586621689442608"><span class="annot"><span class="annottext">makeRows :: InsOrdHashMap FieldName OutputValue
 -&gt; Either ExecuteProblem (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438483"><span class="hs-identifier hs-var hs-var">makeRows</span></a></span></span><span> </span><span id="local-6989586621689438482"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438482"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-283"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689438481"><span class="annot"><span class="annottext">rightRows :: Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438481"><span class="hs-identifier hs-var hs-var">rightRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689442608"><span class="hs-identifier hs-var hs-var">makeRows</span></a></span></span><span> </span><span id="local-6989586621689442607"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442607"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-283"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689442606"><span class="annot"><span class="annottext">rightRows :: Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442606"><span class="hs-identifier hs-var hs-var">rightRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-284"></span><span>            </span><span class="annot"><span class="annottext">[InsOrdHashMap FieldName OutputValue]
 -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 forall a. [a] -&gt; Vector a
 </span><span class="hs-identifier hs-var">V.fromList</span></span><span>
 </span><span id="line-285"></span><span>              </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438480"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
+</span><a href="#local-6989586621689442605"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
 </span><span id="line-286"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(FieldName, FieldName)] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438489"><span class="hs-identifier hs-var">joinFields</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-287"></span><span>                  </span><span id="local-6989586621689438480"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438480"><span class="hs-identifier hs-var">rightRow</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442614"><span class="hs-identifier hs-var">joinFields</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-287"></span><span>                  </span><span id="local-6989586621689442605"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442605"><span class="hs-identifier hs-var">rightRow</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; [InsOrdHashMap FieldName OutputValue]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecordSet -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#rows"><span class="hs-identifier hs-var hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438487"><span class="hs-identifier hs-var">right</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689442612"><span class="hs-identifier hs-var">right</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-288"></span><span>                  </span><span class="annot"><span class="annottext">((FieldName, FieldName) -&gt; Bool)
 -&gt; [(FieldName, FieldName)] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">all</span></span><span>
-</span><span id="line-289"></span><span>                    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689438476"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438476"><span class="hs-identifier hs-var">rightField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689438475"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438475"><span class="hs-identifier hs-var">leftField</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-289"></span><span>                    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689442601"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689442601"><span class="hs-identifier hs-var">rightField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689442600"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689442600"><span class="hs-identifier hs-var">leftField</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-290"></span><span>                        </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
@@ -902,31 +902,31 @@ forall a. a -&gt; Maybe a
 </span><span id="line-291"></span><span>                          </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-292"></span><span>                                 </span><span id="local-6989586621689438474"><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438474"><span class="hs-identifier hs-var">leftValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span id="line-292"></span><span>                                 </span><span id="local-6989586621689442599"><span class="annot"><span class="annottext">OutputValue
+</span><a href="#local-6989586621689442599"><span class="hs-identifier hs-var">leftValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
 -&gt; InsOrdHashMap FieldName OutputValue -&gt; Maybe OutputValue
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438475"><span class="hs-identifier hs-var">leftField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438482"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
-</span><span id="line-293"></span><span>                                 </span><span id="local-6989586621689438473"><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438473"><span class="hs-identifier hs-var">rightValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689442600"><span class="hs-identifier hs-var">leftField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442607"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
+</span><span id="line-293"></span><span>                                 </span><span id="local-6989586621689442598"><span class="annot"><span class="annottext">OutputValue
+</span><a href="#local-6989586621689442598"><span class="hs-identifier hs-var">rightValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
 -&gt; InsOrdHashMap FieldName OutputValue -&gt; Maybe OutputValue
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438476"><span class="hs-identifier hs-var">rightField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438480"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
+</span><a href="#local-6989586621689442601"><span class="hs-identifier hs-var">rightField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442605"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
 </span><span id="line-294"></span><span>                                 </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438474"><span class="hs-identifier hs-var">leftValue</span></a></span><span> </span><span class="annot"><span class="annottext">OutputValue -&gt; OutputValue -&gt; Bool
+</span><a href="#local-6989586621689442599"><span class="hs-identifier hs-var">leftValue</span></a></span><span> </span><span class="annot"><span class="annottext">OutputValue -&gt; OutputValue -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438473"><span class="hs-identifier hs-var">rightValue</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442598"><span class="hs-identifier hs-var">rightValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-295"></span><span>                             </span><span class="hs-special">)</span><span>
 </span><span id="line-296"></span><span>                    </span><span class="hs-special">)</span><span>
 </span><span id="line-297"></span><span>                    </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438489"><span class="hs-identifier hs-var">joinFields</span></a></span><span>
+</span><a href="#local-6989586621689442614"><span class="hs-identifier hs-var">joinFields</span></a></span><span>
 </span><span id="line-298"></span><span>              </span><span class="hs-special">]</span><span>
 </span><span id="line-299"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-comment">-- The line below will return Left is rightRows has more than one element.</span><span>
 </span><span id="line-300"></span><span>          </span><span class="hs-comment">-- Consider moving the check here if it makes sense in the future.</span><span>
@@ -936,10 +936,10 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; Either ExecuteProblem (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#joinObjectRows"><span class="hs-identifier hs-var">joinObjectRows</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438491"><span class="hs-identifier hs-var">wantedFields</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438490"><span class="hs-identifier hs-var">joinAlias</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438482"><span class="hs-identifier hs-var">leftRow</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438481"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
+</span><a href="#local-6989586621689442616"><span class="hs-identifier hs-var">wantedFields</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442615"><span class="hs-identifier hs-var">joinAlias</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442607"><span class="hs-identifier hs-var">leftRow</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442606"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
 </span><span id="line-302"></span><span>
 </span><span id="line-303"></span><span class="hs-comment">-- | A naive, exponential reference implementation of a left join. It</span><span>
 </span><span id="line-304"></span><span class="hs-comment">-- serves as a trivial sample implementation for correctness checking</span><span>
@@ -961,14 +961,14 @@ forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 -&gt; RecordSet
 -&gt; RecordSet
 -&gt; Either ExecuteProblem RecordSet
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#leftArrayJoin"><span class="hs-identifier hs-var hs-var">leftArrayJoin</span></a></span></span><span> </span><span id="local-6989586621689438472"><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438472"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689438471"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438471"><span class="hs-identifier hs-var">joinAlias</span></a></span></span><span> </span><span id="local-6989586621689438470"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438470"><span class="hs-identifier hs-var">joinFields</span></a></span></span><span> </span><span id="local-6989586621689438469"><span class="annot"><span class="annottext">Top
-</span><a href="#local-6989586621689438469"><span class="hs-identifier hs-var">rhsTop</span></a></span></span><span> </span><span id="local-6989586621689438468"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689438468"><span class="hs-identifier hs-var">rhsOffset</span></a></span></span><span> </span><span id="local-6989586621689438467"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438467"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span id="local-6989586621689438466"><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438466"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#leftArrayJoin"><span class="hs-identifier hs-var hs-var">leftArrayJoin</span></a></span></span><span> </span><span id="local-6989586621689442597"><span class="annot"><span class="annottext">Maybe [Text]
+</span><a href="#local-6989586621689442597"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689442596"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442596"><span class="hs-identifier hs-var">joinAlias</span></a></span></span><span> </span><span id="local-6989586621689442595"><span class="annot"><span class="annottext">[(FieldName, FieldName)]
+</span><a href="#local-6989586621689442595"><span class="hs-identifier hs-var">joinFields</span></a></span></span><span> </span><span id="local-6989586621689442594"><span class="annot"><span class="annottext">Top
+</span><a href="#local-6989586621689442594"><span class="hs-identifier hs-var">rhsTop</span></a></span></span><span> </span><span id="local-6989586621689442593"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689442593"><span class="hs-identifier hs-var">rhsOffset</span></a></span></span><span> </span><span id="local-6989586621689442592"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442592"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span id="local-6989586621689442591"><span class="annot"><span class="annottext">RecordSet
+</span><a href="#local-6989586621689442591"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-316"></span><span>  </span><span class="annot"><span class="annottext">RecordSet -&gt; Either ExecuteProblem RecordSet
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span>
@@ -997,50 +997,50 @@ forall a. [a] -&gt; Vector a
 -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; InsOrdHashMap FieldName OutputValue
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#joinArrayRows"><span class="hs-identifier hs-var">joinArrayRows</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438472"><span class="hs-identifier hs-var">wantedFields</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438471"><span class="hs-identifier hs-var">joinAlias</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438464"><span class="hs-identifier hs-var">leftRow</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438463"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
-</span><span id="line-323"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689438464"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438464"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442597"><span class="hs-identifier hs-var">wantedFields</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442596"><span class="hs-identifier hs-var">joinAlias</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442589"><span class="hs-identifier hs-var">leftRow</span></a></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442588"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
+</span><span id="line-323"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689442589"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442589"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; [InsOrdHashMap FieldName OutputValue]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecordSet -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#rows"><span class="hs-identifier hs-var hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438467"><span class="hs-identifier hs-var">left</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-324"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689438463"><span class="annot"><span class="annottext">rightRows :: Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438463"><span class="hs-identifier hs-var hs-var">rightRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689442592"><span class="hs-identifier hs-var">left</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-324"></span><span>                </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689442588"><span class="annot"><span class="annottext">rightRows :: Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442588"><span class="hs-identifier hs-var hs-var">rightRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-325"></span><span>                      </span><span class="annot"><span class="annottext">[InsOrdHashMap FieldName OutputValue]
 -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 forall a. [a] -&gt; Vector a
 </span><span class="hs-identifier hs-var">V.fromList</span></span><span>
 </span><span id="line-326"></span><span>                        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[InsOrdHashMap FieldName OutputValue]
 -&gt; [InsOrdHashMap FieldName OutputValue]
-</span><a href="#local-6989586621689438462"><span class="hs-identifier hs-var">limit</span></a></span><span>
+</span><a href="#local-6989586621689442587"><span class="hs-identifier hs-var">limit</span></a></span><span>
 </span><span id="line-327"></span><span>                            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">[InsOrdHashMap FieldName OutputValue]
 -&gt; [InsOrdHashMap FieldName OutputValue]
-</span><a href="#local-6989586621689438461"><span class="hs-identifier hs-var">offset</span></a></span><span>
+</span><a href="#local-6989586621689442586"><span class="hs-identifier hs-var">offset</span></a></span><span>
 </span><span id="line-328"></span><span>                                </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438460"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
+</span><a href="#local-6989586621689442585"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
 </span><span id="line-329"></span><span>                                  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(FieldName, FieldName)] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438470"><span class="hs-identifier hs-var">joinFields</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-330"></span><span>                                    </span><span id="local-6989586621689438460"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438460"><span class="hs-identifier hs-var">rightRow</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442595"><span class="hs-identifier hs-var">joinFields</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-330"></span><span>                                    </span><span id="local-6989586621689442585"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442585"><span class="hs-identifier hs-var">rightRow</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; [InsOrdHashMap FieldName OutputValue]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RecordSet -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#rows"><span class="hs-identifier hs-var hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">RecordSet
-</span><a href="#local-6989586621689438466"><span class="hs-identifier hs-var">right</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689442591"><span class="hs-identifier hs-var">right</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-331"></span><span>                                    </span><span class="annot"><span class="annottext">((FieldName, FieldName) -&gt; Bool)
 -&gt; [(FieldName, FieldName)] -&gt; Bool
 forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">all</span></span><span>
-</span><span id="line-332"></span><span>                                      </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689438459"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438459"><span class="hs-identifier hs-var">rightField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689438458"><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438458"><span class="hs-identifier hs-var">leftField</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-332"></span><span>                                      </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689442584"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689442584"><span class="hs-identifier hs-var">rightField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689442583"><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689442583"><span class="hs-identifier hs-var">leftField</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-333"></span><span>                                          </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Bool
@@ -1048,40 +1048,40 @@ forall a. a -&gt; Maybe a
 </span><span id="line-334"></span><span>                                            </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-335"></span><span>                                                   </span><span id="local-6989586621689438457"><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438457"><span class="hs-identifier hs-var">leftValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><span id="line-335"></span><span>                                                   </span><span id="local-6989586621689442582"><span class="annot"><span class="annottext">OutputValue
+</span><a href="#local-6989586621689442582"><span class="hs-identifier hs-var">leftValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
 -&gt; InsOrdHashMap FieldName OutputValue -&gt; Maybe OutputValue
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438458"><span class="hs-identifier hs-var">leftField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438464"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
-</span><span id="line-336"></span><span>                                                   </span><span id="local-6989586621689438456"><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438456"><span class="hs-identifier hs-var">rightValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
+</span><a href="#local-6989586621689442583"><span class="hs-identifier hs-var">leftField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442589"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
+</span><span id="line-336"></span><span>                                                   </span><span id="local-6989586621689442581"><span class="annot"><span class="annottext">OutputValue
+</span><a href="#local-6989586621689442581"><span class="hs-identifier hs-var">rightValue</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">FieldName
 -&gt; InsOrdHashMap FieldName OutputValue -&gt; Maybe OutputValue
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689438459"><span class="hs-identifier hs-var">rightField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438460"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
+</span><a href="#local-6989586621689442584"><span class="hs-identifier hs-var">rightField</span></a></span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442585"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
 </span><span id="line-337"></span><span>                                                   </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438457"><span class="hs-identifier hs-var">leftValue</span></a></span><span> </span><span class="annot"><span class="annottext">OutputValue -&gt; OutputValue -&gt; Bool
+</span><a href="#local-6989586621689442582"><span class="hs-identifier hs-var">leftValue</span></a></span><span> </span><span class="annot"><span class="annottext">OutputValue -&gt; OutputValue -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">OutputValue
-</span><a href="#local-6989586621689438456"><span class="hs-identifier hs-var">rightValue</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442581"><span class="hs-identifier hs-var">rightValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-338"></span><span>                                               </span><span class="hs-special">)</span><span>
 </span><span id="line-339"></span><span>                                      </span><span class="hs-special">)</span><span>
 </span><span id="line-340"></span><span>                                      </span><span class="annot"><span class="annottext">[(FieldName, FieldName)]
-</span><a href="#local-6989586621689438470"><span class="hs-identifier hs-var">joinFields</span></a></span><span>
+</span><a href="#local-6989586621689442595"><span class="hs-identifier hs-var">joinFields</span></a></span><span>
 </span><span id="line-341"></span><span>                                </span><span class="hs-special">]</span><span>
 </span><span id="line-342"></span><span>                            </span><span class="hs-special">)</span><span>
 </span><span id="line-343"></span><span>                        </span><span class="hs-special">)</span><span>
 </span><span id="line-344"></span><span>            </span><span class="hs-special">]</span><span>
 </span><span id="line-345"></span><span>      </span><span class="hs-special">}</span><span>
 </span><span id="line-346"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-347"></span><span>    </span><span id="local-6989586621689438461"><span class="annot"><span class="annottext">offset :: [InsOrdHashMap FieldName OutputValue]
+</span><span id="line-347"></span><span>    </span><span id="local-6989586621689442586"><span class="annot"><span class="annottext">offset :: [InsOrdHashMap FieldName OutputValue]
 -&gt; [InsOrdHashMap FieldName OutputValue]
-</span><a href="#local-6989586621689438461"><span class="hs-identifier hs-var hs-var">offset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([InsOrdHashMap FieldName OutputValue]
+</span><a href="#local-6989586621689442586"><span class="hs-identifier hs-var hs-var">offset</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([InsOrdHashMap FieldName OutputValue]
  -&gt; [InsOrdHashMap FieldName OutputValue])
 -&gt; (Int
     -&gt; [InsOrdHashMap FieldName OutputValue]
@@ -1098,24 +1098,24 @@ forall a. a -&gt; a
 -&gt; [InsOrdHashMap FieldName OutputValue]
 forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">drop</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621689438468"><span class="hs-identifier hs-var">rhsOffset</span></a></span><span>
-</span><span id="line-348"></span><span>    </span><span id="local-6989586621689438462"><span class="annot"><span class="annottext">limit :: [InsOrdHashMap FieldName OutputValue]
+</span><a href="#local-6989586621689442593"><span class="hs-identifier hs-var">rhsOffset</span></a></span><span>
+</span><span id="line-348"></span><span>    </span><span id="local-6989586621689442587"><span class="annot"><span class="annottext">limit :: [InsOrdHashMap FieldName OutputValue]
 -&gt; [InsOrdHashMap FieldName OutputValue]
-</span><a href="#local-6989586621689438462"><span class="hs-identifier hs-var hs-var">limit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689442587"><span class="hs-identifier hs-var hs-var">limit</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-349"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Top
-</span><a href="#local-6989586621689438469"><span class="hs-identifier hs-var">rhsTop</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689442594"><span class="hs-identifier hs-var">rhsTop</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-350"></span><span>        </span><span class="annot"><span class="annottext">Top
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#NoTop"><span class="hs-identifier hs-var">NoTop</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[InsOrdHashMap FieldName OutputValue]
 -&gt; [InsOrdHashMap FieldName OutputValue]
 forall a. a -&gt; a
 </span><span class="hs-identifier hs-var">id</span></span><span>
-</span><span id="line-351"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Top"><span class="hs-identifier hs-type">Top</span></a></span><span> </span><span id="local-6989586621689438451"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689438451"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-351"></span><span>        </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Top"><span class="hs-identifier hs-type">Top</span></a></span><span> </span><span id="local-6989586621689442576"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689442576"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int
 -&gt; [InsOrdHashMap FieldName OutputValue]
 -&gt; [InsOrdHashMap FieldName OutputValue]
 forall a. Int -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">take</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689438451"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689442576"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-352"></span><span>
 </span><span id="line-353"></span><span class="hs-comment">-- | Join a row with another as an array join.</span><span>
 </span><span id="line-354"></span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#joinArrayRows"><span class="hs-identifier hs-type">joinArrayRows</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -1129,11 +1129,11 @@ forall a. Int -&gt; [a] -&gt; [a]
 -&gt; InsOrdHashMap FieldName OutputValue
 -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; InsOrdHashMap FieldName OutputValue
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#joinArrayRows"><span class="hs-identifier hs-var hs-var">joinArrayRows</span></a></span></span><span> </span><span id="local-6989586621689438449"><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438449"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689438448"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438448"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689438447"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438447"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span id="local-6989586621689438446"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438446"><span class="hs-identifier hs-var">rightRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#joinArrayRows"><span class="hs-identifier hs-var hs-var">joinArrayRows</span></a></span></span><span> </span><span id="local-6989586621689442574"><span class="annot"><span class="annottext">Maybe [Text]
+</span><a href="#local-6989586621689442574"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689442573"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442573"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689442572"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442572"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span id="local-6989586621689442571"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442571"><span class="hs-identifier hs-var">rightRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-361"></span><span>  </span><span class="annot"><span class="annottext">FieldName
 -&gt; OutputValue
 -&gt; InsOrdHashMap FieldName OutputValue
@@ -1144,7 +1144,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span>
 </span><span id="line-362"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-var">DataLoaderPlan.FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438448"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442573"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-363"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Vector OutputValue -&gt; OutputValue
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#ArrayOutputValue"><span class="hs-identifier hs-var">ArrayOutputValue</span></a></span><span>
 </span><span id="line-364"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">(InsOrdHashMap FieldName OutputValue -&gt; OutputValue)
@@ -1166,8 +1166,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall k v.
 (k -&gt; v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.filterWithKey</span></span><span>
-</span><span id="line-367"></span><span>                  </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span> </span><span id="local-6989586621689438445"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438445"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
+</span><span id="line-367"></span><span>                  </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span> </span><span id="local-6989586621689442570"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442570"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-368"></span><span>                      </span><span class="annot"><span class="annottext">Bool -&gt; ([Text] -&gt; Bool) -&gt; Maybe [Text] -&gt; Bool
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
@@ -1175,16 +1175,16 @@ forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">elem</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438445"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438449"><span class="hs-identifier hs-var">wantedFields</span></a></span><span>
+</span><a href="#local-6989586621689442570"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
+</span><a href="#local-6989586621689442574"><span class="hs-identifier hs-var">wantedFields</span></a></span><span>
 </span><span id="line-369"></span><span>                  </span><span class="hs-special">)</span><span>
 </span><span id="line-370"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-371"></span><span>            </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438446"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
+</span><a href="#local-6989586621689442571"><span class="hs-identifier hs-var">rightRow</span></a></span><span>
 </span><span id="line-372"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-373"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-374"></span><span>    </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438447"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
+</span><a href="#local-6989586621689442572"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
 </span><span id="line-375"></span><span>
 </span><span id="line-376"></span><span class="hs-comment">-- | Join a row with another as an object join.</span><span>
 </span><span id="line-377"></span><span class="hs-comment">--</span><span>
@@ -1200,15 +1200,15 @@ forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 -&gt; InsOrdHashMap FieldName OutputValue
 -&gt; Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; Either ExecuteProblem (InsOrdHashMap FieldName OutputValue)
-</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#joinObjectRows"><span class="hs-identifier hs-var hs-var">joinObjectRows</span></a></span></span><span> </span><span id="local-6989586621689438444"><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438444"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689438443"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438443"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689438442"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438442"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span id="local-6989586621689438441"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438441"><span class="hs-identifier hs-var">rightRows</span></a></span></span><span>
+</span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#joinObjectRows"><span class="hs-identifier hs-var hs-var">joinObjectRows</span></a></span></span><span> </span><span id="local-6989586621689442569"><span class="annot"><span class="annottext">Maybe [Text]
+</span><a href="#local-6989586621689442569"><span class="hs-identifier hs-var">wantedFields</span></a></span></span><span> </span><span id="local-6989586621689442568"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442568"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689442567"><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442567"><span class="hs-identifier hs-var">leftRow</span></a></span></span><span> </span><span id="local-6989586621689442566"><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><a href="#local-6989586621689442566"><span class="hs-identifier hs-var">rightRows</span></a></span></span><span>
 </span><span id="line-386"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue) -&gt; Int
 forall a. Vector a -&gt; Int
 </span><span class="hs-identifier hs-var">V.length</span></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438441"><span class="hs-identifier hs-var">rightRows</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621689442566"><span class="hs-identifier hs-var">rightRows</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ExecuteProblem
@@ -1239,15 +1239,15 @@ forall k v. InsOrdHashMap k v -&gt; [k]
 -&gt; Either ExecuteProblem (InsOrdHashMap FieldName OutputValue)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438441"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
+</span><a href="#local-6989586621689442566"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
 </span><span id="line-387"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-388"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689438437"><span class="annot"><span class="annottext">row :: InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438437"><span class="hs-identifier hs-var hs-var">row</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
+</span><span id="line-388"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689442562"><span class="annot"><span class="annottext">row :: InsOrdHashMap FieldName OutputValue
+</span><a href="#local-6989586621689442562"><span class="hs-identifier hs-var hs-var">row</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
 -&gt; InsOrdHashMap FieldName OutputValue
 forall a. Vector a -&gt; a
 </span><span class="hs-identifier hs-var">V.head</span></span><span> </span><span class="annot"><span class="annottext">Vector (InsOrdHashMap FieldName OutputValue)
-</span><a href="#local-6989586621689438441"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
+</span><a href="#local-6989586621689442566"><span class="hs-identifier hs-var">rightRows</span></a></span><span>
 </span><span id="line-389"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
 -&gt; Either ExecuteProblem (InsOrdHashMap FieldName OutputValue)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -1267,7 +1267,7 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span>
 </span><span id="line-391"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-var">DataLoaderPlan.FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438443"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442568"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-392"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue -&gt; OutputValue
 </span><a href="Hasura.Backends.MySQL.DataLoader.Execute.html#RecordOutputValue"><span class="hs-identifier hs-var">RecordOutputValue</span></a></span><span>
 </span><span id="line-393"></span><span>                </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">(FieldName -&gt; OutputValue -&gt; Bool)
@@ -1276,20 +1276,20 @@ k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 forall k v.
 (k -&gt; v -&gt; Bool) -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.filterWithKey</span></span><span>
-</span><span id="line-394"></span><span>                    </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span> </span><span id="local-6989586621689438435"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438435"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
+</span><span id="line-394"></span><span>                    </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.DataLoader.Plan.html#FieldName"><span class="hs-identifier hs-type">DataLoaderPlan.FieldName</span></a></span><span> </span><span id="local-6989586621689442560"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689442560"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">OutputValue
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; ([Text] -&gt; Bool) -&gt; Maybe [Text] -&gt; Bool
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-identifier hs-var">elem</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689438435"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
-</span><a href="#local-6989586621689438444"><span class="hs-identifier hs-var">wantedFields</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689442560"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [Text]
+</span><a href="#local-6989586621689442569"><span class="hs-identifier hs-var">wantedFields</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-395"></span><span>                    </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438437"><span class="hs-identifier hs-var">row</span></a></span><span>
+</span><a href="#local-6989586621689442562"><span class="hs-identifier hs-var">row</span></a></span><span>
 </span><span id="line-396"></span><span>                </span><span class="hs-special">)</span><span>
 </span><span id="line-397"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-398"></span><span>            </span><span class="annot"><span class="annottext">InsOrdHashMap FieldName OutputValue
-</span><a href="#local-6989586621689438442"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
+</span><a href="#local-6989586621689442567"><span class="hs-identifier hs-var">leftRow</span></a></span><span>
 </span><span id="line-399"></span></pre></body></html>

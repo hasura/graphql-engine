@@ -27466,6 +27466,7 @@ ExecuteReader :: !BigQuerySourceConfig -> ExecuteReader
 data ExecuteProblem
 GetJobDecodeProblem :: String -> ExecuteProblem
 CreateQueryJobDecodeProblem :: String -> ExecuteProblem
+InsertDatasetDecodeProblem :: String -> ExecuteProblem
 ExecuteRunBigQueryProblem :: BigQueryProblem -> ExecuteProblem
 RESTRequestNonOK :: Status -> Value -> ExecuteProblem
 
@@ -27539,6 +27540,7 @@ IsRequired :: IsNullable
 
 -- | Delay between attempts to get job results if the job is incomplete.
 streamDelaySeconds :: DiffTime
+bigQueryProjectUrl :: Text -> String
 runExecute :: MonadIO m => BigQuerySourceConfig -> Execute RecordSet -> m (Either ExecuteProblem RecordSet)
 executeSelect :: Select -> Execute RecordSet
 
@@ -27585,8 +27587,23 @@ Job :: !Text -> !Text -> !Text -> Job
 [$sel:jobId:Job] :: Job -> !Text
 [$sel:location:Job] :: Job -> !Text
 
+-- | Make a Request return <tt>JSON</tt>
+jsonRequestHeader :: Request -> Request
+
 -- | Create a job asynchronously.
-createQueryJob :: MonadIO m => BigQueryConnection -> BigQuery -> m (Either ExecuteProblem Job)
+createQueryJob :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> BigQuery -> m Job
+data Dataset
+Dataset :: Text -> Dataset
+[$sel:datasetId:Dataset] :: Dataset -> Text
+
+-- | Delete a dataset
+deleteDataset :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> Text -> m ()
+
+-- | Run request and map errors into ExecuteProblem
+runBigQueryExcept :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> Request -> m (Response ByteString)
+
+-- | Insert a new dataset
+insertDataset :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> Text -> m Dataset
 
 -- | Parse given @<tt>ByteString</tt> as JSON value. If not a valid JSON,
 --   encode to plain text.
@@ -27641,6 +27658,8 @@ instance GHC.Show.Show Hasura.Backends.BigQuery.Execute.JobResults
 instance GHC.Show.Show Hasura.Backends.BigQuery.Execute.JobResultsResponse
 instance GHC.Show.Show Hasura.Backends.BigQuery.Execute.Fetch
 instance GHC.Show.Show Hasura.Backends.BigQuery.Execute.Job
+instance GHC.Show.Show Hasura.Backends.BigQuery.Execute.Dataset
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.BigQuery.Execute.Dataset
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.BigQuery.Execute.Job
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.BigQuery.Execute.JobResultsResponse
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.BigQuery.Execute.JobResults
