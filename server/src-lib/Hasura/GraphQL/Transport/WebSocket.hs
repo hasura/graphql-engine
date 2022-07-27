@@ -434,7 +434,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
   (sc, scVer) <- liftIO getSchemaCache
 
-  operationLimit <- askGraphqlOperationLimit
+  operationLimit <- askGraphqlOperationLimit requestId
   let runLimits ::
         ExceptT (Either GQExecError QErr) (ExceptT () m) a ->
         ExceptT (Either GQExecError QErr) (ExceptT () m) a

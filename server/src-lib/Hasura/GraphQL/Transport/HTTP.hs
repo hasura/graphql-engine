@@ -328,7 +328,7 @@ runGQ env logger reqId userInfo ipAddress reqHeaders queryType reqUnparsed = do
         E.checkGQLExecution userInfo (reqHeaders, ipAddress) enableAL sc reqUnparsed reqId
           >>= flip onLeft throwError
 
-      operationLimit <- askGraphqlOperationLimit
+      operationLimit <- askGraphqlOperationLimit reqId
       let runLimits = runResourceLimits $ operationLimit userInfo (scApiLimits sc)
 
       -- 2. Construct the first step of the execution plan from 'reqParsed :: GQLParsed'.
