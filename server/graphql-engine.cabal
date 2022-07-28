@@ -1260,9 +1260,9 @@ test-suite tests-hspec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
+    Test.Postgres.TimestampSpec
     Test.Queries.FilterSearchSpec
     Test.Queries.SortSpec
-    Test.PostgresTypesSpec
     Test.Queries.Paginate.LimitSpec
     Test.Queries.Paginate.OffsetSpec
     Test.Queries.Simple.ObjectQueriesSpec
