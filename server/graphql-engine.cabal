@@ -1257,6 +1257,7 @@ test-suite tests-hspec
     Test.InsertEnumColumnSpec
     Test.InsertOnConflictSpec
     Test.LongIdentifiersSpec
+    Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
     Test.Queries.FilterSearchSpec
@@ -1283,7 +1284,6 @@ test-suite tests-hspec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.SerializationSpec
     Test.ServiceLivenessSpec
-    Test.UpdateManySpec
     Test.ViewsSpec
 
 test-suite tests-dc-api
