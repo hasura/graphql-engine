@@ -173,7 +173,7 @@
         "name": "HireDate",
         "type": "string",
         "nullable": true,
-        "description": "The employee's birth date"
+        "description": "The employee's hire date"
       },
       {
         "name": "Address",

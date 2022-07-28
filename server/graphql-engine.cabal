@@ -1333,6 +1333,7 @@ test-suite tests-dc-api
     , Test.CapabilitiesSpec
     , Test.HealthSpec
     , Test.QuerySpec
+    , Test.QuerySpec.AggregatesSpec
     , Test.QuerySpec.BasicSpec
     , Test.QuerySpec.RelationshipsSpec
     , Test.SchemaSpec

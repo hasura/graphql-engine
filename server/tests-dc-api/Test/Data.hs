@@ -9,11 +9,13 @@ module Test.Data
     customersAsJson,
     employeesAsJson,
     employeesAsJsonById,
+    invoicesAsJson,
     sortBy,
     filterColumnsByQueryFields,
     queryFields,
     responseRows,
     sortResponseRowsBy,
+    responseAggregates,
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
@@ -21,6 +23,7 @@ module Test.Data
 where
 
 import Codec.Compression.GZip qualified as GZip
+import Control.Arrow ((>>>))
 import Control.Lens (Index, IxValue, Ixed, Traversal', ix, (%~), (&), (^.), (^..), (^?))
 import Data.Aeson (Key, eitherDecodeStrict)
 import Data.Aeson qualified as J
@@ -51,6 +54,9 @@ schemaBS = $(makeRelativeToProject "tests-dc-api/Test/Data/schema-tables.json" >
 schemaTables :: [API.TableInfo]
 schemaTables = sortOn API.dtiName . either error id . eitherDecodeStrict $ schemaBS
 
+numericColumns :: [API.ColumnName]
+numericColumns = schemaTables >>= (API.dtiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if dciType == API.NumberTy then Just dciName else Nothing))
+
 chinookXmlBS :: ByteString
 chinookXmlBS = $(makeRelativeToProject "tests-dc-api/Test/Data/ChinookData.xml.gz" >>= embedFile)
 
@@ -73,11 +79,15 @@ readTableFromXmlIntoRows tableName =
     columnElementToProperty :: XML.Element -> (K.Key, API.FieldValue)
     columnElementToProperty columnElement =
       let name = K.fromText $ columnElement ^. XML.localName
-          textValue = Text.concat $ columnElement ^.. XML.text
-          value =
-            case eitherDecodeStrict $ Text.encodeUtf8 textValue of
-              Left _ -> API.mkColumnFieldValue $ J.String textValue
-              Right scientific -> API.mkColumnFieldValue $ J.Number scientific
+          value = case columnElement ^. XML.nodes of
+            [] -> API.mkColumnFieldValue $ J.Null
+            _ ->
+              let textValue = Text.concat $ columnElement ^.. XML.text
+               in if API.ColumnName (K.toText name) `elem` numericColumns
+                    then case eitherDecodeStrict $ Text.encodeUtf8 textValue of
+                      Left _ -> API.mkColumnFieldValue $ J.String textValue
+                      Right scientific -> API.mkColumnFieldValue $ J.Number scientific
+                    else API.mkColumnFieldValue $ J.String textValue
        in (name, value)
 
 artistsAsJson :: [KeyMap API.FieldValue]
@@ -100,6 +110,9 @@ employeesAsJsonById :: HashMap Scientific (KeyMap API.FieldValue)
 employeesAsJsonById =
   HashMap.fromList $ mapMaybe (\employee -> (,employee) <$> employee ^? ix "EmployeeId" . _ColumnFieldNumber) employeesAsJson
 
+invoicesAsJson :: [KeyMap API.FieldValue]
+invoicesAsJson = sortBy "InvoiceId" $ readTableFromXmlIntoRows "Invoice"
+
 sortBy :: (Ixed m, Ord (IxValue m)) => Index m -> [m] -> [m]
 sortBy propName = sortOn (^? ix propName)
 
@@ -117,6 +130,9 @@ responseRows = fromMaybe [] . API._qrRows
 
 sortResponseRowsBy :: Key -> API.QueryResponse -> API.QueryResponse
 sortResponseRowsBy columnName response = response & API.qrRows %~ (fmap (sortBy columnName))
+
+responseAggregates :: API.QueryResponse -> KeyMap API.Value
+responseAggregates = fromMaybe mempty . API._qrAggregates
 
 _ColumnFieldNumber :: Traversal' API.FieldValue Scientific
 _ColumnFieldNumber = API._ColumnFieldValue . _Number
