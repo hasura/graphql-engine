@@ -1228,6 +1228,7 @@ test-suite tests-hspec
     Test.BackendOnlyPermissionsSpec
     Test.BigQuery.ComputedFieldSpec
     Test.BigQuery.Metadata.ComputedFieldSpec
+    Test.BigQuery.TypeInterpretationSpec
     Test.ColumnPresetsSpec
     Test.CustomFieldNamesSpec
     Test.CustomRootFieldsSpec
@@ -1282,7 +1283,6 @@ test-suite tests-hspec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.DataValidation.PermissionSpec
     Test.SQLServer.InsertVarcharColumnSpec
-    Test.SerializationSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
 
