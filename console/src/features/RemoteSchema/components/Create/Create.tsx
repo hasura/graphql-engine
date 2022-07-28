@@ -151,13 +151,16 @@ export const Create = ({ onSuccess }: Props) => {
                 </label>
               </div>
               <div>
-                <label className="flex items-center">
+                <label className="flex items-center mb-xs">
                   Additional headers:
                   <ToolTip message="Custom headers to be sent to the remote GraphQL server" />
                 </label>
               </div>
 
-              <RequestHeadersSelector name="headers" />
+              <RequestHeadersSelector
+                name="headers"
+                addButtonText="Add additional headers"
+              />
             </div>
             <div className="mb-lg w-8/12">
               <h2 className="text-lg font-semibold flex items-center">

@@ -60,7 +60,7 @@ Primary.args = {
 Primary.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
 
-  const addNewRowButton = canvas.getByText('Add additional header');
+  const addNewRowButton = canvas.getByText('Add');
 
   // Add a third header
   await userEvent.click(addNewRowButton);

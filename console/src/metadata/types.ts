@@ -520,6 +520,8 @@ export interface CronTrigger {
   include_in_metadata: boolean;
   /**	Custom comment. */
   comment?: string;
+  /** Rest connectors. */
+  request_transform?: RequestTransform;
 }
 
 /**
@@ -925,6 +927,9 @@ interface RequestTransformFields {
   template_engine?: Nullable<RequestTransformTemplateEngine>;
 }
 
+/**
+ * https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs/#requesttransformation
+ */
 interface RequestTransformV1 extends RequestTransformFields {
   version: 1;
   body?: string;
