@@ -70,6 +70,14 @@ instance Monoid FieldsAndAggregates where
 newtype FieldPrefix = FieldPrefix (Maybe FieldName)
   deriving stock (Show, Eq)
 
+instance Semigroup FieldPrefix where
+  (FieldPrefix Nothing) <> (FieldPrefix something) = FieldPrefix something
+  (FieldPrefix something) <> (FieldPrefix Nothing) = FieldPrefix something
+  (FieldPrefix (Just l)) <> (FieldPrefix (Just r)) = FieldPrefix . Just $ l <> "_" <> r
+
+instance Monoid FieldPrefix where
+  mempty = FieldPrefix Nothing
+
 noPrefix :: FieldPrefix
 noPrefix = FieldPrefix Nothing
 
@@ -236,6 +244,9 @@ mkPlan session (SourceConfig {}) ir = do
       AFArrayRelation (ASAggregate arrayRelationSelect) ->
         Just <$> translateArrayRelationSelect sourceTableName translateTableAggregateFields arrayRelationSelect
       AFExpression _literal ->
+        -- We ignore literal text fields (we don't send them to the data connector agent)
+        -- and add them back to the response JSON when we reshape what the agent returns
+        -- to us
         pure Nothing
 
     translateArrayRelationSelect ::
@@ -275,11 +286,53 @@ mkPlan session (SourceConfig {}) ir = do
       TableAggregateFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
       CPS.WriterT IR.R.TableRelationships m FieldsAndAggregates
     translateTableAggregateField sourceTableName fieldName = \case
-      TAFAgg _aggregateFields ->
-        pure mempty --TODO(dchambers) implement this
+      TAFAgg aggregateFields -> do
+        let fieldNamePrefix = prefixWith fieldName
+        translatedAggregateFields <- lift $ mconcat <$> traverse (uncurry (translateAggregateField fieldNamePrefix)) aggregateFields
+        pure $
+          FieldsAndAggregates
+            mempty
+            translatedAggregateFields
       TAFNodes _ fields ->
         translateAnnFields (prefixWith fieldName) sourceTableName fields
       TAFExp _txt ->
+        -- We ignore literal text fields (we don't send them to the data connector agent)
+        -- and add them back to the response JSON when we reshape what the agent returns
+        -- to us
+        pure mempty
+
+    translateAggregateField ::
+      FieldPrefix ->
+      FieldName ->
+      AggregateField 'DataConnector ->
+      m (HashMap FieldName IR.A.Aggregate)
+    translateAggregateField fieldPrefix fieldName = \case
+      AFCount countAggregate -> pure $ HashMap.singleton (applyPrefix fieldPrefix fieldName) (IR.A.Count countAggregate)
+      AFOp AggregateOp {..} -> do
+        let fieldPrefix' = fieldPrefix <> prefixWith fieldName
+        aggFunction <- case _aoOp of
+          "avg" -> pure IR.A.Average
+          "max" -> pure IR.A.Max
+          "min" -> pure IR.A.Min
+          "stddev_pop" -> pure IR.A.StandardDeviationPopulation
+          "stddev_samp" -> pure IR.A.StandardDeviationSample
+          "stddev" -> pure IR.A.StandardDeviationSample
+          "sum" -> pure IR.A.Sum
+          "var_pop" -> pure IR.A.VariancePopulation
+          "var_samp" -> pure IR.A.VarianceSample
+          "variance" -> pure IR.A.VarianceSample
+          unknownFunc -> throw500 $ "translateAggregateField: Unknown aggregate function encountered: " <> unknownFunc
+
+        fmap (HashMap.fromList . catMaybes) . forM _aoFields $ \(columnFieldName, columnField) ->
+          case columnField of
+            CFCol column _columnType ->
+              pure . Just $ (applyPrefix fieldPrefix' columnFieldName, IR.A.SingleColumn $ IR.A.SingleColumnAggregate aggFunction column)
+            CFExp _txt ->
+              -- We ignore literal text fields (we don't send them to the data connector agent)
+              -- and add them back to the response JSON when we reshape what the agent returns
+              -- to us
+              pure Nothing
+      AFExp _txt ->
         -- We ignore literal text fields (we don't send them to the data connector agent)
         -- and add them back to the response JSON when we reshape what the agent returns
         -- to us
@@ -468,17 +521,50 @@ reshapeTableAggregateFields ::
 reshapeTableAggregateFields tableAggregateFields API.QueryResponse {..} = do
   reshapedFields <- forM tableAggregateFields $ \(fieldName@(FieldName fieldNameText), tableAggregateField) -> do
     case tableAggregateField of
-      TAFAgg _aggregateFields ->
-        --TODO(dchambers) implement this
-        throw500 "reshapeTableAggregateFields: TAFAgg not supported"
+      TAFAgg aggregateFields -> do
+        reshapedAggregateFields <- reshapeAggregateFields (prefixWith fieldName) aggregateFields responseAggregates
+        pure $ (fieldNameText, reshapedAggregateFields)
       TAFNodes _ annFields -> do
-        reshapedRows <- traverse (reshapeAnnFields (prefixWith fieldName) annFields) rows
+        reshapedRows <- traverse (reshapeAnnFields (prefixWith fieldName) annFields) responseRows
         pure $ (fieldNameText, JE.list id reshapedRows)
       TAFExp txt ->
         pure $ (fieldNameText, JE.text txt)
   pure $ encodeAssocListAsObject reshapedFields
   where
-    rows = fromMaybe mempty _qrRows
+    responseRows = fromMaybe mempty _qrRows
+    responseAggregates = fromMaybe mempty _qrAggregates
+
+reshapeAggregateFields ::
+  MonadError QErr m =>
+  FieldPrefix ->
+  AggregateFields 'DataConnector ->
+  KeyMap API.Value ->
+  m J.Encoding
+reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
+  reshapedFields <- forM aggregateFields $ \(fieldName@(FieldName fieldNameText), aggregateField) ->
+    case aggregateField of
+      AFCount _countAggregate -> do
+        let fieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldPrefix fieldName
+        responseAggregateValue <-
+          KM.lookup fieldNameKey responseAggregates
+            `onNothing` throw500 ("Unable to find expected aggregate " <> K.toText fieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+        pure (fieldNameText, J.toEncoding responseAggregateValue)
+      AFOp AggregateOp {..} -> do
+        reshapedColumnFields <- forM _aoFields $ \(columnFieldName@(FieldName columnFieldNameText), columnField) ->
+          case columnField of
+            CFCol _column _columnType -> do
+              let fieldPrefix' = fieldPrefix <> prefixWith fieldName
+              let columnFieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldPrefix' columnFieldName
+              responseAggregateValue <-
+                KM.lookup columnFieldNameKey responseAggregates
+                  `onNothing` throw500 ("Unable to find expected aggregate " <> K.toText columnFieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+              pure (columnFieldNameText, J.toEncoding responseAggregateValue)
+            CFExp txt ->
+              pure (columnFieldNameText, JE.text txt)
+        pure (fieldNameText, encodeAssocListAsObject reshapedColumnFields)
+      AFExp txt ->
+        pure (fieldNameText, JE.text txt)
+  pure $ encodeAssocListAsObject reshapedFields
 
 reshapeAnnFields ::
   MonadError QErr m =>

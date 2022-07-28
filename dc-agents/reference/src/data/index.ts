@@ -18,11 +18,23 @@ const streamToBuffer = async (stream : stream.Readable) : Promise<Buffer> => {
   return Buffer.concat(chunks);
 }
 
+// Only parse numeric columns as numbers, otherwise you get "number-like" columns like BillingPostCode
+// getting partially parsed as a number or a string depending on the individual postcode
+const parseNumbersInNumericColumns = (schema: SchemaResponse) => {
+  const numericColumns = new Set(schema.tables.flatMap(table => table.columns.filter(c => c.type === "number").map(c => c.name)));
+
+  return (value: string, name: string): any => {
+    return numericColumns.has(name)
+      ? parseNumbers(value)
+      : value;
+  };
+}
+
 export const loadStaticData = async (): Promise<StaticData> => {
   const gzipReadStream = fs.createReadStream(__dirname + "/ChinookData.xml.gz");
   const unzipStream = stream.pipeline(gzipReadStream, zlib.createGunzip(), () => {});
   const xmlStr = (await streamToBuffer(unzipStream)).toString("utf16le");
-  const xml = await xml2js.parseStringPromise(xmlStr, { explicitArray: false, valueProcessors: [parseNumbers] });
+  const xml = await xml2js.parseStringPromise(xmlStr, { explicitArray: false, emptyTag: () => null, valueProcessors: [parseNumbersInNumericColumns(schema)] });
   const data = xml.ChinookDataSet;
   delete data["$"]; // Remove XML namespace property
   return await data as StaticData;
@@ -210,7 +222,7 @@ const schema: SchemaResponse = {
           name: "HireDate",
           type: "string", // Ought to be DateTime but we don't have a type for this yet
           nullable: true,
-          description: "The employee's birth date"
+          description: "The employee's hire date"
         },
         {
           name: "Address",
