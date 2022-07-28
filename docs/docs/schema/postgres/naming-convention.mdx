@@ -13,6 +13,7 @@ keywords:
 ---
 
 import Tabs from '@theme/Tabs';
+import Thumbnail from '@site/src/components/Thumbnail';
 import TabItem from '@theme/TabItem';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
@@ -162,7 +163,14 @@ This means any database source will follow this naming convention unless explici
 <Tabs className="api-tabs">
   <TabItem value="console" label="Console">
 
-Console support will be added soon.
+  Currently setting the database naming convention is only allowed at the time of connecting your database.
+  Head to the `Data -> Manage -> Connect Database` page. Under the `GraphQL Field Customization` section you can
+  choose the naming convention of your choice.
+
+  <Thumbnail
+    src='/img/graphql/core/schema/naming-convention.png'
+    alt='Naming Convention'
+    />
 
   </TabItem>
   <TabItem value="cli" label="CLI">
