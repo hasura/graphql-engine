@@ -12,7 +12,6 @@ import Autodocodec
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Data (Data)
 import Data.HashMap.Strict qualified as HashMap
-import Data.List.NonEmpty (NonEmpty)
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
@@ -57,7 +56,7 @@ instance HasCodec SingleColumnAggregateFunction where
         ]
 
 data ColumnCountAggregate = ColumnCountAggregate
-  { _ccaColumns :: NonEmpty API.V0.ColumnName,
+  { _ccaColumn :: API.V0.ColumnName,
     _ccaDistinct :: Bool
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -65,7 +64,7 @@ data ColumnCountAggregate = ColumnCountAggregate
 columnCountAggregateObjectCodec :: JSONObjectCodec ColumnCountAggregate
 columnCountAggregateObjectCodec =
   ColumnCountAggregate
-    <$> requiredField "columns" "The columns to apply the count aggregate function to" .= _ccaColumns
+    <$> requiredField "column" "The column to apply the count aggregate function to" .= _ccaColumn
     <*> requiredField "distinct" "Whether or not only distinct items should be counted" .= _ccaDistinct
 
 data Aggregate

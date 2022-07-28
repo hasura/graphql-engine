@@ -202,10 +202,10 @@ countTypeInput' ::
   Maybe (P.Parser 'P.Both n IR.C.Name) ->
   P.InputFieldsParser n (IR.CountDistinct -> IR.A.CountAggregate)
 countTypeInput' = \case
-  Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._columns Nothing (P.list columnEnum)
+  Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._column Nothing columnEnum
   Nothing -> pure $ mkCountAggregate Nothing
   where
-    mkCountAggregate :: Maybe [IR.C.Name] -> IR.CountDistinct -> IR.A.CountAggregate
+    mkCountAggregate :: Maybe IR.C.Name -> IR.CountDistinct -> IR.A.CountAggregate
     mkCountAggregate Nothing _ = IR.A.StarCount
-    mkCountAggregate (Just cols) IR.SelectCountDistinct = maybe IR.A.StarCount IR.A.ColumnDistinctCount $ nonEmpty cols
-    mkCountAggregate (Just cols) IR.SelectCountNonDistinct = maybe IR.A.StarCount IR.A.ColumnCount $ nonEmpty cols
+    mkCountAggregate (Just column) IR.SelectCountDistinct = IR.A.ColumnDistinctCount column
+    mkCountAggregate (Just column) IR.SelectCountNonDistinct = IR.A.ColumnCount column

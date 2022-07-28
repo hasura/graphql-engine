@@ -4,9 +4,9 @@
 
 export type ColumnCountAggregate = {
   /**
-   * The columns to apply the count aggregate function to
+   * The column to apply the count aggregate function to
    */
-  columns: Array<string>;
+  column: string;
   /**
    * Whether or not only distinct items should be counted
    */

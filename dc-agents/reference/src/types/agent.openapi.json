@@ -829,12 +829,9 @@
       },
       "ColumnCountAggregate": {
         "properties": {
-          "columns": {
-            "description": "The columns to apply the count aggregate function to",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
+          "column": {
+            "description": "The column to apply the count aggregate function to",
+            "type": "string"
           },
           "distinct": {
             "description": "Whether or not only distinct items should be counted",
@@ -848,7 +845,7 @@
           }
         },
         "required": [
-          "columns",
+          "column",
           "distinct",
           "type"
         ],

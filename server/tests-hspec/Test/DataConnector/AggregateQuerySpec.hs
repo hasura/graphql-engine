@@ -209,8 +209,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                 Invoice_aggregate {
                   aggregate {
                     count
-                    countColumn: count(columns: BillingState)
-                    countColumnDistinct: count(columns: BillingState, distinct: true)
+                    countColumn: count(column: BillingState)
+                    countColumnDistinct: count(column: BillingState, distinct: true)
                   }
                 }
               }
