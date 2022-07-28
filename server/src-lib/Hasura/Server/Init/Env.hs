@@ -1,18 +1,21 @@
 -- TODO(SOLOMON): Should this be moved into `Data.Environment`?
 module Hasura.Server.Init.Env
   ( FromEnv (..),
+    WithEnvT (..),
     WithEnv,
+    runWithEnvT,
+    runWithEnv,
     withEnv,
     withEnvs,
     withEnvBool,
     withEnvList,
     considerEnv,
-    runWithEnv,
   )
 where
 
 --------------------------------------------------------------------------------
 
+import Control.Monad.Morph (MFunctor (..))
 import Data.Char qualified as C
 import Data.Coerce (Coercible)
 import Data.Proxy (Proxy, asProxyTypeOf)
@@ -39,7 +42,7 @@ import Network.Wai.Handler.Warp (HostPreference)
 
 -- | Lookup a key in the application environment then parse the value
 -- with a 'FromEnv' instance'
-considerEnv :: FromEnv a => String -> WithEnv (Maybe a)
+considerEnv :: (Monad m, FromEnv a) => String -> WithEnvT m (Maybe a)
 considerEnv envVar = do
   env <- ask
   case lookup envVar env of
@@ -52,37 +55,37 @@ considerEnv envVar = do
 
 -- | Lookup a list of keys with 'considerEnv' and return the first
 -- value to parse successfully.
-considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
+considerEnvs :: (Monad m, FromEnv a) => [String] -> WithEnvT m (Maybe a)
 considerEnvs envVars = foldl1 (<|>) <$> mapM considerEnv envVars
 
-withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
+withEnv :: (Monad m, FromEnv a) => Maybe a -> String -> WithEnvT m (Maybe a)
 withEnv mVal envVar =
   maybe (considerEnv envVar) (pure . Just) mVal
 
 -- | Return 'a' if Just or else call 'considerEnv' with a list of env keys k
-withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
+withEnvs :: (Monad m, FromEnv a) => Maybe a -> [String] -> WithEnvT m (Maybe a)
 withEnvs mVal envVars =
   maybe (considerEnvs envVars) (pure . Just) mVal
 
 -- | If @bVal@ is 'True' then return it, else lookup the 'envVar' in
 -- the environment and return 'False' if absent.
-withEnvBool :: Bool -> String -> WithEnv Bool
+withEnvBool :: Monad m => Bool -> String -> WithEnvT m Bool
 withEnvBool bVal envVar =
   if bVal
     then pure bVal
     else do
-      mVal <- considerEnv @Bool envVar
+      mVal <- considerEnv @_ @Bool envVar
       pure $ fromMaybe False mVal
 
 -- | 'withEnv' for types isomorphic to an array. 'Proxy' is generally
 -- used to pass on the type info. Here 'Proxy' helps us to specify
 -- what the underlying array type should be.
 withEnvList ::
-  (FromEnv b, Coercible b [a]) =>
+  (Monad m, FromEnv b, Coercible b [a]) =>
   Proxy [a] ->
   b ->
   String ->
-  WithEnv b
+  WithEnvT m b
 withEnvList proxy x env
   | null (asArrayType $ coerce x) = fromMaybe emptyArr <$> considerEnv env
   | otherwise = return x
@@ -97,13 +100,25 @@ withEnvList proxy x env
 class FromEnv a where
   fromEnv :: String -> Either String a
 
--- TODO: Convert to a newtype and use `Data.Environment.Environment` for context
-type WithEnv a = ReaderT [(String, String)] (ExceptT String Identity) a
+-- TODO: Use `Data.Environment.Environment` for context
+type WithEnv = WithEnvT Identity
+
+newtype WithEnvT m a = WithEnvT {unWithEnvT :: ReaderT [(String, String)] (ExceptT String m) a}
+  deriving newtype (Functor, Applicative, Monad, MonadReader [(String, String)], MonadError String, MonadIO)
+
+instance MonadTrans WithEnvT where
+  lift = WithEnvT . lift . lift
+
+instance MFunctor WithEnvT where
+  hoist f (WithEnvT m) = WithEnvT $ hoist (hoist f) m
 
 -- | Given an environment run a 'WithEnv' action producing either a
 -- parse error or an @a@.
 runWithEnv :: [(String, String)] -> WithEnv a -> Either String a
-runWithEnv env m = runIdentity $ runExceptT $ runReaderT m env
+runWithEnv env (WithEnvT m) = runIdentity $ runExceptT $ runReaderT m env
+
+runWithEnvT :: [(String, String)] -> WithEnvT m a -> m (Either String a)
+runWithEnvT env (WithEnvT m) = runExceptT $ runReaderT m env
 
 --------------------------------------------------------------------------------
 
