@@ -101,7 +101,7 @@ const RetryConfEditor: React.FC<Props> = props => {
           legacyTooltip
             ? {
                 id: 'retry-conf-interval-sec',
-                message: 'Interval (in seconds) between each retry"',
+                message: 'Interval (in seconds) between each retry',
               }
             : undefined
         }

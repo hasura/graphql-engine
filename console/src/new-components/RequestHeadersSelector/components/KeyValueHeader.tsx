@@ -6,6 +6,7 @@ interface Props {
   fieldId: string;
   fieldName: string;
   rowIndex: number;
+  typeSelect: boolean;
   removeRow: (index?: number | number[]) => void;
 }
 
@@ -14,7 +15,7 @@ const borderStyle =
 const ringStyle = 'focus:ring-2 focus:ring-yellow-200';
 
 export const KeyValueHeader = (props: Props) => {
-  const { fieldId, fieldName, rowIndex, removeRow } = props;
+  const { fieldId, fieldName, rowIndex, typeSelect, removeRow } = props;
   const keyLabel = `${fieldName}[${rowIndex}].name`;
   const typeLabel = `${fieldName}[${rowIndex}].type`;
   const valueLabel = `${fieldName}[${rowIndex}].value`;
@@ -30,14 +31,16 @@ export const KeyValueHeader = (props: Props) => {
         aria-label={keyLabel}
       />
       <div className="flex rounded">
-        <select
-          {...register(typeLabel)}
-          aria-label={typeLabel}
-          className={`inline-flex h-10 shadow-sm rounded-l border border-r-0 bg-white ${borderStyle} ${ringStyle}`}
-        >
-          <option value="from_value">Value</option>
-          <option value="from_env">Env Var</option>
-        </select>
+        {typeSelect ? (
+          <select
+            {...register(typeLabel)}
+            aria-label={typeLabel}
+            className={`inline-flex h-10 shadow-sm rounded-l border border-r-0 bg-white ${borderStyle} ${ringStyle}`}
+          >
+            <option value="from_value">Value</option>
+            <option value="from_env">Env Var</option>
+          </select>
+        ) : null}
         <input
           {...register(valueLabel)}
           aria-label={valueLabel}

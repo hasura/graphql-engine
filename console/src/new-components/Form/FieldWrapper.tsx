@@ -77,18 +77,20 @@ export const FieldWrapper = (props: FieldWrapperProps) => {
         ) : null}
       </label>
       <div>{children}</div>
-      <div
-        role={error?.message ? 'alert' : ''}
-        aria-label={error?.message || ''}
-        className="text-red-600 flex items-center text-sm mt-1"
-      >
-        <span className="flex items-center">
-          {error?.message && (
-            <FaExclamationCircle className="fill-current h-4 mr-xs" />
-          )}
-          {error?.message}&nbsp;
-        </span>
-      </div>
+      {error ? (
+        <div
+          role={error?.message ? 'alert' : ''}
+          aria-label={error?.message || ''}
+          className="text-red-600 flex items-center text-sm mt-1"
+        >
+          <span className="flex items-center">
+            {error?.message && (
+              <FaExclamationCircle className="fill-current h-4 mr-xs" />
+            )}
+            {error?.message}&nbsp;
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 };

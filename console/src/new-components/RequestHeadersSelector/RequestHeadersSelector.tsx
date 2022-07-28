@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactText } from 'react';
 import { useFieldArray } from 'react-hook-form';
 import { FaPlusCircle } from 'react-icons/fa';
 import { Button } from '@/new-components/Button';
@@ -7,10 +7,12 @@ import { KeyValueHeader } from './components/KeyValueHeader';
 
 export interface RequestHeadersSelectorProps {
   name: string;
+  addButtonText?: ReactText;
+  typeSelect?: boolean;
 }
 
 export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
-  const { name } = props;
+  const { name, addButtonText = 'Add', typeSelect = true } = props;
   const { fields, append, remove } = useFieldArray<
     Record<string, RequestHeadersSelectorSchema>
   >({
@@ -34,6 +36,7 @@ export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
               fieldId={field.id}
               fieldName={name}
               rowIndex={index}
+              typeSelect={typeSelect}
               removeRow={remove}
             />
           ))}
@@ -43,11 +46,15 @@ export const RequestHeadersSelector = (props: RequestHeadersSelectorProps) => {
       <Button
         icon={<FaPlusCircle />}
         onClick={() => {
-          append({ name: '', value: '', type: 'from_value' });
+          append({
+            name: '',
+            value: '',
+            ...(typeSelect && { type: 'from_value' }),
+          });
         }}
         size="sm"
       >
-        Add additional header
+        {addButtonText}
       </Button>
     </div>
   );

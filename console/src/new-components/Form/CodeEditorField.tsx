@@ -3,6 +3,8 @@ import clsx from 'clsx';
 import get from 'lodash.get';
 import AceEditor, { IAceOptions, IEditorProps } from 'react-ace';
 import 'ace-builds/src-noconflict/theme-github';
+import 'ace-builds/src-noconflict/theme-eclipse';
+import 'ace-builds/src-noconflict/ext-language_tools';
 import { FieldError, useFormContext, Controller } from 'react-hook-form';
 import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
@@ -24,6 +26,14 @@ export type CodeEditorFieldProps = FieldWrapperPassThroughProps & {
    */
   size?: 'full' | 'medium';
   /**
+   * The theme of code editor
+   */
+  theme?: 'github' | 'eclipse';
+  /**
+   * The mode of code editor
+   */
+  mode?: string;
+  /**
    * Flag to indicate if the field is disabled
    */
   disabled?: boolean;
@@ -34,6 +44,8 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
   editorProps,
   editorOptions = { minLines: 5, maxLines: 8, showGutter: false },
   size = 'full',
+  theme = 'github',
+  mode = 'json',
   disabled,
   dataTest,
   ...wrapperProps
@@ -68,7 +80,8 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
               name={controllerName}
               ref={ref}
               value={value}
-              theme="github"
+              theme={theme}
+              mode={mode}
               onChange={onChange}
               onBlur={onBlur}
               editorProps={editorProps}
@@ -81,7 +94,8 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                   : 'border-gray-300',
                 disabled
                   ? 'bg-gray-100 border-gray-100 pointer-events-none'
-                  : 'hover:border-gray-400'
+                  : 'hover:border-gray-400',
+                size === 'full' ? 'max-h-52' : ''
               )}
               data-testid={name}
             />
