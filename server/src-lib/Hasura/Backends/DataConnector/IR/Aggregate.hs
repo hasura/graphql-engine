@@ -24,8 +24,8 @@ data Aggregate
 instance Witch.From Aggregate API.Aggregate where
   from (SingleColumn singleColumn) = API.SingleColumn (Witch.from singleColumn)
   from (Count StarCount) = API.StarCount
-  from (Count (ColumnCount columns)) = API.ColumnCount $ API.ColumnCountAggregate {_ccaColumns = Witch.from <$> columns, _ccaDistinct = False}
-  from (Count (ColumnDistinctCount columns)) = API.ColumnCount $ API.ColumnCountAggregate {_ccaColumns = Witch.from <$> columns, _ccaDistinct = True}
+  from (Count (ColumnCount column)) = API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = False}
+  from (Count (ColumnDistinctCount column)) = API.ColumnCount $ API.ColumnCountAggregate {_ccaColumn = Witch.from column, _ccaDistinct = True}
 
 data SingleColumnAggregate = SingleColumnAggregate
   { _scaFunction :: SingleColumnAggregateFunction,
@@ -71,7 +71,7 @@ instance Witch.From SingleColumnAggregateFunction API.SingleColumnAggregateFunct
 
 data CountAggregate
   = StarCount
-  | ColumnCount (NonEmpty IR.C.Name)
-  | ColumnDistinctCount (NonEmpty IR.C.Name)
+  | ColumnCount IR.C.Name
+  | ColumnDistinctCount IR.C.Name
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving anyclass (Cacheable, FromJSON, Hashable, NFData, ToJSON)

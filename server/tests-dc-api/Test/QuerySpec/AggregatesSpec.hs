@@ -54,8 +54,8 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       Data.responseAggregates response `shouldBe` expectedAggregates
 
   describe "Column Count" $ do
-    it "counts all rows with non-null columns - single column" $ do
-      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState" :| []) False)]
+    it "counts all rows with non-null columns" $ do
+      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState") False)]
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
@@ -66,7 +66,7 @@ spec api sourceName config = describe "Aggregate Queries" $ do
 
     it "can count all rows with non-null values in a column, after applying pagination and filtering" $ do
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (localComparisonColumn "InvoiceId") (ScalarValue (Number 380))
-      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState" :| []) False)]
+      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState") False)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit .~ Just 20 >>> qWhere .~ Just where')
       response <- (api // _query) sourceName config queryRequest
 
@@ -82,7 +82,7 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       Data.responseAggregates response `shouldBe` expectedAggregates
 
     it "can count all rows with distinct non-null values in a column" $ do
-      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState" :| []) True)]
+      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState") True)]
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
@@ -93,7 +93,7 @@ spec api sourceName config = describe "Aggregate Queries" $ do
 
     it "can count all rows with distinct non-null values in a column, after applying pagination and filtering" $ do
       let where' = ApplyBinaryComparisonOperator GreaterThanOrEqual (localComparisonColumn "InvoiceId") (ScalarValue (Number 380))
-      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState" :| []) True)]
+      let aggregates = KeyMap.fromList [("count_cols", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState") True)]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit .~ Just 20 >>> qWhere .~ Just where')
       response <- (api // _query) sourceName config queryRequest
 
@@ -144,7 +144,7 @@ spec api sourceName config = describe "Aggregate Queries" $ do
       let aggregates =
             KeyMap.fromList
               [ ("count", StarCount),
-                ("distinctBillingStates", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState" :| []) True),
+                ("distinctBillingStates", ColumnCount $ ColumnCountAggregate (ColumnName "BillingState") True),
                 ("maxTotal", SingleColumn $ SingleColumnAggregate Max (ColumnName "Total"))
               ]
       let queryRequest = invoicesQueryRequest aggregates

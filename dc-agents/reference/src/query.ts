@@ -315,12 +315,7 @@ const starCountAggregateFunction = (rows: Record<string, ScalarValue>[]): Scalar
 };
 
 const columnCountAggregateFunction = (aggregate: ColumnCountAggregate) => (rows: Record<string, ScalarValue>[]): ScalarValue => {
-  // HACK: Only accept a single column. Multiple column support is being removed.
-  const column = aggregate.columns.length == 1
-    ? aggregate.columns[0]
-    : (() => {throw new Error("Multiple columns in a count aggregate are not supported");})();
-
-  const nonNullValues = rows.map(row => row[column]).filter(v => v !== null);
+  const nonNullValues = rows.map(row => row[aggregate.column]).filter(v => v !== null);
 
   return aggregate.distinct
     ? (new Set(nonNullValues)).size

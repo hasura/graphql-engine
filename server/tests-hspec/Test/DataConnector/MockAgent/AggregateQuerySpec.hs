@@ -8,7 +8,6 @@ where
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
-import Data.List.NonEmpty (NonEmpty (..))
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Quoter.Graphql (graphql)
@@ -223,7 +222,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                       Invoice_aggregate(limit: 2) {
                         counts: aggregate {
                           count
-                          uniqueBillingCountries: count(columns: BillingCountry, distinct: true)
+                          uniqueBillingCountries: count(column: BillingCountry, distinct: true)
                         }
                         ids: aggregate {
                           minimum: min {
@@ -311,7 +310,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                                 Just $
                                   KM.fromList
                                     [ ("counts_count", API.StarCount),
-                                      ("counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry" :| []) True)),
+                                      ("counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
                                       ("ids_minimum_Id", API.SingleColumn (API.SingleColumnAggregate API.Min (API.ColumnName "InvoiceId"))),
                                       ("ids_max_InvoiceId", API.SingleColumn (API.SingleColumnAggregate API.Max (API.ColumnName "InvoiceId")))
                                     ],
