@@ -42,7 +42,7 @@ dedicated metadata database as described
 - (optional) Write access to the schemas if you want to support mutations as well.
 - (optional) To create tables and views via the Hasura console (the admin UI) you'll need the privilege to create
   tables/views. This might not be required when you're working with an existing database.
-- (required only if event triggers are needed) Read & write access on schema: `hdb_catalog`.
+- (required only if event triggers are needed) Read, write & create access on schema: `hdb_catalog`.
 
 ## Sample scenarios
 
@@ -101,6 +101,13 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 -- GRANT ALL ON ALL TABLES IN SCHEMA <schema-name> TO hasurauser;
 -- GRANT ALL ON ALL SEQUENCES IN SCHEMA <schema-name> TO hasurauser;
 -- GRANT ALL ON ALL FUNCTIONS IN SCHEMA <schema-name> TO hasurauser;
+
+-- grant these privileges to use create and use all Hasura GraphQL engine functionality
+GRANT USAGE ON SCHEMA hdb_catalog TO hasurauser;
+GRANT CREATE ON SCHEMA hdb_catalog TO hasurauser;
+GRANT ALL ON ALL TABLES IN SCHEMA hdb_catalog TO hasurauser;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA hdb_catalog TO hasurauser;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA hdb_catalog TO hasurauser;
 ```
 
 ### 2. A single role to manage metadata and user objects in the **same database**
