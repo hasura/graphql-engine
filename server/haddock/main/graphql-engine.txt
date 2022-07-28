@@ -26829,6 +26829,7 @@ Many :: Cardinality
 reshapeResponseToQueryShape :: MonadError QErr m => QueryDB 'DataConnector Void (UnpreparedValue 'DataConnector) -> QueryResponse -> m Encoding
 reshapeSimpleSelectRows :: MonadError QErr m => Cardinality -> AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) -> QueryResponse -> m Encoding
 reshapeTableAggregateFields :: MonadError QErr m => TableAggregateFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) -> QueryResponse -> m Encoding
+reshapeAggregateFields :: MonadError QErr m => FieldPrefix -> AggregateFields 'DataConnector -> KeyMap Value -> m Encoding
 reshapeAnnFields :: MonadError QErr m => FieldPrefix -> AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) -> KeyMap FieldValue -> m Encoding
 encodeAssocListAsObject :: [(Text, Encoding)] -> Encoding
 reshapeField :: MonadError QErr m => AnnFieldG 'DataConnector Void (UnpreparedValue 'DataConnector) -> m FieldValue -> m Encoding
@@ -26837,6 +26838,8 @@ instance GHC.Classes.Eq Hasura.Backends.DataConnector.Plan.FieldsAndAggregates
 instance GHC.Show.Show Hasura.Backends.DataConnector.Plan.FieldsAndAggregates
 instance GHC.Classes.Eq Hasura.Backends.DataConnector.Plan.FieldPrefix
 instance GHC.Show.Show Hasura.Backends.DataConnector.Plan.FieldPrefix
+instance GHC.Base.Semigroup Hasura.Backends.DataConnector.Plan.FieldPrefix
+instance GHC.Base.Monoid Hasura.Backends.DataConnector.Plan.FieldPrefix
 instance GHC.Base.Semigroup Hasura.Backends.DataConnector.Plan.FieldsAndAggregates
 instance GHC.Base.Monoid Hasura.Backends.DataConnector.Plan.FieldsAndAggregates
 

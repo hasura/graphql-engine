@@ -28,8 +28,8 @@
 </span><span id="line-28"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataFromCatalog"><span class="hs-identifier hs-type">fetchMetadataFromCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxE</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span>
 </span><span id="line-29"></span><span id="fetchMetadataFromCatalog"><span class="annot"><span class="annottext">fetchMetadataFromCatalog :: TxE QErr Metadata
 </span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataFromCatalog"><span class="hs-identifier hs-var hs-var">fetchMetadataFromCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-30"></span><span>  </span><span id="local-6989586621689460049"><span class="annot"><span class="annottext">[Identity (AltJ Metadata)]
-</span><a href="#local-6989586621689460049"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-30"></span><span>  </span><span id="local-6989586621689465251"><span class="annot"><span class="annottext">[Identity (AltJ Metadata)]
+</span><a href="#local-6989586621689465251"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO [Identity (AltJ Metadata)]
 forall (m :: * -&gt; *) a r e.
@@ -45,16 +45,16 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Identity (AltJ Metadata)]
-</span><a href="#local-6989586621689460049"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689465251"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-39"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; TxE QErr Metadata
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#emptyMetadata"><span class="hs-identifier hs-var">emptyMetadata</span></a></span><span>
-</span><span id="line-40"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689460043"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460043"><span class="hs-identifier hs-var">metadata</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; TxE QErr Metadata
+</span><span id="line-40"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689465245"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621689465245"><span class="hs-identifier hs-var">metadata</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; TxE QErr Metadata
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460043"><span class="hs-identifier hs-var">metadata</span></a></span><span>
+</span><a href="#local-6989586621689465245"><span class="hs-identifier hs-var">metadata</span></a></span><span>
 </span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">[Identity (AltJ Metadata)]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr Metadata
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
@@ -64,8 +64,8 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span id="line-43"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataAndResourceVersionFromCatalog"><span class="hs-identifier hs-type">fetchMetadataAndResourceVersionFromCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxE</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span id="fetchMetadataAndResourceVersionFromCatalog"><span class="annot"><span class="annottext">fetchMetadataAndResourceVersionFromCatalog :: TxE QErr (Metadata, MetadataResourceVersion)
 </span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataAndResourceVersionFromCatalog"><span class="hs-identifier hs-var hs-var">fetchMetadataAndResourceVersionFromCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621689460041"><span class="annot"><span class="annottext">[(AltJ Metadata, Int64)]
-</span><a href="#local-6989586621689460041"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621689465243"><span class="annot"><span class="annottext">[(AltJ Metadata, Int64)]
+</span><a href="#local-6989586621689465243"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO [(AltJ Metadata, Int64)]
 forall (m :: * -&gt; *) a r e.
@@ -81,22 +81,22 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-52"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[(AltJ Metadata, Int64)]
-</span><a href="#local-6989586621689460041"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689465243"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-54"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Metadata, MetadataResourceVersion)
 -&gt; TxE QErr (Metadata, MetadataResourceVersion)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#emptyMetadata"><span class="hs-identifier hs-var">emptyMetadata</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="Hasura.RQL.Types.SchemaCache.html#initialResourceVersion"><span class="hs-identifier hs-var">initialResourceVersion</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-55"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689460040"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460040"><span class="hs-identifier hs-var">metadata</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689460039"><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460039"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Metadata, MetadataResourceVersion)
+</span><span id="line-55"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Q.AltJ</span></span><span> </span><span id="local-6989586621689465242"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621689465242"><span class="hs-identifier hs-var">metadata</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689465241"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689465241"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Metadata, MetadataResourceVersion)
 -&gt; TxE QErr (Metadata, MetadataResourceVersion)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460040"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; MetadataResourceVersion
+</span><a href="#local-6989586621689465242"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; MetadataResourceVersion
 </span><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-var">MetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460039"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689465241"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">[(AltJ Metadata, Int64)]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr (Metadata, MetadataResourceVersion)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
@@ -106,8 +106,8 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span id="line-58"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataResourceVersionFromCatalog"><span class="hs-identifier hs-type">fetchMetadataResourceVersionFromCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxE</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span>
 </span><span id="line-59"></span><span id="fetchMetadataResourceVersionFromCatalog"><span class="annot"><span class="annottext">fetchMetadataResourceVersionFromCatalog :: TxE QErr MetadataResourceVersion
 </span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataResourceVersionFromCatalog"><span class="hs-identifier hs-var hs-var">fetchMetadataResourceVersionFromCatalog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621689460037"><span class="annot"><span class="annottext">[Identity Int64]
-</span><a href="#local-6989586621689460037"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621689465239"><span class="annot"><span class="annottext">[Identity Int64]
+</span><a href="#local-6989586621689465239"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-61"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO [Identity Int64]
 forall (m :: * -&gt; *) a r e.
@@ -123,17 +123,17 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Identity Int64]
-</span><a href="#local-6989586621689460037"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689465239"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-69"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; TxE QErr MetadataResourceVersion
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
 </span><a href="Hasura.RQL.Types.SchemaCache.html#initialResourceVersion"><span class="hs-identifier hs-var">initialResourceVersion</span></a></span><span>
-</span><span id="line-70"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span id="local-6989586621689460036"><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460036"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; TxE QErr MetadataResourceVersion
+</span><span id="line-70"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span id="local-6989586621689465238"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689465238"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; TxE QErr MetadataResourceVersion
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64 -&gt; MetadataResourceVersion
 </span><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-var">MetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460036"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689465238"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span>    </span><span class="annot"><span class="annottext">[Identity Int64]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr MetadataResourceVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
@@ -144,9 +144,9 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><span id="line-74"></span><span id="fetchMetadataNotificationsFromCatalog"><span class="annot"><span class="annottext">fetchMetadataNotificationsFromCatalog :: MetadataResourceVersion
 -&gt; InstanceId
 -&gt; TxE QErr [(MetadataResourceVersion, CacheInvalidations)]
-</span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataNotificationsFromCatalog"><span class="hs-identifier hs-var hs-var">fetchMetadataNotificationsFromCatalog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span id="local-6989586621689460035"><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460035"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689460034"><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621689460034"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.RQL.DDL.Schema.Catalog.html#fetchMetadataNotificationsFromCatalog"><span class="hs-identifier hs-var hs-var">fetchMetadataNotificationsFromCatalog</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span id="local-6989586621689465237"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689465237"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689465236"><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621689465236"><span class="hs-identifier hs-var">instanceId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">((Int64, AltJ CacheInvalidations)
  -&gt; (MetadataResourceVersion, CacheInvalidations))
 -&gt; [(Int64, AltJ CacheInvalidations)]
@@ -185,8 +185,8 @@ forall (m :: * -&gt; *) a r e.
          WHERE resource_version &gt; $1 AND instance_id != ($2::uuid)
       |]</span></span><span>
 </span><span id="line-83"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460035"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InstanceId
-</span><a href="#local-6989586621689460034"><span class="hs-identifier hs-var">instanceId</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689465237"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InstanceId
+</span><a href="#local-6989586621689465236"><span class="hs-identifier hs-var">instanceId</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-85"></span><span>
@@ -211,8 +211,8 @@ forall (m :: * -&gt; *) r e.
 </span><span id="line-97"></span><span>
 </span><span id="line-98"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Catalog.html#insertMetadataInCatalog"><span class="hs-identifier hs-type">insertMetadataInCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxE</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span id="insertMetadataInCatalog"><span class="annot"><span class="annottext">insertMetadataInCatalog :: Metadata -&gt; TxE QErr ()
-</span><a href="Hasura.RQL.DDL.Schema.Catalog.html#insertMetadataInCatalog"><span class="hs-identifier hs-var hs-var">insertMetadataInCatalog</span></a></span></span><span> </span><span id="local-6989586621689460030"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460030"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.DDL.Schema.Catalog.html#insertMetadataInCatalog"><span class="hs-identifier hs-var hs-var">insertMetadataInCatalog</span></a></span></span><span> </span><span id="local-6989586621689465232"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621689465232"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-100"></span><span>  </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query -&gt; Identity (AltJ Metadata) -&gt; Bool -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
@@ -233,7 +233,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; AltJ Metadata
 forall a. a -&gt; AltJ a
 </span><span class="hs-identifier hs-var">Q.AltJ</span></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460030"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689465232"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-107"></span><span>    </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-108"></span><span>
@@ -244,11 +244,11 @@ forall a. a -&gt; AltJ a
 </span><span id="line-113"></span><span class="annot"><a href="Hasura.RQL.DDL.Schema.Catalog.html#setMetadataInCatalog"><span class="hs-identifier hs-type">setMetadataInCatalog</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#Metadata"><span class="hs-identifier hs-type">Metadata</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q.TxE</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-type">MetadataResourceVersion</span></a></span><span>
 </span><span id="line-114"></span><span id="setMetadataInCatalog"><span class="annot"><span class="annottext">setMetadataInCatalog :: MetadataResourceVersion
 -&gt; Metadata -&gt; TxE QErr MetadataResourceVersion
-</span><a href="Hasura.RQL.DDL.Schema.Catalog.html#setMetadataInCatalog"><span class="hs-identifier hs-var hs-var">setMetadataInCatalog</span></a></span></span><span> </span><span id="local-6989586621689460029"><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621689460029"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span> </span><span id="local-6989586621689460028"><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460028"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-115"></span><span>  </span><span id="local-6989586621689460027"><span class="annot"><span class="annottext">[Identity Int64]
-</span><a href="#local-6989586621689460027"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="Hasura.RQL.DDL.Schema.Catalog.html#setMetadataInCatalog"><span class="hs-identifier hs-var hs-var">setMetadataInCatalog</span></a></span></span><span> </span><span id="local-6989586621689465231"><span class="annot"><span class="annottext">MetadataResourceVersion
+</span><a href="#local-6989586621689465231"><span class="hs-identifier hs-var">resourceVersion</span></a></span></span><span> </span><span id="local-6989586621689465230"><span class="annot"><span class="annottext">Metadata
+</span><a href="#local-6989586621689465230"><span class="hs-identifier hs-var">metadata</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-115"></span><span>  </span><span id="local-6989586621689465229"><span class="annot"><span class="annottext">[Identity Int64]
+</span><a href="#local-6989586621689465229"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-116"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
 -&gt; (AltJ Metadata, Int64)
@@ -272,13 +272,13 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-127"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Metadata -&gt; AltJ Metadata
 forall a. a -&gt; AltJ a
 </span><span class="hs-identifier hs-var">Q.AltJ</span></span><span> </span><span class="annot"><span class="annottext">Metadata
-</span><a href="#local-6989586621689460028"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Int64
+</span><a href="#local-6989586621689465230"><span class="hs-identifier hs-var">metadata</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Int64
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getMetadataResourceVersion"><span class="hs-identifier hs-var hs-var">getMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621689460029"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689465231"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-128"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-129"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Identity Int64]
-</span><a href="#local-6989586621689460027"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689465229"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-130"></span><span>    </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr MetadataResourceVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw409"><span class="hs-identifier hs-var">throw409</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TxE QErr MetadataResourceVersion)
@@ -291,19 +291,19 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="Hasura.Prelude.html#tshow"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; Int64
 </span><a href="Hasura.RQL.Types.SchemaCache.html#getMetadataResourceVersion"><span class="hs-identifier hs-var hs-var">getMetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion
-</span><a href="#local-6989586621689460029"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689465231"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;) did not match current version&quot;</span></span><span>
-</span><span id="line-131"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span id="local-6989586621689460023"><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460023"><span class="hs-identifier hs-var">newResourceVersion</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; TxE QErr MetadataResourceVersion
+</span><span id="line-131"></span><span>    </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span id="local-6989586621689465225"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689465225"><span class="hs-identifier hs-var">newResourceVersion</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MetadataResourceVersion -&gt; TxE QErr MetadataResourceVersion
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(MetadataResourceVersion -&gt; TxE QErr MetadataResourceVersion)
 -&gt; MetadataResourceVersion -&gt; TxE QErr MetadataResourceVersion
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; MetadataResourceVersion
 </span><a href="Hasura.RQL.Types.SchemaCache.html#MetadataResourceVersion"><span class="hs-identifier hs-var">MetadataResourceVersion</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689460023"><span class="hs-identifier hs-var">newResourceVersion</span></a></span><span>
+</span><a href="#local-6989586621689465225"><span class="hs-identifier hs-var">newResourceVersion</span></a></span><span>
 </span><span id="line-132"></span><span>    </span><span class="annot"><span class="annottext">[Identity Int64]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr MetadataResourceVersion
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
