@@ -25,6 +25,7 @@ export const TableTrackingCustomizationModal: React.FC<TableTrackingCustomizatio
       select: '',
       select_by_pk: '',
       select_aggregate: '',
+      select_stream: '',
       insert: '',
       insert_one: '',
       update: '',

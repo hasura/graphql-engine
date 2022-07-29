@@ -81,6 +81,7 @@ export const TableTrackingCustomizationModalContainer: React.FC<TableTrackingCus
             select: values.select,
             select_by_pk: values.select_by_pk,
             select_aggregate: values.select_aggregate,
+            select_stream: values.select_stream,
             insert: values.insert,
             insert_one: values.insert_one,
             update: values.update,

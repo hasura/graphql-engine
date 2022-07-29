@@ -120,6 +120,7 @@ const RootFieldsEditor = ({
       selectOnChange={onRootFieldChange('select')}
       selectByPkOnChange={onRootFieldChange('select_by_pk')}
       selectAggOnChange={onRootFieldChange('select_aggregate')}
+      selectStreamOnChange={onRootFieldChange('select_stream')}
       insertOnChange={onRootFieldChange('insert')}
       insertOneOnChange={onRootFieldChange('insert_one')}
       updateOnChange={onRootFieldChange('update')}

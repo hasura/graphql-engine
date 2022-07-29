@@ -19,6 +19,7 @@ interface RootFieldEditorProps {
   selectOnChange: ChangeHandler;
   selectByPkOnChange: ChangeHandler;
   selectAggOnChange: ChangeHandler;
+  selectStreamOnChange: ChangeHandler;
   insertOnChange: ChangeHandler;
   insertOneOnChange: ChangeHandler;
   updateOnChange: ChangeHandler;
@@ -36,6 +37,7 @@ export const rootFieldLabels: Record<keyof CustomRootFields, string> = {
   select: 'Select',
   select_by_pk: 'Select by PK',
   select_aggregate: 'Select Aggregate',
+  select_stream: 'Select Stream',
   insert: 'Insert',
   insert_one: 'Insert One',
   update: 'Update',
@@ -51,6 +53,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
   selectOnChange,
   selectByPkOnChange,
   selectAggOnChange,
+  selectStreamOnChange,
   insertOnChange,
   insertOneOnChange,
   updateOnChange,
@@ -67,6 +70,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
     select: `fetch data from the table: ${qualifiedTableName}`,
     select_by_pk: `fetch data from the table: ${qualifiedTableName} using primary key columns`,
     select_aggregate: `fetch aggregated fields from the table: ${qualifiedTableName}`,
+    select_stream: `fetch stream fields from the table: ${qualifiedTableName}`,
     insert: `insert data into the table: ${qualifiedTableName}`,
     insert_one: `insert a single row into the table: ${qualifiedTableName}`,
     update: `update data of the table: ${qualifiedTableName}`,
@@ -166,6 +170,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
               {getRootFieldRow('select', selectOnChange)}
               {getRootFieldRow('select_by_pk', selectByPkOnChange)}
               {getRootFieldRow('select_aggregate', selectAggOnChange)}
+              {getRootFieldRow('select_stream', selectStreamOnChange)}
             </div>
           )}
           {rfType === 'mutation' && (

@@ -182,6 +182,7 @@ export type CustomRootFields = {
   select?: Nullable<string> | CustomRootField;
   select_by_pk?: Nullable<string> | CustomRootField;
   select_aggregate?: Nullable<string> | CustomRootField;
+  select_stream?: Nullable<string> | CustomRootField;
   insert?: Nullable<string> | CustomRootField;
   insert_one?: Nullable<string> | CustomRootField;
   update?: Nullable<string> | CustomRootField;
