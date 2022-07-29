@@ -750,7 +750,7 @@ instance (Backend b) => ToJSON (TableConfig b) where
           -- custom_column_names is a deprecated property that has been replaced by column_config.
           -- We are retaining it here, sourcing its values from column_config, for backwards-compatibility
           -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
-          "custom_column_names" .= M.mapMaybe _ccfgCustomName _tcColumnConfig,
+          "custom_column_names" .= mapMaybe _ccfgCustomName _tcColumnConfig,
           "column_config" .= M.filter (/= mempty) _tcColumnConfig,
           "custom_name" .= _tcCustomName,
           "comment" .= _tcComment

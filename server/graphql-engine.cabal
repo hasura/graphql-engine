@@ -207,6 +207,7 @@ common lib-depends
                      , vector-instances
                      , wai
                      , witch
+                     , witherable >= 0.4
 
                      -- Encoder related
                      , uuid
@@ -405,7 +406,6 @@ library
                      , Data.HashMap.Strict.Multi
                      , Data.HashMap.Strict.NonEmpty
                      , Data.HashMap.Strict.InsOrd.Extended
-                     , Data.IntMap.Strict.Extended
                      , Data.List.Extended
                      , Data.Parser.CacheControl
                      , Data.Parser.Expires

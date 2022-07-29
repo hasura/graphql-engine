@@ -26,17 +26,16 @@ module Hasura.GraphQL.Parser.Directives
 where
 
 import Control.Monad (guard, unless)
-import Control.Monad.Identity (Identity (..))
 import Data.Aeson.Key qualified as K
 import Data.Aeson.Types (JSONPathElement (Key))
 import Data.Dependent.Map qualified as DM
 import Data.Dependent.Sum (DSum (..))
 import Data.Foldable (for_)
+import Data.Functor.Identity (Identity (..))
 import Data.GADT.Compare.Extended
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.List qualified as L
-import Data.Maybe (catMaybes)
 import Data.Traversable (for)
 import Data.Typeable (eqT)
 import Hasura.Base.ToErrorValue
@@ -48,6 +47,7 @@ import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
 import Type.Reflection (Typeable, typeRep, (:~:) (..))
+import Witherable (catMaybes)
 import Prelude
 
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.

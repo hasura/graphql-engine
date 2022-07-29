@@ -1,6 +1,5 @@
 module Data.HashMap.Strict.Extended
   ( module M,
-    catMaybes,
     fromListOn,
     groupOn,
     groupOnNE,
@@ -24,11 +23,8 @@ import Data.List qualified as L
 import Data.List.NonEmpty (NonEmpty (..))
 import Prelude
 
-catMaybes :: HashMap k (Maybe v) -> HashMap k v
-catMaybes = M.mapMaybe id
-
 fromListOn :: (Eq k, Hashable k) => (v -> k) -> [v] -> HashMap k v
-fromListOn f = fromList . Prelude.map (\v -> (f v, v))
+fromListOn f = M.fromList . Prelude.map (\v -> (f v, v))
 
 -- | Given a 'Foldable' sequence of values and a function that extracts a key from each value,
 -- returns a 'HashMap' that maps each key to a list of all values in the sequence for which the
@@ -95,23 +91,23 @@ unionWithM ::
   HashMap k v ->
   HashMap k v ->
   m (HashMap k v)
-unionWithM f m1 m2 = foldM step m1 (toList m2)
+unionWithM f m1 m2 = foldM step m1 (M.toList m2)
   where
     step m (k, new) = case M.lookup k m of
-      Nothing -> pure $ insert k new m
+      Nothing -> pure $ M.insert k new m
       Just old -> do
         combined <- f k new old
-        pure $ insert k combined m
+        pure $ M.insert k combined m
 
 -- | Like 'M.unions', but keeping all elements in the result.
 unionsAll ::
   (Eq k, Hashable k, Foldable t) => t (HashMap k v) -> HashMap k (NonEmpty v)
-unionsAll = F.foldl' (\a b -> unionWith (<>) a (fmap (:| []) b)) M.empty
+unionsAll = F.foldl' (\a b -> M.unionWith (<>) a (fmap (:| []) b)) M.empty
 
 -- | Homogenise maps, such that all maps range over the full set of
 -- keys, inserting a default value as needed.
 homogenise :: (Hashable a, Eq a) => b -> [HashMap a b] -> (HashSet a, [HashMap a b])
 homogenise defaultValue maps =
-  let ks = S.unions $ L.map keysSet maps
-      defaults = fromList [(k, defaultValue) | k <- S.toList ks]
+  let ks = S.unions $ L.map M.keysSet maps
+      defaults = M.fromList [(k, defaultValue) | k <- S.toList ks]
    in (ks, L.map (<> defaults) maps)

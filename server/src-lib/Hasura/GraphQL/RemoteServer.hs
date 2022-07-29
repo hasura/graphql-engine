@@ -532,7 +532,7 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
     typeFieldMap :: HashMap G.Name [G.Name] -- typeName -> fieldNames
     typeFieldMap =
-      Map.mapMaybe getFieldsNames typeDefinitions
+      mapMaybe getFieldsNames typeDefinitions
       where
         getFieldsNames = \case
           G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> Just $ G._fldName <$> _otdFieldsDefinition
