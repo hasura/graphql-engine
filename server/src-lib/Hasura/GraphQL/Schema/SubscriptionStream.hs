@@ -250,7 +250,8 @@ selectStreamTable ::
   Maybe G.Description ->
   m (Maybe (P.FieldParser n (StreamSelectExp b)))
 selectStreamTable sourceInfo tableInfo fieldName description = runMaybeT $ do
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   xStreamSubscription <- hoistMaybe $ streamSubscriptionExtension @b
   stringifyNumbers <- retrieve Options.soStringifyNumbers
   tableStreamArgsParser <- lift $ tableStreamArguments sourceInfo tableInfo

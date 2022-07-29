@@ -80,7 +80,8 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
       NamingCase ->
       FieldInfo b ->
       m (Maybe (InputFieldsParser n (Maybe [IR.AnnotatedOrderByItemG b (IR.UnpreparedValue b)])))
-    mkField tCase fieldInfo = runMaybeT $
+    mkField tCase fieldInfo = runMaybeT $ do
+      roleName <- retrieve scRole
       case fieldInfo of
         FIColumn columnInfo -> do
           let fieldName = ciName columnInfo
@@ -92,8 +93,8 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
               <&> fmap (pure . mkOrderByItemG @b (IR.AOCColumn columnInfo)) . join
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
+          perms <- hoistMaybe $ tableSelectPermissions roleName remoteTableInfo
           fieldName <- hoistMaybe $ G.mkName $ relNameToTxt $ riName relationshipInfo
-          perms <- MaybeT $ tableSelectPermissions remoteTableInfo
           let newPerms = fmap partialSQLExpToUnpreparedValue <$> spiFilter perms
           case riType relationshipInfo of
             ObjRel -> do
@@ -128,7 +129,7 @@ orderByExp sourceInfo tableInfo = memoizeOn 'orderByExp (_siName sourceInfo, tab
             ReturnsTable table -> do
               let aggregateFieldName = applyFieldNameCaseIdentifier tCase $ C.fromTuple (fieldName, [G.convertNameToSuffix Name._aggregate])
               tableInfo' <- askTableInfo sourceInfo table
-              perms <- MaybeT $ tableSelectPermissions tableInfo'
+              perms <- hoistMaybe $ tableSelectPermissions roleName tableInfo'
               let newPerms = fmap partialSQLExpToUnpreparedValue <$> spiFilter perms
               aggregationParser <- lift $ orderByAggregation sourceInfo tableInfo'
               pure $ do

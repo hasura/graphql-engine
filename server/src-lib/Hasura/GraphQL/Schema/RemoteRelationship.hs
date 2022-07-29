@@ -71,7 +71,7 @@ remoteRelationshipToSchemaField ::
   RemoteSchemaFieldInfo ->
   m (Maybe (FieldParser n (IR.RemoteSchemaSelect (IR.RemoteRelationshipField IR.UnpreparedValue))))
 remoteRelationshipToSchemaField remoteSchemaCache remoteSchemaPermissions lhsFields RemoteSchemaFieldInfo {..} = runMaybeT do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   remoteSchemaContext <-
     Map.lookup _rrfiRemoteSchemaName remoteSchemaCache
       `onNothing` throw500 ("invalid remote schema name: " <>> _rrfiRemoteSchemaName)
@@ -188,13 +188,13 @@ remoteRelationshipToSourceField ::
 remoteRelationshipToSourceField sourceCache RemoteSourceFieldInfo {..} =
   withTypenameCustomization (mkCustomizedTypename (Just _rsfiSourceCustomization) HasuraCase) do
     tCase <- asks getter
+    roleName <- retrieve scRole
     sourceInfo <-
       onNothing (unsafeSourceInfo @tgt =<< Map.lookup _rsfiSource sourceCache) $
         throw500 $ "source not found " <> dquote _rsfiSource
     tableInfo <- askTableInfo sourceInfo _rsfiTable
     fieldName <- textToName $ relNameToTxt _rsfiName
-    maybePerms <- tableSelectPermissions @tgt tableInfo
-    case maybePerms of
+    case tableSelectPermissions @tgt roleName tableInfo of
       Nothing -> pure []
       Just tablePerms -> do
         parsers <- case _rsfiType of
