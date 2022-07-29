@@ -2,16 +2,38 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Test.Data
-  ( schemaTables,
-    artistsAsJson,
-    artistsAsJsonById,
-    albumsAsJson,
-    customersAsJson,
-    employeesAsJson,
-    employeesAsJsonById,
-    invoicesAsJson,
+  ( -- = Schema
+    schemaTables,
+    -- = Artists table
+    artistsTableName,
+    artistsRows,
+    artistsRowsById,
+    artistsTableRelationships,
+    -- = Albums table
+    albumsTableName,
+    albumsRelationshipName,
+    albumsRows,
+    albumsTableRelationships,
+    artistRelationshipName,
+    -- = Customers table
+    customersTableName,
+    customersRows,
+    customersTableRelationships,
+    supportRepRelationshipName,
+    -- = Employees table
+    employeesTableName,
+    employeesRows,
+    employeesRowsById,
+    employeesTableRelationships,
+    supportRepForCustomersRelationshipName,
+    -- = Invoices table
+    invoicesTableName,
+    invoicesRows,
+    -- = Utilities
+    emptyQuery,
     sortBy,
     filterColumnsByQueryFields,
+    onlyKeepRelationships,
     queryFields,
     responseRows,
     sortResponseRowsBy,
@@ -19,6 +41,9 @@ module Test.Data
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
+    columnField,
+    comparisonColumn,
+    localComparisonColumn,
   )
 where
 
@@ -63,8 +88,8 @@ chinookXmlBS = $(makeRelativeToProject "tests-dc-api/Test/Data/ChinookData.xml.g
 chinookXml :: XML.Document
 chinookXml = XML.parseLBS_ XML.def . GZip.decompress $ BSL.fromStrict chinookXmlBS
 
-readTableFromXmlIntoRows :: Text -> [KeyMap API.FieldValue]
-readTableFromXmlIntoRows tableName =
+readTableFromXmlIntoRows :: API.TableName -> [KeyMap API.FieldValue]
+readTableFromXmlIntoRows (API.TableName tableName) =
   rowToJsonObject <$> tableRows
   where
     tableRows :: [XML.Element]
@@ -90,28 +115,98 @@ readTableFromXmlIntoRows tableName =
                     else API.mkColumnFieldValue $ J.String textValue
        in (name, value)
 
-artistsAsJson :: [KeyMap API.FieldValue]
-artistsAsJson = sortBy "ArtistId" $ readTableFromXmlIntoRows "Artist"
+artistsTableName :: API.TableName
+artistsTableName = API.TableName "Artist"
 
-artistsAsJsonById :: HashMap Scientific (KeyMap API.FieldValue)
-artistsAsJsonById =
-  HashMap.fromList $ mapMaybe (\artist -> (,artist) <$> artist ^? ix "ArtistId" . _ColumnFieldNumber) artistsAsJson
+artistsRows :: [KeyMap API.FieldValue]
+artistsRows = sortBy "ArtistId" $ readTableFromXmlIntoRows artistsTableName
 
-albumsAsJson :: [KeyMap API.FieldValue]
-albumsAsJson = sortBy "AlbumId" $ readTableFromXmlIntoRows "Album"
+artistsRowsById :: HashMap Scientific (KeyMap API.FieldValue)
+artistsRowsById =
+  HashMap.fromList $ mapMaybe (\artist -> (,artist) <$> artist ^? ix "ArtistId" . _ColumnFieldNumber) artistsRows
 
-customersAsJson :: [KeyMap API.FieldValue]
-customersAsJson = sortBy "CustomerId" $ readTableFromXmlIntoRows "Customer"
+albumsRelationshipName :: API.RelationshipName
+albumsRelationshipName = API.RelationshipName "Albums"
 
-employeesAsJson :: [KeyMap API.FieldValue]
-employeesAsJson = sortBy "EmployeeId" $ readTableFromXmlIntoRows "Employee"
+artistsTableRelationships :: API.TableRelationships
+artistsTableRelationships =
+  let joinFieldMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+   in API.TableRelationships
+        artistsTableName
+        ( HashMap.fromList
+            [ (albumsRelationshipName, API.Relationship albumsTableName API.ArrayRelationship joinFieldMapping)
+            ]
+        )
 
-employeesAsJsonById :: HashMap Scientific (KeyMap API.FieldValue)
-employeesAsJsonById =
-  HashMap.fromList $ mapMaybe (\employee -> (,employee) <$> employee ^? ix "EmployeeId" . _ColumnFieldNumber) employeesAsJson
+albumsTableName :: API.TableName
+albumsTableName = API.TableName "Album"
 
-invoicesAsJson :: [KeyMap API.FieldValue]
-invoicesAsJson = sortBy "InvoiceId" $ readTableFromXmlIntoRows "Invoice"
+albumsRows :: [KeyMap API.FieldValue]
+albumsRows = sortBy "AlbumId" $ readTableFromXmlIntoRows albumsTableName
+
+albumsTableRelationships :: API.TableRelationships
+albumsTableRelationships =
+  let joinFieldMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+   in API.TableRelationships
+        albumsTableName
+        ( HashMap.fromList
+            [ (artistRelationshipName, API.Relationship artistsTableName API.ObjectRelationship joinFieldMapping)
+            ]
+        )
+
+artistRelationshipName :: API.RelationshipName
+artistRelationshipName = API.RelationshipName "Artist"
+
+customersTableName :: API.TableName
+customersTableName = API.TableName "Customer"
+
+customersRows :: [KeyMap API.FieldValue]
+customersRows = sortBy "CustomerId" $ readTableFromXmlIntoRows customersTableName
+
+customersTableRelationships :: API.TableRelationships
+customersTableRelationships =
+  let joinFieldMapping = HashMap.fromList [(API.ColumnName "SupportRepId", API.ColumnName "EmployeeId")]
+   in API.TableRelationships
+        customersTableName
+        ( HashMap.fromList
+            [ (supportRepRelationshipName, API.Relationship employeesTableName API.ObjectRelationship joinFieldMapping)
+            ]
+        )
+
+supportRepRelationshipName :: API.RelationshipName
+supportRepRelationshipName = API.RelationshipName "SupportRep"
+
+employeesTableName :: API.TableName
+employeesTableName = API.TableName "Employee"
+
+employeesRows :: [KeyMap API.FieldValue]
+employeesRows = sortBy "EmployeeId" $ readTableFromXmlIntoRows employeesTableName
+
+employeesRowsById :: HashMap Scientific (KeyMap API.FieldValue)
+employeesRowsById =
+  HashMap.fromList $ mapMaybe (\employee -> (,employee) <$> employee ^? ix "EmployeeId" . _ColumnFieldNumber) employeesRows
+
+employeesTableRelationships :: API.TableRelationships
+employeesTableRelationships =
+  let joinFieldMapping = HashMap.fromList [(API.ColumnName "EmployeeId", API.ColumnName "SupportRepId")]
+   in API.TableRelationships
+        employeesTableName
+        ( HashMap.fromList
+            [ (supportRepForCustomersRelationshipName, API.Relationship customersTableName API.ArrayRelationship joinFieldMapping)
+            ]
+        )
+
+supportRepForCustomersRelationshipName :: API.RelationshipName
+supportRepForCustomersRelationshipName = API.RelationshipName "SupportRepForCustomers"
+
+invoicesTableName :: API.TableName
+invoicesTableName = API.TableName "Invoice"
+
+invoicesRows :: [KeyMap API.FieldValue]
+invoicesRows = sortBy "InvoiceId" $ readTableFromXmlIntoRows invoicesTableName
+
+emptyQuery :: API.Query
+emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
 
 sortBy :: (Ixed m, Ord (IxValue m)) => Index m -> [m] -> [m]
 sortBy propName = sortOn (^? ix propName)
@@ -121,6 +216,10 @@ filterColumnsByQueryFields query =
   KM.filterWithKey (\key _value -> key `elem` columns)
   where
     columns = KM.keys $ queryFields query
+
+onlyKeepRelationships :: [API.RelationshipName] -> API.TableRelationships -> API.TableRelationships
+onlyKeepRelationships names tableRels =
+  tableRels & API.trRelationships %~ HashMap.filterWithKey (\relName _ -> relName `elem` names)
 
 queryFields :: API.Query -> KeyMap API.Field
 queryFields = fromMaybe mempty . API._qFields
@@ -142,3 +241,12 @@ _ColumnFieldString = API._ColumnFieldValue . _String
 
 _ColumnFieldBoolean :: Traversal' API.FieldValue Bool
 _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
+
+columnField :: Text -> API.Field
+columnField = API.ColumnField . API.ColumnName
+
+comparisonColumn :: [API.RelationshipName] -> Text -> API.ComparisonColumn
+comparisonColumn path columnName = API.ComparisonColumn path $ API.ColumnName columnName
+
+localComparisonColumn :: Text -> API.ComparisonColumn
+localComparisonColumn columnName = comparisonColumn [] columnName
