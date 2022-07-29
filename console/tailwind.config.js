@@ -16,6 +16,10 @@ module.exports = {
     fontFamily: {
       sans: ['Gudea', 'ui-sans-serif', 'system-ui'],
     },
+    flex: {
+      grow220px: '1 0 220px',
+      grow320px: '1 0 320px',
+    },
     extend: {
       colors: {
         current: 'currentColor',
@@ -29,7 +33,7 @@ module.exports = {
         },
         // added this new colour from tailwindv3, can be removed on tailwind upgrade
         slate: {
-          700: '#334155'
+          700: '#334155',
         },
         cloud: {
           DEFAULT: '#1eb4d4',
@@ -66,6 +70,9 @@ module.exports = {
         xl: ['1.714rem', { lineHeight: '2.143rem' }],
         subtitle: ['1.300rem', { lineHeight: '2.143rem' }], // ~20 px
         title: ['1.5rem', { lineHeight: '2.143rem' }], // ~24 px
+      },
+      width: {
+        inherit: 'inherit',
       },
     },
   },

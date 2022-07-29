@@ -21,10 +21,6 @@ export type CheckboxProps = FieldWrapperPassThroughProps & {
    */
   options: CheckboxItem[];
   /**
-   * The checkbox list size
-   */
-  size?: 'full' | 'medium';
-  /**
    * The checkbox list orientation
    */
   orientation?: 'vertical' | 'horizontal';
@@ -36,7 +32,6 @@ export type CheckboxProps = FieldWrapperPassThroughProps & {
 
 export const Checkbox: React.FC<CheckboxProps> = ({
   name,
-  size = 'full',
   options,
   orientation = 'vertical',
   disabled = false,
@@ -50,12 +45,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 
   const maybeError = get(errors, name) as FieldError | undefined;
   return (
-    <FieldWrapper
-      id={name}
-      {...wrapperProps}
-      className={size === 'medium' ? 'w-1/2 max-w-lg' : 'w-full max-w-xl'}
-      error={maybeError}
-    >
+    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <div
         className={clsx(
           'flex',
