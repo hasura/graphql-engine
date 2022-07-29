@@ -214,6 +214,7 @@ mkClientHeadersForward reqHeaders =
       case hdrName of
         "Host" -> Just ("X-Forwarded-Host", hdrValue)
         "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        "Origin" -> Just ("X-Forwarded-Origin", hdrValue)
         _ -> Nothing
 
 mkSetCookieHeaders :: Wreq.Response a -> HTTP.ResponseHeaders
