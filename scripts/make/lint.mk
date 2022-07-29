@@ -95,6 +95,12 @@ check-format: check-format-hs check-format-nix
 .PHONY: check-format-changed
 check-format-changed: check-format-hs-changed check-format-nix
 
+.PHONY: lint-hpack
+## lint-hpack: ensure that Cabal files are up-to-date with hpack files
+lint-hpack:
+	@echo running hpack
+	@ $(foreach cabal_file,$(GENERATED_CABAL_FILES),./scripts/hpack.sh --check $(cabal_file);)
+
 .PHONY: lint-hs
 ## lint-hs: lint Haskell code using `hlint`
 lint-hs: check-hlint-version
@@ -124,7 +130,7 @@ lint-shell-changed:
 	fi
 
 .PHONY: lint
-lint: lint-hs lint-shell check-format
+lint: lint-hpack lint-hs lint-shell check-format
 
 .PHONY: lint-changed
-lint-changed: lint-hs-changed lint-shell-changed check-format-changed
+lint-changed: lint-hpack lint-hs-changed lint-shell-changed check-format-changed

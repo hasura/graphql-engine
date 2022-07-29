@@ -10,6 +10,7 @@ own machine and how to contribute.
 - There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile)
 - Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
   - [HLint](https://github.com/ndmitchell/hlint), for linting Haskell code
+  - [hpack](https://github.com/sol/hpack), for generating Cabal files
   - [Ormolu](https://github.com/tweag/ormolu), for formatting Haskell code
 
 For building console and running test suite:
