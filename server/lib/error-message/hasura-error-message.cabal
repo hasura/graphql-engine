@@ -1,5 +1,9 @@
 cabal-version: 1.12
 
+-- This file is generated using hpack.
+-- Do not modify it directly. Instead, edit package.yaml and then run:
+--     make server/lib/error-message/hasura-error-message.cabal
+
 -- This file has been generated from package.yaml by hpack version 0.34.7.
 --
 -- see: https://github.com/sol/hpack
