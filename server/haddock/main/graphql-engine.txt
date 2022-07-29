@@ -22756,13 +22756,16 @@ module Hasura.GraphQL.Schema.Common
 
 -- | Aggregation of contextual information required to build the schema.
 data SchemaContext
-SchemaContext :: SchemaKind -> RemoteRelationshipParserBuilder -> SchemaContext
+SchemaContext :: SchemaKind -> RemoteRelationshipParserBuilder -> RoleName -> SchemaContext
 
 -- | the kind of schema being built
 [scSchemaKind] :: SchemaContext -> SchemaKind
 
 -- | how to process remote relationships
 [scRemoteRelationshipParserBuilder] :: SchemaContext -> RemoteRelationshipParserBuilder
+
+-- | the role for which the schema is being built
+[scRole] :: SchemaContext -> RoleName
 
 -- | The kind of schema we're building, and its associated options.
 data SchemaKind
@@ -22771,7 +22774,7 @@ RelaySchema :: NodeInterfaceParserBuilder -> SchemaKind
 isHasuraSchema :: SchemaKind -> Bool
 
 -- | The set of common constraints required to build the schema.
-type MonadBuildSchemaBase r m n = (MonadError QErr m, MonadReader r m, MonadSchema n m, Has SchemaOptions r, Has SchemaContext r, Has RoleName r, Has MkTypename r, Has MkRootFieldName r, Has CustomizeRemoteFieldName r, Has NamingCase r)
+type MonadBuildSchemaBase r m n = (MonadError QErr m, MonadReader r m, MonadSchema n m, Has SchemaOptions r, Has SchemaContext r, Has MkTypename r, Has MkRootFieldName r, Has CustomizeRemoteFieldName r, Has NamingCase r)
 
 -- | How a remote relationship field should be processed when building a
 --   schema. Injecting this function from the top level avoids having to
@@ -25283,18 +25286,17 @@ tableSelectColumnsEnum :: forall b r m n. MonadBuildSchema b r m n => SourceInfo
 --   to the table_update_column object.
 tableUpdateColumnsEnum :: forall b r m n. MonadBuildSchema b r m n => TableInfo b -> m (Maybe (Parser 'Both n (Column b)))
 updateColumnsPlaceholderParser :: MonadBuildSchema backend r m n => TableInfo backend -> m (Parser 'Both n (Maybe (Column backend)))
-tablePermissions :: forall b r m. (MonadReader r m, Has RoleName r) => TableInfo b -> m (RolePermInfo b)
-tableSelectPermissions :: forall b r m. (MonadReader r m, Has RoleName r) => TableInfo b -> m (Maybe (SelPermInfo b))
-tableSelectFields :: forall b r m. (Backend b, MonadError QErr m, MonadReader r m, Has RoleName r) => SourceInfo b -> TableInfo b -> m [FieldInfo b]
+tableSelectPermissions :: RoleName -> TableInfo b -> Maybe (SelPermInfo b)
+tableSelectFields :: forall b r m. (Backend b, MonadError QErr m, MonadReader r m, Has SchemaContext r) => SourceInfo b -> TableInfo b -> m [FieldInfo b]
 tableColumns :: forall b. TableInfo b -> [ColumnInfo b]
 
 -- | Get the columns of a table that my be selected under the given select
 --   permissions.
-tableSelectColumns :: forall b r m. (Backend b, MonadError QErr m, MonadReader r m, Has RoleName r) => SourceInfo b -> TableInfo b -> m [ColumnInfo b]
+tableSelectColumns :: forall b r m. (Backend b, MonadError QErr m, MonadReader r m, Has SchemaContext r) => SourceInfo b -> TableInfo b -> m [ColumnInfo b]
 
 -- | Get the columns of a table that my be updated under the given update
 --   permissions.
-tableUpdateColumns :: forall b r m. (Backend b, MonadError QErr m, MonadReader r m, Has RoleName r) => TableInfo b -> m [ColumnInfo b]
+tableUpdateColumns :: forall b. Backend b => RoleName -> TableInfo b -> [ColumnInfo b]
 
 module Hasura.GraphQL.Schema.OrderBy
 orderByOperator :: forall b n. (BackendSchema b, MonadParse n) => NamingCase -> SourceInfo b -> Parser 'Both n (Maybe (BasicOrderType b, NullsOrderType b))
@@ -26372,9 +26374,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axWcK. Lens' (QueryParametersInfo b_axWcK) (Seq (ColumnValue b_axWcK))
-qpiReusableVariableValues :: forall b_axWcK. Lens' (QueryParametersInfo b_axWcK) (HashMap Name (ColumnValue b_axWcK))
-qpiReferencedSessionVariables :: forall b_axWcK. Lens' (QueryParametersInfo b_axWcK) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_axWpq. Lens' (QueryParametersInfo b_axWpq) (Seq (ColumnValue b_axWpq))
+qpiReusableVariableValues :: forall b_axWpq. Lens' (QueryParametersInfo b_axWpq) (HashMap Name (ColumnValue b_axWpq))
+qpiReferencedSessionVariables :: forall b_axWpq. Lens' (QueryParametersInfo b_axWpq) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -27005,8 +27007,8 @@ mutationRoot :: Name
 queryRoot :: Name
 finalizeParser :: Parser 'Output Parse a -> ParserFn a
 throwOnConflictingDefinitions :: QErrM m => Either ConflictingDefinitions a -> m a
-type ConcreteSchemaT m a = SchemaT Parse (ReaderT (SchemaOptions, SchemaContext, RoleName, MkTypename, MkRootFieldName, CustomizeRemoteFieldName, NamingCase) m) a
-runMonadSchema :: forall m a. Monad m => SchemaOptions -> SchemaContext -> RoleName -> ConcreteSchemaT m a -> m a
+type ConcreteSchemaT m a = SchemaT Parse (ReaderT (SchemaOptions, SchemaContext, MkTypename, MkRootFieldName, CustomizeRemoteFieldName, NamingCase) m) a
+runMonadSchema :: forall m a. Monad m => SchemaOptions -> SchemaContext -> ConcreteSchemaT m a -> m a
 buildBackendSource :: (forall b. BackendSchema b => SourceInfo b -> r) -> AnyBackend SourceInfo -> r
 typenameToNamespacedRawRF :: ParsedSelection (NamespacedField (RootField db remote action Value)) -> NamespacedField (RootField db remote action Value)
 typenameToRawRF :: ParsedSelection (RootField db remote action Value) -> RootField db remote action Value
