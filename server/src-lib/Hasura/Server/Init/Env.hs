@@ -27,13 +27,15 @@ import Database.PG.Query qualified as Q
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase (NamingCase, parseNamingConventionFromText)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (NonNegativeInt, mkNonNegativeInt)
 import Hasura.Server.Auth (AdminSecretHash, AuthHookType (..), JWTConfig (..), hashAdminSecret)
 import Hasura.Server.Cors (CorsConfig, readCorsDomains)
 import Hasura.Server.Init.Config
-import Hasura.Server.Types (ExperimentalFeature (..))
+import Hasura.Server.Logging qualified as Logging
+import Hasura.Server.Types (ExperimentalFeature (..), MaintenanceMode (..))
 import Hasura.Server.Utils (readIsoLevel)
 import Hasura.Session (RoleName, mkRoleName)
 import Network.Wai.Handler.Warp (HostPreference)
@@ -175,6 +177,21 @@ instance FromEnv Bool where
           ++ show falseVals
           ++ ". All values are case insensitive"
 
+instance FromEnv Options.StringifyNumbers where
+  fromEnv = fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) . fromEnv @Bool
+
+instance FromEnv Options.RemoteSchemaPermissions where
+  fromEnv = fmap (bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions) . fromEnv @Bool
+
+instance FromEnv Options.InferFunctionPermissions where
+  fromEnv = fmap (bool Options.Don'tInferFunctionPermissions Options.InferFunctionPermissions) . fromEnv @Bool
+
+instance FromEnv (MaintenanceMode ()) where
+  fromEnv = fmap (bool MaintenanceModeDisabled (MaintenanceModeEnabled ())) . fromEnv @Bool
+
+instance FromEnv Logging.MetadataQueryLoggingMode where
+  fromEnv = fmap (bool Logging.MetadataQueryLoggingDisabled Logging.MetadataQueryLoggingEnabled) . fromEnv @Bool
+
 instance FromEnv Q.TxIsolation where
   fromEnv = readIsoLevel
 
@@ -223,8 +240,22 @@ instance FromEnv ES.RefetchInterval where
 instance FromEnv Milliseconds where
   fromEnv = readEither
 
+instance FromEnv OptionalInterval where
+  fromEnv x = do
+    Milliseconds i <- fromEnv @Milliseconds x
+    if i == 0
+      then pure $ Skip
+      else pure $ Interval $ Milliseconds i
+
 instance FromEnv Seconds where
   fromEnv = fmap fromInteger . readEither
+
+instance FromEnv WSConnectionInitTimeout where
+  fromEnv = fmap (WSConnectionInitTimeout . fromIntegral) . fromEnv @Int
+
+instance FromEnv KeepAliveDelay where
+  fromEnv =
+    fmap KeepAliveDelay . fromEnv @Seconds
 
 instance FromEnv JWTConfig where
   fromEnv = readJson

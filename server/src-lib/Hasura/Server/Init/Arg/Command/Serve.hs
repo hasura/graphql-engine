@@ -18,14 +18,17 @@ import Database.PG.Query qualified as Query
 import Hasura.Cache.Bounded qualified as Cache
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ESO
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
+import Hasura.Server.Init.Config (OptionalInterval)
 import Hasura.Server.Init.Config qualified as Config
 import Hasura.Server.Init.Env qualified as Env
+import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
@@ -438,12 +441,13 @@ wsReadCookieEnv =
       ++ " This configuration is only applicable when CORS is disabled."
   )
 
-parseStringifyNum :: Opt.Parser Bool
+parseStringifyNum :: Opt.Parser Options.StringifyNumbers
 parseStringifyNum =
-  Opt.switch
-    ( Opt.long "stringify-numeric-types"
-        <> Opt.help (snd stringifyNumEnv)
-    )
+  fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) $
+    Opt.switch
+      ( Opt.long "stringify-numeric-types"
+          <> Opt.help (snd stringifyNumEnv)
+      )
 
 stringifyNumEnv :: (String, String)
 stringifyNumEnv =
@@ -680,7 +684,7 @@ graphqlEventsFetchIntervalEnv =
   )
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
-parseGraphqlAsyncActionsFetchInterval :: Opt.Parser (Maybe Milliseconds)
+parseGraphqlAsyncActionsFetchInterval :: Opt.Parser (Maybe Config.OptionalInterval)
 parseGraphqlAsyncActionsFetchInterval =
   Opt.optional $
     Opt.option
@@ -698,12 +702,13 @@ asyncActionsFetchIntervalEnv =
       ++ "Default 1000 milliseconds"
   )
 
-parseEnableRemoteSchemaPerms :: Opt.Parser Bool
+parseEnableRemoteSchemaPerms :: Opt.Parser Options.RemoteSchemaPermissions
 parseEnableRemoteSchemaPerms =
-  Opt.switch
-    ( Opt.long "enable-remote-schema-permissions"
-        <> Opt.help (snd enableRemoteSchemaPermsEnv)
-    )
+  fmap (bool Options.DisableRemoteSchemaPermissions Options.EnableRemoteSchemaPermissions) $
+    Opt.switch
+      ( Opt.long "enable-remote-schema-permissions"
+          <> Opt.help (snd enableRemoteSchemaPermsEnv)
+      )
 
 enableRemoteSchemaPermsEnv :: (String, String)
 enableRemoteSchemaPermsEnv =
@@ -725,7 +730,7 @@ webSocketCompressionEnv =
   )
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
-parseWebSocketKeepAlive :: Opt.Parser (Maybe Int)
+parseWebSocketKeepAlive :: Opt.Parser (Maybe Config.KeepAliveDelay)
 parseWebSocketKeepAlive =
   Opt.optional $
     Opt.option
@@ -741,7 +746,7 @@ webSocketKeepAliveEnv =
     "Control websocket keep-alive timeout (default 5 seconds)"
   )
 
-parseInferFunctionPerms :: Opt.Parser (Maybe Bool)
+parseInferFunctionPerms :: Opt.Parser (Maybe Options.InferFunctionPermissions)
 parseInferFunctionPerms =
   Opt.optional $
     Opt.option
@@ -756,12 +761,13 @@ inferFunctionPermsEnv =
     "Infers function permissions (default: true)"
   )
 
-parseEnableMaintenanceMode :: Opt.Parser Bool
+parseEnableMaintenanceMode :: Opt.Parser (Types.MaintenanceMode ())
 parseEnableMaintenanceMode =
-  Opt.switch
-    ( Opt.long "enable-maintenance-mode"
-        <> Opt.help (snd enableMaintenanceModeEnv)
-    )
+  fmap (bool Types.MaintenanceModeDisabled (Types.MaintenanceModeEnabled ())) $
+    Opt.switch
+      ( Opt.long "enable-maintenance-mode"
+          <> Opt.help (snd enableMaintenanceModeEnv)
+      )
 
 enableMaintenanceModeEnv :: (String, String)
 enableMaintenanceModeEnv =
@@ -770,7 +776,7 @@ enableMaintenanceModeEnv =
   )
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
-parseSchemaPollInterval :: Opt.Parser (Maybe Milliseconds)
+parseSchemaPollInterval :: Opt.Parser (Maybe OptionalInterval)
 parseSchemaPollInterval =
   Opt.optional $
     Opt.option
@@ -844,11 +850,11 @@ gracefulShutdownEnv =
   )
 
 -- TODO(SOLOMON): Review, currently accepts negative integers
-parseWebSocketConnectionInitTimeout :: Opt.Parser (Maybe Int)
+parseWebSocketConnectionInitTimeout :: Opt.Parser (Maybe Config.WSConnectionInitTimeout)
 parseWebSocketConnectionInitTimeout =
   Opt.optional $
     Opt.option
-      (Opt.eitherReader readEither)
+      (Opt.eitherReader Env.fromEnv)
       ( Opt.long "websocket-connection-init-timeout"
           <> Opt.help (snd webSocketConnectionInitTimeoutEnv)
       )
@@ -860,12 +866,13 @@ webSocketConnectionInitTimeoutEnv =
     "Control websocket connection_init timeout (default 3 seconds)"
   )
 
-parseEnableMetadataQueryLogging :: Opt.Parser Bool
+parseEnableMetadataQueryLogging :: Opt.Parser Logging.MetadataQueryLoggingMode
 parseEnableMetadataQueryLogging =
-  Opt.switch
-    ( Opt.long "enable-metadata-query-logging"
-        <> Opt.help (snd enableMetadataQueryLoggingEnv)
-    )
+  fmap (bool Logging.MetadataQueryLoggingDisabled Logging.MetadataQueryLoggingEnabled) $
+    Opt.switch
+      ( Opt.long "enable-metadata-query-logging"
+          <> Opt.help (snd enableMetadataQueryLoggingEnv)
+      )
 
 enableMetadataQueryLoggingEnv :: (String, String)
 enableMetadataQueryLoggingEnv =

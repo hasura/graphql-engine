@@ -10,11 +10,13 @@ import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as Q
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
+import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as Session
 import Options.Applicative qualified as Opt
@@ -816,7 +818,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoStringifyNum result `Hspec.shouldSatisfy` \case
-        Opt.Success stringifyNum -> stringifyNum == True
+        Opt.Success stringifyNum -> stringifyNum == Options.StringifyNumbers
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1363,7 +1365,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoAsyncActionsFetchInterval result `Hspec.shouldSatisfy` \case
-        Opt.Success asyncActionsFetchInterval -> asyncActionsFetchInterval == Just 123
+        Opt.Success asyncActionsFetchInterval -> asyncActionsFetchInterval == Just (UUT.Interval 123)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1402,7 +1404,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEnableRemoteSchemaPermissions result `Hspec.shouldSatisfy` \case
-        Opt.Success enableRemoteSchemaPermissions -> enableRemoteSchemaPermissions == True
+        Opt.Success enableRemoteSchemaPermissions -> enableRemoteSchemaPermissions == Options.EnableRemoteSchemaPermissions
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1454,7 +1456,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketKeepAlive result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketKeepAlive -> webSocketKeepAlive == Just 8
+        Opt.Success webSocketKeepAlive -> webSocketKeepAlive == Just (UUT.KeepAliveDelay 8)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1493,7 +1495,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoInferFunctionPermissions result `Hspec.shouldSatisfy` \case
-        Opt.Success inferFunctionPermissions -> inferFunctionPermissions == Just False
+        Opt.Success inferFunctionPermissions -> inferFunctionPermissions == Just Options.Don'tInferFunctionPermissions
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1532,7 +1534,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEnableMaintenanceMode result `Hspec.shouldSatisfy` \case
-        Opt.Success enableMaintenanceMode -> enableMaintenanceMode == True
+        Opt.Success enableMaintenanceMode -> enableMaintenanceMode == Types.MaintenanceModeEnabled ()
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1558,7 +1560,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoSchemaPollInterval result `Hspec.shouldSatisfy` \case
-        Opt.Success schemaPollInterval -> schemaPollInterval == Just 5432
+        Opt.Success schemaPollInterval -> schemaPollInterval == Just (UUT.Interval 5432)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1714,7 +1716,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoWebSocketConnectionInitTimeout result `Hspec.shouldSatisfy` \case
-        Opt.Success webSocketConnectionInitTimeout -> webSocketConnectionInitTimeout == Just 34
+        Opt.Success webSocketConnectionInitTimeout -> webSocketConnectionInitTimeout == Just (UUT.WSConnectionInitTimeout 34)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
@@ -1753,7 +1755,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoEnableMetadataQueryLoggingEnv result `Hspec.shouldSatisfy` \case
-        Opt.Success enableMetadataQueryLogging -> enableMetadataQueryLogging == True
+        Opt.Success enableMetadataQueryLogging -> enableMetadataQueryLogging == Logging.MetadataQueryLoggingEnabled
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
