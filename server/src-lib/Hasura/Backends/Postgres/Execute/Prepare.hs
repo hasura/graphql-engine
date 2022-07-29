@@ -54,9 +54,9 @@ type PlanVariables = Map.HashMap G.Name Int
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
 data PlanningSt = PlanningSt
-  { _psArgNumber :: !Int,
-    _psVariables :: !PlanVariables,
-    _psPrepped :: !PrepArgMap
+  { _psArgNumber :: Int,
+    _psVariables :: PlanVariables,
+    _psPrepped :: PrepArgMap
   }
   deriving stock (Eq, Show)
 

@@ -105,10 +105,10 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
             _ -> message
 
 data PGSourceConfig = PGSourceConfig
-  { _pscExecCtx :: !PGExecCtx,
-    _pscConnInfo :: !Q.ConnInfo,
-    _pscReadReplicaConnInfos :: !(Maybe (NonEmpty Q.ConnInfo)),
-    _pscPostDropHook :: !(IO ())
+  { _pscExecCtx :: PGExecCtx,
+    _pscConnInfo :: Q.ConnInfo,
+    _pscReadReplicaConnInfos :: Maybe (NonEmpty Q.ConnInfo),
+    _pscPostDropHook :: IO ()
   }
   deriving (Generic)
 

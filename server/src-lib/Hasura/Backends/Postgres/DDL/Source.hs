@@ -86,13 +86,13 @@ resolveSourceConfig _logger name config _backendKind _backendConfig _env _manage
 -- | 'PGSourceLockQuery' is a data type which represents the contents of a single object of the
 --   locked queries which are queried from the `pg_stat_activity`. See `logPGSourceCatalogMigrationLockedQueries`.
 data PGSourceLockQuery = PGSourceLockQuery
-  { _psqaQuery :: !Text,
-    _psqaLockGranted :: !(Maybe Bool),
-    _psqaLockMode :: !Text,
-    _psqaTransactionStartTime :: !UTCTime,
-    _psqaQueryStartTime :: !UTCTime,
-    _psqaWaitEventType :: !Text,
-    _psqaBlockingQuery :: !Text
+  { _psqaQuery :: Text,
+    _psqaLockGranted :: Maybe Bool,
+    _psqaLockMode :: Text,
+    _psqaTransactionStartTime :: UTCTime,
+    _psqaQueryStartTime :: UTCTime,
+    _psqaWaitEventType :: Text,
+    _psqaBlockingQuery :: Text
   }
 
 $(deriveJSON hasuraJSON ''PGSourceLockQuery)

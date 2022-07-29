@@ -35,11 +35,11 @@ import Hasura.SQL.Backend
 -- see Note [Mutation output expression].
 data MutationCTE
   = -- | A Mutation with check constraint validation (Insert or Update)
-    MCCheckConstraint !S.TopLevelCTE
+    MCCheckConstraint S.TopLevelCTE
   | -- | A Select statement which emits mutated table rows
-    MCSelectValues !S.Select
+    MCSelectValues S.Select
   | -- | A Delete statement
-    MCDelete !S.SQLDelete
+    MCDelete S.SQLDelete
   deriving (Show, Eq)
 
 getMutationCTE :: MutationCTE -> S.TopLevelCTE

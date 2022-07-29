@@ -224,7 +224,7 @@ data SetValue
 
 data SetIdentityInsert = SetIdentityInsert
   { setTable :: SomeTableName,
-    setValue :: !SetValue
+    setValue :: SetValue
   }
 
 type DeleteOutput = Output Deleted
@@ -472,8 +472,8 @@ newtype SchemaName = SchemaName {_unSchemaName :: Text}
   deriving (Show, Eq, Ord, Data, J.ToJSON, J.FromJSON, NFData, Generic, Cacheable, IsString, Hashable, Lift)
 
 data TableName = TableName
-  { tableName :: !Text,
-    tableSchema :: !SchemaName
+  { tableName :: Text,
+    tableSchema :: SchemaName
   }
 
 data FieldName = FieldName

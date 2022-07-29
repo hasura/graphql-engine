@@ -26,24 +26,24 @@ import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data ComputedFieldValidateError
-  = CFVENotValidGraphQLName !ComputedFieldName
-  | CFVEInvalidTableArgument !InvalidTableArgument
-  | CFVEInvalidSessionArgument !InvalidSessionArgument
-  | CFVENotBaseReturnType !PGScalarType
-  | CFVEReturnTableNotFound !QualifiedTable
+  = CFVENotValidGraphQLName ComputedFieldName
+  | CFVEInvalidTableArgument InvalidTableArgument
+  | CFVEInvalidSessionArgument InvalidSessionArgument
+  | CFVENotBaseReturnType PGScalarType
+  | CFVEReturnTableNotFound QualifiedTable
   | CFVENoInputArguments
   | CFVEFunctionVolatile
   deriving (Show, Eq)
 
 data InvalidTableArgument
-  = ITANotFound !FunctionArgName
-  | ITANotComposite !PG.FunctionTableArgument
-  | ITANotTable !QualifiedTable !PG.FunctionTableArgument
+  = ITANotFound FunctionArgName
+  | ITANotComposite PG.FunctionTableArgument
+  | ITANotTable QualifiedTable PG.FunctionTableArgument
   deriving (Show, Eq)
 
 data InvalidSessionArgument
-  = ISANotFound !FunctionArgName
-  | ISANotJSON !PG.FunctionSessionArgument
+  = ISANotFound FunctionArgName
+  | ISANotJSON PG.FunctionSessionArgument
   deriving (Show, Eq)
 
 showError :: QualifiedFunction -> ComputedFieldValidateError -> Text

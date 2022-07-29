@@ -45,9 +45,9 @@ import Text.Regex.TDFA qualified as TDFA
 
 data MSSQLRunSQL = MSSQLRunSQL
   { _mrsSql :: Text,
-    _mrsSource :: !SourceName,
-    _mrsCascade :: !Bool,
-    _mrsCheckMetadataConsistency :: !(Maybe Bool)
+    _mrsSource :: SourceName,
+    _mrsCascade :: Bool,
+    _mrsCheckMetadataConsistency :: Maybe Bool
   }
   deriving (Show, Eq)
 
