@@ -38,7 +38,7 @@
 </span><span id="line-38"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-39"></span><span class="hs-comment">-- Serve Command</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621689536754"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-type">serveCommandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536754"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-type">Config.RawServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536754"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-41"></span><span id="local-6989586621689536759"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-type">serveCommandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536759"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-type">Config.RawServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536759"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-42"></span><span id="serveCommandParser"><span class="annot"><span class="annottext">serveCommandParser :: Parser (RawServeOptions impl)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-var hs-var">serveCommandParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">Maybe Int
@@ -2208,7 +2208,7 @@ forall a b. (a, b) -&gt; b
       -&gt; RawConnParams)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
-</span><a href="#local-6989586621689536696"><span class="hs-identifier hs-var">pgStripes</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621689536701"><span class="hs-identifier hs-var">pgStripes</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe Int
    -&gt; Maybe Int
    -&gt; Maybe NominalDiffTime
@@ -2224,7 +2224,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
       -&gt; RawConnParams)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
-</span><a href="#local-6989586621689536695"><span class="hs-identifier hs-var">pgConns</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621689536700"><span class="hs-identifier hs-var">pgConns</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe Int
    -&gt; Maybe NominalDiffTime
    -&gt; Maybe Bool
@@ -2236,27 +2236,27 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
-</span><a href="#local-6989586621689536694"><span class="hs-identifier hs-var">pgIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+</span><a href="#local-6989586621689536699"><span class="hs-identifier hs-var">pgIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe NominalDiffTime
    -&gt; Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
 -&gt; Parser (Maybe NominalDiffTime)
 -&gt; Parser (Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime)
-</span><a href="#local-6989586621689536693"><span class="hs-identifier hs-var">pgConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
+</span><a href="#local-6989586621689536698"><span class="hs-identifier hs-var">pgConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
 -&gt; Parser (Maybe Bool)
 -&gt; Parser (Maybe NominalDiffTime -&gt; RawConnParams)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool)
-</span><a href="#local-6989586621689536692"><span class="hs-identifier hs-var">pgAllowPrepare</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime -&gt; RawConnParams)
+</span><a href="#local-6989586621689536697"><span class="hs-identifier hs-var">pgAllowPrepare</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime -&gt; RawConnParams)
 -&gt; Parser (Maybe NominalDiffTime) -&gt; Parser RawConnParams
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime)
-</span><a href="#local-6989586621689536691"><span class="hs-identifier hs-var">pgPoolTimeout</span></a></span><span>
+</span><a href="#local-6989586621689536696"><span class="hs-identifier hs-var">pgPoolTimeout</span></a></span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-125"></span><span>    </span><span class="hs-comment">-- TODO(SOLOMON): Review, currently accepts negative integers</span><span>
-</span><span id="line-126"></span><span>    </span><span id="local-6989586621689536696"><span class="annot"><span class="annottext">pgStripes :: Parser (Maybe Int)
-</span><a href="#local-6989586621689536696"><span class="hs-identifier hs-var hs-var">pgStripes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-126"></span><span>    </span><span id="local-6989586621689536701"><span class="annot"><span class="annottext">pgStripes :: Parser (Maybe Int)
+</span><a href="#local-6989586621689536701"><span class="hs-identifier hs-var hs-var">pgStripes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-127"></span><span>      </span><span class="annot"><span class="annottext">Parser Int -&gt; Parser (Maybe Int)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Int -&gt; Parser (Maybe Int))
@@ -2299,8 +2299,8 @@ forall a b. (a, b) -&gt; b
 </span><span id="line-134"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-135"></span><span>
 </span><span id="line-136"></span><span>    </span><span class="hs-comment">-- TODO(SOLOMON): Review, currently accepts negative integers</span><span>
-</span><span id="line-137"></span><span>    </span><span id="local-6989586621689536695"><span class="annot"><span class="annottext">pgConns :: Parser (Maybe Int)
-</span><a href="#local-6989586621689536695"><span class="hs-identifier hs-var hs-var">pgConns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-137"></span><span>    </span><span id="local-6989586621689536700"><span class="annot"><span class="annottext">pgConns :: Parser (Maybe Int)
+</span><a href="#local-6989586621689536700"><span class="hs-identifier hs-var hs-var">pgConns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-138"></span><span>      </span><span class="annot"><span class="annottext">Parser Int -&gt; Parser (Maybe Int)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Int -&gt; Parser (Maybe Int))
@@ -2343,8 +2343,8 @@ forall a b. (a, b) -&gt; b
 </span><span id="line-145"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span>    </span><span class="hs-comment">-- TODO(SOLOMON): Review, currently accepts negative integers</span><span>
-</span><span id="line-148"></span><span>    </span><span id="local-6989586621689536694"><span class="annot"><span class="annottext">pgIdleTimeout :: Parser (Maybe Int)
-</span><a href="#local-6989586621689536694"><span class="hs-identifier hs-var hs-var">pgIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-148"></span><span>    </span><span id="local-6989586621689536699"><span class="annot"><span class="annottext">pgIdleTimeout :: Parser (Maybe Int)
+</span><a href="#local-6989586621689536699"><span class="hs-identifier hs-var hs-var">pgIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-149"></span><span>      </span><span class="annot"><span class="annottext">Parser Int -&gt; Parser (Maybe Int)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Int -&gt; Parser (Maybe Int))
@@ -2380,8 +2380,8 @@ forall a b. (a, b) -&gt; b
 </span><span id="line-155"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-156"></span><span>
 </span><span id="line-157"></span><span>    </span><span class="hs-comment">-- TODO(SOLOMON): Review, currently accepts negative integers</span><span>
-</span><span id="line-158"></span><span>    </span><span id="local-6989586621689536693"><span class="annot"><span class="annottext">pgConnLifetime :: Parser (Maybe NominalDiffTime)
-</span><a href="#local-6989586621689536693"><span class="hs-identifier hs-var hs-var">pgConnLifetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-158"></span><span>    </span><span id="local-6989586621689536698"><span class="annot"><span class="annottext">pgConnLifetime :: Parser (Maybe NominalDiffTime)
+</span><a href="#local-6989586621689536698"><span class="hs-identifier hs-var hs-var">pgConnLifetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-159"></span><span>      </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Maybe NominalDiffTime)
 -&gt; Parser (Maybe Int) -&gt; Parser (Maybe NominalDiffTime)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -2427,8 +2427,8 @@ forall a b. (a, b) -&gt; b
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgConnLifetimeEnv"><span class="hs-identifier hs-var">pgConnLifetimeEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-166"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-167"></span><span>
-</span><span id="line-168"></span><span>    </span><span id="local-6989586621689536692"><span class="annot"><span class="annottext">pgAllowPrepare :: Parser (Maybe Bool)
-</span><a href="#local-6989586621689536692"><span class="hs-identifier hs-var hs-var">pgAllowPrepare</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-168"></span><span>    </span><span id="local-6989586621689536697"><span class="annot"><span class="annottext">pgAllowPrepare :: Parser (Maybe Bool)
+</span><a href="#local-6989586621689536697"><span class="hs-identifier hs-var hs-var">pgAllowPrepare</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-169"></span><span>      </span><span class="annot"><span class="annottext">Parser Bool -&gt; Parser (Maybe Bool)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Bool -&gt; Parser (Maybe Bool))
@@ -2466,8 +2466,8 @@ forall a b. (a, b) -&gt; b
 </span><span id="line-175"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>
 </span><span id="line-177"></span><span>    </span><span class="hs-comment">-- TODO(SOLOMON): Review, currently accepts negative integers</span><span>
-</span><span id="line-178"></span><span>    </span><span id="local-6989586621689536691"><span class="annot"><span class="annottext">pgPoolTimeout :: Parser (Maybe NominalDiffTime)
-</span><a href="#local-6989586621689536691"><span class="hs-identifier hs-var hs-var">pgPoolTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-178"></span><span>    </span><span id="local-6989586621689536696"><span class="annot"><span class="annottext">pgPoolTimeout :: Parser (Maybe NominalDiffTime)
+</span><a href="#local-6989586621689536696"><span class="hs-identifier hs-var hs-var">pgPoolTimeout</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-179"></span><span>      </span><span class="annot"><span class="annottext">(Maybe Int -&gt; Maybe NominalDiffTime)
 -&gt; Parser (Maybe Int) -&gt; Parser (Maybe NominalDiffTime)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -2747,14 +2747,14 @@ forall a b. a -&gt; b -&gt; AuthHookG a b
 -&gt; Parser (Maybe AuthHookType -&gt; RawAuthHook)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Text)
-</span><a href="#local-6989586621689536676"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType -&gt; RawAuthHook)
+</span><a href="#local-6989586621689536681"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType -&gt; RawAuthHook)
 -&gt; Parser (Maybe AuthHookType) -&gt; Parser RawAuthHook
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType)
-</span><a href="#local-6989586621689536675"><span class="hs-identifier hs-var">urlType</span></a></span><span>
+</span><a href="#local-6989586621689536680"><span class="hs-identifier hs-var">urlType</span></a></span><span>
 </span><span id="line-281"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-282"></span><span>    </span><span id="local-6989586621689536676"><span class="annot"><span class="annottext">url :: Parser (Maybe Text)
-</span><a href="#local-6989586621689536676"><span class="hs-identifier hs-var hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-282"></span><span>    </span><span id="local-6989586621689536681"><span class="annot"><span class="annottext">url :: Parser (Maybe Text)
+</span><a href="#local-6989586621689536681"><span class="hs-identifier hs-var hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-283"></span><span>      </span><span class="annot"><span class="annottext">Parser Text -&gt; Parser (Maybe Text)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser Text -&gt; Parser (Maybe Text))
@@ -2785,8 +2785,8 @@ forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(String, String)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#authHookEnv"><span class="hs-identifier hs-var">authHookEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-288"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-289"></span><span>    </span><span id="local-6989586621689536675"><span class="annot"><span class="annottext">urlType :: Parser (Maybe AuthHookType)
-</span><a href="#local-6989586621689536675"><span class="hs-identifier hs-var hs-var">urlType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-289"></span><span>    </span><span id="local-6989586621689536680"><span class="annot"><span class="annottext">urlType :: Parser (Maybe AuthHookType)
+</span><a href="#local-6989586621689536680"><span class="hs-identifier hs-var hs-var">urlType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-290"></span><span>      </span><span class="annot"><span class="annottext">Parser AuthHookType -&gt; Parser (Maybe AuthHookType)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser AuthHookType -&gt; Parser (Maybe AuthHookType))
@@ -2905,7 +2905,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 -&gt; Parser (Maybe Text) -&gt; Parser (Maybe RoleName)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe RoleName
-</span><a href="#local-6989586621689536671"><span class="hs-identifier hs-var">mkRoleName</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser (Maybe Text) -&gt; Parser (Maybe RoleName))
+</span><a href="#local-6989586621689536676"><span class="hs-identifier hs-var">mkRoleName</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser (Maybe Text) -&gt; Parser (Maybe RoleName))
 -&gt; Parser (Maybe Text) -&gt; Parser (Maybe RoleName)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
@@ -2940,10 +2940,10 @@ forall a b. (a, b) -&gt; b
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#unAuthRoleEnv"><span class="hs-identifier hs-var">unAuthRoleEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-336"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-337"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-338"></span><span>    </span><span id="local-6989586621689536671"><span class="annot"><span class="annottext">mkRoleName :: Maybe Text -&gt; Maybe RoleName
-</span><a href="#local-6989586621689536671"><span class="hs-identifier hs-var hs-var">mkRoleName</span></a></span></span><span> </span><span id="local-6989586621689536669"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689536669"><span class="hs-identifier hs-var">mText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689536669"><span class="hs-identifier hs-var">mText</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Maybe RoleName) -&gt; Maybe RoleName
+</span><span id="line-338"></span><span>    </span><span id="local-6989586621689536676"><span class="annot"><span class="annottext">mkRoleName :: Maybe Text -&gt; Maybe RoleName
+</span><a href="#local-6989586621689536676"><span class="hs-identifier hs-var hs-var">mkRoleName</span></a></span></span><span> </span><span id="local-6989586621689536674"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689536674"><span class="hs-identifier hs-var">mText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689536674"><span class="hs-identifier hs-var">mText</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; (Text -&gt; Maybe RoleName) -&gt; Maybe RoleName
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe RoleName
 </span><a href="Hasura.Session.html#mkRoleName"><span class="hs-identifier hs-var">Session.mkRoleName</span></a></span><span>
@@ -2964,18 +2964,18 @@ forall a. [a] -&gt; [a] -&gt; [a]
 </span><span id="line-347"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseCorsConfig"><span class="hs-identifier hs-type">parseCorsConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Cors.html#CorsConfig"><span class="hs-identifier hs-type">Cors.CorsConfig</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-348"></span><span id="parseCorsConfig"><span class="annot"><span class="annottext">parseCorsConfig :: Parser (Maybe CorsConfig)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseCorsConfig"><span class="hs-identifier hs-var hs-var">parseCorsConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig
-</span><a href="#local-6989586621689536667"><span class="hs-identifier hs-var">mapCC</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig)
+</span><a href="#local-6989586621689536672"><span class="hs-identifier hs-var">mapCC</span></a></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig)
 -&gt; Parser Bool -&gt; Parser (Maybe CorsConfig -&gt; Maybe CorsConfig)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool
-</span><a href="#local-6989586621689536666"><span class="hs-identifier hs-var">disableCors</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CorsConfig -&gt; Maybe CorsConfig)
+</span><a href="#local-6989586621689536671"><span class="hs-identifier hs-var">disableCors</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CorsConfig -&gt; Maybe CorsConfig)
 -&gt; Parser (Maybe CorsConfig) -&gt; Parser (Maybe CorsConfig)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CorsConfig)
-</span><a href="#local-6989586621689536665"><span class="hs-identifier hs-var">corsDomain</span></a></span><span>
+</span><a href="#local-6989586621689536670"><span class="hs-identifier hs-var">corsDomain</span></a></span><span>
 </span><span id="line-349"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-350"></span><span>    </span><span id="local-6989586621689536665"><span class="annot"><span class="annottext">corsDomain :: Parser (Maybe CorsConfig)
-</span><a href="#local-6989586621689536665"><span class="hs-identifier hs-var hs-var">corsDomain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-350"></span><span>    </span><span id="local-6989586621689536670"><span class="annot"><span class="annottext">corsDomain :: Parser (Maybe CorsConfig)
+</span><a href="#local-6989586621689536670"><span class="hs-identifier hs-var hs-var">corsDomain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-351"></span><span>      </span><span class="annot"><span class="annottext">Parser CorsConfig -&gt; Parser (Maybe CorsConfig)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
 </span><span class="hs-identifier hs-var">Opt.optional</span></span><span> </span><span class="annot"><span class="annottext">(Parser CorsConfig -&gt; Parser (Maybe CorsConfig))
@@ -3013,8 +3013,8 @@ forall a b. (a, b) -&gt; b
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#corsDomainEnv"><span class="hs-identifier hs-var">corsDomainEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-357"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-358"></span><span>
-</span><span id="line-359"></span><span>    </span><span id="local-6989586621689536666"><span class="annot"><span class="annottext">disableCors :: Parser Bool
-</span><a href="#local-6989586621689536666"><span class="hs-identifier hs-var hs-var">disableCors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-359"></span><span>    </span><span id="local-6989586621689536671"><span class="annot"><span class="annottext">disableCors :: Parser Bool
+</span><a href="#local-6989586621689536671"><span class="hs-identifier hs-var hs-var">disableCors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-360"></span><span>      </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
 </span><span class="hs-identifier hs-var">Opt.switch</span></span><span>
 </span><span id="line-361"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
@@ -3031,21 +3031,21 @@ forall a b. (a, b) -&gt; b
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#disableCorsEnv"><span class="hs-identifier hs-var">disableCorsEnv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-363"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-364"></span><span>
-</span><span id="line-365"></span><span>    </span><span id="local-6989586621689536667"><span class="annot"><span class="annottext">mapCC :: Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig
-</span><a href="#local-6989586621689536667"><span class="hs-identifier hs-var hs-var">mapCC</span></a></span></span><span> </span><span id="local-6989586621689536661"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689536661"><span class="hs-identifier hs-var">isDisabled</span></a></span></span><span> </span><span id="local-6989586621689536660"><span class="annot"><span class="annottext">Maybe CorsConfig
-</span><a href="#local-6989586621689536660"><span class="hs-identifier hs-var">domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-365"></span><span>    </span><span id="local-6989586621689536672"><span class="annot"><span class="annottext">mapCC :: Bool -&gt; Maybe CorsConfig -&gt; Maybe CorsConfig
+</span><a href="#local-6989586621689536672"><span class="hs-identifier hs-var hs-var">mapCC</span></a></span></span><span> </span><span id="local-6989586621689536666"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689536666"><span class="hs-identifier hs-var">isDisabled</span></a></span></span><span> </span><span id="local-6989586621689536665"><span class="annot"><span class="annottext">Maybe CorsConfig
+</span><a href="#local-6989586621689536665"><span class="hs-identifier hs-var">domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-366"></span><span>      </span><span class="annot"><span class="annottext">Maybe CorsConfig -&gt; Maybe CorsConfig -&gt; Bool -&gt; Maybe CorsConfig
 forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><span class="hs-identifier hs-var">bool</span></span><span> </span><span class="annot"><span class="annottext">Maybe CorsConfig
-</span><a href="#local-6989586621689536660"><span class="hs-identifier hs-var">domains</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CorsConfig -&gt; Maybe CorsConfig
+</span><a href="#local-6989586621689536665"><span class="hs-identifier hs-var">domains</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CorsConfig -&gt; Maybe CorsConfig
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(CorsConfig -&gt; Maybe CorsConfig) -&gt; CorsConfig -&gt; Maybe CorsConfig
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-var">Cors.CCDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689536661"><span class="hs-identifier hs-var">isDisabled</span></a></span><span>
+</span><a href="#local-6989586621689536666"><span class="hs-identifier hs-var">isDisabled</span></a></span><span>
 </span><span id="line-367"></span><span>
 </span><span id="line-368"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#corsDomainEnv"><span class="hs-identifier hs-type">corsDomainEnv</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span>
 </span><span id="line-369"></span><span id="corsDomainEnv"><span class="annot"><span class="annottext">corsDomainEnv :: (String, String)
@@ -3600,7 +3600,7 @@ forall a b. (a, b) -&gt; b
 </span><span class="hs-string">&quot;Only accept allowed GraphQL queries&quot;</span></span><span>
 </span><span id="line-569"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-570"></span><span>
-</span><span id="line-571"></span><span id="local-6989586621689536818"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledLogs"><span class="hs-identifier hs-type">parseEnabledLogs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536818"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">L.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536818"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span></span><span>
+</span><span id="line-571"></span><span id="local-6989586621689536823"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledLogs"><span class="hs-identifier hs-type">parseEnabledLogs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536823"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">L.EngineLogType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689536823"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span></span><span>
 </span><span id="line-572"></span><span id="parseEnabledLogs"><span class="annot"><span class="annottext">parseEnabledLogs :: Parser (Maybe [EngineLogType impl])
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledLogs"><span class="hs-identifier hs-var hs-var">parseEnabledLogs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-573"></span><span>  </span><span class="annot"><span class="annottext">Parser [EngineLogType impl] -&gt; Parser (Maybe [EngineLogType impl])
@@ -3652,7 +3652,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-585"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689536642"><span class="hs-identifier hs-var">defaultLogTypes</span></a></span><span>
+</span><a href="#local-6989586621689536647"><span class="hs-identifier hs-var">defaultLogTypes</span></a></span><span>
 </span><span id="line-586"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -3664,15 +3664,15 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-588"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689536641"><span class="hs-identifier hs-var">allAllowedLogTypes</span></a></span><span>
+</span><a href="#local-6989586621689536646"><span class="hs-identifier hs-var">allAllowedLogTypes</span></a></span><span>
 </span><span id="line-589"></span><span>      </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;)&quot;</span></span><span>
 </span><span id="line-590"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-591"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-592"></span><span>    </span><span id="local-6989586621689536642"><span class="annot"><span class="annottext">defaultLogTypes :: String
-</span><a href="#local-6989586621689536642"><span class="hs-identifier hs-var hs-var">defaultLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span id="line-592"></span><span>    </span><span id="local-6989586621689536647"><span class="annot"><span class="annottext">defaultLogTypes :: String
+</span><a href="#local-6989586621689536647"><span class="hs-identifier hs-var hs-var">defaultLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; ([Text] -&gt; Text) -&gt; [Text] -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
@@ -3687,8 +3687,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall a. HashSet a -&gt; [a]
 </span><span class="hs-identifier hs-var">Set.toList</span></span><span> </span><span class="annot"><span class="annottext">HashSet (EngineLogType Hasura)
 </span><a href="Hasura.Logging.html#defaultEnabledEngineLogTypes"><span class="hs-identifier hs-var">L.defaultEnabledEngineLogTypes</span></a></span><span>
-</span><span id="line-593"></span><span>    </span><span id="local-6989586621689536641"><span class="annot"><span class="annottext">allAllowedLogTypes :: String
-</span><a href="#local-6989586621689536641"><span class="hs-identifier hs-var hs-var">allAllowedLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span id="line-593"></span><span>    </span><span id="local-6989586621689536646"><span class="annot"><span class="annottext">allAllowedLogTypes :: String
+</span><a href="#local-6989586621689536646"><span class="hs-identifier hs-var hs-var">allAllowedLogTypes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; ([Text] -&gt; Text) -&gt; [Text] -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
@@ -4605,19 +4605,19 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-905"></span><span id="serveCmdFooter"><span class="annot"><span class="annottext">serveCmdFooter :: Doc
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCmdFooter"><span class="hs-identifier hs-var hs-var">serveCmdFooter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-906"></span><span>  </span><span class="annot"><span class="annottext">Doc
-</span><a href="#local-6989586621689536608"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
+</span><a href="#local-6989586621689536613"><span class="hs-identifier hs-var">examplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 </span><span class="hs-operator hs-var">PP.&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Doc
 </span><span class="hs-identifier hs-var">PP.text</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Doc -&gt; Doc -&gt; Doc
 </span><span class="hs-operator hs-var">PP.&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Doc
-</span><a href="#local-6989586621689536605"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
+</span><a href="#local-6989586621689536610"><span class="hs-identifier hs-var">envVarDoc</span></a></span><span>
 </span><span id="line-907"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-908"></span><span>    </span><span id="local-6989586621689536608"><span class="annot"><span class="annottext">examplesDoc :: Doc
-</span><a href="#local-6989586621689536608"><span class="hs-identifier hs-var hs-var">examplesDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[String]] -&gt; Doc
+</span><span id="line-908"></span><span>    </span><span id="local-6989586621689536613"><span class="annot"><span class="annottext">examplesDoc :: Doc
+</span><a href="#local-6989586621689536613"><span class="hs-identifier hs-var hs-var">examplesDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[String]] -&gt; Doc
 </span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkExamplesDoc"><span class="hs-identifier hs-var">PP.mkExamplesDoc</span></a></span><span> </span><span class="annot"><span class="annottext">[[String]]
-</span><a href="#local-6989586621689536603"><span class="hs-identifier hs-var">examples</span></a></span><span>
-</span><span id="line-909"></span><span>    </span><span id="local-6989586621689536603"><span class="annot"><span class="annottext">examples :: [[String]]
-</span><a href="#local-6989586621689536603"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689536608"><span class="hs-identifier hs-var">examples</span></a></span><span>
+</span><span id="line-909"></span><span>    </span><span id="local-6989586621689536608"><span class="annot"><span class="annottext">examples :: [[String]]
+</span><a href="#local-6989586621689536608"><span class="hs-identifier hs-var hs-var">examples</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-910"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;# Start GraphQL Engine on default port (8080) with console enabled&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-911"></span><span>          </span><span class="annot"><span class="annottext">String
@@ -4683,17 +4683,17 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-944"></span><span>        </span><span class="hs-special">]</span><span>
 </span><span id="line-945"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-946"></span><span>
-</span><span id="line-947"></span><span>    </span><span id="local-6989586621689536605"><span class="annot"><span class="annottext">envVarDoc :: Doc
-</span><a href="#local-6989586621689536605"><span class="hs-identifier hs-var hs-var">envVarDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; Doc
+</span><span id="line-947"></span><span>    </span><span id="local-6989586621689536610"><span class="annot"><span class="annottext">envVarDoc :: Doc
+</span><a href="#local-6989586621689536610"><span class="hs-identifier hs-var hs-var">envVarDoc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; Doc
 </span><a href="Hasura.Server.Init.Arg.PrettyPrinter.html#mkEnvVarDoc"><span class="hs-identifier hs-var">PP.mkEnvVarDoc</span></a></span><span> </span><span class="annot"><span class="annottext">([(String, String)] -&gt; Doc) -&gt; [(String, String)] -&gt; Doc
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621689536601"><span class="hs-identifier hs-var">envVars</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; [(String, String)] -&gt; [(String, String)]
+</span><a href="#local-6989586621689536606"><span class="hs-identifier hs-var">envVars</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, String)] -&gt; [(String, String)] -&gt; [(String, String)]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621689536600"><span class="hs-identifier hs-var">eventEnvs</span></a></span><span>
-</span><span id="line-948"></span><span>    </span><span id="local-6989586621689536601"><span class="annot"><span class="annottext">envVars :: [(String, String)]
-</span><a href="#local-6989586621689536601"><span class="hs-identifier hs-var hs-var">envVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689536605"><span class="hs-identifier hs-var">eventEnvs</span></a></span><span>
+</span><span id="line-948"></span><span>    </span><span id="local-6989586621689536606"><span class="annot"><span class="annottext">envVars :: [(String, String)]
+</span><a href="#local-6989586621689536606"><span class="hs-identifier hs-var hs-var">envVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-949"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">(String, String)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#servePortEnv"><span class="hs-identifier hs-var">servePortEnv</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-950"></span><span>        </span><span class="annot"><span class="annottext">(String, String)
@@ -4791,8 +4791,8 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-996"></span><span>        </span><span class="annot"><span class="annottext">(String, String)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#defaultNamingConventionEnv"><span class="hs-identifier hs-var">defaultNamingConventionEnv</span></a></span><span>
 </span><span id="line-997"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-998"></span><span>    </span><span id="local-6989586621689536600"><span class="annot"><span class="annottext">eventEnvs :: [(String, String)]
-</span><a href="#local-6989586621689536600"><span class="hs-identifier hs-var hs-var">eventEnvs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">(String, String)
+</span><span id="line-998"></span><span>    </span><span id="local-6989586621689536605"><span class="annot"><span class="annottext">eventEnvs :: [(String, String)]
+</span><a href="#local-6989586621689536605"><span class="hs-identifier hs-var hs-var">eventEnvs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">(String, String)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#graphqlEventsHttpPoolSizeEnv"><span class="hs-identifier hs-var">graphqlEventsHttpPoolSizeEnv</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(String, String)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#graphqlEventsFetchIntervalEnv"><span class="hs-identifier hs-var">graphqlEventsFetchIntervalEnv</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-999"></span></pre></body></html>
