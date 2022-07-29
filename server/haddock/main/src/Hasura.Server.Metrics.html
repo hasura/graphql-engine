@@ -89,10 +89,10 @@
 </span><span id="line-82"></span><span>
 </span><span id="line-83"></span><span class="annot"><a href="Hasura.Server.Metrics.html#createServerMetrics"><span class="hs-identifier hs-type">createServerMetrics</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Store</span></span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetricsSpec"><span class="hs-identifier hs-type">ServerMetricsSpec</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="Hasura.Server.Metrics.html#ServerMetrics"><span class="hs-identifier hs-type">ServerMetrics</span></a></span><span>
 </span><span id="line-84"></span><span id="createServerMetrics"><span class="annot"><span class="annottext">createServerMetrics :: Store ServerMetricsSpec -&gt; IO ServerMetrics
-</span><a href="Hasura.Server.Metrics.html#createServerMetrics"><span class="hs-identifier hs-var hs-var">createServerMetrics</span></a></span></span><span> </span><span id="local-6989586621689370486"><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-85"></span><span>  </span><span id="local-6989586621689370485"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689370485"><span class="hs-identifier hs-var">smWarpThreads</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;warp_threads&quot; 'GaugeType ()
+</span><a href="Hasura.Server.Metrics.html#createServerMetrics"><span class="hs-identifier hs-var hs-var">createServerMetrics</span></a></span></span><span> </span><span id="local-6989586621689376708"><span class="annot"><span class="annottext">Store ServerMetricsSpec
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621689376707"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689376707"><span class="hs-identifier hs-var">smWarpThreads</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;warp_threads&quot; 'GaugeType ()
 -&gt; () -&gt; Store ServerMetricsSpec -&gt; IO Gauge
 forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
        tags.
@@ -100,9 +100,9 @@ forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
 metrics name 'GaugeType tags -&gt; tags -&gt; Store metrics -&gt; IO Gauge
 </span><span class="hs-identifier hs-var">createGauge</span></span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;warp_threads&quot; 'GaugeType ()
 </span><a href="Hasura.Server.Metrics.html#WarpThreads"><span class="hs-identifier hs-var">WarpThreads</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span><span>
-</span><span id="line-86"></span><span>  </span><span id="local-6989586621689370483"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689370483"><span class="hs-identifier hs-var">smWebsocketConnections</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;websocket_connections&quot; 'GaugeType ()
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621689376705"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689376705"><span class="hs-identifier hs-var">smWebsocketConnections</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;websocket_connections&quot; 'GaugeType ()
 -&gt; () -&gt; Store ServerMetricsSpec -&gt; IO Gauge
 forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
        tags.
@@ -110,9 +110,9 @@ forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
 metrics name 'GaugeType tags -&gt; tags -&gt; Store metrics -&gt; IO Gauge
 </span><span class="hs-identifier hs-var">createGauge</span></span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;websocket_connections&quot; 'GaugeType ()
 </span><a href="Hasura.Server.Metrics.html#WebsocketConnections"><span class="hs-identifier hs-var">WebsocketConnections</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621689370482"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689370482"><span class="hs-identifier hs-var">smActiveSubscriptions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;active_subscriptions&quot; 'GaugeType ()
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621689376704"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689376704"><span class="hs-identifier hs-var">smActiveSubscriptions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;active_subscriptions&quot; 'GaugeType ()
 -&gt; () -&gt; Store ServerMetricsSpec -&gt; IO Gauge
 forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
        tags.
@@ -120,9 +120,9 @@ forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
 metrics name 'GaugeType tags -&gt; tags -&gt; Store metrics -&gt; IO Gauge
 </span><span class="hs-identifier hs-var">createGauge</span></span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;active_subscriptions&quot; 'GaugeType ()
 </span><a href="Hasura.Server.Metrics.html#ActiveSubscriptions"><span class="hs-identifier hs-var">ActiveSubscriptions</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span><span>
-</span><span id="line-88"></span><span>  </span><span id="local-6989586621689370481"><span class="annot"><span class="annottext">Distribution
-</span><a href="#local-6989586621689370481"><span class="hs-identifier hs-var">smNumEventsFetchedPerBatch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;events_fetched_per_batch&quot; 'DistributionType ()
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621689376703"><span class="annot"><span class="annottext">Distribution
+</span><a href="#local-6989586621689376703"><span class="hs-identifier hs-var">smNumEventsFetchedPerBatch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;events_fetched_per_batch&quot; 'DistributionType ()
 -&gt; () -&gt; Store ServerMetricsSpec -&gt; IO Distribution
 forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
        tags.
@@ -131,9 +131,9 @@ metrics name 'DistributionType tags
 -&gt; tags -&gt; Store metrics -&gt; IO Distribution
 </span><span class="hs-identifier hs-var">createDistribution</span></span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;events_fetched_per_batch&quot; 'DistributionType ()
 </span><a href="Hasura.Server.Metrics.html#NumEventsFetchedPerBatch"><span class="hs-identifier hs-var">NumEventsFetchedPerBatch</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span><span>
-</span><span id="line-89"></span><span>  </span><span id="local-6989586621689370479"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689370479"><span class="hs-identifier hs-var">smNumEventHTTPWorkers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;num_event_trigger_http_workers&quot; 'GaugeType ()
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span><span>
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621689376701"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689376701"><span class="hs-identifier hs-var">smNumEventHTTPWorkers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;num_event_trigger_http_workers&quot; 'GaugeType ()
 -&gt; () -&gt; Store ServerMetricsSpec -&gt; IO Gauge
 forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
        tags.
@@ -141,9 +141,9 @@ forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
 metrics name 'GaugeType tags -&gt; tags -&gt; Store metrics -&gt; IO Gauge
 </span><span class="hs-identifier hs-var">createGauge</span></span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;num_event_trigger_http_workers&quot; 'GaugeType ()
 </span><a href="Hasura.Server.Metrics.html#NumEventHTTPWorkers"><span class="hs-identifier hs-var">NumEventHTTPWorkers</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span><span>
-</span><span id="line-90"></span><span>  </span><span id="local-6989586621689370478"><span class="annot"><span class="annottext">Distribution
-</span><a href="#local-6989586621689370478"><span class="hs-identifier hs-var">smEventQueueTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;event_queue_time&quot; 'DistributionType ()
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span><span>
+</span><span id="line-90"></span><span>  </span><span id="local-6989586621689376700"><span class="annot"><span class="annottext">Distribution
+</span><a href="#local-6989586621689376700"><span class="hs-identifier hs-var">smEventQueueTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;event_queue_time&quot; 'DistributionType ()
 -&gt; () -&gt; Store ServerMetricsSpec -&gt; IO Distribution
 forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
        tags.
@@ -152,9 +152,9 @@ metrics name 'DistributionType tags
 -&gt; tags -&gt; Store metrics -&gt; IO Distribution
 </span><span class="hs-identifier hs-var">createDistribution</span></span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec &quot;event_queue_time&quot; 'DistributionType ()
 </span><a href="Hasura.Server.Metrics.html#EventQueueTime"><span class="hs-identifier hs-var">EventQueueTime</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span><span>
-</span><span id="line-91"></span><span>  </span><span id="local-6989586621689370477"><span class="annot"><span class="annottext">Gauge
-</span><a href="#local-6989586621689370477"><span class="hs-identifier hs-var">smSchemaCacheMetadataResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621689376699"><span class="annot"><span class="annottext">Gauge
+</span><a href="#local-6989586621689376699"><span class="hs-identifier hs-var">smSchemaCacheMetadataResourceVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec
   &quot;schema_cache_metadata_resource_version&quot; 'GaugeType ()
 -&gt; () -&gt; Store ServerMetricsSpec -&gt; IO Gauge
 forall (metrics :: Symbol -&gt; MetricType -&gt; * -&gt; *) (name :: Symbol)
@@ -164,7 +164,7 @@ metrics name 'GaugeType tags -&gt; tags -&gt; Store metrics -&gt; IO Gauge
 </span><span class="hs-identifier hs-var">createGauge</span></span><span> </span><span class="annot"><span class="annottext">ServerMetricsSpec
   &quot;schema_cache_metadata_resource_version&quot; 'GaugeType ()
 </span><a href="Hasura.Server.Metrics.html#SchemaCacheMetadataResourceVersion"><span class="hs-identifier hs-var">SchemaCacheMetadataResourceVersion</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Store ServerMetricsSpec
-</span><a href="#local-6989586621689370486"><span class="hs-identifier hs-var">store</span></a></span><span>
+</span><a href="#local-6989586621689376708"><span class="hs-identifier hs-var">store</span></a></span><span>
 </span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">ServerMetrics -&gt; IO ServerMetrics
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">ServerMetrics :: Gauge
@@ -191,5 +191,5 @@ smNumEventsFetchedPerBatch :: Distribution
 smActiveSubscriptions :: Gauge
 smWebsocketConnections :: Gauge
 smWarpThreads :: Gauge
-</span><a href="#local-6989586621689370477"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689376699"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-93"></span></pre></body></html>

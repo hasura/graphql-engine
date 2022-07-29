@@ -29935,7 +29935,7 @@ METRICS :: API
 
 -- | The Serve Command options accumulated from the arg parser and env.
 data RawServeOptions impl
-RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe TxIsolation -> Maybe AdminSecretHash -> RawAuthHook -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> Bool -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe Milliseconds -> Bool -> Bool -> Maybe Int -> Maybe Bool -> Bool -> Maybe Milliseconds -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe Int -> Bool -> Maybe NamingCase -> RawServeOptions impl
+RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe TxIsolation -> Maybe AdminSecretHash -> RawAuthHook -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> RawServeOptions impl
 [rsoPort] :: RawServeOptions impl -> Maybe Int
 [rsoHost] :: RawServeOptions impl -> Maybe HostPreference
 [rsoConnParams] :: RawServeOptions impl -> RawConnParams
@@ -29949,7 +29949,7 @@ RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe T
 [rsoConsoleAssetsDir] :: RawServeOptions impl -> Maybe Text
 [rsoEnableTelemetry] :: RawServeOptions impl -> Maybe Bool
 [rsoWsReadCookie] :: RawServeOptions impl -> Bool
-[rsoStringifyNum] :: RawServeOptions impl -> Bool
+[rsoStringifyNum] :: RawServeOptions impl -> StringifyNumbers
 [rsoDangerousBooleanCollapse] :: RawServeOptions impl -> Maybe Bool
 [rsoEnabledAPIs] :: RawServeOptions impl -> Maybe [API]
 [rsoMxRefetchInt] :: RawServeOptions impl -> Maybe RefetchInterval
@@ -29963,18 +29963,18 @@ RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe T
 [rsoAdminInternalErrors] :: RawServeOptions impl -> Maybe Bool
 [rsoEventsHttpPoolSize] :: RawServeOptions impl -> Maybe Int
 [rsoEventsFetchInterval] :: RawServeOptions impl -> Maybe Milliseconds
-[rsoAsyncActionsFetchInterval] :: RawServeOptions impl -> Maybe Milliseconds
-[rsoEnableRemoteSchemaPermissions] :: RawServeOptions impl -> Bool
+[rsoAsyncActionsFetchInterval] :: RawServeOptions impl -> Maybe OptionalInterval
+[rsoEnableRemoteSchemaPermissions] :: RawServeOptions impl -> RemoteSchemaPermissions
 [rsoWebSocketCompression] :: RawServeOptions impl -> Bool
-[rsoWebSocketKeepAlive] :: RawServeOptions impl -> Maybe Int
-[rsoInferFunctionPermissions] :: RawServeOptions impl -> Maybe Bool
-[rsoEnableMaintenanceMode] :: RawServeOptions impl -> Bool
-[rsoSchemaPollInterval] :: RawServeOptions impl -> Maybe Milliseconds
+[rsoWebSocketKeepAlive] :: RawServeOptions impl -> Maybe KeepAliveDelay
+[rsoInferFunctionPermissions] :: RawServeOptions impl -> Maybe InferFunctionPermissions
+[rsoEnableMaintenanceMode] :: RawServeOptions impl -> MaintenanceMode ()
+[rsoSchemaPollInterval] :: RawServeOptions impl -> Maybe OptionalInterval
 [rsoExperimentalFeatures] :: RawServeOptions impl -> Maybe [ExperimentalFeature]
 [rsoEventsFetchBatchSize] :: RawServeOptions impl -> Maybe NonNegativeInt
 [rsoGracefulShutdownTimeout] :: RawServeOptions impl -> Maybe Seconds
-[rsoWebSocketConnectionInitTimeout] :: RawServeOptions impl -> Maybe Int
-[rsoEnableMetadataQueryLoggingEnv] :: RawServeOptions impl -> Bool
+[rsoWebSocketConnectionInitTimeout] :: RawServeOptions impl -> Maybe WSConnectionInitTimeout
+[rsoEnableMetadataQueryLoggingEnv] :: RawServeOptions impl -> MetadataQueryLoggingMode
 
 -- | stores global default naming convention
 [rsoDefaultNamingConvention] :: RawServeOptions impl -> Maybe NamingCase
@@ -30133,14 +30133,14 @@ instance GHC.Read.Read Hasura.Server.Init.Config.PostgresRawConnDetails
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnDetails
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
-instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
-instance GHC.Classes.Eq Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.KeepAliveDelay
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.KeepAliveDelay
 instance GHC.Classes.Eq Hasura.Server.Init.Config.ResponseInternalErrorsConfig
 instance GHC.Show.Show Hasura.Server.Init.Config.ResponseInternalErrorsConfig
 instance GHC.Show.Show Hasura.Server.Init.Config.KeepAliveDelay
 instance GHC.Classes.Eq Hasura.Server.Init.Config.KeepAliveDelay
+instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
+instance GHC.Classes.Eq Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.API
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.API
@@ -30173,35 +30173,47 @@ module Hasura.Server.Init.Env
 
 -- | Lookup a key in the application environment then parse the value with
 --   a <a>FromEnv</a> instance'
-considerEnv :: FromEnv a => String -> WithEnv (Maybe a)
+considerEnv :: (Monad m, FromEnv a) => String -> WithEnvT m (Maybe a)
 
 -- | Lookup a list of keys with <a>considerEnv</a> and return the first
 --   value to parse successfully.
-considerEnvs :: FromEnv a => [String] -> WithEnv (Maybe a)
-withEnv :: FromEnv a => Maybe a -> String -> WithEnv (Maybe a)
+considerEnvs :: (Monad m, FromEnv a) => [String] -> WithEnvT m (Maybe a)
+withEnv :: (Monad m, FromEnv a) => Maybe a -> String -> WithEnvT m (Maybe a)
 
 -- | Return <tt>a</tt> if Just or else call <a>considerEnv</a> with a list
 --   of env keys k
-withEnvs :: FromEnv a => Maybe a -> [String] -> WithEnv (Maybe a)
+withEnvs :: (Monad m, FromEnv a) => Maybe a -> [String] -> WithEnvT m (Maybe a)
 
 -- | If <tt>bVal</tt> is <a>True</a> then return it, else lookup the
 --   <tt>envVar</tt> in the environment and return <a>False</a> if absent.
-withEnvBool :: Bool -> String -> WithEnv Bool
+withEnvBool :: Monad m => Bool -> String -> WithEnvT m Bool
 
 -- | <a>withEnv</a> for types isomorphic to an array. <a>Proxy</a> is
 --   generally used to pass on the type info. Here <a>Proxy</a> helps us to
 --   specify what the underlying array type should be.
-withEnvList :: (FromEnv b, Coercible b [a]) => Proxy [a] -> b -> String -> WithEnv b
+withEnvList :: (Monad m, FromEnv b, Coercible b [a]) => Proxy [a] -> b -> String -> WithEnvT m b
 
 -- | A <a>Read</a> style parser used for consuming envvars and building
 --   <tt>ReadM</tt> parsers for 'optparse-applicative'.
 class FromEnv a
 fromEnv :: FromEnv a => String -> Either String a
-type WithEnv a = ReaderT [(String, String)] (ExceptT String Identity) a
+type WithEnv = WithEnvT Identity
+newtype WithEnvT m a
+WithEnvT :: ReaderT [(String, String)] (ExceptT String m) a -> WithEnvT m a
+[unWithEnvT] :: WithEnvT m a -> ReaderT [(String, String)] (ExceptT String m) a
 
 -- | Given an environment run a <a>WithEnv</a> action producing either a
 --   parse error or an <tt>a</tt>.
 runWithEnv :: [(String, String)] -> WithEnv a -> Either String a
+runWithEnvT :: [(String, String)] -> WithEnvT m a -> m (Either String a)
+instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (Hasura.Server.Init.Env.WithEnvT m)
+instance GHC.Base.Monad m => Control.Monad.Error.Class.MonadError GHC.Base.String (Hasura.Server.Init.Env.WithEnvT m)
+instance GHC.Base.Monad m => Control.Monad.Reader.Class.MonadReader [(GHC.Base.String, GHC.Base.String)] (Hasura.Server.Init.Env.WithEnvT m)
+instance GHC.Base.Monad m => GHC.Base.Monad (Hasura.Server.Init.Env.WithEnvT m)
+instance GHC.Base.Monad m => GHC.Base.Applicative (Hasura.Server.Init.Env.WithEnvT m)
+instance GHC.Base.Functor m => GHC.Base.Functor (Hasura.Server.Init.Env.WithEnvT m)
+instance Control.Monad.Trans.Class.MonadTrans Hasura.Server.Init.Env.WithEnvT
+instance Control.Monad.Morph.MFunctor Hasura.Server.Init.Env.WithEnvT
 instance Hasura.Server.Init.Env.FromEnv Data.Time.Clock.Internal.NominalDiffTime.NominalDiffTime
 instance Hasura.Server.Init.Env.FromEnv GHC.Base.String
 instance Hasura.Server.Init.Env.FromEnv Data.Streaming.Network.Internal.HostPreference
@@ -30211,6 +30223,11 @@ instance Hasura.Server.Init.Env.FromEnv GHC.Types.Int
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.AdminSecretHash
 instance Hasura.Server.Init.Env.FromEnv Hasura.Session.RoleName
 instance Hasura.Server.Init.Env.FromEnv GHC.Types.Bool
+instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.Options.StringifyNumbers
+instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.Options.RemoteSchemaPermissions
+instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Schema.Options.InferFunctionPermissions
+instance Hasura.Server.Init.Env.FromEnv (Hasura.Server.Types.MaintenanceMode ())
+instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Logging.MetadataQueryLoggingMode
 instance Hasura.Server.Init.Env.FromEnv Database.PG.Query.Transaction.TxIsolation
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Cors.CorsConfig
 instance Hasura.Server.Init.Env.FromEnv [Hasura.Server.Init.Config.API]
@@ -30219,7 +30236,10 @@ instance Hasura.Server.Init.Env.FromEnv [Hasura.Server.Types.ExperimentalFeature
 instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Execute.Subscription.Options.BatchSize
 instance Hasura.Server.Init.Env.FromEnv Hasura.GraphQL.Execute.Subscription.Options.RefetchInterval
 instance Hasura.Server.Init.Env.FromEnv Data.Time.Clock.Units.Milliseconds
+instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.OptionalInterval
 instance Hasura.Server.Init.Env.FromEnv Data.Time.Clock.Units.Seconds
+instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.WSConnectionInitTimeout
+instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Init.Config.KeepAliveDelay
 instance Hasura.Server.Init.Env.FromEnv Hasura.Server.Auth.JWT.JWTConfig
 instance Hasura.Server.Init.Env.FromEnv [Hasura.Server.Auth.JWT.JWTConfig]
 instance Hasura.Logging.EnabledLogTypes impl => Hasura.Server.Init.Env.FromEnv [Hasura.Logging.EngineLogType impl]
@@ -30276,7 +30296,7 @@ parseEnableTelemetry :: Parser (Maybe Bool)
 enableTelemetryEnv :: (String, String)
 parseWsReadCookie :: Parser Bool
 wsReadCookieEnv :: (String, String)
-parseStringifyNum :: Parser Bool
+parseStringifyNum :: Parser StringifyNumbers
 stringifyNumEnv :: (String, String)
 parseDangerousBooleanCollapse :: Parser (Maybe Bool)
 dangerousBooleanCollapseEnv :: (String, String)
@@ -30305,19 +30325,19 @@ parseGraphqlEventsHttpPoolSize :: Parser (Maybe Int)
 graphqlEventsHttpPoolSizeEnv :: (String, String)
 parseGraphqlEventsFetchInterval :: Parser (Maybe Milliseconds)
 graphqlEventsFetchIntervalEnv :: (String, String)
-parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe Milliseconds)
+parseGraphqlAsyncActionsFetchInterval :: Parser (Maybe OptionalInterval)
 asyncActionsFetchIntervalEnv :: (String, String)
-parseEnableRemoteSchemaPerms :: Parser Bool
+parseEnableRemoteSchemaPerms :: Parser RemoteSchemaPermissions
 enableRemoteSchemaPermsEnv :: (String, String)
 parseWebSocketCompression :: Parser Bool
 webSocketCompressionEnv :: (String, String)
-parseWebSocketKeepAlive :: Parser (Maybe Int)
+parseWebSocketKeepAlive :: Parser (Maybe KeepAliveDelay)
 webSocketKeepAliveEnv :: (String, String)
-parseInferFunctionPerms :: Parser (Maybe Bool)
+parseInferFunctionPerms :: Parser (Maybe InferFunctionPermissions)
 inferFunctionPermsEnv :: (String, String)
-parseEnableMaintenanceMode :: Parser Bool
+parseEnableMaintenanceMode :: Parser (MaintenanceMode ())
 enableMaintenanceModeEnv :: (String, String)
-parseSchemaPollInterval :: Parser (Maybe Milliseconds)
+parseSchemaPollInterval :: Parser (Maybe OptionalInterval)
 schemaPollIntervalEnv :: (String, String)
 parseExperimentalFeatures :: Parser (Maybe [ExperimentalFeature])
 experimentalFeaturesEnv :: (String, String)
@@ -30325,9 +30345,9 @@ parseEventsFetchBatchSize :: Parser (Maybe NonNegativeInt)
 eventsFetchBatchSizeEnv :: (String, String)
 parseGracefulShutdownTimeout :: Parser (Maybe Seconds)
 gracefulShutdownEnv :: (String, String)
-parseWebSocketConnectionInitTimeout :: Parser (Maybe Int)
+parseWebSocketConnectionInitTimeout :: Parser (Maybe WSConnectionInitTimeout)
 webSocketConnectionInitTimeoutEnv :: (String, String)
-parseEnableMetadataQueryLogging :: Parser Bool
+parseEnableMetadataQueryLogging :: Parser MetadataQueryLoggingMode
 enableMetadataQueryLoggingEnv :: (String, String)
 parseDefaultNamingConvention :: Parser (Maybe NamingCase)
 defaultNamingConventionEnv :: (String, String)

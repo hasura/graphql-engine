@@ -28,93 +28,93 @@
 </span><span id="line-28"></span><span class="hs-comment">-- Disable custom prelude warnings in preparation for extracting this module into a separate package.</span><span>
 </span><span id="line-29"></span><span class="hs-pragma">{-# ANN</span><span> </span><span class="hs-pragma">module</span><span> </span><span class="hs-pragma">(</span><span class="annot"><span class="hs-pragma">&quot;HLint: ignore Use onNothing&quot;</span></span><span> </span><span class="hs-pragma">::</span><span> </span><span class="annot"><span class="hs-pragma hs-type">String</span></span><span class="hs-pragma">)</span><span> </span><span class="hs-pragma">#-}</span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span id="local-6989586621689389767"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Convert.html#valueToJSON"><span class="hs-identifier hs-type">valueToJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689389767"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689389767"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">A.Value</span></span></span><span>
+</span><span id="line-31"></span><span id="local-6989586621689395989"><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Convert.html#valueToJSON"><span class="hs-identifier hs-type">valueToJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Class.Parse.html#MonadParse"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689395989"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.GType</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689395989"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">A.Value</span></span></span><span>
 </span><span id="line-32"></span><span id="valueToJSON"><span class="annot"><span class="annottext">valueToJSON :: GType -&gt; InputValue Variable -&gt; m Value
-</span><a href="Hasura.GraphQL.Parser.Internal.Convert.html#valueToJSON"><span class="hs-identifier hs-var hs-var">valueToJSON</span></a></span></span><span> </span><span id="local-6989586621689389766"><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689389766"><span class="hs-identifier hs-var">expectedType</span></a></span></span><span> </span><span id="local-6989586621689389765"><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689389765"><span class="hs-identifier hs-var">inputVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-33"></span><span>  </span><span id="local-6989586621689389764"><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689389764"><span class="hs-identifier hs-var">peeledVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
+</span><a href="Hasura.GraphQL.Parser.Internal.Convert.html#valueToJSON"><span class="hs-identifier hs-var hs-var">valueToJSON</span></a></span></span><span> </span><span id="local-6989586621689395988"><span class="annot"><span class="annottext">GType
+</span><a href="#local-6989586621689395988"><span class="hs-identifier hs-var">expectedType</span></a></span></span><span> </span><span id="local-6989586621689395987"><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689395987"><span class="hs-identifier hs-var">inputVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-33"></span><span>  </span><span id="local-6989586621689395986"><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689395986"><span class="hs-identifier hs-var">peeledVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 forall (m :: * -&gt; *).
 MonadParse m =&gt;
 GType -&gt; InputValue Variable -&gt; m (InputValue Variable)
 </span><a href="Hasura.GraphQL.Parser.Internal.TypeChecking.html#peelVariable"><span class="hs-identifier hs-var">peelVariable</span></a></span><span> </span><span class="annot"><span class="annottext">GType
-</span><a href="#local-6989586621689389766"><span class="hs-identifier hs-var">expectedType</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689389765"><span class="hs-identifier hs-var">inputVal</span></a></span><span>
+</span><a href="#local-6989586621689395988"><span class="hs-identifier hs-var">expectedType</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689395987"><span class="hs-identifier hs-var">inputVal</span></a></span><span>
 </span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">Value -&gt; m Value
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; m Value) -&gt; Value -&gt; m Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">InputValue Variable -&gt; Value
-</span><a href="#local-6989586621689389762"><span class="hs-identifier hs-var">valueToJSON'</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
-</span><a href="#local-6989586621689389764"><span class="hs-identifier hs-var">peeledVal</span></a></span><span>
+</span><a href="#local-6989586621689395984"><span class="hs-identifier hs-var">valueToJSON'</span></a></span><span> </span><span class="annot"><span class="annottext">InputValue Variable
+</span><a href="#local-6989586621689395986"><span class="hs-identifier hs-var">peeledVal</span></a></span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-36"></span><span>    </span><span class="annot"><a href="#local-6989586621689389762"><span class="hs-identifier hs-type">valueToJSON'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">A.Value</span></span><span>
-</span><span id="line-37"></span><span>    </span><span id="local-6989586621689389762"><span class="annot"><span class="annottext">valueToJSON' :: InputValue Variable -&gt; Value
-</span><a href="#local-6989586621689389762"><span class="hs-identifier hs-var hs-var">valueToJSON'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-38"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span id="local-6989586621689389760"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689389760"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689389760"><span class="hs-identifier hs-var">j</span></a></span><span>
-</span><span id="line-39"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span id="local-6989586621689389758"><span class="annot"><span class="annottext">Value Variable
-</span><a href="#local-6989586621689389758"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; Value
-</span><a href="#local-6989586621689389757"><span class="hs-identifier hs-var">graphQLToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value Variable
-</span><a href="#local-6989586621689389758"><span class="hs-identifier hs-var">g</span></a></span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="#local-6989586621689395984"><span class="hs-identifier hs-type">valueToJSON'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#InputValue"><span class="hs-identifier hs-type">InputValue</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">A.Value</span></span><span>
+</span><span id="line-37"></span><span>    </span><span id="local-6989586621689395984"><span class="annot"><span class="annottext">valueToJSON' :: InputValue Variable -&gt; Value
+</span><a href="#local-6989586621689395984"><span class="hs-identifier hs-var hs-var">valueToJSON'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-38"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#JSONValue"><span class="hs-identifier hs-type">JSONValue</span></a></span><span> </span><span id="local-6989586621689395982"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689395982"><span class="hs-identifier hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689395982"><span class="hs-identifier hs-var">j</span></a></span><span>
+</span><span id="line-39"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#GraphQLValue"><span class="hs-identifier hs-type">GraphQLValue</span></a></span><span> </span><span id="local-6989586621689395980"><span class="annot"><span class="annottext">Value Variable
+</span><a href="#local-6989586621689395980"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; Value
+</span><a href="#local-6989586621689395979"><span class="hs-identifier hs-var">graphQLToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value Variable
+</span><a href="#local-6989586621689395980"><span class="hs-identifier hs-var">g</span></a></span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><a href="#local-6989586621689389757"><span class="hs-identifier hs-type">graphQLToJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">A.Value</span></span><span>
-</span><span id="line-42"></span><span>    </span><span id="local-6989586621689389757"><span class="annot"><span class="annottext">graphQLToJSON :: Value Variable -&gt; Value
-</span><a href="#local-6989586621689389757"><span class="hs-identifier hs-var hs-var">graphQLToJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="#local-6989586621689395979"><span class="hs-identifier hs-type">graphQLToJSON</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Parser.Variable.html#Variable"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">A.Value</span></span><span>
+</span><span id="line-42"></span><span>    </span><span id="local-6989586621689395979"><span class="annot"><span class="annottext">graphQLToJSON :: Value Variable -&gt; Value
+</span><a href="#local-6989586621689395979"><span class="hs-identifier hs-var hs-var">graphQLToJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">Value Variable
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">A.Null</span></span><span>
-</span><span id="line-44"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VInt</span></span><span> </span><span id="local-6989586621689389753"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689389753"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VInt</span></span><span> </span><span id="local-6989586621689395975"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689395975"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689389753"><span class="hs-identifier hs-var">i</span></a></span><span>
-</span><span id="line-45"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VFloat</span></span><span> </span><span id="local-6989586621689389750"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689389750"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
+</span><a href="#local-6989586621689395975"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-45"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VFloat</span></span><span> </span><span id="local-6989586621689395972"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689395972"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689389750"><span class="hs-identifier hs-var">f</span></a></span><span>
-</span><span id="line-46"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VString</span></span><span> </span><span id="local-6989586621689389748"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689389748"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><a href="#local-6989586621689395972"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VString</span></span><span> </span><span id="local-6989586621689395970"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395970"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689389748"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-47"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VBoolean</span></span><span> </span><span id="local-6989586621689389746"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689389746"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
+</span><a href="#local-6989586621689395970"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VBoolean</span></span><span> </span><span id="local-6989586621689395968"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689395968"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689389746"><span class="hs-identifier hs-var">b</span></a></span><span>
-</span><span id="line-48"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.EnumValue</span></span><span> </span><span id="local-6989586621689389743"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689389743"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value
+</span><a href="#local-6989586621689395968"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VEnum</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.EnumValue</span></span><span> </span><span id="local-6989586621689395965"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689395965"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689389743"><span class="hs-identifier hs-var">n</span></a></span><span>
-</span><span id="line-49"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621689389741"><span class="annot"><span class="annottext">[Value Variable]
-</span><a href="#local-6989586621689389741"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Value
+</span><a href="#local-6989586621689395965"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-49"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VList</span></span><span> </span><span id="local-6989586621689395963"><span class="annot"><span class="annottext">[Value Variable]
+</span><a href="#local-6989586621689395963"><span class="hs-identifier hs-var">values</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; Value) -&gt; [Value] -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; Value
-</span><a href="#local-6989586621689389757"><span class="hs-identifier hs-var">graphQLToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Variable -&gt; Value) -&gt; [Value Variable] -&gt; [Value]
+</span><a href="#local-6989586621689395979"><span class="hs-identifier hs-var">graphQLToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Variable -&gt; Value) -&gt; [Value Variable] -&gt; [Value]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Value Variable]
-</span><a href="#local-6989586621689389741"><span class="hs-identifier hs-var">values</span></a></span><span>
-</span><span id="line-50"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621689389738"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621689389738"><span class="hs-identifier hs-var">objects</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name Value -&gt; Value
+</span><a href="#local-6989586621689395963"><span class="hs-identifier hs-var">values</span></a></span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VObject</span></span><span> </span><span id="local-6989586621689395960"><span class="annot"><span class="annottext">HashMap Name (Value Variable)
+</span><a href="#local-6989586621689395960"><span class="hs-identifier hs-var">objects</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Name Value -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name Value -&gt; Value) -&gt; HashMap Name Value -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value Variable -&gt; Value
-</span><a href="#local-6989586621689389757"><span class="hs-identifier hs-var">graphQLToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Variable -&gt; Value)
+</span><a href="#local-6989586621689395979"><span class="hs-identifier hs-var">graphQLToJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Variable -&gt; Value)
 -&gt; HashMap Name (Value Variable) -&gt; HashMap Name Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Name (Value Variable)
-</span><a href="#local-6989586621689389738"><span class="hs-identifier hs-var">objects</span></a></span><span>
-</span><span id="line-51"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VVariable</span></span><span> </span><span id="local-6989586621689389736"><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689389736"><span class="hs-identifier hs-var">variable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InputValue Variable -&gt; Value
-</span><a href="#local-6989586621689389762"><span class="hs-identifier hs-var">valueToJSON'</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; Value) -&gt; InputValue Variable -&gt; Value
+</span><a href="#local-6989586621689395960"><span class="hs-identifier hs-var">objects</span></a></span><span>
+</span><span id="line-51"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">G.VVariable</span></span><span> </span><span id="local-6989586621689395958"><span class="annot"><span class="annottext">Variable
+</span><a href="#local-6989586621689395958"><span class="hs-identifier hs-var">variable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InputValue Variable -&gt; Value
+</span><a href="#local-6989586621689395984"><span class="hs-identifier hs-var">valueToJSON'</span></a></span><span> </span><span class="annot"><span class="annottext">(InputValue Variable -&gt; Value) -&gt; InputValue Variable -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Void -&gt; Variable
 forall a. Void -&gt; a
@@ -122,7 +122,7 @@ forall a. Void -&gt; a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Variable -&gt; InputValue Void
 </span><a href="Hasura.GraphQL.Parser.Variable.html#vValue"><span class="hs-identifier hs-var hs-var">vValue</span></a></span><span> </span><span class="annot"><span class="annottext">Variable
-</span><a href="#local-6989586621689389736"><span class="hs-identifier hs-var">variable</span></a></span><span>
+</span><a href="#local-6989586621689395958"><span class="hs-identifier hs-var">variable</span></a></span><span>
 </span><span id="line-52"></span><span>
 </span><span id="line-53"></span><span class="annot"><a href="Hasura.GraphQL.Parser.Internal.Convert.html#jsonToGraphQL"><span class="hs-identifier hs-type">jsonToGraphQL</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">A.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Value</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span id="jsonToGraphQL"><span class="annot"><span class="annottext">jsonToGraphQL :: Value -&gt; Either ErrorMessage (Value Void)
@@ -133,8 +133,8 @@ forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">Value Void
 forall var. Value var
 </span><span class="hs-identifier hs-var">G.VNull</span></span><span>
-</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Bool</span></span><span> </span><span id="local-6989586621689389733"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689389733"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Either ErrorMessage (Value Void)
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Bool</span></span><span> </span><span id="local-6989586621689395955"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689395955"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Either ErrorMessage (Value Void)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; Either ErrorMessage (Value Void))
 -&gt; Value Void -&gt; Either ErrorMessage (Value Void)
@@ -142,9 +142,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value Void
 forall var. Bool -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VBoolean</span></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621689389733"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-57"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.String</span></span><span> </span><span id="local-6989586621689389731"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689389731"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Either ErrorMessage (Value Void)
+</span><a href="#local-6989586621689395955"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-57"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.String</span></span><span> </span><span id="local-6989586621689395953"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689395953"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Either ErrorMessage (Value Void)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; Either ErrorMessage (Value Void))
 -&gt; Value Void -&gt; Either ErrorMessage (Value Void)
@@ -152,14 +152,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value Void
 forall var. Text -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VString</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689389731"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Number</span></span><span> </span><span id="local-6989586621689389729"><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689389729"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Maybe Int64
+</span><a href="#local-6989586621689395953"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Number</span></span><span> </span><span id="local-6989586621689395951"><span class="annot"><span class="annottext">Scientific
+</span><a href="#local-6989586621689395951"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Maybe Int64
 forall i. (Integral i, Bounded i) =&gt; Scientific -&gt; Maybe i
 </span><span class="hs-identifier hs-var">toBoundedInteger</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689389729"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-59"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689389728"><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689389728"><span class="hs-identifier hs-var">intVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Either ErrorMessage (Value Void)
+</span><a href="#local-6989586621689395951"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-59"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689395950"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621689395950"><span class="hs-identifier hs-var">intVal</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Either ErrorMessage (Value Void)
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; Either ErrorMessage (Value Void))
 -&gt; Value Void -&gt; Either ErrorMessage (Value Void)
@@ -171,7 +171,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Integer
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span> </span><span class="annot"><span class="annottext">Int64
-</span><a href="#local-6989586621689389728"><span class="hs-identifier hs-var">intVal</span></a></span><span>
+</span><a href="#local-6989586621689395950"><span class="hs-identifier hs-var">intVal</span></a></span><span>
 </span><span id="line-60"></span><span>    </span><span class="annot"><span class="annottext">Maybe Int64
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value Void -&gt; Either ErrorMessage (Value Void)
 forall a b. b -&gt; Either a b
@@ -181,9 +181,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Value Void
 forall var. Scientific -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VFloat</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689389729"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Array</span></span><span> </span><span id="local-6989586621689389726"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689389726"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
+</span><a href="#local-6989586621689395951"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Array</span></span><span> </span><span id="local-6989586621689395948"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621689395948"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Value Void] -&gt; Value Void
 forall var. [Value var] -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VList</span></span><span> </span><span class="annot"><span class="annottext">([Value Void] -&gt; Value Void)
 -&gt; Either ErrorMessage [Value Void]
@@ -198,9 +198,9 @@ forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 </span><a href="Hasura.GraphQL.Parser.Internal.Convert.html#jsonToGraphQL"><span class="hs-identifier hs-var">jsonToGraphQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Array -&gt; [Value]
 forall a. Vector a -&gt; [a]
 </span><span class="hs-identifier hs-var">V.toList</span></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621689389726"><span class="hs-identifier hs-var">vals</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-62"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Object</span></span><span> </span><span id="local-6989586621689389722"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689389722"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689395948"><span class="hs-identifier hs-var">vals</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">A.Object</span></span><span> </span><span id="local-6989586621689395944"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689395944"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">HashMap Name (Value Void) -&gt; Value Void
 forall var. HashMap Name (Value var) -&gt; Value var
 </span><span class="hs-identifier hs-var">G.VObject</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Name (Value Void) -&gt; Value Void)
@@ -223,19 +223,19 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><span class="hs-identifier hs-var">for</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><span class="hs-identifier hs-var">KM.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689389722"><span class="hs-identifier hs-var">vals</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689389718"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621689389718"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689389717"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689389717"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-64"></span><span>      </span><span id="local-6989586621689389716"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689389716"><span class="hs-identifier hs-var">graphQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either ErrorMessage Name
+</span><a href="#local-6989586621689395944"><span class="hs-identifier hs-var">vals</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689395940"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621689395940"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689395939"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689395939"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-64"></span><span>      </span><span id="local-6989586621689395938"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689395938"><span class="hs-identifier hs-var">graphQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Either ErrorMessage Name
 -&gt; (Name -&gt; Either ErrorMessage Name)
 -&gt; Maybe Name
 -&gt; Either ErrorMessage Name
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Either ErrorMessage Name
 forall a b. ToErrorValue a =&gt; a -&gt; Either ErrorMessage b
-</span><a href="#local-6989586621689389714"><span class="hs-identifier hs-var">invalidName</span></a></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621689389718"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Either ErrorMessage Name
+</span><a href="#local-6989586621689395936"><span class="hs-identifier hs-var">invalidName</span></a></span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621689395940"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Either ErrorMessage Name
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Maybe Name -&gt; Either ErrorMessage Name)
 -&gt; Maybe Name -&gt; Either ErrorMessage Name
@@ -243,19 +243,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key -&gt; Text
 </span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621689389718"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689395940"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689389716"><span class="hs-identifier hs-var">graphQLName</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; (Name, Value Void))
+</span><a href="#local-6989586621689395938"><span class="hs-identifier hs-var">graphQLName</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Value Void -&gt; (Name, Value Void))
 -&gt; Either ErrorMessage (Value Void)
 -&gt; Either ErrorMessage (Name, Value Void)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either ErrorMessage (Value Void)
 </span><a href="Hasura.GraphQL.Parser.Internal.Convert.html#jsonToGraphQL"><span class="hs-identifier hs-var">jsonToGraphQL</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689389717"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621689395939"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621689389714"><span class="annot"><span class="annottext">invalidName :: a -&gt; Either ErrorMessage b
-</span><a href="#local-6989586621689389714"><span class="hs-identifier hs-var hs-var">invalidName</span></a></span></span><span> </span><span id="local-6989586621689389711"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689389711"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621689395936"><span class="annot"><span class="annottext">invalidName :: a -&gt; Either ErrorMessage b
+</span><a href="#local-6989586621689395936"><span class="hs-identifier hs-var hs-var">invalidName</span></a></span></span><span> </span><span id="local-6989586621689395933"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689395933"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-68"></span><span>      </span><span class="annot"><span class="annottext">ErrorMessage -&gt; Either ErrorMessage b
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(ErrorMessage -&gt; Either ErrorMessage b)
@@ -267,7 +267,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ErrorMessage
 forall a. ToErrorValue a =&gt; a -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">toErrorValue</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689389711"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
+</span><a href="#local-6989586621689395933"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; ErrorMessage -&gt; ErrorMessage
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
 </span><span class="hs-string">&quot;, which is not a legal GraphQL name&quot;</span></span><span>
