@@ -4,7 +4,6 @@ module Hasura.GraphQL.Schema.Table
     tableSelectColumnsEnum,
     tableUpdateColumnsEnum,
     updateColumnsPlaceholderParser,
-    tablePermissions,
     tableSelectPermissions,
     tableSelectFields,
     tableColumns,
@@ -119,13 +118,13 @@ tableUpdateColumnsEnum ::
   TableInfo b ->
   m (Maybe (Parser 'Both n (Column b)))
 tableUpdateColumnsEnum tableInfo = do
+  roleName <- retrieve scRole
   tableGQLName <- getTableGQLName tableInfo
-  columns <- tableUpdateColumns tableInfo
   enumName <- mkTypename $ tableGQLName <> Name.__update_column
   let tableName = tableInfoName tableInfo
       enumDesc = Just $ G.Description $ "update columns of table " <>> tableName
       enumValues = do
-        column <- columns
+        column <- tableUpdateColumns roleName tableInfo
         pure (define $ ciName column, ciColumn column)
   pure $ P.enum enumName enumDesc <$> nonEmpty enumValues
   where
@@ -152,52 +151,40 @@ updateColumnsPlaceholderParser tableInfo = do
               Nothing
             )
 
-tablePermissions ::
-  forall b r m.
-  (MonadReader r m, Has RoleName r) =>
-  TableInfo b ->
-  m (RolePermInfo b)
-tablePermissions tableInfo = do
-  roleName <- asks getter
-  pure $ getRolePermInfo roleName tableInfo
-
-tableSelectPermissions ::
-  forall b r m.
-  (MonadReader r m, Has RoleName r) =>
-  TableInfo b ->
-  m (Maybe (SelPermInfo b))
-tableSelectPermissions tableInfo = _permSel <$> tablePermissions tableInfo
+tableSelectPermissions :: RoleName -> TableInfo b -> Maybe (SelPermInfo b)
+tableSelectPermissions role tableInfo = _permSel $ getRolePermInfo role tableInfo
 
 tableSelectFields ::
   forall b r m.
   ( Backend b,
     MonadError QErr m,
     MonadReader r m,
-    Has RoleName r
+    Has SchemaContext r
   ) =>
   SourceInfo b ->
   TableInfo b ->
   m [FieldInfo b]
 tableSelectFields sourceInfo tableInfo = do
+  roleName <- retrieve scRole
   let tableFields = _tciFieldInfoMap . _tiCoreInfo $ tableInfo
-  permissions <- tableSelectPermissions tableInfo
-  filterM (canBeSelected permissions) $ Map.elems tableFields
+      permissions = tableSelectPermissions roleName tableInfo
+  filterM (canBeSelected roleName permissions) $ Map.elems tableFields
   where
-    canBeSelected Nothing _ = pure False
-    canBeSelected (Just permissions) (FIColumn columnInfo) =
+    canBeSelected _ Nothing _ = pure False
+    canBeSelected _ (Just permissions) (FIColumn columnInfo) =
       pure $ Map.member (ciColumn columnInfo) (spiCols permissions)
-    canBeSelected _ (FIRelationship relationshipInfo) = do
+    canBeSelected role _ (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo sourceInfo $ riRTable relationshipInfo
-      isJust <$> tableSelectPermissions @b tableInfo'
-    canBeSelected (Just permissions) (FIComputedField computedFieldInfo) =
+      pure $ isJust $ tableSelectPermissions @b role tableInfo'
+    canBeSelected role (Just permissions) (FIComputedField computedFieldInfo) =
       case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
         ReturnsScalar _ ->
           pure $ Map.member (_cfiName computedFieldInfo) $ spiComputedFields permissions
         ReturnsTable tableName -> do
           tableInfo' <- askTableInfo sourceInfo tableName
-          isJust <$> tableSelectPermissions @b tableInfo'
+          pure $ isJust $ tableSelectPermissions @b role tableInfo'
         ReturnsOthers -> pure False
-    canBeSelected _ (FIRemoteRelationship _) = pure True
+    canBeSelected _ _ (FIRemoteRelationship _) = pure True
 
 tableColumns ::
   forall b. TableInfo b -> [ColumnInfo b]
@@ -214,7 +201,7 @@ tableSelectColumns ::
   ( Backend b,
     MonadError QErr m,
     MonadReader r m,
-    Has RoleName r
+    Has SchemaContext r
   ) =>
   SourceInfo b ->
   TableInfo b ->
@@ -228,17 +215,14 @@ tableSelectColumns sourceInfo tableInfo =
 -- | Get the columns of a table that my be updated under the given update
 -- permissions.
 tableUpdateColumns ::
-  forall b r m.
-  ( Backend b,
-    MonadError QErr m,
-    MonadReader r m,
-    Has RoleName r
-  ) =>
+  forall b.
+  Backend b =>
+  RoleName ->
   TableInfo b ->
-  m [ColumnInfo b]
-tableUpdateColumns tableInfo = do
-  permissions <- _permUpd <$> tablePermissions tableInfo
-  pure $ filter (isUpdatable permissions) $ tableColumns tableInfo
+  [ColumnInfo b]
+tableUpdateColumns role tableInfo =
+  let permissions = _permUpd $ getRolePermInfo role tableInfo
+   in filter (isUpdatable permissions) $ tableColumns tableInfo
   where
     isUpdatable :: Maybe (UpdPermInfo b) -> ColumnInfo b -> Bool
     isUpdatable (Just permissions) columnInfo = columnIsUpdatable && columnIsPermitted && columnHasNoPreset

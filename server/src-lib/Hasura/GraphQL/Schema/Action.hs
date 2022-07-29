@@ -10,7 +10,6 @@ where
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap qualified as KM
-import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -65,7 +64,7 @@ actionExecute ::
   ActionInfo ->
   m (Maybe (FieldParser n (IR.AnnActionExecution (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionExecute customTypes actionInfo = runMaybeT do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   guard (roleName == adminRoleName || roleName `Map.member` permissions)
   let fieldName = unActionName actionName
       description = G.Description <$> comment
@@ -109,7 +108,7 @@ actionAsyncMutation ::
   ActionInfo ->
   m (Maybe (FieldParser n IR.AnnActionMutationAsync))
 actionAsyncMutation nonObjectTypeMap actionInfo = runMaybeT do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   inputArguments <- lift $ actionInputArguments nonObjectTypeMap $ _adArguments definition
   let fieldName = unActionName actionName
@@ -140,7 +139,7 @@ actionAsyncQuery ::
   ActionInfo ->
   m (Maybe (FieldParser n (IR.AnnActionAsyncQuery ('Postgres 'Vanilla) (IR.RemoteRelationshipField IR.UnpreparedValue))))
 actionAsyncQuery objectTypes actionInfo = runMaybeT do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   guard $ roleName == adminRoleName || roleName `Map.member` permissions
   createdAtFieldParser <-
     lift $ columnParser @('Postgres 'Vanilla) (ColumnScalar PGTimeStampTZ) (G.Nullability False)

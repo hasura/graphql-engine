@@ -25,11 +25,11 @@ import Hasura.Base.Error (QErr)
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSchema (..), MonadBuildSchema, columnParser)
 import Hasura.GraphQL.Schema.BoolExp (boolExp)
-import Hasura.GraphQL.Schema.Common (Scenario (..), mapField, partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Common (Scenario (..), SchemaContext (..), mapField, partialSQLExpToUnpreparedValue, retrieve)
 import Hasura.GraphQL.Schema.Mutation (mutationSelectionSet, primaryKeysArguments)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Parser qualified as P
-import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tablePermissions, tableUpdateColumns)
+import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns, tableUpdateColumns)
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (AnnBoolExp, annBoolExpTrue)
@@ -115,7 +115,8 @@ runUpdateOperator ::
 runUpdateOperator tableInfo UpdateOperator {..} = do
   let tableName = tableInfoName tableInfo
   tableGQLName <- getTableGQLName tableInfo
-  columns <- tableUpdateColumns tableInfo
+  roleName <- retrieve scRole
+  let columns = tableUpdateColumns roleName tableInfo
 
   let applicableCols :: Maybe (NonEmpty (ColumnInfo b)) =
         nonEmpty . filter updateOperatorApplicableColumn $ columns
@@ -271,7 +272,8 @@ updateTable backendUpdate scenario sourceInfo tableInfo fieldName description = 
       whereDesc = "filter the rows which have to be updated"
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
-  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+  roleName <- retrieve scRole
+  updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
   -- If we're in a frontend scenario, we should not include backend_only updates
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
@@ -308,7 +310,8 @@ updateTableByPk backendUpdate scenario sourceInfo tableInfo fieldName descriptio
       tableName = tableInfoName tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
-  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+  roleName <- retrieve scRole
+  updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
   -- If we're in a frontend scenario, we should not include backend_only updates
   -- For more info see Note [Backend only permissions]
   guard $ not $ scenario == Frontend && upiBackendOnly updatePerms

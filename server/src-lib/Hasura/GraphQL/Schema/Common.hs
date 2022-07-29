@@ -82,7 +82,9 @@ data SchemaContext = SchemaContext
   { -- | the kind of schema being built
     scSchemaKind :: SchemaKind,
     -- | how to process remote relationships
-    scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder
+    scRemoteRelationshipParserBuilder :: RemoteRelationshipParserBuilder,
+    -- | the role for which the schema is being built
+    scRole :: RoleName
   }
 
 -- | The kind of schema we're building, and its associated options.
@@ -103,7 +105,6 @@ type MonadBuildSchemaBase r m n =
     Has SchemaOptions r,
     Has SchemaContext r,
     -- TODO: make all `Has x r` explicit fields of 'SchemaContext'
-    Has RoleName r,
     Has MkTypename r,
     Has MkRootFieldName r,
     Has CustomizeRemoteFieldName r,

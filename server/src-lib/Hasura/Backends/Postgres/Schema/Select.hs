@@ -62,8 +62,9 @@ selectFunction ::
   m (Maybe (FieldParser n (SelectExp ('Postgres pgKind))))
 selectFunction sourceInfo fi@FunctionInfo {..} description = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   tableInfo <- lift $ askTableInfo sourceInfo _fiReturnType
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   selectionSetParser <- MaybeT $ returnFunctionParser sourceInfo tableInfo
   lift do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
@@ -101,8 +102,9 @@ selectFunctionAggregate ::
   m (Maybe (FieldParser n (AggSelectExp ('Postgres pgKind))))
 selectFunctionAggregate sourceInfo fi@FunctionInfo {..} description = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   targetTableInfo <- askTableInfo sourceInfo _fiReturnType
-  selectPermissions <- MaybeT $ tableSelectPermissions targetTableInfo
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName targetTableInfo
   guard $ spiAllowAgg selectPermissions
   xNodesAgg <- hoistMaybe $ nodesAggExtension @('Postgres pgKind)
   tableInfo <- askTableInfo sourceInfo _fiReturnType
@@ -153,8 +155,9 @@ selectFunctionConnection ::
   m (Maybe (FieldParser n (ConnectionSelectExp ('Postgres pgKind))))
 selectFunctionConnection sourceInfo fi@FunctionInfo {..} description pkeyColumns = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   returnTableInfo <- lift $ askTableInfo sourceInfo _fiReturnType
-  selectPermissions <- MaybeT $ tableSelectPermissions returnTableInfo
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName returnTableInfo
   xRelayInfo <- hoistMaybe $ relayExtension @('Postgres pgKind)
   tableInfo <- lift $ askTableInfo sourceInfo _fiReturnType
   selectionSetParser <- MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
@@ -195,8 +198,9 @@ computedFieldPG ::
   m (Maybe (FieldParser n (AnnotatedField ('Postgres pgKind))))
 computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMaybeT do
   tCase <- asks getter
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
   stringifyNumbers <- retrieve Options.soStringifyNumbers
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
@@ -226,7 +230,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
       pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
     PG.CFRSetofTable tableName -> do
       otherTableInfo <- lift $ askTableInfo sourceInfo tableName
-      remotePerms <- MaybeT $ tableSelectPermissions otherTableInfo
+      remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
       selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet sourceInfo otherTableInfo)
       selectArgsParser <- lift $ tableArguments sourceInfo otherTableInfo
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser

@@ -118,6 +118,7 @@ buildTableQueryAndSubscriptionFields ::
     )
 buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx gqlName = do
   tCase <- asks getter
+  roleName <- retrieve scRole
   -- select table
   selectName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelect mkSelectField gqlName
   -- select table by pk
@@ -125,13 +126,11 @@ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx
   -- select table aggregate
   selectAggName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectAggregate mkSelectAggregateField gqlName
 
-  selectPermission <- tableSelectPermissions tableInfo
-
   selectTableParser <- optionalFieldParser QDBMultipleRows $ selectTable sourceInfo tableInfo selectName selectDesc
   selectTableByPkParser <- optionalFieldParser QDBSingleRow $ selectTableByPk sourceInfo tableInfo selectPKName selectPKDesc
   selectTableAggregateParser <- optionalFieldParser QDBAggregation $ selectTableAggregate sourceInfo tableInfo selectAggName selectAggDesc
 
-  case selectPermission of
+  case tableSelectPermissions roleName tableInfo of
     -- No select permission found for the current role, so
     -- no root fields will be accessible to the role
     Nothing -> pure (mempty, mempty, Nothing)
@@ -169,7 +168,7 @@ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx
       apolloFedTableParser <- runMaybeT do
         guard $ isApolloFedV1enabled (_tciApolloFederationConfig (_tiCoreInfo tableInfo))
         tableSelSet <- MaybeT $ tableSelectionSet sourceInfo tableInfo
-        selectPerm <- MaybeT $ tableSelectPermissions tableInfo
+        selectPerm <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         stringifyNumbers <- retrieve Options.soStringifyNumbers
         primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
         let tableSelPerm = tablePermissionsInfo selectPerm

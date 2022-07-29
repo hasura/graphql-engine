@@ -125,8 +125,7 @@ buildQueryParsers introspection = do
       -- test, we are free to give 'undefined' for such fields, as they won't be
       -- evaluated.
       schemaInfo =
-        ( adminRoleName :: RoleName,
-          mempty :: CustomizeRemoteFieldName,
+        ( mempty :: CustomizeRemoteFieldName,
           mempty :: MkTypename,
           mempty :: MkRootFieldName,
           HasuraCase :: NamingCase,
@@ -134,6 +133,7 @@ buildQueryParsers introspection = do
           SchemaContext
             HasuraSchema
             ignoreRemoteRelationship
+            adminRoleName
         )
   RemoteSchemaParser query _ _ <-
     runError $

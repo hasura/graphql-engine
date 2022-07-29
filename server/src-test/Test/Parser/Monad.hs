@@ -25,7 +25,7 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Prelude
 import Hasura.RQL.Types.SourceCustomization (CustomizeRemoteFieldName, MkRootFieldName)
-import Hasura.Session (RoleName, adminRoleName)
+import Hasura.Session (adminRoleName)
 import Language.Haskell.TH.Syntax qualified as TH
 import Test.Hspec
 
@@ -51,13 +51,6 @@ instance Has NamingCase SchemaEnvironment where
   modifier :: (NamingCase -> NamingCase) -> SchemaEnvironment -> SchemaEnvironment
   modifier = notImplemented "modifier<Has NamingCase SchemaEnvironment>"
 
-instance Has RoleName SchemaEnvironment where
-  getter :: SchemaEnvironment -> RoleName
-  getter = const adminRoleName
-
-  modifier :: (RoleName -> RoleName) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplemented "modifier<Has RoleName SchemaEnvironment>"
-
 instance Has SchemaOptions SchemaEnvironment where
   getter :: SchemaEnvironment -> SchemaOptions
   getter =
@@ -78,7 +71,8 @@ instance Has SchemaContext SchemaEnvironment where
     const
       SchemaContext
         { scSchemaKind = HasuraSchema,
-          scRemoteRelationshipParserBuilder = ignoreRemoteRelationship
+          scRemoteRelationshipParserBuilder = ignoreRemoteRelationship,
+          scRole = adminRoleName
         }
 
   modifier :: (SchemaContext -> SchemaContext) -> SchemaEnvironment -> SchemaEnvironment

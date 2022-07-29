@@ -197,7 +197,8 @@ buildRoleContext options sources remotes allActionInfos customTypes role remoteS
         SchemaContext
           HasuraSchema
           (remoteRelationshipField sources (fst <$> remotes) remoteSchemaPermsCtx)
-  runMonadSchema schemaOptions schemaContext role $ do
+          role
+  runMonadSchema schemaOptions schemaContext $ do
     -- build all sources (`apolloFedTableParsers` contains all the parsers and
     -- type names, which are eligible for the `_Entity` Union)
     (sourcesQueryFields, sourcesMutationFrontendFields, sourcesMutationBackendFields, subscriptionFields, apolloFedTableParsers) <-
@@ -338,7 +339,8 @@ buildRelayRoleContext options sources allActionInfos customTypes role expFeature
         SchemaContext
           (RelaySchema $ nodeInterface sources)
           (remoteRelationshipField sources mempty Options.DisableRemoteSchemaPermissions)
-  runMonadSchema schemaOptions schemaContext role do
+          role
+  runMonadSchema schemaOptions schemaContext do
     node <- fmap NotNamespaced <$> nodeField sources
     fieldsList <- traverse (buildBackendSource buildSource) $ toList sources
     let (queryFields, mutationFrontendFields, mutationBackendFields, subscriptionFields) = mconcat fieldsList
@@ -460,6 +462,7 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         SchemaContext
           HasuraSchema
           ignoreRemoteRelationship
+          fakeRole
       -- chosen arbitrarily to be as improbable as possible
       fakeRole = mkRoleNameSafe [NT.nonEmptyTextQQ|MyNameIsOzymandiasKingOfKingsLookOnMyWorksYeMightyAndDespair|]
       -- we delete all references to remote joins
@@ -467,7 +470,7 @@ unauthenticatedContext allRemotes remoteSchemaPermsCtx = do
         allRemotes <&> first \context ->
           context {_rscRemoteRelationships = mempty}
 
-  runMonadSchema fakeSchemaOptions fakeSchemaContext fakeRole do
+  runMonadSchema fakeSchemaOptions fakeSchemaContext do
     (queryFields, mutationFields, subscriptionFields, remoteErrors) <- case remoteSchemaPermsCtx of
       Options.EnableRemoteSchemaPermissions ->
         -- Permissions are enabled, unauthenticated users have access to nothing.
@@ -583,7 +586,7 @@ buildQueryAndSubscriptionFields ::
   StreamingSubscriptionsCtx ->
   m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)], [(G.Name, Parser 'Output n (ApolloFederationParserFunction n))])
 buildQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> functions) streamingSubsCtx = do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   functionPermsCtx <- retrieve Options.soInferFunctionPermissions
   functionSelectExpParsers <-
     concat . catMaybes
@@ -624,11 +627,12 @@ buildRelayQueryAndSubscriptionFields ::
   FunctionCache b ->
   m ([P.FieldParser n (QueryRootField UnpreparedValue)], [P.FieldParser n (SubscriptionRootField UnpreparedValue)])
 buildRelayQueryAndSubscriptionFields sourceInfo tables (takeExposedAs FEAQuery -> functions) = do
+  roleName <- retrieve scRole
   (tableConnectionQueryFields, tableConnectionSubscriptionFields) <-
     unzip . catMaybes
       <$> for (Map.toList tables) \(tableName, tableInfo) -> runMaybeT do
         tableIdentifierName <- getTableIdentifierName @b tableInfo
-        SelPermInfo {..} <- MaybeT $ tableSelectPermissions tableInfo
+        SelPermInfo {..} <- hoistMaybe $ tableSelectPermissions roleName tableInfo
         pkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
         relayRootFields <- lift $ mkRFs $ buildTableRelayQueryFields sourceInfo tableName tableInfo tableIdentifierName pkeyColumns
         let includeRelayWhen True = Just relayRootFields
@@ -663,7 +667,7 @@ buildMutationFields ::
   FunctionCache b ->
   m [P.FieldParser n (MutationRootField UnpreparedValue)]
 buildMutationFields scenario sourceInfo tables (takeExposedAs FEAMutation -> functions) = do
-  roleName <- asks getter
+  roleName <- retrieve scRole
   tableMutations <- for (Map.toList tables) \(tableName, tableInfo) -> do
     tableIdentifierName <- getTableIdentifierName @b tableInfo
     inserts <-
@@ -905,7 +909,6 @@ type ConcreteSchemaT m a =
     ( ReaderT
         ( SchemaOptions,
           SchemaContext,
-          RoleName,
           MkTypename,
           MkRootFieldName,
           CustomizeRemoteFieldName,
@@ -920,11 +923,10 @@ runMonadSchema ::
   Monad m =>
   SchemaOptions ->
   SchemaContext ->
-  RoleName ->
   ConcreteSchemaT m a ->
   m a
-runMonadSchema options context roleName m =
-  flip runReaderT (options, context, roleName, mempty, mempty, mempty, HasuraCase) $
+runMonadSchema options context m =
+  flip runReaderT (options, context, mempty, mempty, mempty, HasuraCase) $
     P.runSchemaT m
 
 buildBackendSource ::

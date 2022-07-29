@@ -62,8 +62,9 @@ onConflictFieldParser ::
   m (InputFieldsParser n (Maybe (IR.OnConflictClause ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
 onConflictFieldParser sourceInfo tableInfo = do
   tCase <- asks getter
-  permissions <- tablePermissions tableInfo
-  let maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
+  roleName <- retrieve scRole
+  let permissions = getRolePermInfo roleName tableInfo
+      maybeConstraints = tciUniqueOrPrimaryKeyConstraints . _tiCoreInfo $ tableInfo
       maybeConflictObject = conflictObjectParser sourceInfo tableInfo (_permUpd permissions) <$> maybeConstraints
   case maybeConflictObject of
     Just conflictObject -> conflictObject <&> P.fieldOptional (applyFieldNameCaseCust tCase Name._on_conflict) (Just "upsert condition")

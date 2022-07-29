@@ -104,7 +104,8 @@ defaultSelectTable ::
   m (Maybe (FieldParser n (SelectExp b)))
 defaultSelectTable sourceInfo tableInfo fieldName description = runMaybeT do
   tCase <- asks getter
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   selectionSetParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
   lift $ memoizeOn 'defaultSelectTable (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
@@ -160,8 +161,9 @@ selectTableConnection ::
   m (Maybe (FieldParser n (ConnectionSelectExp b)))
 selectTableConnection sourceInfo tableInfo fieldName description pkeyColumns = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   xRelayInfo <- hoistMaybe $ relayExtension @b
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   selectionSetParser <- fmap P.nonNullableParser <$> MaybeT $ tableConnectionSelectionSet sourceInfo tableInfo
   lift $ memoizeOn 'selectTableConnection (_siName sourceInfo, tableName, fieldName) do
     stringifyNumbers <- retrieve Options.soStringifyNumbers
@@ -210,7 +212,8 @@ selectTableByPk ::
   m (Maybe (FieldParser n (SelectExp b)))
 selectTableByPk sourceInfo tableInfo fieldName description = runMaybeT do
   tCase <- asks getter
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   primaryKeys <- hoistMaybe $ fmap _pkColumns . _tciPrimaryKey . _tiCoreInfo $ tableInfo
   selectionSetParser <- MaybeT $ tableSelectionSet sourceInfo tableInfo
   guard $ all (\c -> ciColumn c `Map.member` spiCols selectPermissions) primaryKeys
@@ -264,7 +267,8 @@ defaultSelectTableAggregate ::
   m (Maybe (FieldParser n (AggSelectExp b)))
 defaultSelectTableAggregate sourceInfo tableInfo fieldName description = runMaybeT $ do
   tCase <- asks getter
-  selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   guard $ spiAllowAgg selectPermissions
   xNodesAgg <- hoistMaybe $ nodesAggExtension @b
   nodesParser <- MaybeT $ tableSelectionList sourceInfo tableInfo
@@ -371,7 +375,8 @@ defaultTableSelectionSet ::
   TableInfo b ->
   m (Maybe (Parser 'Output n (AnnotatedFields b)))
 defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
-  _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  roleName <- retrieve scRole
+  _selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
   schemaKind <- lift $ retrieve scSchemaKind
   -- If this check fails, it means we're attempting to build a Relay schema, but
   -- the current backend b does't support Relay; rather than returning an
@@ -475,8 +480,9 @@ tableConnectionSelectionSet ::
   TableInfo b ->
   m (Maybe (Parser 'Output n (ConnectionFields b)))
 tableConnectionSelectionSet sourceInfo tableInfo = runMaybeT do
+  roleName <- retrieve scRole
   tableGQLName <- lift $ getTableGQLName tableInfo
-  _selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+  void $ hoistMaybe $ tableSelectPermissions roleName tableInfo
   edgesParser <- MaybeT $ tableEdgesSelectionSet tableGQLName
   lift $ memoizeOn 'tableConnectionSelectionSet (_siName sourceInfo, tableName) do
     connectionTypeName <- mkTypename $ tableGQLName <> Name._Connection
@@ -973,6 +979,7 @@ fieldSelection ::
 fieldSelection sourceInfo table tableInfo = \case
   FIColumn columnInfo ->
     maybeToList <$> runMaybeT do
+      roleName <- retrieve scRole
       schemaKind <- retrieve scSchemaKind
       let fieldName = ciName columnInfo
       -- If the field name is 'id' and we're building a schema for the Relay
@@ -980,7 +987,7 @@ fieldSelection sourceInfo table tableInfo = \case
       -- ignore the original.
       guard $ isHasuraSchema schemaKind || fieldName /= Name._id
       let columnName = ciColumn columnInfo
-      selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+      selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       guard $ columnName `Map.member` spiCols selectPermissions
       let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
           caseBoolExpUnpreparedValue =
@@ -1124,15 +1131,16 @@ relationshipField ::
   m (Maybe [FieldParser n (AnnotatedField b)])
 relationshipField sourceInfo table ri = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   optimizePermissionFilters <- retrieve Options.soOptimizePermissionFilters
+  tableInfo <- lift $ askTableInfo sourceInfo table
   otherTableInfo <- lift $ askTableInfo sourceInfo $ riRTable ri
-  remotePerms <- MaybeT $ tableSelectPermissions otherTableInfo
+  tablePerms <- hoistMaybe $ tableSelectPermissions roleName tableInfo
+  remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
   relFieldName <- lift $ textToName $ relNameToTxt $ riName ri
   -- START black magic to deduplicate permission checks
-  thisTablePerm <-
-    IR._tpFilter . tablePermissionsInfo
-      <$> MaybeT (tableSelectPermissions =<< askTableInfo sourceInfo table)
-  let deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
+  let thisTablePerm = IR._tpFilter $ tablePermissionsInfo tablePerms
+      deduplicatePermissions :: AnnBoolExp b (IR.UnpreparedValue b) -> AnnBoolExp b (IR.UnpreparedValue b)
       deduplicatePermissions x =
         case (optimizePermissionFilters, x) of
           (OptimizePermissionFilters, BoolAnd [BoolField (AVRelationship remoteRI remoteTablePerm)]) ->
@@ -1192,7 +1200,6 @@ relationshipField sourceInfo table ri = runMaybeT do
       nullable <- case (riIsManual ri, riInsertOrder ri) of
         -- Automatically generated forward relationship
         (False, BeforeParent) -> do
-          tableInfo <- askTableInfo sourceInfo table
           let columns = Map.keys $ riMapping ri
               fieldInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
               findColumn col = Map.lookup (fromCol @b col) fieldInfoMap ^? _Just . _FIColumn

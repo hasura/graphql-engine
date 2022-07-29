@@ -116,8 +116,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
     -- Minimum valid information required to run schema generation for
     -- the remote schema.
     minimumValidContext =
-      ( adminRoleName :: RoleName,
-        mempty :: CustomizeRemoteFieldName,
+      ( mempty :: CustomizeRemoteFieldName,
         mempty :: MkTypename,
         mempty :: MkRootFieldName,
         HasuraCase,
@@ -137,6 +136,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         SchemaContext
           HasuraSchema
           ignoreRemoteRelationship
+          adminRoleName
       )
 
 -- | Sends a GraphQL query to the given server.

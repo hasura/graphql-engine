@@ -58,6 +58,7 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
       idField = P.selection_ Name._id (Just idDescription) P.identifier
       nodeInterfaceDescription = G.Description "An object with globally unique ID"
   tCase <- asks getter
+  roleName <- retrieve scRole
   tables :: [Parser 'Output n (SourceName, AB.AnyBackend TableMap)] <-
     catMaybes . concat <$> for (Map.toList sourceCache) \(sourceName, anySourceInfo) ->
       AB.dispatchAnyBackendWithTwoConstraints @BackendSchema @BackendTableSelectSchema
@@ -65,7 +66,7 @@ nodeInterface sourceCache = NodeInterfaceParserBuilder $ memoizeOn 'nodeInterfac
         \(sourceInfo :: SourceInfo b) ->
           for (Map.toList $ takeValidTables $ _siTables sourceInfo) \(tableName, tableInfo) -> runMaybeT do
             tablePkeyColumns <- hoistMaybe $ tableInfo ^? tiCoreInfo . tciPrimaryKey . _Just . pkColumns
-            selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+            selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
             annotatedFieldsParser <-
               MaybeT $
                 withTypenameCustomization

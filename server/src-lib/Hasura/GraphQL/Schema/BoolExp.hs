@@ -14,7 +14,7 @@ import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend
-import Hasura.GraphQL.Schema.Common (askTableInfo, partialSQLExpToUnpreparedValue)
+import Hasura.GraphQL.Schema.Common (SchemaContext (..), askTableInfo, partialSQLExpToUnpreparedValue, retrieve)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser
@@ -85,6 +85,7 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
       FieldInfo b ->
       m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
     mkField fieldInfo = runMaybeT do
+      roleName <- retrieve scRole
       fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
       P.fieldOptional fieldName Nothing <$> case fieldInfo of
         -- field_name: field_type_comparison_exp
@@ -93,10 +94,10 @@ boolExp sourceInfo tableInfo = memoizeOn 'boolExp (_siName sourceInfo, tableName
         -- field_name: field_type_bool_exp
         FIRelationship relationshipInfo -> do
           remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
-          remotePermissions <- lift $ tableSelectPermissions remoteTableInfo
           let remoteTableFilter =
-                fmap partialSQLExpToUnpreparedValue
-                  <$> maybe annBoolExpTrue spiFilter remotePermissions
+                (fmap . fmap) partialSQLExpToUnpreparedValue $
+                  maybe annBoolExpTrue spiFilter $
+                    tableSelectPermissions roleName remoteTableInfo
           remoteBoolExp <- lift $ boolExp sourceInfo remoteTableInfo
           pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
         FIComputedField ComputedFieldInfo {..} -> do
