@@ -92,8 +92,8 @@ import Hasura.Tracing qualified as Tracing
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data PreparedSql = PreparedSql
-  { _psQuery :: !Q.Query,
-    _psPrepArgs :: !PrepArgMap
+  { _psQuery :: Q.Query,
+    _psPrepArgs :: PrepArgMap
   }
 
 instance

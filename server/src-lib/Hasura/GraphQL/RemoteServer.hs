@@ -116,8 +116,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
     -- Minimum valid information required to run schema generation for
     -- the remote schema.
     minimumValidContext =
-      ( adminRoleName :: RoleName,
-        mempty :: CustomizeRemoteFieldName,
+      ( mempty :: CustomizeRemoteFieldName,
         mempty :: MkTypename,
         mempty :: MkRootFieldName,
         HasuraCase,
@@ -137,6 +136,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
         SchemaContext
           HasuraSchema
           ignoreRemoteRelationship
+          adminRoleName
       )
 
 -- | Sends a GraphQL query to the given server.
@@ -532,7 +532,7 @@ getCustomizer IntrospectionResult {..} (Just RemoteSchemaCustomization {..}) = R
 
     typeFieldMap :: HashMap G.Name [G.Name] -- typeName -> fieldNames
     typeFieldMap =
-      Map.mapMaybe getFieldsNames typeDefinitions
+      mapMaybe getFieldsNames typeDefinitions
       where
         getFieldsNames = \case
           G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> Just $ G._fldName <$> _otdFieldsDefinition

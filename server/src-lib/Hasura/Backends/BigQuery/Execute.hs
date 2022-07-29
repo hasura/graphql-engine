@@ -60,8 +60,8 @@ import Network.HTTP.Types
 -- we choose a naive implementation in the interest of getting other
 -- work done.
 data RecordSet = RecordSet
-  { rows :: !(Vector (InsOrdHashMap FieldNameText OutputValue)),
-    wantedFields :: !(Maybe [Text])
+  { rows :: Vector (InsOrdHashMap FieldNameText OutputValue),
+    wantedFields :: Maybe [Text]
   }
   deriving (Show)
 
@@ -72,20 +72,20 @@ newtype FieldNameText
   deriving (Show, Ord, Eq, Hashable, Aeson.FromJSON, Aeson.ToJSONKey, IsString)
 
 data OutputValue
-  = DecimalOutputValue !Decimal
-  | BigDecimalOutputValue !BigDecimal
-  | IntegerOutputValue !Int64
-  | FloatOutputValue !Float64
-  | GeographyOutputValue !Geography
-  | TextOutputValue !Text
-  | TimestampOutputValue !Timestamp
-  | DateOutputValue !Date
-  | TimeOutputValue !Time
-  | DatetimeOutputValue !Datetime
-  | BytesOutputValue !Base64
-  | BoolOutputValue !Bool
-  | ArrayOutputValue !(Vector OutputValue)
-  | RecordOutputValue !(InsOrdHashMap FieldNameText OutputValue)
+  = DecimalOutputValue Decimal
+  | BigDecimalOutputValue BigDecimal
+  | IntegerOutputValue Int64
+  | FloatOutputValue Float64
+  | GeographyOutputValue Geography
+  | TextOutputValue Text
+  | TimestampOutputValue Timestamp
+  | DateOutputValue Date
+  | TimeOutputValue Time
+  | DatetimeOutputValue Datetime
+  | BytesOutputValue Base64
+  | BoolOutputValue Bool
+  | ArrayOutputValue (Vector OutputValue)
+  | RecordOutputValue (InsOrdHashMap FieldNameText OutputValue)
   | NullOutputValue -- TODO: Consider implications.
   deriving (Show, Eq, Generic)
 
@@ -94,23 +94,23 @@ instance Hashable OutputValue
 instance Aeson.ToJSON OutputValue where
   toJSON = \case
     NullOutputValue -> Aeson.toJSON Aeson.Null
-    DecimalOutputValue !i -> Aeson.toJSON i
-    BigDecimalOutputValue !i -> Aeson.toJSON i
-    FloatOutputValue !i -> Aeson.toJSON i
-    TextOutputValue !i -> Aeson.toJSON i
-    BytesOutputValue !i -> Aeson.toJSON i
-    DateOutputValue !i -> Aeson.toJSON i
-    TimestampOutputValue !i -> Aeson.toJSON i
-    TimeOutputValue !i -> Aeson.toJSON i
-    DatetimeOutputValue !i -> Aeson.toJSON i
-    GeographyOutputValue !i -> Aeson.toJSON i
-    BoolOutputValue !i -> Aeson.toJSON i
-    IntegerOutputValue !i -> Aeson.toJSON i
-    ArrayOutputValue !vector -> Aeson.toJSON vector
-    RecordOutputValue !record -> Aeson.toJSON record
+    DecimalOutputValue i -> Aeson.toJSON i
+    BigDecimalOutputValue i -> Aeson.toJSON i
+    FloatOutputValue i -> Aeson.toJSON i
+    TextOutputValue i -> Aeson.toJSON i
+    BytesOutputValue i -> Aeson.toJSON i
+    DateOutputValue i -> Aeson.toJSON i
+    TimestampOutputValue i -> Aeson.toJSON i
+    TimeOutputValue i -> Aeson.toJSON i
+    DatetimeOutputValue i -> Aeson.toJSON i
+    GeographyOutputValue i -> Aeson.toJSON i
+    BoolOutputValue i -> Aeson.toJSON i
+    IntegerOutputValue i -> Aeson.toJSON i
+    ArrayOutputValue vector -> Aeson.toJSON vector
+    RecordOutputValue record -> Aeson.toJSON record
 
 data ExecuteReader = ExecuteReader
-  { sourceConfig :: !BigQuerySourceConfig
+  { sourceConfig :: BigQuerySourceConfig
   }
 
 data ExecuteProblem
@@ -181,14 +181,14 @@ data BigQueryType
   deriving (Show, Eq)
 
 data BigQuery = BigQuery
-  { query :: !LT.Text,
-    parameters :: !(InsOrdHashMap ParameterName Parameter)
+  { query :: LT.Text,
+    parameters :: InsOrdHashMap ParameterName Parameter
   }
   deriving (Show)
 
 data Parameter = Parameter
-  { typ :: !BigQueryType,
-    value :: !Value
+  { typ :: BigQueryType,
+    value :: Value
   }
   deriving (Show)
 
@@ -197,9 +197,9 @@ newtype ParameterName
   deriving (Show, Aeson.ToJSON, Ord, Eq, Hashable)
 
 data BigQueryField = BigQueryField
-  { name :: !FieldNameText,
-    typ :: !BigQueryFieldType,
-    mode :: !Mode
+  { name :: FieldNameText,
+    typ :: BigQueryFieldType,
+    mode :: Mode
   }
   deriving (Show)
 
@@ -530,9 +530,9 @@ getJobResults conn Job {jobId, location} Fetch {pageToken} = runExceptT $ do
 -- Creating jobs
 
 data Job = Job
-  { state :: !Text,
-    jobId :: !Text,
-    location :: !Text
+  { state :: Text,
+    jobId :: Text,
+    location :: Text
   }
   deriving (Show)
 

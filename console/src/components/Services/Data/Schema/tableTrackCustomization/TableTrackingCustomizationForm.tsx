@@ -46,6 +46,7 @@ export type FormValues = {
   select: string;
   select_by_pk: string;
   select_aggregate: string;
+  select_stream: string;
   insert: string;
   insert_one: string;
   update: string;
@@ -77,6 +78,7 @@ export const TableTrackingCustomizationForm: React.FC<TableTrackingCustomization
   const selectFormMethods = formMethods.register('select');
   const selectByPkFormMethods = formMethods.register('select_by_pk');
   const selectAggregateFormMethods = formMethods.register('select_aggregate');
+  const selectStreamFormMethods = formMethods.register('select_stream');
   const insertFormMethods = formMethods.register('insert');
   const insertOneFormMethods = formMethods.register('insert_one');
   const updateFormMethods = formMethods.register('update');
@@ -99,6 +101,11 @@ export const TableTrackingCustomizationForm: React.FC<TableTrackingCustomization
       name: 'Select Aggregate',
       placeholder: placeholders.select_aggregate,
       formMethods: selectAggregateFormMethods,
+    },
+    {
+      name: 'Select Stream',
+      placeholder: placeholders.select_stream,
+      formMethods: selectStreamFormMethods,
     },
   ];
 

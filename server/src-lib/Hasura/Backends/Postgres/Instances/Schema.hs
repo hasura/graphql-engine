@@ -59,7 +59,7 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
-import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Table (getTableGQLName, tableColumns)
 import Hasura.GraphQL.Schema.Typename
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
@@ -78,7 +78,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Function (FunctionInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
-import Hasura.RQL.Types.Table (CustomRootField (..), RolePermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..), ViewInfo (..), isMutable, tableInfoName)
+import Hasura.RQL.Types.Table (CustomRootField (..), RolePermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..), ViewInfo (..), getRolePermInfo, isMutable, tableInfoName)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Vanilla))
 import Hasura.SQL.Tag (HasTag)
 import Hasura.SQL.Types
@@ -225,9 +225,10 @@ pgkBuildTableUpdateMutationFields ::
   -- | field display name
   C.GQLNameIdentifier ->
   m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
-pgkBuildTableUpdateMutationFields scenario sourceInfo tableName tableInfo gqlName =
+pgkBuildTableUpdateMutationFields scenario sourceInfo tableName tableInfo gqlName = do
+  roleName <- retrieve scRole
   concat . maybeToList <$> runMaybeT do
-    updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+    updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
     lift $ do
       -- update_table and update_table_by_pk
       singleUpdates <-
@@ -279,10 +280,11 @@ updateTableMany ::
   m (Maybe (P.FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))))
 updateTableMany scenario sourceInfo tableInfo gqlName = runMaybeT do
   tCase <- asks getter
+  roleName <- retrieve scRole
   let columns = tableColumns tableInfo
       viewInfo = _tciViewInfo $ _tiCoreInfo tableInfo
   guard $ isMutable viIsUpdatable viewInfo
-  updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+  updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
   guard $ not $ scenario == Frontend && upiBackendOnly updatePerms
   updates <- lift (mkMultiRowUpdateParser sourceInfo tableInfo updatePerms)
   selection <- lift $ P.multiple <$> GSB.mutationSelectionSet sourceInfo tableInfo

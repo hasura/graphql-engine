@@ -29,8 +29,8 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.SQL.Backend
 
 data RunSQL = RunSQL
-  { _Sql :: !Text,
-    _Source :: !SourceName
+  { _Sql :: Text,
+    _Source :: SourceName
   }
   deriving (Show, Eq)
 

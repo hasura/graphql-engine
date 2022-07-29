@@ -212,8 +212,8 @@ translateBoolExp = \case
     recCurrentTable curr = local (\e -> e {currTableReference = curr}) . translateBoolExp
 
 data LHSField b
-  = LColumn !FieldName
-  | LComputedField !QualifiedFunction !(FunctionArgsExp b (SQLExpression b))
+  = LColumn FieldName
+  | LComputedField QualifiedFunction (FunctionArgsExp b (SQLExpression b))
 
 mkComputedFieldFunctionExp ::
   S.Qual ->

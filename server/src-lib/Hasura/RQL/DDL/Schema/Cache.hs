@@ -567,7 +567,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         |) metadataObject
                   )
               |)
-          >-> (\infos -> M.catMaybes infos >- returnA)
+          >-> (\infos -> catMaybes infos >- returnA)
 
       returnA -< AB.mkAnyBackend $ SourceInfo sourceName tableCache functionCache sourceConfig queryTagsConfig sourceCustomization
 
@@ -702,7 +702,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                     (exists, (invalidationKeys, defaultNC, isNamingConventionEnabled))
             )
         |) (M.fromList $ OMap.toList backendConfigAndSourceMetadata)
-          >-> (\infos -> M.catMaybes infos >- returnA)
+          >-> (\infos -> catMaybes infos >- returnA)
 
       -- then we can build the entire source output
       -- we need to have the table cache of all sources to build cross-sources relationships
@@ -804,7 +804,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                       returnA
                         -<
                           ( remoteSchemaCtx
-                              { _rscPermissions = M.catMaybes $ M.fromList resolvedPermissions,
+                              { _rscPermissions = catMaybes $ M.fromList resolvedPermissions,
                                 _rscRemoteRelationships = OMap.catMaybes <$> OMap.fromList resolvedRelationships
                               },
                             metadataObj
@@ -961,7 +961,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           Inc.keyed
             (\remoteSchemaName infos -> combine -< (remoteSchemaName, infos))
           |) (align baseInfo extraInfo)
-      returnA -< M.catMaybes combinedInfo
+      returnA -< catMaybes combinedInfo
       where
         combine :: (RemoteSchemaName, These a [b]) `arr` Maybe (a, [b])
         combine = proc (remoteSchemaName, infos) -> case infos of

@@ -50,11 +50,11 @@ import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
 
 data PostgresPoolSettings = PostgresPoolSettings
-  { _ppsMaxConnections :: !(Maybe Int),
-    _ppsIdleTimeout :: !(Maybe Int),
-    _ppsRetries :: !(Maybe Int),
-    _ppsPoolTimeout :: !(Maybe NominalDiffTime),
-    _ppsConnectionLifetime :: !(Maybe NominalDiffTime)
+  { _ppsMaxConnections :: Maybe Int,
+    _ppsIdleTimeout :: Maybe Int,
+    _ppsRetries :: Maybe Int,
+    _ppsPoolTimeout :: Maybe NominalDiffTime,
+    _ppsConnectionLifetime :: Maybe NominalDiffTime
   }
   deriving (Show, Eq, Generic)
 
@@ -76,10 +76,10 @@ instance FromJSON PostgresPoolSettings where
       <*> ((o .:? "connection_lifetime") <&> parseConnLifeTime)
 
 data DefaultPostgresPoolSettings = DefaultPostgresPoolSettings
-  { _dppsMaxConnections :: !Int,
-    _dppsIdleTimeout :: !Int,
-    _dppsRetries :: !Int,
-    _dppsConnectionLifetime :: !(Maybe NominalDiffTime)
+  { _dppsMaxConnections :: Int,
+    _dppsIdleTimeout :: Int,
+    _dppsRetries :: Int,
+    _dppsConnectionLifetime :: Maybe NominalDiffTime
   }
   deriving (Show, Eq)
 
@@ -233,11 +233,11 @@ instance ToJSON Q.TxIsolation where
   toJSON Q.Serializable = "serializable"
 
 data PostgresSourceConnInfo = PostgresSourceConnInfo
-  { _psciDatabaseUrl :: !UrlConf,
-    _psciPoolSettings :: !(Maybe PostgresPoolSettings),
-    _psciUsePreparedStatements :: !Bool,
-    _psciIsolationLevel :: !Q.TxIsolation,
-    _psciSslConfiguration :: !(Maybe (PGClientCerts CertVar CertVar))
+  { _psciDatabaseUrl :: UrlConf,
+    _psciPoolSettings :: Maybe PostgresPoolSettings,
+    _psciUsePreparedStatements :: Bool,
+    _psciIsolationLevel :: Q.TxIsolation,
+    _psciSslConfiguration :: Maybe (PGClientCerts CertVar CertVar)
   }
   deriving (Show, Eq, Generic)
 
@@ -260,8 +260,8 @@ instance FromJSON PostgresSourceConnInfo where
       <*> o .:? "ssl_configuration"
 
 data PostgresConnConfiguration = PostgresConnConfiguration
-  { _pccConnectionInfo :: !PostgresSourceConnInfo,
-    _pccReadReplicas :: !(Maybe (NonEmpty PostgresSourceConnInfo))
+  { _pccConnectionInfo :: PostgresSourceConnInfo,
+    _pccReadReplicas :: Maybe (NonEmpty PostgresSourceConnInfo)
   }
   deriving (Show, Eq, Generic)
 

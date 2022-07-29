@@ -16,6 +16,7 @@ describe('getTrackingTableFormPlaceholders', () => {
       select: 'customizeTableName (default)',
       select_by_pk: 'customizeTableName_by_pk (default)',
       select_aggregate: 'customizeTableName_aggregate (default)',
+      select_stream: 'customizeTableName_stream (default)',
       insert: 'insert_customizeTableName (default)',
       insert_one: 'insert_customizeTableName_one (default)',
       update: 'update_customizeTableName (default)',

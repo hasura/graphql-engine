@@ -420,12 +420,13 @@ bqComputedField ::
   m (Maybe (FieldParser n (AnnotatedField 'BigQuery)))
 bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybeT do
   stringifyNumbers <- retrieve Options.soStringifyNumbers
+  roleName <- retrieve scRole
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
     BigQuery.ReturnExistingTable returnTable -> do
       returnTableInfo <- lift $ askTableInfo sourceName returnTable
-      returnTablePermissions <- MaybeT $ tableSelectPermissions returnTableInfo
+      returnTablePermissions <- hoistMaybe $ tableSelectPermissions roleName returnTableInfo
       selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet sourceName returnTableInfo)
       selectArgsParser <- lift $ tableArguments sourceName returnTableInfo
       let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
@@ -444,7 +445,7 @@ bqComputedField sourceName ComputedFieldInfo {..} tableName tableInfo = runMaybe
                   }
     BigQuery.ReturnTableSchema returnFields -> do
       -- Check if the computed field is available in the select permission
-      selectPermissions <- MaybeT $ tableSelectPermissions tableInfo
+      selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       guard $ Map.member _cfiName $ spiComputedFields selectPermissions
       objectTypeName <-
         mkTypename =<< do

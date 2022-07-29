@@ -58,12 +58,12 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- | Internal: Used to collect information about various parameters
 -- of a subscription field's AST as we resolve them to SQL expressions.
 data QueryParametersInfo (b :: BackendType) = QueryParametersInfo
-  { _qpiReusableVariableValues :: !(HashMap G.Name (ColumnValue b)),
-    _qpiSyntheticVariableValues :: !(Seq (ColumnValue b)),
+  { _qpiReusableVariableValues :: HashMap G.Name (ColumnValue b),
+    _qpiSyntheticVariableValues :: Seq (ColumnValue b),
     -- | The session variables that are referenced in the query root fld's AST.
     -- This information is used to determine a cohort's required session
     -- variables
-    _qpiReferencedSessionVariables :: !(Set.HashSet SessionVariable)
+    _qpiReferencedSessionVariables :: Set.HashSet SessionVariable
   }
   deriving (Generic)
   deriving (Semigroup, Monoid) via (GenericSemigroupMonoid (QueryParametersInfo b))

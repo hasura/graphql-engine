@@ -61,25 +61,25 @@ import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data Aliased a = Aliased
-  { aliasedThing :: !a,
-    aliasedAlias :: !Text
+  { aliasedThing :: a,
+    aliasedAlias :: Text
   }
 
 -- | Partial of Database.MySQL.Simple.ConnectInfo
 data ConnSourceConfig = ConnSourceConfig
   { -- | Works with @127.0.0.1@ but not with @localhost@: https://mariadb.com/kb/en/troubleshooting-connection-issues/#localhost-and
-    _cscHost :: !Text,
-    _cscPort :: !Word16,
-    _cscUser :: !Text,
-    _cscPassword :: !Text,
-    _cscDatabase :: !Text,
-    _cscPoolSettings :: !ConnPoolSettings
+    _cscHost :: Text,
+    _cscPort :: Word16,
+    _cscUser :: Text,
+    _cscPassword :: Text,
+    _cscDatabase :: Text,
+    _cscPoolSettings :: ConnPoolSettings
   }
   deriving (Eq, Show, NFData, Generic, Hashable)
 
 data SourceConfig = SourceConfig
-  { scConfig :: !ConnSourceConfig,
-    scConnectionPool :: !(Pool Connection)
+  { scConfig :: ConnSourceConfig,
+    scConnectionPool :: Pool Connection
   }
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
@@ -102,40 +102,40 @@ instance ToErrorValue Column where
   toErrorValue = ErrorValue.squote . unColumn
 
 data ScalarValue
-  = BigValue !Int32 -- Not (!Int64) due to scalar-representation
-  | BinaryValue !ByteString
-  | BitValue !Bool
-  | BlobValue !ByteString
-  | CharValue !Text
-  | DatetimeValue !Text
-  | DateValue !Text
-  | DecimalValue !Double -- Not (!Decimal) due to scalar-representation
-  | DoubleValue !Double
-  | EnumValue !Text
-  | FloatValue !Double -- Not (!Float) due to scalar-representation
-  | GeometrycollectionValue !Text -- TODO
-  | GeometryValue !Text -- TODO
-  | IntValue !Int32
-  | JsonValue !J.Value
-  | LinestringValue !Text -- TODO
-  | MediumValue !Int32 -- (actually, 3-bytes)
-  | MultilinestringValue !Text -- TODO
-  | MultipointValue !Text -- TODO
-  | MultipolygonValue !Text -- TODO
+  = BigValue Int32 -- Not Int64 due to scalar-representation
+  | BinaryValue ByteString
+  | BitValue Bool
+  | BlobValue ByteString
+  | CharValue Text
+  | DatetimeValue Text
+  | DateValue Text
+  | DecimalValue Double -- Not Decimal due to scalar-representation
+  | DoubleValue Double
+  | EnumValue Text
+  | FloatValue Double -- Not Float due to scalar-representation
+  | GeometrycollectionValue Text -- TODO
+  | GeometryValue Text -- TODO
+  | IntValue Int32
+  | JsonValue J.Value
+  | LinestringValue Text -- TODO
+  | MediumValue Int32 -- (actually, 3-bytes)
+  | MultilinestringValue Text -- TODO
+  | MultipointValue Text -- TODO
+  | MultipolygonValue Text -- TODO
   | NullValue
-  | NumericValue !Double -- Not (!Decimal) due to scalar-representation -- TODO: Double check
-  | PointValue !Text -- TODO
-  | PolygonValue !Text -- TODO
-  | SetValue !(Set Text)
-  | SmallValue !Int32 -- Not (!Int16) due to scalar-representation
-  | TextValue !Text
-  | TimestampValue !Text
-  | TimeValue !Text
-  | TinyValue !Int32 -- Not (!Int8) due to scalar-representation
-  | UnknownValue !Text
-  | VarbinaryValue !ByteString
-  | VarcharValue !Text
-  | YearValue !Text
+  | NumericValue Double -- Not Decimal due to scalar-representation -- TODO: Double check
+  | PointValue Text -- TODO
+  | PolygonValue Text -- TODO
+  | SetValue (Set Text)
+  | SmallValue Int32 -- Not Int16 due to scalar-representation
+  | TextValue Text
+  | TimestampValue Text
+  | TimeValue Text
+  | TinyValue Int32 -- Not Int8 due to scalar-representation
+  | UnknownValue Text
+  | VarbinaryValue ByteString
+  | VarcharValue Text
+  | YearValue Text
   deriving (Show, Read, Eq, Ord, Generic, J.ToJSON, J.ToJSONKey, J.FromJSON, Data, NFData, Cacheable)
 
 instance Hashable ScalarValue where
@@ -160,7 +160,7 @@ data Expression
   | OpExpression Op Expression Expression
   | ColumnExpression FieldName
   | -- expression.text(e1, e2, ..)
-    MethodExpression !Expression !Text ![Expression]
+    MethodExpression Expression Text [Expression]
 
 data Top
   = NoTop
@@ -179,14 +179,14 @@ data Op
   | NEQ'
 
 data ConnPoolSettings = ConnPoolSettings
-  { _cscIdleTimeout :: !Word,
-    _cscMaxConnections :: !Word
+  { _cscIdleTimeout :: Word,
+    _cscMaxConnections :: Word
   }
   deriving (Eq, Show, NFData, Generic, Hashable)
 
 data FieldName = FieldName
-  { fName :: !Text,
-    fNameEntity :: !Text
+  { fName :: Text,
+    fNameEntity :: Text
   }
 
 data FieldOrigin
@@ -204,8 +204,8 @@ data Countable name
 
 data Aggregate
   = CountAggregate (Countable FieldName)
-  | OpAggregate !Text [Expression]
-  | TextAggregate !Text
+  | OpAggregate Text [Expression]
+  | TextAggregate Text
 
 data Projection
   = ExpressionProjection (Aliased Expression)
@@ -217,8 +217,8 @@ data Projection
   | ArrayEntityProjection EntityAlias (Aliased [FieldName])
 
 data TableName = TableName
-  { name :: !Text,
-    schema :: !(Maybe Text)
+  { name :: Text,
+    schema :: Maybe Text
   }
 
 instance ToErrorValue TableName where
@@ -230,8 +230,8 @@ data From
   | FromSelect (Aliased Select)
 
 data Reselect = Reselect
-  { reselectProjections :: ![Projection],
-    reselectWhere :: !Where
+  { reselectProjections :: [Projection],
+    reselectWhere :: Where
   }
 
 data JoinAlias = JoinAlias
@@ -241,15 +241,15 @@ data JoinAlias = JoinAlias
 
 data Join = Join
   { -- | For display/debug purposes.
-    joinRightTable :: !EntityAlias,
+    joinRightTable :: EntityAlias,
     -- | Where to pull the data from.
-    joinSelect :: !Select,
+    joinSelect :: Select,
     -- | Type of join to perform in-Haskell.
-    joinType :: !JoinType,
+    joinType :: JoinType,
     -- | Wrap the output in this field name.
-    joinFieldName :: !Text,
-    joinTop :: !Top,
-    joinOffset :: !(Maybe Int)
+    joinFieldName :: Text,
+    joinTop :: Top,
+    joinOffset :: Maybe Int
   }
 
 data JoinType
@@ -285,15 +285,15 @@ data OrderBy = OrderBy
   }
 
 data Select = Select
-  { selectProjections :: !(InsOrdHashSet Projection),
-    selectFrom :: !From,
-    selectJoins :: ![Join],
-    selectWhere :: !Where,
-    selectOrderBy :: !(Maybe (NonEmpty OrderBy)),
-    selectSqlOffset :: !(Maybe Int),
-    selectSqlTop :: !Top,
+  { selectProjections :: InsOrdHashSet Projection,
+    selectFrom :: From,
+    selectJoins :: [Join],
+    selectWhere :: Where,
+    selectOrderBy :: Maybe (NonEmpty OrderBy),
+    selectSqlOffset :: Maybe Int,
+    selectSqlTop :: Top,
     selectGroupBy :: [FieldName],
-    selectFinalWantedFields :: !(Maybe [Text])
+    selectFinalWantedFields :: Maybe [Text]
   }
 
 mkMySQLScalarTypeName :: MonadError QErr m => ScalarType -> m G.Name

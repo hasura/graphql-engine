@@ -89,6 +89,8 @@ export interface CustomRootFields {
   select_by_pk?: string | CustomRootField | null;
   /** Customise the `<table-name>_aggregate` root field */
   select_aggregate?: string | CustomRootField | null;
+  /** Customise the `<table-name>_stream` root field */
+  select_stream?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>` root field */
   insert?: string | CustomRootField | null;
   /** Customise the `insert_<table-name>_one` root field */

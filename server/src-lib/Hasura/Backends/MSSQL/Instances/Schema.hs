@@ -36,7 +36,6 @@ import Hasura.GraphQL.Schema.Parser
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
-import Hasura.GraphQL.Schema.Table
 import Hasura.GraphQL.Schema.Typename (MkTypename)
 import Hasura.GraphQL.Schema.Update qualified as SU
 import Hasura.Name qualified as Name
@@ -131,8 +130,9 @@ msBuildTableUpdateMutationFields ::
   C.GQLNameIdentifier ->
   m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
 msBuildTableUpdateMutationFields scenario sourceName tableName tableInfo gqlName = do
+  roleName <- retrieve scRole
   fieldParsers <- runMaybeT do
-    updatePerms <- MaybeT $ _permUpd <$> tablePermissions tableInfo
+    updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
     let mkBackendUpdate backendUpdateTableInfo =
           (fmap . fmap) BackendUpdate $
             SU.buildUpdateOperators

@@ -212,8 +212,8 @@ instance ToSQL SchemaName where
   toSQL = toSQL . toIdentifier
 
 data QualifiedObject a = QualifiedObject
-  { qSchema :: !SchemaName,
-    qName :: !a
+  { qSchema :: SchemaName,
+    qName :: a
   }
   deriving (Show, Eq, Functor, Ord, Generic, Data)
 
@@ -366,9 +366,9 @@ data PGScalarType
   | PGLquery
   | PGLtxtquery
   | PGArray PGScalarType
-  | PGUnknown !Text
-  | PGCompositeScalar !Text
-  | PGEnumScalar !Text
+  | PGUnknown Text
+  | PGCompositeScalar Text
+  | PGEnumScalar Text
   deriving (Show, Eq, Ord, Generic, Data)
 
 instance NFData PGScalarType
@@ -546,7 +546,7 @@ data PGTypeKind
   | PGKindEnum
   | PGKindRange
   | PGKindPseudo
-  | PGKindUnknown !Text
+  | PGKindUnknown Text
   deriving (Show, Eq, Generic)
 
 instance NFData PGTypeKind
@@ -577,9 +577,9 @@ instance ToJSON PGTypeKind where
     PGKindUnknown t -> String t
 
 data QualifiedPGType = QualifiedPGType
-  { _qptSchema :: !SchemaName,
-    _qptName :: !PGScalarType,
-    _qptType :: !PGTypeKind
+  { _qptSchema :: SchemaName,
+    _qptName :: PGScalarType,
+    _qptType :: PGTypeKind
   }
   deriving (Show, Eq, Generic)
 
@@ -613,18 +613,18 @@ mkFunctionArgScalarType (QualifiedPGType _schema name type') =
 
 -- | Metadata describing SQL functions at the DB level, i.e. below the GraphQL layer.
 data PGRawFunctionInfo = PGRawFunctionInfo
-  { rfiOid :: !OID,
-    rfiHasVariadic :: !Bool,
-    rfiFunctionType :: !FunctionVolatility,
-    rfiReturnTypeSchema :: !SchemaName,
-    rfiReturnTypeName :: !PGScalarType,
-    rfiReturnTypeType :: !PGTypeKind,
-    rfiReturnsSet :: !Bool,
-    rfiInputArgTypes :: ![QualifiedPGType],
-    rfiInputArgNames :: ![FunctionArgName],
-    rfiDefaultArgs :: !Int,
-    rfiReturnsTable :: !Bool,
-    rfiDescription :: !(Maybe PGDescription)
+  { rfiOid :: OID,
+    rfiHasVariadic :: Bool,
+    rfiFunctionType :: FunctionVolatility,
+    rfiReturnTypeSchema :: SchemaName,
+    rfiReturnTypeName :: PGScalarType,
+    rfiReturnTypeType :: PGTypeKind,
+    rfiReturnsSet :: Bool,
+    rfiInputArgTypes :: [QualifiedPGType],
+    rfiInputArgNames :: [FunctionArgName],
+    rfiDefaultArgs :: Int,
+    rfiReturnsTable :: Bool,
+    rfiDescription :: Maybe PGDescription
   }
   deriving (Show, Eq, Generic)
 
