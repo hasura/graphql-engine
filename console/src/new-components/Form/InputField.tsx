@@ -26,10 +26,6 @@ export type InputFieldProps = FieldWrapperPassThroughProps & {
    */
   iconPosition?: 'start' | 'end';
   /**
-   * The input field size
-   */
-  size?: 'full' | 'medium';
-  /**
    * The input field placeholder
    */
   placeholder?: string;
@@ -49,7 +45,6 @@ export type InputFieldProps = FieldWrapperPassThroughProps & {
 
 export const InputField: React.FC<InputFieldProps> = ({
   type = 'text',
-  size = 'full',
   name,
   icon,
   iconPosition = 'start',
@@ -67,12 +62,7 @@ export const InputField: React.FC<InputFieldProps> = ({
 
   const maybeError = get(errors, name) as FieldError | undefined;
   return (
-    <FieldWrapper
-      id={name}
-      {...wrapperProps}
-      className={size === 'medium' ? 'w-1/2 max-w-lg' : 'w-full max-w-xl'}
-      error={maybeError}
-    >
+    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <div className={clsx('relative flex')}>
         {prependLabel !== '' ? (
           <span className="inline-flex items-center h-input rounded-l text-muted font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50 whitespace-nowrap shadow-sm">

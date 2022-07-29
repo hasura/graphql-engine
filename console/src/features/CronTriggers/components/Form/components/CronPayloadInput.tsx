@@ -8,6 +8,8 @@ export const CronPayloadInput = () => {
     showGutter: true,
     tabSize: 2,
     showLineNumbers: true,
+    minLines: 10,
+    maxLines: 10,
   };
 
   return (

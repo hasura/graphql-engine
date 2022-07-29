@@ -32,6 +32,7 @@ import { Button } from '@/new-components/Button';
 - [💠 Form input default value](#-form-input-default-value)
 - [💠 Manually trigger form validation](#-manually-trigger-form-validation)
 - [💠 Demo with all inputs and form reset](#-demo-with-all-inputs-and-form-reset)
+- [💠 Demo with horizontal fields](#-demo-with-horizontal-fields)
 - [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/Form/Form.tsx')
 
 ## 🧰 Overview
@@ -371,10 +372,8 @@ Validation schema with all inputs mandatory:
 ```ts
 const allInputsValidationSchema = z.object({
   inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
-  textareaName: z.string(),
-  selectName: z.enum(['selectValue0', 'selectValue1'], {
-    message: 'Choose between Value 0 & Value 1',
-  }),
+  textareaName: z.string().min(1, { message: 'Mandatory field' }),
+  selectName: z.string().min(1, { message: 'Mandatory field' }),
   checkboxNames: z
     // When nothing is selected, the value is a false boolean
     .union([z.string().array(), z.boolean()])
@@ -395,10 +394,8 @@ const allInputsValidationSchema = z.object({
 
 export const allInputsValidationSchema = z.object({
   inputFieldName: z.string().min(1, { message: 'Mandatory field' }),
-  textareaName: z.string(),
-  selectName: z.enum(['selectValue0', 'selectValue1'], {
-    message: 'Choose between Value 0 & Value 1',
-  }),
+  textareaName: z.string().min(1, { message: 'Mandatory field' }),
+  selectName: z.string().min(1, { message: 'Mandatory field' }),
   checkboxNames: z
     // When nothing is selected, the value is a false boolean
     .union([z.string().array(), z.boolean()])
@@ -416,7 +413,7 @@ export const allInputsValidationSchema = z.object({
   codeEditorFieldName: z.string().min(1, { message: 'Mandatory field' }),
 });
 
-export const TemplateAllInputs = args => {
+export const TemplateAllInputs = horizontalFields => args => {
   const formRef = useRef();
   useEffect(() => {
     if (args && args.triggerValidation) {
@@ -443,12 +440,18 @@ export const TemplateAllInputs = args => {
           <InputField
             name="inputFieldName"
             label="The input field label"
+            description="The input field description"
+            tooltip="The input field tooltip"
             placeholder="Input field placeholder"
+            horizontal={horizontalFields}
           />
           <Textarea
             name="textareaName"
             label="The textarea label"
+            description="The textarea description"
+            tooltip="The textarea tooltip"
             placeholder="Textarea field placeholder"
+            horizontal={horizontalFields}
           />
           <Select
             name="selectName"
@@ -462,11 +465,16 @@ export const TemplateAllInputs = args => {
               { value: 'selectValue2', label: 'Select value 2' },
             ]}
             label="The select label *"
+            description="The select description"
+            tooltip="The select tooltip"
             placeholder="--Select placeholder--"
+            horizontal={horizontalFields}
           />
           <Checkbox
             name="checkboxNames"
             label="The checkbox label *"
+            description="The checkbox description"
+            tooltip="The checkbox tooltip"
             options={[
               { value: 'checkboxValue0', label: 'Checkbox value 0' },
               {
@@ -476,11 +484,14 @@ export const TemplateAllInputs = args => {
               },
               { value: 'checkboxValue2', label: 'Checkbox value 2' },
             ]}
-            orientation={'horizontal'}
+            orientation={horizontalFields ? 'vertical' : 'horizontal'}
+            horizontal={horizontalFields}
           />
           <Radio
             name="radioName"
             label="The radio label *"
+            description="The radio description"
+            tooltip="The radio tooltip"
             options={[
               { value: 'radioValue0', label: 'Radio value 0' },
               {
@@ -490,11 +501,15 @@ export const TemplateAllInputs = args => {
               },
               { value: 'radioValue2', label: 'Radio value 2' },
             ]}
-            orientation={'horizontal'}
+            orientation={horizontalFields ? 'vertical' : 'horizontal'}
+            horizontal={horizontalFields}
           />
           <CodeEditorField
             name="codeEditorFieldName"
             label="The code editor label *"
+            description="The code editor description"
+            tooltip="The code editor tooltip"
+            horizontal={horizontalFields}
           />
           <div className={'flex gap-4'}>
             <Button type={'button'} onClick={() => reset({})}>
@@ -512,5 +527,48 @@ export const TemplateAllInputs = args => {
 };
 
 <Canvas>
-  <Story name="Demo with all inputs">{TemplateAllInputs.bind({})}</Story>
+  <Story name="Demo with all inputs">{TemplateAllInputs(false).bind({})}</Story>
+</Canvas>
+
+### 💠 Form input default value
+
+For this demo, we reuse the `basicFormValidationSchema` from [💠 Basic usage](#-basic-usage).
+
+In this example, the form is automatically filled with the `Hello world !` value for the `inputFieldName` input:
+
+```tsx
+const TemplateFormInputDefaultValue = args => (
+  <Form
+    schema={basicFormValidationSchema}
+    options={{
+      defaultValues: {
+        inputFieldName: 'Hello world !',
+      },
+    }}
+    onSubmit={action('onSubmit')}
+  >
+    {({ control }) => (
+      <div className="space-y-2">
+        <h1 className="text-xl font-semibold mb-xs">Default value</h1>
+        <InputField
+          name="inputFieldName"
+          label="The input field label"
+          placeholder="Input field placeholder"
+        />
+        <Button type={'submit'} mode={'primary'}>
+          Submit
+        </Button>
+        <DevTool control={control} />
+      </div>
+    )}
+  </Form>
+);
+```
+
+### 💠 Demo with horizontal fields
+
+<Canvas>
+  <Story name="Demo with horizontal fields">
+    {TemplateAllInputs(true).bind({})}
+  </Story>
 </Canvas>

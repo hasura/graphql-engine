@@ -10,10 +10,6 @@ export type TextareaProps = FieldWrapperPassThroughProps & {
    */
   name: string;
   /**
-   * The textarea size
-   */
-  size?: 'full' | 'medium';
-  /**
    * The textarea visible rows number
    */
   rowsNumber?: number;
@@ -28,7 +24,6 @@ export type TextareaProps = FieldWrapperPassThroughProps & {
 };
 
 export const Textarea: React.FC<TextareaProps> = ({
-  size = 'full',
   rowsNumber = 3,
   name,
   placeholder,
@@ -43,18 +38,8 @@ export const Textarea: React.FC<TextareaProps> = ({
 
   const maybeError = get(errors, name) as FieldError | undefined;
   return (
-    <FieldWrapper
-      id={name}
-      {...wrapperProps}
-      className={size === 'medium' ? 'w-1/2 max-w-lg' : 'w-full max-w-xl'}
-      error={maybeError}
-    >
-      <div
-        className={clsx(
-          'relative',
-          size === 'medium' ? 'w-1/2 max-w-lg' : 'w-full max-w-xl'
-        )}
-      >
+    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
+      <div className={clsx('relative')}>
         <textarea
           id={name}
           rows={rowsNumber}
