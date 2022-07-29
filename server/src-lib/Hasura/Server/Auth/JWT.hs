@@ -346,7 +346,7 @@ updateJwkRef ::
 updateJwkRef (Logger logger) manager url jwkRef = do
   let urlT = tshow url
       infoMsg = "refreshing JWK from endpoint: " <> urlT
-  liftIO $ logger $ JwkRefreshLog LevelInfo (Just infoMsg) Nothing
+  liftIO $ logger $ JwkRefreshLog LevelDebug (Just infoMsg) Nothing
   res <- try $ do
     req <- liftIO $ HTTP.mkRequestThrow $ tshow url
     let req' = req & over HTTP.headers addDefaultHeaders
