@@ -15,10 +15,10 @@
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Witch</span></span><span> </span><span class="hs-keyword">qualified</span><span>
 </span><span id="line-17"></span><span>
-</span><span id="line-18"></span><span id="local-6989586621689400506"><span id="local-6989586621689400507"></span></span><span class="hs-keyword">data</span><span> </span><span id="Aggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Aggregate"><span class="hs-identifier hs-var">Aggregate</span></a></span></span><span>
+</span><span id="line-18"></span><span id="local-6989586621689403445"><span id="local-6989586621689403446"></span></span><span class="hs-keyword">data</span><span> </span><span id="Aggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Aggregate"><span class="hs-identifier hs-var">Aggregate</span></a></span></span><span>
 </span><span id="line-19"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SingleColumn"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumn"><span class="hs-identifier hs-var">SingleColumn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-type">SingleColumnAggregate</span></a></span><span>
 </span><span id="line-20"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Count"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Count"><span class="hs-identifier hs-var">Count</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#CountAggregate"><span class="hs-identifier hs-type">CountAggregate</span></a></span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cCount"><span id="%24cSingleColumn"><span id="%24tAggregate"><span id="local-6989586621689400475"><span id="local-6989586621689400477"><span id="local-6989586621689400479"><span id="local-6989586621689400481"><span id="local-6989586621689400483"><span id="local-6989586621689400485"><span id="local-6989586621689400487"><span id="local-6989586621689400489"><span id="local-6989586621689400491"><span id="local-6989586621689400493"><span id="local-6989586621689400495"><span id="local-6989586621689400497"><span id="local-6989586621689400499"><span id="local-6989586621689400501"><span class="annot"><span class="annottext">Typeable Aggregate
+</span><span id="line-21"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cCount"><span id="%24cSingleColumn"><span id="%24tAggregate"><span id="local-6989586621689403414"><span id="local-6989586621689403416"><span id="local-6989586621689403418"><span id="local-6989586621689403420"><span id="local-6989586621689403422"><span id="local-6989586621689403424"><span id="local-6989586621689403426"><span id="local-6989586621689403428"><span id="local-6989586621689403430"><span id="local-6989586621689403432"><span id="local-6989586621689403434"><span id="local-6989586621689403436"><span id="local-6989586621689403438"><span id="local-6989586621689403440"><span class="annot"><span class="annottext">Typeable Aggregate
 DataType
 Constr
 Typeable Aggregate
@@ -176,7 +176,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Aggregate -&gt; c Aggregate
 $cp1Data :: Typeable Aggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400467"><span id="local-6989586621689400469"><span class="annot"><span class="annottext">Aggregate -&gt; Aggregate -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403406"><span id="local-6989586621689403408"><span class="annot"><span class="annottext">Aggregate -&gt; Aggregate -&gt; Bool
 (Aggregate -&gt; Aggregate -&gt; Bool)
 -&gt; (Aggregate -&gt; Aggregate -&gt; Bool) -&gt; Eq Aggregate
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -192,7 +192,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep Aggregate x -&gt; Aggregate
 $cfrom :: forall x. Aggregate -&gt; Rep Aggregate x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400448"><span id="local-6989586621689400450"><span id="local-6989586621689400452"><span id="local-6989586621689400454"><span id="local-6989586621689400456"><span id="local-6989586621689400458"><span id="local-6989586621689400460"><span class="annot"><span class="annottext">Eq Aggregate
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403387"><span id="local-6989586621689403389"><span id="local-6989586621689403391"><span id="local-6989586621689403393"><span id="local-6989586621689403395"><span id="local-6989586621689403397"><span id="local-6989586621689403399"><span class="annot"><span class="annottext">Eq Aggregate
 Eq Aggregate
 -&gt; (Aggregate -&gt; Aggregate -&gt; Ordering)
 -&gt; (Aggregate -&gt; Aggregate -&gt; Bool)
@@ -230,7 +230,7 @@ $c&lt; :: Aggregate -&gt; Aggregate -&gt; Bool
 compare :: Aggregate -&gt; Aggregate -&gt; Ordering
 $ccompare :: Aggregate -&gt; Aggregate -&gt; Ordering
 $cp1Ord :: Eq Aggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400441"><span id="local-6989586621689400443"><span id="local-6989586621689400445"><span class="annot"><span class="annottext">Int -&gt; Aggregate -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403380"><span id="local-6989586621689403382"><span id="local-6989586621689403384"><span class="annot"><span class="annottext">Int -&gt; Aggregate -&gt; ShowS
 [Aggregate] -&gt; ShowS
 Aggregate -&gt; String
 (Int -&gt; Aggregate -&gt; ShowS)
@@ -246,7 +246,7 @@ $cshow :: Aggregate -&gt; String
 showsPrec :: Int -&gt; Aggregate -&gt; ShowS
 $cshowsPrec :: Int -&gt; Aggregate -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689400437"><span class="annot"><span class="annottext">Eq Aggregate
+</span><span id="line-22"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689403376"><span class="annot"><span class="annottext">Eq Aggregate
 Eq Aggregate
 -&gt; (Accesses -&gt; Aggregate -&gt; Aggregate -&gt; Bool)
 -&gt; Cacheable Aggregate
@@ -255,7 +255,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Aggregate -&gt; Aggregate -&gt; Bool
 $cunchanged :: Accesses -&gt; Aggregate -&gt; Aggregate -&gt; Bool
 $cp1Cacheable :: Eq Aggregate
-</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400432"><span id="local-6989586621689400434"><span class="annot"><span class="annottext">Value -&gt; Parser [Aggregate]
+</span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403371"><span id="local-6989586621689403373"><span class="annot"><span class="annottext">Value -&gt; Parser [Aggregate]
 Value -&gt; Parser Aggregate
 (Value -&gt; Parser Aggregate)
 -&gt; (Value -&gt; Parser [Aggregate]) -&gt; FromJSON Aggregate
@@ -265,7 +265,7 @@ parseJSONList :: Value -&gt; Parser [Aggregate]
 $cparseJSONList :: Value -&gt; Parser [Aggregate]
 parseJSON :: Value -&gt; Parser Aggregate
 $cparseJSON :: Value -&gt; Parser Aggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400427"><span id="local-6989586621689400429"><span class="annot"><span class="annottext">Int -&gt; Aggregate -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403366"><span id="local-6989586621689403368"><span class="annot"><span class="annottext">Int -&gt; Aggregate -&gt; Int
 Aggregate -&gt; Int
 (Int -&gt; Aggregate -&gt; Int)
 -&gt; (Aggregate -&gt; Int) -&gt; Hashable Aggregate
@@ -274,12 +274,12 @@ hash :: Aggregate -&gt; Int
 $chash :: Aggregate -&gt; Int
 hashWithSalt :: Int -&gt; Aggregate -&gt; Int
 $chashWithSalt :: Int -&gt; Aggregate -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400424"><span class="annot"><span class="annottext">Aggregate -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403363"><span class="annot"><span class="annottext">Aggregate -&gt; ()
 (Aggregate -&gt; ()) -&gt; NFData Aggregate
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Aggregate -&gt; ()
 $crnf :: Aggregate -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400415"><span id="local-6989586621689400417"><span id="local-6989586621689400419"><span id="local-6989586621689400421"><span class="annot"><span class="annottext">[Aggregate] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403354"><span id="local-6989586621689403356"><span id="local-6989586621689403358"><span id="local-6989586621689403360"><span class="annot"><span class="annottext">[Aggregate] -&gt; Value
 [Aggregate] -&gt; Encoding
 Aggregate -&gt; Value
 Aggregate -&gt; Encoding
@@ -305,50 +305,50 @@ $ctoJSON :: Aggregate -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Aggregate"><span class="hs-identifier hs-type">Aggregate</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.Aggregate</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-25"></span><span>  </span><span id="local-6989586621689400411"><span class="annot"><span class="annottext">from :: Aggregate -&gt; Aggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumn"><span class="hs-identifier hs-type">SingleColumn</span></a></span><span> </span><span id="local-6989586621689400409"><span class="annot"><span class="annottext">SingleColumnAggregate
-</span><a href="#local-6989586621689400409"><span class="hs-identifier hs-var">singleColumn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; Aggregate
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621689403350"><span class="annot"><span class="annottext">from :: Aggregate -&gt; Aggregate
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumn"><span class="hs-identifier hs-type">SingleColumn</span></a></span><span> </span><span id="local-6989586621689403348"><span class="annot"><span class="annottext">SingleColumnAggregate
+</span><a href="#local-6989586621689403348"><span class="hs-identifier hs-var">singleColumn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; Aggregate
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.SingleColumn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; SingleColumnAggregate
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregate
-</span><a href="#local-6989586621689400409"><span class="hs-identifier hs-var">singleColumn</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689403348"><span class="hs-identifier hs-var">singleColumn</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Count"><span class="hs-identifier hs-type">Count</span></a></span><span> </span><span class="annot"><span class="annottext">CountAggregate
 </span><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#StarCount"><span class="hs-identifier hs-var">StarCount</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Aggregate
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.StarCount</span></a></span><span>
-</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Count"><span class="hs-identifier hs-type">Count</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#ColumnCount"><span class="hs-identifier hs-type">ColumnCount</span></a></span><span> </span><span id="local-6989586621689400404"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689400404"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnCountAggregate -&gt; Aggregate
+</span><span id="line-27"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Count"><span class="hs-identifier hs-type">Count</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#ColumnCount"><span class="hs-identifier hs-type">ColumnCount</span></a></span><span> </span><span id="local-6989586621689403343"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689403343"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnCountAggregate -&gt; Aggregate
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ColumnCount</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnCountAggregate -&gt; Aggregate)
 -&gt; ColumnCountAggregate -&gt; Aggregate
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnCountAggregate :: ColumnName -&gt; Bool -&gt; ColumnCountAggregate
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ColumnCountAggregate</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_ccaColumn :: ColumnName
-</span><a href="#local-6989586621689400401"><span class="hs-identifier hs-var">_ccaColumn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ColumnName
+</span><a href="#local-6989586621689403340"><span class="hs-identifier hs-var">_ccaColumn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689400404"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_ccaDistinct :: Bool
-</span><a href="#local-6989586621689400400"><span class="hs-identifier hs-var">_ccaDistinct</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689403343"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_ccaDistinct :: Bool
+</span><a href="#local-6989586621689403339"><span class="hs-identifier hs-var">_ccaDistinct</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span class="hs-special">}</span><span>
-</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Count"><span class="hs-identifier hs-type">Count</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#ColumnDistinctCount"><span class="hs-identifier hs-type">ColumnDistinctCount</span></a></span><span> </span><span id="local-6989586621689400398"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689400398"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnCountAggregate -&gt; Aggregate
+</span><span id="line-28"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Count"><span class="hs-identifier hs-type">Count</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#ColumnDistinctCount"><span class="hs-identifier hs-type">ColumnDistinctCount</span></a></span><span> </span><span id="local-6989586621689403337"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689403337"><span class="hs-identifier hs-var">column</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnCountAggregate -&gt; Aggregate
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ColumnCount</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnCountAggregate -&gt; Aggregate)
 -&gt; ColumnCountAggregate -&gt; Aggregate
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnCountAggregate :: ColumnName -&gt; Bool -&gt; ColumnCountAggregate
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ColumnCountAggregate</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_ccaColumn :: ColumnName
-</span><a href="#local-6989586621689400401"><span class="hs-identifier hs-var">_ccaColumn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ColumnName
+</span><a href="#local-6989586621689403340"><span class="hs-identifier hs-var">_ccaColumn</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689400398"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_ccaDistinct :: Bool
-</span><a href="#local-6989586621689400400"><span class="hs-identifier hs-var">_ccaDistinct</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621689403337"><span class="hs-identifier hs-var">column</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_ccaDistinct :: Bool
+</span><a href="#local-6989586621689403339"><span class="hs-identifier hs-var">_ccaDistinct</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span class="hs-special">}</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span id="local-6989586621689400396"><span id="local-6989586621689400397"></span></span><span class="hs-keyword">data</span><span> </span><span id="SingleColumnAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-var">SingleColumnAggregate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SingleColumnAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-var">SingleColumnAggregate</span></a></span></span><span>
+</span><span id="line-30"></span><span id="local-6989586621689403335"><span id="local-6989586621689403336"></span></span><span class="hs-keyword">data</span><span> </span><span id="SingleColumnAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-var">SingleColumnAggregate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SingleColumnAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-var">SingleColumnAggregate</span></a></span></span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_scaFunction"><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; SingleColumnAggregateFunction
 </span><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#_scaFunction"><span class="hs-identifier hs-var hs-var">_scaFunction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregateFunction"><span class="hs-identifier hs-type">SingleColumnAggregateFunction</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-32"></span><span>    </span><span id="_scaColumn"><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; Name
 </span><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#_scaColumn"><span class="hs-identifier hs-var hs-var">_scaColumn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cSingleColumnAggregate"><span id="%24tSingleColumnAggregate"><span id="local-6989586621689400364"><span id="local-6989586621689400366"><span id="local-6989586621689400368"><span id="local-6989586621689400370"><span id="local-6989586621689400372"><span id="local-6989586621689400374"><span id="local-6989586621689400376"><span id="local-6989586621689400378"><span id="local-6989586621689400380"><span id="local-6989586621689400382"><span id="local-6989586621689400384"><span id="local-6989586621689400386"><span id="local-6989586621689400388"><span id="local-6989586621689400390"><span class="annot"><span class="annottext">Typeable SingleColumnAggregate
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cSingleColumnAggregate"><span id="%24tSingleColumnAggregate"><span id="local-6989586621689403303"><span id="local-6989586621689403305"><span id="local-6989586621689403307"><span id="local-6989586621689403309"><span id="local-6989586621689403311"><span id="local-6989586621689403313"><span id="local-6989586621689403315"><span id="local-6989586621689403317"><span id="local-6989586621689403319"><span id="local-6989586621689403321"><span id="local-6989586621689403323"><span id="local-6989586621689403325"><span id="local-6989586621689403327"><span id="local-6989586621689403329"><span class="annot"><span class="annottext">Typeable SingleColumnAggregate
 DataType
 Constr
 Typeable SingleColumnAggregate
@@ -545,7 +545,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; SingleColumnAggregate
 -&gt; c SingleColumnAggregate
 $cp1Data :: Typeable SingleColumnAggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400358"><span id="local-6989586621689400360"><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403297"><span id="local-6989586621689403299"><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool
 (SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool)
 -&gt; (SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool)
 -&gt; Eq SingleColumnAggregate
@@ -563,7 +563,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep SingleColumnAggregate x -&gt; SingleColumnAggregate
 $cfrom :: forall x. SingleColumnAggregate -&gt; Rep SingleColumnAggregate x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400341"><span id="local-6989586621689400343"><span id="local-6989586621689400345"><span id="local-6989586621689400347"><span id="local-6989586621689400349"><span id="local-6989586621689400351"><span id="local-6989586621689400353"><span class="annot"><span class="annottext">Eq SingleColumnAggregate
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403280"><span id="local-6989586621689403282"><span id="local-6989586621689403284"><span id="local-6989586621689403286"><span id="local-6989586621689403288"><span id="local-6989586621689403290"><span id="local-6989586621689403292"><span class="annot"><span class="annottext">Eq SingleColumnAggregate
 Eq SingleColumnAggregate
 -&gt; (SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Ordering)
 -&gt; (SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool)
@@ -608,7 +608,7 @@ $c&lt; :: SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool
 compare :: SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Ordering
 $ccompare :: SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Ordering
 $cp1Ord :: Eq SingleColumnAggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400335"><span id="local-6989586621689400337"><span id="local-6989586621689400339"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregate -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403274"><span id="local-6989586621689403276"><span id="local-6989586621689403278"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregate -&gt; ShowS
 [SingleColumnAggregate] -&gt; ShowS
 SingleColumnAggregate -&gt; String
 (Int -&gt; SingleColumnAggregate -&gt; ShowS)
@@ -624,7 +624,7 @@ $cshow :: SingleColumnAggregate -&gt; String
 showsPrec :: Int -&gt; SingleColumnAggregate -&gt; ShowS
 $cshowsPrec :: Int -&gt; SingleColumnAggregate -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689400332"><span class="annot"><span class="annottext">Eq SingleColumnAggregate
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689403271"><span class="annot"><span class="annottext">Eq SingleColumnAggregate
 Eq SingleColumnAggregate
 -&gt; (Accesses
     -&gt; SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool)
@@ -634,7 +634,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool
 $cunchanged :: Accesses -&gt; SingleColumnAggregate -&gt; SingleColumnAggregate -&gt; Bool
 $cp1Cacheable :: Eq SingleColumnAggregate
-</span><a href="#local-6989586621689400332"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400328"><span id="local-6989586621689400330"><span class="annot"><span class="annottext">Value -&gt; Parser [SingleColumnAggregate]
+</span><a href="#local-6989586621689403271"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403267"><span id="local-6989586621689403269"><span class="annot"><span class="annottext">Value -&gt; Parser [SingleColumnAggregate]
 Value -&gt; Parser SingleColumnAggregate
 (Value -&gt; Parser SingleColumnAggregate)
 -&gt; (Value -&gt; Parser [SingleColumnAggregate])
@@ -645,7 +645,7 @@ parseJSONList :: Value -&gt; Parser [SingleColumnAggregate]
 $cparseJSONList :: Value -&gt; Parser [SingleColumnAggregate]
 parseJSON :: Value -&gt; Parser SingleColumnAggregate
 $cparseJSON :: Value -&gt; Parser SingleColumnAggregate
-</span><a href="#local-6989586621689400328"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400324"><span id="local-6989586621689400326"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregate -&gt; Int
+</span><a href="#local-6989586621689403267"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403263"><span id="local-6989586621689403265"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregate -&gt; Int
 SingleColumnAggregate -&gt; Int
 (Int -&gt; SingleColumnAggregate -&gt; Int)
 -&gt; (SingleColumnAggregate -&gt; Int) -&gt; Hashable SingleColumnAggregate
@@ -654,12 +654,12 @@ hash :: SingleColumnAggregate -&gt; Int
 $chash :: SingleColumnAggregate -&gt; Int
 hashWithSalt :: Int -&gt; SingleColumnAggregate -&gt; Int
 $chashWithSalt :: Int -&gt; SingleColumnAggregate -&gt; Int
-</span><a href="#local-6989586621689400324"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400322"><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; ()
+</span><a href="#local-6989586621689403263"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403261"><span class="annot"><span class="annottext">SingleColumnAggregate -&gt; ()
 (SingleColumnAggregate -&gt; ()) -&gt; NFData SingleColumnAggregate
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: SingleColumnAggregate -&gt; ()
 $crnf :: SingleColumnAggregate -&gt; ()
-</span><a href="#local-6989586621689400322"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400314"><span id="local-6989586621689400316"><span id="local-6989586621689400318"><span id="local-6989586621689400320"><span class="annot"><span class="annottext">[SingleColumnAggregate] -&gt; Value
+</span><a href="#local-6989586621689403261"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403253"><span id="local-6989586621689403255"><span id="local-6989586621689403257"><span id="local-6989586621689403259"><span class="annot"><span class="annottext">[SingleColumnAggregate] -&gt; Value
 [SingleColumnAggregate] -&gt; Encoding
 SingleColumnAggregate -&gt; Value
 SingleColumnAggregate -&gt; Encoding
@@ -682,27 +682,27 @@ toEncoding :: SingleColumnAggregate -&gt; Encoding
 $ctoEncoding :: SingleColumnAggregate -&gt; Encoding
 toJSON :: SingleColumnAggregate -&gt; Value
 $ctoJSON :: SingleColumnAggregate -&gt; Value
-</span><a href="#local-6989586621689400314"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689403253"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-type">SingleColumnAggregate</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.SingleColumnAggregate</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621689400312"><span class="annot"><span class="annottext">from :: SingleColumnAggregate -&gt; SingleColumnAggregate
-</span><a href="#local-6989586621689400312"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-type">SingleColumnAggregate</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689400310"><span id="local-6989586621689400311"><span class="annot"><span class="annottext">Name
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621689403251"><span class="annot"><span class="annottext">from :: SingleColumnAggregate -&gt; SingleColumnAggregate
+</span><a href="#local-6989586621689403251"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregate"><span class="hs-identifier hs-type">SingleColumnAggregate</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689403249"><span id="local-6989586621689403250"><span class="annot"><span class="annottext">Name
 SingleColumnAggregateFunction
 _scaColumn :: Name
 _scaFunction :: SingleColumnAggregateFunction
 _scaColumn :: SingleColumnAggregate -&gt; Name
 _scaFunction :: SingleColumnAggregate -&gt; SingleColumnAggregateFunction
-</span><a href="#local-6989586621689400310"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
+</span><a href="#local-6989586621689403249"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
 -&gt; ColumnName -&gt; SingleColumnAggregate
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.SingleColumnAggregate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SingleColumnAggregateFunction -&gt; SingleColumnAggregateFunction
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
-</span><a href="#local-6989586621689400311"><span class="hs-identifier hs-var">_scaFunction</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
+</span><a href="#local-6989586621689403250"><span class="hs-identifier hs-var">_scaFunction</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; ColumnName
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689400310"><span class="hs-identifier hs-var">_scaColumn</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689403249"><span class="hs-identifier hs-var">_scaColumn</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span id="local-6989586621689400307"><span id="local-6989586621689400308"></span></span><span class="hs-keyword">data</span><span> </span><span id="SingleColumnAggregateFunction"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregateFunction"><span class="hs-identifier hs-var">SingleColumnAggregateFunction</span></a></span></span><span>
+</span><span id="line-40"></span><span id="local-6989586621689403246"><span id="local-6989586621689403247"></span></span><span class="hs-keyword">data</span><span> </span><span id="SingleColumnAggregateFunction"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregateFunction"><span class="hs-identifier hs-var">SingleColumnAggregateFunction</span></a></span></span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Average"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Average"><span class="hs-identifier hs-var">Average</span></a></span></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Max"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Max"><span class="hs-identifier hs-var">Max</span></a></span></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Min"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Min"><span class="hs-identifier hs-var">Min</span></a></span></span><span>
@@ -711,7 +711,7 @@ forall source target. From source target =&gt; source -&gt; target
 </span><span id="line-46"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Sum"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Sum"><span class="hs-identifier hs-var">Sum</span></a></span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VariancePopulation"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#VariancePopulation"><span class="hs-identifier hs-var">VariancePopulation</span></a></span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VarianceSample"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#VarianceSample"><span class="hs-identifier hs-var">VarianceSample</span></a></span></span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cVarianceSample"><span id="%24cVariancePopulation"><span id="%24cSum"><span id="%24cStandardDeviationSample"><span id="%24cStandardDeviationPopulation"><span id="%24cMin"><span id="%24cMax"><span id="%24cAverage"><span id="%24tSingleColumnAggregateFunction"><span id="local-6989586621689400270"><span id="local-6989586621689400272"><span id="local-6989586621689400274"><span id="local-6989586621689400276"><span id="local-6989586621689400278"><span id="local-6989586621689400280"><span id="local-6989586621689400282"><span id="local-6989586621689400284"><span id="local-6989586621689400286"><span id="local-6989586621689400288"><span id="local-6989586621689400290"><span id="local-6989586621689400292"><span id="local-6989586621689400294"><span id="local-6989586621689400296"><span class="annot"><span class="annottext">Typeable SingleColumnAggregateFunction
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cVarianceSample"><span id="%24cVariancePopulation"><span id="%24cSum"><span id="%24cStandardDeviationSample"><span id="%24cStandardDeviationPopulation"><span id="%24cMin"><span id="%24cMax"><span id="%24cAverage"><span id="%24tSingleColumnAggregateFunction"><span id="local-6989586621689403209"><span id="local-6989586621689403211"><span id="local-6989586621689403213"><span id="local-6989586621689403215"><span id="local-6989586621689403217"><span id="local-6989586621689403219"><span id="local-6989586621689403221"><span id="local-6989586621689403223"><span id="local-6989586621689403225"><span id="local-6989586621689403227"><span id="local-6989586621689403229"><span id="local-6989586621689403231"><span id="local-6989586621689403233"><span id="local-6989586621689403235"><span class="annot"><span class="annottext">Typeable SingleColumnAggregateFunction
 DataType
 Constr
 Typeable SingleColumnAggregateFunction
@@ -966,7 +966,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 -&gt; SingleColumnAggregateFunction
 -&gt; c SingleColumnAggregateFunction
 $cp1Data :: Typeable SingleColumnAggregateFunction
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400257"><span id="local-6989586621689400259"><span class="annot"><span class="annottext">SingleColumnAggregateFunction
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403196"><span id="local-6989586621689403198"><span class="annot"><span class="annottext">SingleColumnAggregateFunction
 -&gt; SingleColumnAggregateFunction -&gt; Bool
 (SingleColumnAggregateFunction
  -&gt; SingleColumnAggregateFunction -&gt; Bool)
@@ -1003,7 +1003,7 @@ Rep SingleColumnAggregateFunction x
 $cfrom :: forall x.
 SingleColumnAggregateFunction
 -&gt; Rep SingleColumnAggregateFunction x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400240"><span id="local-6989586621689400242"><span id="local-6989586621689400244"><span id="local-6989586621689400246"><span id="local-6989586621689400248"><span id="local-6989586621689400250"><span id="local-6989586621689400252"><span class="annot"><span class="annottext">Eq SingleColumnAggregateFunction
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403179"><span id="local-6989586621689403181"><span id="local-6989586621689403183"><span id="local-6989586621689403185"><span id="local-6989586621689403187"><span id="local-6989586621689403189"><span id="local-6989586621689403191"><span class="annot"><span class="annottext">Eq SingleColumnAggregateFunction
 Eq SingleColumnAggregateFunction
 -&gt; (SingleColumnAggregateFunction
     -&gt; SingleColumnAggregateFunction -&gt; Ordering)
@@ -1065,7 +1065,7 @@ compare :: SingleColumnAggregateFunction
 $ccompare :: SingleColumnAggregateFunction
 -&gt; SingleColumnAggregateFunction -&gt; Ordering
 $cp1Ord :: Eq SingleColumnAggregateFunction
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400234"><span id="local-6989586621689400236"><span id="local-6989586621689400238"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregateFunction -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403173"><span id="local-6989586621689403175"><span id="local-6989586621689403177"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregateFunction -&gt; ShowS
 [SingleColumnAggregateFunction] -&gt; ShowS
 SingleColumnAggregateFunction -&gt; String
 (Int -&gt; SingleColumnAggregateFunction -&gt; ShowS)
@@ -1081,7 +1081,7 @@ $cshow :: SingleColumnAggregateFunction -&gt; String
 showsPrec :: Int -&gt; SingleColumnAggregateFunction -&gt; ShowS
 $cshowsPrec :: Int -&gt; SingleColumnAggregateFunction -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689400231"><span class="annot"><span class="annottext">Eq SingleColumnAggregateFunction
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689403170"><span class="annot"><span class="annottext">Eq SingleColumnAggregateFunction
 Eq SingleColumnAggregateFunction
 -&gt; (Accesses
     -&gt; SingleColumnAggregateFunction
@@ -1102,7 +1102,7 @@ $cunchanged :: Accesses
 -&gt; SingleColumnAggregateFunction
 -&gt; Bool
 $cp1Cacheable :: Eq SingleColumnAggregateFunction
-</span><a href="#local-6989586621689400231"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400227"><span id="local-6989586621689400229"><span class="annot"><span class="annottext">Value -&gt; Parser [SingleColumnAggregateFunction]
+</span><a href="#local-6989586621689403170"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403166"><span id="local-6989586621689403168"><span class="annot"><span class="annottext">Value -&gt; Parser [SingleColumnAggregateFunction]
 Value -&gt; Parser SingleColumnAggregateFunction
 (Value -&gt; Parser SingleColumnAggregateFunction)
 -&gt; (Value -&gt; Parser [SingleColumnAggregateFunction])
@@ -1113,7 +1113,7 @@ parseJSONList :: Value -&gt; Parser [SingleColumnAggregateFunction]
 $cparseJSONList :: Value -&gt; Parser [SingleColumnAggregateFunction]
 parseJSON :: Value -&gt; Parser SingleColumnAggregateFunction
 $cparseJSON :: Value -&gt; Parser SingleColumnAggregateFunction
-</span><a href="#local-6989586621689400227"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400223"><span id="local-6989586621689400225"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregateFunction -&gt; Int
+</span><a href="#local-6989586621689403166"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403162"><span id="local-6989586621689403164"><span class="annot"><span class="annottext">Int -&gt; SingleColumnAggregateFunction -&gt; Int
 SingleColumnAggregateFunction -&gt; Int
 (Int -&gt; SingleColumnAggregateFunction -&gt; Int)
 -&gt; (SingleColumnAggregateFunction -&gt; Int)
@@ -1123,13 +1123,13 @@ hash :: SingleColumnAggregateFunction -&gt; Int
 $chash :: SingleColumnAggregateFunction -&gt; Int
 hashWithSalt :: Int -&gt; SingleColumnAggregateFunction -&gt; Int
 $chashWithSalt :: Int -&gt; SingleColumnAggregateFunction -&gt; Int
-</span><a href="#local-6989586621689400223"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400221"><span class="annot"><span class="annottext">SingleColumnAggregateFunction -&gt; ()
+</span><a href="#local-6989586621689403162"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403160"><span class="annot"><span class="annottext">SingleColumnAggregateFunction -&gt; ()
 (SingleColumnAggregateFunction -&gt; ())
 -&gt; NFData SingleColumnAggregateFunction
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: SingleColumnAggregateFunction -&gt; ()
 $crnf :: SingleColumnAggregateFunction -&gt; ()
-</span><a href="#local-6989586621689400221"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400213"><span id="local-6989586621689400215"><span id="local-6989586621689400217"><span id="local-6989586621689400219"><span class="annot"><span class="annottext">[SingleColumnAggregateFunction] -&gt; Value
+</span><a href="#local-6989586621689403160"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403152"><span id="local-6989586621689403154"><span id="local-6989586621689403156"><span id="local-6989586621689403158"><span class="annot"><span class="annottext">[SingleColumnAggregateFunction] -&gt; Value
 [SingleColumnAggregateFunction] -&gt; Encoding
 SingleColumnAggregateFunction -&gt; Value
 SingleColumnAggregateFunction -&gt; Encoding
@@ -1152,11 +1152,11 @@ toEncoding :: SingleColumnAggregateFunction -&gt; Encoding
 $ctoEncoding :: SingleColumnAggregateFunction -&gt; Encoding
 toJSON :: SingleColumnAggregateFunction -&gt; Value
 $ctoJSON :: SingleColumnAggregateFunction -&gt; Value
-</span><a href="#local-6989586621689400213"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689403152"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.SingleColumnAggregateFunction</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregateFunction"><span class="hs-identifier hs-type">SingleColumnAggregateFunction</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621689400211"><span class="annot"><span class="annottext">from :: SingleColumnAggregateFunction -&gt; SingleColumnAggregateFunction
-</span><a href="#local-6989586621689400211"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621689403150"><span class="annot"><span class="annottext">from :: SingleColumnAggregateFunction -&gt; SingleColumnAggregateFunction
+</span><a href="#local-6989586621689403150"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Average</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
 </span><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Average"><span class="hs-identifier hs-var">Average</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
@@ -1182,8 +1182,8 @@ $ctoJSON :: SingleColumnAggregateFunction -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#VarianceSample"><span class="hs-identifier hs-var">VarianceSample</span></a></span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#SingleColumnAggregateFunction"><span class="hs-identifier hs-type">SingleColumnAggregateFunction</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.SingleColumnAggregateFunction</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-63"></span><span>  </span><span id="local-6989586621689400201"><span class="annot"><span class="annottext">from :: SingleColumnAggregateFunction -&gt; SingleColumnAggregateFunction
-</span><a href="#local-6989586621689400201"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621689403140"><span class="annot"><span class="annottext">from :: SingleColumnAggregateFunction -&gt; SingleColumnAggregateFunction
+</span><a href="#local-6989586621689403140"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
 </span><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#Average"><span class="hs-identifier hs-var">Average</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.Average</span></a></span><span>
 </span><span id="line-64"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">from</span></span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
@@ -1208,11 +1208,11 @@ $ctoJSON :: SingleColumnAggregateFunction -&gt; Value
 </span><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#VarianceSample"><span class="hs-identifier hs-var">VarianceSample</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SingleColumnAggregateFunction
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.VarianceSample</span></a></span><span>
 </span><span id="line-71"></span><span>
-</span><span id="line-72"></span><span id="local-6989586621689400199"><span id="local-6989586621689400200"></span></span><span class="hs-keyword">data</span><span> </span><span id="CountAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#CountAggregate"><span class="hs-identifier hs-var">CountAggregate</span></a></span></span><span>
+</span><span id="line-72"></span><span id="local-6989586621689403138"><span id="local-6989586621689403139"></span></span><span class="hs-keyword">data</span><span> </span><span id="CountAggregate"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#CountAggregate"><span class="hs-identifier hs-var">CountAggregate</span></a></span></span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StarCount"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#StarCount"><span class="hs-identifier hs-var">StarCount</span></a></span></span><span>
 </span><span id="line-74"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ColumnCount"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#ColumnCount"><span class="hs-identifier hs-var">ColumnCount</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ColumnDistinctCount"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Aggregate.html#ColumnDistinctCount"><span class="hs-identifier hs-var">ColumnDistinctCount</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Column.html#Name"><span class="hs-identifier hs-type">IR.C.Name</span></a></span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumnDistinctCount"><span id="%24cColumnCount"><span id="%24cStarCount"><span id="%24tCountAggregate"><span id="local-6989586621689400170"><span id="local-6989586621689400172"><span id="local-6989586621689400174"><span id="local-6989586621689400176"><span id="local-6989586621689400178"><span id="local-6989586621689400180"><span id="local-6989586621689400182"><span id="local-6989586621689400184"><span id="local-6989586621689400186"><span id="local-6989586621689400188"><span id="local-6989586621689400190"><span id="local-6989586621689400192"><span id="local-6989586621689400194"><span id="local-6989586621689400196"><span class="annot"><span class="annottext">Typeable CountAggregate
+</span><span id="line-76"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cColumnDistinctCount"><span id="%24cColumnCount"><span id="%24cStarCount"><span id="%24tCountAggregate"><span id="local-6989586621689403109"><span id="local-6989586621689403111"><span id="local-6989586621689403113"><span id="local-6989586621689403115"><span id="local-6989586621689403117"><span id="local-6989586621689403119"><span id="local-6989586621689403121"><span id="local-6989586621689403123"><span id="local-6989586621689403125"><span id="local-6989586621689403127"><span id="local-6989586621689403129"><span id="local-6989586621689403131"><span id="local-6989586621689403133"><span id="local-6989586621689403135"><span class="annot"><span class="annottext">Typeable CountAggregate
 DataType
 Constr
 Typeable CountAggregate
@@ -1390,7 +1390,7 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; CountAggregate -&gt; c CountAggregate
 $cp1Data :: Typeable CountAggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400162"><span id="local-6989586621689400164"><span class="annot"><span class="annottext">CountAggregate -&gt; CountAggregate -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403101"><span id="local-6989586621689403103"><span class="annot"><span class="annottext">CountAggregate -&gt; CountAggregate -&gt; Bool
 (CountAggregate -&gt; CountAggregate -&gt; Bool)
 -&gt; (CountAggregate -&gt; CountAggregate -&gt; Bool) -&gt; Eq CountAggregate
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1407,7 +1407,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep CountAggregate x -&gt; CountAggregate
 $cfrom :: forall x. CountAggregate -&gt; Rep CountAggregate x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400145"><span id="local-6989586621689400147"><span id="local-6989586621689400149"><span id="local-6989586621689400151"><span id="local-6989586621689400153"><span id="local-6989586621689400155"><span id="local-6989586621689400157"><span class="annot"><span class="annottext">Eq CountAggregate
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403084"><span id="local-6989586621689403086"><span id="local-6989586621689403088"><span id="local-6989586621689403090"><span id="local-6989586621689403092"><span id="local-6989586621689403094"><span id="local-6989586621689403096"><span class="annot"><span class="annottext">Eq CountAggregate
 Eq CountAggregate
 -&gt; (CountAggregate -&gt; CountAggregate -&gt; Ordering)
 -&gt; (CountAggregate -&gt; CountAggregate -&gt; Bool)
@@ -1445,7 +1445,7 @@ $c&lt; :: CountAggregate -&gt; CountAggregate -&gt; Bool
 compare :: CountAggregate -&gt; CountAggregate -&gt; Ordering
 $ccompare :: CountAggregate -&gt; CountAggregate -&gt; Ordering
 $cp1Ord :: Eq CountAggregate
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400139"><span id="local-6989586621689400141"><span id="local-6989586621689400143"><span class="annot"><span class="annottext">Int -&gt; CountAggregate -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403078"><span id="local-6989586621689403080"><span id="local-6989586621689403082"><span class="annot"><span class="annottext">Int -&gt; CountAggregate -&gt; ShowS
 [CountAggregate] -&gt; ShowS
 CountAggregate -&gt; String
 (Int -&gt; CountAggregate -&gt; ShowS)
@@ -1461,7 +1461,7 @@ $cshow :: CountAggregate -&gt; String
 showsPrec :: Int -&gt; CountAggregate -&gt; ShowS
 $cshowsPrec :: Int -&gt; CountAggregate -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689400136"><span class="annot"><span class="annottext">Eq CountAggregate
+</span><span id="line-77"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689403075"><span class="annot"><span class="annottext">Eq CountAggregate
 Eq CountAggregate
 -&gt; (Accesses -&gt; CountAggregate -&gt; CountAggregate -&gt; Bool)
 -&gt; Cacheable CountAggregate
@@ -1470,7 +1470,7 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; CountAggregate -&gt; CountAggregate -&gt; Bool
 $cunchanged :: Accesses -&gt; CountAggregate -&gt; CountAggregate -&gt; Bool
 $cp1Cacheable :: Eq CountAggregate
-</span><a href="#local-6989586621689400136"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400132"><span id="local-6989586621689400134"><span class="annot"><span class="annottext">Value -&gt; Parser [CountAggregate]
+</span><a href="#local-6989586621689403075"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403071"><span id="local-6989586621689403073"><span class="annot"><span class="annottext">Value -&gt; Parser [CountAggregate]
 Value -&gt; Parser CountAggregate
 (Value -&gt; Parser CountAggregate)
 -&gt; (Value -&gt; Parser [CountAggregate]) -&gt; FromJSON CountAggregate
@@ -1480,7 +1480,7 @@ parseJSONList :: Value -&gt; Parser [CountAggregate]
 $cparseJSONList :: Value -&gt; Parser [CountAggregate]
 parseJSON :: Value -&gt; Parser CountAggregate
 $cparseJSON :: Value -&gt; Parser CountAggregate
-</span><a href="#local-6989586621689400132"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400128"><span id="local-6989586621689400130"><span class="annot"><span class="annottext">Int -&gt; CountAggregate -&gt; Int
+</span><a href="#local-6989586621689403071"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403067"><span id="local-6989586621689403069"><span class="annot"><span class="annottext">Int -&gt; CountAggregate -&gt; Int
 CountAggregate -&gt; Int
 (Int -&gt; CountAggregate -&gt; Int)
 -&gt; (CountAggregate -&gt; Int) -&gt; Hashable CountAggregate
@@ -1489,12 +1489,12 @@ hash :: CountAggregate -&gt; Int
 $chash :: CountAggregate -&gt; Int
 hashWithSalt :: Int -&gt; CountAggregate -&gt; Int
 $chashWithSalt :: Int -&gt; CountAggregate -&gt; Int
-</span><a href="#local-6989586621689400128"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400126"><span class="annot"><span class="annottext">CountAggregate -&gt; ()
+</span><a href="#local-6989586621689403067"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403065"><span class="annot"><span class="annottext">CountAggregate -&gt; ()
 (CountAggregate -&gt; ()) -&gt; NFData CountAggregate
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: CountAggregate -&gt; ()
 $crnf :: CountAggregate -&gt; ()
-</span><a href="#local-6989586621689400126"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689400118"><span id="local-6989586621689400120"><span id="local-6989586621689400122"><span id="local-6989586621689400124"><span class="annot"><span class="annottext">[CountAggregate] -&gt; Value
+</span><a href="#local-6989586621689403065"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689403057"><span id="local-6989586621689403059"><span id="local-6989586621689403061"><span id="local-6989586621689403063"><span class="annot"><span class="annottext">[CountAggregate] -&gt; Value
 [CountAggregate] -&gt; Encoding
 CountAggregate -&gt; Value
 CountAggregate -&gt; Encoding
@@ -1517,5 +1517,5 @@ toEncoding :: CountAggregate -&gt; Encoding
 $ctoEncoding :: CountAggregate -&gt; Encoding
 toJSON :: CountAggregate -&gt; Value
 $ctoJSON :: CountAggregate -&gt; Value
-</span><a href="#local-6989586621689400118"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689403057"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-78"></span></pre></body></html>

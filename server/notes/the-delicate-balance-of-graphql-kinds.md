@@ -1,7 +1,7 @@
 This note is in [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L183).
 It is referenced at:
-  - line 324 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L324)
-  - line 381 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L381)
+  - line 325 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L325)
+  - line 382 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L382)
   - line 134 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L134)
   - line 172 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L172)
 

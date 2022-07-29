@@ -1,7 +1,7 @@
 This note is in [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L334).
 It is referenced at:
-  - line 223 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L223)
-  - line 279 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L279)
+  - line 224 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L224)
+  - line 280 of [Hasura.GraphQL.Parser.Internal.Parser](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Internal/Parser.hs#L280)
   - line 450 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L450)
   - line 473 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L473)
   - line 485 of [Hasura.GraphQL.Parser.Schema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/GraphQL/Parser/Schema.hs#L485)
