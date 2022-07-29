@@ -63,8 +63,8 @@ instance Hashable MSPool.ConnectionString
 instance NFData MSPool.ConnectionString
 
 data InputConnectionString
-  = RawString !MSPool.ConnectionString
-  | FromEnvironment !Text
+  = RawString MSPool.ConnectionString
+  | FromEnvironment Text
   deriving stock (Show, Eq, Generic)
 
 instance Cacheable InputConnectionString
@@ -87,8 +87,8 @@ instance FromJSON InputConnectionString where
       _ -> fail "one of string or object must be provided"
 
 data MSSQLPoolSettings = MSSQLPoolSettings
-  { _mpsMaxConnections :: !Int,
-    _mpsIdleTimeout :: !Int
+  { _mpsMaxConnections :: Int,
+    _mpsIdleTimeout :: Int
   }
   deriving (Show, Eq, Generic)
 
@@ -114,8 +114,8 @@ defaultMSSQLPoolSettings =
     }
 
 data MSSQLConnectionInfo = MSSQLConnectionInfo
-  { _mciConnectionString :: !InputConnectionString,
-    _mciPoolSettings :: !MSSQLPoolSettings
+  { _mciConnectionString :: InputConnectionString,
+    _mciPoolSettings :: MSSQLPoolSettings
   }
   deriving (Show, Eq, Generic)
 
@@ -134,8 +134,8 @@ instance FromJSON MSSQLConnectionInfo where
       <*> o .:? "pool_settings" .!= defaultMSSQLPoolSettings
 
 data MSSQLConnConfiguration = MSSQLConnConfiguration
-  { _mccConnectionInfo :: !MSSQLConnectionInfo,
-    _mccReadReplicas :: !(Maybe (NonEmpty MSSQLConnectionInfo))
+  { _mccConnectionInfo :: MSSQLConnectionInfo,
+    _mccReadReplicas :: Maybe (NonEmpty MSSQLConnectionInfo)
   }
   deriving (Show, Eq, Generic)
 
@@ -204,8 +204,8 @@ mkMSSQLExecCtx pool =
     }
 
 data MSSQLSourceConfig = MSSQLSourceConfig
-  { _mscConnectionString :: !MSPool.ConnectionString,
-    _mscExecCtx :: !MSSQLExecCtx
+  { _mscConnectionString :: MSPool.ConnectionString,
+    _mscExecCtx :: MSSQLExecCtx
   }
   deriving (Generic)
 

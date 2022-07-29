@@ -42,8 +42,8 @@ newtype Scope = Scope {unScope :: T.Text}
   deriving (Show, Eq, IsString)
 
 data GoogleAccessTokenRequest = GoogleAccessTokenRequest
-  { _gatrGrantType :: !Text,
-    _gatrAssertion :: !Text
+  { _gatrGrantType :: Text,
+    _gatrAssertion :: Text
   }
   deriving (Show, Eq)
 

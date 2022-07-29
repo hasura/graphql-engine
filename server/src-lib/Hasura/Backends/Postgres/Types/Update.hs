@@ -124,11 +124,11 @@ isEmpty =
 --
 -- See <https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/update.html#postgres-update-mutation Update Mutations User docs>
 data UpdateOpExpression v
-  = UpdateSet !v
-  | UpdateInc !v
-  | UpdateAppend !v
-  | UpdatePrepend !v
-  | UpdateDeleteKey !v
-  | UpdateDeleteElem !v
-  | UpdateDeleteAtPath ![v]
+  = UpdateSet v
+  | UpdateInc v
+  | UpdateAppend v
+  | UpdatePrepend v
+  | UpdateDeleteKey v
+  | UpdateDeleteElem v
+  | UpdateDeleteAtPath [v]
   deriving (Functor, Foldable, Traversable, Generic, Data, Show, Eq)

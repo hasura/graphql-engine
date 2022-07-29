@@ -29,17 +29,17 @@ import Hasura.Prelude
 -- are further subdivided into individual error codes. Even if a particular status code is not known
 -- to the application, it’s possible to determine its class and handle it appropriately.
 data PGErrorType
-  = PGDataException !(Maybe (PGErrorCode PGDataException))
-  | PGIntegrityConstraintViolation !(Maybe (PGErrorCode PGIntegrityConstraintViolation))
-  | PGSyntaxErrorOrAccessRuleViolation !(Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
-  | PGTransactionRollback !(Maybe (PGErrorCode PGTransactionRollback))
+  = PGDataException (Maybe (PGErrorCode PGDataException))
+  | PGIntegrityConstraintViolation (Maybe (PGErrorCode PGIntegrityConstraintViolation))
+  | PGSyntaxErrorOrAccessRuleViolation (Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation))
+  | PGTransactionRollback (Maybe (PGErrorCode PGTransactionRollback))
   deriving (Show, Eq)
 
 data PGErrorCode a
   = -- | represents errors that have the non-specific @000@ status code
     PGErrorGeneric
   | -- | represents errors with a known, more specific status code
-    PGErrorSpecific !a
+    PGErrorSpecific a
   deriving (Show, Eq, Functor)
 
 data PGDataException

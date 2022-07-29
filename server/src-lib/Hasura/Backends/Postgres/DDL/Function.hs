@@ -54,8 +54,8 @@ data FunctionIntegrityError
   | FunctionReturnNotCompositeType
   | FunctionReturnNotTable
   | NonVolatileFunctionAsMutation
-  | FunctionSessionArgumentNotJSON !FunctionArgName
-  | FunctionInvalidSessionArgument !FunctionArgName
+  | FunctionSessionArgumentNotJSON FunctionArgName
+  | FunctionInvalidSessionArgument FunctionArgName
   | FunctionInvalidArgumentNames [FunctionArgName]
   deriving (Show, Eq)
 

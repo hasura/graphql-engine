@@ -98,24 +98,24 @@ recordSetToEncJSON cardinality DataLoader.RecordSet {rows} =
     encJFromOutputValue outputValue =
       case outputValue of
         DataLoader.NullOutputValue -> encJFromJValue Aeson.Null
-        DataLoader.DecimalOutputValue !i -> encJFromJValue i
-        DataLoader.BigDecimalOutputValue !i -> encJFromJValue i
-        DataLoader.FloatOutputValue !i -> encJFromJValue i
-        DataLoader.TextOutputValue !i -> encJFromJValue i
-        DataLoader.BytesOutputValue !i -> encJFromJValue i
-        DataLoader.DateOutputValue !i -> encJFromJValue i
-        DataLoader.TimestampOutputValue !i -> encJFromJValue i
-        DataLoader.TimeOutputValue !i -> encJFromJValue i
-        DataLoader.DatetimeOutputValue !i -> encJFromJValue i
-        DataLoader.GeographyOutputValue !i -> encJFromJValue i
-        DataLoader.BoolOutputValue !i -> encJFromJValue i
-        DataLoader.IntegerOutputValue !i -> encJFromJValue i
-        DataLoader.ArrayOutputValue !vector ->
+        DataLoader.DecimalOutputValue i -> encJFromJValue i
+        DataLoader.BigDecimalOutputValue i -> encJFromJValue i
+        DataLoader.FloatOutputValue i -> encJFromJValue i
+        DataLoader.TextOutputValue i -> encJFromJValue i
+        DataLoader.BytesOutputValue i -> encJFromJValue i
+        DataLoader.DateOutputValue i -> encJFromJValue i
+        DataLoader.TimestampOutputValue i -> encJFromJValue i
+        DataLoader.TimeOutputValue i -> encJFromJValue i
+        DataLoader.DatetimeOutputValue i -> encJFromJValue i
+        DataLoader.GeographyOutputValue i -> encJFromJValue i
+        DataLoader.BoolOutputValue i -> encJFromJValue i
+        DataLoader.IntegerOutputValue i -> encJFromJValue i
+        DataLoader.ArrayOutputValue vector ->
           encJFromList (toList (fmap encJFromOutputValue vector))
         -- Really, the case below shouldn't be happening. But if it
         -- does, it's not a problem either. The output will just have
         -- a record in it.
-        DataLoader.RecordOutputValue !record -> encJFromRecord record
+        DataLoader.RecordOutputValue record -> encJFromRecord record
 
 -- mutation
 

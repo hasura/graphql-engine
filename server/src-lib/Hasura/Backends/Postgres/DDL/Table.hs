@@ -31,14 +31,14 @@ import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data EnumTableIntegrityError (b :: BackendType)
-  = EnumTablePostgresError !Text
+  = EnumTablePostgresError Text
   | EnumTableMissingPrimaryKey
-  | EnumTableMultiColumnPrimaryKey ![PGCol]
-  | EnumTableNonTextualPrimaryKey !(RawColumnInfo b)
+  | EnumTableMultiColumnPrimaryKey [PGCol]
+  | EnumTableNonTextualPrimaryKey (RawColumnInfo b)
   | EnumTableNoEnumValues
-  | EnumTableInvalidEnumValueNames !(NE.NonEmpty Text)
-  | EnumTableNonTextualCommentColumn !(RawColumnInfo b)
-  | EnumTableTooManyColumns ![PGCol]
+  | EnumTableInvalidEnumValueNames (NE.NonEmpty Text)
+  | EnumTableNonTextualCommentColumn (RawColumnInfo b)
+  | EnumTableTooManyColumns [PGCol]
 
 fetchAndValidateEnumValues ::
   forall pgKind m.

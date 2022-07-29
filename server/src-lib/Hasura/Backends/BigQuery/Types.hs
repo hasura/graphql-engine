@@ -100,17 +100,17 @@ import Language.Haskell.TH.Syntax
 import Text.ParserCombinators.ReadP (eof, readP_to_S)
 
 data Select = Select
-  { selectTop :: !Top,
-    selectAsStruct :: !AsStruct,
-    selectProjections :: !(NonEmpty Projection),
-    selectFrom :: !From,
-    selectJoins :: ![Join],
-    selectWhere :: !Where,
-    selectOrderBy :: !(Maybe (NonEmpty OrderBy)),
-    selectOffset :: !(Maybe Expression),
+  { selectTop :: Top,
+    selectAsStruct :: AsStruct,
+    selectProjections :: NonEmpty Projection,
+    selectFrom :: From,
+    selectJoins :: [Join],
+    selectWhere :: Where,
+    selectOrderBy :: Maybe (NonEmpty OrderBy),
+    selectOffset :: Maybe Expression,
     selectGroupBy :: [FieldName],
-    selectFinalWantedFields :: !(Maybe [Text]),
-    selectCardinality :: !Cardinality
+    selectFinalWantedFields :: Maybe [Text],
+    selectCardinality :: Cardinality
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
@@ -129,7 +129,7 @@ instance NFData Select
 -- implemented in Hasura.Backends.BigQuery.FromIr.simulateDistinctOn
 data PartitionableSelect = PartitionableSelect
   { pselectFinalize :: Maybe [FieldName] -> Select,
-    pselectFrom :: !From
+    pselectFrom :: From
   }
 
 simpleSelect :: Select -> PartitionableSelect
@@ -146,9 +146,9 @@ withExtraPartitionFields :: PartitionableSelect -> [FieldName] -> Select
 withExtraPartitionFields PartitionableSelect {..} = pselectFinalize . Just
 
 data ArrayAgg = ArrayAgg
-  { arrayAggProjections :: !(NonEmpty Projection),
-    arrayAggOrderBy :: !(Maybe (NonEmpty OrderBy)),
-    arrayAggTop :: !Top
+  { arrayAggProjections :: NonEmpty Projection,
+    arrayAggOrderBy :: Maybe (NonEmpty OrderBy),
+    arrayAggTop :: Top
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
@@ -161,8 +161,8 @@ instance Cacheable ArrayAgg
 instance NFData ArrayAgg
 
 data Reselect = Reselect
-  { reselectProjections :: !(NonEmpty Projection),
-    reselectWhere :: !Where
+  { reselectProjections :: NonEmpty Projection,
+    reselectWhere :: Where
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
@@ -277,13 +277,13 @@ instance ToJSON WindowFunction
 instance NFData WindowFunction
 
 data Join = Join
-  { joinSource :: !JoinSource,
-    joinAlias :: !EntityAlias,
+  { joinSource :: JoinSource,
+    joinAlias :: EntityAlias,
     joinOn :: [(FieldName, FieldName)],
-    joinProvenance :: !JoinProvenance,
-    joinFieldName :: !Text,
-    joinExtractPath :: !(Maybe Text),
-    joinRightTable :: !EntityAlias
+    joinProvenance :: JoinProvenance,
+    joinFieldName :: Text,
+    joinExtractPath :: Maybe Text,
+    joinRightTable :: EntityAlias
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
@@ -407,7 +407,7 @@ data Expression
   | OpExpression Op Expression Expression
   | ListExpression [Expression]
   | CastExpression Expression ScalarType
-  | FunctionExpression !FunctionName [Expression]
+  | FunctionExpression FunctionName [Expression]
   | ConditionalProjection Expression FieldName
   | -- | A function input argument expression with argument name
     -- `argument_name` => 'argument_value'
@@ -440,9 +440,9 @@ instance NFData JsonPath
 
 data Aggregate
   = CountAggregate (Countable FieldName)
-  | OpAggregates !Text (NonEmpty (Text, Expression))
-  | OpAggregate !Text Expression
-  | TextAggregate !Text
+  | OpAggregates Text (NonEmpty (Text, Expression))
+  | OpAggregate Text Expression
+  | TextAggregate Text
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
 instance FromJSON Aggregate
@@ -542,8 +542,8 @@ instance ToJSON JsonFieldSpec
 instance NFData JsonFieldSpec
 
 data Aliased a = Aliased
-  { aliasedThing :: !a,
-    aliasedAlias :: !Text
+  { aliasedThing :: a,
+    aliasedAlias :: Text
   }
   deriving (Eq, Show, Generic, Data, Lift, Functor)
 
@@ -595,7 +595,7 @@ instance ToErrorValue TableName where
 
 data FieldName = FieldName
   { fieldName :: Text,
-    fieldNameEntity :: !Text
+    fieldNameEntity :: Text
   }
   deriving (Eq, Ord, Show, Generic, Data, Lift)
 
@@ -682,22 +682,22 @@ instance NFData Op
 data Value
   = NullValue
   | -- | 64-bit <https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#integer_type>
-    IntegerValue !Int64
+    IntegerValue Int64
   | -- | Fixed precision <https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#decimal_types>
-    DecimalValue !Decimal
+    DecimalValue Decimal
   | -- | Fixed precision <https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#decimal_types>
-    BigDecimalValue !BigDecimal
+    BigDecimalValue BigDecimal
   | -- | Floating point <https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#floating_point_types>
-    FloatValue !Float64
-  | GeographyValue !Geography
-  | StringValue !Text
-  | BytesValue !Base64
-  | BoolValue !Bool
-  | ArrayValue !(Vector Value)
-  | TimestampValue !Timestamp
-  | DateValue !Date
-  | TimeValue !Time
-  | DatetimeValue !Datetime
+    FloatValue Float64
+  | GeographyValue Geography
+  | StringValue Text
+  | BytesValue Base64
+  | BoolValue Bool
+  | ArrayValue (Vector Value)
+  | TimestampValue Timestamp
+  | DateValue Date
+  | TimeValue Time
+  | DatetimeValue Datetime
   deriving (Show, Eq, Ord, Generic, Data, Lift)
 
 instance FromJSON Value
@@ -846,60 +846,60 @@ instance ToErrorValue ScalarType where
 -- Unified table metadata
 
 data UnifiedMetadata = UnifiedMetadata
-  { tables :: ![UnifiedTableMetadata]
+  { tables :: [UnifiedTableMetadata]
   }
   deriving (Eq, Ord, Show)
 
 data UnifiedTableMetadata = UnifiedTableMetadata
-  { table :: !UnifiedTableName,
-    object_relationships :: ![UnifiedObjectRelationship],
-    array_relationships :: ![UnifiedArrayRelationship],
-    columns :: ![UnifiedColumn]
+  { table :: UnifiedTableName,
+    object_relationships :: [UnifiedObjectRelationship],
+    array_relationships :: [UnifiedArrayRelationship],
+    columns :: [UnifiedColumn]
   }
   deriving (Eq, Ord, Show)
 
 data UnifiedColumn = UnifiedColumn
-  { name :: !Text,
-    type' :: !ScalarType
+  { name :: Text,
+    type' :: ScalarType
   }
   deriving (Eq, Ord, Show)
 
 data UnifiedTableName = UnifiedTableName
-  { schema :: !Text,
-    name :: !Text
+  { schema :: Text,
+    name :: Text
   }
   deriving (Eq, Ord, Show)
 
 data UnifiedObjectRelationship = UnifiedObjectRelationship
-  { using :: !UnifiedUsing,
-    name :: !Text
+  { using :: UnifiedUsing,
+    name :: Text
   }
   deriving (Eq, Ord, Show)
 
 data UnifiedArrayRelationship = UnifiedArrayRelationship
-  { using :: !UnifiedUsing,
-    name :: !Text
+  { using :: UnifiedUsing,
+    name :: Text
   }
   deriving (Eq, Ord, Show)
 
 data UnifiedUsing = UnifiedUsing
-  { foreign_key_constraint_on :: !UnifiedOn
+  { foreign_key_constraint_on :: UnifiedOn
   }
   deriving (Eq, Ord, Show)
 
 data UnifiedOn = UnifiedOn
-  { table :: !UnifiedTableName,
-    column :: !Text
+  { table :: UnifiedTableName,
+    column :: Text
   }
   deriving (Eq, Ord, Show)
 
 data BooleanOperators a
-  = ASTContains !a
-  | ASTEquals !a
-  | ASTTouches !a
-  | ASTWithin !a
-  | ASTIntersects !a
-  | ASTDWithin !(DWithinGeogOp a)
+  = ASTContains a
+  | ASTEquals a
+  | ASTTouches a
+  | ASTWithin a
+  | ASTIntersects a
+  | ASTDWithin (DWithinGeogOp a)
   deriving stock (Eq, Generic, Foldable, Functor, Traversable, Show)
 
 instance NFData a => NFData (BooleanOperators a)

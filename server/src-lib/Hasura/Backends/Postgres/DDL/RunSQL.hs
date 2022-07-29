@@ -64,10 +64,10 @@ import Text.Regex.TDFA qualified as TDFA
 
 data RunSQL = RunSQL
   { rSql :: Text,
-    rSource :: !SourceName,
-    rCascade :: !Bool,
-    rCheckMetadataConsistency :: !(Maybe Bool),
-    rTxAccessMode :: !Q.TxAccess
+    rSource :: SourceName,
+    rCascade :: Bool,
+    rCheckMetadataConsistency :: Maybe Bool,
+    rTxAccessMode :: Q.TxAccess
   }
   deriving (Show, Eq)
 
