@@ -1095,7 +1095,7 @@ test-suite graphql-engine-tests
     Test.QuickCheck.Extended
 
 test-suite tests-hspec
-  import: common-all, common-exe
+  import: common-all
   type: exitcode-stdio-1.0
   build-tool-depends: hspec-discover:hspec-discover
   build-depends:
@@ -1183,7 +1183,11 @@ test-suite tests-hspec
   hs-source-dirs: tests-hspec
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
-  ghc-options: -Wall -O0 -threaded
+  ghc-options:
+    -Wall -O0
+    -threaded
+    -rtsopts "-with-rtsopts=-N"
+
   main-is: Spec.hs
   other-modules:
     SpecHook
