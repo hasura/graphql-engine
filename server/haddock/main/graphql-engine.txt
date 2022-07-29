@@ -2387,17 +2387,17 @@ module Hasura.Backends.Postgres.SQL.Error
 --   application, it’s possible to determine its class and handle it
 --   appropriately.
 data PGErrorType
-PGDataException :: !Maybe (PGErrorCode PGDataException) -> PGErrorType
-PGIntegrityConstraintViolation :: !Maybe (PGErrorCode PGIntegrityConstraintViolation) -> PGErrorType
-PGSyntaxErrorOrAccessRuleViolation :: !Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation) -> PGErrorType
-PGTransactionRollback :: !Maybe (PGErrorCode PGTransactionRollback) -> PGErrorType
+PGDataException :: Maybe (PGErrorCode PGDataException) -> PGErrorType
+PGIntegrityConstraintViolation :: Maybe (PGErrorCode PGIntegrityConstraintViolation) -> PGErrorType
+PGSyntaxErrorOrAccessRuleViolation :: Maybe (PGErrorCode PGSyntaxErrorOrAccessRuleViolation) -> PGErrorType
+PGTransactionRollback :: Maybe (PGErrorCode PGTransactionRollback) -> PGErrorType
 data PGErrorCode a
 
 -- | represents errors that have the non-specific <tt>000</tt> status code
 PGErrorGeneric :: PGErrorCode a
 
 -- | represents errors with a known, more specific status code
-PGErrorSpecific :: !a -> PGErrorCode a
+PGErrorSpecific :: a -> PGErrorCode a
 data PGDataException
 PGInvalidDatetimeFormat :: PGDataException
 PGInvalidParameterValue :: PGDataException
@@ -7901,11 +7901,11 @@ dmlTxErrorHandler :: PGTxErr -> QErr
 --   user. All other errors are considered internal errors.
 mkTxErrorHandler :: (PGErrorType -> Bool) -> PGTxErr -> QErr
 data PGSourceConfig
-PGSourceConfig :: !PGExecCtx -> !ConnInfo -> !Maybe (NonEmpty ConnInfo) -> !IO () -> PGSourceConfig
-[_pscExecCtx] :: PGSourceConfig -> !PGExecCtx
-[_pscConnInfo] :: PGSourceConfig -> !ConnInfo
-[_pscReadReplicaConnInfos] :: PGSourceConfig -> !Maybe (NonEmpty ConnInfo)
-[_pscPostDropHook] :: PGSourceConfig -> !IO ()
+PGSourceConfig :: PGExecCtx -> ConnInfo -> Maybe (NonEmpty ConnInfo) -> IO () -> PGSourceConfig
+[_pscExecCtx] :: PGSourceConfig -> PGExecCtx
+[_pscConnInfo] :: PGSourceConfig -> ConnInfo
+[_pscReadReplicaConnInfos] :: PGSourceConfig -> Maybe (NonEmpty ConnInfo)
+[_pscPostDropHook] :: PGSourceConfig -> IO ()
 runPgSourceReadTx :: (MonadIO m, MonadBaseControl IO m) => PGSourceConfig -> TxET QErr m a -> m (Either QErr a)
 runPgSourceWriteTx :: (MonadIO m, MonadBaseControl IO m) => PGSourceConfig -> TxET QErr m a -> m (Either QErr a)
 instance GHC.Generics.Generic Hasura.Backends.Postgres.Execute.Types.PGSourceConfig
@@ -7920,18 +7920,18 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.Execute.Types.P
 --   connection, pool, and replica related settings.
 module Hasura.Backends.Postgres.Connection.Settings
 data PostgresPoolSettings
-PostgresPoolSettings :: !Maybe Int -> !Maybe Int -> !Maybe Int -> !Maybe NominalDiffTime -> !Maybe NominalDiffTime -> PostgresPoolSettings
-[_ppsMaxConnections] :: PostgresPoolSettings -> !Maybe Int
-[_ppsIdleTimeout] :: PostgresPoolSettings -> !Maybe Int
-[_ppsRetries] :: PostgresPoolSettings -> !Maybe Int
-[_ppsPoolTimeout] :: PostgresPoolSettings -> !Maybe NominalDiffTime
-[_ppsConnectionLifetime] :: PostgresPoolSettings -> !Maybe NominalDiffTime
+PostgresPoolSettings :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe NominalDiffTime -> Maybe NominalDiffTime -> PostgresPoolSettings
+[_ppsMaxConnections] :: PostgresPoolSettings -> Maybe Int
+[_ppsIdleTimeout] :: PostgresPoolSettings -> Maybe Int
+[_ppsRetries] :: PostgresPoolSettings -> Maybe Int
+[_ppsPoolTimeout] :: PostgresPoolSettings -> Maybe NominalDiffTime
+[_ppsConnectionLifetime] :: PostgresPoolSettings -> Maybe NominalDiffTime
 data DefaultPostgresPoolSettings
-DefaultPostgresPoolSettings :: !Int -> !Int -> !Int -> !Maybe NominalDiffTime -> DefaultPostgresPoolSettings
-[_dppsMaxConnections] :: DefaultPostgresPoolSettings -> !Int
-[_dppsIdleTimeout] :: DefaultPostgresPoolSettings -> !Int
-[_dppsRetries] :: DefaultPostgresPoolSettings -> !Int
-[_dppsConnectionLifetime] :: DefaultPostgresPoolSettings -> !Maybe NominalDiffTime
+DefaultPostgresPoolSettings :: Int -> Int -> Int -> Maybe NominalDiffTime -> DefaultPostgresPoolSettings
+[_dppsMaxConnections] :: DefaultPostgresPoolSettings -> Int
+[_dppsIdleTimeout] :: DefaultPostgresPoolSettings -> Int
+[_dppsRetries] :: DefaultPostgresPoolSettings -> Int
+[_dppsConnectionLifetime] :: DefaultPostgresPoolSettings -> Maybe NominalDiffTime
 defaultPostgresPoolSettings :: DefaultPostgresPoolSettings
 setPostgresPoolSettings :: PostgresPoolSettings
 getDefaultPGPoolSettingIfNotExists :: Maybe PostgresPoolSettings -> DefaultPostgresPoolSettings -> (Int, Int, Int)
@@ -7955,21 +7955,21 @@ PGClientCerts :: Maybe a -> Maybe a -> Maybe a -> SSLMode -> Maybe p -> PGClient
 [pgcSslMode] :: PGClientCerts p a -> SSLMode
 [pgcSslPassword] :: PGClientCerts p a -> Maybe p
 data PostgresSourceConnInfo
-PostgresSourceConnInfo :: !UrlConf -> !Maybe PostgresPoolSettings -> !Bool -> !TxIsolation -> !Maybe (PGClientCerts CertVar CertVar) -> PostgresSourceConnInfo
-[_psciDatabaseUrl] :: PostgresSourceConnInfo -> !UrlConf
-[_psciPoolSettings] :: PostgresSourceConnInfo -> !Maybe PostgresPoolSettings
-[_psciUsePreparedStatements] :: PostgresSourceConnInfo -> !Bool
-[_psciIsolationLevel] :: PostgresSourceConnInfo -> !TxIsolation
-[_psciSslConfiguration] :: PostgresSourceConnInfo -> !Maybe (PGClientCerts CertVar CertVar)
+PostgresSourceConnInfo :: UrlConf -> Maybe PostgresPoolSettings -> Bool -> TxIsolation -> Maybe (PGClientCerts CertVar CertVar) -> PostgresSourceConnInfo
+[_psciDatabaseUrl] :: PostgresSourceConnInfo -> UrlConf
+[_psciPoolSettings] :: PostgresSourceConnInfo -> Maybe PostgresPoolSettings
+[_psciUsePreparedStatements] :: PostgresSourceConnInfo -> Bool
+[_psciIsolationLevel] :: PostgresSourceConnInfo -> TxIsolation
+[_psciSslConfiguration] :: PostgresSourceConnInfo -> Maybe (PGClientCerts CertVar CertVar)
 psciUsePreparedStatements :: Lens' PostgresSourceConnInfo Bool
 psciSslConfiguration :: Lens' PostgresSourceConnInfo (Maybe (PGClientCerts CertVar CertVar))
 psciPoolSettings :: Lens' PostgresSourceConnInfo (Maybe PostgresPoolSettings)
 psciIsolationLevel :: Lens' PostgresSourceConnInfo TxIsolation
 psciDatabaseUrl :: Lens' PostgresSourceConnInfo UrlConf
 data PostgresConnConfiguration
-PostgresConnConfiguration :: !PostgresSourceConnInfo -> !Maybe (NonEmpty PostgresSourceConnInfo) -> PostgresConnConfiguration
-[_pccConnectionInfo] :: PostgresConnConfiguration -> !PostgresSourceConnInfo
-[_pccReadReplicas] :: PostgresConnConfiguration -> !Maybe (NonEmpty PostgresSourceConnInfo)
+PostgresConnConfiguration :: PostgresSourceConnInfo -> Maybe (NonEmpty PostgresSourceConnInfo) -> PostgresConnConfiguration
+[_pccConnectionInfo] :: PostgresConnConfiguration -> PostgresSourceConnInfo
+[_pccReadReplicas] :: PostgresConnConfiguration -> Maybe (NonEmpty PostgresSourceConnInfo)
 pccReadReplicas :: Lens' PostgresConnConfiguration (Maybe (NonEmpty PostgresSourceConnInfo))
 pccConnectionInfo :: Lens' PostgresConnConfiguration PostgresSourceConnInfo
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.Connection.Settings.PostgresConnConfiguration
@@ -8058,21 +8058,21 @@ newtype MSSQLConnectionString
 MSSQLConnectionString :: Text -> MSSQLConnectionString
 [unMSSQLConnectionString] :: MSSQLConnectionString -> Text
 data InputConnectionString
-RawString :: !ConnectionString -> InputConnectionString
-FromEnvironment :: !Text -> InputConnectionString
+RawString :: ConnectionString -> InputConnectionString
+FromEnvironment :: Text -> InputConnectionString
 data MSSQLPoolSettings
-MSSQLPoolSettings :: !Int -> !Int -> MSSQLPoolSettings
-[_mpsMaxConnections] :: MSSQLPoolSettings -> !Int
-[_mpsIdleTimeout] :: MSSQLPoolSettings -> !Int
+MSSQLPoolSettings :: Int -> Int -> MSSQLPoolSettings
+[_mpsMaxConnections] :: MSSQLPoolSettings -> Int
+[_mpsIdleTimeout] :: MSSQLPoolSettings -> Int
 defaultMSSQLPoolSettings :: MSSQLPoolSettings
 data MSSQLConnectionInfo
-MSSQLConnectionInfo :: !InputConnectionString -> !MSSQLPoolSettings -> MSSQLConnectionInfo
-[_mciConnectionString] :: MSSQLConnectionInfo -> !InputConnectionString
-[_mciPoolSettings] :: MSSQLConnectionInfo -> !MSSQLPoolSettings
+MSSQLConnectionInfo :: InputConnectionString -> MSSQLPoolSettings -> MSSQLConnectionInfo
+[_mciConnectionString] :: MSSQLConnectionInfo -> InputConnectionString
+[_mciPoolSettings] :: MSSQLConnectionInfo -> MSSQLPoolSettings
 data MSSQLConnConfiguration
-MSSQLConnConfiguration :: !MSSQLConnectionInfo -> !Maybe (NonEmpty MSSQLConnectionInfo) -> MSSQLConnConfiguration
-[_mccConnectionInfo] :: MSSQLConnConfiguration -> !MSSQLConnectionInfo
-[_mccReadReplicas] :: MSSQLConnConfiguration -> !Maybe (NonEmpty MSSQLConnectionInfo)
+MSSQLConnConfiguration :: MSSQLConnectionInfo -> Maybe (NonEmpty MSSQLConnectionInfo) -> MSSQLConnConfiguration
+[_mccConnectionInfo] :: MSSQLConnConfiguration -> MSSQLConnectionInfo
+[_mccReadReplicas] :: MSSQLConnConfiguration -> Maybe (NonEmpty MSSQLConnectionInfo)
 createMSSQLPool :: MonadIO m => QErrM m => MSSQLConnectionInfo -> Environment -> m (ConnectionString, MSSQLPool)
 resolveInputConnectionString :: QErrM m => Environment -> InputConnectionString -> m ConnectionString
 getEnv :: QErrM m => Environment -> Text -> m Text
@@ -8094,9 +8094,9 @@ MSSQLExecCtx :: MSSQLRunTx -> MSSQLRunTx -> IO () -> MSSQLExecCtx
 -- | Creates a MSSQL execution context for a single primary pool
 mkMSSQLExecCtx :: MSSQLPool -> MSSQLExecCtx
 data MSSQLSourceConfig
-MSSQLSourceConfig :: !ConnectionString -> !MSSQLExecCtx -> MSSQLSourceConfig
-[_mscConnectionString] :: MSSQLSourceConfig -> !ConnectionString
-[_mscExecCtx] :: MSSQLSourceConfig -> !MSSQLExecCtx
+MSSQLSourceConfig :: ConnectionString -> MSSQLExecCtx -> MSSQLSourceConfig
+[_mscConnectionString] :: MSSQLSourceConfig -> ConnectionString
+[_mscExecCtx] :: MSSQLSourceConfig -> MSSQLExecCtx
 odbcValueToJValue :: Value -> Value
 runMSSQLSourceReadTx :: (MonadIO m, MonadBaseControl IO m) => MSSQLSourceConfig -> TxET QErr m a -> m (Either QErr a)
 runMSSQLSourceWriteTx :: (MonadIO m, MonadBaseControl IO m) => MSSQLSourceConfig -> TxET QErr m a -> m (Either QErr a)
@@ -10120,9 +10120,9 @@ SchemaName :: Text -> SchemaName
 publicSchema :: SchemaName
 hdbCatalogSchema :: SchemaName
 data QualifiedObject a
-QualifiedObject :: !SchemaName -> !a -> QualifiedObject a
-[qSchema] :: QualifiedObject a -> !SchemaName
-[qName] :: QualifiedObject a -> !a
+QualifiedObject :: SchemaName -> a -> QualifiedObject a
+[qSchema] :: QualifiedObject a -> SchemaName
+[qName] :: QualifiedObject a -> a
 qualifiedObjectToText :: ToTxt a => QualifiedObject a -> Text
 snakeCaseQualifiedObject :: ToTxt a => QualifiedObject a -> Text
 getIdentifierQualifiedObject :: ToTxt a => QualifiedObject a -> Either QErr GQLNameIdentifier
@@ -10169,9 +10169,9 @@ PGLtree :: PGScalarType
 PGLquery :: PGScalarType
 PGLtxtquery :: PGScalarType
 PGArray :: PGScalarType -> PGScalarType
-PGUnknown :: !Text -> PGScalarType
-PGCompositeScalar :: !Text -> PGScalarType
-PGEnumScalar :: !Text -> PGScalarType
+PGUnknown :: Text -> PGScalarType
+PGCompositeScalar :: Text -> PGScalarType
+PGEnumScalar :: Text -> PGScalarType
 pgScalarTypeToText :: PGScalarType -> Text
 textToPGScalarType :: Text -> PGScalarType
 pgScalarTranslations :: [(Text, PGScalarType)]
@@ -10191,12 +10191,12 @@ PGKindDomain :: PGTypeKind
 PGKindEnum :: PGTypeKind
 PGKindRange :: PGTypeKind
 PGKindPseudo :: PGTypeKind
-PGKindUnknown :: !Text -> PGTypeKind
+PGKindUnknown :: Text -> PGTypeKind
 data QualifiedPGType
-QualifiedPGType :: !SchemaName -> !PGScalarType -> !PGTypeKind -> QualifiedPGType
-[_qptSchema] :: QualifiedPGType -> !SchemaName
-[_qptName] :: QualifiedPGType -> !PGScalarType
-[_qptType] :: QualifiedPGType -> !PGTypeKind
+QualifiedPGType :: SchemaName -> PGScalarType -> PGTypeKind -> QualifiedPGType
+[_qptSchema] :: QualifiedPGType -> SchemaName
+[_qptName] :: QualifiedPGType -> PGScalarType
+[_qptType] :: QualifiedPGType -> PGTypeKind
 isBaseType :: QualifiedPGType -> Bool
 typeToTable :: QualifiedPGType -> QualifiedTable
 mkFunctionArgScalarType :: QualifiedPGType -> PGScalarType
@@ -10204,19 +10204,19 @@ mkFunctionArgScalarType :: QualifiedPGType -> PGScalarType
 -- | Metadata describing SQL functions at the DB level, i.e. below the
 --   GraphQL layer.
 data PGRawFunctionInfo
-PGRawFunctionInfo :: !OID -> !Bool -> !FunctionVolatility -> !SchemaName -> !PGScalarType -> !PGTypeKind -> !Bool -> ![QualifiedPGType] -> ![FunctionArgName] -> !Int -> !Bool -> !Maybe PGDescription -> PGRawFunctionInfo
-[rfiOid] :: PGRawFunctionInfo -> !OID
-[rfiHasVariadic] :: PGRawFunctionInfo -> !Bool
-[rfiFunctionType] :: PGRawFunctionInfo -> !FunctionVolatility
-[rfiReturnTypeSchema] :: PGRawFunctionInfo -> !SchemaName
-[rfiReturnTypeName] :: PGRawFunctionInfo -> !PGScalarType
-[rfiReturnTypeType] :: PGRawFunctionInfo -> !PGTypeKind
-[rfiReturnsSet] :: PGRawFunctionInfo -> !Bool
-[rfiInputArgTypes] :: PGRawFunctionInfo -> ![QualifiedPGType]
-[rfiInputArgNames] :: PGRawFunctionInfo -> ![FunctionArgName]
-[rfiDefaultArgs] :: PGRawFunctionInfo -> !Int
-[rfiReturnsTable] :: PGRawFunctionInfo -> !Bool
-[rfiDescription] :: PGRawFunctionInfo -> !Maybe PGDescription
+PGRawFunctionInfo :: OID -> Bool -> FunctionVolatility -> SchemaName -> PGScalarType -> PGTypeKind -> Bool -> [QualifiedPGType] -> [FunctionArgName] -> Int -> Bool -> Maybe PGDescription -> PGRawFunctionInfo
+[rfiOid] :: PGRawFunctionInfo -> OID
+[rfiHasVariadic] :: PGRawFunctionInfo -> Bool
+[rfiFunctionType] :: PGRawFunctionInfo -> FunctionVolatility
+[rfiReturnTypeSchema] :: PGRawFunctionInfo -> SchemaName
+[rfiReturnTypeName] :: PGRawFunctionInfo -> PGScalarType
+[rfiReturnTypeType] :: PGRawFunctionInfo -> PGTypeKind
+[rfiReturnsSet] :: PGRawFunctionInfo -> Bool
+[rfiInputArgTypes] :: PGRawFunctionInfo -> [QualifiedPGType]
+[rfiInputArgNames] :: PGRawFunctionInfo -> [FunctionArgName]
+[rfiDefaultArgs] :: PGRawFunctionInfo -> Int
+[rfiReturnsTable] :: PGRawFunctionInfo -> Bool
+[rfiDescription] :: PGRawFunctionInfo -> Maybe PGDescription
 mkScalarTypeName :: MonadError QErr m => PGScalarType -> m Name
 pgTypeOid :: PGScalarType -> Oid
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.SQL.Types.PGRawFunctionInfo
@@ -10687,22 +10687,22 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.Types.Function.
 -- | Postgres types related to computed fields
 module Hasura.Backends.Postgres.Types.ComputedField
 data ComputedFieldDefinition
-ComputedFieldDefinition :: !QualifiedFunction -> !Maybe FunctionArgName -> !Maybe FunctionArgName -> ComputedFieldDefinition
-[_cfdFunction] :: ComputedFieldDefinition -> !QualifiedFunction
-[_cfdTableArgument] :: ComputedFieldDefinition -> !Maybe FunctionArgName
-[_cfdSessionArgument] :: ComputedFieldDefinition -> !Maybe FunctionArgName
+ComputedFieldDefinition :: QualifiedFunction -> Maybe FunctionArgName -> Maybe FunctionArgName -> ComputedFieldDefinition
+[_cfdFunction] :: ComputedFieldDefinition -> QualifiedFunction
+[_cfdTableArgument] :: ComputedFieldDefinition -> Maybe FunctionArgName
+[_cfdSessionArgument] :: ComputedFieldDefinition -> Maybe FunctionArgName
 
 -- | The function table argument is either the very first argument or the
 --   named argument with an index. The index is 0 if the named argument is
 --   the first.
 data FunctionTableArgument
 FTAFirst :: FunctionTableArgument
-FTANamed :: !FunctionArgName -> !Int -> FunctionTableArgument
+FTANamed :: FunctionArgName -> Int -> FunctionTableArgument
 
 -- | The session argument, which passes Hasura session variables to a SQL
 --   function as a JSON object.
 data FunctionSessionArgument
-FunctionSessionArgument :: !FunctionArgName -> !Int -> FunctionSessionArgument
+FunctionSessionArgument :: FunctionArgName -> Int -> FunctionSessionArgument
 data ComputedFieldImplicitArguments
 ComputedFieldImplicitArguments :: FunctionTableArgument -> Maybe FunctionSessionArgument -> ComputedFieldImplicitArguments
 [_cffaTableArgument] :: ComputedFieldImplicitArguments -> FunctionTableArgument
@@ -10762,20 +10762,20 @@ module Hasura.Backends.Postgres.SQL.DML
 --   See <a>SelectWithG</a> or <a>SelectWith</a> for select statements with
 --   mutations as CTEs.
 data Select
-Select :: ![(TableAlias, Select)] -> !Maybe DistinctExpr -> ![Extractor] -> !Maybe FromExp -> !Maybe WhereFrag -> !Maybe GroupByExp -> !Maybe HavingExp -> !Maybe OrderByExp -> !Maybe LimitExp -> !Maybe OffsetExp -> Select
+Select :: [(TableAlias, Select)] -> Maybe DistinctExpr -> [Extractor] -> Maybe FromExp -> Maybe WhereFrag -> Maybe GroupByExp -> Maybe HavingExp -> Maybe OrderByExp -> Maybe LimitExp -> Maybe OffsetExp -> Select
 
 -- | Unlike <a>SelectWith</a>, does not allow data-modifying statements (as
 --   those are only allowed at the top level of a query).
-[selCTEs] :: Select -> ![(TableAlias, Select)]
-[selDistinct] :: Select -> !Maybe DistinctExpr
-[selExtr] :: Select -> ![Extractor]
-[selFrom] :: Select -> !Maybe FromExp
-[selWhere] :: Select -> !Maybe WhereFrag
-[selGroupBy] :: Select -> !Maybe GroupByExp
-[selHaving] :: Select -> !Maybe HavingExp
-[selOrderBy] :: Select -> !Maybe OrderByExp
-[selLimit] :: Select -> !Maybe LimitExp
-[selOffset] :: Select -> !Maybe OffsetExp
+[selCTEs] :: Select -> [(TableAlias, Select)]
+[selDistinct] :: Select -> Maybe DistinctExpr
+[selExtr] :: Select -> [Extractor]
+[selFrom] :: Select -> Maybe FromExp
+[selWhere] :: Select -> Maybe WhereFrag
+[selGroupBy] :: Select -> Maybe GroupByExp
+[selHaving] :: Select -> Maybe HavingExp
+[selOrderBy] :: Select -> Maybe OrderByExp
+[selLimit] :: Select -> Maybe LimitExp
+[selOffset] :: Select -> Maybe OffsetExp
 
 -- | An empty select statement.
 mkSelect :: Select
@@ -10787,10 +10787,10 @@ newtype OrderByExp
 OrderByExp :: NonEmpty OrderByItem -> OrderByExp
 
 data OrderByItem
-OrderByItem :: !SQLExp -> !Maybe OrderType -> !Maybe NullsOrder -> OrderByItem
-[oExpression] :: OrderByItem -> !SQLExp
-[oOrdering] :: OrderByItem -> !Maybe OrderType
-[oNullsOrder] :: OrderByItem -> !Maybe NullsOrder
+OrderByItem :: SQLExp -> Maybe OrderType -> Maybe NullsOrder -> OrderByItem
+[oExpression] :: OrderByItem -> SQLExp
+[oOrdering] :: OrderByItem -> Maybe OrderType
+[oNullsOrder] :: OrderByItem -> Maybe NullsOrder
 
 -- | Order by ascending or descending
 data OrderType
@@ -10815,14 +10815,14 @@ WhereFrag :: BoolExp -> WhereFrag
 mkSIdenExp :: IsIdentifier a => a -> SQLExp
 mkQIdenExp :: (IsIdentifier a, IsIdentifier b) => a -> b -> SQLExp
 data Qual
-QualifiedIdentifier :: !Identifier -> !Maybe TypeAnn -> Qual
-QualTable :: !QualifiedTable -> Qual
-QualVar :: !Text -> Qual
+QualifiedIdentifier :: Identifier -> Maybe TypeAnn -> Qual
+QualTable :: QualifiedTable -> Qual
+QualVar :: Text -> Qual
 mkQual :: QualifiedTable -> Qual
 mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
 mkQIdentifierTable :: IsIdentifier a => QualifiedTable -> a -> QIdentifier
 data QIdentifier
-QIdentifier :: !Qual -> !Identifier -> QIdentifier
+QIdentifier :: Qual -> Identifier -> QIdentifier
 data ColumnOp
 ColumnOp :: SQLOp -> SQLExp -> ColumnOp
 [_colOp] :: ColumnOp -> SQLOp
@@ -10849,44 +10849,44 @@ jsonbTypeAnn :: TypeAnn
 boolTypeAnn :: TypeAnn
 data CountType
 CTStar :: CountType
-CTSimple :: ![PGCol] -> CountType
-CTDistinct :: ![PGCol] -> CountType
+CTSimple :: [PGCol] -> CountType
+CTDistinct :: [PGCol] -> CountType
 newtype TupleExp
 TupleExp :: [SQLExp] -> TupleExp
 data SQLExp
-SEPrep :: !Int -> SQLExp
+SEPrep :: Int -> SQLExp
 SENull :: SQLExp
-SELit :: !Text -> SQLExp
-SEUnsafe :: !Text -> SQLExp
-SESelect :: !Select -> SQLExp
+SELit :: Text -> SQLExp
+SEUnsafe :: Text -> SQLExp
+SESelect :: Select -> SQLExp
 
 -- | all fields (<tt>*</tt>) or all fields from relation (<tt>iden.*</tt>)
-SEStar :: !Maybe Qual -> SQLExp
+SEStar :: Maybe Qual -> SQLExp
 
 -- | A column name
-SEIdentifier :: !Identifier -> SQLExp
+SEIdentifier :: Identifier -> SQLExp
 
 -- | SEIdentifier and SERowIdentifier are distinguished for easier rewrite
 --   rules
-SERowIdentifier :: !Identifier -> SQLExp
+SERowIdentifier :: Identifier -> SQLExp
 
 -- | A qualified column name
-SEQIdentifier :: !QIdentifier -> SQLExp
+SEQIdentifier :: QIdentifier -> SQLExp
 
 -- | this is used to apply a sql function to an expression. The <a>Text</a>
 --   is the function name
-SEFnApp :: !Text -> ![SQLExp] -> !Maybe OrderByExp -> SQLExp
-SEOpApp :: !SQLOp -> ![SQLExp] -> SQLExp
-SETyAnn :: !SQLExp -> !TypeAnn -> SQLExp
-SECond :: !BoolExp -> !SQLExp -> !SQLExp -> SQLExp
-SEBool :: !BoolExp -> SQLExp
-SEExcluded :: !Identifier -> SQLExp
-SEArray :: ![SQLExp] -> SQLExp
-SEArrayIndex :: !SQLExp -> !SQLExp -> SQLExp
-SETuple :: !TupleExp -> SQLExp
-SECount :: !CountType -> SQLExp
-SENamedArg :: !Identifier -> !SQLExp -> SQLExp
-SEFunction :: !FunctionExp -> SQLExp
+SEFnApp :: Text -> [SQLExp] -> Maybe OrderByExp -> SQLExp
+SEOpApp :: SQLOp -> [SQLExp] -> SQLExp
+SETyAnn :: SQLExp -> TypeAnn -> SQLExp
+SECond :: BoolExp -> SQLExp -> SQLExp -> SQLExp
+SEBool :: BoolExp -> SQLExp
+SEExcluded :: Identifier -> SQLExp
+SEArray :: [SQLExp] -> SQLExp
+SEArrayIndex :: SQLExp -> SQLExp -> SQLExp
+SETuple :: TupleExp -> SQLExp
+SECount :: CountType -> SQLExp
+SENamedArg :: Identifier -> SQLExp -> SQLExp
+SEFunction :: FunctionExp -> SQLExp
 
 -- | Represents an alias assignment for a column
 newtype ColumnAlias
@@ -10917,7 +10917,7 @@ int64ToSQLExp :: Int64 -> SQLExp
 
 -- | Extractor can be used to apply Postgres alias to a column
 data Extractor
-Extractor :: !SQLExp -> !Maybe ColumnAlias -> Extractor
+Extractor :: SQLExp -> Maybe ColumnAlias -> Extractor
 mkSQLOpExp :: SQLOp -> SQLExp -> SQLExp -> SQLExp
 columnDefaultValue :: SQLExp
 handleIfNull :: SQLExp -> SQLExp -> SQLExp
@@ -10928,11 +10928,11 @@ applyUppercase :: SQLExp -> SQLExp
 mkExtr :: IsIdentifier a => a -> Extractor
 data DistinctExpr
 DistinctSimple :: DistinctExpr
-DistinctOn :: ![SQLExp] -> DistinctExpr
+DistinctOn :: [SQLExp] -> DistinctExpr
 data FunctionArgs
-FunctionArgs :: ![SQLExp] -> !HashMap Text SQLExp -> FunctionArgs
-[fasPostional] :: FunctionArgs -> ![SQLExp]
-[fasNamed] :: FunctionArgs -> !HashMap Text SQLExp
+FunctionArgs :: [SQLExp] -> HashMap Text SQLExp -> FunctionArgs
+[fasPostional] :: FunctionArgs -> [SQLExp]
+[fasNamed] :: FunctionArgs -> HashMap Text SQLExp
 data FunctionDefinitionListItem
 FunctionDefinitionListItem :: ColumnAlias -> PGScalarType -> FunctionDefinitionListItem
 [_dliColumn] :: FunctionDefinitionListItem -> ColumnAlias
@@ -10950,17 +10950,17 @@ FunctionDefinitionListItem :: ColumnAlias -> PGScalarType -> FunctionDefinitionL
 --   Note: a function that returns a table (instead of a record) cannot
 --   name the types as seen in the above example.
 data FunctionAlias
-FunctionAlias :: !TableAlias -> !Maybe [FunctionDefinitionListItem] -> FunctionAlias
-[_faIdentifier] :: FunctionAlias -> !TableAlias
-[_faDefinitionList] :: FunctionAlias -> !Maybe [FunctionDefinitionListItem]
+FunctionAlias :: TableAlias -> Maybe [FunctionDefinitionListItem] -> FunctionAlias
+[_faIdentifier] :: FunctionAlias -> TableAlias
+[_faDefinitionList] :: FunctionAlias -> Maybe [FunctionDefinitionListItem]
 mkFunctionAlias :: TableAlias -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
 
 -- | A function call
 data FunctionExp
-FunctionExp :: !QualifiedFunction -> !FunctionArgs -> !Maybe FunctionAlias -> FunctionExp
-[feName] :: FunctionExp -> !QualifiedFunction
-[feArgs] :: FunctionExp -> !FunctionArgs
-[feAlias] :: FunctionExp -> !Maybe FunctionAlias
+FunctionExp :: QualifiedFunction -> FunctionArgs -> Maybe FunctionAlias -> FunctionExp
+[feName] :: FunctionExp -> QualifiedFunction
+[feArgs] :: FunctionExp -> FunctionArgs
+[feAlias] :: FunctionExp -> Maybe FunctionAlias
 
 -- | See <tt>from_item</tt> in
 --   <a>https://www.postgresql.org/docs/current/sql-select.html</a>
@@ -10994,30 +10994,30 @@ mkLateralFromItem :: Select -> TableAlias -> FromItem
 newtype Lateral
 Lateral :: Bool -> Lateral
 data JoinExpr
-JoinExpr :: !FromItem -> !JoinType -> !FromItem -> !JoinCond -> JoinExpr
-[tjeLeft] :: JoinExpr -> !FromItem
-[tjeType] :: JoinExpr -> !JoinType
-[tjeRight] :: JoinExpr -> !FromItem
-[tjeJC] :: JoinExpr -> !JoinCond
+JoinExpr :: FromItem -> JoinType -> FromItem -> JoinCond -> JoinExpr
+[tjeLeft] :: JoinExpr -> FromItem
+[tjeType] :: JoinExpr -> JoinType
+[tjeRight] :: JoinExpr -> FromItem
+[tjeJC] :: JoinExpr -> JoinCond
 data JoinType
 Inner :: JoinType
 LeftOuter :: JoinType
 RightOuter :: JoinType
 FullOuter :: JoinType
 data JoinCond
-JoinOn :: !BoolExp -> JoinCond
-JoinUsing :: ![Identifier] -> JoinCond
+JoinOn :: BoolExp -> JoinCond
+JoinUsing :: [Identifier] -> JoinCond
 data BoolExp
-BELit :: !Bool -> BoolExp
-BEBin :: !BinOp -> !BoolExp -> !BoolExp -> BoolExp
-BENot :: !BoolExp -> BoolExp
-BECompare :: !CompareOp -> !SQLExp -> !SQLExp -> BoolExp
-BECompareAny :: !CompareOp -> !SQLExp -> !SQLExp -> BoolExp
-BENull :: !SQLExp -> BoolExp
-BENotNull :: !SQLExp -> BoolExp
-BEExists :: !Select -> BoolExp
-BEIN :: !SQLExp -> ![SQLExp] -> BoolExp
-BEExp :: !SQLExp -> BoolExp
+BELit :: Bool -> BoolExp
+BEBin :: BinOp -> BoolExp -> BoolExp -> BoolExp
+BENot :: BoolExp -> BoolExp
+BECompare :: CompareOp -> SQLExp -> SQLExp -> BoolExp
+BECompareAny :: CompareOp -> SQLExp -> SQLExp -> BoolExp
+BENull :: SQLExp -> BoolExp
+BENotNull :: SQLExp -> BoolExp
+BEExists :: Select -> BoolExp
+BEIN :: SQLExp -> [SQLExp] -> BoolExp
+BEExp :: SQLExp -> BoolExp
 simplifyBoolExp :: BoolExp -> BoolExp
 mkExists :: FromItem -> BoolExp -> BoolExp
 data BinOp
@@ -11049,11 +11049,11 @@ SHasKeysAny :: CompareOp
 SHasKeysAll :: CompareOp
 SMatchesFulltext :: CompareOp
 data SQLDelete
-SQLDelete :: !QualifiedTable -> !Maybe UsingExp -> !Maybe WhereFrag -> !Maybe RetExp -> SQLDelete
-[delTable] :: SQLDelete -> !QualifiedTable
-[delUsing] :: SQLDelete -> !Maybe UsingExp
-[delWhere] :: SQLDelete -> !Maybe WhereFrag
-[delRet] :: SQLDelete -> !Maybe RetExp
+SQLDelete :: QualifiedTable -> Maybe UsingExp -> Maybe WhereFrag -> Maybe RetExp -> SQLDelete
+[delTable] :: SQLDelete -> QualifiedTable
+[delUsing] :: SQLDelete -> Maybe UsingExp
+[delWhere] :: SQLDelete -> Maybe WhereFrag
+[delRet] :: SQLDelete -> Maybe RetExp
 data SQLUpdate
 SQLUpdate :: QualifiedTable -> SetExp -> Maybe FromExp -> Maybe WhereFrag -> Maybe RetExp -> SQLUpdate
 [upTable] :: SQLUpdate -> QualifiedTable
@@ -11074,21 +11074,21 @@ selectStar :: Extractor
 selectStar' :: Qual -> Extractor
 returningStar :: RetExp
 data SQLConflictTarget
-SQLColumn :: ![PGCol] -> SQLConflictTarget
-SQLConstraint :: !ConstraintName -> SQLConflictTarget
+SQLColumn :: [PGCol] -> SQLConflictTarget
+SQLConstraint :: ConstraintName -> SQLConflictTarget
 data SQLConflict
-DoNothing :: !Maybe SQLConflictTarget -> SQLConflict
-Update :: !SQLConflictTarget -> !SetExp -> !Maybe WhereFrag -> SQLConflict
+DoNothing :: Maybe SQLConflictTarget -> SQLConflict
+Update :: SQLConflictTarget -> SetExp -> Maybe WhereFrag -> SQLConflict
 newtype ValuesExp
 ValuesExp :: [TupleExp] -> ValuesExp
 [getValuesExp] :: ValuesExp -> [TupleExp]
 data SQLInsert
-SQLInsert :: !QualifiedTable -> ![PGCol] -> !ValuesExp -> !Maybe SQLConflict -> !Maybe RetExp -> SQLInsert
-[siTable] :: SQLInsert -> !QualifiedTable
-[siCols] :: SQLInsert -> ![PGCol]
-[siValues] :: SQLInsert -> !ValuesExp
-[siConflict] :: SQLInsert -> !Maybe SQLConflict
-[siRet] :: SQLInsert -> !Maybe RetExp
+SQLInsert :: QualifiedTable -> [PGCol] -> ValuesExp -> Maybe SQLConflict -> Maybe RetExp -> SQLInsert
+[siTable] :: SQLInsert -> QualifiedTable
+[siCols] :: SQLInsert -> [PGCol]
+[siValues] :: SQLInsert -> ValuesExp
+[siConflict] :: SQLInsert -> Maybe SQLConflict
+[siRet] :: SQLInsert -> Maybe RetExp
 
 -- | Top-level Common Table Expression statement.
 --   
@@ -11097,10 +11097,10 @@ SQLInsert :: !QualifiedTable -> ![PGCol] -> !ValuesExp -> !Maybe SQLConflict -> 
 --   Postgres supports mutations only in top-level CTEs. See
 --   <a>https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING</a>
 data TopLevelCTE
-CTESelect :: !Select -> TopLevelCTE
-CTEInsert :: !SQLInsert -> TopLevelCTE
-CTEUpdate :: !SQLUpdate -> TopLevelCTE
-CTEDelete :: !SQLDelete -> TopLevelCTE
+CTESelect :: Select -> TopLevelCTE
+CTEInsert :: SQLInsert -> TopLevelCTE
+CTEUpdate :: SQLUpdate -> TopLevelCTE
+CTEDelete :: SQLDelete -> TopLevelCTE
 
 -- | A <tt>SELECT</tt> statement with Common Table Expressions.
 --   <a>https://www.postgresql.org/docs/current/queries-with.html</a>
@@ -11114,9 +11114,9 @@ CTEDelete :: !SQLDelete -> TopLevelCTE
 --   in CTEs at the top level. See
 --   <a>https://www.postgresql.org/docs/current/queries-with.html#QUERIES-WITH-MODIFYING</a>
 data SelectWithG statement
-SelectWith :: ![(TableAlias, statement)] -> !Select -> SelectWithG statement
-[swCTEs] :: SelectWithG statement -> ![(TableAlias, statement)]
-[swSelect] :: SelectWithG statement -> !Select
+SelectWith :: [(TableAlias, statement)] -> Select -> SelectWithG statement
+[swCTEs] :: SelectWithG statement -> [(TableAlias, statement)]
+[swSelect] :: SelectWithG statement -> Select
 
 -- | A top-level select with CTEs.
 type SelectWith = SelectWithG TopLevelCTE
@@ -11451,32 +11451,32 @@ RasterWKB :: Base16 ByteString -> RasterWKB
 newtype Ltree
 Ltree :: Text -> Ltree
 data PGScalarValue
-PGValInteger :: !Int32 -> PGScalarValue
-PGValSmallInt :: !Int16 -> PGScalarValue
-PGValBigInt :: !Int64 -> PGScalarValue
-PGValFloat :: !Float -> PGScalarValue
-PGValDouble :: !Double -> PGScalarValue
-PGValNumeric :: !Scientific -> PGScalarValue
-PGValMoney :: !Scientific -> PGScalarValue
-PGValBoolean :: !Bool -> PGScalarValue
-PGValChar :: !Char -> PGScalarValue
-PGValVarchar :: !Text -> PGScalarValue
-PGValText :: !Text -> PGScalarValue
-PGValCitext :: !Text -> PGScalarValue
-PGValDate :: !Day -> PGScalarValue
-PGValTimeStamp :: !LocalTime -> PGScalarValue
-PGValTimeStampTZ :: !UTCTime -> PGScalarValue
-PGValTimeTZ :: !ZonedTimeOfDay -> PGScalarValue
-PGNull :: !PGScalarType -> PGScalarValue
-PGValJSON :: !JSON -> PGScalarValue
-PGValJSONB :: !JSONB -> PGScalarValue
-PGValGeo :: !GeometryWithCRS -> PGScalarValue
-PGValRaster :: !RasterWKB -> PGScalarValue
-PGValUUID :: !UUID -> PGScalarValue
-PGValLtree :: !Ltree -> PGScalarValue
-PGValLquery :: !Text -> PGScalarValue
-PGValLtxtquery :: !Text -> PGScalarValue
-PGValUnknown :: !Text -> PGScalarValue
+PGValInteger :: Int32 -> PGScalarValue
+PGValSmallInt :: Int16 -> PGScalarValue
+PGValBigInt :: Int64 -> PGScalarValue
+PGValFloat :: Float -> PGScalarValue
+PGValDouble :: Double -> PGScalarValue
+PGValNumeric :: Scientific -> PGScalarValue
+PGValMoney :: Scientific -> PGScalarValue
+PGValBoolean :: Bool -> PGScalarValue
+PGValChar :: Char -> PGScalarValue
+PGValVarchar :: Text -> PGScalarValue
+PGValText :: Text -> PGScalarValue
+PGValCitext :: Text -> PGScalarValue
+PGValDate :: Day -> PGScalarValue
+PGValTimeStamp :: LocalTime -> PGScalarValue
+PGValTimeStampTZ :: UTCTime -> PGScalarValue
+PGValTimeTZ :: ZonedTimeOfDay -> PGScalarValue
+PGNull :: PGScalarType -> PGScalarValue
+PGValJSON :: JSON -> PGScalarValue
+PGValJSONB :: JSONB -> PGScalarValue
+PGValGeo :: GeometryWithCRS -> PGScalarValue
+PGValRaster :: RasterWKB -> PGScalarValue
+PGValUUID :: UUID -> PGScalarValue
+PGValLtree :: Ltree -> PGScalarValue
+PGValLquery :: Text -> PGScalarValue
+PGValLtxtquery :: Text -> PGScalarValue
+PGValUnknown :: Text -> PGScalarValue
 PGValArray :: [PGScalarValue] -> PGScalarValue
 pgScalarValueToJson :: PGScalarValue -> Value
 textToScalarValue :: Maybe Text -> PGScalarValue
@@ -12731,40 +12731,40 @@ instance Hasura.RQL.Types.Backend.Backend b => GHC.Classes.Eq (Hasura.RQL.IR.Con
 --   Postgres-specific <tt>BooleanOperator</tt> extensions.
 module Hasura.Backends.Postgres.Types.BoolExp
 data BooleanOperators a
-AILIKE :: !a -> BooleanOperators a
-ANILIKE :: !a -> BooleanOperators a
-ASIMILAR :: !a -> BooleanOperators a
-ANSIMILAR :: !a -> BooleanOperators a
-AREGEX :: !a -> BooleanOperators a
-AIREGEX :: !a -> BooleanOperators a
-ANREGEX :: !a -> BooleanOperators a
-ANIREGEX :: !a -> BooleanOperators a
-AContains :: !a -> BooleanOperators a
-AContainedIn :: !a -> BooleanOperators a
-AHasKey :: !a -> BooleanOperators a
-AHasKeysAny :: !a -> BooleanOperators a
-AHasKeysAll :: !a -> BooleanOperators a
-ASTContains :: !a -> BooleanOperators a
-ASTCrosses :: !a -> BooleanOperators a
-ASTEquals :: !a -> BooleanOperators a
-ASTIntersects :: !a -> BooleanOperators a
-AST3DIntersects :: !a -> BooleanOperators a
-ASTOverlaps :: !a -> BooleanOperators a
-ASTTouches :: !a -> BooleanOperators a
-ASTWithin :: !a -> BooleanOperators a
-ASTIntersectsRast :: !a -> BooleanOperators a
-ASTDWithinGeom :: !DWithinGeomOp a -> BooleanOperators a
-AST3DDWithinGeom :: !DWithinGeomOp a -> BooleanOperators a
-ASTDWithinGeog :: !DWithinGeogOp a -> BooleanOperators a
-ASTIntersectsGeomNband :: !STIntersectsGeomminNband a -> BooleanOperators a
-ASTIntersectsNbandGeom :: !STIntersectsNbandGeommin a -> BooleanOperators a
-AAncestor :: !a -> BooleanOperators a
-AAncestorAny :: !a -> BooleanOperators a
-ADescendant :: !a -> BooleanOperators a
-ADescendantAny :: !a -> BooleanOperators a
-AMatches :: !a -> BooleanOperators a
-AMatchesAny :: !a -> BooleanOperators a
-AMatchesFulltext :: !a -> BooleanOperators a
+AILIKE :: a -> BooleanOperators a
+ANILIKE :: a -> BooleanOperators a
+ASIMILAR :: a -> BooleanOperators a
+ANSIMILAR :: a -> BooleanOperators a
+AREGEX :: a -> BooleanOperators a
+AIREGEX :: a -> BooleanOperators a
+ANREGEX :: a -> BooleanOperators a
+ANIREGEX :: a -> BooleanOperators a
+AContains :: a -> BooleanOperators a
+AContainedIn :: a -> BooleanOperators a
+AHasKey :: a -> BooleanOperators a
+AHasKeysAny :: a -> BooleanOperators a
+AHasKeysAll :: a -> BooleanOperators a
+ASTContains :: a -> BooleanOperators a
+ASTCrosses :: a -> BooleanOperators a
+ASTEquals :: a -> BooleanOperators a
+ASTIntersects :: a -> BooleanOperators a
+AST3DIntersects :: a -> BooleanOperators a
+ASTOverlaps :: a -> BooleanOperators a
+ASTTouches :: a -> BooleanOperators a
+ASTWithin :: a -> BooleanOperators a
+ASTIntersectsRast :: a -> BooleanOperators a
+ASTDWithinGeom :: DWithinGeomOp a -> BooleanOperators a
+AST3DDWithinGeom :: DWithinGeomOp a -> BooleanOperators a
+ASTDWithinGeog :: DWithinGeogOp a -> BooleanOperators a
+ASTIntersectsGeomNband :: STIntersectsGeomminNband a -> BooleanOperators a
+ASTIntersectsNbandGeom :: STIntersectsNbandGeommin a -> BooleanOperators a
+AAncestor :: a -> BooleanOperators a
+AAncestorAny :: a -> BooleanOperators a
+ADescendant :: a -> BooleanOperators a
+ADescendantAny :: a -> BooleanOperators a
+AMatches :: a -> BooleanOperators a
+AMatchesAny :: a -> BooleanOperators a
+AMatchesFulltext :: a -> BooleanOperators a
 instance GHC.Show.Show a => GHC.Show.Show (Hasura.Backends.Postgres.Types.BoolExp.BooleanOperators a)
 instance Data.Traversable.Traversable Hasura.Backends.Postgres.Types.BoolExp.BooleanOperators
 instance GHC.Base.Functor Hasura.Backends.Postgres.Types.BoolExp.BooleanOperators
@@ -13064,13 +13064,13 @@ isEmpty :: BackendUpdate pgKind v -> Bool
 --   
 --   See <a>Update Mutations User docs</a>
 data UpdateOpExpression v
-UpdateSet :: !v -> UpdateOpExpression v
-UpdateInc :: !v -> UpdateOpExpression v
-UpdateAppend :: !v -> UpdateOpExpression v
-UpdatePrepend :: !v -> UpdateOpExpression v
-UpdateDeleteKey :: !v -> UpdateOpExpression v
-UpdateDeleteElem :: !v -> UpdateOpExpression v
-UpdateDeleteAtPath :: ![v] -> UpdateOpExpression v
+UpdateSet :: v -> UpdateOpExpression v
+UpdateInc :: v -> UpdateOpExpression v
+UpdateAppend :: v -> UpdateOpExpression v
+UpdatePrepend :: v -> UpdateOpExpression v
+UpdateDeleteKey :: v -> UpdateOpExpression v
+UpdateDeleteElem :: v -> UpdateOpExpression v
+UpdateDeleteAtPath :: [v] -> UpdateOpExpression v
 instance GHC.Classes.Eq v => GHC.Classes.Eq (Hasura.Backends.Postgres.Types.Update.UpdateOpExpression v)
 instance GHC.Show.Show v => GHC.Show.Show (Hasura.Backends.Postgres.Types.Update.UpdateOpExpression v)
 instance Data.Data.Data v => Data.Data.Data (Hasura.Backends.Postgres.Types.Update.UpdateOpExpression v)
@@ -13372,9 +13372,9 @@ data SetValue
 SetON :: SetValue
 SetOFF :: SetValue
 data SetIdentityInsert
-SetIdentityInsert :: SomeTableName -> !SetValue -> SetIdentityInsert
+SetIdentityInsert :: SomeTableName -> SetValue -> SetIdentityInsert
 [$sel:setTable:SetIdentityInsert] :: SetIdentityInsert -> SomeTableName
-[$sel:setValue:SetIdentityInsert] :: SetIdentityInsert -> !SetValue
+[$sel:setValue:SetIdentityInsert] :: SetIdentityInsert -> SetValue
 type DeleteOutput = Output Deleted
 data Delete
 Delete :: Aliased TableName -> DeleteOutput -> TempTable -> Where -> Delete
@@ -13600,9 +13600,9 @@ newtype SchemaName
 SchemaName :: Text -> SchemaName
 [$sel:_unSchemaName:SchemaName] :: SchemaName -> Text
 data TableName
-TableName :: !Text -> !SchemaName -> TableName
-[$sel:tableName:TableName] :: TableName -> !Text
-[$sel:tableSchema:TableName] :: TableName -> !SchemaName
+TableName :: Text -> SchemaName -> TableName
+[$sel:tableName:TableName] :: TableName -> Text
+[$sel:tableSchema:TableName] :: TableName -> SchemaName
 data FieldName
 FieldName :: Text -> Text -> FieldName
 [$sel:fieldName:FieldName] :: FieldName -> Text
@@ -14128,14 +14128,14 @@ PKey :: PrivateKey -> Text -> PKey
 newtype GoogleAccessToken
 GoogleAccessToken :: Text -> GoogleAccessToken
 data TokenResp
-TokenResp :: !GoogleAccessToken -> !Integer -> TokenResp
-[_trAccessToken] :: TokenResp -> !GoogleAccessToken
-[_trExpiresAt] :: TokenResp -> !Integer
+TokenResp :: GoogleAccessToken -> Integer -> TokenResp
+[_trAccessToken] :: TokenResp -> GoogleAccessToken
+[_trExpiresAt] :: TokenResp -> Integer
 data ServiceAccount
-ServiceAccount :: !Text -> !PKey -> !Text -> ServiceAccount
-[_saClientEmail] :: ServiceAccount -> !Text
-[_saPrivateKey] :: ServiceAccount -> !PKey
-[_saProjectId] :: ServiceAccount -> !Text
+ServiceAccount :: Text -> PKey -> Text -> ServiceAccount
+[_saClientEmail] :: ServiceAccount -> Text
+[_saPrivateKey] :: ServiceAccount -> PKey
+[_saProjectId] :: ServiceAccount -> Text
 data ConfigurationJSON a
 FromEnvJSON :: Text -> ConfigurationJSON a
 FromYamlJSON :: a -> ConfigurationJSON a
@@ -14143,14 +14143,14 @@ FromYamlJSON :: a -> ConfigurationJSON a
 -- | Configuration inputs when they are a YAML array or an Env var whos
 --   value is a comma-separated string
 data ConfigurationInputs
-FromYamls :: ![Text] -> ConfigurationInputs
-FromEnvs :: !Text -> ConfigurationInputs
+FromYamls :: [Text] -> ConfigurationInputs
+FromEnvs :: Text -> ConfigurationInputs
 
 -- | Configuration input when the YAML value as well as the Env var have
 --   singlular values
 data ConfigurationInput
-FromYaml :: !Text -> ConfigurationInput
-FromEnv :: !Text -> ConfigurationInput
+FromYaml :: Text -> ConfigurationInput
+FromEnv :: Text -> ConfigurationInput
 data BigQueryConnSourceConfig
 BigQueryConnSourceConfig :: ConfigurationJSON ServiceAccount -> ConfigurationInputs -> ConfigurationInput -> Maybe ConfigurationInput -> Maybe ConfigurationInput -> Maybe ConfigurationInput -> BigQueryConnSourceConfig
 [_cscServiceAccount] :: BigQueryConnSourceConfig -> ConfigurationJSON ServiceAccount
@@ -14251,9 +14251,9 @@ newtype Scope
 Scope :: Text -> Scope
 [unScope] :: Scope -> Text
 data GoogleAccessTokenRequest
-GoogleAccessTokenRequest :: !Text -> !Text -> GoogleAccessTokenRequest
-[_gatrGrantType] :: GoogleAccessTokenRequest -> !Text
-[_gatrAssertion] :: GoogleAccessTokenRequest -> !Text
+GoogleAccessTokenRequest :: Text -> Text -> GoogleAccessTokenRequest
+[_gatrGrantType] :: GoogleAccessTokenRequest -> Text
+[_gatrAssertion] :: GoogleAccessTokenRequest -> Text
 mkTokenRequest :: Text -> GoogleAccessTokenRequest
 data TokenProblem
 BearerTokenDecodeProblem :: UnicodeException -> TokenProblem
@@ -14298,26 +14298,26 @@ instance GHC.Show.Show Hasura.Backends.BigQuery.Connection.GoogleAccessTokenRequ
 
 module Hasura.Backends.MySQL.Types.Internal
 data Aliased a
-Aliased :: !a -> !Text -> Aliased a
-[aliasedThing] :: Aliased a -> !a
-[aliasedAlias] :: Aliased a -> !Text
+Aliased :: a -> Text -> Aliased a
+[aliasedThing] :: Aliased a -> a
+[aliasedAlias] :: Aliased a -> Text
 
 -- | Partial of Database.MySQL.Simple.ConnectInfo
 data ConnSourceConfig
-ConnSourceConfig :: !Text -> !Word16 -> !Text -> !Text -> !Text -> !ConnPoolSettings -> ConnSourceConfig
+ConnSourceConfig :: Text -> Word16 -> Text -> Text -> Text -> ConnPoolSettings -> ConnSourceConfig
 
 -- | Works with <tt>127.0.0.1</tt> but not with <tt>localhost</tt>:
 --   <a>https://mariadb.com/kb/en/troubleshooting-connection-issues/#localhost-and</a>
-[_cscHost] :: ConnSourceConfig -> !Text
-[_cscPort] :: ConnSourceConfig -> !Word16
-[_cscUser] :: ConnSourceConfig -> !Text
-[_cscPassword] :: ConnSourceConfig -> !Text
-[_cscDatabase] :: ConnSourceConfig -> !Text
-[_cscPoolSettings] :: ConnSourceConfig -> !ConnPoolSettings
+[_cscHost] :: ConnSourceConfig -> Text
+[_cscPort] :: ConnSourceConfig -> Word16
+[_cscUser] :: ConnSourceConfig -> Text
+[_cscPassword] :: ConnSourceConfig -> Text
+[_cscDatabase] :: ConnSourceConfig -> Text
+[_cscPoolSettings] :: ConnSourceConfig -> ConnPoolSettings
 data SourceConfig
-SourceConfig :: !ConnSourceConfig -> !Pool Connection -> SourceConfig
-[scConfig] :: SourceConfig -> !ConnSourceConfig
-[scConnectionPool] :: SourceConfig -> !Pool Connection
+SourceConfig :: ConnSourceConfig -> Pool Connection -> SourceConfig
+[scConfig] :: SourceConfig -> ConnSourceConfig
+[scConnectionPool] :: SourceConfig -> Pool Connection
 newtype ConstraintName
 ConstraintName :: Text -> ConstraintName
 [unConstraintName] :: ConstraintName -> Text
@@ -14328,40 +14328,40 @@ newtype Column
 Column :: Text -> Column
 [unColumn] :: Column -> Text
 data ScalarValue
-BigValue :: !Int32 -> ScalarValue
-BinaryValue :: !ByteString -> ScalarValue
-BitValue :: !Bool -> ScalarValue
-BlobValue :: !ByteString -> ScalarValue
-CharValue :: !Text -> ScalarValue
-DatetimeValue :: !Text -> ScalarValue
-DateValue :: !Text -> ScalarValue
-DecimalValue :: !Double -> ScalarValue
-DoubleValue :: !Double -> ScalarValue
-EnumValue :: !Text -> ScalarValue
-FloatValue :: !Double -> ScalarValue
-GeometrycollectionValue :: !Text -> ScalarValue
-GeometryValue :: !Text -> ScalarValue
-IntValue :: !Int32 -> ScalarValue
-JsonValue :: !Value -> ScalarValue
-LinestringValue :: !Text -> ScalarValue
-MediumValue :: !Int32 -> ScalarValue
-MultilinestringValue :: !Text -> ScalarValue
-MultipointValue :: !Text -> ScalarValue
-MultipolygonValue :: !Text -> ScalarValue
+BigValue :: Int32 -> ScalarValue
+BinaryValue :: ByteString -> ScalarValue
+BitValue :: Bool -> ScalarValue
+BlobValue :: ByteString -> ScalarValue
+CharValue :: Text -> ScalarValue
+DatetimeValue :: Text -> ScalarValue
+DateValue :: Text -> ScalarValue
+DecimalValue :: Double -> ScalarValue
+DoubleValue :: Double -> ScalarValue
+EnumValue :: Text -> ScalarValue
+FloatValue :: Double -> ScalarValue
+GeometrycollectionValue :: Text -> ScalarValue
+GeometryValue :: Text -> ScalarValue
+IntValue :: Int32 -> ScalarValue
+JsonValue :: Value -> ScalarValue
+LinestringValue :: Text -> ScalarValue
+MediumValue :: Int32 -> ScalarValue
+MultilinestringValue :: Text -> ScalarValue
+MultipointValue :: Text -> ScalarValue
+MultipolygonValue :: Text -> ScalarValue
 NullValue :: ScalarValue
-NumericValue :: !Double -> ScalarValue
-PointValue :: !Text -> ScalarValue
-PolygonValue :: !Text -> ScalarValue
-SetValue :: !Set Text -> ScalarValue
-SmallValue :: !Int32 -> ScalarValue
-TextValue :: !Text -> ScalarValue
-TimestampValue :: !Text -> ScalarValue
-TimeValue :: !Text -> ScalarValue
-TinyValue :: !Int32 -> ScalarValue
-UnknownValue :: !Text -> ScalarValue
-VarbinaryValue :: !ByteString -> ScalarValue
-VarcharValue :: !Text -> ScalarValue
-YearValue :: !Text -> ScalarValue
+NumericValue :: Double -> ScalarValue
+PointValue :: Text -> ScalarValue
+PolygonValue :: Text -> ScalarValue
+SetValue :: Set Text -> ScalarValue
+SmallValue :: Int32 -> ScalarValue
+TextValue :: Text -> ScalarValue
+TimestampValue :: Text -> ScalarValue
+TimeValue :: Text -> ScalarValue
+TinyValue :: Int32 -> ScalarValue
+UnknownValue :: Text -> ScalarValue
+VarbinaryValue :: ByteString -> ScalarValue
+VarcharValue :: Text -> ScalarValue
+YearValue :: Text -> ScalarValue
 data Expression
 ValueExpression :: ScalarValue -> Expression
 AndExpression :: [Expression] -> Expression
@@ -14371,7 +14371,7 @@ ExistsExpression :: Select -> Expression
 InExpression :: Expression -> [Expression] -> Expression
 OpExpression :: Op -> Expression -> Expression -> Expression
 ColumnExpression :: FieldName -> Expression
-MethodExpression :: !Expression -> !Text -> ![Expression] -> Expression
+MethodExpression :: Expression -> Text -> [Expression] -> Expression
 data Top
 NoTop :: Top
 Top :: Int -> Top
@@ -14387,13 +14387,13 @@ NIN :: Op
 EQ' :: Op
 NEQ' :: Op
 data ConnPoolSettings
-ConnPoolSettings :: !Word -> !Word -> ConnPoolSettings
-[_cscIdleTimeout] :: ConnPoolSettings -> !Word
-[_cscMaxConnections] :: ConnPoolSettings -> !Word
+ConnPoolSettings :: Word -> Word -> ConnPoolSettings
+[_cscIdleTimeout] :: ConnPoolSettings -> Word
+[_cscMaxConnections] :: ConnPoolSettings -> Word
 data FieldName
-FieldName :: !Text -> !Text -> FieldName
-[fName] :: FieldName -> !Text
-[fNameEntity] :: FieldName -> !Text
+FieldName :: Text -> Text -> FieldName
+[fName] :: FieldName -> Text
+[fNameEntity] :: FieldName -> Text
 data FieldOrigin
 NoOrigin :: FieldOrigin
 AggregateOrigin :: [Aliased Aggregate] -> FieldOrigin
@@ -14406,8 +14406,8 @@ NonNullFieldCountable :: NonEmpty name -> Countable name
 DistinctCountable :: NonEmpty name -> Countable name
 data Aggregate
 CountAggregate :: Countable FieldName -> Aggregate
-OpAggregate :: !Text -> [Expression] -> Aggregate
-TextAggregate :: !Text -> Aggregate
+OpAggregate :: Text -> [Expression] -> Aggregate
+TextAggregate :: Text -> Aggregate
 data Projection
 ExpressionProjection :: Aliased Expression -> Projection
 FieldNameProjection :: Aliased FieldName -> Projection
@@ -14417,36 +14417,36 @@ StarProjection :: Projection
 EntityProjection :: Aliased [(FieldName, FieldOrigin)] -> Projection
 ArrayEntityProjection :: EntityAlias -> Aliased [FieldName] -> Projection
 data TableName
-TableName :: !Text -> !Maybe Text -> TableName
-[name] :: TableName -> !Text
-[schema] :: TableName -> !Maybe Text
+TableName :: Text -> Maybe Text -> TableName
+[name] :: TableName -> Text
+[schema] :: TableName -> Maybe Text
 data From
 FromQualifiedTable :: Aliased TableName -> From
 FromSelect :: Aliased Select -> From
 data Reselect
-Reselect :: ![Projection] -> !Where -> Reselect
-[reselectProjections] :: Reselect -> ![Projection]
-[reselectWhere] :: Reselect -> !Where
+Reselect :: [Projection] -> Where -> Reselect
+[reselectProjections] :: Reselect -> [Projection]
+[reselectWhere] :: Reselect -> Where
 data JoinAlias
 JoinAlias :: Text -> Maybe Text -> JoinAlias
 [joinAliasEntity] :: JoinAlias -> Text
 [joinAliasField] :: JoinAlias -> Maybe Text
 data Join
-Join :: !EntityAlias -> !Select -> !JoinType -> !Text -> !Top -> !Maybe Int -> Join
+Join :: EntityAlias -> Select -> JoinType -> Text -> Top -> Maybe Int -> Join
 
 -- | For display/debug purposes.
-[joinRightTable] :: Join -> !EntityAlias
+[joinRightTable] :: Join -> EntityAlias
 
 -- | Where to pull the data from.
-[joinSelect] :: Join -> !Select
+[joinSelect] :: Join -> Select
 
 -- | Type of join to perform in-Haskell.
-[joinType] :: Join -> !JoinType
+[joinType] :: Join -> JoinType
 
 -- | Wrap the output in this field name.
-[joinFieldName] :: Join -> !Text
-[joinTop] :: Join -> !Top
-[joinOffset] :: Join -> !Maybe Int
+[joinFieldName] :: Join -> Text
+[joinTop] :: Join -> Top
+[joinOffset] :: Join -> Maybe Int
 data JoinType
 
 -- | A join without any 'ON x=y' construct. We're querying from a table and
@@ -14478,16 +14478,16 @@ OrderBy :: FieldName -> Order -> NullsOrder -> Maybe ScalarType -> OrderBy
 [orderByNullsOrder] :: OrderBy -> NullsOrder
 [orderByType] :: OrderBy -> Maybe ScalarType
 data Select
-Select :: !InsOrdHashSet Projection -> !From -> ![Join] -> !Where -> !Maybe (NonEmpty OrderBy) -> !Maybe Int -> !Top -> [FieldName] -> !Maybe [Text] -> Select
-[selectProjections] :: Select -> !InsOrdHashSet Projection
-[selectFrom] :: Select -> !From
-[selectJoins] :: Select -> ![Join]
-[selectWhere] :: Select -> !Where
-[selectOrderBy] :: Select -> !Maybe (NonEmpty OrderBy)
-[selectSqlOffset] :: Select -> !Maybe Int
-[selectSqlTop] :: Select -> !Top
+Select :: InsOrdHashSet Projection -> From -> [Join] -> Where -> Maybe (NonEmpty OrderBy) -> Maybe Int -> Top -> [FieldName] -> Maybe [Text] -> Select
+[selectProjections] :: Select -> InsOrdHashSet Projection
+[selectFrom] :: Select -> From
+[selectJoins] :: Select -> [Join]
+[selectWhere] :: Select -> Where
+[selectOrderBy] :: Select -> Maybe (NonEmpty OrderBy)
+[selectSqlOffset] :: Select -> Maybe Int
+[selectSqlTop] :: Select -> Top
 [selectGroupBy] :: Select -> [FieldName]
-[selectFinalWantedFields] :: Select -> !Maybe [Text]
+[selectFinalWantedFields] :: Select -> Maybe [Text]
 mkMySQLScalarTypeName :: MonadError QErr m => ScalarType -> m Name
 scalarTypeDBName :: ScalarType -> Text
 defaultConnPoolSettings :: ConnPoolSettings
@@ -14824,33 +14824,33 @@ module Hasura.Backends.MySQL.DataLoader.Plan
 
 -- | A reference to a result of loading a recordset from the database.
 data Ref
-Ref :: !Int -> !Text -> Ref
+Ref :: Int -> Text -> Ref
 
 -- | This index will be generated by the planner.
-[$sel:idx:Ref] :: Ref -> !Int
+[$sel:idx:Ref] :: Ref -> Int
 
 -- | A display name. The idx gives us uniqueness.
-[$sel:text:Ref] :: Ref -> !Text
+[$sel:text:Ref] :: Ref -> Text
 
 -- | A almost-the-same version of Select from Types.Internal, except with
 --   some fields used for planning and executing.
 data Select
-Select :: !Maybe Text -> !From -> ![FieldName] -> ![Join] -> !Maybe (NonEmpty OrderBy) -> ![Projection] -> !Maybe Relationship -> !Where -> !Maybe [Text] -> !Maybe Int -> !Top -> Select
-[$sel:selectAggUnwrap:Select] :: Select -> !Maybe Text
-[$sel:selectFrom:Select] :: Select -> !From
-[$sel:selectGroupBy:Select] :: Select -> ![FieldName]
-[$sel:selectHaskellJoins:Select] :: Select -> ![Join]
-[$sel:selectOrderBy:Select] :: Select -> !Maybe (NonEmpty OrderBy)
-[$sel:selectProjections:Select] :: Select -> ![Projection]
-[$sel:selectRelationship:Select] :: Select -> !Maybe Relationship
-[$sel:selectWhere:Select] :: Select -> !Where
-[$sel:selectWantedFields:Select] :: Select -> !Maybe [Text]
-[$sel:selectSqlOffset:Select] :: Select -> !Maybe Int
-[$sel:selectSqlTop:Select] :: Select -> !Top
+Select :: Maybe Text -> From -> [FieldName] -> [Join] -> Maybe (NonEmpty OrderBy) -> [Projection] -> Maybe Relationship -> Where -> Maybe [Text] -> Maybe Int -> Top -> Select
+[$sel:selectAggUnwrap:Select] :: Select -> Maybe Text
+[$sel:selectFrom:Select] :: Select -> From
+[$sel:selectGroupBy:Select] :: Select -> [FieldName]
+[$sel:selectHaskellJoins:Select] :: Select -> [Join]
+[$sel:selectOrderBy:Select] :: Select -> Maybe (NonEmpty OrderBy)
+[$sel:selectProjections:Select] :: Select -> [Projection]
+[$sel:selectRelationship:Select] :: Select -> Maybe Relationship
+[$sel:selectWhere:Select] :: Select -> Where
+[$sel:selectWantedFields:Select] :: Select -> Maybe [Text]
+[$sel:selectSqlOffset:Select] :: Select -> Maybe Int
+[$sel:selectSqlTop:Select] :: Select -> Top
 
 -- | An join action.
 data Join
-Join :: Ref -> Ref -> !Top -> !Maybe Int -> !JoinType -> !Text -> !Maybe [Text] -> Join
+Join :: Ref -> Ref -> Top -> Maybe Int -> JoinType -> Text -> Maybe [Text] -> Join
 
 -- | Join this side...
 [$sel:leftRecordSet:Join] :: Join -> Ref
@@ -14860,24 +14860,24 @@ Join :: Ref -> Ref -> !Top -> !Maybe Int -> !JoinType -> !Text -> !Maybe [Text] 
 
 -- | Join only the top N results. It's important that we do this IN
 --   HASKELL, therefore this is not part of the generated SQL.
-[$sel:joinRhsTop:Join] :: Join -> !Top
+[$sel:joinRhsTop:Join] :: Join -> Top
 
 -- | Offset applied to the right-hand-side table.
-[$sel:joinRhsOffset:Join] :: Join -> !Maybe Int
+[$sel:joinRhsOffset:Join] :: Join -> Maybe Int
 
 -- | Type of relational join to do.
-[$sel:joinType:Join] :: Join -> !JoinType
+[$sel:joinType:Join] :: Join -> JoinType
 
 -- | Field name to return the join result as; e.g. "albums" for an artist
 --   with an array relation of albums.
-[$sel:joinFieldName:Join] :: Join -> !Text
+[$sel:joinFieldName:Join] :: Join -> Text
 
 -- | The SQL queries may achieve the data using joining fields, but those
 --   fields aren't supposed to be returned back to the user. To avoid that,
 --   we explicitly specify which fields are wanted from this join. E.g.
 --   "title" and "year", but not artist_id which was used to Haskell-join
 --   the row with an album_artist_id, or whatever.
-[$sel:wantedFields:Join] :: Join -> !Maybe [Text]
+[$sel:wantedFields:Join] :: Join -> Maybe [Text]
 
 -- | An action that the executor will perform. Either pull data from the
 --   database directly via a select, or join two other actions' record sets
@@ -14939,9 +14939,9 @@ HeadAndTail :: Ref -> Ref -> HeadAndTail
 -- | We're simply accumulating a set of actions with this. The counter lets
 --   us generate unique refs.
 data PlanState
-PlanState :: !Seq PlannedAction -> !Int -> PlanState
-[$sel:actions:PlanState] :: PlanState -> !Seq PlannedAction
-[$sel:counter:PlanState] :: PlanState -> !Int
+PlanState :: Seq PlannedAction -> Int -> PlanState
+[$sel:actions:PlanState] :: PlanState -> Seq PlannedAction
+[$sel:counter:PlanState] :: PlanState -> Int
 
 -- | Simple monad to collect actions.
 newtype Plan a
@@ -15833,39 +15833,39 @@ tempTableNameUpdated :: TempTableName
 -- | Types for Transact-SQL aka T-SQL; the language of SQL Server.
 module Hasura.Backends.BigQuery.Types
 data Select
-Select :: !Top -> !AsStruct -> !NonEmpty Projection -> !From -> ![Join] -> !Where -> !Maybe (NonEmpty OrderBy) -> !Maybe Expression -> [FieldName] -> !Maybe [Text] -> !Cardinality -> Select
-[$sel:selectTop:Select] :: Select -> !Top
-[$sel:selectAsStruct:Select] :: Select -> !AsStruct
-[$sel:selectProjections:Select] :: Select -> !NonEmpty Projection
-[$sel:selectFrom:Select] :: Select -> !From
-[$sel:selectJoins:Select] :: Select -> ![Join]
-[$sel:selectWhere:Select] :: Select -> !Where
-[$sel:selectOrderBy:Select] :: Select -> !Maybe (NonEmpty OrderBy)
-[$sel:selectOffset:Select] :: Select -> !Maybe Expression
+Select :: Top -> AsStruct -> NonEmpty Projection -> From -> [Join] -> Where -> Maybe (NonEmpty OrderBy) -> Maybe Expression -> [FieldName] -> Maybe [Text] -> Cardinality -> Select
+[$sel:selectTop:Select] :: Select -> Top
+[$sel:selectAsStruct:Select] :: Select -> AsStruct
+[$sel:selectProjections:Select] :: Select -> NonEmpty Projection
+[$sel:selectFrom:Select] :: Select -> From
+[$sel:selectJoins:Select] :: Select -> [Join]
+[$sel:selectWhere:Select] :: Select -> Where
+[$sel:selectOrderBy:Select] :: Select -> Maybe (NonEmpty OrderBy)
+[$sel:selectOffset:Select] :: Select -> Maybe Expression
 [$sel:selectGroupBy:Select] :: Select -> [FieldName]
-[$sel:selectFinalWantedFields:Select] :: Select -> !Maybe [Text]
-[$sel:selectCardinality:Select] :: Select -> !Cardinality
+[$sel:selectFinalWantedFields:Select] :: Select -> Maybe [Text]
+[$sel:selectCardinality:Select] :: Select -> Cardinality
 
 -- | Helper type allowing addition of extra fields used in PARTITION BY.
 --   
 --   The main purpose of this type is sumulation of DISTINCT ON implemented
 --   in Hasura.Backends.BigQuery.FromIr.simulateDistinctOn
 data PartitionableSelect
-PartitionableSelect :: (Maybe [FieldName] -> Select) -> !From -> PartitionableSelect
+PartitionableSelect :: (Maybe [FieldName] -> Select) -> From -> PartitionableSelect
 [$sel:pselectFinalize:PartitionableSelect] :: PartitionableSelect -> Maybe [FieldName] -> Select
-[$sel:pselectFrom:PartitionableSelect] :: PartitionableSelect -> !From
+[$sel:pselectFrom:PartitionableSelect] :: PartitionableSelect -> From
 simpleSelect :: Select -> PartitionableSelect
 noExtraPartitionFields :: PartitionableSelect -> Select
 withExtraPartitionFields :: PartitionableSelect -> [FieldName] -> Select
 data ArrayAgg
-ArrayAgg :: !NonEmpty Projection -> !Maybe (NonEmpty OrderBy) -> !Top -> ArrayAgg
-[$sel:arrayAggProjections:ArrayAgg] :: ArrayAgg -> !NonEmpty Projection
-[$sel:arrayAggOrderBy:ArrayAgg] :: ArrayAgg -> !Maybe (NonEmpty OrderBy)
-[$sel:arrayAggTop:ArrayAgg] :: ArrayAgg -> !Top
+ArrayAgg :: NonEmpty Projection -> Maybe (NonEmpty OrderBy) -> Top -> ArrayAgg
+[$sel:arrayAggProjections:ArrayAgg] :: ArrayAgg -> NonEmpty Projection
+[$sel:arrayAggOrderBy:ArrayAgg] :: ArrayAgg -> Maybe (NonEmpty OrderBy)
+[$sel:arrayAggTop:ArrayAgg] :: ArrayAgg -> Top
 data Reselect
-Reselect :: !NonEmpty Projection -> !Where -> Reselect
-[$sel:reselectProjections:Reselect] :: Reselect -> !NonEmpty Projection
-[$sel:reselectWhere:Reselect] :: Reselect -> !Where
+Reselect :: NonEmpty Projection -> Where -> Reselect
+[$sel:reselectProjections:Reselect] :: Reselect -> NonEmpty Projection
+[$sel:reselectWhere:Reselect] :: Reselect -> Where
 data OrderBy
 OrderBy :: FieldName -> Order -> NullsOrder -> OrderBy
 [$sel:orderByFieldName:OrderBy] :: OrderBy -> FieldName
@@ -15897,14 +15897,14 @@ data WindowFunction
 -- | ROW_NUMBER() OVER(PARTITION BY field)
 RowNumberOverPartitionBy :: NonEmpty FieldName -> Maybe (NonEmpty OrderBy) -> WindowFunction
 data Join
-Join :: !JoinSource -> !EntityAlias -> [(FieldName, FieldName)] -> !JoinProvenance -> !Text -> !Maybe Text -> !EntityAlias -> Join
-[$sel:joinSource:Join] :: Join -> !JoinSource
-[$sel:joinAlias:Join] :: Join -> !EntityAlias
+Join :: JoinSource -> EntityAlias -> [(FieldName, FieldName)] -> JoinProvenance -> Text -> Maybe Text -> EntityAlias -> Join
+[$sel:joinSource:Join] :: Join -> JoinSource
+[$sel:joinAlias:Join] :: Join -> EntityAlias
 [$sel:joinOn:Join] :: Join -> [(FieldName, FieldName)]
-[$sel:joinProvenance:Join] :: Join -> !JoinProvenance
-[$sel:joinFieldName:Join] :: Join -> !Text
-[$sel:joinExtractPath:Join] :: Join -> !Maybe Text
-[$sel:joinRightTable:Join] :: Join -> !EntityAlias
+[$sel:joinProvenance:Join] :: Join -> JoinProvenance
+[$sel:joinFieldName:Join] :: Join -> Text
+[$sel:joinExtractPath:Join] :: Join -> Maybe Text
+[$sel:joinRightTable:Join] :: Join -> EntityAlias
 data JoinProvenance
 OrderByJoinProvenance :: JoinProvenance
 ObjectJoinProvenance :: [Text] -> JoinProvenance
@@ -15948,7 +15948,7 @@ JsonValueExpression :: Expression -> JsonPath -> Expression
 OpExpression :: Op -> Expression -> Expression -> Expression
 ListExpression :: [Expression] -> Expression
 CastExpression :: Expression -> ScalarType -> Expression
-FunctionExpression :: !FunctionName -> [Expression] -> Expression
+FunctionExpression :: FunctionName -> [Expression] -> Expression
 ConditionalProjection :: Expression -> FieldName -> Expression
 
 -- | A function input argument expression with argument name
@@ -15960,9 +15960,9 @@ FieldPath :: JsonPath -> Text -> JsonPath
 IndexPath :: JsonPath -> Integer -> JsonPath
 data Aggregate
 CountAggregate :: Countable FieldName -> Aggregate
-OpAggregates :: !Text -> NonEmpty (Text, Expression) -> Aggregate
-OpAggregate :: !Text -> Expression -> Aggregate
-TextAggregate :: !Text -> Aggregate
+OpAggregates :: Text -> NonEmpty (Text, Expression) -> Aggregate
+OpAggregate :: Text -> Expression -> Aggregate
+TextAggregate :: Text -> Aggregate
 data Countable fieldname
 StarCountable :: Countable fieldname
 NonNullFieldCountable :: NonEmpty fieldname -> Countable fieldname
@@ -15988,9 +15988,9 @@ data JsonFieldSpec
 IntField :: Text -> JsonFieldSpec
 JsonField :: Text -> JsonFieldSpec
 data Aliased a
-Aliased :: !a -> !Text -> Aliased a
-[$sel:aliasedThing:Aliased] :: Aliased a -> !a
-[$sel:aliasedAlias:Aliased] :: Aliased a -> !Text
+Aliased :: a -> Text -> Aliased a
+[$sel:aliasedThing:Aliased] :: Aliased a -> a
+[$sel:aliasedAlias:Aliased] :: Aliased a -> Text
 newtype SchemaName
 SchemaName :: [Text] -> SchemaName
 [$sel:schemaNameParts:SchemaName] :: SchemaName -> [Text]
@@ -15999,9 +15999,9 @@ TableName :: Text -> Text -> TableName
 [$sel:tableName:TableName] :: TableName -> Text
 [$sel:tableNameSchema:TableName] :: TableName -> Text
 data FieldName
-FieldName :: Text -> !Text -> FieldName
+FieldName :: Text -> Text -> FieldName
 [$sel:fieldName:FieldName] :: FieldName -> Text
-[$sel:fieldNameEntity:FieldName] :: FieldName -> !Text
+[$sel:fieldNameEntity:FieldName] :: FieldName -> Text
 newtype ColumnName
 ColumnName :: Text -> ColumnName
 [$sel:columnName:ColumnName] :: ColumnName -> Text
@@ -16036,28 +16036,28 @@ NullValue :: Value
 
 -- | 64-bit
 --   <a>https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#integer_type</a>
-IntegerValue :: !Int64 -> Value
+IntegerValue :: Int64 -> Value
 
 -- | Fixed precision
 --   <a>https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#decimal_types</a>
-DecimalValue :: !Decimal -> Value
+DecimalValue :: Decimal -> Value
 
 -- | Fixed precision
 --   <a>https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#decimal_types</a>
-BigDecimalValue :: !BigDecimal -> Value
+BigDecimalValue :: BigDecimal -> Value
 
 -- | Floating point
 --   <a>https://cloud.google.com/bigquery/docs/reference/standard-sql/data-types#floating_point_types</a>
-FloatValue :: !Float64 -> Value
-GeographyValue :: !Geography -> Value
-StringValue :: !Text -> Value
-BytesValue :: !Base64 -> Value
-BoolValue :: !Bool -> Value
-ArrayValue :: !Vector Value -> Value
-TimestampValue :: !Timestamp -> Value
-DateValue :: !Date -> Value
-TimeValue :: !Time -> Value
-DatetimeValue :: !Datetime -> Value
+FloatValue :: Float64 -> Value
+GeographyValue :: Geography -> Value
+StringValue :: Text -> Value
+BytesValue :: Base64 -> Value
+BoolValue :: Bool -> Value
+ArrayValue :: Vector Value -> Value
+TimestampValue :: Timestamp -> Value
+DateValue :: Date -> Value
+TimeValue :: Time -> Value
+DatetimeValue :: Datetime -> Value
 
 -- | BigQuery's conception of a timestamp.
 newtype Timestamp
@@ -16120,44 +16120,44 @@ DecimalScalarType :: ScalarType
 BigDecimalScalarType :: ScalarType
 StructScalarType :: ScalarType
 data UnifiedMetadata
-UnifiedMetadata :: ![UnifiedTableMetadata] -> UnifiedMetadata
-[$sel:tables:UnifiedMetadata] :: UnifiedMetadata -> ![UnifiedTableMetadata]
+UnifiedMetadata :: [UnifiedTableMetadata] -> UnifiedMetadata
+[$sel:tables:UnifiedMetadata] :: UnifiedMetadata -> [UnifiedTableMetadata]
 data UnifiedTableMetadata
-UnifiedTableMetadata :: !UnifiedTableName -> ![UnifiedObjectRelationship] -> ![UnifiedArrayRelationship] -> ![UnifiedColumn] -> UnifiedTableMetadata
-[$sel:table:UnifiedTableMetadata] :: UnifiedTableMetadata -> !UnifiedTableName
-[$sel:object_relationships:UnifiedTableMetadata] :: UnifiedTableMetadata -> ![UnifiedObjectRelationship]
-[$sel:array_relationships:UnifiedTableMetadata] :: UnifiedTableMetadata -> ![UnifiedArrayRelationship]
-[$sel:columns:UnifiedTableMetadata] :: UnifiedTableMetadata -> ![UnifiedColumn]
+UnifiedTableMetadata :: UnifiedTableName -> [UnifiedObjectRelationship] -> [UnifiedArrayRelationship] -> [UnifiedColumn] -> UnifiedTableMetadata
+[$sel:table:UnifiedTableMetadata] :: UnifiedTableMetadata -> UnifiedTableName
+[$sel:object_relationships:UnifiedTableMetadata] :: UnifiedTableMetadata -> [UnifiedObjectRelationship]
+[$sel:array_relationships:UnifiedTableMetadata] :: UnifiedTableMetadata -> [UnifiedArrayRelationship]
+[$sel:columns:UnifiedTableMetadata] :: UnifiedTableMetadata -> [UnifiedColumn]
 data UnifiedColumn
-UnifiedColumn :: !Text -> !ScalarType -> UnifiedColumn
-[$sel:name:UnifiedColumn] :: UnifiedColumn -> !Text
-[$sel:type':UnifiedColumn] :: UnifiedColumn -> !ScalarType
+UnifiedColumn :: Text -> ScalarType -> UnifiedColumn
+[$sel:name:UnifiedColumn] :: UnifiedColumn -> Text
+[$sel:type':UnifiedColumn] :: UnifiedColumn -> ScalarType
 data UnifiedTableName
-UnifiedTableName :: !Text -> !Text -> UnifiedTableName
-[$sel:schema:UnifiedTableName] :: UnifiedTableName -> !Text
-[$sel:name:UnifiedTableName] :: UnifiedTableName -> !Text
+UnifiedTableName :: Text -> Text -> UnifiedTableName
+[$sel:schema:UnifiedTableName] :: UnifiedTableName -> Text
+[$sel:name:UnifiedTableName] :: UnifiedTableName -> Text
 data UnifiedObjectRelationship
-UnifiedObjectRelationship :: !UnifiedUsing -> !Text -> UnifiedObjectRelationship
-[$sel:using:UnifiedObjectRelationship] :: UnifiedObjectRelationship -> !UnifiedUsing
-[$sel:name:UnifiedObjectRelationship] :: UnifiedObjectRelationship -> !Text
+UnifiedObjectRelationship :: UnifiedUsing -> Text -> UnifiedObjectRelationship
+[$sel:using:UnifiedObjectRelationship] :: UnifiedObjectRelationship -> UnifiedUsing
+[$sel:name:UnifiedObjectRelationship] :: UnifiedObjectRelationship -> Text
 data UnifiedArrayRelationship
-UnifiedArrayRelationship :: !UnifiedUsing -> !Text -> UnifiedArrayRelationship
-[$sel:using:UnifiedArrayRelationship] :: UnifiedArrayRelationship -> !UnifiedUsing
-[$sel:name:UnifiedArrayRelationship] :: UnifiedArrayRelationship -> !Text
+UnifiedArrayRelationship :: UnifiedUsing -> Text -> UnifiedArrayRelationship
+[$sel:using:UnifiedArrayRelationship] :: UnifiedArrayRelationship -> UnifiedUsing
+[$sel:name:UnifiedArrayRelationship] :: UnifiedArrayRelationship -> Text
 data UnifiedUsing
-UnifiedUsing :: !UnifiedOn -> UnifiedUsing
-[$sel:foreign_key_constraint_on:UnifiedUsing] :: UnifiedUsing -> !UnifiedOn
+UnifiedUsing :: UnifiedOn -> UnifiedUsing
+[$sel:foreign_key_constraint_on:UnifiedUsing] :: UnifiedUsing -> UnifiedOn
 data UnifiedOn
-UnifiedOn :: !UnifiedTableName -> !Text -> UnifiedOn
-[$sel:table:UnifiedOn] :: UnifiedOn -> !UnifiedTableName
-[$sel:column:UnifiedOn] :: UnifiedOn -> !Text
+UnifiedOn :: UnifiedTableName -> Text -> UnifiedOn
+[$sel:table:UnifiedOn] :: UnifiedOn -> UnifiedTableName
+[$sel:column:UnifiedOn] :: UnifiedOn -> Text
 data BooleanOperators a
-ASTContains :: !a -> BooleanOperators a
-ASTEquals :: !a -> BooleanOperators a
-ASTTouches :: !a -> BooleanOperators a
-ASTWithin :: !a -> BooleanOperators a
-ASTIntersects :: !a -> BooleanOperators a
-ASTDWithin :: !DWithinGeogOp a -> BooleanOperators a
+ASTContains :: a -> BooleanOperators a
+ASTEquals :: a -> BooleanOperators a
+ASTTouches :: a -> BooleanOperators a
+ASTWithin :: a -> BooleanOperators a
+ASTIntersects :: a -> BooleanOperators a
+ASTDWithin :: DWithinGeogOp a -> BooleanOperators a
 data FunctionName
 FunctionName :: Text -> Maybe Text -> FunctionName
 [$sel:functionName:FunctionName] :: FunctionName -> Text
@@ -17776,15 +17776,15 @@ convertGraphQLField :: Eq var => GraphQLField Void var -> Field NoFragments var
 --   on the abstract type) that is common across all the member selection
 --   sets and used that as the base selection.
 reduceAbstractTypeSelectionSet :: Eq var => DeduplicatedSelectionSet Void var -> (ObjectSelectionSet Void var, HashMap Name (ObjectSelectionSet Void var))
-_FieldRemote :: forall r_akKu6 var_akKu7. Prism' (Field r_akKu6 var_akKu7) (SchemaRemoteRelationshipSelect r_akKu6)
-_FieldGraphQL :: forall r_akKu6 var_akLUi var_akKu7. Prism (Field r_akKu6 var_akLUi) (Field r_akKu6 var_akKu7) (GraphQLField r_akKu6 var_akLUi) (GraphQLField r_akKu6 var_akKu7)
-fSelectionSet :: forall r_akKu4 var_akKu5 r_akLWj. Lens (GraphQLField r_akKu4 var_akKu5) (GraphQLField r_akLWj var_akKu5) (SelectionSet r_akKu4 var_akKu5) (SelectionSet r_akLWj var_akKu5)
-fName :: forall r_akKu4 var_akKu5. Lens' (GraphQLField r_akKu4 var_akKu5) Name
-fDirectives :: forall r_akKu4 var_akKu5. Lens' (GraphQLField r_akKu4 var_akKu5) [Directive var_akKu5]
-fArguments :: forall r_akKu4 var_akKu5. Lens' (GraphQLField r_akKu4 var_akKu5) (HashMap Name (Value var_akKu5))
-fAlias :: forall r_akKu4 var_akKu5. Lens' (GraphQLField r_akKu4 var_akKu5) Name
-dssMemberSelectionSets :: forall r_akKua var_akKub r_akLZB var_akLZC. Lens (DeduplicatedSelectionSet r_akKua var_akKub) (DeduplicatedSelectionSet r_akLZB var_akLZC) (HashMap Name (ObjectSelectionSet r_akKua var_akKub)) (HashMap Name (ObjectSelectionSet r_akLZB var_akLZC))
-dssCommonFields :: forall r_akKua var_akKub. Lens' (DeduplicatedSelectionSet r_akKua var_akKub) (HashSet Name)
+_FieldRemote :: forall r_akKqW var_akKqX. Prism' (Field r_akKqW var_akKqX) (SchemaRemoteRelationshipSelect r_akKqW)
+_FieldGraphQL :: forall r_akKqW var_akLR8 var_akKqX. Prism (Field r_akKqW var_akLR8) (Field r_akKqW var_akKqX) (GraphQLField r_akKqW var_akLR8) (GraphQLField r_akKqW var_akKqX)
+fSelectionSet :: forall r_akKqU var_akKqV r_akLT9. Lens (GraphQLField r_akKqU var_akKqV) (GraphQLField r_akLT9 var_akKqV) (SelectionSet r_akKqU var_akKqV) (SelectionSet r_akLT9 var_akKqV)
+fName :: forall r_akKqU var_akKqV. Lens' (GraphQLField r_akKqU var_akKqV) Name
+fDirectives :: forall r_akKqU var_akKqV. Lens' (GraphQLField r_akKqU var_akKqV) [Directive var_akKqV]
+fArguments :: forall r_akKqU var_akKqV. Lens' (GraphQLField r_akKqU var_akKqV) (HashMap Name (Value var_akKqV))
+fAlias :: forall r_akKqU var_akKqV. Lens' (GraphQLField r_akKqU var_akKqV) Name
+dssMemberSelectionSets :: forall r_akKr0 var_akKr1 r_akLWr var_akLWs. Lens (DeduplicatedSelectionSet r_akKr0 var_akKr1) (DeduplicatedSelectionSet r_akLWr var_akLWs) (HashMap Name (ObjectSelectionSet r_akKr0 var_akKr1)) (HashMap Name (ObjectSelectionSet r_akLWr var_akLWs))
+dssCommonFields :: forall r_akKr0 var_akKr1. Lens' (DeduplicatedSelectionSet r_akKr0 var_akKr1) (HashSet Name)
 instance Data.Traversable.Traversable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance Data.Foldable.Foldable Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
 instance GHC.Base.Functor Hasura.RQL.IR.RemoteSchema.SchemaRemoteRelationshipSelect
@@ -18026,10 +18026,10 @@ FIColumn :: ColumnInfo b -> FieldInfo (b :: BackendType)
 FIRelationship :: RelInfo b -> FieldInfo (b :: BackendType)
 FIComputedField :: ComputedFieldInfo b -> FieldInfo (b :: BackendType)
 FIRemoteRelationship :: RemoteFieldInfo (DBJoinField b) -> FieldInfo (b :: BackendType)
-_FIRemoteRelationship :: forall b_al1P4. Prism' (FieldInfo b_al1P4) (RemoteFieldInfo (DBJoinField b_al1P4))
-_FIComputedField :: forall b_al1P4. Prism' (FieldInfo b_al1P4) (ComputedFieldInfo b_al1P4)
-_FIRelationship :: forall b_al1P4. Prism' (FieldInfo b_al1P4) (RelInfo b_al1P4)
-_FIColumn :: forall b_al1P4. Prism' (FieldInfo b_al1P4) (ColumnInfo b_al1P4)
+_FIRemoteRelationship :: forall b_al1LU. Prism' (FieldInfo b_al1LU) (RemoteFieldInfo (DBJoinField b_al1LU))
+_FIComputedField :: forall b_al1LU. Prism' (FieldInfo b_al1LU) (ComputedFieldInfo b_al1LU)
+_FIRelationship :: forall b_al1LU. Prism' (FieldInfo b_al1LU) (RelInfo b_al1LU)
+_FIColumn :: forall b_al1LU. Prism' (FieldInfo b_al1LU) (ColumnInfo b_al1LU)
 type FieldInfoMap = HashMap FieldName
 fieldInfoName :: forall b. Backend b => FieldInfo b -> FieldName
 fieldInfoGraphQLName :: FieldInfo b -> Maybe Name
@@ -18112,10 +18112,10 @@ RolePermInfo :: Maybe (InsPermInfo b) -> Maybe (SelPermInfo b) -> Maybe (UpdPerm
 [_permSel] :: RolePermInfo (b :: BackendType) -> Maybe (SelPermInfo b)
 [_permUpd] :: RolePermInfo (b :: BackendType) -> Maybe (UpdPermInfo b)
 [_permDel] :: RolePermInfo (b :: BackendType) -> Maybe (DelPermInfo b)
-permUpd :: forall b_al2DO. Lens' (RolePermInfo b_al2DO) (Maybe (UpdPermInfo b_al2DO))
-permSel :: forall b_al2DO. Lens' (RolePermInfo b_al2DO) (Maybe (SelPermInfo b_al2DO))
-permIns :: forall b_al2DO. Lens' (RolePermInfo b_al2DO) (Maybe (InsPermInfo b_al2DO))
-permDel :: forall b_al2DO. Lens' (RolePermInfo b_al2DO) (Maybe (DelPermInfo b_al2DO))
+permUpd :: forall b_al2AE. Lens' (RolePermInfo b_al2AE) (Maybe (UpdPermInfo b_al2AE))
+permSel :: forall b_al2AE. Lens' (RolePermInfo b_al2AE) (Maybe (SelPermInfo b_al2AE))
+permIns :: forall b_al2AE. Lens' (RolePermInfo b_al2AE) (Maybe (InsPermInfo b_al2AE))
+permDel :: forall b_al2AE. Lens' (RolePermInfo b_al2AE) (Maybe (DelPermInfo b_al2AE))
 type RolePermInfoMap b = HashMap RoleName (RolePermInfo b)
 data ViewInfo
 ViewInfo :: Bool -> Bool -> Bool -> ViewInfo
@@ -18133,10 +18133,10 @@ TableConfig :: TableCustomRootFields -> HashMap (Column b) ColumnConfig -> Maybe
 [_tcColumnConfig] :: TableConfig b -> HashMap (Column b) ColumnConfig
 [_tcCustomName] :: TableConfig b -> Maybe Name
 [_tcComment] :: TableConfig b -> Comment
-tcCustomRootFields :: forall b_al6lt. Lens' (TableConfig b_al6lt) TableCustomRootFields
-tcCustomName :: forall b_al6lt. Lens' (TableConfig b_al6lt) (Maybe Name)
-tcComment :: forall b_al6lt. Lens' (TableConfig b_al6lt) Comment
-tcColumnConfig :: forall b_al6lt b_al71O. Lens (TableConfig b_al6lt) (TableConfig b_al71O) (HashMap (Column b_al6lt) ColumnConfig) (HashMap (Column b_al71O) ColumnConfig)
+tcCustomRootFields :: forall b_al6ij. Lens' (TableConfig b_al6ij) TableCustomRootFields
+tcCustomName :: forall b_al6ij. Lens' (TableConfig b_al6ij) (Maybe Name)
+tcComment :: forall b_al6ij. Lens' (TableConfig b_al6ij) Comment
+tcColumnConfig :: forall b_al6ij b_al6YE. Lens (TableConfig b_al6ij) (TableConfig b_al6YE) (HashMap (Column b_al6ij) ColumnConfig) (HashMap (Column b_al6YE) ColumnConfig)
 emptyTableConfig :: TableConfig b
 data Constraint (b :: BackendType)
 Constraint :: ConstraintName b -> OID -> Constraint (b :: BackendType)
@@ -18146,8 +18146,8 @@ data PrimaryKey (b :: BackendType) a
 PrimaryKey :: Constraint b -> NESeq a -> PrimaryKey (b :: BackendType) a
 [_pkConstraint] :: PrimaryKey (b :: BackendType) a -> Constraint b
 [_pkColumns] :: PrimaryKey (b :: BackendType) a -> NESeq a
-pkConstraint :: forall b_al72q a_al72r b_al9ay. Lens (PrimaryKey b_al72q a_al72r) (PrimaryKey b_al9ay a_al72r) (Constraint b_al72q) (Constraint b_al9ay)
-pkColumns :: forall b_al72q a_al72r a_al9ax. Lens (PrimaryKey b_al72q a_al72r) (PrimaryKey b_al72q a_al9ax) (NESeq a_al72r) (NESeq a_al9ax)
+pkConstraint :: forall b_al6Zg a_al6Zh b_al97o. Lens (PrimaryKey b_al6Zg a_al6Zh) (PrimaryKey b_al97o a_al6Zh) (Constraint b_al6Zg) (Constraint b_al97o)
+pkColumns :: forall b_al6Zg a_al6Zh a_al97n. Lens (PrimaryKey b_al6Zg a_al6Zh) (PrimaryKey b_al6Zg a_al97n) (NESeq a_al6Zh) (NESeq a_al97n)
 
 -- | Data type modelling uniqueness constraints. Occasionally this will
 --   include primary keys, although those are tracked separately in
@@ -18190,17 +18190,17 @@ TableCoreInfo :: TableName b -> Maybe PGDescription -> FieldInfoMap field -> May
 [_tciCustomConfig] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> TableConfig b
 [_tciExtraTableMetadata] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> ExtraTableMetadata b
 [_tciApolloFederationConfig] :: TableCoreInfoG (b :: BackendType) field primaryKeyColumn -> Maybe ApolloFederationConfig
-tciViewInfo :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (Maybe ViewInfo)
-tciUniqueConstraints :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (HashSet (UniqueConstraint b_al9b5))
-tciPrimaryKey :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7 primaryKeyColumn_albsu. Lens (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_albsu) (Maybe (PrimaryKey b_al9b5 primaryKeyColumn_al9b7)) (Maybe (PrimaryKey b_al9b5 primaryKeyColumn_albsu))
-tciName :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (TableName b_al9b5)
-tciForeignKeys :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (HashSet (ForeignKey b_al9b5))
-tciFieldInfoMap :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7 field_albst. Lens (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (TableCoreInfoG b_al9b5 field_albst primaryKeyColumn_al9b7) (FieldInfoMap field_al9b6) (FieldInfoMap field_albst)
-tciExtraTableMetadata :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (ExtraTableMetadata b_al9b5)
-tciEnumValues :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (Maybe EnumValues)
-tciDescription :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (Maybe PGDescription)
-tciCustomConfig :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (TableConfig b_al9b5)
-tciApolloFederationConfig :: forall b_al9b5 field_al9b6 primaryKeyColumn_al9b7. Lens' (TableCoreInfoG b_al9b5 field_al9b6 primaryKeyColumn_al9b7) (Maybe ApolloFederationConfig)
+tciViewInfo :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (Maybe ViewInfo)
+tciUniqueConstraints :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (HashSet (UniqueConstraint b_al97V))
+tciPrimaryKey :: forall b_al97V field_al97W primaryKeyColumn_al97X primaryKeyColumn_albpk. Lens (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_albpk) (Maybe (PrimaryKey b_al97V primaryKeyColumn_al97X)) (Maybe (PrimaryKey b_al97V primaryKeyColumn_albpk))
+tciName :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (TableName b_al97V)
+tciForeignKeys :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (HashSet (ForeignKey b_al97V))
+tciFieldInfoMap :: forall b_al97V field_al97W primaryKeyColumn_al97X field_albpj. Lens (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (TableCoreInfoG b_al97V field_albpj primaryKeyColumn_al97X) (FieldInfoMap field_al97W) (FieldInfoMap field_albpj)
+tciExtraTableMetadata :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (ExtraTableMetadata b_al97V)
+tciEnumValues :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (Maybe EnumValues)
+tciDescription :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (Maybe PGDescription)
+tciCustomConfig :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (TableConfig b_al97V)
+tciApolloFederationConfig :: forall b_al97V field_al97W primaryKeyColumn_al97X. Lens' (TableCoreInfoG b_al97V field_al97W primaryKeyColumn_al97X) (Maybe ApolloFederationConfig)
 
 -- | Fully-processed table info that includes non-column fields.
 type TableCoreInfo b = TableCoreInfoG b (FieldInfo b) (ColumnInfo b)
@@ -18211,10 +18211,10 @@ TableInfo :: TableCoreInfo b -> RolePermInfoMap b -> EventTriggerInfoMap b -> Ro
 [_tiRolePermInfoMap] :: TableInfo (b :: BackendType) -> RolePermInfoMap b
 [_tiEventTriggerInfoMap] :: TableInfo (b :: BackendType) -> EventTriggerInfoMap b
 [_tiAdminRolePermInfo] :: TableInfo (b :: BackendType) -> RolePermInfo b
-tiRolePermInfoMap :: forall b_albv7. Lens' (TableInfo b_albv7) (RolePermInfoMap b_albv7)
-tiEventTriggerInfoMap :: forall b_albv7. Lens' (TableInfo b_albv7) (EventTriggerInfoMap b_albv7)
-tiCoreInfo :: forall b_albv7. Lens' (TableInfo b_albv7) (TableCoreInfo b_albv7)
-tiAdminRolePermInfo :: forall b_albv7. Lens' (TableInfo b_albv7) (RolePermInfo b_albv7)
+tiRolePermInfoMap :: forall b_albrX. Lens' (TableInfo b_albrX) (RolePermInfoMap b_albrX)
+tiEventTriggerInfoMap :: forall b_albrX. Lens' (TableInfo b_albrX) (EventTriggerInfoMap b_albrX)
+tiCoreInfo :: forall b_albrX. Lens' (TableInfo b_albrX) (TableCoreInfo b_albrX)
+tiAdminRolePermInfo :: forall b_albrX. Lens' (TableInfo b_albrX) (RolePermInfo b_albrX)
 tiName :: Lens' (TableInfo b) (TableName b)
 tableInfoName :: TableInfo b -> TableName b
 getRolePermInfo :: RoleName -> TableInfo b -> RolePermInfo b
@@ -18383,12 +18383,12 @@ SourceInfo :: !SourceName -> !TableCache b -> !FunctionCache b -> !SourceConfig 
 [_siConfiguration] :: SourceInfo b -> !SourceConfig b
 [_siQueryTagsConfig] :: SourceInfo b -> !Maybe QueryTagsConfig
 [_siCustomization] :: SourceInfo b -> !SourceCustomization
-siTables :: forall b_alYFj. Lens' (SourceInfo b_alYFj) (TableCache b_alYFj)
-siQueryTagsConfig :: forall b_alYFj. Lens' (SourceInfo b_alYFj) (Maybe QueryTagsConfig)
-siName :: forall b_alYFj. Lens' (SourceInfo b_alYFj) SourceName
-siFunctions :: forall b_alYFj. Lens' (SourceInfo b_alYFj) (FunctionCache b_alYFj)
-siCustomization :: forall b_alYFj. Lens' (SourceInfo b_alYFj) SourceCustomization
-siConfiguration :: forall b_alYFj. Lens' (SourceInfo b_alYFj) (SourceConfig b_alYFj)
+siTables :: forall b_alYC9. Lens' (SourceInfo b_alYC9) (TableCache b_alYC9)
+siQueryTagsConfig :: forall b_alYC9. Lens' (SourceInfo b_alYC9) (Maybe QueryTagsConfig)
+siName :: forall b_alYC9. Lens' (SourceInfo b_alYC9) SourceName
+siFunctions :: forall b_alYC9. Lens' (SourceInfo b_alYC9) (FunctionCache b_alYC9)
+siCustomization :: forall b_alYC9. Lens' (SourceInfo b_alYC9) SourceCustomization
+siConfiguration :: forall b_alYC9. Lens' (SourceInfo b_alYC9) (SourceConfig b_alYC9)
 type BackendSourceInfo = AnyBackend SourceInfo
 type SourceCache = HashMap SourceName BackendSourceInfo
 unsafeSourceInfo :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceInfo b)
@@ -18817,15 +18817,15 @@ amPermissions :: Lens' ActionMetadata [ActionPermissionMetadata]
 amName :: Lens' ActionMetadata ActionName
 amDefinition :: Lens' ActionMetadata ActionDefinitionInput
 amComment :: Lens' ActionMetadata (Maybe Text)
-adType :: forall arg_amqgd webhook_amqge. Lens' (ActionDefinition arg_amqgd webhook_amqge) ActionType
-adTimeout :: forall arg_amqgd webhook_amqge. Lens' (ActionDefinition arg_amqgd webhook_amqge) Timeout
-adResponseTransform :: forall arg_amqgd webhook_amqge. Lens' (ActionDefinition arg_amqgd webhook_amqge) (Maybe MetadataResponseTransform)
-adRequestTransform :: forall arg_amqgd webhook_amqge. Lens' (ActionDefinition arg_amqgd webhook_amqge) (Maybe RequestTransform)
-adOutputType :: forall arg_amqgd webhook_amqge. Lens' (ActionDefinition arg_amqgd webhook_amqge) GraphQLType
-adHeaders :: forall arg_amqgd webhook_amqge. Lens' (ActionDefinition arg_amqgd webhook_amqge) [HeaderConf]
-adHandler :: forall arg_amqgd webhook_amqge webhook_amsxX. Lens (ActionDefinition arg_amqgd webhook_amqge) (ActionDefinition arg_amqgd webhook_amsxX) webhook_amqge webhook_amsxX
-adForwardClientHeaders :: forall arg_amqgd webhook_amqge. Lens' (ActionDefinition arg_amqgd webhook_amqge) Bool
-adArguments :: forall arg_amqgd webhook_amqge arg_amsxW. Lens (ActionDefinition arg_amqgd webhook_amqge) (ActionDefinition arg_amsxW webhook_amqge) [ArgumentDefinition arg_amqgd] [ArgumentDefinition arg_amsxW]
+adType :: forall arg_amqd3 webhook_amqd4. Lens' (ActionDefinition arg_amqd3 webhook_amqd4) ActionType
+adTimeout :: forall arg_amqd3 webhook_amqd4. Lens' (ActionDefinition arg_amqd3 webhook_amqd4) Timeout
+adResponseTransform :: forall arg_amqd3 webhook_amqd4. Lens' (ActionDefinition arg_amqd3 webhook_amqd4) (Maybe MetadataResponseTransform)
+adRequestTransform :: forall arg_amqd3 webhook_amqd4. Lens' (ActionDefinition arg_amqd3 webhook_amqd4) (Maybe RequestTransform)
+adOutputType :: forall arg_amqd3 webhook_amqd4. Lens' (ActionDefinition arg_amqd3 webhook_amqd4) GraphQLType
+adHeaders :: forall arg_amqd3 webhook_amqd4. Lens' (ActionDefinition arg_amqd3 webhook_amqd4) [HeaderConf]
+adHandler :: forall arg_amqd3 webhook_amqd4 webhook_amsuN. Lens (ActionDefinition arg_amqd3 webhook_amqd4) (ActionDefinition arg_amqd3 webhook_amsuN) webhook_amqd4 webhook_amsuN
+adForwardClientHeaders :: forall arg_amqd3 webhook_amqd4. Lens' (ActionDefinition arg_amqd3 webhook_amqd4) Bool
+adArguments :: forall arg_amqd3 webhook_amqd4 arg_amsuM. Lens (ActionDefinition arg_amqd3 webhook_amqd4) (ActionDefinition arg_amsuM webhook_amqd4) [ArgumentDefinition arg_amqd3] [ArgumentDefinition arg_amsuM]
 aiPermissions :: Lens' ActionInfo (HashMap RoleName ActionPermissionInfo)
 aiOutputType :: Lens' ActionInfo (GType, AnnotatedOutputType)
 aiName :: Lens' ActionInfo ActionName
@@ -18978,10 +18978,10 @@ ActionRemoteRelationshipSelect :: HashMap FieldName Name -> r -> ActionRemoteRel
 --   an execution tree is constructed so that a backend is absolved of
 --   dealing with remote relationships.
 [_arrsRelationship] :: ActionRemoteRelationshipSelect r -> r
-_ACFNestedObject :: forall r_amGrb. Prism' (ActionFieldG r_amGrb) (Name, ActionFieldsG r_amGrb)
-_ACFExpression :: forall r_amGrb. Prism' (ActionFieldG r_amGrb) Text
-_ACFRemote :: forall r_amGrb. Prism' (ActionFieldG r_amGrb) (ActionRemoteRelationshipSelect r_amGrb)
-_ACFScalar :: forall r_amGrb. Prism' (ActionFieldG r_amGrb) Name
+_ACFNestedObject :: forall r_amGo1. Prism' (ActionFieldG r_amGo1) (Name, ActionFieldsG r_amGo1)
+_ACFExpression :: forall r_amGo1. Prism' (ActionFieldG r_amGo1) Text
+_ACFRemote :: forall r_amGo1. Prism' (ActionFieldG r_amGo1) (ActionRemoteRelationshipSelect r_amGo1)
+_ACFScalar :: forall r_amGo1. Prism' (ActionFieldG r_amGo1) Name
 data AnnActionExecution (r :: Type)
 AnnActionExecution :: !ActionName -> !GraphQLType -> !ActionFieldsG r -> !Value -> !ActionOutputFields -> !EnvRecord ResolvedWebhook -> ![HeaderConf] -> !Bool -> !Timeout -> !Maybe RequestTransform -> !Maybe MetadataResponseTransform -> AnnActionExecution (r :: Type)
 [_aaeName] :: AnnActionExecution (r :: Type) -> !ActionName
@@ -19036,30 +19036,30 @@ ASINoSource :: ActionSourceInfo b
 
 -- | All relationships refer to tables in one source
 ASISource :: SourceName -> SourceConfig b -> ActionSourceInfo b
-aaaqStringifyNum :: forall b_amGPp r_amGPq. Lens' (AnnActionAsyncQuery b_amGPp r_amGPq) StringifyNumbers
-aaaqSource :: forall b_amGPp r_amGPq. Lens' (AnnActionAsyncQuery b_amGPp r_amGPq) (ActionSourceInfo b_amGPp)
-aaaqOutputType :: forall b_amGPp r_amGPq. Lens' (AnnActionAsyncQuery b_amGPp r_amGPq) GraphQLType
-aaaqName :: forall b_amGPp r_amGPq. Lens' (AnnActionAsyncQuery b_amGPp r_amGPq) ActionName
-aaaqForwardClientHeaders :: forall b_amGPp r_amGPq. Lens' (AnnActionAsyncQuery b_amGPp r_amGPq) Bool
-aaaqFields :: forall b_amGPp r_amGPq r_amHse. Lens (AnnActionAsyncQuery b_amGPp r_amGPq) (AnnActionAsyncQuery b_amGPp r_amHse) (AsyncActionQueryFieldsG r_amGPq) (AsyncActionQueryFieldsG r_amHse)
-aaaqDefinitionList :: forall b_amGPp r_amGPq. Lens' (AnnActionAsyncQuery b_amGPp r_amGPq) [(Column b_amGPp, ScalarType b_amGPp)]
-aaaqActionId :: forall b_amGPp r_amGPq. Lens' (AnnActionAsyncQuery b_amGPp r_amGPq) ActionId
-aaeWebhook :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) (EnvRecord ResolvedWebhook)
-aaeTimeOut :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) Timeout
-aaeResponseTransform :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) (Maybe MetadataResponseTransform)
-aaeRequestTransform :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) (Maybe RequestTransform)
-aaePayload :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) Value
-aaeOutputType :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) GraphQLType
-aaeOutputFields :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) ActionOutputFields
-aaeName :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) ActionName
-aaeHeaders :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) [HeaderConf]
-aaeForwardClientHeaders :: forall r_amGPt. Lens' (AnnActionExecution r_amGPt) Bool
-aaeFields :: forall r_amGPt r_amHy3. Lens (AnnActionExecution r_amGPt) (AnnActionExecution r_amHy3) (ActionFieldsG r_amGPt) (ActionFieldsG r_amHy3)
-_AsyncErrors :: forall r_amGPs. Prism' (AsyncActionQueryFieldG r_amGPs) ()
-_AsyncCreatedAt :: forall r_amGPs. Prism' (AsyncActionQueryFieldG r_amGPs) ()
-_AsyncId :: forall r_amGPs. Prism' (AsyncActionQueryFieldG r_amGPs) ()
-_AsyncOutput :: forall r_amHFi r_amGPs. Prism (AsyncActionQueryFieldG r_amHFi) (AsyncActionQueryFieldG r_amGPs) (ActionFieldsG r_amHFi) (ActionFieldsG r_amGPs)
-_AsyncTypename :: forall r_amGPs. Prism' (AsyncActionQueryFieldG r_amGPs) Text
+aaaqStringifyNum :: forall b_amGMf r_amGMg. Lens' (AnnActionAsyncQuery b_amGMf r_amGMg) StringifyNumbers
+aaaqSource :: forall b_amGMf r_amGMg. Lens' (AnnActionAsyncQuery b_amGMf r_amGMg) (ActionSourceInfo b_amGMf)
+aaaqOutputType :: forall b_amGMf r_amGMg. Lens' (AnnActionAsyncQuery b_amGMf r_amGMg) GraphQLType
+aaaqName :: forall b_amGMf r_amGMg. Lens' (AnnActionAsyncQuery b_amGMf r_amGMg) ActionName
+aaaqForwardClientHeaders :: forall b_amGMf r_amGMg. Lens' (AnnActionAsyncQuery b_amGMf r_amGMg) Bool
+aaaqFields :: forall b_amGMf r_amGMg r_amHp4. Lens (AnnActionAsyncQuery b_amGMf r_amGMg) (AnnActionAsyncQuery b_amGMf r_amHp4) (AsyncActionQueryFieldsG r_amGMg) (AsyncActionQueryFieldsG r_amHp4)
+aaaqDefinitionList :: forall b_amGMf r_amGMg. Lens' (AnnActionAsyncQuery b_amGMf r_amGMg) [(Column b_amGMf, ScalarType b_amGMf)]
+aaaqActionId :: forall b_amGMf r_amGMg. Lens' (AnnActionAsyncQuery b_amGMf r_amGMg) ActionId
+aaeWebhook :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) (EnvRecord ResolvedWebhook)
+aaeTimeOut :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) Timeout
+aaeResponseTransform :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) (Maybe MetadataResponseTransform)
+aaeRequestTransform :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) (Maybe RequestTransform)
+aaePayload :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) Value
+aaeOutputType :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) GraphQLType
+aaeOutputFields :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) ActionOutputFields
+aaeName :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) ActionName
+aaeHeaders :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) [HeaderConf]
+aaeForwardClientHeaders :: forall r_amGMj. Lens' (AnnActionExecution r_amGMj) Bool
+aaeFields :: forall r_amGMj r_amHuT. Lens (AnnActionExecution r_amGMj) (AnnActionExecution r_amHuT) (ActionFieldsG r_amGMj) (ActionFieldsG r_amHuT)
+_AsyncErrors :: forall r_amGMi. Prism' (AsyncActionQueryFieldG r_amGMi) ()
+_AsyncCreatedAt :: forall r_amGMi. Prism' (AsyncActionQueryFieldG r_amGMi) ()
+_AsyncId :: forall r_amGMi. Prism' (AsyncActionQueryFieldG r_amGMi) ()
+_AsyncOutput :: forall r_amHC8 r_amGMi. Prism (AsyncActionQueryFieldG r_amHC8) (AsyncActionQueryFieldG r_amGMi) (ActionFieldsG r_amHC8) (ActionFieldsG r_amGMi)
+_AsyncTypename :: forall r_amGMi. Prism' (AsyncActionQueryFieldG r_amGMi) Text
 instance Data.Traversable.Traversable Hasura.RQL.IR.Action.AnnActionExecution
 instance Data.Foldable.Foldable Hasura.RQL.IR.Action.AnnActionExecution
 instance GHC.Base.Functor Hasura.RQL.IR.Action.AnnActionExecution
@@ -19151,14 +19151,14 @@ mkSelectExpFromColumnValues :: forall pgKind m. MonadError QErr m => QualifiedTa
 --   See <a>Backend</a>.
 module Hasura.Backends.Postgres.DDL.Table
 data EnumTableIntegrityError (b :: BackendType)
-EnumTablePostgresError :: !Text -> EnumTableIntegrityError (b :: BackendType)
+EnumTablePostgresError :: Text -> EnumTableIntegrityError (b :: BackendType)
 EnumTableMissingPrimaryKey :: EnumTableIntegrityError (b :: BackendType)
-EnumTableMultiColumnPrimaryKey :: ![PGCol] -> EnumTableIntegrityError (b :: BackendType)
-EnumTableNonTextualPrimaryKey :: !RawColumnInfo b -> EnumTableIntegrityError (b :: BackendType)
+EnumTableMultiColumnPrimaryKey :: [PGCol] -> EnumTableIntegrityError (b :: BackendType)
+EnumTableNonTextualPrimaryKey :: RawColumnInfo b -> EnumTableIntegrityError (b :: BackendType)
 EnumTableNoEnumValues :: EnumTableIntegrityError (b :: BackendType)
-EnumTableInvalidEnumValueNames :: !NonEmpty Text -> EnumTableIntegrityError (b :: BackendType)
-EnumTableNonTextualCommentColumn :: !RawColumnInfo b -> EnumTableIntegrityError (b :: BackendType)
-EnumTableTooManyColumns :: ![PGCol] -> EnumTableIntegrityError (b :: BackendType)
+EnumTableInvalidEnumValueNames :: NonEmpty Text -> EnumTableIntegrityError (b :: BackendType)
+EnumTableNonTextualCommentColumn :: RawColumnInfo b -> EnumTableIntegrityError (b :: BackendType)
+EnumTableTooManyColumns :: [PGCol] -> EnumTableIntegrityError (b :: BackendType)
 fetchAndValidateEnumValues :: forall pgKind m. (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) => PGSourceConfig -> QualifiedTable -> Maybe (PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind))) -> [RawColumnInfo ('Postgres pgKind)] -> m (Either QErr EnumValues)
 fetchEnumValuesFromDb :: forall pgKind m. (MonadTx m, MonadValidate [EnumTableIntegrityError ('Postgres pgKind)] m) => QualifiedTable -> RawColumnInfo ('Postgres pgKind) -> Maybe (RawColumnInfo ('Postgres pgKind)) -> m EnumValues
 
@@ -19235,23 +19235,23 @@ mkMetadata :: [InformationSchema] -> DBTablesMetadata 'MySQL
 mergeMetadata :: InformationSchema -> DBTablesMetadata 'MySQL -> DBTablesMetadata 'MySQL
 mergeDBTableMetadata :: DBTableMetadata 'MySQL -> DBTableMetadata 'MySQL -> DBTableMetadata 'MySQL
 data InformationSchema
-InformationSchema :: !Text -> !Text -> !Text -> !Word -> !Maybe Text -> !Text -> !Maybe Text -> !Text -> !InformationSchemaColumnKey -> !Text -> !Maybe Text -> !Maybe Word -> !Maybe Word -> !Maybe Text -> !Maybe Text -> !Maybe Text -> InformationSchema
-[isTableSchema] :: InformationSchema -> !Text
-[isTableName] :: InformationSchema -> !Text
-[isColumnName] :: InformationSchema -> !Text
-[isOrdinalPosition] :: InformationSchema -> !Word
-[isColumnDefault] :: InformationSchema -> !Maybe Text
-[isIsNullable] :: InformationSchema -> !Text
-[isDataType] :: InformationSchema -> !Maybe Text
-[isColumnType] :: InformationSchema -> !Text
-[isColumnKey] :: InformationSchema -> !InformationSchemaColumnKey
-[isColumnComment] :: InformationSchema -> !Text
-[isConstraintName] :: InformationSchema -> !Maybe Text
-[isConstraintOrdinalPosition] :: InformationSchema -> !Maybe Word
-[isPositionInUniqueConstraint] :: InformationSchema -> !Maybe Word
-[isReferencedTableSchema] :: InformationSchema -> !Maybe Text
-[isReferencedTableName] :: InformationSchema -> !Maybe Text
-[isReferencedColumnName] :: InformationSchema -> !Maybe Text
+InformationSchema :: Text -> Text -> Text -> Word -> Maybe Text -> Text -> Maybe Text -> Text -> InformationSchemaColumnKey -> Text -> Maybe Text -> Maybe Word -> Maybe Word -> Maybe Text -> Maybe Text -> Maybe Text -> InformationSchema
+[isTableSchema] :: InformationSchema -> Text
+[isTableName] :: InformationSchema -> Text
+[isColumnName] :: InformationSchema -> Text
+[isOrdinalPosition] :: InformationSchema -> Word
+[isColumnDefault] :: InformationSchema -> Maybe Text
+[isIsNullable] :: InformationSchema -> Text
+[isDataType] :: InformationSchema -> Maybe Text
+[isColumnType] :: InformationSchema -> Text
+[isColumnKey] :: InformationSchema -> InformationSchemaColumnKey
+[isColumnComment] :: InformationSchema -> Text
+[isConstraintName] :: InformationSchema -> Maybe Text
+[isConstraintOrdinalPosition] :: InformationSchema -> Maybe Word
+[isPositionInUniqueConstraint] :: InformationSchema -> Maybe Word
+[isReferencedTableSchema] :: InformationSchema -> Maybe Text
+[isReferencedTableName] :: InformationSchema -> Maybe Text
+[isReferencedColumnName] :: InformationSchema -> Maybe Text
 data InformationSchemaColumnKey
 PRI :: InformationSchemaColumnKey
 UNI :: InformationSchemaColumnKey
@@ -19300,18 +19300,18 @@ module Hasura.Backends.MySQL.DataLoader.Execute
 --   matrix/flat vector, unboxed sums for Value, etc. Presently we choose a
 --   naive implementation in the interest of getting other work done.
 data RecordSet
-RecordSet :: !Maybe PlannedAction -> !Vector (InsOrdHashMap FieldName OutputValue) -> !Maybe [Text] -> RecordSet
-[origin] :: RecordSet -> !Maybe PlannedAction
-[rows] :: RecordSet -> !Vector (InsOrdHashMap FieldName OutputValue)
-[wantedFields] :: RecordSet -> !Maybe [Text]
+RecordSet :: Maybe PlannedAction -> Vector (InsOrdHashMap FieldName OutputValue) -> Maybe [Text] -> RecordSet
+[origin] :: RecordSet -> Maybe PlannedAction
+[rows] :: RecordSet -> Vector (InsOrdHashMap FieldName OutputValue)
+[wantedFields] :: RecordSet -> Maybe [Text]
 
 -- | The read-only info. used by the Execute monad. Later, this IORef may
 --   become either atomically modified or in an STM or MVar so that jobs
 --   can be executed in parallel.
 data ExecuteReader
-ExecuteReader :: IORef (InsOrdHashMap Ref RecordSet) -> !SourceConfig -> ExecuteReader
+ExecuteReader :: IORef (InsOrdHashMap Ref RecordSet) -> SourceConfig -> ExecuteReader
 [recordSets] :: ExecuteReader -> IORef (InsOrdHashMap Ref RecordSet)
-[credentials] :: ExecuteReader -> !SourceConfig
+[credentials] :: ExecuteReader -> SourceConfig
 
 -- | Any problem encountered while executing the plan.
 data ExecuteProblem
@@ -19330,9 +19330,9 @@ Execute :: ReaderT ExecuteReader (ExceptT ExecuteProblem IO) a -> Execute a
 
 -- | A value outputted by this execute module in a record set.
 data OutputValue
-ArrayOutputValue :: !Vector OutputValue -> OutputValue
-RecordOutputValue :: !InsOrdHashMap FieldName OutputValue -> OutputValue
-ScalarOutputValue :: !Value -> OutputValue
+ArrayOutputValue :: Vector OutputValue -> OutputValue
+RecordOutputValue :: InsOrdHashMap FieldName OutputValue -> OutputValue
+ScalarOutputValue :: Value -> OutputValue
 NullOutputValue :: OutputValue
 
 -- | Using the config, run the execute action. Finally, resolve the
@@ -19768,19 +19768,19 @@ TableMetadata :: !TableName b -> !Bool -> !TableConfig b -> !Relationships (ObjR
 [_tmDeletePermissions] :: TableMetadata b -> !Permissions (DelPermDef b)
 [_tmEventTriggers] :: TableMetadata b -> !EventTriggers b
 [_tmApolloFederationConfig] :: TableMetadata b -> !Maybe ApolloFederationConfig
-tmUpdatePermissions :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (Permissions (UpdPermDef b_anyE6))
-tmTable :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (TableName b_anyE6)
-tmSelectPermissions :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (Permissions (SelPermDef b_anyE6))
-tmRemoteRelationships :: forall b_anyE6. Lens' (TableMetadata b_anyE6) RemoteRelationships
-tmObjectRelationships :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (Relationships (ObjRelDef b_anyE6))
-tmIsEnum :: forall b_anyE6. Lens' (TableMetadata b_anyE6) Bool
-tmInsertPermissions :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (Permissions (InsPermDef b_anyE6))
-tmEventTriggers :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (EventTriggers b_anyE6)
-tmDeletePermissions :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (Permissions (DelPermDef b_anyE6))
-tmConfiguration :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (TableConfig b_anyE6)
-tmComputedFields :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (ComputedFields b_anyE6)
-tmArrayRelationships :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (Relationships (ArrRelDef b_anyE6))
-tmApolloFederationConfig :: forall b_anyE6. Lens' (TableMetadata b_anyE6) (Maybe ApolloFederationConfig)
+tmUpdatePermissions :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (Permissions (UpdPermDef b_anyAW))
+tmTable :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (TableName b_anyAW)
+tmSelectPermissions :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (Permissions (SelPermDef b_anyAW))
+tmRemoteRelationships :: forall b_anyAW. Lens' (TableMetadata b_anyAW) RemoteRelationships
+tmObjectRelationships :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (Relationships (ObjRelDef b_anyAW))
+tmIsEnum :: forall b_anyAW. Lens' (TableMetadata b_anyAW) Bool
+tmInsertPermissions :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (Permissions (InsPermDef b_anyAW))
+tmEventTriggers :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (EventTriggers b_anyAW)
+tmDeletePermissions :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (Permissions (DelPermDef b_anyAW))
+tmConfiguration :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (TableConfig b_anyAW)
+tmComputedFields :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (ComputedFields b_anyAW)
+tmArrayRelationships :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (Relationships (ArrRelDef b_anyAW))
+tmApolloFederationConfig :: forall b_anyAW. Lens' (TableMetadata b_anyAW) (Maybe ApolloFederationConfig)
 mkTableMeta :: TableName b -> Bool -> TableConfig b -> TableMetadata b
 data FunctionMetadata b
 FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionInfo] -> !Maybe Text -> FunctionMetadata b
@@ -19788,10 +19788,10 @@ FunctionMetadata :: !FunctionName b -> !FunctionConfig -> ![FunctionPermissionIn
 [_fmConfiguration] :: FunctionMetadata b -> !FunctionConfig
 [_fmPermissions] :: FunctionMetadata b -> ![FunctionPermissionInfo]
 [_fmComment] :: FunctionMetadata b -> !Maybe Text
-fmPermissions :: forall b_anznK. Lens' (FunctionMetadata b_anznK) [FunctionPermissionInfo]
-fmFunction :: forall b_anznK b_anAg1. Lens (FunctionMetadata b_anznK) (FunctionMetadata b_anAg1) (FunctionName b_anznK) (FunctionName b_anAg1)
-fmConfiguration :: forall b_anznK. Lens' (FunctionMetadata b_anznK) FunctionConfig
-fmComment :: forall b_anznK. Lens' (FunctionMetadata b_anznK) (Maybe Text)
+fmPermissions :: forall b_anzkA. Lens' (FunctionMetadata b_anzkA) [FunctionPermissionInfo]
+fmFunction :: forall b_anzkA b_anAcR. Lens (FunctionMetadata b_anzkA) (FunctionMetadata b_anAcR) (FunctionName b_anzkA) (FunctionName b_anAcR)
+fmConfiguration :: forall b_anzkA. Lens' (FunctionMetadata b_anzkA) FunctionConfig
+fmComment :: forall b_anzkA. Lens' (FunctionMetadata b_anzkA) (Maybe Text)
 type Tables b = InsOrdHashMap (TableName b) (TableMetadata b)
 type Functions b = InsOrdHashMap (FunctionName b) (FunctionMetadata b)
 type RemoteSchemas = InsOrdHashMap RemoteSchemaName RemoteSchemaMetadata
@@ -19808,13 +19808,13 @@ SourceMetadata :: !SourceName -> !BackendSourceKind b -> !Tables b -> !Functions
 [_smConfiguration] :: SourceMetadata b -> !SourceConnConfiguration b
 [_smQueryTags] :: SourceMetadata b -> !Maybe QueryTagsConfig
 [_smCustomization] :: SourceMetadata b -> !SourceCustomization
-smTables :: forall b_anAgK. Lens' (SourceMetadata b_anAgK) (Tables b_anAgK)
-smQueryTags :: forall b_anAgK. Lens' (SourceMetadata b_anAgK) (Maybe QueryTagsConfig)
-smName :: forall b_anAgK. Lens' (SourceMetadata b_anAgK) SourceName
-smKind :: forall b_anAgK. Lens' (SourceMetadata b_anAgK) (BackendSourceKind b_anAgK)
-smFunctions :: forall b_anAgK. Lens' (SourceMetadata b_anAgK) (Functions b_anAgK)
-smCustomization :: forall b_anAgK. Lens' (SourceMetadata b_anAgK) SourceCustomization
-smConfiguration :: forall b_anAgK. Lens' (SourceMetadata b_anAgK) (SourceConnConfiguration b_anAgK)
+smTables :: forall b_anAdA. Lens' (SourceMetadata b_anAdA) (Tables b_anAdA)
+smQueryTags :: forall b_anAdA. Lens' (SourceMetadata b_anAdA) (Maybe QueryTagsConfig)
+smName :: forall b_anAdA. Lens' (SourceMetadata b_anAdA) SourceName
+smKind :: forall b_anAdA. Lens' (SourceMetadata b_anAdA) (BackendSourceKind b_anAdA)
+smFunctions :: forall b_anAdA. Lens' (SourceMetadata b_anAdA) (Functions b_anAdA)
+smCustomization :: forall b_anAdA. Lens' (SourceMetadata b_anAdA) SourceCustomization
+smConfiguration :: forall b_anAdA. Lens' (SourceMetadata b_anAdA) (SourceConnConfiguration b_anAdA)
 mkSourceMetadata :: forall (b :: BackendType). Backend b => SourceName -> BackendSourceKind b -> SourceConnConfiguration b -> SourceCustomization -> BackendSourceMetadata
 type BackendSourceMetadata = AnyBackend SourceMetadata
 toSourceMetadata :: forall b. Backend b => Prism' BackendSourceMetadata (SourceMetadata b)
@@ -20221,14 +20221,14 @@ resolveSourceConfig :: (MonadIO m, MonadResolveSource m) => Logger Hasura -> Sou
 --   <tt>pg_stat_activity</tt>. See
 --   <a>logPGSourceCatalogMigrationLockedQueries</a>.
 data PGSourceLockQuery
-PGSourceLockQuery :: !Text -> !Maybe Bool -> !Text -> !UTCTime -> !UTCTime -> !Text -> !Text -> PGSourceLockQuery
-[_psqaQuery] :: PGSourceLockQuery -> !Text
-[_psqaLockGranted] :: PGSourceLockQuery -> !Maybe Bool
-[_psqaLockMode] :: PGSourceLockQuery -> !Text
-[_psqaTransactionStartTime] :: PGSourceLockQuery -> !UTCTime
-[_psqaQueryStartTime] :: PGSourceLockQuery -> !UTCTime
-[_psqaWaitEventType] :: PGSourceLockQuery -> !Text
-[_psqaBlockingQuery] :: PGSourceLockQuery -> !Text
+PGSourceLockQuery :: Text -> Maybe Bool -> Text -> UTCTime -> UTCTime -> Text -> Text -> PGSourceLockQuery
+[_psqaQuery] :: PGSourceLockQuery -> Text
+[_psqaLockGranted] :: PGSourceLockQuery -> Maybe Bool
+[_psqaLockMode] :: PGSourceLockQuery -> Text
+[_psqaTransactionStartTime] :: PGSourceLockQuery -> UTCTime
+[_psqaQueryStartTime] :: PGSourceLockQuery -> UTCTime
+[_psqaWaitEventType] :: PGSourceLockQuery -> Text
+[_psqaBlockingQuery] :: PGSourceLockQuery -> Text
 newtype PGSourceLockQueryError
 PGSourceLockQueryError :: QErr -> PGSourceLockQueryError
 
@@ -20907,48 +20907,48 @@ insertFunctionArg :: FunctionArgName -> Int -> a -> FunctionArgsExpG a -> Functi
 data CountDistinct
 SelectCountDistinct :: CountDistinct
 SelectCountNonDistinct :: CountDistinct
-asnStrfyNum :: forall b_aoWgx f_aoWgy v_aoWgz. Lens' (AnnSelectG b_aoWgx f_aoWgy v_aoWgz) StringifyNumbers
-asnPerm :: forall b_aoWgx f_aoWgy v_aoWgz. Lens' (AnnSelectG b_aoWgx f_aoWgy v_aoWgz) (TablePermG b_aoWgx v_aoWgz)
-asnNamingConvention :: forall b_aoWgx f_aoWgy v_aoWgz. Lens' (AnnSelectG b_aoWgx f_aoWgy v_aoWgz) (Maybe NamingCase)
-asnFrom :: forall b_aoWgx f_aoWgy v_aoWgz. Lens' (AnnSelectG b_aoWgx f_aoWgy v_aoWgz) (SelectFromG b_aoWgx v_aoWgz)
-asnFields :: forall b_aoWgx f_aoWgy v_aoWgz f_apMGr. Lens (AnnSelectG b_aoWgx f_aoWgy v_aoWgz) (AnnSelectG b_aoWgx f_apMGr v_aoWgz) (Fields (f_aoWgy v_aoWgz)) (Fields (f_apMGr v_aoWgz))
-asnArgs :: forall b_aoWgx f_aoWgy v_aoWgz. Lens' (AnnSelectG b_aoWgx f_aoWgy v_aoWgz) (SelectArgsG b_aoWgx v_aoWgz)
-aosTableFrom :: forall b_aoWeY r_aoWeZ v_aoWf0. Lens' (AnnObjectSelectG b_aoWeY r_aoWeZ v_aoWf0) (TableName b_aoWeY)
-aosTableFilter :: forall b_aoWeY r_aoWeZ v_aoWf0. Lens' (AnnObjectSelectG b_aoWeY r_aoWeZ v_aoWf0) (AnnBoolExp b_aoWeY v_aoWf0)
-aosFields :: forall b_aoWeY r_aoWeZ v_aoWf0 r_apMKW. Lens (AnnObjectSelectG b_aoWeY r_aoWeZ v_aoWf0) (AnnObjectSelectG b_aoWeY r_apMKW v_aoWf0) (AnnFieldsG b_aoWeY r_aoWeZ v_aoWf0) (AnnFieldsG b_aoWeY r_apMKW v_aoWf0)
-aarRelationshipName :: forall b_aoWfb a_aoWfc. Lens' (AnnRelationSelectG b_aoWfb a_aoWfc) RelName
-aarColumnMapping :: forall b_aoWfb a_aoWfc b_apMNg. Lens (AnnRelationSelectG b_aoWfb a_aoWfc) (AnnRelationSelectG b_apMNg a_aoWfc) (HashMap (Column b_aoWfb) (Column b_aoWfb)) (HashMap (Column b_apMNg) (Column b_apMNg))
-aarAnnSelect :: forall b_aoWfb a_aoWfc a_apMNf. Lens (AnnRelationSelectG b_aoWfb a_aoWfc) (AnnRelationSelectG b_aoWfb a_apMNf) a_aoWfc a_apMNf
-csXRelay :: forall b_aoWgf r_aoWgg v_aoWgh. Lens' (ConnectionSelect b_aoWgf r_aoWgg v_aoWgh) (XRelay b_aoWgf)
-csSplit :: forall b_aoWgf r_aoWgg v_aoWgh. Lens' (ConnectionSelect b_aoWgf r_aoWgg v_aoWgh) (Maybe (NonEmpty (ConnectionSplit b_aoWgf v_aoWgh)))
-csSlice :: forall b_aoWgf r_aoWgg v_aoWgh. Lens' (ConnectionSelect b_aoWgf r_aoWgg v_aoWgh) (Maybe ConnectionSlice)
-csSelect :: forall b_aoWgf r_aoWgg v_aoWgh r_apMPt. Lens (ConnectionSelect b_aoWgf r_aoWgg v_aoWgh) (ConnectionSelect b_aoWgf r_apMPt v_aoWgh) (AnnSelectG b_aoWgf (ConnectionField b_aoWgf r_aoWgg) v_aoWgh) (AnnSelectG b_aoWgf (ConnectionField b_aoWgf r_apMPt) v_aoWgh)
-csPrimaryKeyColumns :: forall b_aoWgf r_aoWgg v_aoWgh. Lens' (ConnectionSelect b_aoWgf r_aoWgg v_aoWgh) (PrimaryKeyColumns b_aoWgf)
-saWhere :: forall b_aoWg5 v_aoWg6. Lens' (SelectArgsG b_aoWg5 v_aoWg6) (Maybe (AnnBoolExp b_aoWg5 v_aoWg6))
-saOrderBy :: forall b_aoWg5 v_aoWg6. Lens' (SelectArgsG b_aoWg5 v_aoWg6) (Maybe (NonEmpty (AnnotatedOrderByItemG b_aoWg5 v_aoWg6)))
-saOffset :: forall b_aoWg5 v_aoWg6. Lens' (SelectArgsG b_aoWg5 v_aoWg6) (Maybe Int64)
-saLimit :: forall b_aoWg5 v_aoWg6. Lens' (SelectArgsG b_aoWg5 v_aoWg6) (Maybe Int)
-saDistinct :: forall b_aoWg5 v_aoWg6. Lens' (SelectArgsG b_aoWg5 v_aoWg6) (Maybe (NonEmpty (Column b_aoWg5)))
-_AFExpression :: forall b_aoWfO r_aoWfP v_aoWfQ. Prism' (AnnFieldG b_aoWfO r_aoWfP v_aoWfQ) Text
-_AFNodeId :: forall b_aoWfO r_aoWfP v_aoWfQ. Prism' (AnnFieldG b_aoWfO r_aoWfP v_aoWfQ) (XRelay b_aoWfO, SourceName, TableName b_aoWfO, PrimaryKeyColumns b_aoWfO)
-_AFRemote :: forall b_aoWfO r_aoWfP v_aoWfQ. Prism' (AnnFieldG b_aoWfO r_aoWfP v_aoWfQ) (RemoteRelationshipSelect b_aoWfO r_aoWfP)
-_AFComputedField :: forall b_aoWfO r_aoWfP v_aoWfQ. Prism' (AnnFieldG b_aoWfO r_aoWfP v_aoWfQ) (XComputedField b_aoWfO, ComputedFieldName, ComputedFieldSelect b_aoWfO r_aoWfP v_aoWfQ)
-_AFArrayRelation :: forall b_aoWfO r_aoWfP v_aoWfQ. Prism' (AnnFieldG b_aoWfO r_aoWfP v_aoWfQ) (ArraySelectG b_aoWfO r_aoWfP v_aoWfQ)
-_AFObjectRelation :: forall b_aoWfO r_aoWfP v_aoWfQ. Prism' (AnnFieldG b_aoWfO r_aoWfP v_aoWfQ) (ObjectRelationSelectG b_aoWfO r_aoWfP v_aoWfQ)
-_AFColumn :: forall b_aoWfO r_aoWfP v_aoWfQ. Prism' (AnnFieldG b_aoWfO r_aoWfP v_aoWfQ) (AnnColumnField b_aoWfO v_aoWfQ)
-_AOCComputedField :: forall b_aoWfY v_aoWfZ. Prism' (AnnotatedOrderByElement b_aoWfY v_aoWfZ) (ComputedFieldOrderBy b_aoWfY v_aoWfZ)
-_AOCArrayAggregation :: forall b_aoWfY v_aoWfZ. Prism' (AnnotatedOrderByElement b_aoWfY v_aoWfZ) (RelInfo b_aoWfY, AnnBoolExp b_aoWfY v_aoWfZ, AnnotatedAggregateOrderBy b_aoWfY)
-_AOCObjectRelation :: forall b_aoWfY v_aoWfZ. Prism' (AnnotatedOrderByElement b_aoWfY v_aoWfZ) (RelInfo b_aoWfY, AnnBoolExp b_aoWfY v_aoWfZ, AnnotatedOrderByElement b_aoWfY v_aoWfZ)
-_AOCColumn :: forall b_aoWfY v_aoWfZ. Prism' (AnnotatedOrderByElement b_aoWfY v_aoWfZ) (ColumnInfo b_aoWfY)
-_TAFExp :: forall b_aoWfJ r_aoWfK v_aoWfL. Prism' (TableAggregateFieldG b_aoWfJ r_aoWfK v_aoWfL) Text
-_TAFNodes :: forall b_aoWfJ r_apN8K v_apN8L r_aoWfK v_aoWfL. Prism (TableAggregateFieldG b_aoWfJ r_apN8K v_apN8L) (TableAggregateFieldG b_aoWfJ r_aoWfK v_aoWfL) (XNodesAgg b_aoWfJ, AnnFieldsG b_aoWfJ r_apN8K v_apN8L) (XNodesAgg b_aoWfJ, AnnFieldsG b_aoWfJ r_aoWfK v_aoWfL)
-_TAFAgg :: forall b_aoWfJ r_aoWfK v_aoWfL. Prism' (TableAggregateFieldG b_aoWfJ r_aoWfK v_aoWfL) (AggregateFields b_aoWfJ)
-_ConnectionEdges :: forall b_apNct r_apNcu v_apNcv b_aoWft r_aoWfu v_aoWfv. Prism (ConnectionField b_apNct r_apNcu v_apNcv) (ConnectionField b_aoWft r_aoWfu v_aoWfv) (EdgeFields b_apNct r_apNcu v_apNcv) (EdgeFields b_aoWft r_aoWfu v_aoWfv)
-_ConnectionPageInfo :: forall b_aoWft r_aoWfu v_aoWfv. Prism' (ConnectionField b_aoWft r_aoWfu v_aoWfv) PageInfoFields
-_ConnectionTypename :: forall b_aoWft r_aoWfu v_aoWfv. Prism' (ConnectionField b_aoWft r_aoWfu v_aoWfv) Text
-_EdgeNode :: forall b_apNg0 r_apNg1 v_apNg2 b_aoWfq r_aoWfr v_aoWfs. Prism (EdgeField b_apNg0 r_apNg1 v_apNg2) (EdgeField b_aoWfq r_aoWfr v_aoWfs) (AnnFieldsG b_apNg0 r_apNg1 v_apNg2) (AnnFieldsG b_aoWfq r_aoWfr v_aoWfs)
-_EdgeCursor :: forall b_aoWfq r_aoWfr v_aoWfs. Prism' (EdgeField b_aoWfq r_aoWfr v_aoWfs) ()
-_EdgeTypename :: forall b_aoWfq r_aoWfr v_aoWfs. Prism' (EdgeField b_aoWfq r_aoWfr v_aoWfs) Text
+asnStrfyNum :: forall b_aoWdn f_aoWdo v_aoWdp. Lens' (AnnSelectG b_aoWdn f_aoWdo v_aoWdp) StringifyNumbers
+asnPerm :: forall b_aoWdn f_aoWdo v_aoWdp. Lens' (AnnSelectG b_aoWdn f_aoWdo v_aoWdp) (TablePermG b_aoWdn v_aoWdp)
+asnNamingConvention :: forall b_aoWdn f_aoWdo v_aoWdp. Lens' (AnnSelectG b_aoWdn f_aoWdo v_aoWdp) (Maybe NamingCase)
+asnFrom :: forall b_aoWdn f_aoWdo v_aoWdp. Lens' (AnnSelectG b_aoWdn f_aoWdo v_aoWdp) (SelectFromG b_aoWdn v_aoWdp)
+asnFields :: forall b_aoWdn f_aoWdo v_aoWdp f_apMDh. Lens (AnnSelectG b_aoWdn f_aoWdo v_aoWdp) (AnnSelectG b_aoWdn f_apMDh v_aoWdp) (Fields (f_aoWdo v_aoWdp)) (Fields (f_apMDh v_aoWdp))
+asnArgs :: forall b_aoWdn f_aoWdo v_aoWdp. Lens' (AnnSelectG b_aoWdn f_aoWdo v_aoWdp) (SelectArgsG b_aoWdn v_aoWdp)
+aosTableFrom :: forall b_aoWbO r_aoWbP v_aoWbQ. Lens' (AnnObjectSelectG b_aoWbO r_aoWbP v_aoWbQ) (TableName b_aoWbO)
+aosTableFilter :: forall b_aoWbO r_aoWbP v_aoWbQ. Lens' (AnnObjectSelectG b_aoWbO r_aoWbP v_aoWbQ) (AnnBoolExp b_aoWbO v_aoWbQ)
+aosFields :: forall b_aoWbO r_aoWbP v_aoWbQ r_apMHM. Lens (AnnObjectSelectG b_aoWbO r_aoWbP v_aoWbQ) (AnnObjectSelectG b_aoWbO r_apMHM v_aoWbQ) (AnnFieldsG b_aoWbO r_aoWbP v_aoWbQ) (AnnFieldsG b_aoWbO r_apMHM v_aoWbQ)
+aarRelationshipName :: forall b_aoWc1 a_aoWc2. Lens' (AnnRelationSelectG b_aoWc1 a_aoWc2) RelName
+aarColumnMapping :: forall b_aoWc1 a_aoWc2 b_apMK6. Lens (AnnRelationSelectG b_aoWc1 a_aoWc2) (AnnRelationSelectG b_apMK6 a_aoWc2) (HashMap (Column b_aoWc1) (Column b_aoWc1)) (HashMap (Column b_apMK6) (Column b_apMK6))
+aarAnnSelect :: forall b_aoWc1 a_aoWc2 a_apMK5. Lens (AnnRelationSelectG b_aoWc1 a_aoWc2) (AnnRelationSelectG b_aoWc1 a_apMK5) a_aoWc2 a_apMK5
+csXRelay :: forall b_aoWd5 r_aoWd6 v_aoWd7. Lens' (ConnectionSelect b_aoWd5 r_aoWd6 v_aoWd7) (XRelay b_aoWd5)
+csSplit :: forall b_aoWd5 r_aoWd6 v_aoWd7. Lens' (ConnectionSelect b_aoWd5 r_aoWd6 v_aoWd7) (Maybe (NonEmpty (ConnectionSplit b_aoWd5 v_aoWd7)))
+csSlice :: forall b_aoWd5 r_aoWd6 v_aoWd7. Lens' (ConnectionSelect b_aoWd5 r_aoWd6 v_aoWd7) (Maybe ConnectionSlice)
+csSelect :: forall b_aoWd5 r_aoWd6 v_aoWd7 r_apMMj. Lens (ConnectionSelect b_aoWd5 r_aoWd6 v_aoWd7) (ConnectionSelect b_aoWd5 r_apMMj v_aoWd7) (AnnSelectG b_aoWd5 (ConnectionField b_aoWd5 r_aoWd6) v_aoWd7) (AnnSelectG b_aoWd5 (ConnectionField b_aoWd5 r_apMMj) v_aoWd7)
+csPrimaryKeyColumns :: forall b_aoWd5 r_aoWd6 v_aoWd7. Lens' (ConnectionSelect b_aoWd5 r_aoWd6 v_aoWd7) (PrimaryKeyColumns b_aoWd5)
+saWhere :: forall b_aoWcV v_aoWcW. Lens' (SelectArgsG b_aoWcV v_aoWcW) (Maybe (AnnBoolExp b_aoWcV v_aoWcW))
+saOrderBy :: forall b_aoWcV v_aoWcW. Lens' (SelectArgsG b_aoWcV v_aoWcW) (Maybe (NonEmpty (AnnotatedOrderByItemG b_aoWcV v_aoWcW)))
+saOffset :: forall b_aoWcV v_aoWcW. Lens' (SelectArgsG b_aoWcV v_aoWcW) (Maybe Int64)
+saLimit :: forall b_aoWcV v_aoWcW. Lens' (SelectArgsG b_aoWcV v_aoWcW) (Maybe Int)
+saDistinct :: forall b_aoWcV v_aoWcW. Lens' (SelectArgsG b_aoWcV v_aoWcW) (Maybe (NonEmpty (Column b_aoWcV)))
+_AFExpression :: forall b_aoWcE r_aoWcF v_aoWcG. Prism' (AnnFieldG b_aoWcE r_aoWcF v_aoWcG) Text
+_AFNodeId :: forall b_aoWcE r_aoWcF v_aoWcG. Prism' (AnnFieldG b_aoWcE r_aoWcF v_aoWcG) (XRelay b_aoWcE, SourceName, TableName b_aoWcE, PrimaryKeyColumns b_aoWcE)
+_AFRemote :: forall b_aoWcE r_aoWcF v_aoWcG. Prism' (AnnFieldG b_aoWcE r_aoWcF v_aoWcG) (RemoteRelationshipSelect b_aoWcE r_aoWcF)
+_AFComputedField :: forall b_aoWcE r_aoWcF v_aoWcG. Prism' (AnnFieldG b_aoWcE r_aoWcF v_aoWcG) (XComputedField b_aoWcE, ComputedFieldName, ComputedFieldSelect b_aoWcE r_aoWcF v_aoWcG)
+_AFArrayRelation :: forall b_aoWcE r_aoWcF v_aoWcG. Prism' (AnnFieldG b_aoWcE r_aoWcF v_aoWcG) (ArraySelectG b_aoWcE r_aoWcF v_aoWcG)
+_AFObjectRelation :: forall b_aoWcE r_aoWcF v_aoWcG. Prism' (AnnFieldG b_aoWcE r_aoWcF v_aoWcG) (ObjectRelationSelectG b_aoWcE r_aoWcF v_aoWcG)
+_AFColumn :: forall b_aoWcE r_aoWcF v_aoWcG. Prism' (AnnFieldG b_aoWcE r_aoWcF v_aoWcG) (AnnColumnField b_aoWcE v_aoWcG)
+_AOCComputedField :: forall b_aoWcO v_aoWcP. Prism' (AnnotatedOrderByElement b_aoWcO v_aoWcP) (ComputedFieldOrderBy b_aoWcO v_aoWcP)
+_AOCArrayAggregation :: forall b_aoWcO v_aoWcP. Prism' (AnnotatedOrderByElement b_aoWcO v_aoWcP) (RelInfo b_aoWcO, AnnBoolExp b_aoWcO v_aoWcP, AnnotatedAggregateOrderBy b_aoWcO)
+_AOCObjectRelation :: forall b_aoWcO v_aoWcP. Prism' (AnnotatedOrderByElement b_aoWcO v_aoWcP) (RelInfo b_aoWcO, AnnBoolExp b_aoWcO v_aoWcP, AnnotatedOrderByElement b_aoWcO v_aoWcP)
+_AOCColumn :: forall b_aoWcO v_aoWcP. Prism' (AnnotatedOrderByElement b_aoWcO v_aoWcP) (ColumnInfo b_aoWcO)
+_TAFExp :: forall b_aoWcz r_aoWcA v_aoWcB. Prism' (TableAggregateFieldG b_aoWcz r_aoWcA v_aoWcB) Text
+_TAFNodes :: forall b_aoWcz r_apN5A v_apN5B r_aoWcA v_aoWcB. Prism (TableAggregateFieldG b_aoWcz r_apN5A v_apN5B) (TableAggregateFieldG b_aoWcz r_aoWcA v_aoWcB) (XNodesAgg b_aoWcz, AnnFieldsG b_aoWcz r_apN5A v_apN5B) (XNodesAgg b_aoWcz, AnnFieldsG b_aoWcz r_aoWcA v_aoWcB)
+_TAFAgg :: forall b_aoWcz r_aoWcA v_aoWcB. Prism' (TableAggregateFieldG b_aoWcz r_aoWcA v_aoWcB) (AggregateFields b_aoWcz)
+_ConnectionEdges :: forall b_apN9j r_apN9k v_apN9l b_aoWcj r_aoWck v_aoWcl. Prism (ConnectionField b_apN9j r_apN9k v_apN9l) (ConnectionField b_aoWcj r_aoWck v_aoWcl) (EdgeFields b_apN9j r_apN9k v_apN9l) (EdgeFields b_aoWcj r_aoWck v_aoWcl)
+_ConnectionPageInfo :: forall b_aoWcj r_aoWck v_aoWcl. Prism' (ConnectionField b_aoWcj r_aoWck v_aoWcl) PageInfoFields
+_ConnectionTypename :: forall b_aoWcj r_aoWck v_aoWcl. Prism' (ConnectionField b_aoWcj r_aoWck v_aoWcl) Text
+_EdgeNode :: forall b_apNcQ r_apNcR v_apNcS b_aoWcg r_aoWch v_aoWci. Prism (EdgeField b_apNcQ r_apNcR v_apNcS) (EdgeField b_aoWcg r_aoWch v_aoWci) (AnnFieldsG b_apNcQ r_apNcR v_apNcS) (AnnFieldsG b_aoWcg r_aoWch v_aoWci)
+_EdgeCursor :: forall b_aoWcg r_aoWch v_aoWci. Prism' (EdgeField b_aoWcg r_aoWch v_aoWci) ()
+_EdgeTypename :: forall b_aoWcg r_aoWch v_aoWci. Prism' (EdgeField b_aoWcg r_aoWch v_aoWci) Text
 instance Data.Hashable.Class.Hashable Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Generics.Generic Hasura.RQL.IR.Select.ConnectionSlice
 instance GHC.Classes.Eq Hasura.RQL.IR.Select.ConnectionSlice
@@ -21133,9 +21133,9 @@ type MutationOutput b = MutationOutputG b Void (SQLExpression b)
 type MutFlds b = MutFldsG b Void (SQLExpression b)
 buildEmptyMutResp :: MutationOutput backend -> EncJSON
 hasNestedFld :: MutationOutputG backend r a -> Bool
-_MRet :: forall b_aqMv6 r_aqMv7 v_aqMv8 b_aqJUf r_aqJUg v_aqJUh. Prism (MutFldG b_aqMv6 r_aqMv7 v_aqMv8) (MutFldG b_aqJUf r_aqJUg v_aqJUh) (AnnFieldsG b_aqMv6 r_aqMv7 v_aqMv8) (AnnFieldsG b_aqJUf r_aqJUg v_aqJUh)
-_MExp :: forall b_aqJUf r_aqJUg v_aqJUh. Prism' (MutFldG b_aqJUf r_aqJUg v_aqJUh) Text
-_MCount :: forall b_aqJUf r_aqJUg v_aqJUh. Prism' (MutFldG b_aqJUf r_aqJUg v_aqJUh) ()
+_MRet :: forall b_aqMrW r_aqMrX v_aqMrY b_aqJR5 r_aqJR6 v_aqJR7. Prism (MutFldG b_aqMrW r_aqMrX v_aqMrY) (MutFldG b_aqJR5 r_aqJR6 v_aqJR7) (AnnFieldsG b_aqMrW r_aqMrX v_aqMrY) (AnnFieldsG b_aqJR5 r_aqJR6 v_aqJR7)
+_MExp :: forall b_aqJR5 r_aqJR6 v_aqJR7. Prism' (MutFldG b_aqJR5 r_aqJR6 v_aqJR7) Text
+_MCount :: forall b_aqJR5 r_aqJR6 v_aqJR7. Prism' (MutFldG b_aqJR5 r_aqJR6 v_aqJR7) ()
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Returning.MutFldG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Returning.MutFldG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Returning.MutFldG b r)
@@ -21167,13 +21167,13 @@ AnnotatedUpdateG :: !TableName b -> !(AnnBoolExp b v, AnnBoolExp b v) -> !AnnBoo
 [_auAllCols] :: AnnotatedUpdateG (b :: BackendType) (r :: Type) v -> ![ColumnInfo b]
 [_auNamingConvention] :: AnnotatedUpdateG (b :: BackendType) (r :: Type) v -> !Maybe NamingCase
 type AnnotatedUpdate b = AnnotatedUpdateG b Void (SQLExpression b)
-auWhere :: forall b_aqQyK r_aqQyL v_aqQyM. Lens' (AnnotatedUpdateG b_aqQyK r_aqQyL v_aqQyM) (AnnBoolExp b_aqQyK v_aqQyM, AnnBoolExp b_aqQyK v_aqQyM)
-auTable :: forall b_aqQyK r_aqQyL v_aqQyM. Lens' (AnnotatedUpdateG b_aqQyK r_aqQyL v_aqQyM) (TableName b_aqQyK)
-auOutput :: forall b_aqQyK r_aqQyL v_aqQyM r_aqRWZ. Lens (AnnotatedUpdateG b_aqQyK r_aqQyL v_aqQyM) (AnnotatedUpdateG b_aqQyK r_aqRWZ v_aqQyM) (MutationOutputG b_aqQyK r_aqQyL v_aqQyM) (MutationOutputG b_aqQyK r_aqRWZ v_aqQyM)
-auNamingConvention :: forall b_aqQyK r_aqQyL v_aqQyM. Lens' (AnnotatedUpdateG b_aqQyK r_aqQyL v_aqQyM) (Maybe NamingCase)
-auCheck :: forall b_aqQyK r_aqQyL v_aqQyM. Lens' (AnnotatedUpdateG b_aqQyK r_aqQyL v_aqQyM) (AnnBoolExp b_aqQyK v_aqQyM)
-auBackend :: forall b_aqQyK r_aqQyL v_aqQyM. Lens' (AnnotatedUpdateG b_aqQyK r_aqQyL v_aqQyM) (BackendUpdate b_aqQyK v_aqQyM)
-auAllCols :: forall b_aqQyK r_aqQyL v_aqQyM. Lens' (AnnotatedUpdateG b_aqQyK r_aqQyL v_aqQyM) [ColumnInfo b_aqQyK]
+auWhere :: forall b_aqQvA r_aqQvB v_aqQvC. Lens' (AnnotatedUpdateG b_aqQvA r_aqQvB v_aqQvC) (AnnBoolExp b_aqQvA v_aqQvC, AnnBoolExp b_aqQvA v_aqQvC)
+auTable :: forall b_aqQvA r_aqQvB v_aqQvC. Lens' (AnnotatedUpdateG b_aqQvA r_aqQvB v_aqQvC) (TableName b_aqQvA)
+auOutput :: forall b_aqQvA r_aqQvB v_aqQvC r_aqRTP. Lens (AnnotatedUpdateG b_aqQvA r_aqQvB v_aqQvC) (AnnotatedUpdateG b_aqQvA r_aqRTP v_aqQvC) (MutationOutputG b_aqQvA r_aqQvB v_aqQvC) (MutationOutputG b_aqQvA r_aqRTP v_aqQvC)
+auNamingConvention :: forall b_aqQvA r_aqQvB v_aqQvC. Lens' (AnnotatedUpdateG b_aqQvA r_aqQvB v_aqQvC) (Maybe NamingCase)
+auCheck :: forall b_aqQvA r_aqQvB v_aqQvC. Lens' (AnnotatedUpdateG b_aqQvA r_aqQvB v_aqQvC) (AnnBoolExp b_aqQvA v_aqQvC)
+auBackend :: forall b_aqQvA r_aqQvB v_aqQvC. Lens' (AnnotatedUpdateG b_aqQvA r_aqQvB v_aqQvC) (BackendUpdate b_aqQvA v_aqQvC)
+auAllCols :: forall b_aqQvA r_aqQvB v_aqQvC. Lens' (AnnotatedUpdateG b_aqQvA r_aqQvB v_aqQvC) [ColumnInfo b_aqQvA]
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Update.AnnotatedUpdateG b r)
@@ -21280,14 +21280,14 @@ InsertQueryP1 :: TableName b -> [Column b] -> [[SQLExpression b]] -> Maybe (OnCo
 [iqp1CheckCond] :: InsertQueryP1 (b :: BackendType) -> (AnnBoolExpSQL b, Maybe (AnnBoolExpSQL b))
 [iqp1Output] :: InsertQueryP1 (b :: BackendType) -> MutationOutput b
 [iqp1AllCols] :: InsertQueryP1 (b :: BackendType) -> [ColumnInfo b]
-aiOutput :: forall b_aqV3q r_aqV3r v_aqV3s r_ar0aB. Lens (AnnotatedInsert b_aqV3q r_aqV3r v_aqV3s) (AnnotatedInsert b_aqV3q r_ar0aB v_aqV3s) (MutationOutputG b_aqV3q r_aqV3r v_aqV3s) (MutationOutputG b_aqV3q r_ar0aB v_aqV3s)
-aiNamingConvention :: forall b_aqV3q r_aqV3r v_aqV3s. Lens' (AnnotatedInsert b_aqV3q r_aqV3r v_aqV3s) (Maybe NamingCase)
-aiIsSingle :: forall b_aqV3q r_aqV3r v_aqV3s. Lens' (AnnotatedInsert b_aqV3q r_aqV3r v_aqV3s) Bool
-aiFieldName :: forall b_aqV3q r_aqV3r v_aqV3s. Lens' (AnnotatedInsert b_aqV3q r_aqV3r v_aqV3s) Text
-aiData :: forall b_aqV3q r_aqV3r v_aqV3s. Lens' (AnnotatedInsert b_aqV3q r_aqV3r v_aqV3s) (MultiObjectInsert b_aqV3q v_aqV3s)
-_AIArrayRelationship :: forall b_aqV3g v_aqV3h. Prism' (AnnotatedInsertField b_aqV3g v_aqV3h) (XNestedInserts b_aqV3g, ArrayRelationInsert b_aqV3g v_aqV3h)
-_AIObjectRelationship :: forall b_aqV3g v_aqV3h. Prism' (AnnotatedInsertField b_aqV3g v_aqV3h) (XNestedInserts b_aqV3g, ObjectRelationInsert b_aqV3g v_aqV3h)
-_AIColumn :: forall b_aqV3g v_aqV3h. Prism' (AnnotatedInsertField b_aqV3g v_aqV3h) (Column b_aqV3g, v_aqV3h)
+aiOutput :: forall b_aqV0g r_aqV0h v_aqV0i r_ar07r. Lens (AnnotatedInsert b_aqV0g r_aqV0h v_aqV0i) (AnnotatedInsert b_aqV0g r_ar07r v_aqV0i) (MutationOutputG b_aqV0g r_aqV0h v_aqV0i) (MutationOutputG b_aqV0g r_ar07r v_aqV0i)
+aiNamingConvention :: forall b_aqV0g r_aqV0h v_aqV0i. Lens' (AnnotatedInsert b_aqV0g r_aqV0h v_aqV0i) (Maybe NamingCase)
+aiIsSingle :: forall b_aqV0g r_aqV0h v_aqV0i. Lens' (AnnotatedInsert b_aqV0g r_aqV0h v_aqV0i) Bool
+aiFieldName :: forall b_aqV0g r_aqV0h v_aqV0i. Lens' (AnnotatedInsert b_aqV0g r_aqV0h v_aqV0i) Text
+aiData :: forall b_aqV0g r_aqV0h v_aqV0i. Lens' (AnnotatedInsert b_aqV0g r_aqV0h v_aqV0i) (MultiObjectInsert b_aqV0g v_aqV0i)
+_AIArrayRelationship :: forall b_aqV06 v_aqV07. Prism' (AnnotatedInsertField b_aqV06 v_aqV07) (XNestedInserts b_aqV06, ArrayRelationInsert b_aqV06 v_aqV07)
+_AIObjectRelationship :: forall b_aqV06 v_aqV07. Prism' (AnnotatedInsertField b_aqV06 v_aqV07) (XNestedInserts b_aqV06, ObjectRelationInsert b_aqV06 v_aqV07)
+_AIColumn :: forall b_aqV06 v_aqV07. Prism' (AnnotatedInsertField b_aqV06 v_aqV07) (Column b_aqV06, v_aqV07)
 getInsertColumns :: AnnotatedInsertRow b v -> [(Column b, v)]
 getInsertObjectRelationships :: AnnotatedInsertRow b v -> [ObjectRelationInsert b v]
 getInsertArrayRelationships :: AnnotatedInsertRow b v -> [ArrayRelationInsert b v]
@@ -21318,11 +21318,11 @@ AnnDel :: TableName b -> (AnnBoolExp b v, AnnBoolExp b v) -> MutationOutputG b r
 [_adAllCols] :: AnnDelG (b :: BackendType) (r :: Type) v -> [ColumnInfo b]
 [_adNamingConvention] :: AnnDelG (b :: BackendType) (r :: Type) v -> Maybe NamingCase
 type AnnDel b = AnnDelG b Void (SQLExpression b)
-adWhere :: forall b_ar6BG r_ar6BH v_ar6BI. Lens' (AnnDelG b_ar6BG r_ar6BH v_ar6BI) (AnnBoolExp b_ar6BG v_ar6BI, AnnBoolExp b_ar6BG v_ar6BI)
-adTable :: forall b_ar6BG r_ar6BH v_ar6BI. Lens' (AnnDelG b_ar6BG r_ar6BH v_ar6BI) (TableName b_ar6BG)
-adOutput :: forall b_ar6BG r_ar6BH v_ar6BI r_ar7Ny. Lens (AnnDelG b_ar6BG r_ar6BH v_ar6BI) (AnnDelG b_ar6BG r_ar7Ny v_ar6BI) (MutationOutputG b_ar6BG r_ar6BH v_ar6BI) (MutationOutputG b_ar6BG r_ar7Ny v_ar6BI)
-adNamingConvention :: forall b_ar6BG r_ar6BH v_ar6BI. Lens' (AnnDelG b_ar6BG r_ar6BH v_ar6BI) (Maybe NamingCase)
-adAllCols :: forall b_ar6BG r_ar6BH v_ar6BI. Lens' (AnnDelG b_ar6BG r_ar6BH v_ar6BI) [ColumnInfo b_ar6BG]
+adWhere :: forall b_ar6yw r_ar6yx v_ar6yy. Lens' (AnnDelG b_ar6yw r_ar6yx v_ar6yy) (AnnBoolExp b_ar6yw v_ar6yy, AnnBoolExp b_ar6yw v_ar6yy)
+adTable :: forall b_ar6yw r_ar6yx v_ar6yy. Lens' (AnnDelG b_ar6yw r_ar6yx v_ar6yy) (TableName b_ar6yw)
+adOutput :: forall b_ar6yw r_ar6yx v_ar6yy r_ar7Ko. Lens (AnnDelG b_ar6yw r_ar6yx v_ar6yy) (AnnDelG b_ar6yw r_ar7Ko v_ar6yy) (MutationOutputG b_ar6yw r_ar6yx v_ar6yy) (MutationOutputG b_ar6yw r_ar7Ko v_ar6yy)
+adNamingConvention :: forall b_ar6yw r_ar6yx v_ar6yy. Lens' (AnnDelG b_ar6yw r_ar6yx v_ar6yy) (Maybe NamingCase)
+adAllCols :: forall b_ar6yw r_ar6yx v_ar6yy. Lens' (AnnDelG b_ar6yw r_ar6yx v_ar6yy) [ColumnInfo b_ar6yw]
 instance Hasura.RQL.Types.Backend.Backend b => Data.Traversable.Traversable (Hasura.RQL.IR.Delete.AnnDelG b r)
 instance Hasura.RQL.Types.Backend.Backend b => Data.Foldable.Foldable (Hasura.RQL.IR.Delete.AnnDelG b r)
 instance Hasura.RQL.Types.Backend.Backend b => GHC.Base.Functor (Hasura.RQL.IR.Delete.AnnDelG b r)
@@ -22400,20 +22400,20 @@ CreateEventTriggerQuery :: !SourceName -> !TriggerName -> !TableName b -> !Maybe
 [_cetqReplace] :: CreateEventTriggerQuery (b :: BackendType) -> !Bool
 [_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> !Maybe MetadataResponseTransform
-cetqWebhookFromEnv :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe Text)
-cetqWebhook :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe InputWebhook)
-cetqUpdate :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe (SubscribeOpSpec b_aspvV))
-cetqTable :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (TableName b_aspvV)
-cetqSource :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) SourceName
-cetqRetryConf :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe RequestTransform)
-cetqReplace :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) Bool
-cetqName :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) TriggerName
-cetqInsert :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe (SubscribeOpSpec b_aspvV))
-cetqHeaders :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe Bool)
-cetqDelete :: forall b_aspvV. Lens' (CreateEventTriggerQuery b_aspvV) (Maybe (SubscribeOpSpec b_aspvV))
+cetqWebhookFromEnv :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe Text)
+cetqWebhook :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe InputWebhook)
+cetqUpdate :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe (SubscribeOpSpec b_aspsL))
+cetqTable :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (TableName b_aspsL)
+cetqSource :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) SourceName
+cetqRetryConf :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe RequestTransform)
+cetqReplace :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) Bool
+cetqName :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) TriggerName
+cetqInsert :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe (SubscribeOpSpec b_aspsL))
+cetqHeaders :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe Bool)
+cetqDelete :: forall b_aspsL. Lens' (CreateEventTriggerQuery b_aspsL) (Maybe (SubscribeOpSpec b_aspsL))
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: !SourceName -> !TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
 [_detqSource] :: DeleteEventTriggerQuery (b :: BackendType) -> !SourceName
@@ -23347,8 +23347,8 @@ BoolExpM :: ReaderT BoolExpCtx (State Word64) a -> BoolExpM a
 --   leaves into a bare SQL Boolean Expression.
 translateBoolExp :: forall pgKind. Backend ('Postgres pgKind) => AnnBoolExpSQL ('Postgres pgKind) -> BoolExpM BoolExp
 data LHSField b
-LColumn :: !FieldName -> LHSField b
-LComputedField :: !QualifiedFunction -> !FunctionArgsExp b (SQLExpression b) -> LHSField b
+LColumn :: FieldName -> LHSField b
+LComputedField :: QualifiedFunction -> FunctionArgsExp b (SQLExpression b) -> LHSField b
 mkComputedFieldFunctionExp :: Qual -> QualifiedFunction -> FunctionArgsExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind)) -> Maybe TableAlias -> FunctionExp
 mkFieldCompExp :: Qual -> Qual -> LHSField ('Postgres pgKind) -> OpExpG ('Postgres pgKind) SQLExp -> BoolExp
 instance Control.Monad.State.Class.MonadState GHC.Word.Word64 Hasura.Backends.Postgres.Translate.BoolExp.BoolExpM
@@ -23672,8 +23672,8 @@ FunctionVariadic :: FunctionIntegrityError
 FunctionReturnNotCompositeType :: FunctionIntegrityError
 FunctionReturnNotTable :: FunctionIntegrityError
 NonVolatileFunctionAsMutation :: FunctionIntegrityError
-FunctionSessionArgumentNotJSON :: !FunctionArgName -> FunctionIntegrityError
-FunctionInvalidSessionArgument :: !FunctionArgName -> FunctionIntegrityError
+FunctionSessionArgumentNotJSON :: FunctionArgName -> FunctionIntegrityError
+FunctionInvalidSessionArgument :: FunctionArgName -> FunctionIntegrityError
 FunctionInvalidArgumentNames :: [FunctionArgName] -> FunctionIntegrityError
 buildFunctionInfo :: forall pgKind m. (Backend ('Postgres pgKind), QErrM m) => SourceName -> QualifiedFunction -> SystemDefined -> FunctionConfig -> FunctionPermissionsMap -> RawFunctionInfo ('Postgres pgKind) -> Maybe Text -> NamingCase -> m (FunctionInfo ('Postgres pgKind), SchemaDependency)
 instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.Function.FunctionIntegrityError
@@ -23687,20 +23687,20 @@ instance GHC.Show.Show Hasura.Backends.Postgres.DDL.Function.FunctionIntegrityEr
 --   See <a>Backend</a>.
 module Hasura.Backends.Postgres.DDL.ComputedField
 data ComputedFieldValidateError
-CFVENotValidGraphQLName :: !ComputedFieldName -> ComputedFieldValidateError
-CFVEInvalidTableArgument :: !InvalidTableArgument -> ComputedFieldValidateError
-CFVEInvalidSessionArgument :: !InvalidSessionArgument -> ComputedFieldValidateError
-CFVENotBaseReturnType :: !PGScalarType -> ComputedFieldValidateError
-CFVEReturnTableNotFound :: !QualifiedTable -> ComputedFieldValidateError
+CFVENotValidGraphQLName :: ComputedFieldName -> ComputedFieldValidateError
+CFVEInvalidTableArgument :: InvalidTableArgument -> ComputedFieldValidateError
+CFVEInvalidSessionArgument :: InvalidSessionArgument -> ComputedFieldValidateError
+CFVENotBaseReturnType :: PGScalarType -> ComputedFieldValidateError
+CFVEReturnTableNotFound :: QualifiedTable -> ComputedFieldValidateError
 CFVENoInputArguments :: ComputedFieldValidateError
 CFVEFunctionVolatile :: ComputedFieldValidateError
 data InvalidTableArgument
-ITANotFound :: !FunctionArgName -> InvalidTableArgument
-ITANotComposite :: !FunctionTableArgument -> InvalidTableArgument
-ITANotTable :: !QualifiedTable -> !FunctionTableArgument -> InvalidTableArgument
+ITANotFound :: FunctionArgName -> InvalidTableArgument
+ITANotComposite :: FunctionTableArgument -> InvalidTableArgument
+ITANotTable :: QualifiedTable -> FunctionTableArgument -> InvalidTableArgument
 data InvalidSessionArgument
-ISANotFound :: !FunctionArgName -> InvalidSessionArgument
-ISANotJSON :: !FunctionSessionArgument -> InvalidSessionArgument
+ISANotFound :: FunctionArgName -> InvalidSessionArgument
+ISANotJSON :: FunctionSessionArgument -> InvalidSessionArgument
 showError :: QualifiedFunction -> ComputedFieldValidateError -> Text
 buildComputedFieldInfo :: forall pgKind m. QErrM m => HashSet QualifiedTable -> QualifiedTable -> HashSet PGCol -> ComputedFieldName -> ComputedFieldDefinition -> PGRawFunctionInfo -> Comment -> m (ComputedFieldInfo ('Postgres pgKind))
 instance GHC.Classes.Eq Hasura.Backends.Postgres.DDL.ComputedField.InvalidTableArgument
@@ -24244,10 +24244,10 @@ planSubscription :: MonadError QErr m => InsOrdHashMap Name (QueryDB 'MSSQL Void
 --   subselects.
 collapseMap :: InsOrdHashMap Name Select -> Reselect
 data PrepareState
-PrepareState :: ![ColumnValue 'MSSQL] -> !HashMap Name (ColumnValue 'MSSQL) -> !HashSet SessionVariable -> PrepareState
-[positionalArguments] :: PrepareState -> ![ColumnValue 'MSSQL]
-[namedArguments] :: PrepareState -> !HashMap Name (ColumnValue 'MSSQL)
-[sessionVariables] :: PrepareState -> !HashSet SessionVariable
+PrepareState :: [ColumnValue 'MSSQL] -> HashMap Name (ColumnValue 'MSSQL) -> HashSet SessionVariable -> PrepareState
+[positionalArguments] :: PrepareState -> [ColumnValue 'MSSQL]
+[namedArguments] :: PrepareState -> HashMap Name (ColumnValue 'MSSQL)
+[sessionVariables] :: PrepareState -> HashSet SessionVariable
 emptyPrepareState :: PrepareState
 
 -- | Prepare a value for multiplexed queries.
@@ -25982,20 +25982,20 @@ isMatchColumnValid :: ColumnInfo 'MSSQL -> Bool
 --   Intermediary / helper types used for translating IR to Postgres SQL.
 module Hasura.Backends.Postgres.Translate.Types
 data SourcePrefixes
-SourcePrefixes :: !Identifier -> !Identifier -> SourcePrefixes
+SourcePrefixes :: Identifier -> Identifier -> SourcePrefixes
 
 -- | Current source prefix
-[_pfThis] :: SourcePrefixes -> !Identifier
+[_pfThis] :: SourcePrefixes -> Identifier
 
 -- | Base table source row identifier to generate the table's column
 --   identifiers for computed field function input parameters
-[_pfBase] :: SourcePrefixes -> !Identifier
+[_pfBase] :: SourcePrefixes -> Identifier
 
 -- | Select portion of rows generated by the query using limit and offset
 data SelectSlicing
-SelectSlicing :: !Maybe Int -> !Maybe Int64 -> SelectSlicing
-[_ssLimit] :: SelectSlicing -> !Maybe Int
-[_ssOffset] :: SelectSlicing -> !Maybe Int64
+SelectSlicing :: Maybe Int -> Maybe Int64 -> SelectSlicing
+[_ssLimit] :: SelectSlicing -> Maybe Int
+[_ssOffset] :: SelectSlicing -> Maybe Int64
 data DistinctAndOrderByExpr
 ASorting :: (OrderByExp, Maybe DistinctExpr) -> Maybe (OrderByExp, Maybe DistinctExpr) -> DistinctAndOrderByExpr
 [_sortAtNode] :: DistinctAndOrderByExpr -> (OrderByExp, Maybe DistinctExpr)
@@ -26003,71 +26003,71 @@ ASorting :: (OrderByExp, Maybe DistinctExpr) -> Maybe (OrderByExp, Maybe Distinc
 
 -- | Sorting with -- Note [Optimizing queries using limit/offset])
 data SelectSorting
-NoSorting :: !Maybe DistinctExpr -> SelectSorting
-Sorting :: !DistinctAndOrderByExpr -> SelectSorting
+NoSorting :: Maybe DistinctExpr -> SelectSorting
+Sorting :: DistinctAndOrderByExpr -> SelectSorting
 data SortingAndSlicing
-SortingAndSlicing :: !SelectSorting -> !SelectSlicing -> SortingAndSlicing
-[_sasSorting] :: SortingAndSlicing -> !SelectSorting
-[_sasSlicing] :: SortingAndSlicing -> !SelectSlicing
+SortingAndSlicing :: SelectSorting -> SelectSlicing -> SortingAndSlicing
+[_sasSorting] :: SortingAndSlicing -> SelectSorting
+[_sasSlicing] :: SortingAndSlicing -> SelectSlicing
 data SelectSource
-SelectSource :: !Identifier -> !FromItem -> !BoolExp -> !SortingAndSlicing -> SelectSource
-[_ssPrefix] :: SelectSource -> !Identifier
-[_ssFrom] :: SelectSource -> !FromItem
-[_ssWhere] :: SelectSource -> !BoolExp
-[_ssSortingAndSlicing] :: SelectSource -> !SortingAndSlicing
+SelectSource :: Identifier -> FromItem -> BoolExp -> SortingAndSlicing -> SelectSource
+[_ssPrefix] :: SelectSource -> Identifier
+[_ssFrom] :: SelectSource -> FromItem
+[_ssWhere] :: SelectSource -> BoolExp
+[_ssSortingAndSlicing] :: SelectSource -> SortingAndSlicing
 noSortingAndSlicing :: SortingAndSlicing
 noSlicing :: SelectSlicing
 orderByForJsonAgg :: SelectSource -> Maybe OrderByExp
 data ApplySortingAndSlicing
-ApplySortingAndSlicing :: !(Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr) -> !(Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr) -> ApplySortingAndSlicing
-[_applyAtBase] :: ApplySortingAndSlicing -> !(Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
-[_applyAtNode] :: ApplySortingAndSlicing -> !(Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+ApplySortingAndSlicing :: (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr) -> (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr) -> ApplySortingAndSlicing
+[_applyAtBase] :: ApplySortingAndSlicing -> (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
+[_applyAtNode] :: ApplySortingAndSlicing -> (Maybe OrderByExp, SelectSlicing, Maybe DistinctExpr)
 applySortingAndSlicing :: SortingAndSlicing -> ApplySortingAndSlicing
 data SelectNode
-SelectNode :: !HashMap ColumnAlias SQLExp -> !JoinTree -> SelectNode
-[_snExtractors] :: SelectNode -> !HashMap ColumnAlias SQLExp
-[_snJoinTree] :: SelectNode -> !JoinTree
+SelectNode :: HashMap ColumnAlias SQLExp -> JoinTree -> SelectNode
+[_snExtractors] :: SelectNode -> HashMap ColumnAlias SQLExp
+[_snJoinTree] :: SelectNode -> JoinTree
 data ObjectSelectSource
-ObjectSelectSource :: !Identifier -> !FromItem -> !BoolExp -> ObjectSelectSource
-[_ossPrefix] :: ObjectSelectSource -> !Identifier
-[_ossFrom] :: ObjectSelectSource -> !FromItem
-[_ossWhere] :: ObjectSelectSource -> !BoolExp
+ObjectSelectSource :: Identifier -> FromItem -> BoolExp -> ObjectSelectSource
+[_ossPrefix] :: ObjectSelectSource -> Identifier
+[_ossFrom] :: ObjectSelectSource -> FromItem
+[_ossWhere] :: ObjectSelectSource -> BoolExp
 objectSelectSourceToSelectSource :: ObjectSelectSource -> SelectSource
 data ObjectRelationSource
-ObjectRelationSource :: !RelName -> !HashMap PGCol PGCol -> !ObjectSelectSource -> ObjectRelationSource
-[_orsRelationshipName] :: ObjectRelationSource -> !RelName
-[_orsRelationMapping] :: ObjectRelationSource -> !HashMap PGCol PGCol
-[_orsSelectSource] :: ObjectRelationSource -> !ObjectSelectSource
+ObjectRelationSource :: RelName -> HashMap PGCol PGCol -> ObjectSelectSource -> ObjectRelationSource
+[_orsRelationshipName] :: ObjectRelationSource -> RelName
+[_orsRelationMapping] :: ObjectRelationSource -> HashMap PGCol PGCol
+[_orsSelectSource] :: ObjectRelationSource -> ObjectSelectSource
 data ArrayRelationSource
-ArrayRelationSource :: !TableAlias -> !HashMap PGCol PGCol -> !SelectSource -> ArrayRelationSource
-[_arsAlias] :: ArrayRelationSource -> !TableAlias
-[_arsRelationMapping] :: ArrayRelationSource -> !HashMap PGCol PGCol
-[_arsSelectSource] :: ArrayRelationSource -> !SelectSource
+ArrayRelationSource :: TableAlias -> HashMap PGCol PGCol -> SelectSource -> ArrayRelationSource
+[_arsAlias] :: ArrayRelationSource -> TableAlias
+[_arsRelationMapping] :: ArrayRelationSource -> HashMap PGCol PGCol
+[_arsSelectSource] :: ArrayRelationSource -> SelectSource
 data MultiRowSelectNode
-MultiRowSelectNode :: ![Extractor] -> !SelectNode -> MultiRowSelectNode
-[_mrsnTopExtractors] :: MultiRowSelectNode -> ![Extractor]
-[_mrsnSelectNode] :: MultiRowSelectNode -> !SelectNode
+MultiRowSelectNode :: [Extractor] -> SelectNode -> MultiRowSelectNode
+[_mrsnTopExtractors] :: MultiRowSelectNode -> [Extractor]
+[_mrsnSelectNode] :: MultiRowSelectNode -> SelectNode
 data ComputedFieldTableSetSource
-ComputedFieldTableSetSource :: !FieldName -> !SelectSource -> ComputedFieldTableSetSource
-[_cftssFieldName] :: ComputedFieldTableSetSource -> !FieldName
-[_cftssSelectSource] :: ComputedFieldTableSetSource -> !SelectSource
+ComputedFieldTableSetSource :: FieldName -> SelectSource -> ComputedFieldTableSetSource
+[_cftssFieldName] :: ComputedFieldTableSetSource -> FieldName
+[_cftssSelectSource] :: ComputedFieldTableSetSource -> SelectSource
 data ArrayConnectionSource
-ArrayConnectionSource :: !TableAlias -> !HashMap PGCol PGCol -> !Maybe BoolExp -> !Maybe ConnectionSlice -> !SelectSource -> ArrayConnectionSource
-[_acsAlias] :: ArrayConnectionSource -> !TableAlias
-[_acsRelationMapping] :: ArrayConnectionSource -> !HashMap PGCol PGCol
-[_acsSplitFilter] :: ArrayConnectionSource -> !Maybe BoolExp
-[_acsSlice] :: ArrayConnectionSource -> !Maybe ConnectionSlice
-[_acsSource] :: ArrayConnectionSource -> !SelectSource
+ArrayConnectionSource :: TableAlias -> HashMap PGCol PGCol -> Maybe BoolExp -> Maybe ConnectionSlice -> SelectSource -> ArrayConnectionSource
+[_acsAlias] :: ArrayConnectionSource -> TableAlias
+[_acsRelationMapping] :: ArrayConnectionSource -> HashMap PGCol PGCol
+[_acsSplitFilter] :: ArrayConnectionSource -> Maybe BoolExp
+[_acsSlice] :: ArrayConnectionSource -> Maybe ConnectionSlice
+[_acsSource] :: ArrayConnectionSource -> SelectSource
 data JoinTree
-JoinTree :: !HashMap ObjectRelationSource SelectNode -> !HashMap ArrayRelationSource MultiRowSelectNode -> !HashMap ArrayConnectionSource MultiRowSelectNode -> !HashMap ComputedFieldTableSetSource MultiRowSelectNode -> JoinTree
-[_jtObjectRelations] :: JoinTree -> !HashMap ObjectRelationSource SelectNode
-[_jtArrayRelations] :: JoinTree -> !HashMap ArrayRelationSource MultiRowSelectNode
-[_jtArrayConnections] :: JoinTree -> !HashMap ArrayConnectionSource MultiRowSelectNode
-[_jtComputedFieldTableSets] :: JoinTree -> !HashMap ComputedFieldTableSetSource MultiRowSelectNode
+JoinTree :: HashMap ObjectRelationSource SelectNode -> HashMap ArrayRelationSource MultiRowSelectNode -> HashMap ArrayConnectionSource MultiRowSelectNode -> HashMap ComputedFieldTableSetSource MultiRowSelectNode -> JoinTree
+[_jtObjectRelations] :: JoinTree -> HashMap ObjectRelationSource SelectNode
+[_jtArrayRelations] :: JoinTree -> HashMap ArrayRelationSource MultiRowSelectNode
+[_jtArrayConnections] :: JoinTree -> HashMap ArrayConnectionSource MultiRowSelectNode
+[_jtComputedFieldTableSets] :: JoinTree -> HashMap ComputedFieldTableSetSource MultiRowSelectNode
 data PermissionLimitSubQuery
 
 -- | Permission limit
-PLSQRequired :: !Int -> PermissionLimitSubQuery
+PLSQRequired :: Int -> PermissionLimitSubQuery
 PLSQNotRequired :: PermissionLimitSubQuery
 type SimilarArrayFields = HashMap FieldName [FieldName]
 instance GHC.Generics.Generic Hasura.Backends.Postgres.Translate.Types.SourcePrefixes
@@ -26368,17 +26368,17 @@ module Hasura.Backends.Postgres.Execute.Subscription
 -- | Internal: Used to collect information about various parameters of a
 --   subscription field's AST as we resolve them to SQL expressions.
 data QueryParametersInfo (b :: BackendType)
-QueryParametersInfo :: !HashMap Name (ColumnValue b) -> !Seq (ColumnValue b) -> !HashSet SessionVariable -> QueryParametersInfo (b :: BackendType)
-[_qpiReusableVariableValues] :: QueryParametersInfo (b :: BackendType) -> !HashMap Name (ColumnValue b)
-[_qpiSyntheticVariableValues] :: QueryParametersInfo (b :: BackendType) -> !Seq (ColumnValue b)
+QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> HashSet SessionVariable -> QueryParametersInfo (b :: BackendType)
+[_qpiReusableVariableValues] :: QueryParametersInfo (b :: BackendType) -> HashMap Name (ColumnValue b)
+[_qpiSyntheticVariableValues] :: QueryParametersInfo (b :: BackendType) -> Seq (ColumnValue b)
 
 -- | The session variables that are referenced in the query root fld's AST.
 --   This information is used to determine a cohort's required session
 --   variables
-[_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> !HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_axVG5. Lens' (QueryParametersInfo b_axVG5) (Seq (ColumnValue b_axVG5))
-qpiReusableVariableValues :: forall b_axVG5. Lens' (QueryParametersInfo b_axVG5) (HashMap Name (ColumnValue b_axVG5))
-qpiReferencedSessionVariables :: forall b_axVG5. Lens' (QueryParametersInfo b_axVG5) (HashSet SessionVariable)
+[_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
+qpiSyntheticVariableValues :: forall b_axVCV. Lens' (QueryParametersInfo b_axVCV) (Seq (ColumnValue b_axVCV))
+qpiReusableVariableValues :: forall b_axVCV. Lens' (QueryParametersInfo b_axVCV) (HashMap Name (ColumnValue b_axVCV))
+qpiReferencedSessionVariables :: forall b_axVCV. Lens' (QueryParametersInfo b_axVCV) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -26422,13 +26422,13 @@ module Hasura.Backends.Postgres.Translate.Returning
 data MutationCTE
 
 -- | A Mutation with check constraint validation (Insert or Update)
-MCCheckConstraint :: !TopLevelCTE -> MutationCTE
+MCCheckConstraint :: TopLevelCTE -> MutationCTE
 
 -- | A Select statement which emits mutated table rows
-MCSelectValues :: !Select -> MutationCTE
+MCSelectValues :: Select -> MutationCTE
 
 -- | A Delete statement
-MCDelete :: !SQLDelete -> MutationCTE
+MCDelete :: SQLDelete -> MutationCTE
 getMutationCTE :: MutationCTE -> TopLevelCTE
 checkPermissionRequired :: MutationCTE -> Bool
 pgColsToSelFlds :: forall pgKind. Backend ('Postgres pgKind) => [ColumnInfo ('Postgres pgKind)] -> [(FieldName, AnnField ('Postgres pgKind))]
@@ -26675,17 +26675,17 @@ buildActionSubscriptionFields :: MonadBuildSchema ('Postgres 'Vanilla) r m n => 
 --   See <a>Execute</a>.
 module Hasura.Backends.Postgres.Execute.Mutation
 data MutateResp (b :: BackendType) a
-MutateResp :: !Int -> ![ColumnValues b a] -> MutateResp (b :: BackendType) a
-[_mrAffectedRows] :: MutateResp (b :: BackendType) a -> !Int
-[_mrReturningColumns] :: MutateResp (b :: BackendType) a -> ![ColumnValues b a]
+MutateResp :: Int -> [ColumnValues b a] -> MutateResp (b :: BackendType) a
+[_mrAffectedRows] :: MutateResp (b :: BackendType) a -> Int
+[_mrReturningColumns] :: MutateResp (b :: BackendType) a -> [ColumnValues b a]
 data Mutation (b :: BackendType)
-Mutation :: !QualifiedTable -> !(MutationCTE, Seq PrepArg) -> !MutationOutput b -> ![ColumnInfo b] -> !StringifyNumbers -> !Maybe NamingCase -> Mutation (b :: BackendType)
-[_mTable] :: Mutation (b :: BackendType) -> !QualifiedTable
-[_mQuery] :: Mutation (b :: BackendType) -> !(MutationCTE, Seq PrepArg)
-[_mOutput] :: Mutation (b :: BackendType) -> !MutationOutput b
-[_mCols] :: Mutation (b :: BackendType) -> ![ColumnInfo b]
-[_mStrfyNum] :: Mutation (b :: BackendType) -> !StringifyNumbers
-[_mNamingConvention] :: Mutation (b :: BackendType) -> !Maybe NamingCase
+Mutation :: QualifiedTable -> (MutationCTE, Seq PrepArg) -> MutationOutput b -> [ColumnInfo b] -> StringifyNumbers -> Maybe NamingCase -> Mutation (b :: BackendType)
+[_mTable] :: Mutation (b :: BackendType) -> QualifiedTable
+[_mQuery] :: Mutation (b :: BackendType) -> (MutationCTE, Seq PrepArg)
+[_mOutput] :: Mutation (b :: BackendType) -> MutationOutput b
+[_mCols] :: Mutation (b :: BackendType) -> [ColumnInfo b]
+[_mStrfyNum] :: Mutation (b :: BackendType) -> StringifyNumbers
+[_mNamingConvention] :: Mutation (b :: BackendType) -> Maybe NamingCase
 mkMutation :: UserInfo -> QualifiedTable -> (MutationCTE, Seq PrepArg) -> MutationOutput ('Postgres pgKind) -> [ColumnInfo ('Postgres pgKind)] -> StringifyNumbers -> Maybe NamingCase -> Mutation ('Postgres pgKind)
 runMutation :: (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => Mutation ('Postgres pgKind) -> m EncJSON
 mutateAndReturn :: (MonadTx m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => Mutation ('Postgres pgKind) -> m EncJSON
@@ -27066,19 +27066,19 @@ newtype FromIr a
 FromIr :: ReaderT FromIrReader (StateT FromIrState (Validate (NonEmpty Error))) a -> FromIr a
 [unFromIr] :: FromIr a -> ReaderT FromIrReader (StateT FromIrState (Validate (NonEmpty Error))) a
 data FromIrState
-FromIrState :: !Map Text Int -> FromIrState
-[indices] :: FromIrState -> !Map Text Int
+FromIrState :: Map Text Int -> FromIrState
+[indices] :: FromIrState -> Map Text Int
 data FromIrReader
-FromIrReader :: !FromIrConfig -> FromIrReader
-[config] :: FromIrReader -> !FromIrConfig
+FromIrReader :: FromIrConfig -> FromIrReader
+[config] :: FromIrReader -> FromIrConfig
 
 -- | Config values for the from-IR translator.
 data FromIrConfig
-FromIrConfig :: !Top -> FromIrConfig
+FromIrConfig :: Top -> FromIrConfig
 
 -- | Applies globally to all selects, and may be reduced to something even
 --   smaller by permission/user args.
-[globalSelectLimit] :: FromIrConfig -> !Top
+[globalSelectLimit] :: FromIrConfig -> Top
 
 -- | A default config.
 defaultFromIrConfig :: FromIrConfig
@@ -27439,33 +27439,33 @@ module Hasura.Backends.BigQuery.Execute
 --   matrix/flat vector, unboxed sums for Value, etc. Presently we choose a
 --   naive implementation in the interest of getting other work done.
 data RecordSet
-RecordSet :: !Vector (InsOrdHashMap FieldNameText OutputValue) -> !Maybe [Text] -> RecordSet
-[$sel:rows:RecordSet] :: RecordSet -> !Vector (InsOrdHashMap FieldNameText OutputValue)
-[$sel:wantedFields:RecordSet] :: RecordSet -> !Maybe [Text]
+RecordSet :: Vector (InsOrdHashMap FieldNameText OutputValue) -> Maybe [Text] -> RecordSet
+[$sel:rows:RecordSet] :: RecordSet -> Vector (InsOrdHashMap FieldNameText OutputValue)
+[$sel:wantedFields:RecordSet] :: RecordSet -> Maybe [Text]
 
 -- | As opposed to BigQuery.FieldName which is a qualified name, this is
 --   just the unqualified text name itself.
 newtype FieldNameText
 FieldNameText :: Text -> FieldNameText
 data OutputValue
-DecimalOutputValue :: !Decimal -> OutputValue
-BigDecimalOutputValue :: !BigDecimal -> OutputValue
-IntegerOutputValue :: !Int64 -> OutputValue
-FloatOutputValue :: !Float64 -> OutputValue
-GeographyOutputValue :: !Geography -> OutputValue
-TextOutputValue :: !Text -> OutputValue
-TimestampOutputValue :: !Timestamp -> OutputValue
-DateOutputValue :: !Date -> OutputValue
-TimeOutputValue :: !Time -> OutputValue
-DatetimeOutputValue :: !Datetime -> OutputValue
-BytesOutputValue :: !Base64 -> OutputValue
-BoolOutputValue :: !Bool -> OutputValue
-ArrayOutputValue :: !Vector OutputValue -> OutputValue
-RecordOutputValue :: !InsOrdHashMap FieldNameText OutputValue -> OutputValue
+DecimalOutputValue :: Decimal -> OutputValue
+BigDecimalOutputValue :: BigDecimal -> OutputValue
+IntegerOutputValue :: Int64 -> OutputValue
+FloatOutputValue :: Float64 -> OutputValue
+GeographyOutputValue :: Geography -> OutputValue
+TextOutputValue :: Text -> OutputValue
+TimestampOutputValue :: Timestamp -> OutputValue
+DateOutputValue :: Date -> OutputValue
+TimeOutputValue :: Time -> OutputValue
+DatetimeOutputValue :: Datetime -> OutputValue
+BytesOutputValue :: Base64 -> OutputValue
+BoolOutputValue :: Bool -> OutputValue
+ArrayOutputValue :: Vector OutputValue -> OutputValue
+RecordOutputValue :: InsOrdHashMap FieldNameText OutputValue -> OutputValue
 NullOutputValue :: OutputValue
 data ExecuteReader
-ExecuteReader :: !BigQuerySourceConfig -> ExecuteReader
-[$sel:sourceConfig:ExecuteReader] :: ExecuteReader -> !BigQuerySourceConfig
+ExecuteReader :: BigQuerySourceConfig -> ExecuteReader
+[$sel:sourceConfig:ExecuteReader] :: ExecuteReader -> BigQuerySourceConfig
 data ExecuteProblem
 GetJobDecodeProblem :: String -> ExecuteProblem
 CreateQueryJobDecodeProblem :: String -> ExecuteProblem
@@ -27505,20 +27505,20 @@ DATETIME :: BigQueryType
 TIME :: BigQueryType
 BIGDECIMAL :: BigQueryType
 data BigQuery
-BigQuery :: !Text -> !InsOrdHashMap ParameterName Parameter -> BigQuery
-[$sel:query:BigQuery] :: BigQuery -> !Text
-[$sel:parameters:BigQuery] :: BigQuery -> !InsOrdHashMap ParameterName Parameter
+BigQuery :: Text -> InsOrdHashMap ParameterName Parameter -> BigQuery
+[$sel:query:BigQuery] :: BigQuery -> Text
+[$sel:parameters:BigQuery] :: BigQuery -> InsOrdHashMap ParameterName Parameter
 data Parameter
-Parameter :: !BigQueryType -> !Value -> Parameter
-[$sel:typ:Parameter] :: Parameter -> !BigQueryType
-[$sel:value:Parameter] :: Parameter -> !Value
+Parameter :: BigQueryType -> Value -> Parameter
+[$sel:typ:Parameter] :: Parameter -> BigQueryType
+[$sel:value:Parameter] :: Parameter -> Value
 newtype ParameterName
 ParameterName :: Text -> ParameterName
 data BigQueryField
-BigQueryField :: !FieldNameText -> !BigQueryFieldType -> !Mode -> BigQueryField
-[$sel:name:BigQueryField] :: BigQueryField -> !FieldNameText
-[$sel:typ:BigQueryField] :: BigQueryField -> !BigQueryFieldType
-[$sel:mode:BigQueryField] :: BigQueryField -> !Mode
+BigQueryField :: FieldNameText -> BigQueryFieldType -> Mode -> BigQueryField
+[$sel:name:BigQueryField] :: BigQueryField -> FieldNameText
+[$sel:typ:BigQueryField] :: BigQueryField -> BigQueryFieldType
+[$sel:mode:BigQueryField] :: BigQueryField -> Mode
 data BigQueryFieldType
 FieldSTRING :: BigQueryFieldType
 FieldBYTES :: BigQueryFieldType
@@ -27585,10 +27585,10 @@ Fetch :: Maybe Text -> Fetch
 -- | Get results of a job.
 getJobResults :: MonadIO m => BigQueryConnection -> Job -> Fetch -> m (Either ExecuteProblem JobResultsResponse)
 data Job
-Job :: !Text -> !Text -> !Text -> Job
-[$sel:state:Job] :: Job -> !Text
-[$sel:jobId:Job] :: Job -> !Text
-[$sel:location:Job] :: Job -> !Text
+Job :: Text -> Text -> Text -> Job
+[$sel:state:Job] :: Job -> Text
+[$sel:jobId:Job] :: Job -> Text
+[$sel:location:Job] :: Job -> Text
 
 -- | Make a Request return <tt>JSON</tt>
 jsonRequestHeader :: Request -> Request
@@ -28647,12 +28647,12 @@ instance Hasura.RQL.Types.Backend.Backend b => Data.Aeson.Types.FromJSON.FromJSO
 --   See <a>V2Query</a> and <a>Query</a>.
 module Hasura.Backends.Postgres.DDL.RunSQL
 data RunSQL
-RunSQL :: Text -> !SourceName -> !Bool -> !Maybe Bool -> !TxAccess -> RunSQL
+RunSQL :: Text -> SourceName -> Bool -> Maybe Bool -> TxAccess -> RunSQL
 [rSql] :: RunSQL -> Text
-[rSource] :: RunSQL -> !SourceName
-[rCascade] :: RunSQL -> !Bool
-[rCheckMetadataConsistency] :: RunSQL -> !Maybe Bool
-[rTxAccessMode] :: RunSQL -> !TxAccess
+[rSource] :: RunSQL -> SourceName
+[rCascade] :: RunSQL -> Bool
+[rCheckMetadataConsistency] :: RunSQL -> Maybe Bool
+[rTxAccessMode] :: RunSQL -> TxAccess
 
 -- | Check for known schema-mutating keywords in the raw SQL text.
 --   
@@ -28694,9 +28694,9 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.Postgres.DDL.RunSQL.RunS
 
 module Hasura.Backends.MySQL.SQL
 data RunSQL
-RunSQL :: !Text -> !SourceName -> RunSQL
-[_Sql] :: RunSQL -> !Text
-[_Source] :: RunSQL -> !SourceName
+RunSQL :: Text -> SourceName -> RunSQL
+[_Sql] :: RunSQL -> Text
+[_Source] :: RunSQL -> SourceName
 runSQL :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => RunSQL -> m EncJSON
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.MySQL.SQL.RunSQL
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Backends.MySQL.SQL.RunSQL
@@ -28709,11 +28709,11 @@ instance GHC.Show.Show Hasura.Backends.MySQL.SQL.RunSQL
 --   Provides primitives for running raw text SQL on MSSQL backends.
 module Hasura.Backends.MSSQL.DDL.RunSQL
 data MSSQLRunSQL
-MSSQLRunSQL :: Text -> !SourceName -> !Bool -> !Maybe Bool -> MSSQLRunSQL
+MSSQLRunSQL :: Text -> SourceName -> Bool -> Maybe Bool -> MSSQLRunSQL
 [_mrsSql] :: MSSQLRunSQL -> Text
-[_mrsSource] :: MSSQLRunSQL -> !SourceName
-[_mrsCascade] :: MSSQLRunSQL -> !Bool
-[_mrsCheckMetadataConsistency] :: MSSQLRunSQL -> !Maybe Bool
+[_mrsSource] :: MSSQLRunSQL -> SourceName
+[_mrsCascade] :: MSSQLRunSQL -> Bool
+[_mrsCheckMetadataConsistency] :: MSSQLRunSQL -> Maybe Bool
 runSQL :: forall m. (MonadIO m, MonadBaseControl IO m, CacheRWM m, MonadError QErr m, MetadataM m) => MSSQLRunSQL -> m EncJSON
 isSchemaCacheBuildRequiredRunSQL :: MSSQLRunSQL -> Bool
 toResult :: [[(Column, Value)]] -> RunSQLRes
@@ -28732,9 +28732,9 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Backends.MSSQL.DDL.RunSQL.MSSQLRu
 --   World!"]]}
 module Hasura.Backends.BigQuery.DDL.RunSQL
 data BigQueryRunSQL
-BigQueryRunSQL :: Text -> !SourceName -> BigQueryRunSQL
+BigQueryRunSQL :: Text -> SourceName -> BigQueryRunSQL
 [_mrsSql] :: BigQueryRunSQL -> Text
-[_mrsSource] :: BigQueryRunSQL -> !SourceName
+[_mrsSource] :: BigQueryRunSQL -> SourceName
 runSQL :: (MonadIO m, CacheRWM m, MonadError QErr m, MetadataM m) => BigQueryRunSQL -> m EncJSON
 
 -- | The SQL query in the request is ignored
@@ -29040,10 +29040,10 @@ type PlanVariables = HashMap Name Int
 --   encoding in PG format
 type PrepArgMap = IntMap (PrepArg, PGScalarValue)
 data PlanningSt
-PlanningSt :: !Int -> !PlanVariables -> !PrepArgMap -> PlanningSt
-[_psArgNumber] :: PlanningSt -> !Int
-[_psVariables] :: PlanningSt -> !PlanVariables
-[_psPrepped] :: PlanningSt -> !PrepArgMap
+PlanningSt :: Int -> PlanVariables -> PrepArgMap -> PlanningSt
+[_psArgNumber] :: PlanningSt -> Int
+[_psVariables] :: PlanningSt -> PlanVariables
+[_psPrepped] :: PlanningSt -> PrepArgMap
 initPlanningSt :: PlanningSt
 
 -- | If we're preparing a value with planning state, we favour referring to
@@ -29139,9 +29139,9 @@ setProcessingActionLogsToPendingTx :: LockedActionIdArray -> TxE QErr ()
 --   mutations, and more.
 module Hasura.Backends.Postgres.Instances.Execute
 data PreparedSql
-PreparedSql :: !Query -> !PrepArgMap -> PreparedSql
-[_psQuery] :: PreparedSql -> !Query
-[_psPrepArgs] :: PreparedSql -> !PrepArgMap
+PreparedSql :: Query -> PrepArgMap -> PreparedSql
+[_psQuery] :: PreparedSql -> Query
+[_psPrepArgs] :: PreparedSql -> PrepArgMap
 pgDBQueryPlan :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind, MonadReader QueryTagsComment m) => UserInfo -> Environment -> SourceName -> SourceConfig ('Postgres pgKind) -> QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> m (DBStepInfo ('Postgres pgKind))
 pgDBQueryExplain :: forall pgKind m. (MonadError QErr m, Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) => RootFieldAlias -> UserInfo -> SourceName -> SourceConfig ('Postgres pgKind) -> QueryDB ('Postgres pgKind) Void (UnpreparedValue ('Postgres pgKind)) -> m (AnyBackend DBStepInfo)
 pgDBSubscriptionExplain :: (MonadError QErr m, MonadIO m, MonadBaseControl IO m) => SubscriptionQueryPlan ('Postgres pgKind) (MultiplexedQuery ('Postgres pgKind)) -> m SubscriptionQueryPlanExplanation
