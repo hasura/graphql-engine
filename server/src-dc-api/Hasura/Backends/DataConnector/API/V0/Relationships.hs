@@ -1,8 +1,14 @@
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.Backends.DataConnector.API.V0.Relationships
   ( TableRelationships (..),
+    trSourceTable,
+    trRelationships,
     Relationship (..),
+    rTargetTable,
+    rRelationshipType,
+    rColumnMapping,
     RelationshipName (..),
     RelationshipType (..),
     SourceColumnName,
@@ -13,6 +19,7 @@ where
 import Autodocodec.Extended
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
+import Control.Lens (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.HashMap.Strict qualified as M
@@ -74,3 +81,6 @@ instance HasCodec RelationshipType where
 type SourceColumnName = API.V0.ColumnName
 
 type TargetColumnName = API.V0.ColumnName
+
+$(makeLenses 'TableRelationships)
+$(makeLenses 'Relationship)
