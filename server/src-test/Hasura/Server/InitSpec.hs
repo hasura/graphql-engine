@@ -59,7 +59,7 @@ emptyRawServeOptions =
       rsoConsoleAssetsDir = Nothing,
       rsoEnableTelemetry = Nothing,
       rsoWsReadCookie = False,
-      rsoStringifyNum = False,
+      rsoStringifyNum = Options.Don'tStringifyNumbers,
       rsoDangerousBooleanCollapse = Nothing,
       rsoEnabledAPIs = Nothing,
       rsoMxRefetchInt = Nothing,
@@ -74,17 +74,17 @@ emptyRawServeOptions =
       rsoEventsHttpPoolSize = Nothing,
       rsoEventsFetchInterval = Nothing,
       rsoAsyncActionsFetchInterval = Nothing,
-      rsoEnableRemoteSchemaPermissions = False,
+      rsoEnableRemoteSchemaPermissions = Options.DisableRemoteSchemaPermissions,
       rsoWebSocketCompression = False,
       rsoWebSocketKeepAlive = Nothing,
       rsoInferFunctionPermissions = Nothing,
-      rsoEnableMaintenanceMode = False,
+      rsoEnableMaintenanceMode = Types.MaintenanceModeDisabled,
       rsoSchemaPollInterval = Nothing,
       rsoExperimentalFeatures = Nothing,
       rsoEventsFetchBatchSize = Nothing,
       rsoGracefulShutdownTimeout = Nothing,
       rsoWebSocketConnectionInitTimeout = Nothing,
-      rsoEnableMetadataQueryLoggingEnv = False,
+      rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingDisabled,
       rsoDefaultNamingConvention = Nothing
     }
 
@@ -554,9 +554,9 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoStringifyNum = True}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoStringifyNum = Options.StringifyNumbers}
             -- When
-            env = [("HASURA_GRAPHQL_ENABLE_TELEMETRY", "false")]
+            env = [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "false")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Logging.Hasura rawServeOptions)
 
@@ -991,7 +991,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoAsyncActionsFetchInterval = Just 300}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoAsyncActionsFetchInterval = Just (UUT.Interval 300)}
             -- When
             env = [("HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL", "200")]
             -- Then
@@ -1022,7 +1022,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableRemoteSchemaPermissions = True}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableRemoteSchemaPermissions = Options.EnableRemoteSchemaPermissions}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS", "false")]
             -- Then
@@ -1086,7 +1086,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoWebSocketKeepAlive = Just 20}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoWebSocketKeepAlive = Just (UUT.KeepAliveDelay 20)}
             -- When
             env = [("HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE", "10")]
             -- Then
@@ -1117,7 +1117,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoInferFunctionPermissions = Just True}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoInferFunctionPermissions = Just Options.InferFunctionPermissions}
             -- When
             env = [("HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS", "false")]
             -- Then
@@ -1148,7 +1148,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableMaintenanceMode = True}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableMaintenanceMode = Types.MaintenanceModeEnabled ()}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE", "false")]
             -- Then
@@ -1189,7 +1189,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoSchemaPollInterval = Just 3000}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoSchemaPollInterval = Just (UUT.Interval 3000)}
             -- When
             env = [("HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL", "2000")]
             -- Then
@@ -1309,7 +1309,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoWebSocketConnectionInitTimeout = Just 300}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoWebSocketConnectionInitTimeout = Just (UUT.WSConnectionInitTimeout 300)}
             -- When
             env = [("HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", "200")]
             -- Then
@@ -1342,7 +1342,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableMetadataQueryLoggingEnv = True}
+            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingEnabled}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING", "False")]
             -- Then

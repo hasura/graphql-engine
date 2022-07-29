@@ -136,7 +136,7 @@ data RawServeOptions impl = RawServeOptions
     rsoConsoleAssetsDir :: Maybe Text,
     rsoEnableTelemetry :: Maybe Bool,
     rsoWsReadCookie :: Bool,
-    rsoStringifyNum :: Bool,
+    rsoStringifyNum :: Options.StringifyNumbers,
     rsoDangerousBooleanCollapse :: Maybe Bool,
     rsoEnabledAPIs :: Maybe [API],
     rsoMxRefetchInt :: Maybe ES.RefetchInterval,
@@ -151,19 +151,19 @@ data RawServeOptions impl = RawServeOptions
     rsoAdminInternalErrors :: Maybe Bool,
     rsoEventsHttpPoolSize :: Maybe Int,
     rsoEventsFetchInterval :: Maybe Milliseconds,
-    rsoAsyncActionsFetchInterval :: Maybe Milliseconds,
-    rsoEnableRemoteSchemaPermissions :: Bool,
+    rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
+    rsoEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
     rsoWebSocketCompression :: Bool,
-    rsoWebSocketKeepAlive :: Maybe Int,
-    rsoInferFunctionPermissions :: Maybe Bool,
-    rsoEnableMaintenanceMode :: Bool,
-    rsoSchemaPollInterval :: Maybe Milliseconds,
+    rsoWebSocketKeepAlive :: Maybe KeepAliveDelay,
+    rsoInferFunctionPermissions :: Maybe Options.InferFunctionPermissions,
+    rsoEnableMaintenanceMode :: MaintenanceMode (),
+    rsoSchemaPollInterval :: Maybe OptionalInterval,
     -- see Note [Experimental features]
     rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
     rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
     rsoGracefulShutdownTimeout :: Maybe Seconds,
-    rsoWebSocketConnectionInitTimeout :: Maybe Int,
-    rsoEnableMetadataQueryLoggingEnv :: Bool,
+    rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
+    rsoEnableMetadataQueryLoggingEnv :: MetadataQueryLoggingMode,
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase
   }
@@ -217,13 +217,13 @@ shouldIncludeInternal role = \case
 newtype KeepAliveDelay = KeepAliveDelay {unKeepAliveDelay :: Seconds}
   deriving (Eq, Show)
 
-$(J.deriveJSON hasuraJSON ''KeepAliveDelay)
-
 defaultKeepAliveDelay :: KeepAliveDelay
 defaultKeepAliveDelay = KeepAliveDelay $ fromIntegral (5 :: Int)
 
 newtype WSConnectionInitTimeout = WSConnectionInitTimeout {unWSConnectionInitTimeout :: Seconds}
   deriving (Eq, Show)
+
+$(J.deriveJSON hasuraJSON ''KeepAliveDelay)
 
 $(J.deriveJSON hasuraJSON ''WSConnectionInitTimeout)
 
