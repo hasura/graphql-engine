@@ -6,7 +6,7 @@
 
 
 - server: add warning log for missing admin secret
-
+- console: add custom names for streaming subscriptions
 ## v2.10.0-beta.1
 
 ### Introducing Apollo Federation v1 support (experimental)
