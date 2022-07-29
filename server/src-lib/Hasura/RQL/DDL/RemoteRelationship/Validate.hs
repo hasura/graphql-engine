@@ -218,7 +218,7 @@ stripInMap ::
     (Either ValidationError)
     (HM.HashMap G.Name RemoteSchemaInputValueDefinition)
 stripInMap relName lhsIdentifier types schemaArguments providedArguments =
-  fmap HM.catMaybes $
+  fmap catMaybes $
     HM.traverseWithKey
       ( \name remoteInpValDef@(RemoteSchemaInputValueDefinition inpValInfo _preset) ->
           case HM.lookup name providedArguments of

@@ -433,15 +433,15 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
             )
         |)
       |) (withSourceInKey source $ Map.groupOnNE _tbiName tableBuildInputs)
-  let rawTableCache = removeSourceInKey $ Map.catMaybes rawTableInfos
-      enumTables = flip Map.mapMaybe rawTableCache \rawTableInfo ->
+  let rawTableCache = removeSourceInKey $ catMaybes rawTableInfos
+      enumTables = flip mapMaybe rawTableCache \rawTableInfo ->
         (,,) <$> _tciPrimaryKey rawTableInfo <*> pure (_tciCustomConfig rawTableInfo) <*> _tciEnumValues rawTableInfo
   tableInfos <-
     (|
       Inc.keyed
         (| withTable (\table -> processTableInfo -< (enumTables, table, tCase)) |)
       |) (withSourceInKey source rawTableCache)
-  returnA -< removeSourceInKey (Map.catMaybes tableInfos)
+  returnA -< removeSourceInKey (catMaybes tableInfos)
   where
     withSourceInKey :: (Eq k, Hashable k) => SourceName -> HashMap k v -> HashMap (SourceName, k) v
     withSourceInKey source = mapKeys (source,)

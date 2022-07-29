@@ -5,10 +5,12 @@ module Hasura.Prelude
   ( module M,
     alphabet,
     alphaNumerics,
+    catMaybes,
     onNothing,
     onNothingM,
     onJust,
     withJust,
+    mapMaybe,
     maybeToEither,
     eitherToMaybe,
     onLeft,
@@ -119,12 +121,10 @@ import Data.List as M
   )
 import Data.List.NonEmpty as M (NonEmpty (..), nonEmpty)
 import Data.Maybe as M
-  ( catMaybes,
-    fromMaybe,
+  ( fromMaybe,
     isJust,
     isNothing,
     listToMaybe,
-    mapMaybe,
     maybeToList,
   )
 import Data.Monoid as M (getAlt)
@@ -150,6 +150,7 @@ import GHC.Generics as M (Generic)
 import System.IO.Unsafe (unsafePerformIO) -- for custom trace functions
 import Text.Pretty.Simple qualified as PS
 import Text.Read as M (readEither, readMaybe)
+import Witherable (catMaybes, mapMaybe)
 import Prelude as M hiding (fail, init, lookup)
 
 alphabet :: String

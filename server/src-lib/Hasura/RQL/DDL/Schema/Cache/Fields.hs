@@ -145,14 +145,14 @@ addNonColumnFields =
     (align relationshipFields computedFieldFields >- returnA)
       >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts FIRelationship FIComputedField) |)
       -- Second, align with remote relationship fields
-      >-> (\fields -> align (M.catMaybes fields) remoteRelationshipFields >- returnA)
+      >-> (\fields -> align (catMaybes fields) remoteRelationshipFields >- returnA)
       >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts id FIRemoteRelationship) |)
       -- Next, check for conflicts with custom field names. This is easiest to do before merging with
       -- the column info itself because we have access to the information separately, and custom field
       -- names are not currently stored as a separate map (but maybe should be!).
-      >-> (\fields -> (columns, M.catMaybes fields) >- noCustomFieldConflicts)
+      >-> (\fields -> (columns, catMaybes fields) >- noCustomFieldConflicts)
       -- Finally, check for conflicts with the columns themselves.
-      >-> (\fields -> align columns (M.catMaybes fields) >- returnA)
+      >-> (\fields -> align columns (catMaybes fields) >- returnA)
       >-> (| Inc.keyed (\_ fields -> fields >- noColumnConflicts) |)
   where
     noFieldConflicts this that = proc (fieldName, fields) -> case fields of

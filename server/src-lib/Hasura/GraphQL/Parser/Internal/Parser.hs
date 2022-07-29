@@ -15,7 +15,7 @@ where
 
 import Control.Arrow ((&&&))
 import Control.Monad (unless, when, (>=>))
-import Control.Monad.Except (MonadError (..))
+import Control.Monad.Except (MonadError (throwError))
 import Data.Aeson qualified as A
 import Data.Aeson.Key qualified as K
 import Data.Aeson.Types (JSONPathElement (Key))
@@ -44,6 +44,7 @@ import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax hiding (Definition)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Witherable (catMaybes, mapMaybe)
 import Prelude
 
 infixl 1 `bind`
@@ -198,7 +199,7 @@ safeSelectionSet name description fields
     duplicates = M.filter ((> 1) . length) namesOrigins
     uniques = S.toList . S.fromList
     printEntry (fieldName, originsM) =
-      let origins = uniques $ Maybe.catMaybes originsM
+      let origins = uniques $ catMaybes originsM
        in if
               | null origins -> toErrorValue fieldName
               | any Maybe.isNothing originsM ->
@@ -266,7 +267,7 @@ selectionSetObject name description parsers implementsInterfaces =
       parsers
         & map (\FieldParser {fDefinition, fParser} -> (getName fDefinition, fParser))
         & M.fromList
-    interfaces = Maybe.mapMaybe (getInterfaceInfo . pType) implementsInterfaces
+    interfaces = mapMaybe (getInterfaceInfo . pType) implementsInterfaces
     parsedInterfaceNames = fmap getName interfaces
 
 selectionSetInterface ::
@@ -297,7 +298,7 @@ selectionSetInterface name description fields objectImplementations =
       -- fragments on the other types.
     }
   where
-    objects = Maybe.catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
+    objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
 
 selectionSetUnion ::
   (MonadParse n, Traversable t) =>
@@ -315,7 +316,7 @@ selectionSetUnion name description objectImplementations =
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
   where
-    objects = Maybe.catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
+    objects = catMaybes $ toList $ fmap (getObjectInfo . pType) objectImplementations
 
 -- | Builds a 'FieldParser' for a field that does not take a subselection set,
 -- i.e. a field that returns a scalar or enum. The field’s type is taken from

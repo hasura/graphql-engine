@@ -12,7 +12,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.NonEmpty qualified as NEMap
 import Data.HashSet qualified as HS
-import Data.IntMap.Strict.Extended qualified as IntMap
+import Data.IntMap.Strict qualified as IntMap
 import Data.Text qualified as T
 import Data.Tuple (swap)
 import Hasura.Base.Error
@@ -135,7 +135,7 @@ foldJoinTreeWith ::
   m (f JO.Value)
 foldJoinTreeWith callSource callRemoteSchema userInfo lhs joinTree = do
   (compositeValue, joins) <- collectJoinArguments (assignJoinIds joinTree) lhs
-  joinIndices <- fmap IntMap.catMaybes $
+  joinIndices <- fmap catMaybes $
     for joins $ \JoinArguments {..} -> do
       let joinArguments = IntMap.fromList $ map swap $ Map.toList _jalArguments
       previousStep <- case _jalJoin of

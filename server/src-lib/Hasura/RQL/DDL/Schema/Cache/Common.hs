@@ -312,7 +312,7 @@ buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
                   >-> (\info -> join info >- returnA)
             )
         |)
-    >-> (\infoMap -> M.catMaybes infoMap >- returnA)
+    >-> (\infoMap -> catMaybes infoMap >- returnA)
 {-# INLINEABLE buildInfoMap #-}
 
 -- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
