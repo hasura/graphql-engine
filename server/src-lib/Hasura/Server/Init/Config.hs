@@ -1,6 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
-
 -- | Types and classes related to configuration when the server is initialised
 module Hasura.Server.Init.Config
   ( API (..),
@@ -43,9 +40,6 @@ where
 import Control.Lens (Lens', Prism', lens, prism')
 import Data.Aeson
 import Data.Aeson qualified as J
-import Data.Aeson.Casing qualified as J
-import Data.Aeson.TH qualified as J
-import Data.Char (toLower)
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Time
@@ -114,10 +108,24 @@ data API
   | METRICS
   deriving (Show, Eq, Read, Generic)
 
-$( J.deriveJSON
-     (J.defaultOptions {J.constructorTagModifier = map toLower})
-     ''API
- )
+instance FromJSON API where
+  parseJSON = J.withText "API" \case
+    "metadata" -> pure METADATA
+    "graphql" -> pure GRAPHQL
+    "pgdump" -> pure PGDUMP
+    "developer" -> pure DEVELOPER
+    "config" -> pure CONFIG
+    "metrics" -> pure METRICS
+    x -> fail $ "unexpected string '" <> show x <> "'."
+
+instance ToJSON API where
+  toJSON = \case
+    METADATA -> J.String "metadata"
+    GRAPHQL -> J.String "graphql"
+    PGDUMP -> J.String "pgdump"
+    DEVELOPER -> J.String "developer"
+    CONFIG -> J.String "config"
+    METRICS -> J.String "metrics"
 
 instance Hashable API
 
@@ -217,15 +225,29 @@ shouldIncludeInternal role = \case
 newtype KeepAliveDelay = KeepAliveDelay {unKeepAliveDelay :: Seconds}
   deriving (Eq, Show)
 
+instance FromJSON KeepAliveDelay where
+  parseJSON = withObject "KeepAliveDelay" \o -> do
+    unKeepAliveDelay <- o J..: "keep_alive_delay"
+    pure $ KeepAliveDelay {..}
+
+instance ToJSON KeepAliveDelay where
+  toJSON KeepAliveDelay {..} =
+    J.object ["keep_alive_delay" J..= unKeepAliveDelay]
+
 defaultKeepAliveDelay :: KeepAliveDelay
 defaultKeepAliveDelay = KeepAliveDelay $ fromIntegral (5 :: Int)
 
 newtype WSConnectionInitTimeout = WSConnectionInitTimeout {unWSConnectionInitTimeout :: Seconds}
   deriving (Eq, Show)
 
-$(J.deriveJSON hasuraJSON ''KeepAliveDelay)
+instance FromJSON WSConnectionInitTimeout where
+  parseJSON = withObject "WSConnectionInitTimeout" \o -> do
+    unWSConnectionInitTimeout <- o J..: "w_s_connection_init_timeout"
+    pure $ WSConnectionInitTimeout {..}
 
-$(J.deriveJSON hasuraJSON ''WSConnectionInitTimeout)
+instance ToJSON WSConnectionInitTimeout where
+  toJSON WSConnectionInitTimeout {..} =
+    J.object ["w_s_connection_init_timeout" J..= unWSConnectionInitTimeout]
 
 defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
 defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: Int)
@@ -277,6 +299,8 @@ data ServeOptions impl = ServeOptions
     soDefaultNamingConvention :: Maybe NamingCase
   }
 
+--------------------------------------------------------------------------------
+
 -- | The Downgrade Command options. These are only sourced from the
 -- Arg Parser and are used directly in 'Hasura.Server.Migrate'.
 data DowngradeOptions = DowngradeOptions
@@ -284,6 +308,8 @@ data DowngradeOptions = DowngradeOptions
     dgoDryRun :: !Bool
   }
   deriving (Show, Eq)
+
+--------------------------------------------------------------------------------
 
 -- | Postgres connection info tupled with a retry count.
 --
@@ -307,19 +333,7 @@ pciDatabaseConn = lens _pciDatabaseConn $ \pci a -> pci {_pciDatabaseConn = a}
 pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
 pciRetries = lens _pciRetries $ \pci mi -> pci {_pciRetries = mi}
 
--- | Structured Postgres connection information as provided by the arg
--- parser or env vars.
-data PostgresRawConnDetails = PostgresRawConnDetails
-  { connHost :: !String,
-    connPort :: !Int,
-    connUser :: !String,
-    connPassword :: !String,
-    connDatabase :: !String,
-    connOptions :: !(Maybe String)
-  }
-  deriving (Eq, Read, Show)
-
-$(J.deriveJSON (J.aesonPrefix J.camelCase) {J.omitNothingFields = True} ''PostgresRawConnDetails)
+--------------------------------------------------------------------------------
 
 -- | Postgres Connection info can come in the form of a templated URI
 -- string or structured data.
@@ -345,6 +359,41 @@ rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
 rawConnDetailsToUrl =
   mkPlainURLTemplate . rawConnDetailsToUrlText
 
+--------------------------------------------------------------------------------
+
+-- | Structured Postgres connection information as provided by the arg
+-- parser or env vars.
+data PostgresRawConnDetails = PostgresRawConnDetails
+  { connHost :: !String,
+    connPort :: !Int,
+    connUser :: !String,
+    connPassword :: !String,
+    connDatabase :: !String,
+    connOptions :: !(Maybe String)
+  }
+  deriving (Eq, Read, Show)
+
+instance FromJSON PostgresRawConnDetails where
+  parseJSON = J.withObject "PostgresRawConnDetails" \o -> do
+    connHost <- o J..: "host"
+    connPort <- o J..: "port"
+    connUser <- o J..: "user"
+    connPassword <- o J..: "password"
+    connDatabase <- o J..: "database"
+    connOptions <- o J..:? "options"
+    pure $ PostgresRawConnDetails {..}
+
+instance ToJSON PostgresRawConnDetails where
+  toJSON PostgresRawConnDetails {..} =
+    J.object $
+      [ "host" J..= connHost,
+        "port" J..= connPort,
+        "user" J..= connUser,
+        "password" J..= connPassword,
+        "database" J..= connDatabase
+      ]
+        <> catMaybes [fmap ("options" J..=) connOptions]
+
 rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
 rawConnDetailsToUrlText PostgresRawConnDetails {..} =
   T.pack $
@@ -359,22 +408,7 @@ rawConnDetailsToUrlText PostgresRawConnDetails {..} =
       <> connDatabase
       <> maybe "" ("?options=" <>) connOptions
 
--- | The HGE Arg parser Command choices.
---
--- This is polymorphic so that we can pack either 'RawServeOptions' or
--- 'RawProServeOptions' in it.
-data HGECommand a
-  = HCServe !a
-  | HCExport
-  | HCClean
-  | HCVersion
-  | HCDowngrade !DowngradeOptions
-  deriving (Show, Eq)
-
-_HCServe :: Prism' (HGECommand a) a
-_HCServe = prism' HCServe \case
-  HCServe a -> Just a
-  _ -> Nothing
+--------------------------------------------------------------------------------
 
 -- | HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl = HGEOptionsRaw
@@ -392,6 +426,8 @@ horMetadataDbUrl = lens _horMetadataDbUrl $ \hdu a -> hdu {_horMetadataDbUrl = a
 horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
 horCommand = lens _horCommand $ \hdu a -> hdu {_horCommand = a}
 
+--------------------------------------------------------------------------------
+
 -- | The final processed HGE options.
 data HGEOptions impl = HGEOptions
   { _hoDatabaseUrl :: !(PostgresConnInfo (Maybe UrlConf)),
@@ -401,3 +437,22 @@ data HGEOptions impl = HGEOptions
 
 hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
 hoCommand = lens _hoCommand $ \hdu a -> hdu {_hoCommand = a}
+
+--------------------------------------------------------------------------------
+
+-- | The HGE Arg parser Command choices.
+--
+-- This is polymorphic so that we can pack either 'RawServeOptions' or
+-- 'RawProServeOptions' in it.
+data HGECommand a
+  = HCServe !a
+  | HCExport
+  | HCClean
+  | HCVersion
+  | HCDowngrade !DowngradeOptions
+  deriving (Show, Eq)
+
+_HCServe :: Prism' (HGECommand a) a
+_HCServe = prism' HCServe \case
+  HCServe a -> Just a
+  _ -> Nothing
