@@ -30069,6 +30069,16 @@ PostgresConnInfo :: !a -> !Maybe Int -> PostgresConnInfo a
 pciDatabaseConn :: Lens' (PostgresConnInfo a) a
 pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
 
+-- | Postgres Connection info can come in the form of a templated URI
+--   string or structured data.
+data PostgresRawConnInfo
+PGConnDatabaseUrl :: !URLTemplate -> PostgresRawConnInfo
+PGConnDetails :: !PostgresRawConnDetails -> PostgresRawConnInfo
+mkUrlConnInfo :: String -> PostgresRawConnInfo
+_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
+_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
+rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
+
 -- | Structured Postgres connection information as provided by the arg
 --   parser or env vars.
 data PostgresRawConnDetails
@@ -30079,29 +30089,7 @@ PostgresRawConnDetails :: !String -> !Int -> !String -> !String -> !String -> !M
 [connPassword] :: PostgresRawConnDetails -> !String
 [connDatabase] :: PostgresRawConnDetails -> !String
 [connOptions] :: PostgresRawConnDetails -> !Maybe String
-
--- | Postgres Connection info can come in the form of a templated URI
---   string or structured data.
-data PostgresRawConnInfo
-PGConnDatabaseUrl :: !URLTemplate -> PostgresRawConnInfo
-PGConnDetails :: !PostgresRawConnDetails -> PostgresRawConnInfo
-mkUrlConnInfo :: String -> PostgresRawConnInfo
-_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
-_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
-rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
 rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
-
--- | The HGE Arg parser Command choices.
---   
---   This is polymorphic so that we can pack either <a>RawServeOptions</a>
---   or <tt>RawProServeOptions</tt> in it.
-data HGECommand a
-HCServe :: !a -> HGECommand a
-HCExport :: HGECommand a
-HCClean :: HGECommand a
-HCVersion :: HGECommand a
-HCDowngrade :: !DowngradeOptions -> HGECommand a
-_HCServe :: Prism' (HGECommand a) a
 
 -- | HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl
@@ -30120,12 +30108,32 @@ HGEOptions :: !PostgresConnInfo (Maybe UrlConf) -> !Maybe String -> !HGECommand 
 [_hoMetadataDbUrl] :: HGEOptions impl -> !Maybe String
 [_hoCommand] :: HGEOptions impl -> !HGECommand impl
 hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
-instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnInfo
-instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnInfo
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Server.Init.Config.HGECommand a)
-instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.HGECommand a)
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.PostgresRawConnDetails
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.PostgresRawConnDetails
+
+-- | The HGE Arg parser Command choices.
+--   
+--   This is polymorphic so that we can pack either <a>RawServeOptions</a>
+--   or <tt>RawProServeOptions</tt> in it.
+data HGECommand a
+HCServe :: !a -> HGECommand a
+HCExport :: HGECommand a
+HCClean :: HGECommand a
+HCVersion :: HGECommand a
+HCDowngrade :: !DowngradeOptions -> HGECommand a
+_HCServe :: Prism' (HGECommand a) a
+instance GHC.Classes.Eq Hasura.Server.Init.Config.RawConnParams
+instance GHC.Show.Show Hasura.Server.Init.Config.RawConnParams
+instance GHC.Classes.Eq Hasura.Server.Init.Config.OptionalInterval
+instance GHC.Show.Show Hasura.Server.Init.Config.OptionalInterval
+instance GHC.Generics.Generic Hasura.Server.Init.Config.API
+instance GHC.Read.Read Hasura.Server.Init.Config.API
+instance GHC.Classes.Eq Hasura.Server.Init.Config.API
+instance GHC.Show.Show Hasura.Server.Init.Config.API
+instance GHC.Classes.Eq Hasura.Server.Init.Config.ResponseInternalErrorsConfig
+instance GHC.Show.Show Hasura.Server.Init.Config.ResponseInternalErrorsConfig
+instance GHC.Show.Show Hasura.Server.Init.Config.KeepAliveDelay
+instance GHC.Classes.Eq Hasura.Server.Init.Config.KeepAliveDelay
+instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
+instance GHC.Classes.Eq Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance GHC.Classes.Eq Hasura.Server.Init.Config.DowngradeOptions
 instance GHC.Show.Show Hasura.Server.Init.Config.DowngradeOptions
 instance Data.Traversable.Traversable Hasura.Server.Init.Config.PostgresConnInfo
@@ -30136,27 +30144,19 @@ instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.PostgresCon
 instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnDetails
 instance GHC.Read.Read Hasura.Server.Init.Config.PostgresRawConnDetails
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnDetails
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
+instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnInfo
+instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnInfo
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Server.Init.Config.HGECommand a)
+instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.HGECommand a)
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.PostgresRawConnDetails
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.PostgresRawConnDetails
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.KeepAliveDelay
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.KeepAliveDelay
-instance GHC.Classes.Eq Hasura.Server.Init.Config.ResponseInternalErrorsConfig
-instance GHC.Show.Show Hasura.Server.Init.Config.ResponseInternalErrorsConfig
-instance GHC.Show.Show Hasura.Server.Init.Config.KeepAliveDelay
-instance GHC.Classes.Eq Hasura.Server.Init.Config.KeepAliveDelay
-instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
-instance GHC.Classes.Eq Hasura.Server.Init.Config.WSConnectionInitTimeout
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.API
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.KeepAliveDelay
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.API
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.API
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.API
-instance GHC.Classes.Eq Hasura.Server.Init.Config.RawConnParams
-instance GHC.Show.Show Hasura.Server.Init.Config.RawConnParams
-instance GHC.Classes.Eq Hasura.Server.Init.Config.OptionalInterval
-instance GHC.Show.Show Hasura.Server.Init.Config.OptionalInterval
-instance GHC.Generics.Generic Hasura.Server.Init.Config.API
-instance GHC.Read.Read Hasura.Server.Init.Config.API
-instance GHC.Classes.Eq Hasura.Server.Init.Config.API
-instance GHC.Show.Show Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.OptionalInterval
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.OptionalInterval
 
