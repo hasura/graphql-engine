@@ -155,45 +155,54 @@ rawConnInfoToUrlConf maybeRawConnInfo = do
 -- corresponding values from the 'WithEnv' context.
 mkServeOptions :: L.EnabledLogTypes impl => RawServeOptions impl -> WithEnv (ServeOptions impl)
 mkServeOptions rso = do
-  port <-
-    fromMaybe 8080
-      <$> withEnv (rsoPort rso) (fst servePortEnv)
-  host <-
-    fromMaybe "*"
-      <$> withEnv (rsoHost rso) (fst serveHostEnv)
+  port <- fromMaybe 8080 <$> withEnv (rsoPort rso) (fst servePortEnv)
+
+  host <- fromMaybe "*" <$> withEnv (rsoHost rso) (fst serveHostEnv)
 
   connParams <- mkConnParams $ rsoConnParams rso
+
   txIso <- fromMaybe Q.ReadCommitted <$> withEnv (rsoTxIso rso) (fst txIsolationEnv)
+
   adminScrt <- fmap (maybe mempty Set.singleton) $ withEnvs (rsoAdminSecret rso) $ map fst [adminSecretEnv, accessKeyEnv]
+
   authHook <- mkAuthHook $ rsoAuthHook rso
+
   jwtSecret <- (`onNothing` mempty) <$> withEnv (rsoJwtSecret rso) (fst jwtSecretEnv)
 
   unAuthRole <- withEnv (rsoUnAuthRole rso) $ fst unAuthRoleEnv
+
   corsCfg <- mkCorsConfig $ rsoCorsConfig rso
-  enableConsole <-
-    withEnvBool (rsoEnableConsole rso) $
-      fst enableConsoleEnv
+
+  enableConsole <- withEnvBool (rsoEnableConsole rso) $ fst enableConsoleEnv
+
   consoleAssetsDir <- withEnv (rsoConsoleAssetsDir rso) (fst consoleAssetsDirEnv)
-  enableTelemetry <-
-    fromMaybe True
-      <$> withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+
+  enableTelemetry <- fromMaybe True <$> withEnv (rsoEnableTelemetry rso) (fst enableTelemetryEnv)
+
   strfyNum <-
     case rsoStringifyNum rso of
       Options.Don'tStringifyNumbers -> fmap (fromMaybe Options.Don'tStringifyNumbers) $ considerEnv (fst stringifyNumEnv)
       stringifyNums -> pure stringifyNums
+
   dangerousBooleanCollapse <-
     fromMaybe False <$> withEnv (rsoDangerousBooleanCollapse rso) (fst dangerousBooleanCollapseEnv)
+
   enabledAPIs <-
     Set.fromList . fromMaybe defaultEnabledAPIs
       <$> withEnv (rsoEnabledAPIs rso) (fst enabledAPIsEnv)
+
   lqOpts <- mkLQOpts
+
   streamQOpts <- mkStreamQueryOpts
+
   enableAL <- withEnvBool (rsoEnableAllowlist rso) $ fst enableAllowlistEnv
-  enabledLogs <-
-    maybe L.defaultEnabledLogTypes Set.fromList
-      <$> withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
+
+  enabledLogs <- maybe L.defaultEnabledLogTypes Set.fromList <$> withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
+
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
+
   devMode <- withEnvBool (rsoDevMode rso) $ fst graphqlDevModeEnv
+
   adminInternalErrors <-
     fromMaybe True
       <$> withEnv (rsoAdminInternalErrors rso) (fst graphqlAdminInternalErrorsEnv) -- Default to `true` to enable backwards compatibility
@@ -204,8 +213,11 @@ mkServeOptions rso = do
             | otherwise -> InternalErrorsDisabled
 
   eventsHttpPoolSize <- withEnv (rsoEventsHttpPoolSize rso) (fst graphqlEventsHttpPoolSizeEnv)
+
   eventsFetchInterval <- withEnv (rsoEventsFetchInterval rso) (fst graphqlEventsFetchIntervalEnv)
+
   asyncActionsFetchInterval <- fromMaybe defaultAsyncActionsFetchInterval <$> withEnv (rsoAsyncActionsFetchInterval rso) (fst asyncActionsFetchIntervalEnv)
+
   enableRemoteSchemaPerms <-
     case rsoEnableRemoteSchemaPermissions rso of
       Options.DisableRemoteSchemaPermissions -> fmap (fromMaybe Options.DisableRemoteSchemaPermissions) $ considerEnv (fst enableRemoteSchemaPermsEnv)
