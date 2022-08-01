@@ -27,9 +27,9 @@
 </span><span id="line-27"></span><span class="hs-comment">-- represented as semantically distinct types without the boilerplate of</span><span>
 </span><span id="line-28"></span><span class="hs-comment">-- actually defining these wrappers separately.</span><span>
 </span><span id="line-29"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#NameType"><span class="hs-identifier hs-type">NameType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
-</span><span id="line-30"></span><span id="local-6989586621689387384"><span id="local-6989586621689387385"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span id="local-6989586621689387390"><span class="annot"><a href="#local-6989586621689387390"><span class="hs-identifier hs-type">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unName"><span class="annot"><span class="annottext">Name ty -&gt; Text
+</span><span id="line-30"></span><span id="local-6989586621689404316"><span id="local-6989586621689404317"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span id="local-6989586621689404322"><span class="annot"><a href="#local-6989586621689404322"><span class="hs-identifier hs-type">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Name"><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unName"><span class="annot"><span class="annottext">Name ty -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.IR.Name.html#unName"><span class="hs-identifier hs-var hs-var">unName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cName"><span id="%24tName"><span id="local-6989586621689387353"><span id="local-6989586621689387355"><span id="local-6989586621689387357"><span id="local-6989586621689387359"><span id="local-6989586621689387361"><span id="local-6989586621689387363"><span id="local-6989586621689387365"><span id="local-6989586621689387367"><span id="local-6989586621689387369"><span id="local-6989586621689387371"><span id="local-6989586621689387373"><span id="local-6989586621689387375"><span id="local-6989586621689387377"><span id="local-6989586621689387379"><span class="annot"><span class="annottext">Typeable (Name ty)
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="%24cName"><span id="%24tName"><span id="local-6989586621689404285"><span id="local-6989586621689404287"><span id="local-6989586621689404289"><span id="local-6989586621689404291"><span id="local-6989586621689404293"><span id="local-6989586621689404295"><span id="local-6989586621689404297"><span id="local-6989586621689404299"><span id="local-6989586621689404301"><span id="local-6989586621689404303"><span id="local-6989586621689404305"><span id="local-6989586621689404307"><span id="local-6989586621689404309"><span id="local-6989586621689404311"><span class="annot"><span class="annottext">Typeable (Name ty)
 DataType
 Constr
 Typeable (Name ty)
@@ -235,7 +235,7 @@ Typeable ty =&gt;
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; Name ty -&gt; c (Name ty)
 $cp1Data :: forall (ty :: NameType). Typeable ty =&gt; Typeable (Name ty)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387346"><span id="local-6989586621689387348"><span class="annot"><span class="annottext">Name ty -&gt; Name ty -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689404278"><span id="local-6989586621689404280"><span class="annot"><span class="annottext">Name ty -&gt; Name ty -&gt; Bool
 (Name ty -&gt; Name ty -&gt; Bool)
 -&gt; (Name ty -&gt; Name ty -&gt; Bool) -&gt; Eq (Name ty)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -254,7 +254,7 @@ forall (ty :: NameType) x. Rep (Name ty) x -&gt; Name ty
 forall (ty :: NameType) x. Name ty -&gt; Rep (Name ty) x
 $cto :: forall (ty :: NameType) x. Rep (Name ty) x -&gt; Name ty
 $cfrom :: forall (ty :: NameType) x. Name ty -&gt; Rep (Name ty) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387327"><span id="local-6989586621689387329"><span id="local-6989586621689387331"><span id="local-6989586621689387333"><span id="local-6989586621689387335"><span id="local-6989586621689387337"><span id="local-6989586621689387339"><span class="annot"><span class="annottext">Eq (Name ty)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689404259"><span id="local-6989586621689404261"><span id="local-6989586621689404263"><span id="local-6989586621689404265"><span id="local-6989586621689404267"><span id="local-6989586621689404269"><span id="local-6989586621689404271"><span class="annot"><span class="annottext">Eq (Name ty)
 Eq (Name ty)
 -&gt; (Name ty -&gt; Name ty -&gt; Ordering)
 -&gt; (Name ty -&gt; Name ty -&gt; Bool)
@@ -296,7 +296,7 @@ $c&lt; :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Bool
 compare :: Name ty -&gt; Name ty -&gt; Ordering
 $ccompare :: forall (ty :: NameType). Name ty -&gt; Name ty -&gt; Ordering
 $cp1Ord :: forall (ty :: NameType). Eq (Name ty)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689387320"><span id="local-6989586621689387322"><span id="local-6989586621689387324"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689404252"><span id="local-6989586621689404254"><span id="local-6989586621689404256"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; ShowS
 [Name ty] -&gt; ShowS
 Name ty -&gt; String
 (Int -&gt; Name ty -&gt; ShowS)
@@ -314,7 +314,7 @@ showsPrec :: Int -&gt; Name ty -&gt; ShowS
 $cshowsPrec :: forall (ty :: NameType). Int -&gt; Name ty -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span>
-</span><span id="line-33"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689387316"><span class="annot"><span class="annottext">Eq (Name ty)
+</span><span id="line-33"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689404248"><span class="annot"><span class="annottext">Eq (Name ty)
 Eq (Name ty)
 -&gt; (Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool) -&gt; Cacheable (Name ty)
 Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
@@ -325,7 +325,7 @@ unchanged :: Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
 $cunchanged :: forall (ty :: NameType). Accesses -&gt; Name ty -&gt; Name ty -&gt; Bool
 $cp1Cacheable :: forall (ty :: NameType). Eq (Name ty)
 </span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621689387311"><span id="local-6989586621689387313"><span class="annot"><span class="annottext">Value -&gt; Parser [Name ty]
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621689404243"><span id="local-6989586621689404245"><span class="annot"><span class="annottext">Value -&gt; Parser [Name ty]
 Value -&gt; Parser (Name ty)
 (Value -&gt; Parser (Name ty))
 -&gt; (Value -&gt; Parser [Name ty]) -&gt; FromJSON (Name ty)
@@ -338,7 +338,7 @@ $cparseJSONList :: forall (ty :: NameType). Value -&gt; Parser [Name ty]
 parseJSON :: Value -&gt; Parser (Name ty)
 $cparseJSON :: forall (ty :: NameType). Value -&gt; Parser (Name ty)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>      </span><span id="local-6989586621689387306"><span id="local-6989586621689387308"><span class="annot"><span class="annottext">FromJSONKeyFunction [Name ty]
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621689404238"><span id="local-6989586621689404240"><span class="annot"><span class="annottext">FromJSONKeyFunction [Name ty]
 FromJSONKeyFunction (Name ty)
 FromJSONKeyFunction (Name ty)
 -&gt; FromJSONKeyFunction [Name ty] -&gt; FromJSONKey (Name ty)
@@ -351,7 +351,7 @@ $cfromJSONKeyList :: forall (ty :: NameType). FromJSONKeyFunction [Name ty]
 fromJSONKey :: FromJSONKeyFunction (Name ty)
 $cfromJSONKey :: forall (ty :: NameType). FromJSONKeyFunction (Name ty)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621689387301"><span id="local-6989586621689387303"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; Int
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621689404233"><span id="local-6989586621689404235"><span class="annot"><span class="annottext">Int -&gt; Name ty -&gt; Int
 Name ty -&gt; Int
 (Int -&gt; Name ty -&gt; Int) -&gt; (Name ty -&gt; Int) -&gt; Hashable (Name ty)
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -362,14 +362,14 @@ $chash :: forall (ty :: NameType). Name ty -&gt; Int
 hashWithSalt :: Int -&gt; Name ty -&gt; Int
 $chashWithSalt :: forall (ty :: NameType). Int -&gt; Name ty -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-37"></span><span>      </span><span id="local-6989586621689387298"><span class="annot"><span class="annottext">Name ty -&gt; ()
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621689404230"><span class="annot"><span class="annottext">Name ty -&gt; ()
 (Name ty -&gt; ()) -&gt; NFData (Name ty)
 forall a. (a -&gt; ()) -&gt; NFData a
 forall (ty :: NameType). Name ty -&gt; ()
 rnf :: Name ty -&gt; ()
 $crnf :: forall (ty :: NameType). Name ty -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-38"></span><span>      </span><span id="local-6989586621689387289"><span id="local-6989586621689387291"><span id="local-6989586621689387293"><span id="local-6989586621689387295"><span class="annot"><span class="annottext">[Name ty] -&gt; Value
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621689404221"><span id="local-6989586621689404223"><span id="local-6989586621689404225"><span id="local-6989586621689404227"><span class="annot"><span class="annottext">[Name ty] -&gt; Value
 [Name ty] -&gt; Encoding
 Name ty -&gt; Value
 Name ty -&gt; Encoding
@@ -397,7 +397,7 @@ $ctoEncoding :: forall (ty :: NameType). Name ty -&gt; Encoding
 toJSON :: Name ty -&gt; Value
 $ctoJSON :: forall (ty :: NameType). Name ty -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-39"></span><span>      </span><span id="local-6989586621689387284"><span id="local-6989586621689387286"><span class="annot"><span class="annottext">ToJSONKeyFunction [Name ty]
+</span><span id="line-39"></span><span>      </span><span id="local-6989586621689404216"><span id="local-6989586621689404218"><span class="annot"><span class="annottext">ToJSONKeyFunction [Name ty]
 ToJSONKeyFunction (Name ty)
 ToJSONKeyFunction (Name ty)
 -&gt; ToJSONKeyFunction [Name ty] -&gt; ToJSONKey (Name ty)
@@ -410,7 +410,7 @@ $ctoJSONKeyList :: forall (ty :: NameType). ToJSONKeyFunction [Name ty]
 toJSONKey :: ToJSONKeyFunction (Name ty)
 $ctoJSONKey :: forall (ty :: NameType). ToJSONKeyFunction (Name ty)
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621689387281"><span class="annot"><span class="annottext">Name ty -&gt; Text
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621689404213"><span class="annot"><span class="annottext">Name ty -&gt; Text
 (Name ty -&gt; Text) -&gt; ToTxt (Name ty)
 forall a. (a -&gt; Text) -&gt; ToTxt a
 forall (ty :: NameType). Name ty -&gt; Text
@@ -419,8 +419,8 @@ $ctoTxt :: forall (ty :: NameType). Name ty -&gt; Text
 </span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span>
 </span><span id="line-41"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span id="local-6989586621689387279"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-type">ToErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689387279"><span class="hs-identifier hs-type">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621689387276"><span class="annot"><span class="annottext">toErrorValue :: Name ty -&gt; ErrorMessage
+</span><span id="line-43"></span><span id="local-6989586621689404211"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-type">ToErrorValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689404211"><span class="hs-identifier hs-type">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621689404208"><span class="annot"><span class="annottext">toErrorValue :: Name ty -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">ErrorValue.squote</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage)
 -&gt; (Name ty -&gt; Text) -&gt; Name ty -&gt; ErrorMessage
@@ -430,49 +430,49 @@ forall (ty :: NameType). Name ty -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.IR.Name.html#unName"><span class="hs-identifier hs-var hs-var">unName</span></a></span></span><span>
 </span><span id="line-45"></span><span>
 </span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.TableName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Table"><span class="hs-identifier hs-type">Table</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621689387270"><span class="annot"><span class="annottext">from :: TableName -&gt; Name 'Table
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.TableName</span></a></span><span> </span><span id="local-6989586621689387267"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387267"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name 'Table
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621689404202"><span class="annot"><span class="annottext">from :: TableName -&gt; Name 'Table
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.TableName</span></a></span><span> </span><span id="local-6989586621689404199"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689404199"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name 'Table
 forall (ty :: NameType). Text -&gt; Name ty
 </span><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387267"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689404199"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Table"><span class="hs-identifier hs-type">Table</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.TableName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621689387265"><span class="annot"><span class="annottext">from :: Name 'Table -&gt; TableName
-</span><a href="#local-6989586621689387265"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span id="local-6989586621689387264"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387264"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableName
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621689404197"><span class="annot"><span class="annottext">from :: Name 'Table -&gt; TableName
+</span><a href="#local-6989586621689404197"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span id="local-6989586621689404196"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689404196"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TableName
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.TableName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387264"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689404196"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ColumnName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621689387262"><span class="annot"><span class="annottext">from :: ColumnName -&gt; Name 'Column
-</span><a href="#local-6989586621689387262"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ColumnName</span></a></span><span> </span><span id="local-6989586621689387260"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387260"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name 'Column
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621689404194"><span class="annot"><span class="annottext">from :: ColumnName -&gt; Name 'Column
+</span><a href="#local-6989586621689404194"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ColumnName</span></a></span><span> </span><span id="local-6989586621689404192"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689404192"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name 'Column
 forall (ty :: NameType). Text -&gt; Name ty
 </span><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387260"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689404192"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-54"></span><span>
 </span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.ColumnName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-56"></span><span>  </span><span id="local-6989586621689387258"><span class="annot"><span class="annottext">from :: Name 'Column -&gt; ColumnName
-</span><a href="#local-6989586621689387258"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span id="local-6989586621689387257"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387257"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ColumnName
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621689404190"><span class="annot"><span class="annottext">from :: Name 'Column -&gt; ColumnName
+</span><a href="#local-6989586621689404190"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span id="local-6989586621689404189"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689404189"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ColumnName
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.ColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387257"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689404189"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621689387255"><span class="annot"><span class="annottext">from :: RelationshipName -&gt; Name 'Relationship
-</span><a href="#local-6989586621689387255"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipName</span></a></span><span> </span><span id="local-6989586621689387253"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387253"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name 'Relationship
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621689404187"><span class="annot"><span class="annottext">from :: RelationshipName -&gt; Name 'Relationship
+</span><a href="#local-6989586621689404187"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipName</span></a></span><span> </span><span id="local-6989586621689404185"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689404185"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name 'Relationship
 forall (ty :: NameType). Text -&gt; Name ty
 </span><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-var">Name</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387253"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689404185"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-60"></span><span>
 </span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Witch.From</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Relationship"><span class="hs-identifier hs-type">Relationship</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-type">API.RelationshipName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621689387251"><span class="annot"><span class="annottext">from :: Name 'Relationship -&gt; RelationshipName
-</span><a href="#local-6989586621689387251"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span id="local-6989586621689387250"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387250"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; RelationshipName
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621689404183"><span class="annot"><span class="annottext">from :: Name 'Relationship -&gt; RelationshipName
+</span><a href="#local-6989586621689404183"><span class="hs-identifier hs-var hs-var hs-var hs-var">from</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.DataConnector.IR.Name.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span> </span><span id="local-6989586621689404182"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689404182"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; RelationshipName
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/l/dc-api/opt/doc/html/graphql-engine/src"><span class="hs-identifier hs-var">API.RelationshipName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689387250"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689404182"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="hs-comment">-- | The &quot;type&quot; of &quot;name&quot; that the 'Name' type is meant to provide a textual</span><span>
 </span><span id="line-65"></span><span class="hs-comment">-- representation for.</span><span>
