@@ -1,30 +1,41 @@
 -- | Types and classes related to configuration when the server is initialised
 module Hasura.Server.Init.Config
-  ( API (..),
-    DowngradeOptions (..),
-    HGECommand (..),
-    _HCServe,
-    HGEOptions (..),
-    hoCommand,
+  ( -- * HGEOptions
     HGEOptionsRaw (..),
     horDatabaseUrl,
     horMetadataDbUrl,
     horCommand,
-    KeepAliveDelay (..),
-    OptionalInterval (..),
+
+    -- * HGEOptionsRaw
+    HGEOptions (..),
+    hoCommand,
+
+    -- * PostgresConnInfo
     PostgresConnInfo (..),
     pciDatabaseConn,
     pciRetries,
-    PostgresRawConnDetails (..),
+
+    -- * PostgresRawConnInfo
     PostgresRawConnInfo (..),
     _PGConnDatabaseUrl,
     _PGConnDetails,
     mkUrlConnInfo,
+
+    -- * PostgresRawConnDetails
+    PostgresRawConnDetails (..),
+
+    -- * HGECommand
+    HGECommand (..),
+    _HCServe,
+
+    -- * RawServeOptions
+    RawServeOptions (..),
+    API (..),
+    KeepAliveDelay (..),
+    OptionalInterval (..),
     RawAuthHook,
     RawConnParams (..),
-    RawServeOptions (..),
     ResponseInternalErrorsConfig (..),
-    ServeOptions (..),
     WSConnectionInitTimeout (..),
     defaultKeepAliveDelay,
     defaultWSConnectionInitTimeout,
@@ -32,50 +43,268 @@ module Hasura.Server.Init.Config
     rawConnDetailsToUrl,
     rawConnDetailsToUrlText,
     shouldIncludeInternal,
+
+    -- * ServeOptions
+    ServeOptions (..),
+
+    -- * DowngradeOptions
+    DowngradeOptions (..),
   )
 where
 
 --------------------------------------------------------------------------------
 
-import Control.Lens (Lens', Prism', lens, prism')
-import Data.Aeson
-import Data.Aeson qualified as J
-import Data.HashSet qualified as Set
-import Data.Text qualified as T
-import Data.Time
-import Data.URL.Template
+import Control.Lens (Lens', Prism')
+import Control.Lens qualified as Lens
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson qualified as Aeson
+import Data.Text qualified as Text
+import Data.Time qualified as Time
+import Data.URL.Template qualified as Template
 import Database.PG.Query qualified as Q
-import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
+import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Logging qualified as L
+import Hasura.Logging qualified as Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Common
-import Hasura.Server.Auth
-import Hasura.Server.Cors
-import Hasura.Server.Logging
-import Hasura.Server.Types
-import Hasura.Session
-import Network.Wai.Handler.Warp (HostPreference)
-import Network.WebSockets qualified as WS
+import Hasura.RQL.Types.Common qualified as Common
+import Hasura.Server.Auth qualified as Auth
+import Hasura.Server.Cors qualified as Cors
+import Hasura.Server.Logging qualified as Server.Logging
+import Hasura.Server.Types qualified as Types
+import Hasura.Session qualified as Session
+import Network.Wai.Handler.Warp qualified as Warp
+import Network.WebSockets qualified as WebSockets
 
 --------------------------------------------------------------------------------
 
-data RawConnParams = RawConnParams
-  { rcpStripes :: !(Maybe Int),
-    rcpConns :: !(Maybe Int),
-    rcpIdleTime :: !(Maybe Int),
-    -- | Time from connection creation after which to destroy a connection and
-    -- choose a different/new one.
-    rcpConnLifetime :: !(Maybe NominalDiffTime),
-    rcpAllowPrepare :: !(Maybe Bool),
-    -- | See @HASURA_GRAPHQL_PG_POOL_TIMEOUT@
-    rcpPoolTimeout :: !(Maybe NominalDiffTime)
+-- | Raw HGE Options from the arg parser and the env.
+data HGEOptionsRaw impl = HGEOptionsRaw
+  { _horDatabaseUrl :: PostgresConnInfo (Maybe PostgresRawConnInfo),
+    _horMetadataDbUrl :: Maybe String,
+    _horCommand :: HGECommand impl
   }
+
+horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
+horDatabaseUrl = Lens.lens _horDatabaseUrl $ \hdu a -> hdu {_horDatabaseUrl = a}
+
+horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
+horMetadataDbUrl = Lens.lens _horMetadataDbUrl $ \hdu a -> hdu {_horMetadataDbUrl = a}
+
+horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
+horCommand = Lens.lens _horCommand $ \hdu a -> hdu {_horCommand = a}
+
+--------------------------------------------------------------------------------
+
+-- | The final processed HGE options.
+data HGEOptions impl = HGEOptions
+  { _hoDatabaseUrl :: PostgresConnInfo (Maybe Common.UrlConf),
+    _hoMetadataDbUrl :: Maybe String,
+    _hoCommand :: HGECommand impl
+  }
+
+hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
+hoCommand = Lens.lens _hoCommand $ \hdu a -> hdu {_hoCommand = a}
+
+--------------------------------------------------------------------------------
+
+-- | Postgres connection info tupled with a retry count.
+--
+-- In practice, the @a@ here is one of the following:
+-- 1. 'Maybe PostgresRawConnInfo'
+-- 2. 'Maybe UrlConf'
+-- 3. 'Maybe Text'
+-- 4. 'Maybe DatabaseUrl' where 'DatabaseUrl' is an alias for 'Text'
+--
+-- If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
+-- processed your arg parser results.
+data PostgresConnInfo a = PostgresConnInfo
+  { _pciDatabaseConn :: a,
+    _pciRetries :: Maybe Int
+  }
+  deriving (Show, Eq, Functor, Foldable, Traversable)
+
+pciDatabaseConn :: Lens' (PostgresConnInfo a) a
+pciDatabaseConn = Lens.lens _pciDatabaseConn $ \pci a -> pci {_pciDatabaseConn = a}
+
+pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
+pciRetries = Lens.lens _pciRetries $ \pci mi -> pci {_pciRetries = mi}
+
+--------------------------------------------------------------------------------
+
+-- | Postgres Connection info can come in the form of a templated URI
+-- string or structured data.
+data PostgresRawConnInfo
+  = PGConnDatabaseUrl Template.URLTemplate
+  | PGConnDetails PostgresRawConnDetails
   deriving (Show, Eq)
 
+mkUrlConnInfo :: String -> PostgresRawConnInfo
+mkUrlConnInfo = PGConnDatabaseUrl . Template.mkPlainURLTemplate . Text.pack
+
+_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo Template.URLTemplate
+_PGConnDatabaseUrl = Lens.prism' PGConnDatabaseUrl $ \case
+  PGConnDatabaseUrl template -> Just template
+  PGConnDetails _ -> Nothing
+
+_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
+_PGConnDetails = Lens.prism' PGConnDetails $ \case
+  PGConnDatabaseUrl _ -> Nothing
+  PGConnDetails prcd -> Just prcd
+
+rawConnDetailsToUrl :: PostgresRawConnDetails -> Template.URLTemplate
+rawConnDetailsToUrl =
+  Template.mkPlainURLTemplate . rawConnDetailsToUrlText
+
+--------------------------------------------------------------------------------
+
+-- | Structured Postgres connection information as provided by the arg
+-- parser or env vars.
+data PostgresRawConnDetails = PostgresRawConnDetails
+  { connHost :: String,
+    connPort :: Int,
+    connUser :: String,
+    connPassword :: String,
+    connDatabase :: String,
+    connOptions :: Maybe String
+  }
+  deriving (Eq, Read, Show)
+
+instance FromJSON PostgresRawConnDetails where
+  parseJSON = Aeson.withObject "PostgresRawConnDetails" \o -> do
+    connHost <- o Aeson..: "host"
+    connPort <- o Aeson..: "port"
+    connUser <- o Aeson..: "user"
+    connPassword <- o Aeson..: "password"
+    connDatabase <- o Aeson..: "database"
+    connOptions <- o Aeson..:? "options"
+    pure $ PostgresRawConnDetails {..}
+
+instance ToJSON PostgresRawConnDetails where
+  toJSON PostgresRawConnDetails {..} =
+    Aeson.object $
+      [ "host" Aeson..= connHost,
+        "port" Aeson..= connPort,
+        "user" Aeson..= connUser,
+        "password" Aeson..= connPassword,
+        "database" Aeson..= connDatabase
+      ]
+        <> catMaybes [fmap ("options" Aeson..=) connOptions]
+
+rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
+rawConnDetailsToUrlText PostgresRawConnDetails {..} =
+  Text.pack $
+    "postgresql://" <> connUser
+      <> ":"
+      <> connPassword
+      <> "@"
+      <> connHost
+      <> ":"
+      <> show connPort
+      <> "/"
+      <> connDatabase
+      <> maybe "" ("?options=" <>) connOptions
+
+--------------------------------------------------------------------------------
+
+-- | The HGE Arg parser Command choices.
+--
+-- This is polymorphic so that we can pack either 'RawServeOptions' or
+-- 'RawProServeOptions' in it.
+data HGECommand a
+  = HCServe a
+  | HCExport
+  | HCClean
+  | HCVersion
+  | HCDowngrade !DowngradeOptions
+  deriving (Show, Eq)
+
+_HCServe :: Prism' (HGECommand a) a
+_HCServe = Lens.prism' HCServe \case
+  HCServe a -> Just a
+  _ -> Nothing
+
+--------------------------------------------------------------------------------
+
+-- | The Serve Command options accumulated from the arg parser and env.
+data RawServeOptions impl = RawServeOptions
+  { rsoPort :: Maybe Int,
+    rsoHost :: Maybe Warp.HostPreference,
+    rsoConnParams :: RawConnParams,
+    rsoTxIso :: Maybe Q.TxIsolation,
+    rsoAdminSecret :: Maybe Auth.AdminSecretHash,
+    rsoAuthHook :: RawAuthHook,
+    rsoJwtSecret :: Maybe Auth.JWTConfig,
+    rsoUnAuthRole :: Maybe Session.RoleName,
+    rsoCorsConfig :: Maybe Cors.CorsConfig,
+    rsoEnableConsole :: Bool,
+    rsoConsoleAssetsDir :: Maybe Text,
+    rsoEnableTelemetry :: Maybe Bool,
+    rsoWsReadCookie :: Bool,
+    rsoStringifyNum :: Options.StringifyNumbers,
+    rsoDangerousBooleanCollapse :: Maybe Bool,
+    rsoEnabledAPIs :: Maybe [API],
+    rsoMxRefetchInt :: Maybe Subscription.Options.RefetchInterval,
+    rsoMxBatchSize :: Maybe Subscription.Options.BatchSize,
+    -- We have different config options for livequery and streaming subscriptions
+    rsoStreamingMxRefetchInt :: Maybe Subscription.Options.RefetchInterval,
+    rsoStreamingMxBatchSize :: Maybe Subscription.Options.BatchSize,
+    rsoEnableAllowlist :: Bool,
+    rsoEnabledLogTypes :: Maybe [Logging.EngineLogType impl],
+    rsoLogLevel :: Maybe Logging.LogLevel,
+    rsoDevMode :: Bool,
+    rsoAdminInternalErrors :: Maybe Bool,
+    rsoEventsHttpPoolSize :: Maybe Int,
+    rsoEventsFetchInterval :: Maybe Milliseconds,
+    rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
+    rsoEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
+    rsoWebSocketCompression :: Bool,
+    rsoWebSocketKeepAlive :: Maybe KeepAliveDelay,
+    rsoInferFunctionPermissions :: Maybe Options.InferFunctionPermissions,
+    rsoEnableMaintenanceMode :: Types.MaintenanceMode (),
+    rsoSchemaPollInterval :: Maybe OptionalInterval,
+    -- See Note [Experimental features] at bottom of module
+    rsoExperimentalFeatures :: Maybe [Types.ExperimentalFeature],
+    rsoEventsFetchBatchSize :: Maybe Common.NonNegativeInt,
+    rsoGracefulShutdownTimeout :: Maybe Seconds,
+    rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
+    rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
+    -- | stores global default naming convention
+    rsoDefaultNamingConvention :: Maybe NamingCase
+  }
+
+data API
+  = METADATA
+  | GRAPHQL
+  | PGDUMP
+  | DEVELOPER
+  | CONFIG
+  | METRICS
+  deriving (Show, Eq, Read, Generic)
+
+instance FromJSON API where
+  parseJSON = Aeson.withText "API" \case
+    "metadata" -> pure METADATA
+    "graphql" -> pure GRAPHQL
+    "pgdump" -> pure PGDUMP
+    "developer" -> pure DEVELOPER
+    "config" -> pure CONFIG
+    "metrics" -> pure METRICS
+    x -> fail $ "unexpected string '" <> show x <> "'."
+
+instance ToJSON API where
+  toJSON = \case
+    METADATA -> Aeson.String "metadata"
+    GRAPHQL -> Aeson.String "graphql"
+    PGDUMP -> Aeson.String "pgdump"
+    DEVELOPER -> Aeson.String "developer"
+    CONFIG -> Aeson.String "config"
+    METRICS -> Aeson.String "metrics"
+
+instance Hashable API
+
 -- TODO(SOLOMON): Monomorphize
-type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
+type RawAuthHook = Auth.AuthHookG (Maybe Text) (Maybe Auth.AuthHookType)
 
 -- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')
 --   Presently @'msToOptionalInterval' interprets `0` as Skip.
@@ -92,89 +321,129 @@ msToOptionalInterval = \case
   s -> Interval s
 
 instance FromJSON OptionalInterval where
-  parseJSON v = msToOptionalInterval <$> parseJSON v
+  parseJSON v = msToOptionalInterval <$> Aeson.parseJSON v
 
 instance ToJSON OptionalInterval where
   toJSON = \case
-    Skip -> toJSON @Milliseconds 0
-    Interval s -> toJSON s
+    Skip -> Aeson.toJSON @Milliseconds 0
+    Interval s -> Aeson.toJSON s
 
-data API
-  = METADATA
-  | GRAPHQL
-  | PGDUMP
-  | DEVELOPER
-  | CONFIG
-  | METRICS
-  deriving (Show, Eq, Read, Generic)
-
-instance FromJSON API where
-  parseJSON = J.withText "API" \case
-    "metadata" -> pure METADATA
-    "graphql" -> pure GRAPHQL
-    "pgdump" -> pure PGDUMP
-    "developer" -> pure DEVELOPER
-    "config" -> pure CONFIG
-    "metrics" -> pure METRICS
-    x -> fail $ "unexpected string '" <> show x <> "'."
-
-instance ToJSON API where
-  toJSON = \case
-    METADATA -> J.String "metadata"
-    GRAPHQL -> J.String "graphql"
-    PGDUMP -> J.String "pgdump"
-    DEVELOPER -> J.String "developer"
-    CONFIG -> J.String "config"
-    METRICS -> J.String "metrics"
-
-instance Hashable API
-
--- | The Serve Command options accumulated from the arg parser and env.
-data RawServeOptions impl = RawServeOptions
-  { rsoPort :: Maybe Int,
-    rsoHost :: Maybe HostPreference,
-    rsoConnParams :: RawConnParams,
-    rsoTxIso :: Maybe Q.TxIsolation,
-    rsoAdminSecret :: Maybe AdminSecretHash,
-    rsoAuthHook :: RawAuthHook,
-    rsoJwtSecret :: Maybe JWTConfig,
-    rsoUnAuthRole :: Maybe RoleName,
-    rsoCorsConfig :: Maybe CorsConfig,
-    rsoEnableConsole :: Bool,
-    rsoConsoleAssetsDir :: Maybe Text,
-    rsoEnableTelemetry :: Maybe Bool,
-    rsoWsReadCookie :: Bool,
-    rsoStringifyNum :: Options.StringifyNumbers,
-    rsoDangerousBooleanCollapse :: Maybe Bool,
-    rsoEnabledAPIs :: Maybe [API],
-    rsoMxRefetchInt :: Maybe ES.RefetchInterval,
-    rsoMxBatchSize :: Maybe ES.BatchSize,
-    -- we have different config options for livequery and streaming subscriptions
-    rsoStreamingMxRefetchInt :: Maybe ES.RefetchInterval,
-    rsoStreamingMxBatchSize :: Maybe ES.BatchSize,
-    rsoEnableAllowlist :: Bool,
-    rsoEnabledLogTypes :: Maybe [L.EngineLogType impl],
-    rsoLogLevel :: Maybe L.LogLevel,
-    rsoDevMode :: Bool,
-    rsoAdminInternalErrors :: Maybe Bool,
-    rsoEventsHttpPoolSize :: Maybe Int,
-    rsoEventsFetchInterval :: Maybe Milliseconds,
-    rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
-    rsoEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
-    rsoWebSocketCompression :: Bool,
-    rsoWebSocketKeepAlive :: Maybe KeepAliveDelay,
-    rsoInferFunctionPermissions :: Maybe Options.InferFunctionPermissions,
-    rsoEnableMaintenanceMode :: MaintenanceMode (),
-    rsoSchemaPollInterval :: Maybe OptionalInterval,
-    -- see Note [Experimental features]
-    rsoExperimentalFeatures :: Maybe [ExperimentalFeature],
-    rsoEventsFetchBatchSize :: Maybe NonNegativeInt,
-    rsoGracefulShutdownTimeout :: Maybe Seconds,
-    rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
-    rsoEnableMetadataQueryLoggingEnv :: MetadataQueryLoggingMode,
-    -- | stores global default naming convention
-    rsoDefaultNamingConvention :: Maybe NamingCase
+-- | The Raw configuration data from the Arg and Env parsers needed to
+-- construct a 'Q.ConnParams'
+data RawConnParams = RawConnParams
+  { rcpStripes :: Maybe Int,
+    rcpConns :: Maybe Int,
+    rcpIdleTime :: Maybe Int,
+    -- | Time from connection creation after which to destroy a connection and
+    -- choose a different/new one.
+    rcpConnLifetime :: Maybe Time.NominalDiffTime,
+    rcpAllowPrepare :: Maybe Bool,
+    -- | See @HASURA_GRAPHQL_PG_POOL_TIMEOUT@
+    rcpPoolTimeout :: Maybe Time.NominalDiffTime
   }
+  deriving (Show, Eq)
+
+newtype KeepAliveDelay = KeepAliveDelay {unKeepAliveDelay :: Seconds}
+  deriving (Eq, Show)
+
+instance FromJSON KeepAliveDelay where
+  parseJSON = Aeson.withObject "KeepAliveDelay" \o -> do
+    unKeepAliveDelay <- o Aeson..: "keep_alive_delay"
+    pure $ KeepAliveDelay {..}
+
+instance ToJSON KeepAliveDelay where
+  toJSON KeepAliveDelay {..} =
+    Aeson.object ["keep_alive_delay" Aeson..= unKeepAliveDelay]
+
+defaultKeepAliveDelay :: KeepAliveDelay
+defaultKeepAliveDelay = KeepAliveDelay $ fromIntegral (5 :: Int)
+
+newtype WSConnectionInitTimeout = WSConnectionInitTimeout {unWSConnectionInitTimeout :: Seconds}
+  deriving (Eq, Show)
+
+instance FromJSON WSConnectionInitTimeout where
+  parseJSON = Aeson.withObject "WSConnectionInitTimeout" \o -> do
+    unWSConnectionInitTimeout <- o Aeson..: "w_s_connection_init_timeout"
+    pure $ WSConnectionInitTimeout {..}
+
+instance ToJSON WSConnectionInitTimeout where
+  toJSON WSConnectionInitTimeout {..} =
+    Aeson.object ["w_s_connection_init_timeout" Aeson..= unWSConnectionInitTimeout]
+
+defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
+defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: Int)
+
+--------------------------------------------------------------------------------
+
+-- | The final Serve Command options accummulated from the Arg Parser
+-- and the Environment, fully processed and ready to apply when
+-- running the server.
+data ServeOptions impl = ServeOptions
+  { soPort :: Int,
+    soHost :: Warp.HostPreference,
+    soConnParams :: Q.ConnParams,
+    soTxIso :: Q.TxIsolation,
+    soAdminSecret :: HashSet Auth.AdminSecretHash,
+    soAuthHook :: Maybe Auth.AuthHook,
+    soJwtSecret :: [Auth.JWTConfig],
+    soUnAuthRole :: Maybe Session.RoleName,
+    soCorsConfig :: Cors.CorsConfig,
+    soEnableConsole :: Bool,
+    soConsoleAssetsDir :: Maybe Text,
+    soEnableTelemetry :: Bool,
+    soStringifyNum :: Options.StringifyNumbers,
+    soDangerousBooleanCollapse :: Bool,
+    soEnabledAPIs :: HashSet API,
+    soLiveQueryOpts :: Subscription.Options.LiveQueriesOptions,
+    soStreamingQueryOpts :: Subscription.Options.StreamQueriesOptions,
+    soEnableAllowlist :: Bool,
+    soEnabledLogTypes :: HashSet (Logging.EngineLogType impl),
+    soLogLevel :: Logging.LogLevel,
+    soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
+    soEventsHttpPoolSize :: Maybe Int,
+    soEventsFetchInterval :: Maybe Milliseconds,
+    soAsyncActionsFetchInterval :: OptionalInterval,
+    soEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
+    soConnectionOptions :: WebSockets.ConnectionOptions,
+    soWebSocketKeepAlive :: KeepAliveDelay,
+    soInferFunctionPermissions :: Options.InferFunctionPermissions,
+    soEnableMaintenanceMode :: Types.MaintenanceMode (),
+    soSchemaPollInterval :: OptionalInterval,
+    soExperimentalFeatures :: HashSet Types.ExperimentalFeature,
+    soEventsFetchBatchSize :: Common.NonNegativeInt,
+    soDevMode :: Bool,
+    soGracefulShutdownTimeout :: Seconds,
+    soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
+    soEventingMode :: Types.EventingMode,
+    soReadOnlyMode :: Types.ReadOnlyMode,
+    soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
+    soDefaultNamingConvention :: Maybe NamingCase
+  }
+
+-- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
+-- errors in the response to the client.
+-- See the github comment https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705 for more details.
+data ResponseInternalErrorsConfig
+  = InternalErrorsAllRequests
+  | InternalErrorsAdminOnly
+  | InternalErrorsDisabled
+  deriving (Show, Eq)
+
+shouldIncludeInternal :: Session.RoleName -> ResponseInternalErrorsConfig -> Bool
+shouldIncludeInternal role = \case
+  InternalErrorsAllRequests -> True
+  InternalErrorsAdminOnly -> role == Session.adminRoleName
+  InternalErrorsDisabled -> False
+
+--------------------------------------------------------------------------------
+
+-- | The Downgrade Command options. These are only sourced from the
+-- Arg Parser and are used directly in 'Hasura.Server.Migrate'.
+data DowngradeOptions = DowngradeOptions
+  { dgoTargetVersion :: !Text,
+    dgoDryRun :: !Bool
+  }
+  deriving (Show, Eq)
 
 --------------------------------------------------------------------------------
 
@@ -204,255 +473,3 @@ a stable feature, so it was removed as an experimental feature but the code was 
 `--experimental-features inherited_roles` to not throw an error.
 
 -}
-
---------------------------------------------------------------------------------
-
--- | @'ResponseInternalErrorsConfig' represents the encoding of the internal
--- errors in the response to the client.
--- See the github comment https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705 for more details.
-data ResponseInternalErrorsConfig
-  = InternalErrorsAllRequests
-  | InternalErrorsAdminOnly
-  | InternalErrorsDisabled
-  deriving (Show, Eq)
-
-shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
-shouldIncludeInternal role = \case
-  InternalErrorsAllRequests -> True
-  InternalErrorsAdminOnly -> role == adminRoleName
-  InternalErrorsDisabled -> False
-
-newtype KeepAliveDelay = KeepAliveDelay {unKeepAliveDelay :: Seconds}
-  deriving (Eq, Show)
-
-instance FromJSON KeepAliveDelay where
-  parseJSON = withObject "KeepAliveDelay" \o -> do
-    unKeepAliveDelay <- o J..: "keep_alive_delay"
-    pure $ KeepAliveDelay {..}
-
-instance ToJSON KeepAliveDelay where
-  toJSON KeepAliveDelay {..} =
-    J.object ["keep_alive_delay" J..= unKeepAliveDelay]
-
-defaultKeepAliveDelay :: KeepAliveDelay
-defaultKeepAliveDelay = KeepAliveDelay $ fromIntegral (5 :: Int)
-
-newtype WSConnectionInitTimeout = WSConnectionInitTimeout {unWSConnectionInitTimeout :: Seconds}
-  deriving (Eq, Show)
-
-instance FromJSON WSConnectionInitTimeout where
-  parseJSON = withObject "WSConnectionInitTimeout" \o -> do
-    unWSConnectionInitTimeout <- o J..: "w_s_connection_init_timeout"
-    pure $ WSConnectionInitTimeout {..}
-
-instance ToJSON WSConnectionInitTimeout where
-  toJSON WSConnectionInitTimeout {..} =
-    J.object ["w_s_connection_init_timeout" J..= unWSConnectionInitTimeout]
-
-defaultWSConnectionInitTimeout :: WSConnectionInitTimeout
-defaultWSConnectionInitTimeout = WSConnectionInitTimeout $ fromIntegral (3 :: Int)
-
---------------------------------------------------------------------------------
-
--- | The final Serve Command options accummulated from the Arg Parser
--- and the Environment, fully processed and ready to apply when
--- running the server.
-data ServeOptions impl = ServeOptions
-  { soPort :: Int,
-    soHost :: HostPreference,
-    soConnParams :: Q.ConnParams,
-    soTxIso :: Q.TxIsolation,
-    soAdminSecret :: Set.HashSet AdminSecretHash,
-    soAuthHook :: Maybe AuthHook,
-    soJwtSecret :: [JWTConfig],
-    soUnAuthRole :: Maybe RoleName,
-    soCorsConfig :: CorsConfig,
-    soEnableConsole :: Bool,
-    soConsoleAssetsDir :: Maybe Text,
-    soEnableTelemetry :: Bool,
-    soStringifyNum :: Options.StringifyNumbers,
-    soDangerousBooleanCollapse :: Bool,
-    soEnabledAPIs :: Set.HashSet API,
-    soLiveQueryOpts :: ES.LiveQueriesOptions,
-    soStreamingQueryOpts :: ES.StreamQueriesOptions,
-    soEnableAllowlist :: Bool,
-    soEnabledLogTypes :: Set.HashSet (L.EngineLogType impl),
-    soLogLevel :: L.LogLevel,
-    soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
-    soEventsHttpPoolSize :: Maybe Int,
-    soEventsFetchInterval :: Maybe Milliseconds,
-    soAsyncActionsFetchInterval :: OptionalInterval,
-    soEnableRemoteSchemaPermissions :: Options.RemoteSchemaPermissions,
-    soConnectionOptions :: WS.ConnectionOptions,
-    soWebSocketKeepAlive :: KeepAliveDelay,
-    soInferFunctionPermissions :: Options.InferFunctionPermissions,
-    soEnableMaintenanceMode :: MaintenanceMode (),
-    soSchemaPollInterval :: OptionalInterval,
-    soExperimentalFeatures :: Set.HashSet ExperimentalFeature,
-    soEventsFetchBatchSize :: NonNegativeInt,
-    soDevMode :: Bool,
-    soGracefulShutdownTimeout :: Seconds,
-    soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
-    soEventingMode :: EventingMode,
-    soReadOnlyMode :: ReadOnlyMode,
-    soEnableMetadataQueryLogging :: MetadataQueryLoggingMode,
-    soDefaultNamingConvention :: Maybe NamingCase
-  }
-
---------------------------------------------------------------------------------
-
--- | The Downgrade Command options. These are only sourced from the
--- Arg Parser and are used directly in 'Hasura.Server.Migrate'.
-data DowngradeOptions = DowngradeOptions
-  { dgoTargetVersion :: !Text,
-    dgoDryRun :: !Bool
-  }
-  deriving (Show, Eq)
-
---------------------------------------------------------------------------------
-
--- | Postgres connection info tupled with a retry count.
---
--- The @a@ here is one of the following:
--- 1. 'Maybe PostgresRawConnInfo'
--- 2. 'Maybe UrlConf'
--- 3. 'Maybe Text'
--- 4. 'Maybe DatabaseUrl' where 'DatabaseUrl' is an alias for 'Text'
---
--- If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
--- processed your arg parser results.
-data PostgresConnInfo a = PostgresConnInfo
-  { _pciDatabaseConn :: !a,
-    _pciRetries :: !(Maybe Int)
-  }
-  deriving (Show, Eq, Functor, Foldable, Traversable)
-
-pciDatabaseConn :: Lens' (PostgresConnInfo a) a
-pciDatabaseConn = lens _pciDatabaseConn $ \pci a -> pci {_pciDatabaseConn = a}
-
-pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
-pciRetries = lens _pciRetries $ \pci mi -> pci {_pciRetries = mi}
-
---------------------------------------------------------------------------------
-
--- | Postgres Connection info can come in the form of a templated URI
--- string or structured data.
-data PostgresRawConnInfo
-  = PGConnDatabaseUrl !URLTemplate
-  | PGConnDetails !PostgresRawConnDetails
-  deriving (Show, Eq)
-
-mkUrlConnInfo :: String -> PostgresRawConnInfo
-mkUrlConnInfo = PGConnDatabaseUrl . mkPlainURLTemplate . T.pack
-
-_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
-_PGConnDatabaseUrl = prism' PGConnDatabaseUrl $ \case
-  PGConnDatabaseUrl template -> Just template
-  PGConnDetails _ -> Nothing
-
-_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
-_PGConnDetails = prism' PGConnDetails $ \case
-  PGConnDatabaseUrl _ -> Nothing
-  PGConnDetails prcd -> Just prcd
-
-rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
-rawConnDetailsToUrl =
-  mkPlainURLTemplate . rawConnDetailsToUrlText
-
---------------------------------------------------------------------------------
-
--- | Structured Postgres connection information as provided by the arg
--- parser or env vars.
-data PostgresRawConnDetails = PostgresRawConnDetails
-  { connHost :: !String,
-    connPort :: !Int,
-    connUser :: !String,
-    connPassword :: !String,
-    connDatabase :: !String,
-    connOptions :: !(Maybe String)
-  }
-  deriving (Eq, Read, Show)
-
-instance FromJSON PostgresRawConnDetails where
-  parseJSON = J.withObject "PostgresRawConnDetails" \o -> do
-    connHost <- o J..: "host"
-    connPort <- o J..: "port"
-    connUser <- o J..: "user"
-    connPassword <- o J..: "password"
-    connDatabase <- o J..: "database"
-    connOptions <- o J..:? "options"
-    pure $ PostgresRawConnDetails {..}
-
-instance ToJSON PostgresRawConnDetails where
-  toJSON PostgresRawConnDetails {..} =
-    J.object $
-      [ "host" J..= connHost,
-        "port" J..= connPort,
-        "user" J..= connUser,
-        "password" J..= connPassword,
-        "database" J..= connDatabase
-      ]
-        <> catMaybes [fmap ("options" J..=) connOptions]
-
-rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
-rawConnDetailsToUrlText PostgresRawConnDetails {..} =
-  T.pack $
-    "postgresql://" <> connUser
-      <> ":"
-      <> connPassword
-      <> "@"
-      <> connHost
-      <> ":"
-      <> show connPort
-      <> "/"
-      <> connDatabase
-      <> maybe "" ("?options=" <>) connOptions
-
---------------------------------------------------------------------------------
-
--- | HGE Options from the arg parser and the env.
-data HGEOptionsRaw impl = HGEOptionsRaw
-  { _horDatabaseUrl :: !(PostgresConnInfo (Maybe PostgresRawConnInfo)),
-    _horMetadataDbUrl :: !(Maybe String),
-    _horCommand :: !(HGECommand impl)
-  }
-
-horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
-horDatabaseUrl = lens _horDatabaseUrl $ \hdu a -> hdu {_horDatabaseUrl = a}
-
-horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
-horMetadataDbUrl = lens _horMetadataDbUrl $ \hdu a -> hdu {_horMetadataDbUrl = a}
-
-horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
-horCommand = lens _horCommand $ \hdu a -> hdu {_horCommand = a}
-
---------------------------------------------------------------------------------
-
--- | The final processed HGE options.
-data HGEOptions impl = HGEOptions
-  { _hoDatabaseUrl :: !(PostgresConnInfo (Maybe UrlConf)),
-    _hoMetadataDbUrl :: !(Maybe String),
-    _hoCommand :: !(HGECommand impl)
-  }
-
-hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
-hoCommand = lens _hoCommand $ \hdu a -> hdu {_hoCommand = a}
-
---------------------------------------------------------------------------------
-
--- | The HGE Arg parser Command choices.
---
--- This is polymorphic so that we can pack either 'RawServeOptions' or
--- 'RawProServeOptions' in it.
-data HGECommand a
-  = HCServe !a
-  | HCExport
-  | HCClean
-  | HCVersion
-  | HCDowngrade !DowngradeOptions
-  deriving (Show, Eq)
-
-_HCServe :: Prism' (HGECommand a) a
-_HCServe = prism' HCServe \case
-  HCServe a -> Just a
-  _ -> Nothing
