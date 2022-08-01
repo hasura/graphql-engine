@@ -405,12 +405,12 @@ type SelectFrom b = SelectFromG b (SQLExpression b)
 
 data SelectStreamArgsG (b :: BackendType) v = SelectStreamArgsG
   { -- | optional filter to filter the stream results
-    _ssaWhere :: !(Maybe (AnnBoolExp b v)),
+    _ssaWhere :: Maybe (AnnBoolExp b v),
     -- | maximum number of rows to be returned in a single fetch
-    _ssaBatchSize :: !Int,
+    _ssaBatchSize :: Int,
     -- | info related to the cursor column, a single item data type
     --   currently because only single column cursors are supported
-    _ssaCursorArg :: !(StreamCursorItem b)
+    _ssaCursorArg :: StreamCursorItem b
   }
   deriving (Generic, Functor, Foldable, Traversable)
 
@@ -534,7 +534,7 @@ instance (Backend b, Hashable v, Hashable (BooleanOperators b v), Hashable (Func
 
 data AnnotatedAggregateOrderBy (b :: BackendType)
   = AAOCount
-  | AAOOp Text !(ColumnInfo b)
+  | AAOOp Text (ColumnInfo b)
   deriving stock (Generic)
 
 deriving stock instance (Backend b) => Eq (AnnotatedAggregateOrderBy b)
@@ -550,11 +550,11 @@ type AnnotatedOrderByItem b = AnnotatedOrderByItemG b (SQLExpression b)
 -- | Cursor for streaming subscription
 data StreamCursorItem (b :: BackendType) = StreamCursorItem
   { -- | Specifies how the cursor item should be ordered
-    _sciOrdering :: !CursorOrdering,
+    _sciOrdering :: CursorOrdering,
     -- | Column info of the cursor item
-    _sciColInfo :: !(ColumnInfo b),
+    _sciColInfo :: ColumnInfo b,
     -- | Initial value of the cursor item from where the streaming should start
-    _sciInitialValue :: !(ColumnValue b)
+    _sciInitialValue :: ColumnValue b
   }
   deriving (Generic)
 
@@ -696,7 +696,7 @@ data AggregateOp (b :: BackendType) = AggregateOp
   deriving stock (Eq, Show)
 
 data ColFld (b :: BackendType)
-  = CFCol (Column b) !(ColumnType b)
+  = CFCol (Column b) (ColumnType b)
   | CFExp Text
   deriving stock (Eq, Show)
 
@@ -852,7 +852,7 @@ data ComputedFieldSelect (b :: BackendType) (r :: Type) v
       -- the scalar computed value will be outputted as computed and when the
       -- value is `Just c`, the scalar computed field will be outputted when
       -- `c` evaluates to `true` and `null` when `c` evaluates to `false`
-  | CFSTable JsonAggSelect !(AnnSimpleSelectG b r v)
+  | CFSTable JsonAggSelect (AnnSimpleSelectG b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance

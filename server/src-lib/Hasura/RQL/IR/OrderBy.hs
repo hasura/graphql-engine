@@ -17,8 +17,8 @@ import Hasura.SQL.Backend
 -- order by col
 
 data OrderByCol
-  = OCPG !FieldName
-  | OCRel !FieldName !OrderByCol
+  = OCPG FieldName
+  | OCRel FieldName OrderByCol
   deriving (Show, Eq)
 
 instance FromJSON OrderByCol where
@@ -50,9 +50,9 @@ orderByColFromTxt =
 -- order by item
 
 data OrderByItemG (b :: BackendType) a = OrderByItemG
-  { obiType :: !(Maybe (BasicOrderType b)),
-    obiColumn :: !a,
-    obiNulls :: !(Maybe (NullsOrderType b))
+  { obiType :: Maybe (BasicOrderType b),
+    obiColumn :: a,
+    obiNulls :: Maybe (NullsOrderType b)
   }
   deriving (Functor, Foldable, Traversable, Generic)
 

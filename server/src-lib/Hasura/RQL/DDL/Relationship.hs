@@ -258,10 +258,10 @@ drUsingColumnDep source qt col =
 -- Drop local relationship
 
 data DropRel b = DropRel
-  { _drSource :: !SourceName,
-    _drTable :: !(TableName b),
-    _drRelationship :: !RelName,
-    _drCascade :: !Bool
+  { _drSource :: SourceName,
+    _drTable :: TableName b,
+    _drRelationship :: RelName,
+    _drCascade :: Bool
   }
 
 instance (Backend b) => FromJSON (DropRel b) where
@@ -320,10 +320,10 @@ purgeRelDep d =
 -- Set local relationship comment
 
 data SetRelComment b = SetRelComment
-  { arSource :: !SourceName,
-    arTable :: !(TableName b),
-    arRelationship :: !RelName,
-    arComment :: !(Maybe Text)
+  { arSource :: SourceName,
+    arTable :: TableName b,
+    arRelationship :: RelName,
+    arComment :: Maybe Text
   }
   deriving (Generic)
 

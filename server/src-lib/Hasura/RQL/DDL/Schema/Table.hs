@@ -64,10 +64,10 @@ import Hasura.Server.Utils
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TrackTable b = TrackTable
-  { tSource :: !SourceName,
-    tName :: !(TableName b),
-    tIsEnum :: !Bool,
-    tApolloFedConfig :: !(Maybe ApolloFederationConfig)
+  { tSource :: SourceName,
+    tName :: TableName b,
+    tIsEnum :: Bool,
+    tApolloFedConfig :: Maybe ApolloFederationConfig
   }
 
 deriving instance (Backend b) => Show (TrackTable b)
@@ -86,9 +86,9 @@ instance (Backend b) => FromJSON (TrackTable b) where
       withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False <*> pure Nothing
 
 data SetTableIsEnum = SetTableIsEnum
-  { stieSource :: !SourceName,
-    stieTable :: !QualifiedTable,
-    stieIsEnum :: !Bool
+  { stieSource :: SourceName,
+    stieTable :: QualifiedTable,
+    stieIsEnum :: Bool
   }
   deriving (Show, Eq)
 
@@ -100,9 +100,9 @@ instance FromJSON SetTableIsEnum where
       <*> o .: "is_enum"
 
 data UntrackTable b = UntrackTable
-  { utSource :: !SourceName,
-    utTable :: !(TableName b),
-    utCascade :: !Bool
+  { utSource :: SourceName,
+    utTable :: TableName b,
+    utCascade :: Bool
   }
 
 deriving instance (Backend b) => Show (UntrackTable b)
@@ -248,8 +248,8 @@ runTrackTableQ (TrackTable source qt isEnum apolloFedConfig) = do
   trackExistingTableOrViewP2 @b source qt isEnum emptyTableConfig apolloFedConfig
 
 data TrackTableV2 b = TrackTableV2
-  { ttv2Table :: !(TrackTable b),
-    ttv2Configuration :: !(TableConfig b)
+  { ttv2Table :: TrackTable b,
+    ttv2Configuration :: TableConfig b
   }
   deriving (Show, Eq)
 
@@ -278,9 +278,9 @@ runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
   return successMsg
 
 data SetTableCustomization b = SetTableCustomization
-  { _stcSource :: !SourceName,
-    _stcTable :: !(TableName b),
-    _stcConfiguration :: !(TableConfig b)
+  { _stcSource :: SourceName,
+    _stcTable :: TableName b,
+    _stcConfiguration :: TableConfig b
   }
   deriving (Show, Eq)
 
@@ -292,10 +292,10 @@ instance (Backend b) => FromJSON (SetTableCustomization b) where
       <*> o .: "configuration"
 
 data SetTableCustomFields = SetTableCustomFields
-  { _stcfSource :: !SourceName,
-    _stcfTable :: !QualifiedTable,
-    _stcfCustomRootFields :: !TableCustomRootFields,
-    _stcfCustomColumnNames :: !(HashMap (Column ('Postgres 'Vanilla)) G.Name)
+  { _stcfSource :: SourceName,
+    _stcfTable :: QualifiedTable,
+    _stcfCustomRootFields :: TableCustomRootFields,
+    _stcfCustomColumnNames :: HashMap (Column ('Postgres 'Vanilla)) G.Name
   }
   deriving (Show, Eq)
 

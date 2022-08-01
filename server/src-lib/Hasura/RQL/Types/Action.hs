@@ -95,8 +95,8 @@ instance NFData ActionMetadata
 instance Cacheable ActionMetadata
 
 data ActionPermissionMetadata = ActionPermissionMetadata
-  { _apmRole :: !RoleName,
-    _apmComment :: !(Maybe Text)
+  { _apmRole :: RoleName,
+    _apmComment :: Maybe Text
   }
   deriving (Show, Eq, Generic)
 
@@ -132,17 +132,17 @@ type ActionDefinitionInput =
 -- Definition
 
 data ActionDefinition arg webhook = ActionDefinition
-  { _adArguments :: ![ArgumentDefinition arg],
-    _adOutputType :: !GraphQLType,
-    _adType :: !ActionType,
-    _adHeaders :: ![HeaderConf],
-    _adForwardClientHeaders :: !Bool,
+  { _adArguments :: [ArgumentDefinition arg],
+    _adOutputType :: GraphQLType,
+    _adType :: ActionType,
+    _adHeaders :: [HeaderConf],
+    _adForwardClientHeaders :: Bool,
     -- | If the timeout is not provided by the user, then
     -- the default timeout of 30 seconds will be used
-    _adTimeout :: !Timeout,
-    _adHandler :: !webhook,
-    _adRequestTransform :: !(Maybe RequestTransform),
-    _adResponseTransform :: !(Maybe MetadataResponseTransform)
+    _adTimeout :: Timeout,
+    _adHandler :: webhook,
+    _adRequestTransform :: Maybe RequestTransform,
+    _adResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -152,7 +152,7 @@ instance (Cacheable a, Cacheable w) => Cacheable (ActionDefinition a w)
 
 data ActionType
   = ActionQuery
-  | ActionMutation !ActionMutationKind
+  | ActionMutation ActionMutationKind
   deriving (Show, Eq, Generic)
 
 instance NFData ActionType
@@ -172,9 +172,9 @@ instance Cacheable ActionMutationKind
 -- Arguments
 
 data ArgumentDefinition a = ArgumentDefinition
-  { _argName :: !ArgumentName,
-    _argType :: !a,
-    _argDescription :: !(Maybe G.Description)
+  { _argName :: ArgumentName,
+    _argType :: a,
+    _argDescription :: Maybe G.Description
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -214,38 +214,38 @@ newtype ActionPermissionInfo = ActionPermissionInfo
 -- GraphQL.Execute.
 
 data ActionExecContext = ActionExecContext
-  { _aecManager :: !HTTP.Manager,
-    _aecHeaders :: !HTTP.RequestHeaders,
-    _aecSessionVariables :: !SessionVariables
+  { _aecManager :: HTTP.Manager,
+    _aecHeaders :: HTTP.RequestHeaders,
+    _aecSessionVariables :: SessionVariables
   }
 
 data ActionLogItem = ActionLogItem
-  { _aliId :: !ActionId,
-    _aliActionName :: !ActionName,
-    _aliRequestHeaders :: ![HTTP.Header],
-    _aliSessionVariables :: !SessionVariables,
-    _aliInputPayload :: !J.Value
+  { _aliId :: ActionId,
+    _aliActionName :: ActionName,
+    _aliRequestHeaders :: [HTTP.Header],
+    _aliSessionVariables :: SessionVariables,
+    _aliInputPayload :: J.Value
   }
   deriving (Show, Eq)
 
 data ActionLogResponse = ActionLogResponse
-  { _alrId :: !ActionId,
-    _alrCreatedAt :: !UTC.UTCTime,
-    _alrResponsePayload :: !(Maybe J.Value),
-    _alrErrors :: !(Maybe J.Value),
-    _alrSessionVariables :: !SessionVariables
+  { _alrId :: ActionId,
+    _alrCreatedAt :: UTC.UTCTime,
+    _alrResponsePayload :: Maybe J.Value,
+    _alrErrors :: Maybe J.Value,
+    _alrSessionVariables :: SessionVariables
   }
   deriving (Show, Eq)
 
 type ActionLogResponseMap = HashMap ActionId ActionLogResponse
 
 data AsyncActionStatus
-  = AASCompleted !J.Value
-  | AASError !QErr
+  = AASCompleted J.Value
+  | AASError QErr
 
 data ActionsInfo = ActionsInfo
-  { _asiName :: !ActionName,
-    _asiForwardClientHeaders :: !Bool
+  { _asiName :: ActionName,
+    _asiForwardClientHeaders :: Bool
   }
   deriving (Show, Eq, Generic)
 

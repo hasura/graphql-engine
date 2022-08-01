@@ -13,9 +13,9 @@ import Hasura.SQL.Backend
 -- | Context to parse a RHS value in a boolean expression
 data BoolExpRHSParser (b :: BackendType) m v = BoolExpRHSParser
   { -- | Parse a JSON value with enforcing a column type
-    _berpValueParser :: !(ValueParser b m v),
+    _berpValueParser :: ValueParser b m v,
     -- | Required for a computed field SQL function with session argument
-    _berpSessionValue :: !v
+    _berpSessionValue :: v
   }
 
 -- | A function which resolves boolean expression from given table fields

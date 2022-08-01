@@ -87,8 +87,8 @@ instance FromHttpApiData EndpointUrl where
         Just net -> Right (EndpointUrl net)
 
 data QueryReference = QueryReference
-  { _qrCollectionName :: !CollectionName,
-    _qrQueryName :: !QueryName
+  { _qrCollectionName :: CollectionName,
+    _qrQueryName :: QueryName
   }
   deriving stock (Show, Eq, Generic)
 
@@ -96,7 +96,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''QueryReference)
 $(makeLenses ''QueryReference)
 
 data EndpointDef query = EndpointDef
-  { _edQuery :: !query
+  { _edQuery :: query
   }
   deriving stock (Show, Eq, Ord, Generic, Functor, Foldable, Traversable)
 
@@ -124,11 +124,11 @@ splitPath var lit = map toPathComponent . T.split (== '/') . toTxt
 type CreateEndpoint = EndpointMetadata QueryReference
 
 data EndpointMetadata query = EndpointMetadata
-  { _ceName :: !EndpointName,
-    _ceUrl :: !EndpointUrl,
-    _ceMethods :: !(NonEmpty EndpointMethod), -- TODO: Use a set for this?
-    _ceDefinition :: !(EndpointDef query),
-    _ceComment :: !(Maybe Text)
+  { _ceName :: EndpointName,
+    _ceUrl :: EndpointUrl,
+    _ceMethods :: NonEmpty EndpointMethod, -- TODO: Use a set for this?
+    _ceDefinition :: EndpointDef query,
+    _ceComment :: Maybe Text
   }
   deriving (Show, Eq, Ord, Generic, Functor, Foldable, Traversable)
 
@@ -136,7 +136,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''EndpointMetadata)
 $(makeLenses ''EndpointMetadata)
 
 data DropEndpoint = DropEndpoint
-  { _deName :: !EndpointName
+  { _deName :: EndpointName
   }
   deriving (Show, Eq, Generic)
 

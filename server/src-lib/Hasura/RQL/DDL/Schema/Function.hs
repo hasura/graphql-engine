@@ -109,10 +109,10 @@ runTrackFunc (TrackFunction qf) = do
 --
 -- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#track-function-v2
 data TrackFunctionV2 (b :: BackendType) = TrackFunctionV2
-  { _tfv2Source :: !SourceName,
-    _tfv2Function :: !(FunctionName b),
-    _tfv2Configuration :: !FunctionConfig,
-    _tfv2Comment :: !(Maybe Text)
+  { _tfv2Source :: SourceName,
+    _tfv2Function :: FunctionName b,
+    _tfv2Configuration :: FunctionConfig,
+    _tfv2Comment :: Maybe Text
   }
 
 instance Backend b => FromJSON (TrackFunctionV2 b) where
@@ -136,8 +136,8 @@ runTrackFunctionV2 (TrackFunctionV2 source qf config comment) = do
 --
 -- https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#untrack-function
 data UnTrackFunction b = UnTrackFunction
-  { _utfFunction :: !(FunctionName b),
-    _utfSource :: !SourceName
+  { _utfFunction :: FunctionName b,
+    _utfSource :: SourceName
   }
 
 instance (Backend b) => FromJSON (UnTrackFunction b) where
@@ -205,9 +205,9 @@ to false (by default, it's set to true).
 -}
 
 data FunctionPermissionArgument b = FunctionPermissionArgument
-  { _afpFunction :: !(FunctionName b),
-    _afpSource :: !SourceName,
-    _afpRole :: !RoleName
+  { _afpFunction :: FunctionName b,
+    _afpSource :: SourceName,
+    _afpRole :: RoleName
   }
 
 instance (Backend b) => FromJSON (FunctionPermissionArgument b) where

@@ -235,8 +235,8 @@ askTableInfoSource tableName = do
     throw400 NotExists $ "table " <> tableName <<> " does not exist"
 
 data SessionVariableBuilder m = SessionVariableBuilder
-  { _svbCurrentSession :: !(SQLExpression ('Postgres 'Vanilla)),
-    _svbVariableParser :: !(SessionVarType ('Postgres 'Vanilla) -> SessionVariable -> m (SQLExpression ('Postgres 'Vanilla)))
+  { _svbCurrentSession :: SQLExpression ('Postgres 'Vanilla),
+    _svbVariableParser :: SessionVarType ('Postgres 'Vanilla) -> SessionVariable -> m (SQLExpression ('Postgres 'Vanilla))
   }
 
 fetchRelDet ::

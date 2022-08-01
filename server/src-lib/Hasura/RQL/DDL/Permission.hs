@@ -513,11 +513,11 @@ buildDelPermInfo source tn fieldInfoMap (DelPerm fltr backendOnly) = do
   return (DelPermInfo tn be backendOnly depHeaders, deps)
 
 data SetPermComment b = SetPermComment
-  { apSource :: !SourceName,
-    apTable :: !(TableName b),
-    apRole :: !RoleName,
-    apPermission :: !PermType,
-    apComment :: !(Maybe Text)
+  { apSource :: SourceName,
+    apTable :: TableName b,
+    apRole :: RoleName,
+    apPermission :: PermType,
+    apComment :: Maybe Text
   }
 
 instance (Backend b) => FromJSON (SetPermComment b) where

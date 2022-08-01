@@ -200,7 +200,7 @@ class ToAesonPairs a where
 
 data SourceName
   = SNDefault
-  | SNName !NonEmptyText
+  | SNName NonEmptyText
   deriving (Show, Eq, Ord, Generic)
 
 instance FromJSON SourceName where
@@ -236,10 +236,10 @@ defaultSource :: SourceName
 defaultSource = SNDefault
 
 data InpValInfo = InpValInfo
-  { _iviDesc :: !(Maybe G.Description),
-    _iviName :: !G.Name,
-    _iviDefVal :: !(Maybe (G.Value Void)),
-    _iviType :: !G.GType
+  { _iviDesc :: Maybe G.Description,
+    _iviName :: G.Name,
+    _iviDefVal :: Maybe (G.Value Void),
+    _iviType :: G.GType
   }
   deriving (Show, Eq, TH.Lift, Generic)
 
@@ -349,11 +349,11 @@ defaultActionTimeoutSecs = Timeout 30
 -- | See API reference here:
 --   https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconnectionparameters
 data PGConnectionParams = PGConnectionParams
-  { _pgcpHost :: !Text,
-    _pgcpUsername :: !Text,
-    _pgcpPassword :: !(Maybe Text),
-    _pgcpPort :: !Int,
-    _pgcpDatabase :: !Text
+  { _pgcpHost :: Text,
+    _pgcpUsername :: Text,
+    _pgcpPassword :: Maybe Text,
+    _pgcpPort :: Int,
+    _pgcpDatabase :: Text
   }
   deriving (Show, Eq, Generic)
 
@@ -376,11 +376,11 @@ instance FromJSON PGConnectionParams where
 
 data UrlConf
   = -- | the database connection string
-    UrlValue !InputWebhook
+    UrlValue InputWebhook
   | -- | the name of environment variable containing the connection string
-    UrlFromEnv !T.Text
+    UrlFromEnv T.Text
   | -- | the minimum required `connection parameters` to construct a valid connection string
-    UrlFromParams !PGConnectionParams
+    UrlFromParams PGConnectionParams
   deriving (Show, Eq, Generic)
 
 instance NFData UrlConf
@@ -486,9 +486,9 @@ getEnv env k = do
 -- | Various user-controlled configuration for metrics used by Pro
 data MetricsConfig = MetricsConfig
   { -- | should the query-variables be logged and analyzed for metrics
-    _mcAnalyzeQueryVariables :: !Bool,
+    _mcAnalyzeQueryVariables :: Bool,
     -- | should the response-body be analyzed for empty and null responses
-    _mcAnalyzeResponseBody :: !Bool
+    _mcAnalyzeResponseBody :: Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -565,7 +565,7 @@ instance FromJSON ApolloFederationVersion where
 instance NFData ApolloFederationVersion
 
 data ApolloFederationConfig = ApolloFederationConfig
-  { enable :: !ApolloFederationVersion
+  { enable :: ApolloFederationVersion
   }
   deriving (Show, Eq, Generic)
 

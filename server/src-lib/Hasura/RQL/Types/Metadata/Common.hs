@@ -132,9 +132,9 @@ parseListAsMap things mapFn listP = do
   pure $ oMapFromL mapFn list
 
 data ComputedFieldMetadata b = ComputedFieldMetadata
-  { _cfmName :: !ComputedFieldName,
-    _cfmDefinition :: !(ComputedFieldDefinition b),
-    _cfmComment :: !Comment
+  { _cfmName :: ComputedFieldName,
+    _cfmDefinition :: ComputedFieldDefinition b,
+    _cfmComment :: Comment
   }
   deriving (Generic)
 
@@ -160,9 +160,9 @@ instance (Backend b) => FromJSON (ComputedFieldMetadata b) where
       <*> obj .:? "comment" .!= Automatic
 
 data RemoteSchemaPermissionMetadata = RemoteSchemaPermissionMetadata
-  { _rspmRole :: !RoleName,
-    _rspmDefinition :: !RemoteSchemaPermissionDefinition,
-    _rspmComment :: !(Maybe Text)
+  { _rspmRole :: RoleName,
+    _rspmDefinition :: RemoteSchemaPermissionDefinition,
+    _rspmComment :: Maybe Text
   }
   deriving (Show, Eq, Generic)
 
@@ -238,19 +238,19 @@ $(makeLenses ''RemoteSchemaTypeRelationships)
 $(makeLenses ''RemoteSchemaMetadata)
 
 data TableMetadata b = TableMetadata
-  { _tmTable :: !(TableName b),
-    _tmIsEnum :: !Bool,
-    _tmConfiguration :: !(TableConfig b),
-    _tmObjectRelationships :: !(Relationships (ObjRelDef b)),
-    _tmArrayRelationships :: !(Relationships (ArrRelDef b)),
-    _tmComputedFields :: !(ComputedFields b),
-    _tmRemoteRelationships :: !RemoteRelationships,
-    _tmInsertPermissions :: !(Permissions (InsPermDef b)),
-    _tmSelectPermissions :: !(Permissions (SelPermDef b)),
-    _tmUpdatePermissions :: !(Permissions (UpdPermDef b)),
-    _tmDeletePermissions :: !(Permissions (DelPermDef b)),
-    _tmEventTriggers :: !(EventTriggers b),
-    _tmApolloFederationConfig :: !(Maybe ApolloFederationConfig)
+  { _tmTable :: TableName b,
+    _tmIsEnum :: Bool,
+    _tmConfiguration :: TableConfig b,
+    _tmObjectRelationships :: Relationships (ObjRelDef b),
+    _tmArrayRelationships :: Relationships (ArrRelDef b),
+    _tmComputedFields :: ComputedFields b,
+    _tmRemoteRelationships :: RemoteRelationships,
+    _tmInsertPermissions :: Permissions (InsPermDef b),
+    _tmSelectPermissions :: Permissions (SelPermDef b),
+    _tmUpdatePermissions :: Permissions (UpdPermDef b),
+    _tmDeletePermissions :: Permissions (DelPermDef b),
+    _tmEventTriggers :: EventTriggers b,
+    _tmApolloFederationConfig :: Maybe ApolloFederationConfig
   }
   deriving (Generic)
 
@@ -340,10 +340,10 @@ instance (Backend b) => FromJSON (TableMetadata b) where
           ]
 
 data FunctionMetadata b = FunctionMetadata
-  { _fmFunction :: !(FunctionName b),
-    _fmConfiguration :: !FunctionConfig,
-    _fmPermissions :: ![FunctionPermissionInfo],
-    _fmComment :: !(Maybe Text)
+  { _fmFunction :: FunctionName b,
+    _fmConfiguration :: FunctionConfig,
+    _fmPermissions :: [FunctionPermissionInfo],
+    _fmComment :: Maybe Text
   }
   deriving (Generic)
 
@@ -381,13 +381,13 @@ type CronTriggers = InsOrdHashMap TriggerName CronTriggerMetadata
 type InheritedRoles = InsOrdHashMap RoleName InheritedRole
 
 data SourceMetadata b = SourceMetadata
-  { _smName :: !SourceName,
-    _smKind :: !(BackendSourceKind b),
-    _smTables :: !(Tables b),
-    _smFunctions :: !(Functions b),
-    _smConfiguration :: !(SourceConnConfiguration b),
-    _smQueryTags :: !(Maybe QueryTagsConfig),
-    _smCustomization :: !SourceCustomization
+  { _smName :: SourceName,
+    _smKind :: BackendSourceKind b,
+    _smTables :: Tables b,
+    _smFunctions :: Functions b,
+    _smConfiguration :: SourceConnConfiguration b,
+    _smQueryTags :: Maybe QueryTagsConfig,
+    _smCustomization :: SourceCustomization
   }
   deriving (Generic)
 
@@ -498,17 +498,17 @@ data CatalogStateType
 $(deriveJSON defaultOptions {constructorTagModifier = snakeCase . drop 3} ''CatalogStateType)
 
 data SetCatalogState = SetCatalogState
-  { _scsType :: !CatalogStateType,
-    _scsState :: !Value
+  { _scsType :: CatalogStateType,
+    _scsState :: Value
   }
   deriving (Show, Eq)
 
 $(deriveJSON hasuraJSON ''SetCatalogState)
 
 data CatalogState = CatalogState
-  { _csId :: !Text,
-    _csCliState :: !Value,
-    _csConsoleState :: !Value
+  { _csId :: Text,
+    _csCliState :: Value,
+    _csConsoleState :: Value
   }
   deriving (Show, Eq)
 

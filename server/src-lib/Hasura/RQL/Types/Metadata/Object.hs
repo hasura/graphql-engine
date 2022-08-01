@@ -60,20 +60,20 @@ import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableMetadataObjId
-  = MTORel !RelName !RelType
-  | MTOComputedField !ComputedFieldName
-  | MTOPerm !RoleName !PermType
-  | MTOTrigger !TriggerName
-  | MTORemoteRelationship !RelName
+  = MTORel RelName RelType
+  | MTOComputedField ComputedFieldName
+  | MTOPerm RoleName PermType
+  | MTOTrigger TriggerName
+  | MTORemoteRelationship RelName
   deriving (Show, Eq, Generic)
 
 instance Hashable TableMetadataObjId
 
 data SourceMetadataObjId b
-  = SMOTable !(TableName b)
-  | SMOFunction !(FunctionName b)
-  | SMOFunctionPermission !(FunctionName b) !RoleName
-  | SMOTableObj !(TableName b) !TableMetadataObjId
+  = SMOTable (TableName b)
+  | SMOFunction (FunctionName b)
+  | SMOFunctionPermission (FunctionName b) RoleName
+  | SMOTableObj (TableName b) TableMetadataObjId
   deriving (Generic)
 
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
@@ -83,24 +83,24 @@ deriving instance (Backend b) => Eq (SourceMetadataObjId b)
 instance (Backend b) => Hashable (SourceMetadataObjId b)
 
 data MetadataObjId
-  = MOSource !SourceName
-  | MOSourceObjId !SourceName !(AB.AnyBackend SourceMetadataObjId)
+  = MOSource SourceName
+  | MOSourceObjId SourceName (AB.AnyBackend SourceMetadataObjId)
   | -- | Originates from user-defined '_arsqName'
-    MORemoteSchema !RemoteSchemaName
-  | MORemoteSchemaPermissions !RemoteSchemaName !RoleName
+    MORemoteSchema RemoteSchemaName
+  | MORemoteSchemaPermissions RemoteSchemaName RoleName
   | -- | A remote relationship on a remote schema type, identified by
     -- 1. remote schema name
     -- 2. remote schema type on which the relationship is defined
     -- 3. name of the relationship
-    MORemoteSchemaRemoteRelationship !RemoteSchemaName !G.Name !RelName
+    MORemoteSchemaRemoteRelationship RemoteSchemaName G.Name RelName
   | MOCustomTypes
-  | MOAction !ActionName
-  | MOActionPermission !ActionName !RoleName
-  | MOCronTrigger !TriggerName
-  | MOInheritedRole !RoleName
-  | MOEndpoint !EndpointName
-  | MOHostTlsAllowlist !String
-  | MOQueryCollectionsQuery !CollectionName !ListedQuery
+  | MOAction ActionName
+  | MOActionPermission ActionName RoleName
+  | MOCronTrigger TriggerName
+  | MOInheritedRole RoleName
+  | MOEndpoint EndpointName
+  | MOHostTlsAllowlist String
+  | MOQueryCollectionsQuery CollectionName ListedQuery
   deriving (Show, Eq, Generic)
 
 $(makePrisms ''MetadataObjId)
@@ -189,8 +189,8 @@ moiName objectId =
                 )
 
 data MetadataObject = MetadataObject
-  { _moId :: !MetadataObjId,
-    _moDefinition :: !Value
+  { _moId :: MetadataObjId,
+    _moDefinition :: Value
   }
   deriving (Show, Eq, Generic)
 
@@ -200,13 +200,13 @@ $(makeLenses ''MetadataObject)
 
 data InconsistentRoleEntity
   = InconsistentTablePermission
-      !SourceName
-      !Text
+      SourceName
+      Text
       -- ^ Table name -- using `Text` here instead of `TableName b` for simplification,
       -- Otherwise, we'll have to create a newtype wrapper around `TableName b` and then
       -- use it with `AB.AnyBackend`
-      !PermType
-  | InconsistentRemoteSchemaPermission !RemoteSchemaName
+      PermType
+  | InconsistentRemoteSchemaPermission RemoteSchemaName
   deriving stock (Show, Eq, Generic)
 
 instance Hashable InconsistentRoleEntity
@@ -234,13 +234,13 @@ instance ToJSON InconsistentRoleEntity where
       object ["remote_schema" .= remoteSchemaName]
 
 data InconsistentMetadata
-  = InconsistentObject !Text !(Maybe Value) !MetadataObject
-  | ConflictingObjects !Text ![MetadataObject]
-  | DuplicateObjects !MetadataObjId ![Value]
-  | DuplicateRestVariables !Text !MetadataObject
-  | InvalidRestSegments !Text !MetadataObject
-  | AmbiguousRestEndpoints !Text ![MetadataObject]
-  | ConflictingInheritedPermission !RoleName !InconsistentRoleEntity
+  = InconsistentObject Text (Maybe Value) MetadataObject
+  | ConflictingObjects Text [MetadataObject]
+  | DuplicateObjects MetadataObjId [Value]
+  | DuplicateRestVariables Text MetadataObject
+  | InvalidRestSegments Text MetadataObject
+  | AmbiguousRestEndpoints Text [MetadataObject]
+  | ConflictingInheritedPermission RoleName InconsistentRoleEntity
   deriving stock (Show, Eq, Generic)
 
 instance Hashable InconsistentMetadata

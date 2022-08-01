@@ -53,12 +53,12 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- Metadata
 
 data SourceInfo b = SourceInfo
-  { _siName :: !SourceName,
-    _siTables :: !(TableCache b),
-    _siFunctions :: !(FunctionCache b),
-    _siConfiguration :: !(SourceConfig b),
-    _siQueryTagsConfig :: !(Maybe QueryTagsConfig),
-    _siCustomization :: !SourceCustomization
+  { _siName :: SourceName,
+    _siTables :: TableCache b,
+    _siFunctions :: FunctionCache b,
+    _siConfiguration :: SourceConfig b,
+    _siQueryTagsConfig :: Maybe QueryTagsConfig,
+    _siCustomization :: SourceCustomization
   }
   deriving (Generic)
 

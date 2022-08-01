@@ -61,7 +61,7 @@ instance FromJSON ExportMetadata where
 
 data ReloadSpec a
   = RSReloadAll
-  | RSReloadList !(HashSet a)
+  | RSReloadList (HashSet a)
   deriving (Show, Eq)
 
 instance (ToJSON a) => ToJSON (ReloadSpec a) where
@@ -148,8 +148,8 @@ instance ToJSON AllowInconsistentMetadata where
       toBool NoAllowInconsistentMetadata = False
 
 data ReplaceMetadataV1
-  = RMWithSources !Metadata
-  | RMWithoutSources !MetadataNoSources
+  = RMWithSources Metadata
+  | RMWithoutSources MetadataNoSources
   deriving (Eq)
 
 instance FromJSON ReplaceMetadataV1 where
@@ -165,8 +165,8 @@ instance ToJSON ReplaceMetadataV1 where
     RMWithoutSources v -> toJSON v
 
 data ReplaceMetadataV2 = ReplaceMetadataV2
-  { _rmv2AllowInconsistentMetadata :: !AllowInconsistentMetadata,
-    _rmv2Metadata :: !ReplaceMetadataV1
+  { _rmv2AllowInconsistentMetadata :: AllowInconsistentMetadata,
+    _rmv2Metadata :: ReplaceMetadataV1
   }
   deriving (Eq)
 
@@ -186,8 +186,8 @@ instance ToJSON ReplaceMetadataV2 where
 -- TODO: If additional API versions are supported in future it would be ideal to include a version field
 --       Rather than differentiating on the "metadata" field.
 data ReplaceMetadata
-  = RMReplaceMetadataV1 !ReplaceMetadataV1
-  | RMReplaceMetadataV2 !ReplaceMetadataV2
+  = RMReplaceMetadataV1 ReplaceMetadataV1
+  | RMReplaceMetadataV2 ReplaceMetadataV2
   deriving (Eq)
 
 instance FromJSON ReplaceMetadata where
@@ -221,7 +221,7 @@ data TestWebhookTransform = TestWebhookTransform
     _twtWebhookUrl :: WebHookUrl,
     _twtPayload :: Value,
     _twtTransformer :: RequestTransform,
-    _twtResponseTransformer :: !(Maybe MetadataResponseTransform),
+    _twtResponseTransformer :: Maybe MetadataResponseTransform,
     _twtSessionVariables :: Maybe SessionVariables
   }
   deriving (Eq)

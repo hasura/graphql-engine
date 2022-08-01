@@ -72,8 +72,8 @@ newtype CreatePerm a b = CreatePerm (WithTable b (PermDef b a))
 deriving instance (Backend b, FromJSON (PermDef b a)) => FromJSON (CreatePerm a b)
 
 data CreatePermP1Res a = CreatePermP1Res
-  { cprInfo :: !a,
-    cprDeps :: ![SchemaDependency]
+  { cprInfo :: a,
+    cprDeps :: [SchemaDependency]
   }
   deriving (Show, Eq)
 
@@ -109,9 +109,9 @@ getDependentHeaders (BoolExp boolExp) =
   Set.fromList $ flip foldMap boolExp $ \(ColExp _ v) -> getDepHeadersFromVal v
 
 data DropPerm b = DropPerm
-  { dipSource :: !SourceName,
-    dipTable :: !(TableName b),
-    dipRole :: !RoleName
+  { dipSource :: SourceName,
+    dipTable :: TableName b,
+    dipRole :: RoleName
   }
 
 instance (Backend b) => FromJSON (DropPerm b) where

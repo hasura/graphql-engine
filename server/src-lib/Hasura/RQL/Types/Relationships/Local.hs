@@ -33,9 +33,9 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 
 data RelDef a = RelDef
-  { _rdName :: !RelName,
-    _rdUsing :: !a,
-    _rdComment :: !(Maybe T.Text)
+  { _rdName :: RelName,
+    _rdUsing :: a,
+    _rdComment :: Maybe T.Text
   }
   deriving (Show, Eq, Generic)
 
@@ -55,9 +55,9 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
     ]
 
 data RelManualConfig (b :: BackendType) = RelManualConfig
-  { rmTable :: !(TableName b),
-    rmColumns :: !(HashMap (Column b) (Column b)),
-    rmInsertOrder :: !(Maybe InsertOrder)
+  { rmTable :: TableName b,
+    rmColumns :: HashMap (Column b) (Column b),
+    rmInsertOrder :: Maybe InsertOrder
   }
   deriving (Generic)
 
@@ -85,8 +85,8 @@ instance (Backend b) => ToJSON (RelManualConfig b) where
       ]
 
 data RelUsing (b :: BackendType) a
-  = RUFKeyOn !a
-  | RUManual !(RelManualConfig b)
+  = RUFKeyOn a
+  | RUManual (RelManualConfig b)
   deriving (Show, Eq, Generic)
 
 instance (Backend b, Cacheable a) => Cacheable (RelUsing b a)
@@ -111,8 +111,8 @@ instance (FromJSON a, Backend b) => FromJSON (RelUsing b a) where
     fail "using should be an object"
 
 data ArrRelUsingFKeyOn (b :: BackendType) = ArrRelUsingFKeyOn
-  { arufTable :: !(TableName b),
-    arufColumns :: !(NonEmpty (Column b))
+  { arufTable :: TableName b,
+    arufColumns :: NonEmpty (Column b)
   }
   deriving (Generic)
 
@@ -124,9 +124,9 @@ instance Backend b => Cacheable (ArrRelUsingFKeyOn b)
 
 -- TODO: This has to move to a common module
 data WithTable b a = WithTable
-  { wtSource :: !SourceName,
-    wtName :: !(TableName b),
-    wtInfo :: !a
+  { wtSource :: SourceName,
+    wtName :: TableName b,
+    wtInfo :: a
   }
 
 deriving instance (Backend b, Show a) => Show (WithTable b a)
@@ -147,8 +147,8 @@ instance (ToAesonPairs a, Backend b) => ToJSON (WithTable b a) where
     object $ ("source" .= sourceName) : ("table" .= tn) : toAesonPairs rel
 
 data ObjRelUsingChoice b
-  = SameTable !(NonEmpty (Column b))
-  | RemoteTable !(TableName b) !(NonEmpty (Column b))
+  = SameTable (NonEmpty (Column b))
+  | RemoteTable (TableName b) (NonEmpty (Column b))
   deriving (Generic)
 
 deriving instance Backend b => Eq (ObjRelUsingChoice b)
@@ -227,12 +227,12 @@ type ObjRelUsing b = RelUsing b (ObjRelUsingChoice b)
 type ObjRelDef b = RelDef (ObjRelUsing b)
 
 data RelInfo (b :: BackendType) = RelInfo
-  { riName :: !RelName,
-    riType :: !RelType,
-    riMapping :: !(HashMap (Column b) (Column b)),
-    riRTable :: !(TableName b),
-    riIsManual :: !Bool,
-    riInsertOrder :: !InsertOrder
+  { riName :: RelName,
+    riType :: RelType,
+    riMapping :: HashMap (Column b) (Column b),
+    riRTable :: TableName b,
+    riIsManual :: Bool,
+    riInsertOrder :: InsertOrder
   }
   deriving (Generic)
 

@@ -25,13 +25,13 @@ import Hasura.RQL.Types.Column
 import Hasura.SQL.Backend
 
 data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
-  { _auTable :: !(TableName b),
+  { _auTable :: TableName b,
     -- | The where clause for /update_table/ and /update_table_by_pk/ along with
     -- the permissions filter.
     -- In the case of /update_table_many/, this will be empty and the actual
     -- where clauses (one per update) are found in 'BackendUpdate'.
-    _auWhere :: !(AnnBoolExp b v, AnnBoolExp b v),
-    _auCheck :: !(AnnBoolExp b v),
+    _auWhere :: (AnnBoolExp b v, AnnBoolExp b v),
+    _auCheck :: AnnBoolExp b v,
     -- | All the backend-specific data related to an update mutation
     _auBackend :: BackendUpdate b v,
     -- we don't prepare the arguments for returning
@@ -39,9 +39,9 @@ data AnnotatedUpdateG (b :: BackendType) (r :: Type) v = AnnotatedUpdateG
     -- converted as desired
 
     -- | Selection set
-    _auOutput :: !(MutationOutputG b r v),
-    _auAllCols :: ![ColumnInfo b],
-    _auNamingConvention :: !(Maybe NamingCase)
+    _auOutput :: MutationOutputG b r v,
+    _auAllCols :: [ColumnInfo b],
+    _auNamingConvention :: Maybe NamingCase
   }
   deriving stock (Functor, Foldable, Traversable)
 

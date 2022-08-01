@@ -87,8 +87,8 @@ newtype FunctionArgName = FunctionArgName {getFuncArgNameTxt :: Text}
   deriving (Show, Eq, Ord, NFData, ToJSON, ToJSONKey, FromJSON, FromJSONKey, ToTxt, IsString, Generic, Cacheable, Hashable, Lift, Data)
 
 data InputArgument a
-  = IAUserProvided !a
-  | IASessionVariables !FunctionArgName
+  = IAUserProvided a
+  | IASessionVariables FunctionArgName
   deriving (Show, Eq, Functor)
 
 $( deriveToJSON

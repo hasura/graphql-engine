@@ -119,19 +119,19 @@ currentMetadataVersion = MVVersion3
 -- | A complete GraphQL Engine metadata representation to be stored,
 -- exported/replaced via metadata queries.
 data Metadata = Metadata
-  { _metaSources :: !Sources,
-    _metaRemoteSchemas :: !RemoteSchemas,
-    _metaQueryCollections :: !QueryCollections,
-    _metaAllowlist :: !MetadataAllowlist,
-    _metaCustomTypes :: !CustomTypes,
-    _metaActions :: !Actions,
-    _metaCronTriggers :: !CronTriggers,
-    _metaRestEndpoints :: !Endpoints,
-    _metaApiLimits :: !ApiLimit,
-    _metaMetricsConfig :: !MetricsConfig,
-    _metaInheritedRoles :: !InheritedRoles,
-    _metaSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions,
-    _metaNetwork :: !Network,
+  { _metaSources :: Sources,
+    _metaRemoteSchemas :: RemoteSchemas,
+    _metaQueryCollections :: QueryCollections,
+    _metaAllowlist :: MetadataAllowlist,
+    _metaCustomTypes :: CustomTypes,
+    _metaActions :: Actions,
+    _metaCronTriggers :: CronTriggers,
+    _metaRestEndpoints :: Endpoints,
+    _metaApiLimits :: ApiLimit,
+    _metaMetricsConfig :: MetricsConfig,
+    _metaInheritedRoles :: InheritedRoles,
+    _metaSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
+    _metaNetwork :: Network,
     _metaBackendConfigs :: BackendMap BackendConfigWrapper
   }
   deriving (Show, Eq, Generic)
@@ -242,14 +242,14 @@ instance (MetadataM m) => MetadataM (TraceT m) where
   putMetadata = lift . putMetadata
 
 data MetadataNoSources = MetadataNoSources
-  { _mnsTables :: !(Tables ('Postgres 'Vanilla)),
-    _mnsFunctions :: !(Functions ('Postgres 'Vanilla)),
-    _mnsRemoteSchemas :: !RemoteSchemas,
-    _mnsQueryCollections :: !QueryCollections,
-    _mnsAllowlist :: !MetadataAllowlist,
-    _mnsCustomTypes :: !CustomTypes,
-    _mnsActions :: !Actions,
-    _mnsCronTriggers :: !CronTriggers
+  { _mnsTables :: Tables ('Postgres 'Vanilla),
+    _mnsFunctions :: Functions ('Postgres 'Vanilla),
+    _mnsRemoteSchemas :: RemoteSchemas,
+    _mnsQueryCollections :: QueryCollections,
+    _mnsAllowlist :: MetadataAllowlist,
+    _mnsCustomTypes :: CustomTypes,
+    _mnsActions :: Actions,
+    _mnsCronTriggers :: CronTriggers
   }
   deriving (Eq)
 
