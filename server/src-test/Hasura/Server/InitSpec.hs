@@ -35,13 +35,13 @@ spec = Hspec.describe "Init Tests" $ do
 
 --------------------------------------------------------------------------------
 
-emptyRawServeOptions :: UUT.RawServeOptions Logging.Hasura
-emptyRawServeOptions =
-  UUT.RawServeOptions
+emptyServeOptionsRaw :: UUT.ServeOptionsRaw Logging.Hasura
+emptyServeOptionsRaw =
+  UUT.ServeOptionsRaw
     { rsoPort = Nothing,
       rsoHost = Nothing,
       rsoConnParams =
-        UUT.RawConnParams
+        UUT.ConnParamsRaw
           { rcpStripes = Nothing,
             rcpConns = Nothing,
             rcpIdleTime = Nothing,
@@ -94,7 +94,7 @@ mkServeOptionsSpec =
     Hspec.describe "soPort" $ do
       Hspec.it "Default == 8080" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -104,7 +104,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_SERVER_PORT", "420")]
             -- Then
@@ -114,7 +114,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoPort = Just 11}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoPort = Just 11}
             -- When
             env = [("HASURA_GRAPHQL_SERVER_PORT", "420")]
             -- Then
@@ -125,7 +125,7 @@ mkServeOptionsSpec =
     Hspec.describe "soHost" $ do
       Hspec.it "Default = '*'" $ do
         -- Given
-        let rawServeOptions = emptyRawServeOptions
+        let rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -135,7 +135,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         -- Given
-        let rawServeOptions = emptyRawServeOptions
+        let rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_SERVER_HOST", "127.0.0.1")]
             -- Then
@@ -145,7 +145,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         -- Given
-        let rawServeOptions = emptyRawServeOptions {UUT.rsoHost = Just "*4"}
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoHost = Just "*4"}
             -- When
             env = [("HASURA_GRAPHQL_SERVER_HOST", "127.0.0.1")]
             -- Then
@@ -156,7 +156,7 @@ mkServeOptionsSpec =
     Hspec.describe "soConnParams" $ do
       Hspec.it "Default == 1, 50, 180, 600" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -177,7 +177,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
               [ ("HASURA_GRAPHQL_PG_STRIPES", "42"),
@@ -206,9 +206,9 @@ mkServeOptionsSpec =
       Hspec.it "Arg > Env" $ do
         let -- Given
             rawServeOptions =
-              emptyRawServeOptions
+              emptyServeOptionsRaw
                 { UUT.rsoConnParams =
-                    UUT.RawConnParams
+                    UUT.ConnParamsRaw
                       { rcpStripes = Just 2,
                         rcpConns = Just 3,
                         rcpIdleTime = Just 4,
@@ -245,7 +245,7 @@ mkServeOptionsSpec =
     Hspec.describe "soTxIso" $ do
       Hspec.it "Default == ReadCommitted" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -255,7 +255,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_TX_ISOLATION", "repeatable-read")]
             -- Then
@@ -265,7 +265,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         -- Given
-        let rawServeOptions = emptyRawServeOptions {UUT.rsoTxIso = Just Q.Serializable}
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoTxIso = Just Q.Serializable}
             -- When
             env = [("HASURA_GRAPHQL_TX_ISOLATION", "repeatable-read")]
             -- Then
@@ -276,7 +276,7 @@ mkServeOptionsSpec =
     Hspec.describe "soAdminSecret" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ADMIN_SECRET", "A monad is a monoid in the category of endofunctors")]
             -- Then
@@ -286,7 +286,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         -- Given
-        let rawServeOptions = emptyRawServeOptions {UUT.rsoAdminSecret = Just (Auth.hashAdminSecret "Whats the big deal")}
+        let rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminSecret = Just (Auth.hashAdminSecret "Whats the big deal")}
             -- When
             env = [("HASURA_GRAPHQL_ADMIN_SECRET", "A monad is a monoid in the category of endofunctors")]
             -- Then
@@ -297,7 +297,7 @@ mkServeOptionsSpec =
     Hspec.describe "soAuthHook" $ do
       Hspec.it "Default Hook Mode == GET" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_AUTH_HOOK", "http://auth.hook.com")]
             -- Then
@@ -307,7 +307,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
               [ ("HASURA_GRAPHQL_AUTH_HOOK", "http://auth.hook.com"),
@@ -320,7 +320,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoAuthHook = UUT.AuthHookG (Just "http://auth.hook.com") (Just UUT.AHTGet)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAuthHook = UUT.AuthHookG (Just "http://auth.hook.com") (Just UUT.AHTGet)}
             -- When
             env =
               [ ("HASURA_GRAPHQL_AUTH_HOOK", "http://auth.hook.net"),
@@ -334,7 +334,7 @@ mkServeOptionsSpec =
     Hspec.describe "soJwtSecret" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
               [ ( "HASURA_GRAPHQL_JWT_SECRET",
@@ -350,7 +350,7 @@ mkServeOptionsSpec =
       Hspec.it "Arg > Env" $ do
         let -- Given
             jwtConfig = eitherToMaybe $ UUT.fromEnv @UUT.JWTConfig "{\"type\": \"HS256\", \"key\": \"22222222222222222222222222222222\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}"
-            rawServeOptions = emptyRawServeOptions {UUT.rsoJwtSecret = jwtConfig}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoJwtSecret = jwtConfig}
             -- When
             env =
               [ ( "HASURA_GRAPHQL_JWT_SECRET",
@@ -365,7 +365,7 @@ mkServeOptionsSpec =
     Hspec.describe "soUnAuthRole" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_UNAUTHORIZED_ROLE", "guest")]
             -- Then
@@ -375,7 +375,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoUnAuthRole = UUT.mkRoleName "visitor"}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoUnAuthRole = UUT.mkRoleName "visitor"}
             -- When
             env = [("HASURA_GRAPHQL_UNAUTHORIZED_ROLE", "guest")]
             -- Then
@@ -386,7 +386,7 @@ mkServeOptionsSpec =
     Hspec.describe "soCorsConfig" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain1:23, http://domain2:34")]
             -- Then
@@ -396,7 +396,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Default CorsConfig == CCAllowAll" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -406,7 +406,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env 'HASURA_GRAPHQL_DISABLE_CORS=false' superseded by 'HASURA_GRAPHQL_CORS_DOMAIN'" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain1:23, http://domain2:34"), ("HASURA_GRAPHQL_DISABLE_CORS", "false")]
             -- Then
@@ -416,7 +416,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env 'HASURA_GRAPHQL_DISABLE_CORS=true' enables use of cookie value" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_WS_READ_COOKIE", "true"), ("HASURA_GRAPHQL_DISABLE_CORS", "true")]
             -- Then
@@ -426,7 +426,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env 'HASURA_GRAPHQL_DISABLE_CORS=true' supersedes 'HASURA_GRAPHQL_CORS_DOMAIN'" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain1:23, http://domain2:34"), ("HASURA_GRAPHQL_DISABLE_CORS", "true")]
             -- Then
@@ -436,7 +436,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoCorsConfig = eitherToMaybe (Cors.readCorsDomains "http://domain1:23, http://domain2:34")}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoCorsConfig = eitherToMaybe (Cors.readCorsDomains "http://domain1:23, http://domain2:34")}
             -- When
             env = [("HASURA_GRAPHQL_CORS_DOMAIN", "http://domain3:23, http://domain4:34")]
             -- Then
@@ -447,7 +447,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnableConsole" $ do
       Hspec.it "Default == False" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -461,7 +461,7 @@ mkServeOptionsSpec =
       -- the env var to ensure the flag supersedes the env var.
       Hspec.it "Env > No Switch" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_CONSOLE", "true")]
             -- Then
@@ -471,7 +471,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableConsole = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableConsole = True}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_CONSOLE", "false")]
             -- Then
@@ -482,7 +482,7 @@ mkServeOptionsSpec =
     Hspec.describe "soConsoleAssetsDir" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_CONSOLE_ASSETS_DIR", "/assets")]
             -- Then
@@ -492,7 +492,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoConsoleAssetsDir = Just "/data"}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoConsoleAssetsDir = Just "/data"}
             -- When
             env = [("HASURA_GRAPHQL_CONSOLE_ASSETS_DIR", "/assets")]
             -- Then
@@ -503,7 +503,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnableTelemetry" $ do
       Hspec.it "Default == True" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -513,7 +513,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_TELEMETRY", "false")]
             -- Then
@@ -523,7 +523,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableTelemetry = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableTelemetry = Just False}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_TELEMETRY", "true")]
             -- Then
@@ -534,7 +534,7 @@ mkServeOptionsSpec =
     Hspec.describe "soStringifyNum" $ do
       Hspec.it "Default == LeaveNumbersAlone" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -544,7 +544,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "true")]
             -- Then
@@ -554,7 +554,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoStringifyNum = Options.StringifyNumbers}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoStringifyNum = Options.StringifyNumbers}
             -- When
             env = [("HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES", "false")]
             -- Then
@@ -565,7 +565,7 @@ mkServeOptionsSpec =
     Hspec.describe "soDangerousBooleanCollapse" $ do
       Hspec.it "Default == False" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -575,7 +575,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE", "true")]
             -- Then
@@ -585,7 +585,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoDangerousBooleanCollapse = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDangerousBooleanCollapse = Just False}
             -- When
             env = [("HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE", "true")]
             -- Then
@@ -596,7 +596,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnabledAPIs" $ do
       Hspec.it "Default == metadata,graphql,pgdump,config" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -606,7 +606,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ENABLED_APIS", "metadata,graphql")]
             -- Then
@@ -616,7 +616,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnabledAPIs = Just [UUT.CONFIG]}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledAPIs = Just [UUT.CONFIG]}
             -- When
             env = [("HASURA_GRAPHQL_ENABLED_APIS", "metadata,graphql")]
             -- Then
@@ -627,7 +627,7 @@ mkServeOptionsSpec =
     Hspec.describe "soLiveQueryOpts" $ do
       Hspec.it "Default == 1000, 100" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -643,7 +643,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
               [ ("HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL", "2000"),
@@ -663,7 +663,7 @@ mkServeOptionsSpec =
       Hspec.it "Arg > Env" $ do
         let -- Given
             rawServeOptions =
-              emptyRawServeOptions
+              emptyServeOptionsRaw
                 { UUT.rsoMxRefetchInt = ESO.mkRefetchInterval 3,
                   UUT.rsoMxBatchSize = ESP.mkBatchSize 300
                 }
@@ -686,7 +686,7 @@ mkServeOptionsSpec =
     Hspec.describe "soStreamingQueryOpts" $ do
       Hspec.it "Default == 1000, 100" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -702,7 +702,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env =
               [ ("HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL", "2000"),
@@ -722,7 +722,7 @@ mkServeOptionsSpec =
       Hspec.it "Arg > Env" $ do
         let -- Given
             rawServeOptions =
-              emptyRawServeOptions
+              emptyServeOptionsRaw
                 { UUT.rsoStreamingMxRefetchInt = ESO.mkRefetchInterval 3,
                   UUT.rsoStreamingMxBatchSize = ESO.mkBatchSize 300
                 }
@@ -745,7 +745,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnableAllowlist" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_ALLOWLIST", "true")]
             -- Then
@@ -755,7 +755,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableAllowlist = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableAllowlist = True}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_ALLOWLIST", "false")]
             -- Then
@@ -766,7 +766,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnabledLogTypes" $ do
       Hspec.it "Default == Startup, HttpLog, WebhookLog, WebsocketLog" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -776,7 +776,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ENABLED_LOG_TYPES", "http-log")]
             -- Then
@@ -786,7 +786,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnabledLogTypes = Just [Logging.ELTActionHandler]}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnabledLogTypes = Just [Logging.ELTActionHandler]}
             -- When
             env = [("HASURA_GRAPHQL_ENABLED_LOG_TYPES", "http-log")]
             -- Then
@@ -797,7 +797,7 @@ mkServeOptionsSpec =
     Hspec.describe "soLogLevel" $ do
       Hspec.it "Default == LevelInfo" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -807,7 +807,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_LOG_LEVEL", "warn")]
             -- Then
@@ -817,7 +817,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoLogLevel = Just Logging.LevelWarn}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoLogLevel = Just Logging.LevelWarn}
             -- When
             env = [("HASURA_GRAPHQL_LOG_LEVEL", "warn")]
             -- Then
@@ -828,7 +828,7 @@ mkServeOptionsSpec =
     Hspec.describe "soDevMode" $ do
       Hspec.it "Default == False" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -841,7 +841,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_DEV_MODE", "true")]
             -- Then
@@ -854,7 +854,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoDevMode = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDevMode = True}
             -- When
             env = [("HASURA_GRAPHQL_DEV_MODE", "false")]
             -- Then
@@ -865,7 +865,7 @@ mkServeOptionsSpec =
     Hspec.describe "soAdminInternalErrors" $ do
       Hspec.it "Default == InternalErrorsAdminOnly" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -875,7 +875,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS", "false")]
             -- Then
@@ -885,7 +885,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Dev Mode supersedes rsoAdminInternalErrors" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS", "false"), ("HASURA_GRAPHQL_DEV_MODE", "true")]
             -- Then
@@ -895,7 +895,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoAdminInternalErrors = Just False}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAdminInternalErrors = Just False}
             -- When
             env = [("HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS", "true")]
             -- Then
@@ -909,7 +909,7 @@ mkServeOptionsSpec =
       -- this:
       --Hspec.it "Default == 100" $ do
       --  let -- Given
-      --      rawServeOptions = emptyRawServeOptions
+      --      rawServeOptions = emptyServeOptionsRaw
       --      -- When
       --      env = []
       --      -- Then
@@ -919,7 +919,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE", "200")]
             -- Then
@@ -929,7 +929,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEventsHttpPoolSize = Just 300}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsHttpPoolSize = Just 300}
             -- When
             env = [("HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE", "200")]
             -- Then
@@ -940,7 +940,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEventsFetchInterval" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL", "200")]
             -- Then
@@ -950,7 +950,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEventsFetchInterval = Just 300}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchInterval = Just 300}
             -- When
             env = [("HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL", "200")]
             -- Then
@@ -961,7 +961,7 @@ mkServeOptionsSpec =
     Hspec.describe "soAsyncActionsFetchInterval" $ do
       Hspec.it "Default == 1000" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -971,7 +971,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL", "200")]
             -- Then
@@ -981,7 +981,7 @@ mkServeOptionsSpec =
 
       Hspec.it "0 == 'Skip'" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL", "0")]
             -- Then
@@ -991,7 +991,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoAsyncActionsFetchInterval = Just (UUT.Interval 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAsyncActionsFetchInterval = Just (UUT.Interval 300)}
             -- When
             env = [("HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL", "200")]
             -- Then
@@ -1002,7 +1002,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnableRemoteSchemaPermissions" $ do
       Hspec.it "Default == False" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -1012,7 +1012,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS", "true")]
             -- Then
@@ -1022,7 +1022,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableRemoteSchemaPermissions = Options.EnableRemoteSchemaPermissions}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableRemoteSchemaPermissions = Options.EnableRemoteSchemaPermissions}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS", "false")]
             -- Then
@@ -1033,7 +1033,7 @@ mkServeOptionsSpec =
     Hspec.describe "soWebSocketCompression" $ do
       Hspec.it "Default == NoCompression" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -1043,7 +1043,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_CONNECTION_COMPRESSION", "true")]
             -- Then
@@ -1054,7 +1054,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoWebSocketCompression = True}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketCompression = True}
             -- When
             env = [("HASURA_GRAPHQL_CONNECTION_COMPRESSION", "false")]
             -- Then
@@ -1066,7 +1066,7 @@ mkServeOptionsSpec =
     Hspec.describe "soWebSocketKeepAlive" $ do
       Hspec.it "Default == 5" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -1076,7 +1076,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE", "10")]
             -- Then
@@ -1086,7 +1086,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoWebSocketKeepAlive = Just (UUT.KeepAliveDelay 20)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketKeepAlive = Just (UUT.KeepAliveDelay 20)}
             -- When
             env = [("HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE", "10")]
             -- Then
@@ -1097,7 +1097,7 @@ mkServeOptionsSpec =
     Hspec.describe "soInferFunctionPermissions" $ do
       Hspec.it "Default == FunctionPermissionsInferred" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -1107,7 +1107,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS", "false")]
             -- Then
@@ -1117,7 +1117,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoInferFunctionPermissions = Just Options.InferFunctionPermissions}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoInferFunctionPermissions = Just Options.InferFunctionPermissions}
             -- When
             env = [("HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS", "false")]
             -- Then
@@ -1128,7 +1128,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnableMaintenanceMode" $ do
       Hspec.it "Defaut == MaintenanceModeDisabled" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -1138,7 +1138,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE", "true")]
             -- Then
@@ -1148,7 +1148,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableMaintenanceMode = Types.MaintenanceModeEnabled ()}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableMaintenanceMode = Types.MaintenanceModeEnabled ()}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE", "false")]
             -- Then
@@ -1159,7 +1159,7 @@ mkServeOptionsSpec =
     Hspec.describe "soSchemaPollInterval" $ do
       Hspec.it "Default == 1000" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -1169,7 +1169,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL", "2000")]
             -- Then
@@ -1179,7 +1179,7 @@ mkServeOptionsSpec =
 
       Hspec.it "0 == Skip" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL", "0")]
             -- Then
@@ -1189,7 +1189,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoSchemaPollInterval = Just (UUT.Interval 3000)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoSchemaPollInterval = Just (UUT.Interval 3000)}
             -- When
             env = [("HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL", "2000")]
             -- Then
@@ -1200,7 +1200,7 @@ mkServeOptionsSpec =
     Hspec.describe "soExperimentalFeatures" $ do
       Hspec.it "Default == mempty" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
             env = []
@@ -1211,7 +1211,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
             env = [("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "inherited_roles,optimize_permission_filters,naming_convention")]
@@ -1223,7 +1223,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoExperimentalFeatures = Just [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions]}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoExperimentalFeatures = Just [Types.EFInheritedRoles, Types.EFOptimizePermissionFilters, Types.EFNamingConventions]}
             -- When
             env = [("HASURA_GRAPHQL_EXPERIMENTAL_FEATURES", "inherited_roles")]
             -- Then
@@ -1235,7 +1235,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEventsFetchBatchSize" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE", "200")]
             -- Then
@@ -1245,7 +1245,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEventsFetchBatchSize = Just 300}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchBatchSize = Just 300}
             -- When
             env = [("HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE", "200")]
             -- Then
@@ -1256,7 +1256,7 @@ mkServeOptionsSpec =
     Hspec.describe "soGracefulShutdownTimeout" $ do
       Hspec.it "Default == 60" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
             env = []
@@ -1267,7 +1267,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
             env = [("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "200")]
@@ -1278,7 +1278,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoGracefulShutdownTimeout = Just 300}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoGracefulShutdownTimeout = Just 300}
             -- When
             env = [("HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT", "200")]
             -- Then
@@ -1289,7 +1289,7 @@ mkServeOptionsSpec =
     Hspec.describe "soWebSocketConnectionInitTimeout" $ do
       Hspec.it "Default == 3" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = []
             -- Then
@@ -1299,7 +1299,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             env = [("HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", "200")]
             -- Then
@@ -1309,7 +1309,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoWebSocketConnectionInitTimeout = Just (UUT.WSConnectionInitTimeout 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketConnectionInitTimeout = Just (UUT.WSConnectionInitTimeout 300)}
             -- When
             env = [("HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", "200")]
             -- Then
@@ -1320,7 +1320,7 @@ mkServeOptionsSpec =
     Hspec.describe "soEnableMetadataQueryLoggingEnv" $ do
       Hspec.it "Default == MetadataQueryLoggingDisabled" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
             env = []
@@ -1331,7 +1331,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING", "true")]
@@ -1342,7 +1342,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingEnabled}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEnableMetadataQueryLoggingEnv = Logging.MetadataQueryLoggingEnabled}
             -- When
             env = [("HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING", "False")]
             -- Then
@@ -1353,7 +1353,7 @@ mkServeOptionsSpec =
     Hspec.describe "soDefaultNamingConvention" $ do
       Hspec.it "Env > Nothing" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions
+            rawServeOptions = emptyServeOptionsRaw
             -- When
             -- When
             env = [("HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION", "graphql-default")]
@@ -1364,7 +1364,7 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyRawServeOptions {UUT.rsoDefaultNamingConvention = Just NC.GraphqlCase}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoDefaultNamingConvention = Just NC.GraphqlCase}
             -- When
             env = [("HASURA_GRAPHQL_DEFAULT_NAMING_CONVENTION", "hasura-default")]
             -- Then

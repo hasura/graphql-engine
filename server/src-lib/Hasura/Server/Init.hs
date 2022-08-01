@@ -96,12 +96,12 @@ $(J.deriveJSON hasuraJSON ''StartupTimeInfo)
 
 --------------------------------------------------------------------------------
 
--- | Given the 'RawServeOptions' parsed from the arg parser,
+-- | Given the 'ServeOptionsRaw' parsed from the arg parser,
 -- postprocess the db url and fetch env vars associated with the main
 -- command parser, then process the subcommand raw values if
 -- necessary.
 mkHGEOptions ::
-  L.EnabledLogTypes impl => HGEOptionsRaw (RawServeOptions impl) -> WithEnv (HGEOptions (ServeOptions impl))
+  L.EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
 mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
   dbUrl <- processPostgresConnInfo rawDbUrl
   metadataDbUrl <- withEnv rawMetadataDbUrl $ fst metadataDbUrlEnv
@@ -115,11 +115,11 @@ mkHGEOptions (HGEOptionsRaw rawDbUrl rawMetadataDbUrl rawCmd) = do
 
 -- | 'PostressConnInfo' is a a tuple of some @a@ with a 'Maybe Int'
 -- representing the retries setting. This function thus takes a
--- retries setting and a 'PostgresRawConnInfo' from the arg parser and
+-- retries setting and a 'PostgresConnInfoRaw' from the arg parser and
 -- merges those results with the contents of their corresponding env
 -- vars.
 processPostgresConnInfo ::
-  PostgresConnInfo (Maybe PostgresRawConnInfo) ->
+  PostgresConnInfo (Maybe PostgresConnInfoRaw) ->
   WithEnv (PostgresConnInfo (Maybe RTC.UrlConf))
 processPostgresConnInfo PostgresConnInfo {..} = do
   withEnvRetries <- withEnv _pciRetries $ fst retriesNumEnv
@@ -129,7 +129,7 @@ processPostgresConnInfo PostgresConnInfo {..} = do
 -- | A helper function for 'processPostgresConnInfo' which fetches
 -- postgres connection info from the 'WithEnv' and merges it with the
 -- arg parser result.
-rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv (Maybe RTC.UrlConf)
+rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe RTC.UrlConf)
 rawConnInfoToUrlConf maybeRawConnInfo = do
   env <- ask
   let databaseUrlEnvVar = fst databaseUrlEnv
@@ -153,7 +153,7 @@ rawConnInfoToUrlConf maybeRawConnInfo = do
 
 -- | Merge the results of the serve subcommmand arg parser with
 -- corresponding values from the 'WithEnv' context.
-mkServeOptions :: L.EnabledLogTypes impl => RawServeOptions impl -> WithEnv (ServeOptions impl)
+mkServeOptions :: L.EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
 mkServeOptions rso = do
   port <- fromMaybe 8080 <$> withEnv (rsoPort rso) (fst servePortEnv)
 
@@ -306,7 +306,7 @@ mkServeOptions rso = do
   where
     defaultAsyncActionsFetchInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
     defaultSchemaPollInterval = Interval 1000 -- 1000 Milliseconds or 1 Second
-    mkConnParams (RawConnParams s c i cl p pt) = do
+    mkConnParams (ConnParamsRaw s c i cl p pt) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:

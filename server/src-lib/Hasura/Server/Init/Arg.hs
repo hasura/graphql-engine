@@ -30,14 +30,14 @@ import Options.Applicative qualified as Opt
 
 -- | The Main Arg Parser. It constructs a 'Config.HGEOptionsRaw' term:
 --
--- 1. '(Config.PostgresConnInfo (Maybe PostgresRawConnInfo))' - The DB connection.
+-- 1. '(Config.PostgresConnInfo (Maybe PostgresConnInfoRaw))' - The DB connection.
 -- 2: 'Maybe String' - Representing the metadata connection.
 -- 3: 'Config.HGECommand' @a@ - The result of the supplied Subcommand.
-parseHgeOpts :: L.EnabledLogTypes impl => Opt.Parser (Config.HGEOptionsRaw (Config.RawServeOptions impl))
+parseHgeOpts :: L.EnabledLogTypes impl => Opt.Parser (Config.HGEOptionsRaw (Config.ServeOptionsRaw impl))
 parseHgeOpts =
   Config.HGEOptionsRaw <$> parsePostgresConnInfo <*> parseMetadataDbUrl <*> parseHGECommand
 
-parseHGECommand :: L.EnabledLogTypes impl => Opt.Parser (Config.HGECommand (Config.RawServeOptions impl))
+parseHGECommand :: L.EnabledLogTypes impl => Opt.Parser (Config.HGECommand (Config.ServeOptionsRaw impl))
 parseHGECommand =
   Opt.subparser
     ( Opt.command
@@ -76,7 +76,7 @@ parseHGECommand =
 
 --------------------------------------------------------------------------------
 
-parsePostgresConnInfo :: Opt.Parser (Config.PostgresConnInfo (Maybe Config.PostgresRawConnInfo))
+parsePostgresConnInfo :: Opt.Parser (Config.PostgresConnInfo (Maybe Config.PostgresConnInfoRaw))
 parsePostgresConnInfo = do
   retries' <- retries
   maybeRawConnInfo <-
@@ -115,7 +115,7 @@ databaseUrlEnv =
     "Postgres database URL. Example postgres://foo:bar@example.com:2345/database"
   )
 
-parseRawConnDetails :: Opt.Parser (Maybe Config.PostgresRawConnDetails)
+parseRawConnDetails :: Opt.Parser (Maybe Config.PostgresConnDetailsRaw)
 parseRawConnDetails = do
   host' <- host
   port' <- port
@@ -124,7 +124,7 @@ parseRawConnDetails = do
   dbName' <- dbName
   options' <- options
   pure $
-    Config.PostgresRawConnDetails
+    Config.PostgresConnDetailsRaw
       <$> host'
       <*> port'
       <*> user'

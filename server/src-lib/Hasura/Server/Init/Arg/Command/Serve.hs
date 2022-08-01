@@ -38,9 +38,9 @@ import Witch qualified
 --------------------------------------------------------------------------------
 -- Serve Command
 
-serveCommandParser :: L.EnabledLogTypes impl => Opt.Parser (Config.RawServeOptions impl)
+serveCommandParser :: L.EnabledLogTypes impl => Opt.Parser (Config.ServeOptionsRaw impl)
 serveCommandParser =
-  Config.RawServeOptions
+  Config.ServeOptionsRaw
     <$> parseServerPort
     <*> parseServerHost
     <*> parseConnParams
@@ -118,9 +118,9 @@ serveHostEnv =
     "Host on which graphql-engine will listen (default: *)"
   )
 
-parseConnParams :: Opt.Parser Config.RawConnParams
+parseConnParams :: Opt.Parser Config.ConnParamsRaw
 parseConnParams =
-  Config.RawConnParams <$> pgStripes <*> pgConns <*> pgIdleTimeout <*> pgConnLifetime <*> pgAllowPrepare <*> pgPoolTimeout
+  Config.ConnParamsRaw <$> pgStripes <*> pgConns <*> pgIdleTimeout <*> pgConnLifetime <*> pgAllowPrepare <*> pgPoolTimeout
   where
     -- TODO(SOLOMON): Review, currently accepts negative integers
     pgStripes =
@@ -275,7 +275,7 @@ accessKeyEnv =
     "Admin secret key, required to access this instance (deprecated: use HASURA_GRAPHQL_ADMIN_SECRET instead)"
   )
 
-parseAuthHook :: Opt.Parser Config.RawAuthHook
+parseAuthHook :: Opt.Parser Config.AuthHookRaw
 parseAuthHook =
   Auth.AuthHookG <$> url <*> urlType
   where
