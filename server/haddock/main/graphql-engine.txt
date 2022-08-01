@@ -29948,39 +29948,73 @@ instance GHC.Show.Show Hasura.Server.Auth.AdminSecretHash
 -- | Types and classes related to configuration when the server is
 --   initialised
 module Hasura.Server.Init.Config
-data RawConnParams
-RawConnParams :: !Maybe Int -> !Maybe Int -> !Maybe Int -> !Maybe NominalDiffTime -> !Maybe Bool -> !Maybe NominalDiffTime -> RawConnParams
-[rcpStripes] :: RawConnParams -> !Maybe Int
-[rcpConns] :: RawConnParams -> !Maybe Int
-[rcpIdleTime] :: RawConnParams -> !Maybe Int
 
--- | Time from connection creation after which to destroy a connection and
---   choose a different/new one.
-[rcpConnLifetime] :: RawConnParams -> !Maybe NominalDiffTime
-[rcpAllowPrepare] :: RawConnParams -> !Maybe Bool
+-- | Raw HGE Options from the arg parser and the env.
+data HGEOptionsRaw impl
+HGEOptionsRaw :: PostgresConnInfo (Maybe PostgresRawConnInfo) -> Maybe String -> HGECommand impl -> HGEOptionsRaw impl
+[_horDatabaseUrl] :: HGEOptionsRaw impl -> PostgresConnInfo (Maybe PostgresRawConnInfo)
+[_horMetadataDbUrl] :: HGEOptionsRaw impl -> Maybe String
+[_horCommand] :: HGEOptionsRaw impl -> HGECommand impl
+horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
+horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
+horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
 
--- | See <tt>HASURA_GRAPHQL_PG_POOL_TIMEOUT</tt>
-[rcpPoolTimeout] :: RawConnParams -> !Maybe NominalDiffTime
-type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
+-- | The final processed HGE options.
+data HGEOptions impl
+HGEOptions :: PostgresConnInfo (Maybe UrlConf) -> Maybe String -> HGECommand impl -> HGEOptions impl
+[_hoDatabaseUrl] :: HGEOptions impl -> PostgresConnInfo (Maybe UrlConf)
+[_hoMetadataDbUrl] :: HGEOptions impl -> Maybe String
+[_hoCommand] :: HGEOptions impl -> HGECommand impl
+hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
 
--- | Sleep time interval for recurring activities such as
---   (<tt><tt>asyncActionsProcessor</tt>) Presently
---   </tt><a>msToOptionalInterval</a> interprets `0` as Skip.
-data OptionalInterval
+-- | Postgres connection info tupled with a retry count.
+--   
+--   In practice, the <tt>a</tt> here is one of the following: 1. 'Maybe
+--   PostgresRawConnInfo' 2. 'Maybe UrlConf' 3. 'Maybe Text' 4. 'Maybe
+--   DatabaseUrl' where <tt>DatabaseUrl</tt> is an alias for <a>Text</a>
+--   
+--   If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
+--   processed your arg parser results.
+data PostgresConnInfo a
+PostgresConnInfo :: a -> Maybe Int -> PostgresConnInfo a
+[_pciDatabaseConn] :: PostgresConnInfo a -> a
+[_pciRetries] :: PostgresConnInfo a -> Maybe Int
+pciDatabaseConn :: Lens' (PostgresConnInfo a) a
+pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
 
--- | No polling
-Skip :: OptionalInterval
+-- | Postgres Connection info can come in the form of a templated URI
+--   string or structured data.
+data PostgresRawConnInfo
+PGConnDatabaseUrl :: URLTemplate -> PostgresRawConnInfo
+PGConnDetails :: PostgresRawConnDetails -> PostgresRawConnInfo
+mkUrlConnInfo :: String -> PostgresRawConnInfo
+_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
+_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
+rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
 
--- | Interval time
-Interval :: !Milliseconds -> OptionalInterval
-msToOptionalInterval :: Milliseconds -> OptionalInterval
-data API
-METADATA :: API
-GRAPHQL :: API
-PGDUMP :: API
-DEVELOPER :: API
-CONFIG :: API
-METRICS :: API
+-- | Structured Postgres connection information as provided by the arg
+--   parser or env vars.
+data PostgresRawConnDetails
+PostgresRawConnDetails :: String -> Int -> String -> String -> String -> Maybe String -> PostgresRawConnDetails
+[connHost] :: PostgresRawConnDetails -> String
+[connPort] :: PostgresRawConnDetails -> Int
+[connUser] :: PostgresRawConnDetails -> String
+[connPassword] :: PostgresRawConnDetails -> String
+[connDatabase] :: PostgresRawConnDetails -> String
+[connOptions] :: PostgresRawConnDetails -> Maybe String
+rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
+
+-- | The HGE Arg parser Command choices.
+--   
+--   This is polymorphic so that we can pack either <a>RawServeOptions</a>
+--   or <tt>RawProServeOptions</tt> in it.
+data HGECommand a
+HCServe :: a -> HGECommand a
+HCExport :: HGECommand a
+HCClean :: HGECommand a
+HCVersion :: HGECommand a
+HCDowngrade :: !DowngradeOptions -> HGECommand a
+_HCServe :: Prism' (HGECommand a) a
 
 -- | The Serve Command options accumulated from the arg parser and env.
 data RawServeOptions impl
@@ -30027,16 +30061,42 @@ RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe T
 
 -- | stores global default naming convention
 [rsoDefaultNamingConvention] :: RawServeOptions impl -> Maybe NamingCase
+data API
+METADATA :: API
+GRAPHQL :: API
+PGDUMP :: API
+DEVELOPER :: API
+CONFIG :: API
+METRICS :: API
+type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
--- | @<a>ResponseInternalErrorsConfig</a> represents the encoding of the
---   internal errors in the response to the client. See the github comment
---   <a>https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705</a>
---   for more details.
-data ResponseInternalErrorsConfig
-InternalErrorsAllRequests :: ResponseInternalErrorsConfig
-InternalErrorsAdminOnly :: ResponseInternalErrorsConfig
-InternalErrorsDisabled :: ResponseInternalErrorsConfig
-shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
+-- | Sleep time interval for recurring activities such as
+--   (<tt><tt>asyncActionsProcessor</tt>) Presently
+--   </tt><a>msToOptionalInterval</a> interprets `0` as Skip.
+data OptionalInterval
+
+-- | No polling
+Skip :: OptionalInterval
+
+-- | Interval time
+Interval :: !Milliseconds -> OptionalInterval
+msToOptionalInterval :: Milliseconds -> OptionalInterval
+
+-- | The Raw configuration data from the Arg and Env parsers needed to
+--   construct a <a>ConnParams</a>
+data RawConnParams
+RawConnParams :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe NominalDiffTime -> Maybe Bool -> Maybe NominalDiffTime -> RawConnParams
+[rcpStripes] :: RawConnParams -> Maybe Int
+[rcpConns] :: RawConnParams -> Maybe Int
+[rcpIdleTime] :: RawConnParams -> Maybe Int
+
+-- | Time from connection creation after which to destroy a connection and
+--   choose a different/new one.
+[rcpConnLifetime] :: RawConnParams -> Maybe NominalDiffTime
+[rcpAllowPrepare] :: RawConnParams -> Maybe Bool
+
+-- | See <tt>HASURA_GRAPHQL_PG_POOL_TIMEOUT</tt>
+[rcpPoolTimeout] :: RawConnParams -> Maybe NominalDiffTime
 newtype KeepAliveDelay
 KeepAliveDelay :: Seconds -> KeepAliveDelay
 [unKeepAliveDelay] :: KeepAliveDelay -> Seconds
@@ -30091,95 +30151,22 @@ ServeOptions :: Int -> HostPreference -> ConnParams -> TxIsolation -> HashSet Ad
 [soEnableMetadataQueryLogging] :: ServeOptions impl -> MetadataQueryLoggingMode
 [soDefaultNamingConvention] :: ServeOptions impl -> Maybe NamingCase
 
+-- | @<a>ResponseInternalErrorsConfig</a> represents the encoding of the
+--   internal errors in the response to the client. See the github comment
+--   <a>https://github.com/hasura/graphql-engine/issues/4031#issuecomment-609747705</a>
+--   for more details.
+data ResponseInternalErrorsConfig
+InternalErrorsAllRequests :: ResponseInternalErrorsConfig
+InternalErrorsAdminOnly :: ResponseInternalErrorsConfig
+InternalErrorsDisabled :: ResponseInternalErrorsConfig
+shouldIncludeInternal :: RoleName -> ResponseInternalErrorsConfig -> Bool
+
 -- | The Downgrade Command options. These are only sourced from the Arg
 --   Parser and are used directly in <a>Migrate</a>.
 data DowngradeOptions
 DowngradeOptions :: !Text -> !Bool -> DowngradeOptions
 [dgoTargetVersion] :: DowngradeOptions -> !Text
 [dgoDryRun] :: DowngradeOptions -> !Bool
-
--- | Postgres connection info tupled with a retry count.
---   
---   The <tt>a</tt> here is one of the following: 1. 'Maybe
---   PostgresRawConnInfo' 2. 'Maybe UrlConf' 3. 'Maybe Text' 4. 'Maybe
---   DatabaseUrl' where <tt>DatabaseUrl</tt> is an alias for <a>Text</a>
---   
---   If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
---   processed your arg parser results.
-data PostgresConnInfo a
-PostgresConnInfo :: !a -> !Maybe Int -> PostgresConnInfo a
-[_pciDatabaseConn] :: PostgresConnInfo a -> !a
-[_pciRetries] :: PostgresConnInfo a -> !Maybe Int
-pciDatabaseConn :: Lens' (PostgresConnInfo a) a
-pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
-
--- | Postgres Connection info can come in the form of a templated URI
---   string or structured data.
-data PostgresRawConnInfo
-PGConnDatabaseUrl :: !URLTemplate -> PostgresRawConnInfo
-PGConnDetails :: !PostgresRawConnDetails -> PostgresRawConnInfo
-mkUrlConnInfo :: String -> PostgresRawConnInfo
-_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
-_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
-rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
-
--- | Structured Postgres connection information as provided by the arg
---   parser or env vars.
-data PostgresRawConnDetails
-PostgresRawConnDetails :: !String -> !Int -> !String -> !String -> !String -> !Maybe String -> PostgresRawConnDetails
-[connHost] :: PostgresRawConnDetails -> !String
-[connPort] :: PostgresRawConnDetails -> !Int
-[connUser] :: PostgresRawConnDetails -> !String
-[connPassword] :: PostgresRawConnDetails -> !String
-[connDatabase] :: PostgresRawConnDetails -> !String
-[connOptions] :: PostgresRawConnDetails -> !Maybe String
-rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
-
--- | HGE Options from the arg parser and the env.
-data HGEOptionsRaw impl
-HGEOptionsRaw :: !PostgresConnInfo (Maybe PostgresRawConnInfo) -> !Maybe String -> !HGECommand impl -> HGEOptionsRaw impl
-[_horDatabaseUrl] :: HGEOptionsRaw impl -> !PostgresConnInfo (Maybe PostgresRawConnInfo)
-[_horMetadataDbUrl] :: HGEOptionsRaw impl -> !Maybe String
-[_horCommand] :: HGEOptionsRaw impl -> !HGECommand impl
-horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
-horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
-horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
-
--- | The final processed HGE options.
-data HGEOptions impl
-HGEOptions :: !PostgresConnInfo (Maybe UrlConf) -> !Maybe String -> !HGECommand impl -> HGEOptions impl
-[_hoDatabaseUrl] :: HGEOptions impl -> !PostgresConnInfo (Maybe UrlConf)
-[_hoMetadataDbUrl] :: HGEOptions impl -> !Maybe String
-[_hoCommand] :: HGEOptions impl -> !HGECommand impl
-hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
-
--- | The HGE Arg parser Command choices.
---   
---   This is polymorphic so that we can pack either <a>RawServeOptions</a>
---   or <tt>RawProServeOptions</tt> in it.
-data HGECommand a
-HCServe :: !a -> HGECommand a
-HCExport :: HGECommand a
-HCClean :: HGECommand a
-HCVersion :: HGECommand a
-HCDowngrade :: !DowngradeOptions -> HGECommand a
-_HCServe :: Prism' (HGECommand a) a
-instance GHC.Classes.Eq Hasura.Server.Init.Config.RawConnParams
-instance GHC.Show.Show Hasura.Server.Init.Config.RawConnParams
-instance GHC.Classes.Eq Hasura.Server.Init.Config.OptionalInterval
-instance GHC.Show.Show Hasura.Server.Init.Config.OptionalInterval
-instance GHC.Generics.Generic Hasura.Server.Init.Config.API
-instance GHC.Read.Read Hasura.Server.Init.Config.API
-instance GHC.Classes.Eq Hasura.Server.Init.Config.API
-instance GHC.Show.Show Hasura.Server.Init.Config.API
-instance GHC.Classes.Eq Hasura.Server.Init.Config.ResponseInternalErrorsConfig
-instance GHC.Show.Show Hasura.Server.Init.Config.ResponseInternalErrorsConfig
-instance GHC.Show.Show Hasura.Server.Init.Config.KeepAliveDelay
-instance GHC.Classes.Eq Hasura.Server.Init.Config.KeepAliveDelay
-instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
-instance GHC.Classes.Eq Hasura.Server.Init.Config.WSConnectionInitTimeout
-instance GHC.Classes.Eq Hasura.Server.Init.Config.DowngradeOptions
-instance GHC.Show.Show Hasura.Server.Init.Config.DowngradeOptions
 instance Data.Traversable.Traversable Hasura.Server.Init.Config.PostgresConnInfo
 instance Data.Foldable.Foldable Hasura.Server.Init.Config.PostgresConnInfo
 instance GHC.Base.Functor Hasura.Server.Init.Config.PostgresConnInfo
@@ -30190,19 +30177,35 @@ instance GHC.Read.Read Hasura.Server.Init.Config.PostgresRawConnDetails
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnDetails
 instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnInfo
 instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnInfo
+instance GHC.Generics.Generic Hasura.Server.Init.Config.API
+instance GHC.Read.Read Hasura.Server.Init.Config.API
+instance GHC.Classes.Eq Hasura.Server.Init.Config.API
+instance GHC.Show.Show Hasura.Server.Init.Config.API
+instance GHC.Classes.Eq Hasura.Server.Init.Config.OptionalInterval
+instance GHC.Show.Show Hasura.Server.Init.Config.OptionalInterval
+instance GHC.Classes.Eq Hasura.Server.Init.Config.RawConnParams
+instance GHC.Show.Show Hasura.Server.Init.Config.RawConnParams
+instance GHC.Show.Show Hasura.Server.Init.Config.KeepAliveDelay
+instance GHC.Classes.Eq Hasura.Server.Init.Config.KeepAliveDelay
+instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
+instance GHC.Classes.Eq Hasura.Server.Init.Config.WSConnectionInitTimeout
+instance GHC.Classes.Eq Hasura.Server.Init.Config.ResponseInternalErrorsConfig
+instance GHC.Show.Show Hasura.Server.Init.Config.ResponseInternalErrorsConfig
+instance GHC.Classes.Eq Hasura.Server.Init.Config.DowngradeOptions
+instance GHC.Show.Show Hasura.Server.Init.Config.DowngradeOptions
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Server.Init.Config.HGECommand a)
 instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.HGECommand a)
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.PostgresRawConnDetails
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.PostgresRawConnDetails
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.WSConnectionInitTimeout
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.KeepAliveDelay
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.KeepAliveDelay
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.OptionalInterval
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.OptionalInterval
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.API
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.API
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.OptionalInterval
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.OptionalInterval
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.PostgresRawConnDetails
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.PostgresRawConnDetails
 
 module Hasura.Server.Init.Logging
 censorQueryItem :: Text -> QueryItem -> QueryItem
