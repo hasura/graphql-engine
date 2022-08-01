@@ -1,33 +1,61 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@features/Datasources/useTableRelationships hook should return success when all the correct paramters are passed for a mssql table 1`] = `
+exports[`@features/Datasources/useTableRelationships hook should return success when all the correct parameters are passed for a mssql table 1`] = `
 Array [
   Object {
     "from": Object {
       "column": Array [
-        "AlbumId",
+        "category_id",
       ],
-      "table": "Track",
+      "table": "products",
     },
     "to": Object {
       "column": Array [
-        "AlbumId",
+        "category_id",
       ],
-      "table": "Album",
+      "table": "categories",
     },
   },
   Object {
     "from": Object {
       "column": Array [
-        "ArtistId",
+        "brand_id",
       ],
-      "table": "Album",
+      "table": "products",
     },
     "to": Object {
       "column": Array [
-        "ArtistId",
+        "brand_id",
       ],
-      "table": "Artist",
+      "table": "brands",
+    },
+  },
+  Object {
+    "from": Object {
+      "column": Array [
+        "product_id",
+      ],
+      "table": "order_items",
+    },
+    "to": Object {
+      "column": Array [
+        "product_id",
+      ],
+      "table": "products",
+    },
+  },
+  Object {
+    "from": Object {
+      "column": Array [
+        "product_id",
+      ],
+      "table": "stocks",
+    },
+    "to": Object {
+      "column": Array [
+        "product_id",
+      ],
+      "table": "products",
     },
   },
 ]

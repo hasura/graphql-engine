@@ -111,7 +111,7 @@ describe('@features/Datasources/useTableRelationships hook', () => {
     expect(result.current.data).toMatchSnapshot();
   });
 
-  it('should return success when all the correct paramters are passed for a mssql table', async () => {
+  it('should return success when all the correct parameters are passed for a mssql table', async () => {
     const { result, waitFor } = renderHook(
       () =>
         useTableRelationships({

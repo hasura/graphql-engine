@@ -2,7 +2,6 @@ import { DataTarget } from '@/features/Datasources';
 
 import type { QualifiedTable } from '@/metadata/types';
 import { MetadataSelector } from './metadataSelectors';
-
 import { useMetadata } from './useMetadata';
 
 export const useMetadataTables = (dataSource: string) => {
