@@ -2,8 +2,8 @@ import React from 'react';
 import ReactJson from 'react-json-view';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { Story, Meta } from '@storybook/react';
-import { handlers } from '../mocks/handlers.mock';
-import { useSuggestedRelationships } from '../useSuggestedRelationships';
+import { handlers } from '../hooks/mocks/handlers.mock';
+import { useSuggestedRelationships } from './useSuggestedRelationships';
 
 const target = {
   database: 'default',

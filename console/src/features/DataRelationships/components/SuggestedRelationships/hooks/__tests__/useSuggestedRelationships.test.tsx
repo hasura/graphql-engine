@@ -5,7 +5,7 @@ import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Provider } from 'react-redux';
-import { store } from '../../../../store';
+import { store } from '../../../../../../store';
 
 import {
   ExistingRelationships,
