@@ -1,5 +1,4 @@
 {-# LANGUAGE PolyKinds #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Data.GADT.Compare.Extended
   ( module Data.GADT.Compare,
@@ -9,14 +8,7 @@ module Data.GADT.Compare.Extended
 where
 
 import "some" Data.GADT.Compare
-import Type.Reflection
 import Prelude
-
-instance GEq ((:~~:) a) where
-  geq HRefl HRefl = Just Refl
-
-instance GCompare ((:~~:) a) where
-  gcompare HRefl HRefl = GEQ
 
 strengthenOrdering :: Ordering -> GOrdering a a
 strengthenOrdering LT = GLT
