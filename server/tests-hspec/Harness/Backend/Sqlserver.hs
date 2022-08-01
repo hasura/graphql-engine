@@ -128,7 +128,7 @@ scalarType = \case
   Schema.TInt -> "INT"
   Schema.TStr -> "NVARCHAR(127)"
   Schema.TUTCTime -> "DATETIME"
-  Schema.TBool -> "BOOLEAN"
+  Schema.TBool -> "BIT"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstMssql
 
 mkColumn :: Schema.Column -> Text
