@@ -1244,7 +1244,6 @@ test-suite tests-hspec
     Test.DataConnector.AggregateQuerySpec
     Test.DataConnector.QuerySpec
     Test.DataConnector.SelectPermissionsSpec
-    Test.DirectivesSpec
     Test.DisableRootFields.Common
     Test.DisableRootFields.DefaultRootFieldsSpec
     Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipSpec
@@ -1267,6 +1266,10 @@ test-suite tests-hspec
     Test.NestedRelationshipsSpec
     Test.ObjectRelationshipsLimitSpec
     Test.Postgres.TimestampSpec
+    Test.Queries.DirectivesSpec
+    Test.Queries.Directives.IncludeSpec
+    Test.Queries.Directives.IncludeAndSkipSpec
+    Test.Queries.Directives.SkipSpec
     Test.Queries.FilterSearchSpec
     Test.Queries.SortSpec
     Test.Queries.Paginate.LimitSpec
