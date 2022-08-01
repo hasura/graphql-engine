@@ -16,25 +16,25 @@ module Hasura.Server.Init.Config
     pciRetries,
 
     -- * PostgresRawConnInfo
-    PostgresRawConnInfo (..),
+    PostgresConnInfoRaw (..),
     _PGConnDatabaseUrl,
     _PGConnDetails,
     mkUrlConnInfo,
 
     -- * PostgresRawConnDetails
-    PostgresRawConnDetails (..),
+    PostgresConnDetailsRaw (..),
 
     -- * HGECommand
     HGECommand (..),
     _HCServe,
 
-    -- * RawServeOptions
-    RawServeOptions (..),
+    -- * ServeOptionsRaw
+    ServeOptionsRaw (..),
     API (..),
     KeepAliveDelay (..),
     OptionalInterval (..),
-    RawAuthHook,
-    RawConnParams (..),
+    AuthHookRaw,
+    ConnParamsRaw (..),
     ResponseInternalErrorsConfig (..),
     WSConnectionInitTimeout (..),
     defaultKeepAliveDelay,
@@ -47,7 +47,7 @@ module Hasura.Server.Init.Config
     -- * ServeOptions
     ServeOptions (..),
 
-    -- * DowngradeOptions
+    -- * Downgrade Options
     DowngradeOptions (..),
   )
 where
@@ -80,12 +80,12 @@ import Network.WebSockets qualified as WebSockets
 
 -- | Raw HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl = HGEOptionsRaw
-  { _horDatabaseUrl :: PostgresConnInfo (Maybe PostgresRawConnInfo),
+  { _horDatabaseUrl :: PostgresConnInfo (Maybe PostgresConnInfoRaw),
     _horMetadataDbUrl :: Maybe String,
     _horCommand :: HGECommand impl
   }
 
-horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
+horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 horDatabaseUrl = Lens.lens _horDatabaseUrl $ \hdu a -> hdu {_horDatabaseUrl = a}
 
 horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
@@ -111,12 +111,12 @@ hoCommand = Lens.lens _hoCommand $ \hdu a -> hdu {_hoCommand = a}
 -- | Postgres connection info tupled with a retry count.
 --
 -- In practice, the @a@ here is one of the following:
--- 1. 'Maybe PostgresRawConnInfo'
+-- 1. 'Maybe PostgresConnInfoRaw'
 -- 2. 'Maybe UrlConf'
 -- 3. 'Maybe Text'
 -- 4. 'Maybe DatabaseUrl' where 'DatabaseUrl' is an alias for 'Text'
 --
--- If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
+-- If it contains a 'Maybe PostgresConnInfoRaw' then you have not yet
 -- processed your arg parser results.
 data PostgresConnInfo a = PostgresConnInfo
   { _pciDatabaseConn :: a,
@@ -134,25 +134,25 @@ pciRetries = Lens.lens _pciRetries $ \pci mi -> pci {_pciRetries = mi}
 
 -- | Postgres Connection info can come in the form of a templated URI
 -- string or structured data.
-data PostgresRawConnInfo
+data PostgresConnInfoRaw
   = PGConnDatabaseUrl Template.URLTemplate
-  | PGConnDetails PostgresRawConnDetails
+  | PGConnDetails PostgresConnDetailsRaw
   deriving (Show, Eq)
 
-mkUrlConnInfo :: String -> PostgresRawConnInfo
+mkUrlConnInfo :: String -> PostgresConnInfoRaw
 mkUrlConnInfo = PGConnDatabaseUrl . Template.mkPlainURLTemplate . Text.pack
 
-_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo Template.URLTemplate
+_PGConnDatabaseUrl :: Prism' PostgresConnInfoRaw Template.URLTemplate
 _PGConnDatabaseUrl = Lens.prism' PGConnDatabaseUrl $ \case
   PGConnDatabaseUrl template -> Just template
   PGConnDetails _ -> Nothing
 
-_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
+_PGConnDetails :: Prism' PostgresConnInfoRaw PostgresConnDetailsRaw
 _PGConnDetails = Lens.prism' PGConnDetails $ \case
   PGConnDatabaseUrl _ -> Nothing
   PGConnDetails prcd -> Just prcd
 
-rawConnDetailsToUrl :: PostgresRawConnDetails -> Template.URLTemplate
+rawConnDetailsToUrl :: PostgresConnDetailsRaw -> Template.URLTemplate
 rawConnDetailsToUrl =
   Template.mkPlainURLTemplate . rawConnDetailsToUrlText
 
@@ -160,7 +160,7 @@ rawConnDetailsToUrl =
 
 -- | Structured Postgres connection information as provided by the arg
 -- parser or env vars.
-data PostgresRawConnDetails = PostgresRawConnDetails
+data PostgresConnDetailsRaw = PostgresConnDetailsRaw
   { connHost :: String,
     connPort :: Int,
     connUser :: String,
@@ -170,18 +170,18 @@ data PostgresRawConnDetails = PostgresRawConnDetails
   }
   deriving (Eq, Read, Show)
 
-instance FromJSON PostgresRawConnDetails where
-  parseJSON = Aeson.withObject "PostgresRawConnDetails" \o -> do
+instance FromJSON PostgresConnDetailsRaw where
+  parseJSON = Aeson.withObject "PostgresConnDetailsRaw" \o -> do
     connHost <- o Aeson..: "host"
     connPort <- o Aeson..: "port"
     connUser <- o Aeson..: "user"
     connPassword <- o Aeson..: "password"
     connDatabase <- o Aeson..: "database"
     connOptions <- o Aeson..:? "options"
-    pure $ PostgresRawConnDetails {..}
+    pure $ PostgresConnDetailsRaw {..}
 
-instance ToJSON PostgresRawConnDetails where
-  toJSON PostgresRawConnDetails {..} =
+instance ToJSON PostgresConnDetailsRaw where
+  toJSON PostgresConnDetailsRaw {..} =
     Aeson.object $
       [ "host" Aeson..= connHost,
         "port" Aeson..= connPort,
@@ -191,8 +191,8 @@ instance ToJSON PostgresRawConnDetails where
       ]
         <> catMaybes [fmap ("options" Aeson..=) connOptions]
 
-rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
-rawConnDetailsToUrlText PostgresRawConnDetails {..} =
+rawConnDetailsToUrlText :: PostgresConnDetailsRaw -> Text
+rawConnDetailsToUrlText PostgresConnDetailsRaw {..} =
   Text.pack $
     "postgresql://" <> connUser
       <> ":"
@@ -209,8 +209,8 @@ rawConnDetailsToUrlText PostgresRawConnDetails {..} =
 
 -- | The HGE Arg parser Command choices.
 --
--- This is polymorphic so that we can pack either 'RawServeOptions' or
--- 'RawProServeOptions' in it.
+-- This is polymorphic so that we can pack either 'ServeOptionsRaw' or
+-- 'ProServeOptionsRaw' in it.
 data HGECommand a
   = HCServe a
   | HCExport
@@ -227,13 +227,13 @@ _HCServe = Lens.prism' HCServe \case
 --------------------------------------------------------------------------------
 
 -- | The Serve Command options accumulated from the arg parser and env.
-data RawServeOptions impl = RawServeOptions
+data ServeOptionsRaw impl = ServeOptionsRaw
   { rsoPort :: Maybe Int,
     rsoHost :: Maybe Warp.HostPreference,
-    rsoConnParams :: RawConnParams,
+    rsoConnParams :: ConnParamsRaw,
     rsoTxIso :: Maybe Q.TxIsolation,
     rsoAdminSecret :: Maybe Auth.AdminSecretHash,
-    rsoAuthHook :: RawAuthHook,
+    rsoAuthHook :: AuthHookRaw,
     rsoJwtSecret :: Maybe Auth.JWTConfig,
     rsoUnAuthRole :: Maybe Session.RoleName,
     rsoCorsConfig :: Maybe Cors.CorsConfig,
@@ -304,7 +304,7 @@ instance ToJSON API where
 instance Hashable API
 
 -- TODO(SOLOMON): Monomorphize
-type RawAuthHook = Auth.AuthHookG (Maybe Text) (Maybe Auth.AuthHookType)
+type AuthHookRaw = Auth.AuthHookG (Maybe Text) (Maybe Auth.AuthHookType)
 
 -- | Sleep time interval for recurring activities such as (@'asyncActionsProcessor')
 --   Presently @'msToOptionalInterval' interprets `0` as Skip.
@@ -330,7 +330,7 @@ instance ToJSON OptionalInterval where
 
 -- | The Raw configuration data from the Arg and Env parsers needed to
 -- construct a 'Q.ConnParams'
-data RawConnParams = RawConnParams
+data ConnParamsRaw = ConnParamsRaw
   { rcpStripes :: Maybe Int,
     rcpConns :: Maybe Int,
     rcpIdleTime :: Maybe Int,

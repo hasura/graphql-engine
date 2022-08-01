@@ -76,7 +76,7 @@ mainParserSpec =
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
-    Hspec.it "Accepts PostgresRawConnDetails flags" $ do
+    Hspec.it "Accepts PostgressConnDetailsRaw flags" $ do
       let -- Given
           parserInfo = Opt.info (UUT.parseHgeOpts @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
@@ -102,7 +102,7 @@ mainParserSpec =
         Opt.Success template ->
           template
             == Just
-              ( UUT.PostgresRawConnDetails
+              ( UUT.PostgresConnDetailsRaw
                   { connHost = "localhost",
                     connPort = 22,
                     connUser = "user",
@@ -366,7 +366,7 @@ serveParserSpec =
         Opt.Failure _pf -> pure ()
         Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
 
-    Hspec.it "It accepts the flags for a 'RawConnParams'" $ do
+    Hspec.it "It accepts the flags for a 'ConnParamsRaw'" $ do
       let -- Given
           parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
           -- When
@@ -375,7 +375,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoConnParams result `Hspec.shouldSatisfy` \case
-        Opt.Success rawConnParams -> rawConnParams == UUT.RawConnParams (Just 3) (Just 2) (Just 40) (Just 400) (Just True) (Just 45)
+        Opt.Success rawConnParams -> rawConnParams == UUT.ConnParamsRaw (Just 3) (Just 2) (Just 40) (Just 400) (Just True) (Just 45)
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 
