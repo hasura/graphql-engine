@@ -30,99 +30,99 @@
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="hs-comment">-- | The Main Arg Parser. It constructs a 'Config.HGEOptionsRaw' term:</span><span>
 </span><span id="line-32"></span><span class="hs-comment">--</span><span>
-</span><span id="line-33"></span><span class="hs-comment">-- 1. '(Config.PostgresConnInfo (Maybe PostgresRawConnInfo))' - The DB connection.</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- 1. '(Config.PostgresConnInfo (Maybe PostgresConnInfoRaw))' - The DB connection.</span><span>
 </span><span id="line-34"></span><span class="hs-comment">-- 2: 'Maybe String' - Representing the metadata connection.</span><span>
 </span><span id="line-35"></span><span class="hs-comment">-- 3: 'Config.HGECommand' @a@ - The result of the supplied Subcommand.</span><span>
-</span><span id="line-36"></span><span id="local-6989586621689545343"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-type">parseHgeOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545343"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">Config.HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-type">Config.RawServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545343"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
-</span><span id="line-37"></span><span id="parseHgeOpts"><span class="annot"><span class="annottext">parseHgeOpts :: Parser (HGEOptionsRaw (RawServeOptions impl))
+</span><span id="line-36"></span><span id="local-6989586621689545343"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-type">parseHgeOpts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545343"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">Config.HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">Config.ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545343"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-37"></span><span id="parseHgeOpts"><span class="annot"><span class="annottext">parseHgeOpts :: Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-var hs-var">parseHgeOpts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresRawConnInfo)
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresConnInfoRaw)
 -&gt; Maybe String
--&gt; HGECommand (RawServeOptions impl)
--&gt; HGEOptionsRaw (RawServeOptions impl)
+-&gt; HGECommand (ServeOptionsRaw impl)
+-&gt; HGEOptionsRaw (ServeOptionsRaw impl)
 forall impl.
-PostgresConnInfo (Maybe PostgresRawConnInfo)
+PostgresConnInfo (Maybe PostgresConnInfoRaw)
 -&gt; Maybe String -&gt; HGECommand impl -&gt; HGEOptionsRaw impl
-</span><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-var">Config.HGEOptionsRaw</span></a></span><span> </span><span class="annot"><span class="annottext">(PostgresConnInfo (Maybe PostgresRawConnInfo)
+</span><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-var">Config.HGEOptionsRaw</span></a></span><span> </span><span class="annot"><span class="annottext">(PostgresConnInfo (Maybe PostgresConnInfoRaw)
  -&gt; Maybe String
- -&gt; HGECommand (RawServeOptions impl)
- -&gt; HGEOptionsRaw (RawServeOptions impl))
--&gt; Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
+ -&gt; HGECommand (ServeOptionsRaw impl)
+ -&gt; HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 -&gt; Parser
      (Maybe String
-      -&gt; HGECommand (RawServeOptions impl)
-      -&gt; HGEOptionsRaw (RawServeOptions impl))
+      -&gt; HGECommand (ServeOptionsRaw impl)
+      -&gt; HGEOptionsRaw (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 </span><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-var">parsePostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe String
-   -&gt; HGECommand (RawServeOptions impl)
-   -&gt; HGEOptionsRaw (RawServeOptions impl))
+   -&gt; HGECommand (ServeOptionsRaw impl)
+   -&gt; HGEOptionsRaw (ServeOptionsRaw impl))
 -&gt; Parser (Maybe String)
 -&gt; Parser
-     (HGECommand (RawServeOptions impl)
-      -&gt; HGEOptionsRaw (RawServeOptions impl))
+     (HGECommand (ServeOptionsRaw impl)
+      -&gt; HGEOptionsRaw (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
 </span><a href="Hasura.Server.Init.Arg.html#parseMetadataDbUrl"><span class="hs-identifier hs-var">parseMetadataDbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
-  (HGECommand (RawServeOptions impl)
-   -&gt; HGEOptionsRaw (RawServeOptions impl))
--&gt; Parser (HGECommand (RawServeOptions impl))
--&gt; Parser (HGEOptionsRaw (RawServeOptions impl))
+  (HGECommand (ServeOptionsRaw impl)
+   -&gt; HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
+-&gt; Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
 forall impl.
 EnabledLogTypes impl =&gt;
-Parser (HGECommand (RawServeOptions impl))
+Parser (HGECommand (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-var">parseHGECommand</span></a></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span id="local-6989586621689545407"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-type">parseHGECommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545407"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">Config.HGECommand</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-type">Config.RawServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545407"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
-</span><span id="line-41"></span><span id="parseHGECommand"><span class="annot"><span class="annottext">parseHGECommand :: Parser (HGECommand (RawServeOptions impl))
+</span><span id="line-40"></span><span id="local-6989586621689545407"><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-type">parseHGECommand</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545407"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGECommand"><span class="hs-identifier hs-type">Config.HGECommand</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">Config.ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545407"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-41"></span><span id="parseHGECommand"><span class="annot"><span class="annottext">parseHGECommand :: Parser (HGECommand (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHGECommand"><span class="hs-identifier hs-var hs-var">parseHGECommand</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-42"></span><span>  </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Parser (HGECommand (RawServeOptions impl))
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall a. Mod CommandFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.subparser</span></span><span>
 </span><span id="line-43"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
 </span><span class="hs-identifier hs-var">Opt.command</span></span><span>
 </span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;serve&quot;</span></span><span>
-</span><span id="line-45"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
--&gt; InfoMod (HGECommand (RawServeOptions impl))
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
+</span><span id="line-45"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
+-&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
 </span><span class="hs-identifier hs-var">Opt.info</span></span><span>
 </span><span id="line-46"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser
-  (HGECommand (RawServeOptions impl)
-   -&gt; HGECommand (RawServeOptions impl))
+  (HGECommand (ServeOptionsRaw impl)
+   -&gt; HGECommand (ServeOptionsRaw impl))
 forall a. Parser (a -&gt; a)
 </span><span class="hs-identifier hs-var">Opt.helper</span></span><span> </span><span class="annot"><span class="annottext">Parser
-  (HGECommand (RawServeOptions impl)
-   -&gt; HGECommand (RawServeOptions impl))
--&gt; Parser (HGECommand (RawServeOptions impl))
--&gt; Parser (HGECommand (RawServeOptions impl))
+  (HGECommand (ServeOptionsRaw impl)
+   -&gt; HGECommand (ServeOptionsRaw impl))
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RawServeOptions impl -&gt; HGECommand (RawServeOptions impl)
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ServeOptionsRaw impl -&gt; HGECommand (ServeOptionsRaw impl)
 forall a. a -&gt; HGECommand a
-</span><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-var">Config.HCServe</span></a></span><span> </span><span class="annot"><span class="annottext">(RawServeOptions impl -&gt; HGECommand (RawServeOptions impl))
--&gt; Parser (RawServeOptions impl)
--&gt; Parser (HGECommand (RawServeOptions impl))
+</span><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-var">Config.HCServe</span></a></span><span> </span><span class="annot"><span class="annottext">(ServeOptionsRaw impl -&gt; HGECommand (ServeOptionsRaw impl))
+-&gt; Parser (ServeOptionsRaw impl)
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (RawServeOptions impl)
-forall impl. EnabledLogTypes impl =&gt; Parser (RawServeOptions impl)
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (ServeOptionsRaw impl)
+forall impl. EnabledLogTypes impl =&gt; Parser (ServeOptionsRaw impl)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-var">serveCommandParser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-47"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+</span><span id="line-47"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Start the GraphQL Engine Server&quot;</span></span><span>
-</span><span id="line-48"></span><span>                </span><span class="annot"><span class="annottext">InfoMod (HGECommand (RawServeOptions impl))
--&gt; InfoMod (HGECommand (RawServeOptions impl))
--&gt; InfoMod (HGECommand (RawServeOptions impl))
+</span><span id="line-48"></span><span>                </span><span class="annot"><span class="annottext">InfoMod (HGECommand (ServeOptionsRaw impl))
+-&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
+-&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; InfoMod (HGECommand (RawServeOptions impl))
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. Maybe Doc -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">Opt.footerDoc</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc -&gt; Maybe Doc
 forall a. a -&gt; Maybe a
@@ -130,112 +130,112 @@ forall a. a -&gt; Maybe a
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCmdFooter"><span class="hs-identifier hs-var">serveCmdFooter</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>        </span><span class="hs-special">)</span><span>
-</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
 </span><span class="hs-identifier hs-var">Opt.command</span></span><span>
 </span><span id="line-52"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;export&quot;</span></span><span>
-</span><span id="line-53"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
--&gt; InfoMod (HGECommand (RawServeOptions impl))
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
+</span><span id="line-53"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
+-&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
 </span><span class="hs-identifier hs-var">Opt.info</span></span><span>
-</span><span id="line-54"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
--&gt; Parser (HGECommand (RawServeOptions impl))
+</span><span id="line-54"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
 forall a. HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCExport"><span class="hs-identifier hs-var">Config.HCExport</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-55"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+</span><span id="line-55"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Export graphql-engine's metadata to stdout&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
 </span><span class="hs-identifier hs-var">Opt.command</span></span><span>
 </span><span id="line-58"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;clean&quot;</span></span><span>
-</span><span id="line-59"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
--&gt; InfoMod (HGECommand (RawServeOptions impl))
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
+</span><span id="line-59"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
+-&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
 </span><span class="hs-identifier hs-var">Opt.info</span></span><span>
-</span><span id="line-60"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
--&gt; Parser (HGECommand (RawServeOptions impl))
+</span><span id="line-60"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
 forall a. HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCClean"><span class="hs-identifier hs-var">Config.HCClean</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-61"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+</span><span id="line-61"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Clean graphql-engine's metadata to start afresh&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+</span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
 </span><span class="hs-identifier hs-var">Opt.command</span></span><span>
 </span><span id="line-64"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;downgrade&quot;</span></span><span>
-</span><span id="line-65"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
--&gt; InfoMod (HGECommand (RawServeOptions impl))
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
+</span><span id="line-65"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
+-&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
 </span><span class="hs-identifier hs-var">Opt.info</span></span><span>
-</span><span id="line-66"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; HGECommand (RawServeOptions impl)
+</span><span id="line-66"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DowngradeOptions -&gt; HGECommand (ServeOptionsRaw impl)
 forall a. DowngradeOptions -&gt; HGECommand a
-</span><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-var">Config.HCDowngrade</span></a></span><span> </span><span class="annot"><span class="annottext">(DowngradeOptions -&gt; HGECommand (RawServeOptions impl))
+</span><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-var">Config.HCDowngrade</span></a></span><span> </span><span class="annot"><span class="annottext">(DowngradeOptions -&gt; HGECommand (ServeOptionsRaw impl))
 -&gt; Parser DowngradeOptions
--&gt; Parser (HGECommand (RawServeOptions impl))
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser DowngradeOptions
 </span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeCommandParser"><span class="hs-identifier hs-var">downgradeCommandParser</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-67"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+</span><span id="line-67"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Downgrade the GraphQL Engine schema to the specified version&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>          </span><span class="hs-special">)</span><span>
-</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
--&gt; Mod CommandFields (HGECommand (RawServeOptions impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
+-&gt; Mod CommandFields (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; ParserInfo a -&gt; Mod CommandFields a
 </span><span class="hs-identifier hs-var">Opt.command</span></span><span>
 </span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;version&quot;</span></span><span>
-</span><span id="line-71"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (RawServeOptions impl))
--&gt; InfoMod (HGECommand (RawServeOptions impl))
--&gt; ParserInfo (HGECommand (RawServeOptions impl))
+</span><span id="line-71"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Parser (HGECommand (ServeOptionsRaw impl))
+-&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
+-&gt; ParserInfo (HGECommand (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
 </span><span class="hs-identifier hs-var">Opt.info</span></span><span>
-</span><span id="line-72"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
--&gt; Parser (HGECommand (RawServeOptions impl))
+</span><span id="line-72"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
+-&gt; Parser (HGECommand (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (RawServeOptions impl)
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
 forall a. HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCVersion"><span class="hs-identifier hs-var">Config.HCVersion</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-73"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (RawServeOptions impl))
+</span><span id="line-73"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGECommand (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">Opt.progDesc</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Prints the version of GraphQL Engine&quot;</span></span><span class="hs-special">)</span><span>
@@ -244,41 +244,41 @@ forall a. String -&gt; InfoMod a
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-type">parsePostgresConnInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">Config.PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnInfo"><span class="hs-identifier hs-type">Config.PostgresRawConnInfo</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-80"></span><span id="parsePostgresConnInfo"><span class="annot"><span class="annottext">parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
+</span><span id="line-79"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-type">parsePostgresConnInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">Config.PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfoRaw"><span class="hs-identifier hs-type">Config.PostgresConnInfoRaw</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span id="parsePostgresConnInfo"><span class="annot"><span class="annottext">parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 </span><a href="Hasura.Server.Init.Arg.html#parsePostgresConnInfo"><span class="hs-identifier hs-var hs-var">parsePostgresConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-81"></span><span>  </span><span id="local-6989586621689545325"><span class="annot"><span class="annottext">Maybe Int
 </span><a href="#local-6989586621689545325"><span class="hs-identifier hs-var">retries'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
 </span><a href="#local-6989586621689545324"><span class="hs-identifier hs-var">retries</span></a></span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621689545323"><span class="annot"><span class="annottext">Maybe PostgresRawConnInfo
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621689545323"><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
 </span><a href="#local-6989586621689545323"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-83"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(URLTemplate -&gt; PostgresRawConnInfo)
--&gt; Maybe URLTemplate -&gt; Maybe PostgresRawConnInfo
+</span><span id="line-83"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(URLTemplate -&gt; PostgresConnInfoRaw)
+-&gt; Maybe URLTemplate -&gt; Maybe PostgresConnInfoRaw
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; PostgresRawConnInfo
-</span><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-var">Config.PGConnDatabaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe URLTemplate -&gt; Maybe PostgresRawConnInfo)
--&gt; Parser (Maybe URLTemplate) -&gt; Parser (Maybe PostgresRawConnInfo)
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; PostgresConnInfoRaw
+</span><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-var">Config.PGConnDatabaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe URLTemplate -&gt; Maybe PostgresConnInfoRaw)
+-&gt; Parser (Maybe URLTemplate) -&gt; Parser (Maybe PostgresConnInfoRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe URLTemplate)
 </span><a href="Hasura.Server.Init.Arg.html#parseDatabaseUrl"><span class="hs-identifier hs-var">parseDatabaseUrl</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe PostgresRawConnInfo)
--&gt; Parser (Maybe PostgresRawConnInfo)
--&gt; Parser (Maybe PostgresRawConnInfo)
+</span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">Parser (Maybe PostgresConnInfoRaw)
+-&gt; Parser (Maybe PostgresConnInfoRaw)
+-&gt; Parser (Maybe PostgresConnInfoRaw)
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
-</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(PostgresRawConnDetails -&gt; PostgresRawConnInfo)
--&gt; Maybe PostgresRawConnDetails -&gt; Maybe PostgresRawConnInfo
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(PostgresConnDetailsRaw -&gt; PostgresConnInfoRaw)
+-&gt; Maybe PostgresConnDetailsRaw -&gt; Maybe PostgresConnInfoRaw
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">PostgresRawConnDetails -&gt; PostgresRawConnInfo
-</span><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-var">Config.PGConnDetails</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe PostgresRawConnDetails -&gt; Maybe PostgresRawConnInfo)
--&gt; Parser (Maybe PostgresRawConnDetails)
--&gt; Parser (Maybe PostgresRawConnInfo)
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">PostgresConnDetailsRaw -&gt; PostgresConnInfoRaw
+</span><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-var">Config.PGConnDetails</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe PostgresConnDetailsRaw -&gt; Maybe PostgresConnInfoRaw)
+-&gt; Parser (Maybe PostgresConnDetailsRaw)
+-&gt; Parser (Maybe PostgresConnInfoRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe PostgresRawConnDetails)
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe PostgresConnDetailsRaw)
 </span><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-var">parseRawConnDetails</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-85"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresRawConnInfo
--&gt; Maybe Int -&gt; PostgresConnInfo (Maybe PostgresRawConnInfo)
+</span><span id="line-85"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
+-&gt; Maybe Int -&gt; PostgresConnInfo (Maybe PostgresConnInfoRaw)
 forall a. a -&gt; Maybe Int -&gt; PostgresConnInfo a
-</span><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">Config.PostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresRawConnInfo
+</span><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">Config.PostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
 </span><a href="#local-6989586621689545323"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
 </span><a href="#local-6989586621689545325"><span class="hs-identifier hs-var">retries'</span></a></span><span>
 </span><span id="line-86"></span><span>  </span><span class="hs-keyword">where</span><span>
@@ -376,8 +376,8 @@ forall a b. (a, b) -&gt; b
 </span><span class="hs-string">&quot;Postgres database URL. Example postgres://foo:bar@example.com:2345/database&quot;</span></span><span>
 </span><span id="line-116"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span>
-</span><span id="line-118"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-type">parseRawConnDetails</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-type">Config.PostgresRawConnDetails</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-119"></span><span id="parseRawConnDetails"><span class="annot"><span class="annottext">parseRawConnDetails :: Parser (Maybe PostgresRawConnDetails)
+</span><span id="line-118"></span><span class="annot"><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-type">parseRawConnDetails</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnDetailsRaw"><span class="hs-identifier hs-type">Config.PostgresConnDetailsRaw</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span id="parseRawConnDetails"><span class="annot"><span class="annottext">parseRawConnDetails :: Parser (Maybe PostgresConnDetailsRaw)
 </span><a href="Hasura.Server.Init.Arg.html#parseRawConnDetails"><span class="hs-identifier hs-var hs-var">parseRawConnDetails</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-120"></span><span>  </span><span id="local-6989586621689545308"><span class="annot"><span class="annottext">Maybe String
 </span><a href="#local-6989586621689545308"><span class="hs-identifier hs-var">host'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser (Maybe String)
@@ -404,15 +404,15 @@ forall a b. (a, b) -&gt; b
 -&gt; String
 -&gt; String
 -&gt; Maybe String
--&gt; PostgresRawConnDetails
-</span><a href="Hasura.Server.Init.Config.html#PostgresRawConnDetails"><span class="hs-identifier hs-var">Config.PostgresRawConnDetails</span></a></span><span>
+-&gt; PostgresConnDetailsRaw
+</span><a href="Hasura.Server.Init.Config.html#PostgresConnDetailsRaw"><span class="hs-identifier hs-var">Config.PostgresConnDetailsRaw</span></a></span><span>
 </span><span id="line-128"></span><span>      </span><span class="annot"><span class="annottext">(String
  -&gt; Int
  -&gt; String
  -&gt; String
  -&gt; String
  -&gt; Maybe String
- -&gt; PostgresRawConnDetails)
+ -&gt; PostgresConnDetailsRaw)
 -&gt; Maybe String
 -&gt; Maybe
      (Int
@@ -420,7 +420,7 @@ forall a b. (a, b) -&gt; b
       -&gt; String
       -&gt; String
       -&gt; Maybe String
-      -&gt; PostgresRawConnDetails)
+      -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
 </span><a href="#local-6989586621689545308"><span class="hs-identifier hs-var">host'</span></a></span><span>
@@ -430,38 +430,38 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
    -&gt; String
    -&gt; String
    -&gt; Maybe String
-   -&gt; PostgresRawConnDetails)
+   -&gt; PostgresConnDetailsRaw)
 -&gt; Maybe Int
 -&gt; Maybe
      (String
-      -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+      -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Int
 </span><a href="#local-6989586621689545306"><span class="hs-identifier hs-var">port'</span></a></span><span>
 </span><span id="line-130"></span><span>      </span><span class="annot"><span class="annottext">Maybe
   (String
-   -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+   -&gt; String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 -&gt; Maybe String
 -&gt; Maybe
-     (String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+     (String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
 </span><a href="#local-6989586621689545304"><span class="hs-identifier hs-var">user'</span></a></span><span>
-</span><span id="line-131"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+</span><span id="line-131"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 -&gt; Maybe String
--&gt; Maybe (String -&gt; Maybe String -&gt; PostgresRawConnDetails)
+-&gt; Maybe (String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe String
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621689545302"><span class="hs-identifier hs-var">password'</span></a></span><span>
-</span><span id="line-132"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; Maybe String -&gt; PostgresRawConnDetails)
--&gt; Maybe String -&gt; Maybe (Maybe String -&gt; PostgresRawConnDetails)
+</span><span id="line-132"></span><span>      </span><span class="annot"><span class="annottext">Maybe (String -&gt; Maybe String -&gt; PostgresConnDetailsRaw)
+-&gt; Maybe String -&gt; Maybe (Maybe String -&gt; PostgresConnDetailsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String
 </span><a href="#local-6989586621689545300"><span class="hs-identifier hs-var">dbName'</span></a></span><span>
-</span><span id="line-133"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Maybe String -&gt; PostgresRawConnDetails)
--&gt; Maybe (Maybe String) -&gt; Maybe PostgresRawConnDetails
+</span><span id="line-133"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Maybe String -&gt; PostgresConnDetailsRaw)
+-&gt; Maybe (Maybe String) -&gt; Maybe PostgresConnDetailsRaw
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe String -&gt; Maybe (Maybe String)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a

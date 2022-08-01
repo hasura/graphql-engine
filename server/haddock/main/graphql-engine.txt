@@ -29951,11 +29951,11 @@ module Hasura.Server.Init.Config
 
 -- | Raw HGE Options from the arg parser and the env.
 data HGEOptionsRaw impl
-HGEOptionsRaw :: PostgresConnInfo (Maybe PostgresRawConnInfo) -> Maybe String -> HGECommand impl -> HGEOptionsRaw impl
-[_horDatabaseUrl] :: HGEOptionsRaw impl -> PostgresConnInfo (Maybe PostgresRawConnInfo)
+HGEOptionsRaw :: PostgresConnInfo (Maybe PostgresConnInfoRaw) -> Maybe String -> HGECommand impl -> HGEOptionsRaw impl
+[_horDatabaseUrl] :: HGEOptionsRaw impl -> PostgresConnInfo (Maybe PostgresConnInfoRaw)
 [_horMetadataDbUrl] :: HGEOptionsRaw impl -> Maybe String
 [_horCommand] :: HGEOptionsRaw impl -> HGECommand impl
-horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresRawConnInfo))
+horDatabaseUrl :: Lens' (HGEOptionsRaw impl) (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 horMetadataDbUrl :: Lens' (HGEOptionsRaw impl) (Maybe String)
 horCommand :: Lens' (HGEOptionsRaw impl) (HGECommand impl)
 
@@ -29970,10 +29970,10 @@ hoCommand :: Lens' (HGEOptions impl) (HGECommand impl)
 -- | Postgres connection info tupled with a retry count.
 --   
 --   In practice, the <tt>a</tt> here is one of the following: 1. 'Maybe
---   PostgresRawConnInfo' 2. 'Maybe UrlConf' 3. 'Maybe Text' 4. 'Maybe
+--   PostgresConnInfoRaw' 2. 'Maybe UrlConf' 3. 'Maybe Text' 4. 'Maybe
 --   DatabaseUrl' where <tt>DatabaseUrl</tt> is an alias for <a>Text</a>
 --   
---   If it contains a 'Maybe PostgresRawConnInfo' then you have not yet
+--   If it contains a 'Maybe PostgresConnInfoRaw' then you have not yet
 --   processed your arg parser results.
 data PostgresConnInfo a
 PostgresConnInfo :: a -> Maybe Int -> PostgresConnInfo a
@@ -29984,30 +29984,30 @@ pciRetries :: Lens' (PostgresConnInfo a) (Maybe Int)
 
 -- | Postgres Connection info can come in the form of a templated URI
 --   string or structured data.
-data PostgresRawConnInfo
-PGConnDatabaseUrl :: URLTemplate -> PostgresRawConnInfo
-PGConnDetails :: PostgresRawConnDetails -> PostgresRawConnInfo
-mkUrlConnInfo :: String -> PostgresRawConnInfo
-_PGConnDatabaseUrl :: Prism' PostgresRawConnInfo URLTemplate
-_PGConnDetails :: Prism' PostgresRawConnInfo PostgresRawConnDetails
-rawConnDetailsToUrl :: PostgresRawConnDetails -> URLTemplate
+data PostgresConnInfoRaw
+PGConnDatabaseUrl :: URLTemplate -> PostgresConnInfoRaw
+PGConnDetails :: PostgresConnDetailsRaw -> PostgresConnInfoRaw
+mkUrlConnInfo :: String -> PostgresConnInfoRaw
+_PGConnDatabaseUrl :: Prism' PostgresConnInfoRaw URLTemplate
+_PGConnDetails :: Prism' PostgresConnInfoRaw PostgresConnDetailsRaw
+rawConnDetailsToUrl :: PostgresConnDetailsRaw -> URLTemplate
 
 -- | Structured Postgres connection information as provided by the arg
 --   parser or env vars.
-data PostgresRawConnDetails
-PostgresRawConnDetails :: String -> Int -> String -> String -> String -> Maybe String -> PostgresRawConnDetails
-[connHost] :: PostgresRawConnDetails -> String
-[connPort] :: PostgresRawConnDetails -> Int
-[connUser] :: PostgresRawConnDetails -> String
-[connPassword] :: PostgresRawConnDetails -> String
-[connDatabase] :: PostgresRawConnDetails -> String
-[connOptions] :: PostgresRawConnDetails -> Maybe String
-rawConnDetailsToUrlText :: PostgresRawConnDetails -> Text
+data PostgresConnDetailsRaw
+PostgresConnDetailsRaw :: String -> Int -> String -> String -> String -> Maybe String -> PostgresConnDetailsRaw
+[connHost] :: PostgresConnDetailsRaw -> String
+[connPort] :: PostgresConnDetailsRaw -> Int
+[connUser] :: PostgresConnDetailsRaw -> String
+[connPassword] :: PostgresConnDetailsRaw -> String
+[connDatabase] :: PostgresConnDetailsRaw -> String
+[connOptions] :: PostgresConnDetailsRaw -> Maybe String
+rawConnDetailsToUrlText :: PostgresConnDetailsRaw -> Text
 
 -- | The HGE Arg parser Command choices.
 --   
---   This is polymorphic so that we can pack either <a>RawServeOptions</a>
---   or <tt>RawProServeOptions</tt> in it.
+--   This is polymorphic so that we can pack either <a>ServeOptionsRaw</a>
+--   or <tt>ProServeOptionsRaw</tt> in it.
 data HGECommand a
 HCServe :: a -> HGECommand a
 HCExport :: HGECommand a
@@ -30017,50 +30017,50 @@ HCDowngrade :: !DowngradeOptions -> HGECommand a
 _HCServe :: Prism' (HGECommand a) a
 
 -- | The Serve Command options accumulated from the arg parser and env.
-data RawServeOptions impl
-RawServeOptions :: Maybe Int -> Maybe HostPreference -> RawConnParams -> Maybe TxIsolation -> Maybe AdminSecretHash -> RawAuthHook -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> RawServeOptions impl
-[rsoPort] :: RawServeOptions impl -> Maybe Int
-[rsoHost] :: RawServeOptions impl -> Maybe HostPreference
-[rsoConnParams] :: RawServeOptions impl -> RawConnParams
-[rsoTxIso] :: RawServeOptions impl -> Maybe TxIsolation
-[rsoAdminSecret] :: RawServeOptions impl -> Maybe AdminSecretHash
-[rsoAuthHook] :: RawServeOptions impl -> RawAuthHook
-[rsoJwtSecret] :: RawServeOptions impl -> Maybe JWTConfig
-[rsoUnAuthRole] :: RawServeOptions impl -> Maybe RoleName
-[rsoCorsConfig] :: RawServeOptions impl -> Maybe CorsConfig
-[rsoEnableConsole] :: RawServeOptions impl -> Bool
-[rsoConsoleAssetsDir] :: RawServeOptions impl -> Maybe Text
-[rsoEnableTelemetry] :: RawServeOptions impl -> Maybe Bool
-[rsoWsReadCookie] :: RawServeOptions impl -> Bool
-[rsoStringifyNum] :: RawServeOptions impl -> StringifyNumbers
-[rsoDangerousBooleanCollapse] :: RawServeOptions impl -> Maybe Bool
-[rsoEnabledAPIs] :: RawServeOptions impl -> Maybe [API]
-[rsoMxRefetchInt] :: RawServeOptions impl -> Maybe RefetchInterval
-[rsoMxBatchSize] :: RawServeOptions impl -> Maybe BatchSize
-[rsoStreamingMxRefetchInt] :: RawServeOptions impl -> Maybe RefetchInterval
-[rsoStreamingMxBatchSize] :: RawServeOptions impl -> Maybe BatchSize
-[rsoEnableAllowlist] :: RawServeOptions impl -> Bool
-[rsoEnabledLogTypes] :: RawServeOptions impl -> Maybe [EngineLogType impl]
-[rsoLogLevel] :: RawServeOptions impl -> Maybe LogLevel
-[rsoDevMode] :: RawServeOptions impl -> Bool
-[rsoAdminInternalErrors] :: RawServeOptions impl -> Maybe Bool
-[rsoEventsHttpPoolSize] :: RawServeOptions impl -> Maybe Int
-[rsoEventsFetchInterval] :: RawServeOptions impl -> Maybe Milliseconds
-[rsoAsyncActionsFetchInterval] :: RawServeOptions impl -> Maybe OptionalInterval
-[rsoEnableRemoteSchemaPermissions] :: RawServeOptions impl -> RemoteSchemaPermissions
-[rsoWebSocketCompression] :: RawServeOptions impl -> Bool
-[rsoWebSocketKeepAlive] :: RawServeOptions impl -> Maybe KeepAliveDelay
-[rsoInferFunctionPermissions] :: RawServeOptions impl -> Maybe InferFunctionPermissions
-[rsoEnableMaintenanceMode] :: RawServeOptions impl -> MaintenanceMode ()
-[rsoSchemaPollInterval] :: RawServeOptions impl -> Maybe OptionalInterval
-[rsoExperimentalFeatures] :: RawServeOptions impl -> Maybe [ExperimentalFeature]
-[rsoEventsFetchBatchSize] :: RawServeOptions impl -> Maybe NonNegativeInt
-[rsoGracefulShutdownTimeout] :: RawServeOptions impl -> Maybe Seconds
-[rsoWebSocketConnectionInitTimeout] :: RawServeOptions impl -> Maybe WSConnectionInitTimeout
-[rsoEnableMetadataQueryLoggingEnv] :: RawServeOptions impl -> MetadataQueryLoggingMode
+data ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Int -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe Bool -> Maybe [API] -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe [EngineLogType impl] -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe Int -> Maybe Milliseconds -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe [ExperimentalFeature] -> Maybe NonNegativeInt -> Maybe Seconds -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> ServeOptionsRaw impl
+[rsoPort] :: ServeOptionsRaw impl -> Maybe Int
+[rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
+[rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
+[rsoTxIso] :: ServeOptionsRaw impl -> Maybe TxIsolation
+[rsoAdminSecret] :: ServeOptionsRaw impl -> Maybe AdminSecretHash
+[rsoAuthHook] :: ServeOptionsRaw impl -> AuthHookRaw
+[rsoJwtSecret] :: ServeOptionsRaw impl -> Maybe JWTConfig
+[rsoUnAuthRole] :: ServeOptionsRaw impl -> Maybe RoleName
+[rsoCorsConfig] :: ServeOptionsRaw impl -> Maybe CorsConfig
+[rsoEnableConsole] :: ServeOptionsRaw impl -> Bool
+[rsoConsoleAssetsDir] :: ServeOptionsRaw impl -> Maybe Text
+[rsoEnableTelemetry] :: ServeOptionsRaw impl -> Maybe Bool
+[rsoWsReadCookie] :: ServeOptionsRaw impl -> Bool
+[rsoStringifyNum] :: ServeOptionsRaw impl -> StringifyNumbers
+[rsoDangerousBooleanCollapse] :: ServeOptionsRaw impl -> Maybe Bool
+[rsoEnabledAPIs] :: ServeOptionsRaw impl -> Maybe [API]
+[rsoMxRefetchInt] :: ServeOptionsRaw impl -> Maybe RefetchInterval
+[rsoMxBatchSize] :: ServeOptionsRaw impl -> Maybe BatchSize
+[rsoStreamingMxRefetchInt] :: ServeOptionsRaw impl -> Maybe RefetchInterval
+[rsoStreamingMxBatchSize] :: ServeOptionsRaw impl -> Maybe BatchSize
+[rsoEnableAllowlist] :: ServeOptionsRaw impl -> Bool
+[rsoEnabledLogTypes] :: ServeOptionsRaw impl -> Maybe [EngineLogType impl]
+[rsoLogLevel] :: ServeOptionsRaw impl -> Maybe LogLevel
+[rsoDevMode] :: ServeOptionsRaw impl -> Bool
+[rsoAdminInternalErrors] :: ServeOptionsRaw impl -> Maybe Bool
+[rsoEventsHttpPoolSize] :: ServeOptionsRaw impl -> Maybe Int
+[rsoEventsFetchInterval] :: ServeOptionsRaw impl -> Maybe Milliseconds
+[rsoAsyncActionsFetchInterval] :: ServeOptionsRaw impl -> Maybe OptionalInterval
+[rsoEnableRemoteSchemaPermissions] :: ServeOptionsRaw impl -> RemoteSchemaPermissions
+[rsoWebSocketCompression] :: ServeOptionsRaw impl -> Bool
+[rsoWebSocketKeepAlive] :: ServeOptionsRaw impl -> Maybe KeepAliveDelay
+[rsoInferFunctionPermissions] :: ServeOptionsRaw impl -> Maybe InferFunctionPermissions
+[rsoEnableMaintenanceMode] :: ServeOptionsRaw impl -> MaintenanceMode ()
+[rsoSchemaPollInterval] :: ServeOptionsRaw impl -> Maybe OptionalInterval
+[rsoExperimentalFeatures] :: ServeOptionsRaw impl -> Maybe [ExperimentalFeature]
+[rsoEventsFetchBatchSize] :: ServeOptionsRaw impl -> Maybe NonNegativeInt
+[rsoGracefulShutdownTimeout] :: ServeOptionsRaw impl -> Maybe Seconds
+[rsoWebSocketConnectionInitTimeout] :: ServeOptionsRaw impl -> Maybe WSConnectionInitTimeout
+[rsoEnableMetadataQueryLoggingEnv] :: ServeOptionsRaw impl -> MetadataQueryLoggingMode
 
 -- | stores global default naming convention
-[rsoDefaultNamingConvention] :: RawServeOptions impl -> Maybe NamingCase
+[rsoDefaultNamingConvention] :: ServeOptionsRaw impl -> Maybe NamingCase
 data API
 METADATA :: API
 GRAPHQL :: API
@@ -30068,7 +30068,7 @@ PGDUMP :: API
 DEVELOPER :: API
 CONFIG :: API
 METRICS :: API
-type RawAuthHook = AuthHookG (Maybe Text) (Maybe AuthHookType)
+type AuthHookRaw = AuthHookG (Maybe Text) (Maybe AuthHookType)
 
 -- | Sleep time interval for recurring activities such as
 --   (<tt><tt>asyncActionsProcessor</tt>) Presently
@@ -30084,19 +30084,19 @@ msToOptionalInterval :: Milliseconds -> OptionalInterval
 
 -- | The Raw configuration data from the Arg and Env parsers needed to
 --   construct a <a>ConnParams</a>
-data RawConnParams
-RawConnParams :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe NominalDiffTime -> Maybe Bool -> Maybe NominalDiffTime -> RawConnParams
-[rcpStripes] :: RawConnParams -> Maybe Int
-[rcpConns] :: RawConnParams -> Maybe Int
-[rcpIdleTime] :: RawConnParams -> Maybe Int
+data ConnParamsRaw
+ConnParamsRaw :: Maybe Int -> Maybe Int -> Maybe Int -> Maybe NominalDiffTime -> Maybe Bool -> Maybe NominalDiffTime -> ConnParamsRaw
+[rcpStripes] :: ConnParamsRaw -> Maybe Int
+[rcpConns] :: ConnParamsRaw -> Maybe Int
+[rcpIdleTime] :: ConnParamsRaw -> Maybe Int
 
 -- | Time from connection creation after which to destroy a connection and
 --   choose a different/new one.
-[rcpConnLifetime] :: RawConnParams -> Maybe NominalDiffTime
-[rcpAllowPrepare] :: RawConnParams -> Maybe Bool
+[rcpConnLifetime] :: ConnParamsRaw -> Maybe NominalDiffTime
+[rcpAllowPrepare] :: ConnParamsRaw -> Maybe Bool
 
 -- | See <tt>HASURA_GRAPHQL_PG_POOL_TIMEOUT</tt>
-[rcpPoolTimeout] :: RawConnParams -> Maybe NominalDiffTime
+[rcpPoolTimeout] :: ConnParamsRaw -> Maybe NominalDiffTime
 newtype KeepAliveDelay
 KeepAliveDelay :: Seconds -> KeepAliveDelay
 [unKeepAliveDelay] :: KeepAliveDelay -> Seconds
@@ -30172,19 +30172,19 @@ instance Data.Foldable.Foldable Hasura.Server.Init.Config.PostgresConnInfo
 instance GHC.Base.Functor Hasura.Server.Init.Config.PostgresConnInfo
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Hasura.Server.Init.Config.PostgresConnInfo a)
 instance GHC.Show.Show a => GHC.Show.Show (Hasura.Server.Init.Config.PostgresConnInfo a)
-instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnDetails
-instance GHC.Read.Read Hasura.Server.Init.Config.PostgresRawConnDetails
-instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnDetails
-instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresRawConnInfo
-instance GHC.Show.Show Hasura.Server.Init.Config.PostgresRawConnInfo
+instance GHC.Show.Show Hasura.Server.Init.Config.PostgresConnDetailsRaw
+instance GHC.Read.Read Hasura.Server.Init.Config.PostgresConnDetailsRaw
+instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresConnDetailsRaw
+instance GHC.Classes.Eq Hasura.Server.Init.Config.PostgresConnInfoRaw
+instance GHC.Show.Show Hasura.Server.Init.Config.PostgresConnInfoRaw
 instance GHC.Generics.Generic Hasura.Server.Init.Config.API
 instance GHC.Read.Read Hasura.Server.Init.Config.API
 instance GHC.Classes.Eq Hasura.Server.Init.Config.API
 instance GHC.Show.Show Hasura.Server.Init.Config.API
 instance GHC.Classes.Eq Hasura.Server.Init.Config.OptionalInterval
 instance GHC.Show.Show Hasura.Server.Init.Config.OptionalInterval
-instance GHC.Classes.Eq Hasura.Server.Init.Config.RawConnParams
-instance GHC.Show.Show Hasura.Server.Init.Config.RawConnParams
+instance GHC.Classes.Eq Hasura.Server.Init.Config.ConnParamsRaw
+instance GHC.Show.Show Hasura.Server.Init.Config.ConnParamsRaw
 instance GHC.Show.Show Hasura.Server.Init.Config.KeepAliveDelay
 instance GHC.Classes.Eq Hasura.Server.Init.Config.KeepAliveDelay
 instance GHC.Show.Show Hasura.Server.Init.Config.WSConnectionInitTimeout
@@ -30204,8 +30204,8 @@ instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.OptionalInterv
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.API
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.API
 instance Data.Hashable.Class.Hashable Hasura.Server.Init.Config.API
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.PostgresRawConnDetails
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.PostgresRawConnDetails
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.Config.PostgresConnDetailsRaw
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.Config.PostgresConnDetailsRaw
 
 module Hasura.Server.Init.Logging
 censorQueryItem :: Text -> QueryItem -> QueryItem
@@ -30312,12 +30312,12 @@ downgradeCommandParser :: Parser DowngradeOptions
 
 -- | The Arg Parser for the <tt>serve</tt> subcommand.
 module Hasura.Server.Init.Arg.Command.Serve
-serveCommandParser :: EnabledLogTypes impl => Parser (RawServeOptions impl)
+serveCommandParser :: EnabledLogTypes impl => Parser (ServeOptionsRaw impl)
 parseServerPort :: Parser (Maybe Int)
 servePortEnv :: (String, String)
 parseServerHost :: Parser (Maybe HostPreference)
 serveHostEnv :: (String, String)
-parseConnParams :: Parser RawConnParams
+parseConnParams :: Parser ConnParamsRaw
 pgStripesEnv :: (String, String)
 pgConnsEnv :: (String, String)
 pgTimeoutEnv :: (String, String)
@@ -30330,7 +30330,7 @@ parseAdminSecret :: Parser (Maybe AdminSecretHash)
 adminSecretEnv :: (String, String)
 parseAccessKey :: Parser (Maybe AdminSecretHash)
 accessKeyEnv :: (String, String)
-parseAuthHook :: Parser RawAuthHook
+parseAuthHook :: Parser AuthHookRaw
 authHookEnv :: (String, String)
 authHookModeEnv :: (String, String)
 parseJwtSecret :: Parser (Maybe JWTConfig)
@@ -30410,18 +30410,18 @@ module Hasura.Server.Init.Arg
 -- | The Main Arg Parser. It constructs a <a>HGEOptionsRaw</a> term:
 --   
 --   <ol>
---   <li>'(Config.PostgresConnInfo (Maybe PostgresRawConnInfo))' - The DB
+--   <li>'(Config.PostgresConnInfo (Maybe PostgresConnInfoRaw))' - The DB
 --   connection. 2: 'Maybe String' - Representing the metadata connection.
 --   3: <a>HGECommand</a> <tt>a</tt> - The result of the supplied
 --   Subcommand.</li>
 --   </ol>
-parseHgeOpts :: EnabledLogTypes impl => Parser (HGEOptionsRaw (RawServeOptions impl))
-parseHGECommand :: EnabledLogTypes impl => Parser (HGECommand (RawServeOptions impl))
-parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresRawConnInfo))
+parseHgeOpts :: EnabledLogTypes impl => Parser (HGEOptionsRaw (ServeOptionsRaw impl))
+parseHGECommand :: EnabledLogTypes impl => Parser (HGECommand (ServeOptionsRaw impl))
+parsePostgresConnInfo :: Parser (PostgresConnInfo (Maybe PostgresConnInfoRaw))
 retriesNumEnv :: (String, String)
 parseDatabaseUrl :: Parser (Maybe URLTemplate)
 databaseUrlEnv :: (String, String)
-parseRawConnDetails :: Parser (Maybe PostgresRawConnDetails)
+parseRawConnDetails :: Parser (Maybe PostgresConnDetailsRaw)
 parseMetadataDbUrl :: Parser (Maybe String)
 metadataDbUrlEnv :: (String, String)
 mainCmdFooter :: Doc
@@ -30443,26 +30443,26 @@ StartupTimeInfo :: !Text -> !Double -> StartupTimeInfo
 [_stiMessage] :: StartupTimeInfo -> !Text
 [_stiTimeTaken] :: StartupTimeInfo -> !Double
 
--- | Given the <a>RawServeOptions</a> parsed from the arg parser,
+-- | Given the <a>ServeOptionsRaw</a> parsed from the arg parser,
 --   postprocess the db url and fetch env vars associated with the main
 --   command parser, then process the subcommand raw values if necessary.
-mkHGEOptions :: EnabledLogTypes impl => HGEOptionsRaw (RawServeOptions impl) -> WithEnv (HGEOptions (ServeOptions impl))
+mkHGEOptions :: EnabledLogTypes impl => HGEOptionsRaw (ServeOptionsRaw impl) -> WithEnv (HGEOptions (ServeOptions impl))
 
 -- | <tt>PostressConnInfo</tt> is a a tuple of some <tt>a</tt> with a
 --   'Maybe Int' representing the retries setting. This function thus takes
---   a retries setting and a <a>PostgresRawConnInfo</a> from the arg parser
+--   a retries setting and a <a>PostgresConnInfoRaw</a> from the arg parser
 --   and merges those results with the contents of their corresponding env
 --   vars.
-processPostgresConnInfo :: PostgresConnInfo (Maybe PostgresRawConnInfo) -> WithEnv (PostgresConnInfo (Maybe UrlConf))
+processPostgresConnInfo :: PostgresConnInfo (Maybe PostgresConnInfoRaw) -> WithEnv (PostgresConnInfo (Maybe UrlConf))
 
 -- | A helper function for <a>processPostgresConnInfo</a> which fetches
 --   postgres connection info from the <a>WithEnv</a> and merges it with
 --   the arg parser result.
-rawConnInfoToUrlConf :: Maybe PostgresRawConnInfo -> WithEnv (Maybe UrlConf)
+rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe UrlConf)
 
 -- | Merge the results of the serve subcommmand arg parser with
 --   corresponding values from the <a>WithEnv</a> context.
-mkServeOptions :: EnabledLogTypes impl => RawServeOptions impl -> WithEnv (ServeOptions impl)
+mkServeOptions :: EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
 defaultEnabledAPIs :: [API]
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.StartupTimeInfo
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.StartupTimeInfo

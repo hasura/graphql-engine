@@ -255,11 +255,11 @@ forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span id="line-188"></span><span id="local-6989586621689559022"><span class="annot"><a href="Hasura.App.html#parseArgs"><span class="hs-identifier hs-type">parseArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689559022"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-type">HGEOptions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689559022"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-189"></span><span id="parseArgs"><span class="annot"><span class="annottext">parseArgs :: IO (HGEOptions (ServeOptions impl))
 </span><a href="Hasura.App.html#parseArgs"><span class="hs-identifier hs-var hs-var">parseArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-190"></span><span>  </span><span id="local-6989586621689559021"><span class="annot"><span class="annottext">HGEOptionsRaw (RawServeOptions impl)
-</span><a href="#local-6989586621689559021"><span class="hs-identifier hs-var">rawHGEOpts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParserInfo (HGEOptionsRaw (RawServeOptions impl))
--&gt; IO (HGEOptionsRaw (RawServeOptions impl))
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621689559021"><span class="annot"><span class="annottext">HGEOptionsRaw (ServeOptionsRaw impl)
+</span><a href="#local-6989586621689559021"><span class="hs-identifier hs-var">rawHGEOpts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParserInfo (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; IO (HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. ParserInfo a -&gt; IO a
-</span><span class="hs-identifier hs-var">execParser</span></span><span> </span><span class="annot"><span class="annottext">ParserInfo (HGEOptionsRaw (RawServeOptions impl))
+</span><span class="hs-identifier hs-var">execParser</span></span><span> </span><span class="annot"><span class="annottext">ParserInfo (HGEOptionsRaw (ServeOptionsRaw impl))
 </span><a href="#local-6989586621689559019"><span class="hs-identifier hs-var">opts</span></a></span><span>
 </span><span id="line-191"></span><span>  </span><span id="local-6989586621689559018"><span class="annot"><span class="annottext">[(String, String)]
 </span><a href="#local-6989586621689559018"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [(String, String)]
@@ -275,13 +275,13 @@ forall a. [(String, String)] -&gt; WithEnv a -&gt; Either String a
 -&gt; WithEnv (HGEOptions (ServeOptions impl))
 -&gt; Either String (HGEOptions (ServeOptions impl))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw (RawServeOptions impl)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw (ServeOptionsRaw impl)
 -&gt; WithEnv (HGEOptions (ServeOptions impl))
 forall impl.
 EnabledLogTypes impl =&gt;
-HGEOptionsRaw (RawServeOptions impl)
+HGEOptionsRaw (ServeOptionsRaw impl)
 -&gt; WithEnv (HGEOptions (ServeOptions impl))
-</span><a href="Hasura.Server.Init.html#mkHGEOptions"><span class="hs-identifier hs-var">mkHGEOptions</span></a></span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw (RawServeOptions impl)
+</span><a href="Hasura.Server.Init.html#mkHGEOptions"><span class="hs-identifier hs-var">mkHGEOptions</span></a></span><span> </span><span class="annot"><span class="annottext">HGEOptionsRaw (ServeOptionsRaw impl)
 </span><a href="#local-6989586621689559021"><span class="hs-identifier hs-var">rawHGEOpts</span></a></span><span>
 </span><span id="line-193"></span><span>  </span><span class="annot"><span class="annottext">Either String (HGEOptions (ServeOptions impl))
 -&gt; (String -&gt; IO (HGEOptions (ServeOptions impl)))
@@ -300,44 +300,44 @@ forall (m :: * -&gt; *) a. MonadIO m =&gt; ExitCode -&gt; String -&gt; m a
 </span><a href="Hasura.App.html#throwErrExit"><span class="hs-identifier hs-var">throwErrExit</span></a></span><span> </span><span class="annot"><span class="annottext">ExitCode
 </span><a href="Hasura.App.html#InvalidEnvironmentVariableOptionsError"><span class="hs-identifier hs-var">InvalidEnvironmentVariableOptionsError</span></a></span><span>
 </span><span id="line-194"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-195"></span><span>    </span><span id="local-6989586621689559019"><span class="annot"><span class="annottext">opts :: ParserInfo (HGEOptionsRaw (RawServeOptions impl))
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621689559019"><span class="annot"><span class="annottext">opts :: ParserInfo (HGEOptionsRaw (ServeOptionsRaw impl))
 </span><a href="#local-6989586621689559019"><span class="hs-identifier hs-var hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-196"></span><span>      </span><span class="annot"><span class="annottext">Parser (HGEOptionsRaw (RawServeOptions impl))
--&gt; InfoMod (HGEOptionsRaw (RawServeOptions impl))
--&gt; ParserInfo (HGEOptionsRaw (RawServeOptions impl))
+</span><span id="line-196"></span><span>      </span><span class="annot"><span class="annottext">Parser (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; ParserInfo (HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. Parser a -&gt; InfoMod a -&gt; ParserInfo a
 </span><span class="hs-identifier hs-var">info</span></span><span>
 </span><span id="line-197"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser
-  (HGEOptionsRaw (RawServeOptions impl)
-   -&gt; HGEOptionsRaw (RawServeOptions impl))
+  (HGEOptionsRaw (ServeOptionsRaw impl)
+   -&gt; HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. Parser (a -&gt; a)
 </span><span class="hs-identifier hs-var">helper</span></span><span> </span><span class="annot"><span class="annottext">Parser
-  (HGEOptionsRaw (RawServeOptions impl)
-   -&gt; HGEOptionsRaw (RawServeOptions impl))
--&gt; Parser (HGEOptionsRaw (RawServeOptions impl))
--&gt; Parser (HGEOptionsRaw (RawServeOptions impl))
+  (HGEOptionsRaw (ServeOptionsRaw impl)
+   -&gt; HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; Parser (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (HGEOptionsRaw (RawServeOptions impl))
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 forall impl.
 EnabledLogTypes impl =&gt;
-Parser (HGEOptionsRaw (RawServeOptions impl))
+Parser (HGEOptionsRaw (ServeOptionsRaw impl))
 </span><a href="Hasura.Server.Init.Arg.html#parseHgeOpts"><span class="hs-identifier hs-var">parseHgeOpts</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-198"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">InfoMod (HGEOptionsRaw (RawServeOptions impl))
+</span><span id="line-198"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. InfoMod a
 </span><span class="hs-identifier hs-var">fullDesc</span></span><span>
-</span><span id="line-199"></span><span>            </span><span class="annot"><span class="annottext">InfoMod (HGEOptionsRaw (RawServeOptions impl))
--&gt; InfoMod (HGEOptionsRaw (RawServeOptions impl))
--&gt; InfoMod (HGEOptionsRaw (RawServeOptions impl))
+</span><span id="line-199"></span><span>            </span><span class="annot"><span class="annottext">InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGEOptionsRaw (RawServeOptions impl))
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. String -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">header</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Hasura GraphQL Engine: Blazing fast, instant realtime GraphQL APIs on your DB with fine grained access control, also trigger webhooks on database events.&quot;</span></span><span>
-</span><span id="line-200"></span><span>            </span><span class="annot"><span class="annottext">InfoMod (HGEOptionsRaw (RawServeOptions impl))
--&gt; InfoMod (HGEOptionsRaw (RawServeOptions impl))
--&gt; InfoMod (HGEOptionsRaw (RawServeOptions impl))
+</span><span id="line-200"></span><span>            </span><span class="annot"><span class="annottext">InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
+-&gt; InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; InfoMod (HGEOptionsRaw (RawServeOptions impl))
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Doc -&gt; InfoMod (HGEOptionsRaw (ServeOptionsRaw impl))
 forall a. Maybe Doc -&gt; InfoMod a
 </span><span class="hs-identifier hs-var">footerDoc</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Doc -&gt; Maybe Doc
 forall a. a -&gt; Maybe a

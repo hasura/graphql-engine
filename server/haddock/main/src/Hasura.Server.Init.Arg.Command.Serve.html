@@ -38,15 +38,15 @@
 </span><span id="line-38"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-39"></span><span class="hs-comment">-- Serve Command</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621689545091"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-type">serveCommandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545091"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-type">Config.RawServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545091"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
-</span><span id="line-42"></span><span id="serveCommandParser"><span class="annot"><span class="annottext">serveCommandParser :: Parser (RawServeOptions impl)
+</span><span id="line-41"></span><span id="local-6989586621689545091"><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-type">serveCommandParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">L.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545091"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">Config.ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689545091"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-42"></span><span id="serveCommandParser"><span class="annot"><span class="annottext">serveCommandParser :: Parser (ServeOptionsRaw impl)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveCommandParser"><span class="hs-identifier hs-var hs-var">serveCommandParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-43"></span><span>  </span><span class="annot"><span class="annottext">Maybe Int
 -&gt; Maybe HostPreference
--&gt; RawConnParams
+-&gt; ConnParamsRaw
 -&gt; Maybe TxIsolation
 -&gt; Maybe AdminSecretHash
--&gt; RawAuthHook
+-&gt; AuthHookRaw
 -&gt; Maybe JWTConfig
 -&gt; Maybe RoleName
 -&gt; Maybe CorsConfig
@@ -81,14 +81,14 @@
 -&gt; Maybe WSConnectionInitTimeout
 -&gt; MetadataQueryLoggingMode
 -&gt; Maybe NamingCase
--&gt; RawServeOptions impl
+-&gt; ServeOptionsRaw impl
 forall impl.
 Maybe Int
 -&gt; Maybe HostPreference
--&gt; RawConnParams
+-&gt; ConnParamsRaw
 -&gt; Maybe TxIsolation
 -&gt; Maybe AdminSecretHash
--&gt; RawAuthHook
+-&gt; AuthHookRaw
 -&gt; Maybe JWTConfig
 -&gt; Maybe RoleName
 -&gt; Maybe CorsConfig
@@ -123,14 +123,14 @@ Maybe Int
 -&gt; Maybe WSConnectionInitTimeout
 -&gt; MetadataQueryLoggingMode
 -&gt; Maybe NamingCase
--&gt; RawServeOptions impl
-</span><a href="Hasura.Server.Init.Config.html#RawServeOptions"><span class="hs-identifier hs-var">Config.RawServeOptions</span></a></span><span>
+-&gt; ServeOptionsRaw impl
+</span><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-var">Config.ServeOptionsRaw</span></a></span><span>
 </span><span id="line-44"></span><span>    </span><span class="annot"><span class="annottext">(Maybe Int
  -&gt; Maybe HostPreference
- -&gt; RawConnParams
+ -&gt; ConnParamsRaw
  -&gt; Maybe TxIsolation
  -&gt; Maybe AdminSecretHash
- -&gt; RawAuthHook
+ -&gt; AuthHookRaw
  -&gt; Maybe JWTConfig
  -&gt; Maybe RoleName
  -&gt; Maybe CorsConfig
@@ -165,14 +165,14 @@ Maybe Int
  -&gt; Maybe WSConnectionInitTimeout
  -&gt; MetadataQueryLoggingMode
  -&gt; Maybe NamingCase
- -&gt; RawServeOptions impl)
+ -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Int)
 -&gt; Parser
      (Maybe HostPreference
-      -&gt; RawConnParams
+      -&gt; ConnParamsRaw
       -&gt; Maybe TxIsolation
       -&gt; Maybe AdminSecretHash
-      -&gt; RawAuthHook
+      -&gt; AuthHookRaw
       -&gt; Maybe JWTConfig
       -&gt; Maybe RoleName
       -&gt; Maybe CorsConfig
@@ -207,16 +207,16 @@ Maybe Int
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseServerPort"><span class="hs-identifier hs-var">parseServerPort</span></a></span><span>
 </span><span id="line-45"></span><span>    </span><span class="annot"><span class="annottext">Parser
   (Maybe HostPreference
-   -&gt; RawConnParams
+   -&gt; ConnParamsRaw
    -&gt; Maybe TxIsolation
    -&gt; Maybe AdminSecretHash
-   -&gt; RawAuthHook
+   -&gt; AuthHookRaw
    -&gt; Maybe JWTConfig
    -&gt; Maybe RoleName
    -&gt; Maybe CorsConfig
@@ -251,13 +251,13 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe HostPreference)
 -&gt; Parser
-     (RawConnParams
+     (ConnParamsRaw
       -&gt; Maybe TxIsolation
       -&gt; Maybe AdminSecretHash
-      -&gt; RawAuthHook
+      -&gt; AuthHookRaw
       -&gt; Maybe JWTConfig
       -&gt; Maybe RoleName
       -&gt; Maybe CorsConfig
@@ -292,15 +292,15 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe HostPreference)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseServerHost"><span class="hs-identifier hs-var">parseServerHost</span></a></span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">Parser
-  (RawConnParams
+  (ConnParamsRaw
    -&gt; Maybe TxIsolation
    -&gt; Maybe AdminSecretHash
-   -&gt; RawAuthHook
+   -&gt; AuthHookRaw
    -&gt; Maybe JWTConfig
    -&gt; Maybe RoleName
    -&gt; Maybe CorsConfig
@@ -335,12 +335,12 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
--&gt; Parser RawConnParams
+   -&gt; ServeOptionsRaw impl)
+-&gt; Parser ConnParamsRaw
 -&gt; Parser
      (Maybe TxIsolation
       -&gt; Maybe AdminSecretHash
-      -&gt; RawAuthHook
+      -&gt; AuthHookRaw
       -&gt; Maybe JWTConfig
       -&gt; Maybe RoleName
       -&gt; Maybe CorsConfig
@@ -375,14 +375,14 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RawConnParams
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ConnParamsRaw
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseConnParams"><span class="hs-identifier hs-var">parseConnParams</span></a></span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Parser
   (Maybe TxIsolation
    -&gt; Maybe AdminSecretHash
-   -&gt; RawAuthHook
+   -&gt; AuthHookRaw
    -&gt; Maybe JWTConfig
    -&gt; Maybe RoleName
    -&gt; Maybe CorsConfig
@@ -417,11 +417,11 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe TxIsolation)
 -&gt; Parser
      (Maybe AdminSecretHash
-      -&gt; RawAuthHook
+      -&gt; AuthHookRaw
       -&gt; Maybe JWTConfig
       -&gt; Maybe RoleName
       -&gt; Maybe CorsConfig
@@ -456,13 +456,13 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe TxIsolation)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseTxIsolation"><span class="hs-identifier hs-var">parseTxIsolation</span></a></span><span>
 </span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">Parser
   (Maybe AdminSecretHash
-   -&gt; RawAuthHook
+   -&gt; AuthHookRaw
    -&gt; Maybe JWTConfig
    -&gt; Maybe RoleName
    -&gt; Maybe CorsConfig
@@ -497,10 +497,10 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe AdminSecretHash)
 -&gt; Parser
-     (RawAuthHook
+     (AuthHookRaw
       -&gt; Maybe JWTConfig
       -&gt; Maybe RoleName
       -&gt; Maybe CorsConfig
@@ -535,7 +535,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser (Maybe AdminSecretHash)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAdminSecret"><span class="hs-identifier hs-var">parseAdminSecret</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AdminSecretHash)
@@ -544,7 +544,7 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AdminSecretHash)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAccessKey"><span class="hs-identifier hs-var">parseAccessKey</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>    </span><span class="annot"><span class="annottext">Parser
-  (RawAuthHook
+  (AuthHookRaw
    -&gt; Maybe JWTConfig
    -&gt; Maybe RoleName
    -&gt; Maybe CorsConfig
@@ -579,8 +579,8 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
--&gt; Parser RawAuthHook
+   -&gt; ServeOptionsRaw impl)
+-&gt; Parser AuthHookRaw
 -&gt; Parser
      (Maybe JWTConfig
       -&gt; Maybe RoleName
@@ -616,9 +616,9 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RawAuthHook
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser AuthHookRaw
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAuthHook"><span class="hs-identifier hs-var">parseAuthHook</span></a></span><span>
 </span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">Parser
   (Maybe JWTConfig
@@ -655,7 +655,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe JWTConfig)
 -&gt; Parser
      (Maybe RoleName
@@ -691,7 +691,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe JWTConfig)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseJwtSecret"><span class="hs-identifier hs-var">parseJwtSecret</span></a></span><span>
@@ -729,7 +729,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe RoleName)
 -&gt; Parser
      (Maybe CorsConfig
@@ -764,7 +764,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe RoleName)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseUnAuthRole"><span class="hs-identifier hs-var">parseUnAuthRole</span></a></span><span>
@@ -801,7 +801,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe CorsConfig)
 -&gt; Parser
      (Bool
@@ -835,7 +835,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CorsConfig)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseCorsConfig"><span class="hs-identifier hs-var">parseCorsConfig</span></a></span><span>
@@ -871,7 +871,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser Bool
 -&gt; Parser
      (Maybe Text
@@ -904,7 +904,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnableConsole"><span class="hs-identifier hs-var">parseEnableConsole</span></a></span><span>
@@ -939,7 +939,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Text)
 -&gt; Parser
      (Maybe Bool
@@ -971,7 +971,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Text)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseConsoleAssetsDir"><span class="hs-identifier hs-var">parseConsoleAssetsDir</span></a></span><span>
@@ -1005,7 +1005,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Bool)
 -&gt; Parser
      (Bool
@@ -1036,7 +1036,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnableTelemetry"><span class="hs-identifier hs-var">parseEnableTelemetry</span></a></span><span>
@@ -1069,7 +1069,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser Bool
 -&gt; Parser
      (StringifyNumbers
@@ -1099,7 +1099,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseWsReadCookie"><span class="hs-identifier hs-var">parseWsReadCookie</span></a></span><span>
@@ -1131,7 +1131,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser StringifyNumbers
 -&gt; Parser
      (Maybe Bool
@@ -1160,7 +1160,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser StringifyNumbers
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseStringifyNum"><span class="hs-identifier hs-var">parseStringifyNum</span></a></span><span>
@@ -1191,7 +1191,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Bool)
 -&gt; Parser
      (Maybe [API]
@@ -1219,7 +1219,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseDangerousBooleanCollapse"><span class="hs-identifier hs-var">parseDangerousBooleanCollapse</span></a></span><span>
@@ -1249,7 +1249,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe [API])
 -&gt; Parser
      (Maybe RefetchInterval
@@ -1276,7 +1276,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [API])
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnabledAPIs"><span class="hs-identifier hs-var">parseEnabledAPIs</span></a></span><span>
@@ -1305,7 +1305,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe RefetchInterval)
 -&gt; Parser
      (Maybe BatchSize
@@ -1331,7 +1331,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe RefetchInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseMxRefetchDelay"><span class="hs-identifier hs-var">parseMxRefetchDelay</span></a></span><span>
@@ -1359,7 +1359,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe BatchSize)
 -&gt; Parser
      (Maybe RefetchInterval
@@ -1384,7 +1384,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe BatchSize)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseMxBatchSize"><span class="hs-identifier hs-var">parseMxBatchSize</span></a></span><span>
@@ -1411,7 +1411,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe RefetchInterval)
 -&gt; Parser
      (Maybe BatchSize
@@ -1435,7 +1435,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe RefetchInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseStreamingMxRefetchDelay"><span class="hs-identifier hs-var">parseStreamingMxRefetchDelay</span></a></span><span>
@@ -1461,7 +1461,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe BatchSize)
 -&gt; Parser
      (Bool
@@ -1484,7 +1484,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe BatchSize)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseStreamingMxBatchSize"><span class="hs-identifier hs-var">parseStreamingMxBatchSize</span></a></span><span>
@@ -1509,7 +1509,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser Bool
 -&gt; Parser
      (Maybe [EngineLogType impl]
@@ -1531,7 +1531,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnableAllowlist"><span class="hs-identifier hs-var">parseEnableAllowlist</span></a></span><span>
@@ -1555,7 +1555,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe [EngineLogType impl])
 -&gt; Parser
      (Maybe LogLevel
@@ -1576,7 +1576,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [EngineLogType impl])
 forall impl.
@@ -1602,7 +1602,7 @@ Parser (Maybe [EngineLogType impl])
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe LogLevel)
 -&gt; Parser
      (Bool
@@ -1622,7 +1622,7 @@ Parser (Maybe [EngineLogType impl])
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe LogLevel)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseLogLevel"><span class="hs-identifier hs-var">parseLogLevel</span></a></span><span>
@@ -1644,7 +1644,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe CacheSize)
 -&gt; Parser
      (Bool
@@ -1664,7 +1664,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe CacheSize)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parsePlanCacheSize"><span class="hs-identifier hs-var">parsePlanCacheSize</span></a></span><span> </span><span class="hs-comment">-- parsed (for backwards compatibility reasons) but ignored</span><span>
@@ -1686,7 +1686,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser Bool
 -&gt; Parser
      (Maybe Bool
@@ -1705,7 +1705,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlDevMode"><span class="hs-identifier hs-var">parseGraphqlDevMode</span></a></span><span>
@@ -1726,7 +1726,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Bool)
 -&gt; Parser
      (Maybe Int
@@ -1744,7 +1744,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlAdminInternalErrors"><span class="hs-identifier hs-var">parseGraphqlAdminInternalErrors</span></a></span><span>
@@ -1764,7 +1764,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Int)
 -&gt; Parser
      (Maybe Milliseconds
@@ -1781,7 +1781,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlEventsHttpPoolSize"><span class="hs-identifier hs-var">parseGraphqlEventsHttpPoolSize</span></a></span><span>
@@ -1800,7 +1800,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Milliseconds)
 -&gt; Parser
      (Maybe OptionalInterval
@@ -1816,7 +1816,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Milliseconds)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlEventsFetchInterval"><span class="hs-identifier hs-var">parseGraphqlEventsFetchInterval</span></a></span><span>
@@ -1834,7 +1834,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe OptionalInterval)
 -&gt; Parser
      (RemoteSchemaPermissions
@@ -1849,7 +1849,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe OptionalInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGraphqlAsyncActionsFetchInterval"><span class="hs-identifier hs-var">parseGraphqlAsyncActionsFetchInterval</span></a></span><span>
@@ -1866,7 +1866,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser RemoteSchemaPermissions
 -&gt; Parser
      (Bool
@@ -1880,7 +1880,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser RemoteSchemaPermissions
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnableRemoteSchemaPerms"><span class="hs-identifier hs-var">parseEnableRemoteSchemaPerms</span></a></span><span>
@@ -1896,7 +1896,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser Bool
 -&gt; Parser
      (Maybe KeepAliveDelay
@@ -1909,7 +1909,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseWebSocketCompression"><span class="hs-identifier hs-var">parseWebSocketCompression</span></a></span><span>
@@ -1924,7 +1924,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe KeepAliveDelay)
 -&gt; Parser
      (Maybe InferFunctionPermissions
@@ -1936,7 +1936,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe KeepAliveDelay)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseWebSocketKeepAlive"><span class="hs-identifier hs-var">parseWebSocketKeepAlive</span></a></span><span>
@@ -1950,7 +1950,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe InferFunctionPermissions)
 -&gt; Parser
      (MaintenanceMode ()
@@ -1961,7 +1961,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe InferFunctionPermissions)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseInferFunctionPerms"><span class="hs-identifier hs-var">parseInferFunctionPerms</span></a></span><span>
@@ -1974,7 +1974,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (MaintenanceMode ())
 -&gt; Parser
      (Maybe OptionalInterval
@@ -1984,7 +1984,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (MaintenanceMode ())
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnableMaintenanceMode"><span class="hs-identifier hs-var">parseEnableMaintenanceMode</span></a></span><span>
@@ -1996,7 +1996,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe OptionalInterval)
 -&gt; Parser
      (Maybe [ExperimentalFeature]
@@ -2005,7 +2005,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe OptionalInterval)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseSchemaPollInterval"><span class="hs-identifier hs-var">parseSchemaPollInterval</span></a></span><span>
@@ -2016,7 +2016,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe [ExperimentalFeature])
 -&gt; Parser
      (Maybe NonNegativeInt
@@ -2024,7 +2024,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe [ExperimentalFeature])
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseExperimentalFeatures"><span class="hs-identifier hs-var">parseExperimentalFeatures</span></a></span><span>
@@ -2034,14 +2034,14 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe NonNegativeInt)
 -&gt; Parser
      (Maybe Seconds
       -&gt; Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NonNegativeInt)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEventsFetchBatchSize"><span class="hs-identifier hs-var">parseEventsFetchBatchSize</span></a></span><span>
@@ -2050,13 +2050,13 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe Seconds)
 -&gt; Parser
      (Maybe WSConnectionInitTimeout
       -&gt; MetadataQueryLoggingMode
       -&gt; Maybe NamingCase
-      -&gt; RawServeOptions impl)
+      -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Seconds)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseGracefulShutdownTimeout"><span class="hs-identifier hs-var">parseGracefulShutdownTimeout</span></a></span><span>
@@ -2064,24 +2064,24 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
   (Maybe WSConnectionInitTimeout
    -&gt; MetadataQueryLoggingMode
    -&gt; Maybe NamingCase
-   -&gt; RawServeOptions impl)
+   -&gt; ServeOptionsRaw impl)
 -&gt; Parser (Maybe WSConnectionInitTimeout)
 -&gt; Parser
      (MetadataQueryLoggingMode
-      -&gt; Maybe NamingCase -&gt; RawServeOptions impl)
+      -&gt; Maybe NamingCase -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe WSConnectionInitTimeout)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseWebSocketConnectionInitTimeout"><span class="hs-identifier hs-var">parseWebSocketConnectionInitTimeout</span></a></span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">Parser
   (MetadataQueryLoggingMode
-   -&gt; Maybe NamingCase -&gt; RawServeOptions impl)
+   -&gt; Maybe NamingCase -&gt; ServeOptionsRaw impl)
 -&gt; Parser MetadataQueryLoggingMode
--&gt; Parser (Maybe NamingCase -&gt; RawServeOptions impl)
+-&gt; Parser (Maybe NamingCase -&gt; ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser MetadataQueryLoggingMode
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseEnableMetadataQueryLogging"><span class="hs-identifier hs-var">parseEnableMetadataQueryLogging</span></a></span><span>
-</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">Parser (Maybe NamingCase -&gt; RawServeOptions impl)
--&gt; Parser (Maybe NamingCase) -&gt; Parser (RawServeOptions impl)
+</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">Parser (Maybe NamingCase -&gt; ServeOptionsRaw impl)
+-&gt; Parser (Maybe NamingCase) -&gt; Parser (ServeOptionsRaw impl)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NamingCase)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseDefaultNamingConvention"><span class="hs-identifier hs-var">parseDefaultNamingConvention</span></a></span><span>
@@ -2181,8 +2181,8 @@ forall a b. (a, b) -&gt; b
 </span><span class="hs-string">&quot;Host on which graphql-engine will listen (default: *)&quot;</span></span><span>
 </span><span id="line-119"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseConnParams"><span class="hs-identifier hs-type">parseConnParams</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawConnParams"><span class="hs-identifier hs-type">Config.RawConnParams</span></a></span><span>
-</span><span id="line-122"></span><span id="parseConnParams"><span class="annot"><span class="annottext">parseConnParams :: Parser RawConnParams
+</span><span id="line-121"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseConnParams"><span class="hs-identifier hs-type">parseConnParams</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ConnParamsRaw"><span class="hs-identifier hs-type">Config.ConnParamsRaw</span></a></span><span>
+</span><span id="line-122"></span><span id="parseConnParams"><span class="annot"><span class="annottext">parseConnParams :: Parser ConnParamsRaw
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseConnParams"><span class="hs-identifier hs-var hs-var">parseConnParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-123"></span><span>  </span><span class="annot"><span class="annottext">Maybe Int
 -&gt; Maybe Int
@@ -2190,14 +2190,14 @@ forall a b. (a, b) -&gt; b
 -&gt; Maybe NominalDiffTime
 -&gt; Maybe Bool
 -&gt; Maybe NominalDiffTime
--&gt; RawConnParams
-</span><a href="Hasura.Server.Init.Config.html#RawConnParams"><span class="hs-identifier hs-var">Config.RawConnParams</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int
+-&gt; ConnParamsRaw
+</span><a href="Hasura.Server.Init.Config.html#ConnParamsRaw"><span class="hs-identifier hs-var">Config.ConnParamsRaw</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Int
  -&gt; Maybe Int
  -&gt; Maybe Int
  -&gt; Maybe NominalDiffTime
  -&gt; Maybe Bool
  -&gt; Maybe NominalDiffTime
- -&gt; RawConnParams)
+ -&gt; ConnParamsRaw)
 -&gt; Parser (Maybe Int)
 -&gt; Parser
      (Maybe Int
@@ -2205,7 +2205,7 @@ forall a b. (a, b) -&gt; b
       -&gt; Maybe NominalDiffTime
       -&gt; Maybe Bool
       -&gt; Maybe NominalDiffTime
-      -&gt; RawConnParams)
+      -&gt; ConnParamsRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
 </span><a href="#local-6989586621689545033"><span class="hs-identifier hs-var">pgStripes</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
@@ -2214,14 +2214,14 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
    -&gt; Maybe NominalDiffTime
    -&gt; Maybe Bool
    -&gt; Maybe NominalDiffTime
-   -&gt; RawConnParams)
+   -&gt; ConnParamsRaw)
 -&gt; Parser (Maybe Int)
 -&gt; Parser
      (Maybe Int
       -&gt; Maybe NominalDiffTime
       -&gt; Maybe Bool
       -&gt; Maybe NominalDiffTime
-      -&gt; RawConnParams)
+      -&gt; ConnParamsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
 </span><a href="#local-6989586621689545032"><span class="hs-identifier hs-var">pgConns</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
@@ -2229,27 +2229,27 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
    -&gt; Maybe NominalDiffTime
    -&gt; Maybe Bool
    -&gt; Maybe NominalDiffTime
-   -&gt; RawConnParams)
+   -&gt; ConnParamsRaw)
 -&gt; Parser (Maybe Int)
 -&gt; Parser
      (Maybe NominalDiffTime
-      -&gt; Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
+      -&gt; Maybe Bool -&gt; Maybe NominalDiffTime -&gt; ConnParamsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Int)
 </span><a href="#local-6989586621689545031"><span class="hs-identifier hs-var">pgIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
   (Maybe NominalDiffTime
-   -&gt; Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
+   -&gt; Maybe Bool -&gt; Maybe NominalDiffTime -&gt; ConnParamsRaw)
 -&gt; Parser (Maybe NominalDiffTime)
--&gt; Parser (Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
+-&gt; Parser (Maybe Bool -&gt; Maybe NominalDiffTime -&gt; ConnParamsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime)
-</span><a href="#local-6989586621689545030"><span class="hs-identifier hs-var">pgConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool -&gt; Maybe NominalDiffTime -&gt; RawConnParams)
+</span><a href="#local-6989586621689545030"><span class="hs-identifier hs-var">pgConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool -&gt; Maybe NominalDiffTime -&gt; ConnParamsRaw)
 -&gt; Parser (Maybe Bool)
--&gt; Parser (Maybe NominalDiffTime -&gt; RawConnParams)
+-&gt; Parser (Maybe NominalDiffTime -&gt; ConnParamsRaw)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Bool)
-</span><a href="#local-6989586621689545029"><span class="hs-identifier hs-var">pgAllowPrepare</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime -&gt; RawConnParams)
--&gt; Parser (Maybe NominalDiffTime) -&gt; Parser RawConnParams
+</span><a href="#local-6989586621689545029"><span class="hs-identifier hs-var">pgAllowPrepare</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime -&gt; ConnParamsRaw)
+-&gt; Parser (Maybe NominalDiffTime) -&gt; Parser ConnParamsRaw
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe NominalDiffTime)
 </span><a href="#local-6989586621689545028"><span class="hs-identifier hs-var">pgPoolTimeout</span></a></span><span>
@@ -2737,18 +2737,18 @@ forall a b. (a, b) -&gt; b
 </span><span class="hs-string">&quot;Admin secret key, required to access this instance (deprecated: use HASURA_GRAPHQL_ADMIN_SECRET instead)&quot;</span></span><span>
 </span><span id="line-276"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-277"></span><span>
-</span><span id="line-278"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAuthHook"><span class="hs-identifier hs-type">parseAuthHook</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#RawAuthHook"><span class="hs-identifier hs-type">Config.RawAuthHook</span></a></span><span>
-</span><span id="line-279"></span><span id="parseAuthHook"><span class="annot"><span class="annottext">parseAuthHook :: Parser RawAuthHook
+</span><span id="line-278"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAuthHook"><span class="hs-identifier hs-type">parseAuthHook</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Opt.Parser</span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#AuthHookRaw"><span class="hs-identifier hs-type">Config.AuthHookRaw</span></a></span><span>
+</span><span id="line-279"></span><span id="parseAuthHook"><span class="annot"><span class="annottext">parseAuthHook :: Parser AuthHookRaw
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#parseAuthHook"><span class="hs-identifier hs-var hs-var">parseAuthHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-280"></span><span>  </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe AuthHookType -&gt; RawAuthHook
+</span><span id="line-280"></span><span>  </span><span class="annot"><span class="annottext">Maybe Text -&gt; Maybe AuthHookType -&gt; AuthHookRaw
 forall a b. a -&gt; b -&gt; AuthHookG a b
-</span><a href="Hasura.Server.Auth.WebHook.html#AuthHookG"><span class="hs-identifier hs-var">Auth.AuthHookG</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Maybe AuthHookType -&gt; RawAuthHook)
+</span><a href="Hasura.Server.Auth.WebHook.html#AuthHookG"><span class="hs-identifier hs-var">Auth.AuthHookG</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; Maybe AuthHookType -&gt; AuthHookRaw)
 -&gt; Parser (Maybe Text)
--&gt; Parser (Maybe AuthHookType -&gt; RawAuthHook)
+-&gt; Parser (Maybe AuthHookType -&gt; AuthHookRaw)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Text)
-</span><a href="#local-6989586621689545013"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType -&gt; RawAuthHook)
--&gt; Parser (Maybe AuthHookType) -&gt; Parser RawAuthHook
+</span><a href="#local-6989586621689545013"><span class="hs-identifier hs-var">url</span></a></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType -&gt; AuthHookRaw)
+-&gt; Parser (Maybe AuthHookType) -&gt; Parser AuthHookRaw
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe AuthHookType)
 </span><a href="#local-6989586621689545012"><span class="hs-identifier hs-var">urlType</span></a></span><span>
