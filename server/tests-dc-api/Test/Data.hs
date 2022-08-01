@@ -15,6 +15,7 @@ module Test.Data
     albumsRows,
     albumsTableRelationships,
     artistRelationshipName,
+    tracksRelationshipName,
     -- = Customers table
     customersTableName,
     customersRows,
@@ -29,10 +30,24 @@ module Test.Data
     -- = Invoices table
     invoicesTableName,
     invoicesRows,
+    -- = InvoiceLines table
+    invoiceLinesTableName,
+    invoiceLinesRows,
+    -- = MediaTypes table
+    mediaTypesTableName,
+    mediaTypesRows,
+    -- = Tracks table
+    tracksTableName,
+    tracksRows,
+    tracksTableRelationships,
+    invoiceLinesRelationshipName,
+    mediaTypeRelationshipName,
     -- = Utilities
     emptyQuery,
     sortBy,
     filterColumnsByQueryFields,
+    filterColumns,
+    renameColumns,
     onlyKeepRelationships,
     queryFields,
     responseRows,
@@ -56,13 +71,14 @@ import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens (_Bool, _Number, _String)
+import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
 import Data.ByteString.Lazy qualified as BSL
 import Data.CaseInsensitive qualified as CI
 import Data.FileEmbed (embedFile, makeRelativeToProject)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
-import Data.List (sortOn)
+import Data.List (find, sortOn)
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Scientific (Scientific)
 import Data.Text (Text)
@@ -146,16 +162,21 @@ albumsRows = sortBy "AlbumId" $ readTableFromXmlIntoRows albumsTableName
 
 albumsTableRelationships :: API.TableRelationships
 albumsTableRelationships =
-  let joinFieldMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+  let artistsJoinFieldMapping = HashMap.fromList [(API.ColumnName "ArtistId", API.ColumnName "ArtistId")]
+      tracksJoinFieldMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
    in API.TableRelationships
         albumsTableName
         ( HashMap.fromList
-            [ (artistRelationshipName, API.Relationship artistsTableName API.ObjectRelationship joinFieldMapping)
+            [ (artistRelationshipName, API.Relationship artistsTableName API.ObjectRelationship artistsJoinFieldMapping),
+              (tracksRelationshipName, API.Relationship tracksTableName API.ArrayRelationship tracksJoinFieldMapping)
             ]
         )
 
 artistRelationshipName :: API.RelationshipName
 artistRelationshipName = API.RelationshipName "Artist"
+
+tracksRelationshipName :: API.RelationshipName
+tracksRelationshipName = API.RelationshipName "Tracks"
 
 customersTableName :: API.TableName
 customersTableName = API.TableName "Customer"
@@ -205,6 +226,42 @@ invoicesTableName = API.TableName "Invoice"
 invoicesRows :: [KeyMap API.FieldValue]
 invoicesRows = sortBy "InvoiceId" $ readTableFromXmlIntoRows invoicesTableName
 
+invoiceLinesTableName :: API.TableName
+invoiceLinesTableName = API.TableName "InvoiceLine"
+
+invoiceLinesRows :: [KeyMap API.FieldValue]
+invoiceLinesRows = sortBy "InvoiceLineId" $ readTableFromXmlIntoRows invoiceLinesTableName
+
+mediaTypesTableName :: API.TableName
+mediaTypesTableName = API.TableName "MediaType"
+
+mediaTypesRows :: [KeyMap API.FieldValue]
+mediaTypesRows = sortBy "MediaTypeId" $ readTableFromXmlIntoRows mediaTypesTableName
+
+tracksTableName :: API.TableName
+tracksTableName = API.TableName "Track"
+
+tracksRows :: [KeyMap API.FieldValue]
+tracksRows = sortBy "TrackId" $ readTableFromXmlIntoRows tracksTableName
+
+tracksTableRelationships :: API.TableRelationships
+tracksTableRelationships =
+  let invoiceLinesJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
+      mediaTypeJoinFieldMapping = HashMap.fromList [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
+   in API.TableRelationships
+        tracksTableName
+        ( HashMap.fromList
+            [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
+              (mediaTypeRelationshipName, API.Relationship mediaTypesTableName API.ObjectRelationship mediaTypeJoinFieldMapping)
+            ]
+        )
+
+invoiceLinesRelationshipName :: API.RelationshipName
+invoiceLinesRelationshipName = API.RelationshipName "InvoiceLines"
+
+mediaTypeRelationshipName :: API.RelationshipName
+mediaTypeRelationshipName = API.RelationshipName "MediaType"
+
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
 
@@ -216,6 +273,22 @@ filterColumnsByQueryFields query =
   KM.filterWithKey (\key _value -> key `elem` columns)
   where
     columns = KM.keys $ queryFields query
+
+filterColumns :: [Text] -> [KeyMap API.FieldValue] -> [KeyMap API.FieldValue]
+filterColumns columns =
+  fmap (KM.filterWithKey (\key _value -> key `elem` columns'))
+  where
+    columns' = K.fromText <$> columns
+
+renameColumns :: [(Text, Text)] -> [KeyMap API.FieldValue] -> [KeyMap API.FieldValue]
+renameColumns columns =
+  fmap (KM.fromList . fmap rename . KM.toList)
+  where
+    columns' = bimap K.fromText K.fromText <$> columns
+    rename original@(key, value) =
+      case find (\(k, _) -> k == key) columns' of
+        Just (_, renamedKey) -> (renamedKey, value)
+        Nothing -> original
 
 onlyKeepRelationships :: [API.RelationshipName] -> API.TableRelationships -> API.TableRelationships
 onlyKeepRelationships names tableRels =
