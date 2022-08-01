@@ -340,52 +340,52 @@ lookupBackendScalar allScalars baseType =
 
 data CustomTypeValidationError
   = -- | type names have to be unique across all types
-    DuplicateTypeNames !(Set.HashSet G.Name)
+    DuplicateTypeNames (Set.HashSet G.Name)
   | -- | field name and the field's base type
     InputObjectFieldTypeDoesNotExist
-      !InputObjectTypeName
-      !InputObjectFieldName
-      !G.Name
+      InputObjectTypeName
+      InputObjectFieldName
+      G.Name
   | -- | duplicate field declaration in input objects
     InputObjectDuplicateFields
-      !InputObjectTypeName
-      !(Set.HashSet InputObjectFieldName)
+      InputObjectTypeName
+      (Set.HashSet InputObjectFieldName)
   | -- | field name and the field's base type
     ObjectFieldTypeDoesNotExist
-      !ObjectTypeName
-      !ObjectFieldName
-      !G.Name
+      ObjectTypeName
+      ObjectFieldName
+      G.Name
   | -- | duplicate field declaration in objects
-    ObjectDuplicateFields !ObjectTypeName !(Set.HashSet G.Name)
+    ObjectDuplicateFields ObjectTypeName (Set.HashSet G.Name)
   | -- | object fields can't have arguments
-    ObjectFieldArgumentsNotAllowed !ObjectTypeName !ObjectFieldName
+    ObjectFieldArgumentsNotAllowed ObjectTypeName ObjectFieldName
   | -- | object fields can't have object types as base types
-    ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.Name
+    ObjectFieldObjectBaseType ObjectTypeName ObjectFieldName G.Name
   | -- | The table specified in the relationship does not exist
     ObjectRelationshipTableDoesNotExist
-      !ObjectTypeName
-      !RelationshipName
-      !QualifiedTable
+      ObjectTypeName
+      RelationshipName
+      QualifiedTable
   | -- | The field specified in the relationship mapping does not exist
     ObjectRelationshipFieldDoesNotExist
-      !ObjectTypeName
-      !RelationshipName
-      !ObjectFieldName
+      ObjectTypeName
+      RelationshipName
+      ObjectFieldName
   | -- | The field specified in the relationship mapping is a list type
     ObjectRelationshipFieldListType
-      !ObjectTypeName
-      !RelationshipName
-      !ObjectFieldName
+      ObjectTypeName
+      RelationshipName
+      ObjectFieldName
   | -- | The column specified in the relationship mapping does not exist
     ObjectRelationshipColumnDoesNotExist
-      !ObjectTypeName
-      !RelationshipName
-      !QualifiedTable
-      !PGCol
+      ObjectTypeName
+      RelationshipName
+      QualifiedTable
+      PGCol
   | -- | Object relationship refers to table in multiple sources
-    ObjectRelationshipMultiSources !ObjectTypeName
+    ObjectRelationshipMultiSources ObjectTypeName
   | -- | duplicate enum values
-    DuplicateEnumValues !EnumTypeName !(Set.HashSet G.EnumValue)
+    DuplicateEnumValues EnumTypeName (Set.HashSet G.EnumValue)
   deriving (Show, Eq)
 
 showCustomTypeValidationError ::

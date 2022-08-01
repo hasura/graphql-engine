@@ -49,10 +49,10 @@ instance (OnlyRelevantEq permissionType) => Monoid (CheckPermission permissionTy
 --   instance. Multiple role permissions are combined for inherited
 --   role permissions where this is used.
 data CombineRolePermInfo (b :: BackendType) = CombineRolePermInfo
-  { crpiInsPerm :: !(CheckPermission (InsPermInfo b)),
-    crpiSelPerm :: !(Maybe (CombinedSelPermInfo b)),
-    crpiUpdPerm :: !(CheckPermission (UpdPermInfo b)),
-    crpiDelPerm :: !(CheckPermission (DelPermInfo b))
+  { crpiInsPerm :: CheckPermission (InsPermInfo b),
+    crpiSelPerm :: Maybe (CombinedSelPermInfo b),
+    crpiUpdPerm :: CheckPermission (UpdPermInfo b),
+    crpiDelPerm :: CheckPermission (DelPermInfo b)
   }
 
 instance

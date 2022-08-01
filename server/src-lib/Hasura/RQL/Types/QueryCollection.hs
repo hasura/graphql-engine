@@ -71,8 +71,8 @@ getGQLQueryText :: GQLQueryWithText -> Text
 getGQLQueryText (GQLQueryWithText v) = fst v
 
 data ListedQuery = ListedQuery
-  { _lqName :: !QueryName,
-    _lqQuery :: !GQLQueryWithText
+  { _lqName :: QueryName,
+    _lqQuery :: GQLQueryWithText
   }
   deriving (Show, Eq, Generic)
 
@@ -92,9 +92,9 @@ $(deriveJSON hasuraJSON ''CollectionDef)
 $(makeLenses ''CollectionDef)
 
 data CreateCollection = CreateCollection
-  { _ccName :: !CollectionName,
-    _ccDefinition :: !CollectionDef,
-    _ccComment :: !(Maybe Text)
+  { _ccName :: CollectionName,
+    _ccDefinition :: CollectionDef,
+    _ccComment :: Maybe Text
   }
   deriving (Show, Eq, Generic)
 
@@ -105,25 +105,25 @@ collectionQueries :: CreateCollection -> [G.ExecutableDocument G.Name]
 collectionQueries = map (unGQLQuery . getGQLQuery . _lqQuery) . _cdQueries . _ccDefinition
 
 data DropCollection = DropCollection
-  { _dcCollection :: !CollectionName,
-    _dcCascade :: !Bool
+  { _dcCollection :: CollectionName,
+    _dcCascade :: Bool
   }
   deriving (Show, Eq)
 
 $(deriveJSON hasuraJSON ''DropCollection)
 
 data AddQueryToCollection = AddQueryToCollection
-  { _aqtcCollectionName :: !CollectionName,
-    _aqtcQueryName :: !QueryName,
-    _aqtcQuery :: !GQLQueryWithText
+  { _aqtcCollectionName :: CollectionName,
+    _aqtcQueryName :: QueryName,
+    _aqtcQuery :: GQLQueryWithText
   }
   deriving (Show, Eq)
 
 $(deriveJSON hasuraJSON ''AddQueryToCollection)
 
 data DropQueryFromCollection = DropQueryFromCollection
-  { _dqfcCollectionName :: !CollectionName,
-    _dqfcQueryName :: !QueryName
+  { _dqfcCollectionName :: CollectionName,
+    _dqfcQueryName :: QueryName
   }
   deriving (Show, Eq)
 

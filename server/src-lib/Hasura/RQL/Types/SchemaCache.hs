@@ -217,10 +217,10 @@ mkComputedFieldDep reason s tn computedField =
 type WithDeps a = (a, [SchemaDependency])
 
 data IntrospectionResult = IntrospectionResult
-  { irDoc :: !RemoteSchemaIntrospection,
-    irQueryRoot :: !G.Name,
-    irMutationRoot :: !(Maybe G.Name),
-    irSubscriptionRoot :: !(Maybe G.Name)
+  { irDoc :: RemoteSchemaIntrospection,
+    irQueryRoot :: G.Name,
+    irMutationRoot :: Maybe G.Name,
+    irSubscriptionRoot :: Maybe G.Name
   }
   deriving (Show, Eq, Generic)
 
@@ -231,14 +231,14 @@ type RemoteSchemaRelationships =
 
 -- | See 'fetchRemoteSchema'.
 data RemoteSchemaCtx = RemoteSchemaCtx
-  { _rscName :: !RemoteSchemaName,
+  { _rscName :: RemoteSchemaName,
     -- | Original remote schema without customizations
-    _rscIntroOriginal :: !IntrospectionResult,
-    _rscInfo :: !RemoteSchemaInfo,
+    _rscIntroOriginal :: IntrospectionResult,
+    _rscInfo :: RemoteSchemaInfo,
     -- | The raw response from the introspection query against the remote server.
     -- We store this so we can efficiently service 'introspect_remote_schema'.
-    _rscRawIntrospectionResult :: !BL.ByteString,
-    _rscPermissions :: !(M.HashMap RoleName IntrospectionResult),
+    _rscRawIntrospectionResult :: BL.ByteString,
+    _rscPermissions :: M.HashMap RoleName IntrospectionResult,
     _rscRemoteRelationships :: RemoteSchemaRelationships
   }
 
@@ -269,15 +269,15 @@ type RemoteSchemaMap = M.HashMap RemoteSchemaName RemoteSchemaCtx
 type DepMap = M.HashMap SchemaObjId (HS.HashSet SchemaDependency)
 
 data CronTriggerInfo = CronTriggerInfo
-  { ctiName :: !TriggerName,
-    ctiSchedule :: !CronSchedule,
-    ctiPayload :: !(Maybe Value),
-    ctiRetryConf :: !STRetryConf,
-    ctiWebhookInfo :: !(EnvRecord ResolvedWebhook),
-    ctiHeaders :: ![EventHeaderInfo],
-    ctiComment :: !(Maybe Text),
-    ctiRequestTransform :: !(Maybe RequestTransform),
-    ctiResponseTransform :: !(Maybe MetadataResponseTransform)
+  { ctiName :: TriggerName,
+    ctiSchedule :: CronSchedule,
+    ctiPayload :: Maybe Value,
+    ctiRetryConf :: STRetryConf,
+    ctiWebhookInfo :: EnvRecord ResolvedWebhook,
+    ctiHeaders :: [EventHeaderInfo],
+    ctiComment :: Maybe Text,
+    ctiRequestTransform :: Maybe RequestTransform,
+    ctiResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq)
 
@@ -483,25 +483,25 @@ askFunctionInfo sourceName functionName = do
 -------------------------------------------------------------------------------
 
 data SchemaCache = SchemaCache
-  { scSources :: !SourceCache,
-    scActions :: !ActionCache,
-    scRemoteSchemas :: !RemoteSchemaMap,
-    scAllowlist :: !InlinedAllowlist,
-    scAdminIntrospection :: !G.SchemaIntrospection,
-    scGQLContext :: !(HashMap RoleName (RoleContext GQLContext)),
-    scUnauthenticatedGQLContext :: !GQLContext,
-    scRelayContext :: !(HashMap RoleName (RoleContext GQLContext)),
-    scUnauthenticatedRelayContext :: !GQLContext,
-    scDepMap :: !DepMap,
-    scInconsistentObjs :: ![InconsistentMetadata],
-    scCronTriggers :: !(M.HashMap TriggerName CronTriggerInfo),
-    scEndpoints :: !(EndpointTrie GQLQueryWithText),
-    scApiLimits :: !ApiLimit,
-    scMetricsConfig :: !MetricsConfig,
-    scMetadataResourceVersion :: !(Maybe MetadataResourceVersion),
-    scSetGraphqlIntrospectionOptions :: !SetGraphqlIntrospectionOptions,
-    scTlsAllowlist :: ![TlsAllow],
-    scQueryCollections :: !QueryCollections
+  { scSources :: SourceCache,
+    scActions :: ActionCache,
+    scRemoteSchemas :: RemoteSchemaMap,
+    scAllowlist :: InlinedAllowlist,
+    scAdminIntrospection :: G.SchemaIntrospection,
+    scGQLContext :: HashMap RoleName (RoleContext GQLContext),
+    scUnauthenticatedGQLContext :: GQLContext,
+    scRelayContext :: HashMap RoleName (RoleContext GQLContext),
+    scUnauthenticatedRelayContext :: GQLContext,
+    scDepMap :: DepMap,
+    scInconsistentObjs :: [InconsistentMetadata],
+    scCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
+    scEndpoints :: EndpointTrie GQLQueryWithText,
+    scApiLimits :: ApiLimit,
+    scMetricsConfig :: MetricsConfig,
+    scMetadataResourceVersion :: Maybe MetadataResourceVersion,
+    scSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
+    scTlsAllowlist :: [TlsAllow],
+    scQueryCollections :: QueryCollections
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all

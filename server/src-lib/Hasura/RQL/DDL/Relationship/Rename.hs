@@ -21,10 +21,10 @@ import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Table
 
 data RenameRel b = RenameRel
-  { _rrSource :: !SourceName,
-    _rrTable :: !(TableName b),
-    _rrName :: !RelName,
-    _rrNewName :: !RelName
+  { _rrSource :: SourceName,
+    _rrTable :: TableName b,
+    _rrName :: RelName,
+    _rrNewName :: RelName
   }
 
 instance (Backend b) => FromJSON (RenameRel b) where

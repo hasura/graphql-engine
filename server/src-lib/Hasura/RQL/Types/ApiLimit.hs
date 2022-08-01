@@ -24,11 +24,11 @@ import Hasura.Server.Utils (isSessionVariable)
 import Hasura.Session (RoleName)
 
 data ApiLimit = ApiLimit
-  { _alRateLimit :: !(Maybe RateLimit),
-    _alDepthLimit :: !(Maybe DepthLimit),
-    _alNodeLimit :: !(Maybe NodeLimit),
-    _alTimeLimit :: !(Maybe TimeLimit),
-    _alDisabled :: !Bool
+  { _alRateLimit :: Maybe RateLimit,
+    _alDepthLimit :: Maybe DepthLimit,
+    _alNodeLimit :: Maybe NodeLimit,
+    _alTimeLimit :: Maybe TimeLimit,
+    _alDisabled :: Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -49,8 +49,8 @@ emptyApiLimit :: ApiLimit
 emptyApiLimit = ApiLimit Nothing Nothing Nothing Nothing False
 
 data Limit a = Limit
-  { _lGlobal :: !a,
-    _lPerRole :: !(InsOrdHashMap RoleName a)
+  { _lGlobal :: a,
+    _lPerRole :: InsOrdHashMap RoleName a
   }
   deriving (Show, Eq, Generic)
 
@@ -71,8 +71,8 @@ type NodeLimit = Limit MaxNodes
 type TimeLimit = Limit MaxTime
 
 data RateLimitConfig = RateLimitConfig
-  { _rlcMaxReqsPerMin :: !Int,
-    _rlcUniqueParams :: !(Maybe UniqueParamConfig)
+  { _rlcMaxReqsPerMin :: Int,
+    _rlcUniqueParams :: Maybe UniqueParamConfig
   }
   deriving (Show, Eq, Generic)
 
@@ -87,7 +87,7 @@ instance ToJSON RateLimitConfig where
 -- | The unique key using which an authenticated client can be identified
 data UniqueParamConfig
   = -- | it can be a list of session variable (like session var in 'UserInfo')
-    UPCSessionVar ![Text]
+    UPCSessionVar [Text]
   | -- | or it can be an IP address
     UPCIpAddress
   deriving (Show, Eq, Generic)

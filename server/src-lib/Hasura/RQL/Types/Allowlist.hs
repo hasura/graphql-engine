@@ -40,7 +40,7 @@ $(deriveJSON hasuraJSON ''DropCollectionFromAllowlist)
 
 data AllowlistScope
   = AllowlistScopeGlobal
-  | AllowlistScopeRoles !(NonEmpty RoleName)
+  | AllowlistScopeRoles (NonEmpty RoleName)
   deriving (Show, Eq, Generic)
 
 instance FromJSON AllowlistScope where
@@ -64,8 +64,8 @@ instance ToJSON AllowlistScope where
     AllowlistScopeRoles roles -> object ["global" .= False, "roles" .= roles]
 
 data AllowlistEntry = AllowlistEntry
-  { aeCollection :: !CollectionName,
-    aeScope :: !AllowlistScope
+  { aeCollection :: CollectionName,
+    aeScope :: AllowlistScope
   }
   deriving (Show, Eq, Generic)
 

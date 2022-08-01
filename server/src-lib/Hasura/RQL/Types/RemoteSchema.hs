@@ -95,9 +95,9 @@ newtype RemoteSchemaName = RemoteSchemaName
 -- NOTE: Prefix and suffix use 'G.Name' so that we can '<>' to form a new valid
 -- by-construction 'G.Name'.
 data RemoteTypeCustomization = RemoteTypeCustomization
-  { _rtcPrefix :: !(Maybe G.Name),
-    _rtcSuffix :: !(Maybe G.Name),
-    _rtcMapping :: !(HashMap G.Name G.Name)
+  { _rtcPrefix :: Maybe G.Name,
+    _rtcSuffix :: Maybe G.Name,
+    _rtcMapping :: HashMap G.Name G.Name
   }
   deriving (Show, Eq, Generic)
 
@@ -117,10 +117,10 @@ instance J.FromJSON RemoteTypeCustomization where
       <*> o J..:? "mapping" J..!= mempty
 
 data RemoteFieldCustomization = RemoteFieldCustomization
-  { _rfcParentType :: !G.Name,
-    _rfcPrefix :: !(Maybe G.Name),
-    _rfcSuffix :: !(Maybe G.Name),
-    _rfcMapping :: !(HashMap G.Name G.Name)
+  { _rfcParentType :: G.Name,
+    _rfcPrefix :: Maybe G.Name,
+    _rfcSuffix :: Maybe G.Name,
+    _rfcMapping :: HashMap G.Name G.Name
   }
   deriving (Show, Eq, Generic)
 
@@ -141,9 +141,9 @@ instance J.FromJSON RemoteFieldCustomization where
       <*> o J..:? "mapping" J..!= mempty
 
 data RemoteSchemaCustomization = RemoteSchemaCustomization
-  { _rscRootFieldsNamespace :: !(Maybe G.Name),
-    _rscTypeNames :: !(Maybe RemoteTypeCustomization),
-    _rscFieldNames :: !(Maybe [RemoteFieldCustomization])
+  { _rscRootFieldsNamespace :: Maybe G.Name,
+    _rscTypeNames :: Maybe RemoteTypeCustomization,
+    _rscFieldNames :: Maybe [RemoteFieldCustomization]
   }
   deriving (Show, Eq, Generic)
 
@@ -158,11 +158,11 @@ $(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaCustomizati
 -- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.
 data ValidatedRemoteSchemaDef = ValidatedRemoteSchemaDef
   { _vrsdUrl :: EnvRecord N.URI,
-    _vrsdHeaders :: ![HeaderConf],
-    _vrsdFwdClientHeaders :: !Bool,
-    _vrsdTimeoutSeconds :: !Int,
+    _vrsdHeaders :: [HeaderConf],
+    _vrsdFwdClientHeaders :: Bool,
+    _vrsdTimeoutSeconds :: Int,
     -- | See '_rsdCustomization'.
-    _vrsdCustomization :: !(Maybe RemoteSchemaCustomization)
+    _vrsdCustomization :: Maybe RemoteSchemaCustomization
   }
   deriving (Show, Eq, Generic)
 
@@ -175,11 +175,11 @@ instance Hashable ValidatedRemoteSchemaDef
 $(J.deriveJSON hasuraJSON ''ValidatedRemoteSchemaDef)
 
 data RemoteSchemaCustomizer = RemoteSchemaCustomizer
-  { _rscNamespaceFieldName :: !(Maybe G.Name),
+  { _rscNamespaceFieldName :: Maybe G.Name,
     -- | type name -> type name
-    _rscCustomizeTypeName :: !(HashMap G.Name G.Name),
+    _rscCustomizeTypeName :: HashMap G.Name G.Name,
     -- | type name -> field name -> field name
-    _rscCustomizeFieldName :: !(HashMap G.Name (HashMap G.Name G.Name))
+    _rscCustomizeFieldName :: HashMap G.Name (HashMap G.Name G.Name)
   }
   deriving (Show, Eq, Generic)
 
@@ -209,8 +209,8 @@ hasTypeOrFieldCustomizations RemoteSchemaCustomizer {..} =
 -- | 'RemoteSchemaDef' after the RemoteSchemaCustomizer has been generated
 -- by fetchRemoteSchema
 data RemoteSchemaInfo = RemoteSchemaInfo
-  { rsDef :: !ValidatedRemoteSchemaDef,
-    rsCustomizer :: !RemoteSchemaCustomizer
+  { rsDef :: ValidatedRemoteSchemaDef,
+    rsCustomizer :: RemoteSchemaCustomizer
   }
   deriving (Show, Eq, Generic)
 
@@ -224,12 +224,12 @@ $(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
 
 -- | Unvalidated remote schema config, from the user's API request
 data RemoteSchemaDef = RemoteSchemaDef
-  { _rsdUrl :: !(Maybe InputWebhook),
-    _rsdUrlFromEnv :: !(Maybe UrlFromEnv),
-    _rsdHeaders :: !(Maybe [HeaderConf]),
-    _rsdForwardClientHeaders :: !Bool,
-    _rsdTimeoutSeconds :: !(Maybe Int),
-    _rsdCustomization :: !(Maybe RemoteSchemaCustomization)
+  { _rsdUrl :: Maybe InputWebhook,
+    _rsdUrlFromEnv :: Maybe UrlFromEnv,
+    _rsdHeaders :: Maybe [HeaderConf],
+    _rsdForwardClientHeaders :: Bool,
+    _rsdTimeoutSeconds :: Maybe Int,
+    _rsdCustomization :: Maybe RemoteSchemaCustomization
     -- NOTE: In the future we might extend this API to support a small DSL of
     -- name transformations; this might live at a different layer, and be part of
     -- the schema customization story.
@@ -258,10 +258,10 @@ instance J.FromJSON RemoteSchemaDef where
 -- | The payload for 'add_remote_schema', and a component of 'Metadata'.
 data AddRemoteSchemaQuery = AddRemoteSchemaQuery
   { -- | An internal identifier for this remote schema.
-    _arsqName :: !RemoteSchemaName,
-    _arsqDefinition :: !RemoteSchemaDef,
+    _arsqName :: RemoteSchemaName,
+    _arsqDefinition :: RemoteSchemaDef,
     -- | An opaque description or comment. We might display this in the UI, for instance.
-    _arsqComment :: !(Maybe Text)
+    _arsqComment :: Maybe Text
   }
   deriving (Show, Eq, Generic)
 
@@ -352,10 +352,10 @@ instance J.ToJSON RemoteSchemaPermissionDefinition where
     J.object $ ["schema" J..= J.String (TB.run . G.schemaDocument $ schema)]
 
 data AddRemoteSchemaPermission = AddRemoteSchemaPermission
-  { _arspRemoteSchema :: !RemoteSchemaName,
-    _arspRole :: !RoleName,
-    _arspDefinition :: !RemoteSchemaPermissionDefinition,
-    _arspComment :: !(Maybe Text)
+  { _arspRemoteSchema :: RemoteSchemaName,
+    _arspRole :: RoleName,
+    _arspDefinition :: RemoteSchemaPermissionDefinition,
+    _arspComment :: Maybe Text
   }
   deriving (Show, Eq, Generic)
 
@@ -366,8 +366,8 @@ instance Cacheable AddRemoteSchemaPermission
 $(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermission)
 
 data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
-  { _drspRemoteSchema :: !RemoteSchemaName,
-    _drspRole :: !RoleName
+  { _drspRemoteSchema :: RemoteSchemaName,
+    _drspRole :: RoleName
   }
   deriving (Show, Eq, Generic)
 
@@ -381,7 +381,7 @@ $(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
 --   for validation of the session variable value
 data SessionArgumentPresetInfo
   = SessionArgumentPresetScalar
-  | SessionArgumentPresetEnum !(Set.HashSet G.EnumValue)
+  | SessionArgumentPresetEnum (Set.HashSet G.EnumValue)
   deriving (Show, Eq, Generic, Ord)
 
 instance Hashable SessionArgumentPresetInfo
@@ -393,9 +393,9 @@ instance Cacheable SessionArgumentPresetInfo
 -- See Notes [Remote Schema Argument Presets] and [Remote Schema Permissions
 -- Architecture] for additional information.
 data RemoteSchemaVariable
-  = SessionPresetVariable !SessionVariable !G.Name !SessionArgumentPresetInfo
-  | QueryVariable !Variable
-  | RemoteJSONValue !G.GType !J.Value
+  = SessionPresetVariable SessionVariable G.Name SessionArgumentPresetInfo
+  | QueryVariable Variable
+  | RemoteJSONValue G.GType J.Value
   deriving (Show, Eq, Generic, Ord)
 
 instance Hashable RemoteSchemaVariable
@@ -406,8 +406,8 @@ instance Cacheable RemoteSchemaVariable
 --
 -- See Note [Remote Schema Argument Presets] for additional information.
 data RemoteSchemaInputValueDefinition = RemoteSchemaInputValueDefinition
-  { _rsitdDefinition :: !G.InputValueDefinition,
-    _rsitdPresetArgument :: !(Maybe (G.Value RemoteSchemaVariable))
+  { _rsitdDefinition :: G.InputValueDefinition,
+    _rsitdPresetArgument :: Maybe (G.Value RemoteSchemaVariable)
   }
   deriving (Show, Eq, Generic, Ord)
 

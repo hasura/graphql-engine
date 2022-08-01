@@ -69,20 +69,20 @@ import Hasura.Tracing qualified as Tracing
 import Text.Regex.TDFA qualified as TDFA
 
 data CreateEventTriggerQuery (b :: BackendType) = CreateEventTriggerQuery
-  { _cetqSource :: !SourceName,
-    _cetqName :: !TriggerName,
-    _cetqTable :: !(TableName b),
-    _cetqInsert :: !(Maybe (SubscribeOpSpec b)),
-    _cetqUpdate :: !(Maybe (SubscribeOpSpec b)),
-    _cetqDelete :: !(Maybe (SubscribeOpSpec b)),
-    _cetqEnableManual :: !(Maybe Bool),
-    _cetqRetryConf :: !(Maybe RetryConf),
-    _cetqWebhook :: !(Maybe InputWebhook),
-    _cetqWebhookFromEnv :: !(Maybe Text),
-    _cetqHeaders :: !(Maybe [HeaderConf]),
-    _cetqReplace :: !Bool,
-    _cetqRequestTransform :: !(Maybe RequestTransform),
-    _cetqResponseTrasnform :: !(Maybe MetadataResponseTransform)
+  { _cetqSource :: SourceName,
+    _cetqName :: TriggerName,
+    _cetqTable :: TableName b,
+    _cetqInsert :: Maybe (SubscribeOpSpec b),
+    _cetqUpdate :: Maybe (SubscribeOpSpec b),
+    _cetqDelete :: Maybe (SubscribeOpSpec b),
+    _cetqEnableManual :: Maybe Bool,
+    _cetqRetryConf :: Maybe RetryConf,
+    _cetqWebhook :: Maybe InputWebhook,
+    _cetqWebhookFromEnv :: Maybe Text,
+    _cetqHeaders :: Maybe [HeaderConf],
+    _cetqReplace :: Bool,
+    _cetqRequestTransform :: Maybe RequestTransform,
+    _cetqResponseTrasnform :: Maybe MetadataResponseTransform
   }
 
 $(makeLenses ''CreateEventTriggerQuery)
@@ -127,8 +127,8 @@ instance Backend b => FromJSON (CreateEventTriggerQuery b) where
           _ -> return ()
 
 data DeleteEventTriggerQuery (b :: BackendType) = DeleteEventTriggerQuery
-  { _detqSource :: !SourceName,
-    _detqName :: !TriggerName
+  { _detqSource :: SourceName,
+    _detqName :: TriggerName
   }
 
 instance FromJSON (DeleteEventTriggerQuery b) where
@@ -138,8 +138,8 @@ instance FromJSON (DeleteEventTriggerQuery b) where
       <*> o .: "name"
 
 data RedeliverEventQuery (b :: BackendType) = RedeliverEventQuery
-  { _rdeqEventId :: !EventId,
-    _rdeqSource :: !SourceName
+  { _rdeqEventId :: EventId,
+    _rdeqSource :: SourceName
   }
 
 instance FromJSON (RedeliverEventQuery b) where
@@ -149,9 +149,9 @@ instance FromJSON (RedeliverEventQuery b) where
       <*> o .:? "source" .!= defaultSource
 
 data InvokeEventTriggerQuery (b :: BackendType) = InvokeEventTriggerQuery
-  { _ietqName :: !TriggerName,
-    _ietqSource :: !SourceName,
-    _ietqPayload :: !Value
+  { _ietqName :: TriggerName,
+    _ietqSource :: SourceName,
+    _ietqPayload :: Value
   }
 
 instance Backend b => FromJSON (InvokeEventTriggerQuery b) where

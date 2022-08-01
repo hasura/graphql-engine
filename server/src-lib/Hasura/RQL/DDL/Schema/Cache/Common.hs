@@ -83,9 +83,9 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 
 -- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
-  { _ikMetadata :: !Inc.InvalidationKey,
-    _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey),
-    _ikSources :: !(HashMap SourceName Inc.InvalidationKey)
+  { _ikMetadata :: Inc.InvalidationKey,
+    _ikRemoteSchemas :: HashMap RemoteSchemaName Inc.InvalidationKey,
+    _ikSources :: HashMap SourceName Inc.InvalidationKey
   }
   deriving (Show, Eq, Generic)
 
@@ -126,20 +126,20 @@ instance (Backend b) => NFData (TableBuildInput b)
 instance (Backend b) => Inc.Cacheable (TableBuildInput b)
 
 data NonColumnTableInputs b = NonColumnTableInputs
-  { _nctiTable :: !(TableName b),
-    _nctiObjectRelationships :: ![ObjRelDef b],
-    _nctiArrayRelationships :: ![ArrRelDef b],
-    _nctiComputedFields :: ![ComputedFieldMetadata b],
-    _nctiRemoteRelationships :: ![RemoteRelationship]
+  { _nctiTable :: TableName b,
+    _nctiObjectRelationships :: [ObjRelDef b],
+    _nctiArrayRelationships :: [ArrRelDef b],
+    _nctiComputedFields :: [ComputedFieldMetadata b],
+    _nctiRemoteRelationships :: [RemoteRelationship]
   }
   deriving (Show, Eq, Generic)
 
 data TablePermissionInputs b = TablePermissionInputs
-  { _tpiTable :: !(TableName b),
-    _tpiInsert :: ![InsPermDef b],
-    _tpiSelect :: ![SelPermDef b],
-    _tpiUpdate :: ![UpdPermDef b],
-    _tpiDelete :: ![DelPermDef b]
+  { _tpiTable :: TableName b,
+    _tpiInsert :: [InsPermDef b],
+    _tpiSelect :: [SelPermDef b],
+    _tpiUpdate :: [UpdPermDef b],
+    _tpiDelete :: [DelPermDef b]
   }
   deriving (Generic)
 
@@ -175,30 +175,30 @@ mkTableInputs TableMetadata {..} =
 -- 'MonadWriter' side channel.
 data BuildOutputs = BuildOutputs
   { _boSources :: SourceCache,
-    _boActions :: !ActionCache,
+    _boActions :: ActionCache,
     -- | We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
     -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
     -- generation (because of field conflicts).
-    _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject)),
-    _boAllowlist :: !InlinedAllowlist,
-    _boCustomTypes :: !AnnotatedCustomTypes,
-    _boCronTriggers :: !(M.HashMap TriggerName CronTriggerInfo),
-    _boEndpoints :: !(M.HashMap EndpointName (EndpointMetadata GQLQueryWithText)),
-    _boApiLimits :: !ApiLimit,
-    _boMetricsConfig :: !MetricsConfig,
-    _boRoles :: !(HashMap RoleName Role),
-    _boTlsAllowlist :: ![TlsAllow],
-    _boQueryCollections :: !QueryCollections
+    _boRemoteSchemas :: HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject),
+    _boAllowlist :: InlinedAllowlist,
+    _boCustomTypes :: AnnotatedCustomTypes,
+    _boCronTriggers :: M.HashMap TriggerName CronTriggerInfo,
+    _boEndpoints :: M.HashMap EndpointName (EndpointMetadata GQLQueryWithText),
+    _boApiLimits :: ApiLimit,
+    _boMetricsConfig :: MetricsConfig,
+    _boRoles :: HashMap RoleName Role,
+    _boTlsAllowlist :: [TlsAllow],
+    _boQueryCollections :: QueryCollections
   }
 
 $(makeLenses ''BuildOutputs)
 
 -- | Parameters required for schema cache build
 data CacheBuildParams = CacheBuildParams
-  { _cbpManager :: !HTTP.Manager,
-    _cbpPGSourceResolver :: !(SourceResolver ('Postgres 'Vanilla)),
-    _cbpMSSQLSourceResolver :: !(SourceResolver 'MSSQL),
-    _cbpServerConfigCtx :: !ServerConfigCtx
+  { _cbpManager :: HTTP.Manager,
+    _cbpPGSourceResolver :: SourceResolver ('Postgres 'Vanilla),
+    _cbpMSSQLSourceResolver :: SourceResolver 'MSSQL,
+    _cbpServerConfigCtx :: ServerConfigCtx
   }
 
 -- | The monad in which @'RebuildableSchemaCache' is being run
@@ -254,9 +254,9 @@ runCacheBuildM m = do
   runCacheBuild params m
 
 data RebuildableSchemaCache = RebuildableSchemaCache
-  { lastBuiltSchemaCache :: !SchemaCache,
-    _rscInvalidationMap :: !InvalidationKeys,
-    _rscRebuild :: !(Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache)
+  { lastBuiltSchemaCache :: SchemaCache,
+    _rscInvalidationMap :: InvalidationKeys,
+    _rscRebuild :: Inc.Rule (ReaderT BuildReason CacheBuild) (Metadata, InvalidationKeys) SchemaCache
   }
 
 bindErrorA ::

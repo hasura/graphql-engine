@@ -40,9 +40,9 @@ import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data FunctionMeta b = FunctionMeta
-  { fmOid :: !OID,
-    fmFunction :: !(FunctionName b),
-    fmType :: !FunctionVolatility
+  { fmOid :: OID,
+    fmFunction :: FunctionName b,
+    fmType :: FunctionVolatility
   }
   deriving (Generic)
 
@@ -57,8 +57,8 @@ instance (Backend b) => ToJSON (FunctionMeta b) where
   toJSON = genericToJSON hasuraJSON
 
 data ComputedFieldMeta b = ComputedFieldMeta
-  { ccmName :: !ComputedFieldName,
-    ccmFunctionMeta :: !(FunctionMeta b)
+  { ccmName :: ComputedFieldName,
+    ccmFunctionMeta :: FunctionMeta b
   }
   deriving (Generic, Show, Eq)
 
@@ -69,9 +69,9 @@ instance (Backend b) => ToJSON (ComputedFieldMeta b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 data TableMeta (b :: BackendType) = TableMeta
-  { tmTable :: !(TableName b),
-    tmInfo :: !(DBTableMetadata b),
-    tmComputedFields :: ![ComputedFieldMeta b]
+  { tmTable :: TableName b,
+    tmInfo :: DBTableMetadata b,
+    tmComputedFields :: [ComputedFieldMeta b]
   }
   deriving (Show, Eq)
 
@@ -86,16 +86,16 @@ deriving instance (Backend b) => Show (ComputedFieldDiff b)
 deriving instance (Backend b) => Eq (ComputedFieldDiff b)
 
 data TableDiff (b :: BackendType) = TableDiff
-  { _tdNewName :: !(Maybe (TableName b)),
-    _tdDroppedCols :: ![Column b],
-    _tdAlteredCols :: ![(RawColumnInfo b, RawColumnInfo b)],
-    _tdDroppedFKeyCons :: ![ConstraintName b],
-    _tdComputedFields :: !(ComputedFieldDiff b),
+  { _tdNewName :: Maybe (TableName b),
+    _tdDroppedCols :: [Column b],
+    _tdAlteredCols :: [(RawColumnInfo b, RawColumnInfo b)],
+    _tdDroppedFKeyCons :: [ConstraintName b],
+    _tdComputedFields :: ComputedFieldDiff b,
     -- The final list of uniq/primary constraint names
     -- used for generating types on_conflict clauses
     -- TODO: this ideally should't be part of TableDiff
-    _tdUniqOrPriCons :: ![ConstraintName b],
-    _tdNewDescription :: !(Maybe PGDescription)
+    _tdUniqOrPriCons :: [ConstraintName b],
+    _tdNewDescription :: Maybe PGDescription
   }
 
 getTableDiff ::
@@ -207,8 +207,8 @@ getTableChangeDeps source tn tableDiff = do
         $ _cfdDropped computedFieldDiff
 
 data TablesDiff (b :: BackendType) = TablesDiff
-  { _sdDroppedTables :: ![TableName b],
-    _sdAlteredTables :: ![(TableName b, TableDiff b)]
+  { _sdDroppedTables :: [TableName b],
+    _sdAlteredTables :: [(TableName b, TableDiff b)]
   }
 
 getTablesDiff ::
@@ -252,8 +252,8 @@ getIndirectDependenciesFromTableDiff source tablesDiff = do
       _ -> False
 
 data FunctionsDiff b = FunctionsDiff
-  { fdDropped :: ![FunctionName b],
-    fdAltered :: ![(FunctionName b, FunctionVolatility)]
+  { fdDropped :: [FunctionName b],
+    fdAltered :: [(FunctionName b, FunctionVolatility)]
   }
 
 deriving instance (Backend b) => Show (FunctionsDiff b)

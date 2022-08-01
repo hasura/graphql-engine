@@ -46,10 +46,10 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- FIXME: move this to Hasura/Metadata
 data ToSchemaRelationshipDef = ToSchemaRelationshipDef
   { -- | Identifier for this mapping.
-    _trrdRemoteSchema :: !RemoteSchemaName,
+    _trrdRemoteSchema :: RemoteSchemaName,
     -- | The lhs fields that must be forwarded to the remote schema.
-    _trrdLhsFields :: !(HashSet FieldName),
-    _trrdRemoteField :: !RemoteFields
+    _trrdLhsFields :: HashSet FieldName,
+    _trrdRemoteField :: RemoteFields
   }
   deriving stock (Show, Eq, Generic)
 
@@ -102,8 +102,8 @@ instance ToJSON RemoteFields where
 --
 -- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments
 data FieldCall = FieldCall
-  { fcName :: !G.Name,
-    fcArguments :: !RemoteArguments
+  { fcName :: G.Name,
+    fcArguments :: RemoteArguments
   }
   deriving (Show, Eq, Generic)
 
@@ -210,18 +210,18 @@ lhsIdentifierToGraphQLName (LHSIdentifier rawText) = G.mkName $ T.map adjust raw
 data RemoteSchemaFieldInfo = RemoteSchemaFieldInfo
   { -- | Field name to which we'll map the remote in hasura; this becomes part
     --   of the hasura schema.
-    _rrfiName :: !RelName,
+    _rrfiName :: RelName,
     -- | Input arguments to the remote field info; The '_rfiParamMap' will only
     --   include the arguments to the remote field that is being joined. The
     --   names of the arguments here are modified, it will be in the format of
     --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
-    _rrfiParamMap :: !(HashMap G.Name RemoteSchemaInputValueDefinition),
-    _rrfiRemoteFields :: !RemoteFields,
-    _rrfiRemoteSchema :: !RemoteSchemaInfo,
+    _rrfiParamMap :: HashMap G.Name RemoteSchemaInputValueDefinition,
+    _rrfiRemoteFields :: RemoteFields,
+    _rrfiRemoteSchema :: RemoteSchemaInfo,
     -- | The new input value definitions created for this remote field
-    _rrfiInputValueDefinitions :: ![G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition],
+    _rrfiInputValueDefinitions :: [G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition],
     -- | Name of the remote schema, that's used for joining
-    _rrfiRemoteSchemaName :: !RemoteSchemaName,
+    _rrfiRemoteSchemaName :: RemoteSchemaName,
     -- | TODO: this one should be gone when 'validateRemoteRelationship'
     -- function is cleaned up
     _rrfiLHSIdentifier :: LHSIdentifier

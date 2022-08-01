@@ -40,8 +40,8 @@ import Hasura.RQL.DDL.Schema.Rename as M
 import Hasura.RQL.DDL.Schema.Table as M
 
 data RunSQLRes = RunSQLRes
-  { rrResultType :: !Text,
-    rrResult :: !Value
+  { rrResultType :: Text,
+    rrResult :: Value
   }
   deriving (Show, Eq)
 

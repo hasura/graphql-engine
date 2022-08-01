@@ -68,12 +68,12 @@ import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 -- types used during schema cache construction
 
 data CollectedInfo
-  = CIInconsistency !InconsistentMetadata
+  = CIInconsistency InconsistentMetadata
   | CIDependency
-      !MetadataObject
+      MetadataObject
       -- ^ for error reporting on missing dependencies
-      !SchemaObjId
-      !SchemaDependency
+      SchemaObjId
+      SchemaDependency
   deriving (Eq)
 
 $(makePrisms ''CollectedInfo)
@@ -204,13 +204,13 @@ data BuildReason
 data CacheInvalidations = CacheInvalidations
   { -- | Force reloading of all database information, including information not technically stored in
     -- metadata (currently just enum values). Set by the @reload_metadata@ API.
-    ciMetadata :: !Bool,
+    ciMetadata :: Bool,
     -- | Force refetching of the given remote schemas, even if their definition has not changed. Set
     -- by the @reload_remote_schema@ API.
-    ciRemoteSchemas :: !(HashSet RemoteSchemaName),
+    ciRemoteSchemas :: HashSet RemoteSchemaName,
     -- | Force re-establishing connections of the given data sources, even if their configuration has not changed. Set
     -- by the @pg_reload_source@ API.
-    ciSources :: !(HashSet SourceName)
+    ciSources :: HashSet SourceName
   }
 
 $(deriveJSON hasuraJSON ''CacheInvalidations)

@@ -14,7 +14,7 @@ import Hasura.Prelude
 import Test.QuickCheck.Arbitrary as Q
 
 data Network = Network
-  { networkTlsAllowlist :: ![TlsAllow]
+  { networkTlsAllowlist :: [TlsAllow]
   }
   deriving (Show, Eq, Generic)
 
@@ -34,9 +34,9 @@ emptyNetwork :: Network
 emptyNetwork = Network []
 
 data TlsAllow = TlsAllow
-  { taHost :: !String,
-    taSuffix :: !(Maybe String),
-    taPermit :: !(Maybe [TlsPermission])
+  { taHost :: String,
+    taSuffix :: Maybe String,
+    taPermit :: Maybe [TlsPermission]
   }
   deriving (Show, Read, Eq, Generic)
 
@@ -77,7 +77,7 @@ instance ToJSON TlsPermission where
 
 type AddHostToTLSAllowlist = TlsAllow
 
-data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist {_dhftaHost :: !String}
+data DropHostFromTLSAllowlist = DropHostFromTLSAllowlist {_dhftaHost :: String}
   deriving (Show, Eq)
 
 instance FromJSON DropHostFromTLSAllowlist where

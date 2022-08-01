@@ -37,13 +37,13 @@ import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data TableObjId (b :: BackendType)
-  = TOCol !(Column b)
-  | TORel !RelName
-  | TOComputedField !ComputedFieldName
-  | TORemoteRel !RelName
-  | TOForeignKey !(ConstraintName b)
-  | TOPerm !RoleName !PermType
-  | TOTrigger !TriggerName
+  = TOCol (Column b)
+  | TORel RelName
+  | TOComputedField ComputedFieldName
+  | TORemoteRel RelName
+  | TOForeignKey (ConstraintName b)
+  | TOPerm RoleName PermType
+  | TOTrigger TriggerName
   deriving (Generic)
 
 deriving instance Backend b => Eq (TableObjId b)
@@ -51,24 +51,24 @@ deriving instance Backend b => Eq (TableObjId b)
 instance (Backend b) => Hashable (TableObjId b)
 
 data SourceObjId (b :: BackendType)
-  = SOITable !(TableName b)
-  | SOITableObj !(TableName b) !(TableObjId b)
-  | SOIFunction !(FunctionName b)
+  = SOITable (TableName b)
+  | SOITableObj (TableName b) (TableObjId b)
+  | SOIFunction (FunctionName b)
   deriving (Eq, Generic)
 
 instance (Backend b) => Hashable (SourceObjId b)
 
 data SchemaObjId
-  = SOSource !SourceName
-  | SOSourceObj !SourceName !(AB.AnyBackend SourceObjId)
-  | SORemoteSchema !RemoteSchemaName
-  | SORemoteSchemaPermission !RemoteSchemaName !RoleName
+  = SOSource SourceName
+  | SOSourceObj SourceName (AB.AnyBackend SourceObjId)
+  | SORemoteSchema RemoteSchemaName
+  | SORemoteSchemaPermission RemoteSchemaName RoleName
   | -- | A remote relationship on a remote schema type, identified by
     -- 1. remote schema name
     -- 2. remote schema type on which the relationship is defined
     -- 3. name of the relationship
-    SORemoteSchemaRemoteRelationship !RemoteSchemaName !G.Name !RelName
-  | SORole !RoleName
+    SORemoteSchemaRemoteRelationship RemoteSchemaName G.Name RelName
+  | SORole RoleName
   deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
@@ -166,8 +166,8 @@ instance ToJSON DependencyReason where
   toJSON = String . reasonToTxt
 
 data SchemaDependency = SchemaDependency
-  { sdObjId :: !SchemaObjId,
-    sdReason :: !DependencyReason
+  { sdObjId :: SchemaObjId,
+    sdReason :: DependencyReason
   }
   deriving (Show, Eq, Generic)
 

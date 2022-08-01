@@ -59,9 +59,9 @@ getActionInfo actionName = do
     throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
 
 data CreateAction = CreateAction
-  { _caName :: !ActionName,
-    _caDefinition :: !ActionDefinitionInput,
-    _caComment :: !(Maybe Text)
+  { _caName :: ActionName,
+    _caDefinition :: ActionDefinitionInput,
+    _caComment :: Maybe Text
   }
 
 $(makeLenses ''CreateAction)
@@ -209,9 +209,9 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
     )
 
 data UpdateAction = UpdateAction
-  { _uaName :: !ActionName,
-    _uaDefinition :: !ActionDefinitionInput,
-    _uaComment :: !(Maybe Text)
+  { _uaName :: ActionName,
+    _uaDefinition :: ActionDefinitionInput,
+    _uaComment :: Maybe Text
   }
 
 $(makeLenses ''UpdateAction)
@@ -247,8 +247,8 @@ defaultClearActionData :: ClearActionData
 defaultClearActionData = ClearActionData True
 
 data DropAction = DropAction
-  { _daName :: !ActionName,
-    _daClearData :: !(Maybe ClearActionData)
+  { _daName :: ActionName,
+    _daClearData :: Maybe ClearActionData
   }
   deriving (Show, Eq)
 
@@ -285,10 +285,10 @@ doesActionPermissionExist metadata actionName roleName =
   any ((== roleName) . _apmRole) $ metadata ^. (metaActions . ix actionName . amPermissions)
 
 data CreateActionPermission = CreateActionPermission
-  { _capAction :: !ActionName,
-    _capRole :: !RoleName,
-    _capDefinition :: !(Maybe J.Value),
-    _capComment :: !(Maybe Text)
+  { _capAction :: ActionName,
+    _capRole :: RoleName,
+    _capDefinition :: Maybe J.Value,
+    _capComment :: Maybe Text
   }
 
 $(J.deriveFromJSON hasuraJSON ''CreateActionPermission)
@@ -312,8 +312,8 @@ runCreateActionPermission createActionPermission = do
     CreateActionPermission actionName roleName _ comment = createActionPermission
 
 data DropActionPermission = DropActionPermission
-  { _dapAction :: !ActionName,
-    _dapRole :: !RoleName
+  { _dapAction :: ActionName,
+    _dapRole :: RoleName
   }
   deriving (Show, Eq)
 

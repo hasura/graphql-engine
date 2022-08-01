@@ -29,8 +29,8 @@ import Hasura.SQL.Backend
 
 data MutFldG (b :: BackendType) (r :: Type) v
   = MCount
-  | MExp !Text
-  | MRet !(AnnFieldsG b r v)
+  | MExp Text
+  | MRet (AnnFieldsG b r v)
   deriving stock (Functor, Foldable, Traversable)
 
 deriving stock instance
@@ -56,8 +56,8 @@ type MutFld b = MutFldG b Void (SQLExpression b)
 type MutFldsG b r v = Fields (MutFldG b r v)
 
 data MutationOutputG (b :: BackendType) (r :: Type) v
-  = MOutMultirowFields !(MutFldsG b r v)
-  | MOutSinglerowObject !(AnnFieldsG b r v)
+  = MOutMultirowFields (MutFldsG b r v)
+  | MOutSinglerowObject (AnnFieldsG b r v)
   deriving (Functor, Foldable, Traversable)
 
 deriving stock instance

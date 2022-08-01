@@ -75,7 +75,7 @@ instance FromJSON OrderByExp where
       orderColumnParser = AT.takeText >>= orderByColFromTxt
 
 data DMLQuery a
-  = DMLQuery !SourceName !QualifiedTable a
+  = DMLQuery SourceName QualifiedTable a
   deriving (Show, Eq)
 
 instance (FromJSON a) => FromJSON (DMLQuery a) where
@@ -89,11 +89,11 @@ getSourceDMLQuery :: forall a. DMLQuery a -> SourceName
 getSourceDMLQuery (DMLQuery source _ _) = source
 
 data SelectG a b c = SelectG
-  { sqColumns :: ![a], -- Postgres columns and relationships
-    sqWhere :: !(Maybe b), -- Filter
-    sqOrderBy :: !(Maybe OrderByExp), -- Ordering
-    sqLimit :: !(Maybe c), -- Limit
-    sqOffset :: !(Maybe c) -- Offset
+  { sqColumns :: [a], -- Postgres columns and relationships
+    sqWhere :: Maybe b, -- Filter
+    sqOrderBy :: Maybe OrderByExp, -- Ordering
+    sqLimit :: Maybe c, -- Limit
+    sqOffset :: Maybe c -- Offset
   }
   deriving (Show, Eq)
 
@@ -101,7 +101,7 @@ $(deriveFromJSON hasuraJSON {omitNothingFields = True} ''SelectG)
 
 data Wildcard
   = Star
-  | StarDot !Wildcard
+  | StarDot Wildcard
   deriving (Show, Eq, Ord)
 
 parseWildcard :: AT.Parser Wildcard
@@ -113,9 +113,9 @@ parseWildcard =
 
 -- Columns in RQL
 data SelCol
-  = SCStar !Wildcard
-  | SCExtSimple !PGCol
-  | SCExtRel !RelName !(Maybe RelName) !SelectQ
+  = SCStar Wildcard
+  | SCExtSimple PGCol
+  | SCExtRel RelName (Maybe RelName) SelectQ
   deriving (Show, Eq)
 
 instance FromJSON SelCol where
@@ -168,20 +168,20 @@ instance FromJSON ConstraintOn where
       "Expecting String or Array"
 
 data OnConflict = OnConflict
-  { ocConstraintOn :: !(Maybe ConstraintOn),
-    ocConstraint :: !(Maybe ConstraintName),
-    ocAction :: !ConflictAction
+  { ocConstraintOn :: Maybe ConstraintOn,
+    ocConstraint :: Maybe ConstraintName,
+    ocAction :: ConflictAction
   }
   deriving (Show, Eq)
 
 $(deriveFromJSON hasuraJSON {omitNothingFields = True} ''OnConflict)
 
 data InsertQuery = InsertQuery
-  { iqTable :: !QualifiedTable,
-    iqSource :: !SourceName,
-    iqObjects :: !Value,
-    iqOnConflict :: !(Maybe OnConflict),
-    iqReturning :: !(Maybe [PGCol])
+  { iqTable :: QualifiedTable,
+    iqSource :: SourceName,
+    iqObjects :: Value,
+    iqOnConflict :: Maybe OnConflict,
+    iqReturning :: Maybe [PGCol]
   }
   deriving (Show, Eq)
 
@@ -197,14 +197,14 @@ instance FromJSON InsertQuery where
 type UpdVals b = ColumnValues b Value
 
 data UpdateQuery = UpdateQuery
-  { uqTable :: !QualifiedTable,
-    uqSource :: !SourceName,
-    uqWhere :: !(BoolExp ('Postgres 'Vanilla)),
-    uqSet :: !(UpdVals ('Postgres 'Vanilla)),
-    uqInc :: !(UpdVals ('Postgres 'Vanilla)),
-    uqMul :: !(UpdVals ('Postgres 'Vanilla)),
-    uqDefault :: ![PGCol],
-    uqReturning :: !(Maybe [PGCol])
+  { uqTable :: QualifiedTable,
+    uqSource :: SourceName,
+    uqWhere :: BoolExp ('Postgres 'Vanilla),
+    uqSet :: UpdVals ('Postgres 'Vanilla),
+    uqInc :: UpdVals ('Postgres 'Vanilla),
+    uqMul :: UpdVals ('Postgres 'Vanilla),
+    uqDefault :: [PGCol],
+    uqReturning :: Maybe [PGCol]
   }
   deriving (Show, Eq)
 
@@ -221,10 +221,10 @@ instance FromJSON UpdateQuery where
       <*> o .:? "returning"
 
 data DeleteQuery = DeleteQuery
-  { doTable :: !QualifiedTable,
-    doSource :: !SourceName,
-    doWhere :: !(BoolExp ('Postgres 'Vanilla)), -- where clause
-    doReturning :: !(Maybe [PGCol]) -- columns returning
+  { doTable :: QualifiedTable,
+    doSource :: SourceName,
+    doWhere :: BoolExp ('Postgres 'Vanilla), -- where clause
+    doReturning :: Maybe [PGCol] -- columns returning
   }
   deriving (Show, Eq)
 
@@ -237,10 +237,10 @@ instance FromJSON DeleteQuery where
       <*> o .:? "returning"
 
 data CountQuery = CountQuery
-  { cqTable :: !QualifiedTable,
-    cqSource :: !SourceName,
-    cqDistinct :: !(Maybe [PGCol]),
-    cqWhere :: !(Maybe (BoolExp ('Postgres 'Vanilla)))
+  { cqTable :: QualifiedTable,
+    cqSource :: SourceName,
+    cqDistinct :: Maybe [PGCol],
+    cqWhere :: Maybe (BoolExp ('Postgres 'Vanilla))
   }
   deriving (Show, Eq)
 
@@ -253,12 +253,12 @@ instance FromJSON CountQuery where
       <*> o .:? "where"
 
 data QueryT
-  = QTInsert !InsertQuery
-  | QTSelect !SelectQueryT
-  | QTUpdate !UpdateQuery
-  | QTDelete !DeleteQuery
-  | QTCount !CountQuery
-  | QTBulk ![QueryT]
+  = QTInsert InsertQuery
+  | QTSelect SelectQueryT
+  | QTUpdate UpdateQuery
+  | QTDelete DeleteQuery
+  | QTCount CountQuery
+  | QTBulk [QueryT]
   deriving (Show, Eq)
 
 $( deriveFromJSON

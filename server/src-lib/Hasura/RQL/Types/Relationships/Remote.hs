@@ -229,8 +229,8 @@ instance (ToJSON lhsJoinField) => ToJSON (RemoteFieldInfo lhsJoinField)
 
 -- | Resolved remote relationship's RHS
 data RemoteFieldInfoRHS
-  = RFISchema !RemoteSchemaFieldInfo
-  | RFISource !(AnyBackend RemoteSourceFieldInfo)
+  = RFISchema RemoteSchemaFieldInfo
+  | RFISource (AnyBackend RemoteSourceFieldInfo)
   deriving (Generic, Eq)
 
 instance Cacheable RemoteFieldInfoRHS
@@ -243,8 +243,8 @@ instance ToJSON RemoteFieldInfoRHS where
 
 -- | Information about the field on the LHS of a join against a remote schema.
 data DBJoinField (b :: BackendType)
-  = JoinColumn !(Column b) !(ColumnType b)
-  | JoinComputedField !(ScalarComputedField b)
+  = JoinColumn (Column b) (ColumnType b)
+  | JoinComputedField (ScalarComputedField b)
   deriving (Generic)
 
 deriving instance Backend b => Eq (DBJoinField b)
@@ -263,11 +263,11 @@ instance (Backend b) => ToJSON (DBJoinField b) where
 -- | Information about a computed field appearing on the LHS of a remote join.
 -- FIXME: why do we need all of this?
 data ScalarComputedField (b :: BackendType) = ScalarComputedField
-  { _scfXField :: !(XComputedField b),
-    _scfName :: !ComputedFieldName,
-    _scfFunction :: !(FunctionName b),
-    _scfComputedFieldImplicitArgs :: !(ComputedFieldImplicitArguments b),
-    _scfType :: !(ScalarType b)
+  { _scfXField :: XComputedField b,
+    _scfName :: ComputedFieldName,
+    _scfFunction :: FunctionName b,
+    _scfComputedFieldImplicitArgs :: ComputedFieldImplicitArguments b,
+    _scfType :: ScalarType b
   }
   deriving (Generic)
 

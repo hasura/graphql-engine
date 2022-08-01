@@ -25,8 +25,8 @@ import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 
 data SetQueryTagsConfig = SetQueryTagsConfig
-  { _sqtSourceName :: !SourceName,
-    _sqtConfig :: !QueryTagsConfig
+  { _sqtSourceName :: SourceName,
+    _sqtConfig :: QueryTagsConfig
   }
 
 $(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''SetQueryTagsConfig)

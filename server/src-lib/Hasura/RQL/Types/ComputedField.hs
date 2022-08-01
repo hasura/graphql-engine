@@ -61,10 +61,10 @@ deriving instance Backend b => Show (FunctionTrackedAs b)
 deriving instance Backend b => Eq (FunctionTrackedAs b)
 
 data ComputedFieldFunction (b :: BackendType) = ComputedFieldFunction
-  { _cffName :: !(FunctionName b),
-    _cffInputArgs :: !(Seq.Seq (FunctionArgument b)),
-    _cffComputedFieldImplicitArgs :: !(ComputedFieldImplicitArguments b),
-    _cffDescription :: !(Maybe PGDescription)
+  { _cffName :: FunctionName b,
+    _cffInputArgs :: Seq.Seq (FunctionArgument b),
+    _cffComputedFieldImplicitArgs :: ComputedFieldImplicitArguments b,
+    _cffDescription :: Maybe PGDescription
   }
   deriving (Generic)
 
@@ -82,11 +82,11 @@ instance (Backend b) => ToJSON (ComputedFieldFunction b) where
   toJSON = genericToJSON hasuraJSON
 
 data ComputedFieldInfo (b :: BackendType) = ComputedFieldInfo
-  { _cfiXComputedFieldInfo :: !(XComputedField b),
-    _cfiName :: !ComputedFieldName,
-    _cfiFunction :: !(ComputedFieldFunction b),
-    _cfiReturnType :: !(ComputedFieldReturn b),
-    _cfiDescription :: !(Maybe Text)
+  { _cfiXComputedFieldInfo :: XComputedField b,
+    _cfiName :: ComputedFieldName,
+    _cfiFunction :: ComputedFieldFunction b,
+    _cfiReturnType :: ComputedFieldReturn b,
+    _cfiDescription :: Maybe Text
   }
   deriving (Generic)
 

@@ -38,22 +38,22 @@ import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RenameItem (b :: BackendType) a = RenameItem
-  { _riTable :: !(TableName b),
-    _riOld :: !a,
-    _riNew :: !a
+  { _riTable :: TableName b,
+    _riOld :: a,
+    _riNew :: a
   }
 
 type RenameCol (b :: BackendType) = RenameItem b (Column b)
 
 data RenameField b
-  = RFCol !(RenameCol b)
-  | RFRel !(RenameItem b RelName)
+  = RFCol (RenameCol b)
+  | RFRel (RenameItem b RelName)
 
 type RenameTable b = (TableName b, TableName b)
 
 data Rename b
-  = RTable !(RenameTable b)
-  | RField !(RenameField b)
+  = RTable (RenameTable b)
+  | RField (RenameField b)
 
 otherDeps :: QErrM m => Text -> SchemaObjId -> m ()
 otherDeps errMsg d =

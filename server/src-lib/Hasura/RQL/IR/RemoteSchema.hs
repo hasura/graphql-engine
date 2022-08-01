@@ -58,9 +58,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 -- Similarly to other parts of the IR, the @r@ argument is used for remote
 -- relationships.
 data SelectionSet r var
-  = SelectionSetObject !(ObjectSelectionSet r var)
-  | SelectionSetUnion !(DeduplicatedSelectionSet r var)
-  | SelectionSetInterface !(DeduplicatedSelectionSet r var)
+  = SelectionSetObject (ObjectSelectionSet r var)
+  | SelectionSetUnion (DeduplicatedSelectionSet r var)
+  | SelectionSetInterface (DeduplicatedSelectionSet r var)
   | SelectionSetNone
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -71,9 +71,9 @@ data SelectionSet r var
 -- fields as possible on the abstract type.
 data DeduplicatedSelectionSet r var = DeduplicatedSelectionSet
   { -- | Fields that aren't explicitly defined for member types
-    _dssCommonFields :: !(Set.HashSet G.Name),
+    _dssCommonFields :: Set.HashSet G.Name,
     -- | SelectionSets of individual member types
-    _dssMemberSelectionSets :: !(Map.HashMap G.Name (ObjectSelectionSet r var))
+    _dssMemberSelectionSets :: Map.HashMap G.Name (ObjectSelectionSet r var)
   }
   deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
 
@@ -111,8 +111,8 @@ mkUnionSelectionSet selectionSets =
 -- fields that target the actual remote schema, and fields that, instead, are
 -- remote from it and need to be treated differently.
 data Field r var
-  = FieldGraphQL !(GraphQLField r var)
-  | FieldRemote !(SchemaRemoteRelationshipSelect r)
+  = FieldGraphQL (GraphQLField r var)
+  | FieldRemote (SchemaRemoteRelationshipSelect r)
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
 -- | Normalized representation of a GraphQL field.

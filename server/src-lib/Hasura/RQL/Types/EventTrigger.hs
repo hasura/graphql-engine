@@ -93,10 +93,10 @@ instance Backend b => ToJSON (SubscribeColumns b) where
 
 data SubscribeOpSpec (b :: BackendType) = SubscribeOpSpec
   { -- | Columns of the table that user can subscribe to listen for changes.
-    sosColumns :: !(SubscribeColumns b),
+    sosColumns :: SubscribeColumns b,
     -- | Columns that the event trigger payload should consists. If set, only those columns will be
     -- visible in the payload. By default, the payload consists of all the columns of the table.
-    sosPayload :: !(Maybe (SubscribeColumns b))
+    sosPayload :: Maybe (SubscribeColumns b)
   }
   deriving (Show, Eq, Generic)
 
@@ -123,9 +123,9 @@ defaultRetryConf :: RetryConf
 defaultRetryConf = RetryConf defaultNumRetries defaultRetryInterval (Just defaultTimeoutSeconds)
 
 data RetryConf = RetryConf
-  { rcNumRetries :: !Int,
-    rcIntervalSec :: !Int,
-    rcTimeoutSec :: !(Maybe Int)
+  { rcNumRetries :: Int,
+    rcIntervalSec :: Int,
+    rcTimeoutSec :: Maybe Int
   }
   deriving (Show, Eq, Generic)
 
@@ -136,8 +136,8 @@ instance Cacheable RetryConf
 $(deriveJSON hasuraJSON {omitNothingFields = True} ''RetryConf)
 
 data EventHeaderInfo = EventHeaderInfo
-  { ehiHeaderConf :: !HeaderConf,
-    ehiCachedValue :: !Text
+  { ehiHeaderConf :: HeaderConf,
+    ehiCachedValue :: Text
   }
   deriving (Show, Eq, Generic)
 
@@ -165,8 +165,8 @@ instance FromJSON WebhookConf where
   parseJSON _ = fail "one of string or object must be provided for webhook"
 
 data WebhookConfInfo = WebhookConfInfo
-  { wciWebhookConf :: !WebhookConf,
-    wciCachedValue :: !(EnvRecord ResolvedWebhook)
+  { wciWebhookConf :: WebhookConf,
+    wciCachedValue :: EnvRecord ResolvedWebhook
   }
   deriving (Show, Eq, Generic)
 
@@ -178,10 +178,10 @@ $(deriveToJSON hasuraJSON {omitNothingFields = True} ''WebhookConfInfo)
 
 -- | The table operations on which the event trigger will be invoked.
 data TriggerOpsDef (b :: BackendType) = TriggerOpsDef
-  { tdInsert :: !(Maybe (SubscribeOpSpec b)),
-    tdUpdate :: !(Maybe (SubscribeOpSpec b)),
-    tdDelete :: !(Maybe (SubscribeOpSpec b)),
-    tdEnableManual :: !(Maybe Bool)
+  { tdInsert :: Maybe (SubscribeOpSpec b),
+    tdUpdate :: Maybe (SubscribeOpSpec b),
+    tdDelete :: Maybe (SubscribeOpSpec b),
+    tdEnableManual :: Maybe Bool
   }
   deriving (Show, Eq, Generic)
 
@@ -196,14 +196,14 @@ instance Backend b => ToJSON (TriggerOpsDef b) where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 
 data EventTriggerConf (b :: BackendType) = EventTriggerConf
-  { etcName :: !TriggerName,
-    etcDefinition :: !(TriggerOpsDef b),
-    etcWebhook :: !(Maybe InputWebhook),
-    etcWebhookFromEnv :: !(Maybe Text),
-    etcRetryConf :: !RetryConf,
-    etcHeaders :: !(Maybe [HeaderConf]),
-    etcRequestTransform :: !(Maybe RequestTransform),
-    etcResponseTransform :: !(Maybe MetadataResponseTransform)
+  { etcName :: TriggerName,
+    etcDefinition :: TriggerOpsDef b,
+    etcWebhook :: Maybe InputWebhook,
+    etcWebhookFromEnv :: Maybe Text,
+    etcRetryConf :: RetryConf,
+    etcHeaders :: Maybe [HeaderConf],
+    etcRequestTransform :: Maybe RequestTransform,
+    etcResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq, Generic)
 
@@ -237,13 +237,13 @@ $(deriveJSON hasuraJSON {omitNothingFields = True} ''TriggerMetadata)
 --
 -- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html
 data Event (b :: BackendType) = Event
-  { eId :: !EventId,
-    eSource :: !SourceName,
-    eTable :: !(TableName b),
-    eTrigger :: !TriggerMetadata,
-    eEvent :: !Value,
-    eTries :: !Int,
-    eCreatedAt :: !Time.UTCTime
+  { eId :: EventId,
+    eSource :: SourceName,
+    eTable :: TableName b,
+    eTrigger :: TriggerMetadata,
+    eEvent :: Value,
+    eTries :: Int,
+    eCreatedAt :: Time.UTCTime
   }
   deriving (Generic)
 
@@ -256,33 +256,33 @@ instance Backend b => FromJSON (Event b) where
 
 -- | The event payload processed by 'processEvent'
 data EventWithSource (b :: BackendType) = EventWithSource
-  { _ewsEvent :: !(Event b),
-    _ewsSourceConfig :: !(SourceConfig b),
-    _ewsSourceName :: !SourceName,
+  { _ewsEvent :: Event b,
+    _ewsSourceConfig :: SourceConfig b,
+    _ewsSourceName :: SourceName,
     -- | The 'Time.UTCTime' represents the time when the event was fetched from DB.
     -- ^ Used to calculate Event Lock time
-    _ewsFetchTime :: !Time.UTCTime
+    _ewsFetchTime :: Time.UTCTime
   }
 
 data ProcessEventError
-  = PESetRetry !Time.UTCTime
+  = PESetRetry Time.UTCTime
   | PESetError
   deriving (Show, Eq)
 
 data EventTriggerInfo (b :: BackendType) = EventTriggerInfo
-  { etiName :: !TriggerName,
-    etiOpsDef :: !(TriggerOpsDef b),
-    etiRetryConf :: !RetryConf,
+  { etiName :: TriggerName,
+    etiOpsDef :: TriggerOpsDef b,
+    etiRetryConf :: RetryConf,
     -- | The HTTP(s) URL which will be called with the event payload on configured operation.
     -- Must be a POST handler. This URL can be entered manually or can be picked up from an
     -- environment variable (the environment variable needs to be set before using it for
     -- this configuration).
-    etiWebhookInfo :: !WebhookConfInfo,
+    etiWebhookInfo :: WebhookConfInfo,
     -- | Custom headers can be added to an event trigger. Each webhook request will have these
     -- headers added.
-    etiHeaders :: ![EventHeaderInfo],
-    etiRequestTransform :: !(Maybe RequestTransform),
-    etiResponseTransform :: !(Maybe MetadataResponseTransform)
+    etiHeaders :: [EventHeaderInfo],
+    etiRequestTransform :: Maybe RequestTransform,
+    etiResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Generic, Eq)
 

@@ -72,15 +72,15 @@ type ScheduledEventId = EventId
 type InvocationId = Text
 
 data STRetryConf = STRetryConf
-  { strcNumRetries :: !Int,
-    strcRetryIntervalSeconds :: !NonNegativeDiffTime,
-    strcTimeoutSeconds :: !NonNegativeDiffTime,
+  { strcNumRetries :: Int,
+    strcRetryIntervalSeconds :: NonNegativeDiffTime,
+    strcTimeoutSeconds :: NonNegativeDiffTime,
     -- | The tolerance configuration is used to determine whether a scheduled
     --   event is not too old to process. The age of the scheduled event is the
     --   difference between the current timestamp and the scheduled event's
     --   timestamp, if the age is than the tolerance then the scheduled event
     --   is marked as dead.
-    strcToleranceSeconds :: !NonNegativeDiffTime
+    strcToleranceSeconds :: NonNegativeDiffTime
   }
   deriving (Show, Eq, Generic)
 
@@ -113,16 +113,16 @@ defaultSTRetryConf =
     }
 
 data CronTriggerMetadata = CronTriggerMetadata
-  { ctName :: !TriggerName,
-    ctWebhook :: !InputWebhook,
-    ctSchedule :: !CronSchedule,
-    ctPayload :: !(Maybe J.Value),
-    ctRetryConf :: !STRetryConf,
-    ctHeaders :: ![HeaderConf],
-    ctIncludeInMetadata :: !Bool,
-    ctComment :: !(Maybe Text),
-    ctRequestTransform :: !(Maybe RequestTransform),
-    ctResponseTransform :: !(Maybe MetadataResponseTransform)
+  { ctName :: TriggerName,
+    ctWebhook :: InputWebhook,
+    ctSchedule :: CronSchedule,
+    ctPayload :: Maybe J.Value,
+    ctRetryConf :: STRetryConf,
+    ctHeaders :: [HeaderConf],
+    ctIncludeInMetadata :: Bool,
+    ctComment :: Maybe Text,
+    ctRequestTransform :: Maybe RequestTransform,
+    ctResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq, Generic)
 
@@ -148,17 +148,17 @@ instance FromJSON CronTriggerMetadata where
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''CronTriggerMetadata)
 
 data CreateCronTrigger = CreateCronTrigger
-  { _cctName :: !TriggerName,
-    _cctWebhook :: !InputWebhook,
-    _cctCronSchedule :: !CronSchedule,
-    _cctPayload :: !(Maybe J.Value),
-    _cctRetryConf :: !STRetryConf,
-    _cctHeaders :: ![HeaderConf],
-    _cctIncludeInMetadata :: !Bool,
-    _cctComment :: !(Maybe Text),
-    _cctReplace :: !Bool,
-    _cctRequestTransform :: !(Maybe RequestTransform),
-    _cctResponseTransform :: !(Maybe MetadataResponseTransform)
+  { _cctName :: TriggerName,
+    _cctWebhook :: InputWebhook,
+    _cctCronSchedule :: CronSchedule,
+    _cctPayload :: Maybe J.Value,
+    _cctRetryConf :: STRetryConf,
+    _cctHeaders :: [HeaderConf],
+    _cctIncludeInMetadata :: Bool,
+    _cctComment :: Maybe Text,
+    _cctReplace :: Bool,
+    _cctRequestTransform :: Maybe RequestTransform,
+    _cctResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq, Generic)
 
@@ -195,17 +195,17 @@ formatTime' :: UTCTime -> Text
 formatTime' = T.pack . iso8601Show
 
 data CreateScheduledEvent = CreateScheduledEvent
-  { cseWebhook :: !InputWebhook,
+  { cseWebhook :: InputWebhook,
     -- | The timestamp should be in the
     -- <ISO 8601 https://en.wikipedia.org/wiki/ISO_8601>
     -- format (which is what @aeson@ expects by default for 'UTCTime').
-    cseScheduleAt :: !UTCTime,
-    csePayload :: !(Maybe J.Value),
-    cseHeaders :: ![HeaderConf],
-    cseRetryConf :: !STRetryConf,
-    cseComment :: !(Maybe Text),
-    cseRequestTransform :: !(Maybe RequestTransform),
-    cseResponseTransform :: !(Maybe MetadataResponseTransform)
+    cseScheduleAt :: UTCTime,
+    csePayload :: Maybe J.Value,
+    cseHeaders :: [HeaderConf],
+    cseRetryConf :: STRetryConf,
+    cseComment :: Maybe Text,
+    cseRequestTransform :: Maybe RequestTransform,
+    cseResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq, Generic)
 
@@ -243,12 +243,12 @@ data ScheduledEventType
 $(deriveJSON defaultOptions {constructorTagModifier = snakeCase} ''ScheduledEventType)
 
 data ScheduledEventInvocation = ScheduledEventInvocation
-  { _seiId :: !InvocationId,
-    _seiEventId :: !EventId,
-    _seiStatus :: !(Maybe Int),
-    _seiRequest :: !(Maybe Value),
-    _seiResponse :: !(Maybe Value),
-    _seiCreatedAt :: !UTCTime
+  { _seiId :: InvocationId,
+    _seiEventId :: EventId,
+    _seiStatus :: Maybe Int,
+    _seiRequest :: Maybe Value,
+    _seiResponse :: Maybe Value,
+    _seiCreatedAt :: UTCTime
   }
   deriving (Show, Eq)
 
@@ -256,7 +256,7 @@ $(deriveJSON hasuraJSON ''ScheduledEventInvocation)
 
 data ScheduledEvent
   = SEOneOff
-  | SECron !TriggerName
+  | SECron TriggerName
   deriving (Show, Eq)
 
 parseScheduledEvent :: Object -> Parser ScheduledEvent
@@ -272,8 +272,8 @@ scheduledEventToPairs = \case
   SECron name -> ["type" .= Cron, "trigger_name" .= name]
 
 data CronEventSeed = CronEventSeed
-  { cesName :: !TriggerName,
-    cesScheduledTime :: !UTCTime
+  { cesName :: TriggerName,
+    cesScheduledTime :: UTCTime
   }
   deriving (Show, Eq)
 
@@ -319,44 +319,44 @@ instance FromJSON ScheduledEventStatus where
       fail $ T.unpack $ "unexpected status: " <> s
 
 data OneOffScheduledEvent = OneOffScheduledEvent
-  { _ooseId :: !OneOffScheduledEventId,
-    _ooseWebhookConf :: !InputWebhook,
-    _ooseScheduledTime :: !UTCTime,
-    _ooseRetryConf :: !STRetryConf,
-    _oosePayload :: !(Maybe Value),
-    _ooseHeaderConf :: ![HeaderConf],
-    _ooseStatus :: !Text,
-    _ooseTries :: !Int,
-    _ooseCreatedAt :: !UTCTime,
-    _ooseNextRetryAt :: !(Maybe UTCTime),
-    _ooseComment :: !(Maybe Text),
-    _ooseRequestTransform :: !(Maybe RequestTransform),
-    _ooseResponseTransform :: !(Maybe MetadataResponseTransform)
+  { _ooseId :: OneOffScheduledEventId,
+    _ooseWebhookConf :: InputWebhook,
+    _ooseScheduledTime :: UTCTime,
+    _ooseRetryConf :: STRetryConf,
+    _oosePayload :: Maybe Value,
+    _ooseHeaderConf :: [HeaderConf],
+    _ooseStatus :: Text,
+    _ooseTries :: Int,
+    _ooseCreatedAt :: UTCTime,
+    _ooseNextRetryAt :: Maybe UTCTime,
+    _ooseComment :: Maybe Text,
+    _ooseRequestTransform :: Maybe RequestTransform,
+    _ooseResponseTransform :: Maybe MetadataResponseTransform
   }
   deriving (Show, Eq)
 
 $(deriveJSON hasuraJSON ''OneOffScheduledEvent)
 
 data CronEvent = CronEvent
-  { _ceId :: !CronEventId,
-    _ceTriggerName :: !TriggerName,
+  { _ceId :: CronEventId,
+    _ceTriggerName :: TriggerName,
     -- | We expect this to always be at second zero, since cron events have
     -- minute resolution. Note that a OneOffScheduledEvent has full timestamp
     -- precision.
-    _ceScheduledTime :: !UTCTime,
-    _ceStatus :: !Text,
-    _ceTries :: !Int,
+    _ceScheduledTime :: UTCTime,
+    _ceStatus :: Text,
+    _ceTries :: Int,
     -- | it is the time at which the cron event generator created the event
-    _ceCreatedAt :: !UTCTime,
-    _ceNextRetryAt :: !(Maybe UTCTime)
+    _ceCreatedAt :: UTCTime,
+    _ceNextRetryAt :: Maybe UTCTime
   }
   deriving (Show, Eq)
 
 $(deriveJSON hasuraJSON ''CronEvent)
 
 data ScheduledEventPagination = ScheduledEventPagination
-  { _sepLimit :: !(Maybe Int),
-    _sepOffset :: !(Maybe Int)
+  { _sepLimit :: Maybe Int,
+    _sepOffset :: Maybe Int
   }
   deriving (Show, Eq)
 
@@ -372,9 +372,9 @@ scheduledEventPaginationToPairs ScheduledEventPagination {..} =
 
 -- | Query type to fetch all one-off/cron scheduled events
 data GetScheduledEvents = GetScheduledEvents
-  { _gseScheduledEvent :: !ScheduledEvent,
-    _gsePagination :: !ScheduledEventPagination,
-    _gseStatus :: ![ScheduledEventStatus]
+  { _gseScheduledEvent :: ScheduledEvent,
+    _gsePagination :: ScheduledEventPagination,
+    _gseStatus :: [ScheduledEventStatus]
   }
   deriving (Show, Eq)
 
@@ -393,28 +393,28 @@ instance FromJSON GetScheduledEvents where
       <*> o .:? "status" .!= []
 
 data WithTotalCount a = WithTotalCount
-  { _wtcCount :: !Int,
-    _wtcData :: !a
+  { _wtcCount :: Int,
+    _wtcData :: a
   }
   deriving (Show, Eq)
 
 -- | Query type to delete cron/one-off events.
 data DeleteScheduledEvent = DeleteScheduledEvent
-  { _dseType :: !ScheduledEventType,
-    _dseEventId :: !ScheduledEventId
+  { _dseType :: ScheduledEventType,
+    _dseEventId :: ScheduledEventId
   }
   deriving (Show, Eq)
 
 $(deriveJSON hasuraJSON ''DeleteScheduledEvent)
 
 data GetInvocationsBy
-  = GIBEventId !EventId !ScheduledEventType
-  | GIBEvent !ScheduledEvent
+  = GIBEventId EventId ScheduledEventType
+  | GIBEvent ScheduledEvent
   deriving (Show, Eq)
 
 data GetEventInvocations = GetEventInvocations
-  { _geiInvocationsBy :: !GetInvocationsBy,
-    _geiPagination :: !ScheduledEventPagination
+  { _geiInvocationsBy :: GetInvocationsBy,
+    _geiPagination :: ScheduledEventPagination
   }
   deriving (Eq, Show)
 
@@ -437,8 +437,8 @@ instance ToJSON GetEventInvocations where
 
 data ClearCronEvents
   = -- | Used to delete the cron events only of the specified cron trigger
-    SingleCronTrigger !TriggerName
+    SingleCronTrigger TriggerName
   | -- | Used to delete all the cron events of the cron triggers with `include_in_metadata: true`
     -- It is used in the case of the `replace_metadata` API
-    MetadataCronTriggers ![TriggerName]
+    MetadataCronTriggers [TriggerName]
   deriving (Show, Eq)

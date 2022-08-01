@@ -60,9 +60,9 @@ import Hasura.RQL.Types.Instances ()
 import Language.GraphQL.Draft.Syntax qualified as G
 
 data RootFieldsCustomization = RootFieldsCustomization
-  { _rootfcNamespace :: !(Maybe G.Name),
-    _rootfcPrefix :: !(Maybe G.Name),
-    _rootfcSuffix :: !(Maybe G.Name)
+  { _rootfcNamespace :: Maybe G.Name,
+    _rootfcPrefix :: Maybe G.Name,
+    _rootfcSuffix :: Maybe G.Name
   }
   deriving (Eq, Show, Generic)
 
@@ -78,8 +78,8 @@ emptyRootFieldsCustomization :: RootFieldsCustomization
 emptyRootFieldsCustomization = RootFieldsCustomization Nothing Nothing Nothing
 
 data SourceTypeCustomization = SourceTypeCustomization
-  { _stcPrefix :: !(Maybe G.Name),
-    _stcSuffix :: !(Maybe G.Name)
+  { _stcPrefix :: Maybe G.Name,
+    _stcSuffix :: Maybe G.Name
   }
   deriving (Eq, Show, Generic)
 
@@ -178,9 +178,9 @@ concatPrefixSuffix (GraphqlCase) isTypeName neList =
     prefixSuffixGQLIdent = C.fromNonEmptyList neList
 
 data SourceCustomization = SourceCustomization
-  { _scRootFields :: !(Maybe RootFieldsCustomization),
-    _scTypeNames :: !(Maybe SourceTypeCustomization),
-    _scNamingConvention :: !(Maybe NamingCase)
+  { _scRootFields :: Maybe RootFieldsCustomization,
+    _scTypeNames :: Maybe SourceTypeCustomization,
+    _scNamingConvention :: Maybe NamingCase
   }
   deriving (Eq, Show, Generic)
 

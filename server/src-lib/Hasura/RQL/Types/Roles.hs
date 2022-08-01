@@ -29,10 +29,10 @@ instance Cacheable ParentRoles
 --   in the permission building
 --   part of the schema cache building process
 data Role = Role
-  { _rRoleName :: !RoleName,
+  { _rRoleName :: RoleName,
     -- | set of the parent role names, in case of
     -- non-inherited roles it will be an empty set
-    _rParentRoles :: !ParentRoles
+    _rParentRoles :: ParentRoles
   }
   deriving (Show, Eq, Generic)
 

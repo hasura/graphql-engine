@@ -78,9 +78,9 @@ instance ToTxt ArgumentDefinitionType where
     DirectiveArgument -> "Directive"
 
 data PresetInputTypeInfo
-  = PresetScalar !G.Name
-  | PresetEnum !G.Name ![G.EnumValue]
-  | PresetInputObject ![G.InputValueDefinition]
+  = PresetScalar G.Name
+  | PresetEnum G.Name [G.EnumValue]
+  | PresetInputObject [G.InputValueDefinition]
   deriving (Show, Eq, Generic, Ord)
 
 data GraphQLType
@@ -91,8 +91,8 @@ data GraphQLType
   | Union
   | Scalar
   | Directive
-  | Field !FieldDefinitionType
-  | Argument !ArgumentDefinitionType
+  | Field FieldDefinitionType
+  | Argument ArgumentDefinitionType
   deriving (Show, Eq)
 
 instance ToTxt GraphQLType where
@@ -114,61 +114,61 @@ data RoleBasedSchemaValidationError
   = -- | error to indicate that a type provided by the user
     -- differs from the corresponding type defined in the upstream
     -- remote schema
-    NonMatchingType !G.Name !GraphQLType !G.GType !G.GType
+    NonMatchingType G.Name GraphQLType G.GType G.GType
   | -- | error to indicate when a type definition doesn't exist
     -- in the upstream remote schema
-    TypeDoesNotExist !GraphQLType !G.Name
+    TypeDoesNotExist GraphQLType G.Name
   | -- | error to indicate when the default value of an argument
     -- differs from the default value of the corresponding argument
-    NonMatchingDefaultValue !G.Name !G.Name !(Maybe (G.Value Void)) !(Maybe (G.Value Void))
+    NonMatchingDefaultValue G.Name G.Name (Maybe (G.Value Void)) (Maybe (G.Value Void))
   | -- | error to indicate when a given input argument doesn't exist
     -- in the corresponding upstream input object
-    NonExistingInputArgument !G.Name !G.Name
-  | MissingNonNullableArguments !G.Name !(NonEmpty G.Name)
+    NonExistingInputArgument G.Name G.Name
+  | MissingNonNullableArguments G.Name (NonEmpty G.Name)
   | -- | error to indicate when a given directive argument
     -- doesn't exist in the corresponding upstream directive
-    NonExistingDirectiveArgument !G.Name !GraphQLType !G.Name !(NonEmpty G.Name)
+    NonExistingDirectiveArgument G.Name GraphQLType G.Name (NonEmpty G.Name)
   | -- | error to indicate when a given field doesn't exist in a field type (Object/Interface)
-    NonExistingField !(FieldDefinitionType, G.Name) !G.Name
+    NonExistingField (FieldDefinitionType, G.Name) G.Name
   | -- | error to indicate when member types of an Union don't exist in the
     -- corresponding upstream union
-    NonExistingUnionMemberTypes !G.Name !(NE.NonEmpty G.Name)
+    NonExistingUnionMemberTypes G.Name (NE.NonEmpty G.Name)
   | -- | error to indicate when an object is trying to implement an interface
     -- which exists in the schema document but the interface doesn't exist
     -- in the upstream remote.
-    CustomInterfacesNotAllowed !G.Name !(NE.NonEmpty G.Name)
+    CustomInterfacesNotAllowed G.Name (NE.NonEmpty G.Name)
   | -- | error to indicate when object implements interfaces that don't exist
-    ObjectImplementsNonExistingInterfaces !G.Name !(NE.NonEmpty G.Name)
+    ObjectImplementsNonExistingInterfaces G.Name (NE.NonEmpty G.Name)
   | -- | error to indicate enum values in an enum do not exist in the
     -- corresponding upstream enum
-    NonExistingEnumValues !G.Name !(NE.NonEmpty G.Name)
+    NonExistingEnumValues G.Name (NE.NonEmpty G.Name)
   | -- | error to indicate when the user provided schema contains more than
     -- one schema definition
     MultipleSchemaDefinitionsFound
   | -- | error to indicate when the schema definition doesn't contain the
     -- query root.
     MissingQueryRoot
-  | DuplicateTypeNames !(NE.NonEmpty G.Name)
-  | DuplicateDirectives !(GraphQLType, G.Name) !(NE.NonEmpty G.Name)
-  | DuplicateFields !(FieldDefinitionType, G.Name) !(NE.NonEmpty G.Name)
-  | DuplicateArguments !G.Name !(NE.NonEmpty G.Name)
-  | DuplicateEnumValues !G.Name !(NE.NonEmpty G.Name)
+  | DuplicateTypeNames (NE.NonEmpty G.Name)
+  | DuplicateDirectives (GraphQLType, G.Name) (NE.NonEmpty G.Name)
+  | DuplicateFields (FieldDefinitionType, G.Name) (NE.NonEmpty G.Name)
+  | DuplicateArguments G.Name (NE.NonEmpty G.Name)
+  | DuplicateEnumValues G.Name (NE.NonEmpty G.Name)
   | InvalidPresetDirectiveLocation
-  | MultiplePresetDirectives !(GraphQLType, G.Name)
+  | MultiplePresetDirectives (GraphQLType, G.Name)
   | NoPresetArgumentFound
-  | InvalidPresetArgument !G.Name
-  | ExpectedInputTypeButGotOutputType !G.Name
-  | EnumValueNotFound !G.Name !G.Name
-  | ExpectedEnumValue !G.Name !(G.Value Void)
-  | KeyDoesNotExistInInputObject !G.Name !G.Name
-  | ExpectedInputObject !G.Name !(G.Value Void)
-  | ExpectedScalarValue !G.Name !(G.Value Void)
-  | DisallowSessionVarForListType !G.Name
+  | InvalidPresetArgument G.Name
+  | ExpectedInputTypeButGotOutputType G.Name
+  | EnumValueNotFound G.Name G.Name
+  | ExpectedEnumValue G.Name (G.Value Void)
+  | KeyDoesNotExistInInputObject G.Name G.Name
+  | ExpectedInputObject G.Name (G.Value Void)
+  | ExpectedScalarValue G.Name (G.Value Void)
+  | DisallowSessionVarForListType G.Name
   | InvalidStaticValue
   | -- | Error to indicate we're comparing non corresponding
     --   type definitions. Ideally, this error will never occur
     --   unless there's a programming error
-    UnexpectedNonMatchingNames !G.Name !G.Name !GraphQLType
+    UnexpectedNonMatchingNames G.Name G.Name GraphQLType
   deriving (Show, Eq)
 
 {-

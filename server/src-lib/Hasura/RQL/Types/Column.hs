@@ -60,9 +60,9 @@ type EnumValues = M.HashMap EnumValue EnumValueInfo
 -- | Represents a reference to an “enum table,” a single-column Postgres table that is referenced
 -- via foreign key.
 data EnumReference (b :: BackendType) = EnumReference
-  { erTable :: !(TableName b),
-    erValues :: !EnumValues,
-    erTableCustomName :: !(Maybe G.Name)
+  { erTable :: TableName b,
+    erValues :: EnumValues,
+    erTableCustomName :: Maybe G.Name
   }
   deriving (Generic)
 
@@ -90,12 +90,12 @@ instance (Backend b) => ToJSON (EnumReference b) where
 -- make but the backend doesn’t.
 data ColumnType (b :: BackendType)
   = -- | Ordinary Postgres columns.
-    ColumnScalar !(ScalarType b)
+    ColumnScalar (ScalarType b)
   | -- | Columns that reference enum tables (see "Hasura.RQL.Schema.Enum"). This is not actually a
     -- distinct type from the perspective of Postgres (at the time of this writing, we ensure they
     -- always have type @text@), but we really want to distinguish this case, since we treat it
     -- /completely/ differently in the GraphQL schema.
-    ColumnEnumReference !(EnumReference b)
+    ColumnEnumReference (EnumReference b)
   deriving (Show, Eq, Ord, Generic)
 
 instance (Backend b) => NFData (ColumnType b)
@@ -174,14 +174,14 @@ parseScalarValuesColumnType columnType =
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
 data RawColumnInfo (b :: BackendType) = RawColumnInfo
-  { rciName :: !(Column b),
+  { rciName :: Column b,
     -- | The “ordinal position” of the column according to Postgres. Numbering starts at 1 and
     -- increases. Dropping a column does /not/ cause the columns to be renumbered, so a column can be
     -- consistently identified by its position.
-    rciPosition :: !Int,
-    rciType :: !(ScalarType b),
-    rciIsNullable :: !Bool,
-    rciDescription :: !(Maybe G.Description),
+    rciPosition :: Int,
+    rciType :: ScalarType b,
+    rciIsNullable :: Bool,
+    rciDescription :: Maybe G.Description,
     rciMutability :: ColumnMutability
   }
   deriving (Generic)
@@ -232,13 +232,13 @@ instance ToJSON ColumnMutability where
 -- | “Resolved” column info, produced from a 'RawColumnInfo' value that has been combined with
 -- other schema information to produce a 'PGColumnType'.
 data ColumnInfo (b :: BackendType) = ColumnInfo
-  { ciColumn :: !(Column b),
+  { ciColumn :: Column b,
     -- | field name exposed in GraphQL interface
-    ciName :: !G.Name,
-    ciPosition :: !Int,
-    ciType :: !(ColumnType b),
-    ciIsNullable :: !Bool,
-    ciDescription :: !(Maybe G.Description),
+    ciName :: G.Name,
+    ciPosition :: Int,
+    ciType :: ColumnType b,
+    ciIsNullable :: Bool,
+    ciDescription :: Maybe G.Description,
     ciMutability :: ColumnMutability
   }
   deriving (Generic)
@@ -280,9 +280,9 @@ type ColumnValues b a = HashMap (Column b) a
 -- | Represents a reference to a source column, possibly casted an arbitrary
 -- number of times. Used within 'parseBoolExpOperations' for bookkeeping.
 data ColumnReference (b :: BackendType)
-  = ColumnReferenceColumn !(ColumnInfo b)
-  | ColumnReferenceComputedField !ComputedFieldName !(ScalarType b)
-  | ColumnReferenceCast !(ColumnReference b) !(ColumnType b)
+  = ColumnReferenceColumn (ColumnInfo b)
+  | ColumnReferenceComputedField ComputedFieldName (ScalarType b)
+  | ColumnReferenceCast (ColumnReference b) (ColumnType b)
 
 columnReferenceType :: ColumnReference backend -> ColumnType backend
 columnReferenceType = \case
