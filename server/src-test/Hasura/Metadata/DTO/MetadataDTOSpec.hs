@@ -20,7 +20,7 @@ import Hasura.Metadata.DTO.MetadataV2 (MetadataV2 (..))
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray (PlaceholderArray))
 import Hasura.Prelude
-import Hasura.RQL.Types.Metadata (Metadata)
+import Hasura.RQL.Types.Metadata (Metadata, metadataToDTO)
 import Test.Hspec
 
 spec :: Spec
@@ -77,19 +77,31 @@ spec = describe "MetadataDTO" $ do
         fromDto `shouldSatisfy` isRight
         fromDto `shouldBe` metadataFixture
 
+      it "converts metadata to DTO to JSON to metadata" $ \metadataFixture -> do
+        let origMetadata = parseEither (parseJSON @Metadata) =<< metadataFixture
+        let dto = metadataToDTO <$> origMetadata
+        let json = toJSON <$> dto
+        let metadata = parseEither (parseJSON @Metadata) =<< json
+        metadata `shouldSatisfy` isRight
+        metadata `shouldBe` origMetadata
+
 emptyMetadataV3 :: MetadataV3
 emptyMetadataV3 =
   MetadataV3
-    { metaV3Actions = Nothing,
-      metaV3Allowlist = Nothing,
-      metaV3ApiLimits = Nothing,
-      metaV3CronTriggers = Nothing,
-      metaV3CustomTypes = Nothing,
-      metaV3InheritedRoles = Nothing,
-      metaV3QueryCollections = Nothing,
+    { metaV3Sources = PlaceholderArray mempty,
       metaV3RemoteSchemas = Nothing,
+      metaV3QueryCollections = Nothing,
+      metaV3Allowlist = Nothing,
+      metaV3Actions = Nothing,
+      metaV3CustomTypes = Nothing,
+      metaV3CronTriggers = Nothing,
       metaV3RestEndpoints = Nothing,
-      metaV3Sources = PlaceholderArray mempty
+      metaV3ApiLimits = Nothing,
+      metaV3MetricsConfig = Nothing,
+      metaV3InheritedRoles = Nothing,
+      metaV3GraphqlSchemaIntrospection = Nothing,
+      metaV3Network = Nothing,
+      metaV3BackendConfigs = Nothing
     }
 
 emptyMetadataV2 :: MetadataV2

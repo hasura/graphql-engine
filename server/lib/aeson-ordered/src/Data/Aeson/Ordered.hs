@@ -27,6 +27,7 @@ module Data.Aeson.Ordered
     toOrdered,
     fromOrdered,
     fromOrderedHashMap,
+    fromOrderedObject,
   )
 where
 
@@ -80,7 +81,7 @@ import GHC.Generics (Generic)
 -- Our altered type
 
 -- | A JSON \"object\" (key\/value map). This is where this type
--- differs to the 'aeson' package.
+-- differs to the aeson package.
 newtype Object = Object_ {unObject_ :: InsOrdHashMap Text Value}
   deriving stock (Data, Eq, Generic, Read, Show, Typeable)
   deriving newtype (Hashable)
@@ -194,16 +195,21 @@ toOrdered v = case J.toJSON v of
 -- | Convert Ordered Value to Aeson Value
 fromOrdered :: Value -> J.Value
 fromOrdered v = case v of
-  Object obj ->
-    J.Object $
-      KM.fromList $
-        map (bimap K.fromText fromOrdered) $
-          Data.Aeson.Ordered.toList obj
+  Object obj -> J.Object $ fromOrderedObject obj
   Array arr -> J.Array $ V.fromList $ map fromOrdered $ V.toList arr
   String text -> J.String text
   Number number -> J.Number number
   Bool boolean -> J.Bool boolean
   Null -> J.Null
+
+-- | Convert an ordered aeson object to a stock aeson object. The output type is
+-- 'Data.Aeson.Object', not 'Value', to preserve the information that the value
+-- is an object as opposed to some other possible JSON value.
+fromOrderedObject :: Object -> J.Object
+fromOrderedObject obj =
+  KM.fromList $
+    map (bimap K.fromText fromOrdered) $
+      Data.Aeson.Ordered.toList obj
 
 asObject :: IsString s => Value -> Either s Object
 asObject = \case

@@ -19,8 +19,14 @@ import Autodocodec (Autodocodec, HasCodec (codec), codecViaAeson, dimapCodec, va
 import Autodocodec.OpenAPI ()
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Aeson qualified as JSON
+import Data.Aeson.Ordered qualified as AO
 import Data.OpenApi qualified as OpenApi
+import Data.Vector qualified as V
 import Hasura.Prelude
+
+-- TODO: Store ordered aeson values in placeholders instead of stock aeson
+-- values so that we can preserve order. We want to do that after #4842 is
+-- merged so we can use 'toOrderedJSONVia' to produce the appropriate codecs.
 
 -- | Stands in for an array that we have not had time to fully specify yet.
 -- Generated OpenAPI documentation for 'PlaceholderArray' will permit an array
@@ -62,3 +68,9 @@ instance IsPlaceholder PlaceholderArray JSON.Array where
 
 instance IsPlaceholder PlaceholderObject JSON.Object where
   placeholder = PlaceholderObject
+
+instance IsPlaceholder PlaceholderArray AO.Array where
+  placeholder = PlaceholderArray . V.fromList . map AO.fromOrdered . V.toList
+
+instance IsPlaceholder PlaceholderObject AO.Object where
+  placeholder = PlaceholderObject . AO.fromOrderedObject
