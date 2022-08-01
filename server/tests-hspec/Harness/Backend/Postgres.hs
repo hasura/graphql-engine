@@ -208,7 +208,7 @@ serialize = \case
   VInt i -> tshow i
   VStr s -> "'" <> replace "'" "\'" s <> "'"
   VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
-  VBool b -> tshow @Int $ if b then 1 else 0
+  VBool b -> if b then "TRUE" else "FALSE"
   VNull -> "NULL"
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvPostgres
 
