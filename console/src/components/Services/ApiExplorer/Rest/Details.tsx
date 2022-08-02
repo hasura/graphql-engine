@@ -105,7 +105,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
             <AceEditor
               name="query-viewer"
               value={endpointState.currentQuery}
-              placeholder={`query SampleQuery {}`}
+              placeholder="query SampleQuery {}"
               height="300px"
               width="100%"
               mode="graphqlschema"

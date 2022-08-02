@@ -136,7 +136,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
         {selectedSection === SelectedSection.NoChecks && (
           <div className="pt-4">
             <JSONEditor
-              data={'{}'}
+              data="{}"
               onChange={() =>
                 setValue(rowPermissionsCheckType, SelectedSection.Custom)
               }
