@@ -3,16 +3,16 @@
 #
 # Run the following to get started:
 #
-#     docker-compose up -d
+#     docker compose up -d
 #
 # That will start up services in the background. To take them down,
 # you have to run
 #
-#     docker-compose down
+#     docker compose down
 #
 # If you changed DB init scripts, then you should also run:
 #
-#     docker-compose down --volumes
+#     docker compose down --volumes
 #
 # That'll delete the volumes. Otherwise e.g. PostgreSQL will skip
 # initializing if a DB already exists.

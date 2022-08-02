@@ -6,7 +6,7 @@ services:
   reference-agent:
     image: "hasura/dc-reference-agent:${HASURA_VERSION}"
     # build: ./reference
-    ## NOTE: If you want to modify the reference-agent you can use the build config for docker-compose
+    ## NOTE: If you want to modify the reference-agent you can use the build config for Docker Compose
 
   postgres:
     image: "postgres:13"
