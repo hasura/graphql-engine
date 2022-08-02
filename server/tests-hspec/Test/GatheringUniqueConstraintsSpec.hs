@@ -15,7 +15,10 @@ import Test.Hspec
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = run [postgresFixture, citusFixture] (it "Tracks tables without failing" $ \_ -> return @IO ())
+spec =
+  run
+    [postgresFixture, citusFixture]
+    (\_ -> it "Tracks tables without failing" $ \_ -> return @IO ())
 
 postgresFixture :: Fixture ()
 postgresFixture =

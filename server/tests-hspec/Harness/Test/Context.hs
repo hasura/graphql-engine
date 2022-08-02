@@ -23,16 +23,14 @@ module Harness.Test.Context
   )
 where
 
-import Control.Applicative ((<|>))
-import Data.Foldable (for_)
-import Data.Maybe (fromMaybe)
 import Harness.Exceptions
 import Harness.Test.BackendType
+import Harness.Test.CustomOptions
 import Harness.Test.Hspec.Extended
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (mapSpecItem)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Context
@@ -218,37 +216,3 @@ instance Show ContextName where
 -- | Default function for 'mkLocalTestEnvironment' when there's no local testEnvironment.
 noLocalTestEnvironment :: TestEnvironment -> IO ()
 noLocalTestEnvironment _ = pure ()
-
-data Options = Options
-  { -- | Whether a given testing 'Context' should treat numeric values as
-    -- strings.
-    --
-    -- This is primarily a workaround for tests which run BigQuery.
-    stringifyNumbers :: Bool
-  }
-
--- | This function can be used to combine two sets of 'Option's when creating
--- custom composite 'Context's.
---
--- NOTE: This function throws an impure exception if the options are
--- irreconcilable.
-combineOptions :: HasCallStack => Maybe Options -> Maybe Options -> Maybe Options
-combineOptions (Just lhs) (Just rhs) =
-  let -- 'stringifyNumbers' can only be unified if both sides have the same value.
-      stringifyNumbers =
-        if lhsStringify == rhsStringify
-          then lhsStringify
-          else reportInconsistency "stringifyNumbers" lhsStringify rhsStringify
-   in Just Options {..}
-  where
-    reportInconsistency fieldName lhsValue rhsValue =
-      error $ "Could not reconcile '" <> fieldName <> "'\n  lhs value: " <> show lhsValue <> "\n  rhs value: " <> show rhsValue
-    Options {stringifyNumbers = lhsStringify} = lhs
-    Options {stringifyNumbers = rhsStringify} = rhs
-combineOptions mLhs mRhs = mLhs <|> mRhs
-
-defaultOptions :: Options
-defaultOptions =
-  Options
-    { stringifyNumbers = False
-    }
