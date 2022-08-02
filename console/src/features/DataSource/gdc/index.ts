@@ -1,12 +1,12 @@
 import { Database, Feature } from '../index';
 
 export const gdc: Database = {
-  connectDB: {
-    getConfigSchema: async () => {
+  introspection: {
+    getDatabaseConfiguration: async () => {
       return Feature.NotImplemented;
     },
-  },
-  introspectTables: async () => {
-    return Feature.NotImplemented;
+    getTrackableTables: async () => {
+      return Feature.NotImplemented;
+    },
   },
 };

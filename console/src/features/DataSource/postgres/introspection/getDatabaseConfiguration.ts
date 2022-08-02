@@ -1,6 +1,6 @@
 import { Property } from '../../types';
 
-export const getConfigSchema = async () => {
+export const getDatabaseConfiguration = async () => {
   const {
     configSchema,
     otherSchemas,

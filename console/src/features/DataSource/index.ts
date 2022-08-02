@@ -13,7 +13,7 @@ import type {
   Table,
   SupportedDrivers,
 } from './types';
-import { getZodSchema } from './utils';
+import { getZodSchema } from './common/utils';
 import { exportMetadata } from './api';
 
 export enum Feature {
@@ -29,20 +29,22 @@ export const supportedDrivers = [
 ];
 
 export type Database = {
-  /* This section defines how a database is connected to Hasura */
-  connectDB: {
-    /* Expose Methods that are used in the DB connection part */
-    getConfigSchema: (
+  introspection?: {
+    getDatabaseConfiguration: (
       fetch: AxiosInstance
     ) => Promise<
       | { configSchema: Property; otherSchemas: Record<string, Property> }
       | Feature.NotImplemented
     >;
+    getTrackableTables: (
+      dataSourceName: string,
+      configuration: any
+    ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
   };
-  introspectTables: (
-    dataSourceName: string,
-    configuration: any
-  ) => Promise<IntrospectedTable[] | Feature.NotImplemented>;
+  query?: {
+    getTableData: () => void;
+  };
+  modify?: null;
 };
 
 const drivers: Record<SupportedDrivers, Database> = {
@@ -61,19 +63,21 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
   },
   connectDB: {
     getConfigSchema: async (driver: SupportedDrivers) => {
-      return drivers[driver].connectDB.getConfigSchema(hasuraFetch);
+      return drivers[driver].introspection?.getDatabaseConfiguration(
+        hasuraFetch
+      );
     },
     getFormSchema: async () => {
       const schemas = await Promise.all(
         Object.values(drivers).map(database =>
-          database.connectDB.getConfigSchema(hasuraFetch)
+          database.introspection?.getDatabaseConfiguration(hasuraFetch)
         )
       );
 
       let res: ZodSchema | undefined;
 
       schemas.forEach(schema => {
-        if (schema === Feature.NotImplemented) return;
+        if (schema === Feature.NotImplemented || !schema) return;
 
         if (!res) {
           res = z.object({
@@ -126,10 +130,14 @@ export const DataSource = (hasuraFetch: AxiosInstance) => ({
       NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
-    return drivers[dataSource.kind].introspectTables(
-      dataSource.name,
-      (dataSource as any).configuration
-    );
+    const getTrackableTables =
+      drivers[dataSource.kind].introspection?.getTrackableTables;
+    if (getTrackableTables)
+      return getTrackableTables(
+        dataSource.name,
+        (dataSource as any).configuration
+      );
+    return Feature.NotImplemented;
   },
 });
 

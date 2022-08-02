@@ -2,8 +2,8 @@
 import pickBy from 'lodash.pickby';
 import get from 'lodash.get';
 import { z, ZodSchema } from 'zod';
-import { IntrospectedTable, Property, Ref } from './types';
-import { RunSQLResponse } from './api';
+import { IntrospectedTable, Property, Ref } from '../types';
+import { RunSQLResponse } from '../api';
 
 export const isProperty = (
   value: Ref | Property | { oneOf: (Property | Ref)[] }

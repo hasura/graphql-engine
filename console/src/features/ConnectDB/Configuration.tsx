@@ -19,7 +19,7 @@ import {
   isOneOf,
   isProperty,
   isRef,
-} from '../DataSource/utils';
+} from '../DataSource/common/utils';
 
 const useConfigSchema = (driver: SupportedDrivers) => {
   const fetch = axios.create();
@@ -50,7 +50,6 @@ const RadioGroup = ({
       return (
         getPropertyByRef(_property, otherSchemas).description ?? `Option-${i}`
       );
-
     return _property.description ?? `Option-${i}`;
   });
 
