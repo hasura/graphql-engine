@@ -27,6 +27,8 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
     - [Use the `Harness.*` hierarchy for common functions](#use-the-harness-hierarchy-for-common-functions)
   - [Troubleshooting](#troubleshooting)
     - [`Database 'hasura' already exists. Choose a different database name.`](#database-hasura-already-exists-choose-a-different-database-name)
+    - [General `DataConnector` failures](#general-dataconnector-failures)
+    - [`SQLServer` failures on Apple M1 chips](#sqlserver-failures-on-apple-m1-chips)
 
 ## Required setup for BigQuery tests
 
@@ -74,33 +76,15 @@ _Note to Hasura team: a service account is already setup for internal use, pleas
 1. To run the Haskell integration test suite, we'll first need to start the backends:
 
    ```sh
-   docker-compose up
+   docker compose up
    ```
 
-   This will start up Postgres, SQL Server, Citus and MariaDB.
+   This will start up Postgres, SQL Server, Citus, MariaDB and the Hasura Data Connectors' reference agent.
 
 
     > __Note__: on ARM64 architecture we'll need additional steps in order to test mssql properly.
-    >
-    > ### Preparation
-    >
-    > 1. Switch the docker image in `docker-compose/sqlserver/Dockerfile` to `azure-sql-edge`:
-    >
-    > ```diff
-    > - FROM mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af
-    > + FROM mcr.microsoft.com/azure-sql-edge
-    > ```
-    >
-    > 2. Install `sqlcmd` locally. On MacOS, this can be done with brew: `brew install mssql-tools`.
-    >
-    > ### Start the backends
-    >
-    > 1. Run `docker-compose up`
-    > 2. Initialize the SQL Server database
-    >
-    >    ```sh
-    >    (cd docker-compose/sqlserver && bash run-init.sh 65003)
-    >    ```
+    >           See [`SQLServer` failures on Apple M1 chips](#sqlserver-failures-on-apple-m1-chips)
+    >           for more details.
 
 2. Once the containers are up, you can run the test suite via
 
@@ -124,7 +108,7 @@ _Note to Hasura team: a service account is already setup for internal use, pleas
    If this is undesirable, delete the databases using the following command:
 
    ```sh
-   docker-compose down --volumes
+   docker compose down --volumes
    ```
 
 ## Enabling logging
@@ -397,4 +381,50 @@ Any supporting code should be in the `Harness.*` hierarchy and apply broadly to 
 ## Troubleshooting
 
 ### `Database 'hasura' already exists. Choose a different database name.` or `schema "hasura" does not exist`
-This typically indicates persistent DB state between test runs. Try `docker-compose down --volumes` to delete the DBs and restart the containers.
+This typically indicates persistent DB state between test runs. Try `docker compose down --volumes` to delete the DBs and restart the containers.
+
+### General `DataConnector` failures
+
+The DataConnector agent might be out of date. If you are getting a lot of test failures, first try rebuilding the containers with `docker compose build` to make sure you are using the latest version of the agent.
+
+### `SQLServer` failures on Apple M1 chips
+
+We have a few problems with SQLServer on M1:
+
+1. Compiler bug in GHC 8.10.7 on M1.
+
+   
+   Due to compiler bugs in GHC 8.10.7 we need to use patched Haskell ODBC bindings as a workaround for M1 systems.
+   Make the following change in the `cabal.project`:
+
+   ```diff
+     source-repository-package
+       type: git
+   -   location: https://github.com/fpco/odbc.git
+   -   tag: 3d80ffdd4a2879f0debecabb56d834d2d898212b
+   +   location: https://github.com/soupi/odbc.git
+   +   tag: 46ada57c0d8f750280d6c554536c0fbcff02be59
+   ```
+
+2. Microsoft did not release SQL Server for M1. We need to use Azure SQL Edge instead.
+   
+   Switch the docker image in `docker-compose/sqlserver/Dockerfile` to `azure-sql-edge`:
+   
+   ```diff
+   - FROM mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af
+   + FROM mcr.microsoft.com/azure-sql-edge
+   ```
+
+   Note: you might need to rebuild docker-compose with `docker compose build`
+
+3. Azure SQL Edge does not ship with the `sqlcmd` utility with which we use to setup the SQL Server schema.
+
+   1. Install it locally instead, with brew: `brew install microsoft/mssql-release/mssql-tools`.
+   2. To start the test suite's backends, we need to setup the SQL Server schema using our local `sqlcmd`.
+      To start the backends, run this command instead:
+
+      ```diff
+      - docker compose up
+      + docker compose up & (cd docker-compose/sqlserver/ && ./run-init.sh 65003) && fg
+      ```
+
