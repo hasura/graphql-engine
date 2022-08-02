@@ -26,7 +26,7 @@ class TestGraphQLEmpty:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['bigquery'])
+@pytest.mark.backend('bigquery')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicBigquery:
 
@@ -105,7 +105,7 @@ class TestGraphQLQueryBasicBigquery:
         return 'queries/graphql_query/bigquery'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['bigquery'])
+@pytest.mark.backend('bigquery')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchBigquery:
 
@@ -120,7 +120,7 @@ class TestGraphQLQueryBoolExpSearchBigquery:
         return 'queries/graphql_query/boolexp/search'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['citus', 'mssql', 'postgres'])
+@pytest.mark.backend('citus', 'mssql', 'postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicPostgresMSSQLCitus:
 
@@ -135,7 +135,7 @@ class TestGraphQLQueryBasicPostgresMSSQLCitus:
         return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicMSSQL:
 
@@ -163,7 +163,7 @@ class TestGraphQLQueryBasicMSSQL:
         return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['postgres'])
+@pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicPostgres:
     # Can't run server upgrade tests, as this test has a schema change
@@ -209,7 +209,7 @@ class TestGraphQLQueryBasicPostgres:
         return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['citus'])
+@pytest.mark.backend('citus')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBasicCitus:
     def test_nested_select_with_foreign_key_alter(self, hge_ctx, transport):
@@ -246,7 +246,7 @@ class TestGraphQLQueryBasicCitus:
         return 'queries/graphql_query/citus'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['citus', 'postgres'])
+@pytest.mark.backend('citus', 'postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryFragmentsPostgresCitus:
 
@@ -291,7 +291,7 @@ class TestGraphQLQueryAgg:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryAggPermPostgresMSSQL:
 
@@ -318,7 +318,7 @@ class TestGraphQLQueryAggPermPostgresMSSQL:
         return 'queries/graphql_query/agg_perm'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['postgres'])
+@pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryAggPermPostgres:
     # This test should be part of TestGraphQLQueryAggPermCommon and it is not because of
@@ -383,7 +383,7 @@ class TestGraphQLQueryOffsets:
         return 'queries/graphql_query/offset'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpBasicPostgresMSSQL:
     def test_order_delivered_at_is_null(self, hge_ctx, transport):
@@ -430,7 +430,7 @@ class TestGraphQLQueryBoolExpBasicPostgresMSSQL:
         return 'queries/graphql_query/boolexp/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['postgres'])
+@pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpBasicPostgres:
     def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
@@ -465,7 +465,7 @@ class TestGraphQLQueryBoolExpBasicPostgres:
         return 'queries/graphql_query/boolexp/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpBasicMSSQL:
     def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
@@ -656,8 +656,8 @@ class TestGraphQLInheritedRolesPostgres:
         check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@pytest.mark.parametrize('backend', ['mssql'])
-@usefixtures('per_backend_tests', 'per_class_tests_db_state')
+@pytest.mark.backend('mssql')
+@usefixtures('per_class_tests_db_state')
 class TestGraphQLInheritedRolesMSSQL:
 
     @classmethod
@@ -671,7 +671,7 @@ class TestGraphQLInheritedRolesMSSQL:
         check_query_f(hge_ctx, self.dir() + '/inherited_role_with_some_roles_having_no_permissions.yaml')
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['postgres'])
+@pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchPostgres:
 
@@ -713,7 +713,7 @@ class TestGraphQLQueryBoolExpSearchPostgres:
         return 'queries/graphql_query/boolexp/search'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket', 'subscription'])
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSearchMSSQL:
 
@@ -1078,20 +1078,20 @@ class TestGraphQLExplainPostgresMSSQL:
     def dir(cls):
         return 'queries/explain'
 
-    def test_simple_query_as_admin(self, hge_ctx, backend):
+    def test_simple_query_as_admin(self, hge_ctx):
         q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
         hge_ctx.v1GraphqlExplain(q)
 
-    def test_simple_query_as_user(self, hge_ctx, backend):
+    def test_simple_query_as_user(self, hge_ctx):
         q = {"query": {"query": "query abc { __typename }", "operationName": "abc"}}
         hge_ctx.v1GraphqlExplain(q, {"x-hasura-role": "random_user"}, expected_status_code = 400)
 
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-    def test_simple_query(self, hge_ctx, backend):
+    @pytest.mark.backend('postgres', 'mssql')
+    def test_simple_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/simple_query') + ".yaml")
 
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-    def test_permissions_query(self, hge_ctx, backend):
+    @pytest.mark.backend('postgres', 'mssql')
+    def test_permissions_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/permissions_query') + ".yaml")
 
     def test_limit_query(self, hge_ctx):
@@ -1113,20 +1113,19 @@ class TestGraphQLExplainPostgresMSSQL:
     def test_orderby_array_relationship_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + '/orderby_array_relationship_query.yaml')
 
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-    def test_documented_query(self, hge_ctx, backend):
+    @pytest.mark.backend('postgres', 'mssql')
+    def test_documented_query(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_query') + ".yaml")
 
-    @pytest.mark.parametrize("backend", ['postgres', 'mssql'])
-    def test_documented_subscription(self, hge_ctx, backend):
+    @pytest.mark.backend('postgres', 'mssql')
+    def test_documented_subscription(self, hge_ctx):
         self.with_admin_secret("subscription", hge_ctx, self.dir() + hge_ctx.backend_suffix('/docs_subscription') + ".yaml")
 
-    @pytest.mark.parametrize("backend", ['bigquery'])
-    def test_array_relationship_orderby(self, hge_ctx, backend):
+    @pytest.mark.backend('bigquery')
+    def test_array_relationship_orderby(self, hge_ctx):
         self.with_admin_secret("query", hge_ctx, self.dir() + hge_ctx.backend_suffix('/author_articles_orderby') + ".yaml")
 
     def with_admin_secret(self, explain_query_type, hge_ctx, f, hdrs=None, req_st=200):
-
         overwrite_expectations = PytestConf.config.getoption("--accept")
 
         conf = get_conf_f(f)
@@ -1350,7 +1349,7 @@ class TestGraphQLQueryBoolExpLtree:
         return 'queries/graphql_query/boolexp/ltree'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSpatialMSSQL:
     @pytest.mark.skip_server_upgrade_test
@@ -1401,7 +1400,7 @@ class TestGraphQLQueryBoolExpSpatialMSSQL:
         return 'queries/graphql_query/boolexp/spatial'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@pytest.mark.parametrize("backend", ['bigquery'])
+@pytest.mark.backend('bigquery')
 @usefixtures('per_class_tests_db_state')
 class TestGraphQLQueryBoolExpSpatialBigquery:
     def test_select_spatial_bigquery_types(self, hge_ctx, transport):

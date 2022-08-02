@@ -308,6 +308,30 @@ def pytest_unconfigure(config):
         return
     config.hge_ctx_gql_server.teardown()
 
+def run_on_current_backend(request: pytest.FixtureRequest):
+    current_backend = request.config.getoption('--backend')
+    # Currently, we default all tests to run on Postgres with or without a --backend flag.
+    # As our test suite develops, we may consider running backend-agnostic tests on all
+    # backends, unless a specific `--backend` flag is passed.
+    desired_backends = set(name for marker in request.node.iter_markers('backend') for name in marker.args) or set(['postgres'])
+    return current_backend in desired_backends
+
+def per_backend_tests_fixture(request: pytest.FixtureRequest):
+    """
+    This fixture ignores backend-specific tests unless the relevant --backend flag has been passed.
+    """
+    if not run_on_current_backend(request):
+        desired_backends = set(name for marker in request.node.iter_markers('backend') for name in marker.args)
+        pytest.skip('Skipping test. This test can run on ' + ', '.join(desired_backends) + '.')
+
+@pytest.fixture(scope='class', autouse=True)
+def per_backend_test_class(request: pytest.FixtureRequest):
+    return per_backend_tests_fixture(request)
+
+@pytest.fixture(scope='function', autouse=True)
+def per_backend_test_function(request: pytest.FixtureRequest):
+    return per_backend_tests_fixture(request)
+
 @pytest.fixture(scope='module')
 def hge_ctx(request):
     config = request.config
@@ -470,24 +494,28 @@ def per_class_db_schema_for_mutation_tests(request, hge_ctx):
         for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown', 'pre_setup', 'post_teardown']
     ]
 
-    # only lookup files relevant to the tests being run.
-    # defaults to postgres file lookup
-    check_file_exists = hge_ctx.backend == backend
-
     if hge_ctx.is_default_backend:
         if setup_metadata_api_version == "v1":
             db_context = db_context_with_schema_common(
-                request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', check_file_exists
+                request, hge_ctx,
+                'schema_setup_files', 'schema_setup.yaml',
+                'schema_teardown_files', 'schema_teardown.yaml',
             )
         else:
-            db_context = db_context_with_schema_common_new (
-                request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
-                schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
+            db_context = db_context_with_schema_common_new(
+                request, hge_ctx,
+                'schema_setup_files', setup,
+                'schema_teardown_files', teardown,
+                schema_setup, schema_teardown,
+                pre_setup, post_teardown,
             )
     else:
-        db_context = db_context_with_schema_common_new (
-            request, hge_ctx, 'schema_setup_files', setup, 'schema_teardown_files', teardown,
-            schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
+        db_context = db_context_with_schema_common_new(
+            request, hge_ctx,
+            'schema_setup_files', setup,
+            'schema_teardown_files', teardown,
+            schema_setup, schema_teardown,
+            pre_setup, post_teardown,
         )
     yield from db_context
 
@@ -510,29 +538,11 @@ def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_
     ]
 
     yield from db_context_common(
-        request, hge_ctx, 'values_setup_files', values_setup,
+        request, hge_ctx,
+        'values_setup_files', values_setup,
         'values_teardown_files', values_teardown,
-        False, False, False
+        skip_setup=False, skip_teardown=False
     )
-
-@pytest.fixture(scope='function')
-def backend():
-    "This fixture provides a default `backend` value for the `per_backend_tests` fixture"
-    return 'postgres'
-
-@pytest.fixture(scope='function', autouse=True)
-def per_backend_tests(hge_ctx, backend):
-    """
-    This fixture ignores backend-specific tests unless the relevant --backend flag has been passed.
-    """
-    # Currently, we default all tests to run on Postgres with or without a --backend flag.
-    # As our test suite develops, we may consider running backend-agnostic tests on all
-    # backends, unless a specific `--backend` flag is passed.
-    if not hge_ctx.backend == backend:
-        pytest.skip(
-            'Skipping test. Add --backend ' + backend + ' to run backend-specific tests'
-        )
-        return
 
 def db_state_context(request, hge_ctx):
     # Non-default (Postgres) backend tests expect separate setup and schema_setup
@@ -542,10 +552,6 @@ def db_state_context(request, hge_ctx):
         for filename in ['setup', 'teardown', 'schema_setup', 'schema_teardown', 'pre_setup', 'post_teardown']
     ]
 
-    # only lookup files relevant to the tests being run.
-    # defaults to postgres file lookup
-    check_file_exists = hge_ctx.backend == backend
-
     # setting the default metadata API version to v1
     setup_metadata_api_version = getattr(request.cls, 'setup_metadata_api_version',"v1")
 
@@ -553,64 +559,73 @@ def db_state_context(request, hge_ctx):
         if setup_metadata_api_version == "v1":
             # setup the metadata and DB schema using the `/v1/query` endpoint
             db_context = db_context_with_schema_common(
-                request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
-                'teardown.yaml', check_file_exists        )
+                request, hge_ctx,
+                'setup_files', 'setup.yaml',
+                'teardown_files', 'teardown.yaml',
+            )
         elif setup_metadata_api_version == "v2":
             # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
-            db_context = db_context_with_schema_common_new (
-                request, hge_ctx, 'setup_files', setup, 'teardown_files',
-                teardown, schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
+            db_context = db_context_with_schema_common_new(
+                request, hge_ctx,
+                'setup_files', setup,
+                'teardown_files', teardown,
+                schema_setup, schema_teardown,
+                pre_setup, post_teardown,
             )
         else:
             raise NotImplementedError('Invalid API version.')
     else:
         # setup the metadata using the "/v1/metadata" and the DB schema using the `/v2/query` endpoints
-        db_context = db_context_with_schema_common_new (
-            request, hge_ctx, 'setup_files', setup, 'teardown_files',
-            teardown, schema_setup, schema_teardown, pre_setup, post_teardown, check_file_exists
+        db_context = db_context_with_schema_common_new(
+            request, hge_ctx,
+            'setup_files', setup,
+            'teardown_files', teardown,
+            schema_setup, schema_teardown,
+            pre_setup, post_teardown,
         )
     yield from db_context
 
-def db_state_context_new(
-    request, hge_ctx, setup='setup.yaml', teardown='teardown.yaml',
-        schema_setup='schema_setup.yaml', schema_teardown='schema_teardown.yaml',
-        pre_setup='pre_setup.yaml', post_teardown='post_teardown.yaml'):
-    yield from db_context_with_schema_common_new (
-        request, hge_ctx, 'setup_files', setup, 'teardown_files',
-        teardown, schema_setup, schema_teardown, pre_setup, post_teardown, True
-    )
-
 def db_context_with_schema_common(
-    request, hge_ctx, setup_files_attr, setup_default_file,
-    teardown_files_attr, teardown_default_file, check_file_exists=True):
+    request, hge_ctx,
+    setup_files_attr, setup_default_file,
+    teardown_files_attr, teardown_default_file,
+):
     (skip_setup, skip_teardown) = [
         request.config.getoption('--' + x)
         for x in ['skip-schema-setup', 'skip-schema-teardown']
     ]
     yield from db_context_common(
-        request, hge_ctx, setup_files_attr, setup_default_file,
+        request, hge_ctx,
+        setup_files_attr, setup_default_file,
         teardown_files_attr, teardown_default_file,
-        check_file_exists, skip_setup, skip_teardown
+        skip_setup, skip_teardown
     )
 
-def db_context_with_schema_common_new (
-    request, hge_ctx, setup_files_attr, setup_default_file,
-        teardown_files_attr, teardown_default_file, setup_sql_file, teardown_sql_file, pre_setup_file, post_teardown_file, check_file_exists=True):
+def db_context_with_schema_common_new(
+    request, hge_ctx,
+    setup_files_attr, setup_default_file,
+    teardown_files_attr, teardown_default_file,
+    setup_sql_file, teardown_sql_file,
+    pre_setup_file, post_teardown_file,
+):
     (skip_setup, skip_teardown) = [
         request.config.getoption('--' + x)
         for x in ['skip-schema-setup', 'skip-schema-teardown']
     ]
-    yield from db_context_common_new (
-        request, hge_ctx, setup_files_attr, setup_default_file, setup_sql_file,
+    yield from db_context_common_new(
+        request, hge_ctx,
+        setup_files_attr, setup_default_file, setup_sql_file,
         teardown_files_attr, teardown_default_file, teardown_sql_file,
         pre_setup_file, post_teardown_file,
-        check_file_exists, skip_setup, skip_teardown
+        skip_setup, skip_teardown
     )
 
 def db_context_common(
-        request, hge_ctx, setup_files_attr, setup_default_file,
+        request, hge_ctx,
+        setup_files_attr, setup_default_file,
         teardown_files_attr, teardown_default_file,
-        check_file_exists=True, skip_setup=True, skip_teardown=True ):
+        skip_setup=True, skip_teardown=True
+):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
         if not files:
@@ -619,17 +634,26 @@ def db_context_common(
     setup = get_files(setup_files_attr, setup_default_file)
     teardown = get_files(teardown_files_attr, teardown_default_file)
     if hge_ctx.is_default_backend:
-        yield from setup_and_teardown_v1q(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
+        yield from setup_and_teardown_v1q(
+            request, hge_ctx,
+            setup, teardown,
+            skip_setup, skip_teardown
+        )
     else:
-        yield from setup_and_teardown_v2q(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
+        yield from setup_and_teardown_v2q(
+            request, hge_ctx,
+            setup, teardown,
+            skip_setup, skip_teardown
+        )
 
 
 def db_context_common_new(
-        request, hge_ctx, setup_files_attr, setup_default_file,
-        setup_default_sql_file,
+        request, hge_ctx,
+        setup_files_attr, setup_default_file, setup_default_sql_file,
         teardown_files_attr, teardown_default_file, teardown_default_sql_file,
         pre_setup_file, post_teardown_file,
-        check_file_exists=True, skip_setup=True, skip_teardown=True ):
+        skip_setup=True, skip_teardown=True
+):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
         if not files:
@@ -641,17 +665,19 @@ def db_context_common_new(
     teardown_default_sql_file = os.path.join(request.cls.dir(), teardown_default_sql_file)
     pre_setup_default_file = os.path.join(request.cls.dir(), pre_setup_file)
     post_teardown_default_file = os.path.join(request.cls.dir(), post_teardown_file)
-    yield from setup_and_teardown( request, hge_ctx, setup, teardown,
-                                   setup_default_sql_file, teardown_default_sql_file, pre_setup_default_file, post_teardown_default_file,
-                                   check_file_exists, skip_setup, skip_teardown)
+    yield from setup_and_teardown(
+        request, hge_ctx,
+        setup, teardown,
+        setup_default_sql_file, teardown_default_sql_file,
+        pre_setup_default_file, post_teardown_default_file,
+        skip_setup, skip_teardown
+    )
 
-def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
-    def assert_file_exists(f):
-        assert os.path.isfile(f), 'Could not find file ' + f
-    if check_file_exists:
-        for o in [setup_files, teardown_files]:
-            run_on_elem_or_list(assert_file_exists, o)
-
+def setup_and_teardown_v1q(
+    request, hge_ctx,
+    setup_files, teardown_files,
+    skip_setup=False, skip_teardown=False
+):
     def v1q_f(filepath):
         if os.path.isfile(filepath):
             return hge_ctx.v1q_f(filepath)
@@ -663,13 +689,11 @@ def setup_and_teardown_v1q(request, hge_ctx, setup_files, teardown_files, check_
     if request.session.testsfailed > 0 or not skip_teardown:
         run_on_elem_or_list(v1q_f, teardown_files)
 
-def setup_and_teardown_v2q(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
-    def assert_file_exists(f):
-        assert os.path.isfile(f), 'Could not find file ' + f
-    if check_file_exists:
-        for o in [setup_files, teardown_files]:
-            run_on_elem_or_list(assert_file_exists, o)
-
+def setup_and_teardown_v2q(
+    request, hge_ctx,
+    setup_files, teardown_files,
+    skip_setup=False, skip_teardown=False
+):
     def v2q_f(filepath):
         if os.path.isfile(filepath):
             return hge_ctx.v2q_f(filepath)
@@ -681,15 +705,13 @@ def setup_and_teardown_v2q(request, hge_ctx, setup_files, teardown_files, check_
     if request.session.testsfailed > 0 or not skip_teardown:
         run_on_elem_or_list(v2q_f, teardown_files)
 
-def setup_and_teardown(request, hge_ctx, setup_files, teardown_files,
-                       sql_schema_setup_file,sql_schema_teardown_file,
-                       pre_setup_file, post_teardown_file,
-                       check_file_exists=True, skip_setup=False, skip_teardown=False):
-    def assert_file_exists(f):
-        assert os.path.isfile(f), 'Could not find file ' + f
-    if check_file_exists:
-        for o in [setup_files, teardown_files, sql_schema_setup_file, sql_schema_teardown_file]:
-            run_on_elem_or_list(assert_file_exists, o)
+def setup_and_teardown(
+    request, hge_ctx,
+    setup_files, teardown_files,
+    sql_schema_setup_file, sql_schema_teardown_file,
+    pre_setup_file, post_teardown_file,
+    skip_setup=False, skip_teardown=False
+):
     def v2q_f(f):
         if os.path.isfile(f):
             try:

@@ -510,7 +510,7 @@ class TestGraphqlUpdatePermissions:
     def dir(cls):
         return "queries/graphql_mutation/update/permissions"
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @use_mutation_fixtures
 class TestGraphqlUpdateBasicMSSQL:
 
@@ -539,7 +539,7 @@ class TestGraphqlUpdateBasicMSSQL:
     def dir(cls):
         return "queries/graphql_mutation/update/basic"
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @use_mutation_fixtures
 class TestGraphqlUpdatePermissionsMSSQL:
 
@@ -594,7 +594,7 @@ class TestGraphqlDeleteBasic:
     def dir(cls):
         return "queries/graphql_mutation/delete/basic"
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_method_tests_db_state')
 class TestGraphqlDeleteBasicMSSQL:
@@ -636,7 +636,7 @@ class TestGraphqlDeleteConstraints:
     def dir(cls):
         return "queries/graphql_mutation/delete/constraints"
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_method_tests_db_state')
 class TestGraphqlDeleteConstraintsMSSQL:
@@ -689,7 +689,7 @@ class TestGraphqlDeletePermissions:
         return "queries/graphql_mutation/delete/permissions"
 
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestGraphqlDeletePermissionsMSSQL:
 
@@ -840,7 +840,7 @@ class TestGraphQLMutationTransactions:
     def dir(cls):
         return 'queries/graphql_mutation/transactions'
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @use_mutation_fixtures
 class TestGraphQLInsertMSSQL:
 
@@ -872,7 +872,7 @@ class TestGraphQLInsertMSSQL:
     def test_insert_invalid_datetime(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_invalid_datetime_mssql.yaml")
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @use_mutation_fixtures
 class TestGraphqlInsertPermissionMSSQL:
 
@@ -895,7 +895,7 @@ class TestGraphqlInsertPermissionMSSQL:
 
 
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @use_mutation_fixtures
 class TestGraphqlInsertIfMatchedMSSQL:
 

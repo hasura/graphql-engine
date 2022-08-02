@@ -13,8 +13,8 @@ if not PytestConf.config.getoption('--test-read-only-source'):
                 allow_module_level=True)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@pytest.mark.parametrize('backend', ['postgres', 'citus'])
-#@pytest.mark.parametrize('backend', ['citus', 'mssql', 'postgres'])
+@pytest.mark.backend('postgres', 'citus')
+#@pytest.mark.backend('citus', 'mssql', 'postgres')
 @usefixtures('setup_schema_externally', 'per_class_tests_db_state')
 class TestGraphQLOnReadOnlySource:
 

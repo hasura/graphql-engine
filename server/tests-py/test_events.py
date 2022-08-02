@@ -135,7 +135,8 @@ class TestEventCreateAndResetNonDefaultSource:
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/create_and_reset_non_default'
-@pytest.mark.parametrize("backend", ['mssql'])
+
+@pytest.mark.backend('mssql')
 @usefixtures("per_method_tests_db_state")
 class TestEventCreateAndDeleteMSSQL:
 
@@ -169,7 +170,7 @@ class TestEventCreateAndDeleteMSSQL:
 # NOTE: this expects:
 #   HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
 #   HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE=100  (the default)
-@pytest.mark.parametrize("backend", ['mssql','postgres'])
+@pytest.mark.backend('mssql','postgres')
 @usefixtures("per_method_tests_db_state")
 class TestEventFloodPostgresMSSQL(object):
 
@@ -320,7 +321,7 @@ class TestEventDataFormat(object):
       update(hge_ctx, table, where_exp, set_exp)
       check_event(hge_ctx, evts_webhook, "geojson_all", table, "UPDATE", exp_ev_data)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures("per_class_tests_db_state")
 class TestEventDataFormatBigIntMSSQL(object):
 
@@ -356,7 +357,7 @@ class TestEventDataFormatBigIntMSSQL(object):
       print("----------- resp ----------\n", resp)
       check_event(hge_ctx, evts_webhook, "bigint_all", table, "INSERT", exp_ev_data)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures("per_class_tests_db_state")
 class TestEventDataFormatGeoJSONMSSQL(object):
 
@@ -367,7 +368,7 @@ class TestEventDataFormatGeoJSONMSSQL(object):
     def test_geojson(self, hge_ctx, evts_webhook):
       check_query_f(hge_ctx, self.dir() + '/create_geojson_event_trigger.yaml')
 
-@pytest.mark.parametrize("backend", ['mssql','postgres'])
+@pytest.mark.backend('mssql','postgres')
 @usefixtures("per_class_tests_db_state")
 class TestCreateEventQueryPostgresMSSQL(object):
 
@@ -442,7 +443,7 @@ class TestCreateEventQueryPostgresMSSQL(object):
             check_event(hge_ctx, evts_webhook, "measurement_all", table, "INSERT", exp_ev_data)
             hge_ctx.v1q_f(self.dir() + '/partition_table_teardown.yaml')
 
-@pytest.mark.parametrize("backend", ['mssql','postgres'])
+@pytest.mark.backend('mssql','postgres')
 @usefixtures('per_method_tests_db_state')
 class TestEventRetryConfPostgresMSSQL(object):
 
@@ -522,7 +523,7 @@ class TestEventRetryConfPostgresMSSQL(object):
         except queue.Empty:
             pass
 
-@pytest.mark.parametrize("backend", ['mssql','postgres'])
+@pytest.mark.backend('mssql','postgres')
 @usefixtures('per_method_tests_db_state')
 class TestEventHeadersPostgresMSSQL(object):
 
@@ -616,7 +617,7 @@ class TestUpdateEventQuery(object):
 
         check_event(hge_ctx, evts_webhook, "t1_cols", table, "DELETE", exp_ev_data, webhook_path = "/new")
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 class TestUpdateEventQueryMSSQL(object):
 
     @classmethod
@@ -745,7 +746,7 @@ class TestDeleteEventQuery(object):
             # NOTE: use a bit of a delay here, to catch any stray events generated above
             check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data, get_timeout=2)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestDeleteEventQueryMSSQL(object):
 
@@ -848,7 +849,7 @@ class TestEventSelCols:
             }
         })
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestEventSelColsMSSQL:
 
@@ -966,7 +967,7 @@ class TestEventInsertOnly:
             # NOTE: use a bit of a delay here, to catch any stray events generated above
             check_event(hge_ctx, evts_webhook, "t1_insert", table, "DELETE", exp_ev_data, get_timeout=2)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestEventInsertOnlyMSSQL:
 
@@ -1007,7 +1008,7 @@ class TestEventInsertOnlyMSSQL:
             # NOTE: use a bit of a delay here, to catch any stray events generated above
             check_event(hge_ctx, evts_webhook, "t1_insert", table, "DELETE", exp_ev_data, get_timeout=2)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestEventUpdateOnlyMSSQL:
 
@@ -1191,7 +1192,7 @@ class TestEventSelPayload:
         }, expected_status_code = 400)
         assert resp['code'] == "dependency-error", resp
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state')
 class TestEventSelPayloadMSSQL:
 
@@ -1308,7 +1309,7 @@ class TestWebhookEvent(object):
         delete(hge_ctx, table, where_exp)
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestWebhookEventMSSQL(object):
 
@@ -1380,7 +1381,7 @@ class TestEventWebhookTemplateURL(object):
         delete(hge_ctx, table, where_exp)
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data, webhook_path = '/trigger')
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestEventWebhookTemplateURLMSSQL(object):
 
@@ -1455,7 +1456,7 @@ class TestEventSessionVariables(object):
         delete(hge_ctx, table, where_exp)
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestEventSessionVariablesMSSQL(object):
 
@@ -1532,7 +1533,7 @@ class TestManualEvents(object):
 
             self.test_basic(hge_ctx, evts_webhook)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_method_tests_db_state')
 class TestManualEventsMSSQL(object):
 
@@ -1565,7 +1566,7 @@ class TestManualEventsMSSQL(object):
 
             self.test_basic(hge_ctx, evts_webhook)
 
-@pytest.mark.parametrize("backend", ['mssql','postgres'])
+@pytest.mark.backend('mssql','postgres')
 @usefixtures('per_method_tests_db_state')
 class TestEventsAsynchronousExecutionPostgresMSSQL(object):
 
@@ -1632,7 +1633,7 @@ class TestEventTransform(object):
                                 removedHeaders=["user-agent"],
                                 webhook_path=expectedPath)
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures("per_method_tests_db_state")
 class TestEventTransformMSSQL(object):
 
