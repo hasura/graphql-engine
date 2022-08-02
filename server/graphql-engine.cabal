@@ -1261,11 +1261,11 @@ test-suite tests-hspec
     Test.GatheringUniqueConstraintsSpec
     Test.InsertCheckPermissionSpec
     Test.InsertDefaultsSpec
-    Test.InsertEnumColumnSpec
     Test.InsertOnConflictSpec
     Test.LongIdentifiersSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.ObjectRelationshipsLimitSpec
+    Test.Postgres.EnumSpec
     Test.Postgres.TimestampSpec
     Test.Queries.DirectivesSpec
     Test.Queries.Directives.IncludeSpec
