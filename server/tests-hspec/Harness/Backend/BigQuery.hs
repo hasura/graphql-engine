@@ -36,8 +36,8 @@ import Harness.Env
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Context (BackendType (BigQuery))
-import Harness.Test.Fixture
+import Harness.Test.BackendType (BackendType (BigQuery), defaultBackendTypeString, defaultSource)
+import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),

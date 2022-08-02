@@ -77,8 +77,8 @@ permissions source =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: SpecWith TestEnvironment
-tests =
+tests :: Options -> SpecWith TestEnvironment
+tests _ =
   -- Tests relating to https://github.com/hasura/graphql-engine/issues/8260
   describe "The schema for insert mutations with an 'on_conflict' clause" do
     describe "When no columns are updateable" do

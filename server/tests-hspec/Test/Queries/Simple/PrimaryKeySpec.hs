@@ -15,7 +15,7 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.Test.Context qualified as Context
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -24,27 +24,21 @@ import Prelude
 
 spec :: SpecWith TestEnvironment
 spec =
-  Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Postgres.setup schema,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
+  Fixture.run
+    [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Postgres.setupTablesAction schema testEnv
+            ]
         },
-      Context.Context
-        { name = Context.Backend Context.Citus,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Citus.setup schema,
-          teardown = Citus.teardown schema,
-          customOptions = Nothing
+      (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Citus.setupTablesAction schema testEnv
+            ]
         },
-      Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Sqlserver.setup schema,
-          teardown = Sqlserver.teardown schema,
-          customOptions = Nothing
+      (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        { Fixture.setupTeardown = \(testEnv, _) ->
+            [ Sqlserver.setupTablesAction schema testEnv
+            ]
         }
     ]
     tests
@@ -74,7 +68,7 @@ schema =
 --------------------------------------------------------------------------------
 -- Tests
 
-tests :: Context.Options -> SpecWith TestEnvironment
+tests :: Fixture.Options -> SpecWith TestEnvironment
 tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts

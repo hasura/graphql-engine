@@ -1218,6 +1218,7 @@ test-suite tests-hspec
  -- Harness.Test
     Harness.Test.BackendType
     Harness.Test.Context
+    Harness.Test.CustomOptions
     Harness.Test.Fixture
     Harness.Test.Hspec.Extended
     Harness.Test.Introspection

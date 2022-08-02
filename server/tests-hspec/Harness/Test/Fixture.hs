@@ -8,24 +8,27 @@ module Harness.Test.Fixture
     Fixture (..),
     fixture,
     FixtureName (..),
+    BackendType (..),
     defaultSource,
     defaultBackendTypeString,
     defaultSchema,
     noLocalTestEnvironment,
     SetupAction (..),
+    Options (..),
+    combineOptions,
+    defaultOptions,
     fixtureRepl,
   )
 where
 
-import Control.Exception.Safe
-import Data.Foldable (for_)
-import Harness.Exceptions (catchRethrow, rethrowAll)
+import Harness.Exceptions
 import Harness.Test.BackendType
+import Harness.Test.CustomOptions
 import Harness.Test.Hspec.Extended
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (ActionWith, SpecWith, aroundAllWith, describe)
 import Test.Hspec.Core.Spec (mapSpecItem)
-import Prelude
 
 -- | Runs the given tests, for each provided 'Fixture'@ ()@.
 --
@@ -40,13 +43,13 @@ import Prelude
 --
 -- For a more general version that can run tests for any 'Fixture'@ a@, see
 -- 'runWithLocalTestEnvironment'.
-run :: [Fixture ()] -> (SpecWith TestEnvironment) -> SpecWith TestEnvironment
+run :: [Fixture ()] -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
 run contexts tests = do
-  let mappedTests =
+  let mappedTests opts =
         mapSpecItem
           actionWithTestEnvironmentMapping
           (mapItemAction actionWithTestEnvironmentMapping)
-          tests
+          (tests opts)
   runWithLocalTestEnvironment contexts mappedTests
 
 -- | Observe that there is a direct correspondance (i.e. an isomorphism) from
@@ -75,12 +78,14 @@ actionWithTestEnvironmentMapping actionWith (testEnvironment, _) = actionWith te
 runWithLocalTestEnvironment ::
   forall a.
   [Fixture a] ->
-  (SpecWith (TestEnvironment, a)) ->
+  (Options -> SpecWith (TestEnvironment, a)) ->
   SpecWith TestEnvironment
-runWithLocalTestEnvironment contexts tests =
-  for_ contexts \context -> do
+runWithLocalTestEnvironment fixtures tests =
+  for_ fixtures \context -> do
     let n = name context
-    describe (show n) $ aroundAllWith (fixtureBracket context) tests
+        co = customOptions context
+        options = fromMaybe defaultOptions co
+    describe (show n) $ aroundAllWith (fixtureBracket context) (tests options)
 
 -- We want to be able to report exceptions happening both during the tests
 -- and at teardown, which is why we use a custom re-implementation of
@@ -170,7 +175,10 @@ data Fixture a = Fixture
     --  * sending metadata commands
     --
     -- Takes the global 'TestEnvironment' and any local testEnvironment (i.e. @a@) as arguments.
-    setupTeardown :: (TestEnvironment, a) -> [SetupAction]
+    setupTeardown :: (TestEnvironment, a) -> [SetupAction],
+    -- | Options which modify the behavior of a given testing 'Fixture'; when
+    -- this field is 'Nothing', tests are given the 'defaultOptions'.
+    customOptions :: Maybe Options
   }
 
 -- | A simple smart constructor for a 'Fixture'.
@@ -179,6 +187,7 @@ fixture name = Fixture {..}
   where
     setupTeardown = const []
     mkLocalTestEnvironment = noLocalTestEnvironment
+    customOptions = Nothing
 
 -- | a 'SetupAction' encodes how to setup and tear down a single piece of test
 -- system state.

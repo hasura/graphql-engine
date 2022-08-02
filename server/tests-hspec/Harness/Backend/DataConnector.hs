@@ -32,7 +32,7 @@ import Harness.Backend.DataConnector.MockAgent
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (healthCheck)
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
-import Harness.Test.Context (BackendType (DataConnector), Options, defaultBackendTypeString)
+import Harness.Test.Fixture (BackendType (DataConnector), Options, defaultBackendTypeString)
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
