@@ -104,7 +104,7 @@ class TestSubscriptionCtrl(object):
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
 class TestSubscriptionBasic:
     @classmethod
@@ -615,7 +615,7 @@ class TestSubscriptionLiveQueriesForGraphQLWS:
             ws_client_graphql_ws.send(frame)
             ws_client_graphql_ws.clear_queue()
 
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state')
 class TestSubscriptionMultiplexingPostgresMSSQL:
 
@@ -669,7 +669,7 @@ class TestSubscriptionMultiplexingPostgres:
         response = get_explain_graphql_query_response(hge_ctx, config['query'], config['variables'], {})
         assert response["variables"]["synthetic"] == ['{1,2,3}'], response["variables"]
 
-@pytest.mark.parametrize("backend", ['postgres'])
+@pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
 class TestSubscriptionUDFWithSessionArg:
     """
@@ -700,7 +700,7 @@ class TestSubscriptionUDFWithSessionArg:
         assert ev['type'] == 'data', ev
         assert ev['payload']['data'] == {'me': [{'id': '42', 'name': 'Charlie'}]}, ev['payload']['data']
 
-@pytest.mark.parametrize("backend", ['mssql', 'postgres'])
+@pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
 class TestSubscriptionCustomizedSourceMSSQLPostgres:
     @classmethod
@@ -776,7 +776,7 @@ class TestSubscriptionCustomizedSourceMSSQLPostgres:
         assert ev['type'] == 'error' and ev['id'] == '2', ev
         assert ev['payload']['errors'] == [OrderedDict([('extensions', OrderedDict([('path', '$'), ('code', 'validation-failed')])), ('message', 'subscriptions must select one top level field')])], ev
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
 class TestSubscriptionMSSQLChunkedResults:
     @classmethod

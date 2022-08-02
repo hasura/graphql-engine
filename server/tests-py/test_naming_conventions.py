@@ -29,7 +29,7 @@ class TestNamingConventions:
     def test_type_and_field_names_with_prefix_and_suffix(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/type_and_field_names_with_prefix_and_suffix.yaml')
 
-@pytest.mark.parametrize("backend", ['mssql'])
+@pytest.mark.backend('mssql')
 class TestNamingConventionsFailure:
     @classmethod
     def dir(cls):
