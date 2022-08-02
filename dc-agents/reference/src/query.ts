@@ -326,15 +326,29 @@ const isNumberArray = (values: ScalarValue[]): values is number[] => {
   return values.every(v => typeof v === "number");
 };
 
+const isComparableArray = (values: ScalarValue[]): values is (number | string)[] => {
+  return values.every(v => typeof v === "number" || typeof v === "string");
+};
+
 const singleColumnAggregateFunction = (aggregate: SingleColumnAggregate) => (rows: Record<string, ScalarValue>[]): ScalarValue => {
   const values = rows.map(row => row[aggregate.column]).filter((v): v is Exclude<ScalarValue, null> => v !== null);
+  if (values.length === 0)
+    return null;
+
+  if (!isComparableArray(values)) {
+    throw new Error(`Found non-comparable scalar values when computing ${aggregate.function}`);
+  }
+  switch (aggregate.function) {
+    case "max": return values.reduce((prev, curr) => prev > curr ? prev : curr);
+    case "min": return values.reduce((prev, curr) => prev < curr ? prev : curr);
+  }
+
   if (!isNumberArray(values)) {
     throw new Error(`Found non-numeric scalar values when computing ${aggregate.function}`);
   }
   switch (aggregate.function) {
-    case "avg": return math.mean(values);
-    case "max": return math.max(values);
-    case "min": return math.min(values);
+    case "avg":
+      return math.mean(values);
     case "stddev_pop": return math.std(values, "uncorrected");
     case "stddev_samp": return math.std(values, "unbiased");
     case "sum": return math.sum(values);

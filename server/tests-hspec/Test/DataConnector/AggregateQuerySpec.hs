@@ -290,6 +290,36 @@ tests opts = describe "Aggregate Query Tests" $ do
                   Total: 22.518058994165273
         |]
 
+    it "min and max works on string fields" $ \(testEnvironment, _) ->
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query getArtists {
+                Artist_aggregate {
+                  aggregate {
+                    max {
+                      Name
+                    }
+                    min {
+                      Name
+                    }
+                  }
+                }
+              }
+            |]
+        )
+        [yaml|
+          data:
+            Artist_aggregate:
+              aggregate:
+                max:
+                  Name: Zeca Pagodinho
+                min:
+                  Name: A Cor Do Som
+        |]
+
     it "works across array relationships from regular queries" $ \(testEnvironment, _) ->
       shouldReturnYaml
         opts
