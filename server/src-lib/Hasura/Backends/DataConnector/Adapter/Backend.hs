@@ -69,7 +69,10 @@ instance Backend 'DataConnector where
   type XStreamingSubscription 'DataConnector = XDisable
 
   isComparableType :: ScalarType 'DataConnector -> Bool
-  isComparableType = isNumType @'DataConnector
+  isComparableType = \case
+    IR.S.T.Number -> True
+    IR.S.T.String -> True
+    IR.S.T.Bool -> False
 
   isNumType :: ScalarType 'DataConnector -> Bool
   isNumType IR.S.T.Number = True
