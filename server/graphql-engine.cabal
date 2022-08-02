@@ -1228,6 +1228,7 @@ test-suite tests-hspec
     Harness.Quoter.Graphql
     Harness.Quoter.Sql
     Harness.Quoter.Yaml
+    Harness.Quoter.Yaml.InterpolateYaml
 
  -- Test
     Test.ArrayParamPermissionSpec
@@ -1294,6 +1295,7 @@ test-suite tests-hspec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.ServiceLivenessSpec
     Test.ViewsSpec
+    Test.Quoter.YamlSpec
 
 test-suite tests-dc-api
   import: common-all, common-exe

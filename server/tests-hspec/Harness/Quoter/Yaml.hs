@@ -5,7 +5,7 @@
 -- | Templating yaml files.
 module Harness.Quoter.Yaml
   ( yaml,
-    yamlObjects,
+    interpolateYaml,
     shouldReturnYaml,
     shouldReturnOneOfYaml,
     shouldBeYaml,
@@ -13,6 +13,7 @@ module Harness.Quoter.Yaml
 where
 
 import Control.Exception.Safe (Exception, impureThrow, throwM)
+import Control.Monad.Identity
 import Control.Monad.Trans.Resource (ResourceT)
 import Data.Aeson (Value)
 import Data.Aeson qualified
@@ -29,9 +30,10 @@ import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as Vector
 import Data.Yaml qualified
 import Data.Yaml.Internal qualified
+import Harness.Quoter.Yaml.InterpolateYaml
 import Harness.Test.Context qualified as Context (Options (..))
 import Instances.TH.Lift ()
-import Language.Haskell.TH (Exp, Q, listE, mkName, runIO, varE)
+import Language.Haskell.TH
 import Language.Haskell.TH.Lift (Lift)
 import Language.Haskell.TH.Lift qualified as TH
 import Language.Haskell.TH.Quote (QuasiQuoter (..))
@@ -109,6 +111,10 @@ shouldBeYaml actual expected = do
 
 -- * Quasi quoters
 
+-- | Treats Yaml like JSON, and allows other ToJSON instances to be
+-- combined with it using Yaml anchors
+-- ie '*haskellVar: otherStuff'
+-- or 'key: *haskellValue'
 yaml :: QuasiQuoter
 yaml =
   QuasiQuoter
@@ -138,40 +144,6 @@ templateYaml inputString = do
           case Data.Yaml.decodeEither' bs of
             Left e -> impureThrow e
             Right (v :: Aeson.Value) -> pure v
-      )
-    |]
-  where
-    inputBytes = encodeUtf8 $ T.pack inputString
-
-yamlObjects :: QuasiQuoter
-yamlObjects =
-  QuasiQuoter
-    { quoteExp = templateObjects,
-      quotePat = \_ -> fail "invalid",
-      quoteType = \_ -> fail "invalid",
-      quoteDec = \_ -> fail "invalid"
-    }
-
--- | Template a YAML file contents. Throws a bunch of exception types:
---  'YamlTemplateException' or 'YamlException' or 'ParseException'.
---
--- Produces '[Aeson.Object]'.
-templateObjects :: String -> Q Exp
-templateObjects inputString = do
-  events <-
-    runIO
-      ( runConduitRes
-          (Libyaml.decode inputBytes .| CL.mapM processor .| CL.consume)
-      )
-  [|
-    unsafePerformIO
-      ( do
-          bs <-
-            runConduitRes
-              (CL.sourceList (concat $(listE events)) .| Libyaml.encode)
-          case Data.Yaml.decodeEither' bs of
-            Left e -> impureThrow e
-            Right (v :: [Aeson.Object]) -> pure v
       )
     |]
   where
