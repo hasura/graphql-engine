@@ -2,4 +2,4 @@ export { useTableRelationships } from './useTableRelationships';
 export type { DataTarget } from './drivers';
 export { isPostgresDataTarget } from './postgres/types';
 export { isMSSQLDataTarget } from './mssql/types';
-export { TableRelationshipsType } from './drivers';
+export type { TableRelationshipsType } from './drivers';

@@ -1,6 +1,6 @@
 import * as hooks from './hooks';
 
-export { PostgresDataTarget } from './types';
+export type { PostgresDataTarget } from './types';
 
 export default {
   ...hooks,

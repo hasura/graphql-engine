@@ -1,5 +1,5 @@
-import { RunSQLResponse } from '../../api';
-import { IntrospectedTable } from '../../types';
+import { RunSQLResponse } from '../../../api';
+import { IntrospectedTable } from '../../../types';
 import { adaptIntrospectedBigQueryTables } from '../utils';
 
 describe('adaptIntrospectedBigQueryTables', () => {
