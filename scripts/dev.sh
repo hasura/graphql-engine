@@ -325,17 +325,17 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "    $ $0 postgres"
   echo_pretty ""
 
-  RUN_INVOCATION=(cabal new-run --project-file=cabal/dev-sh.project --RTS --
+  RUN_INVOCATION=(cabal new-run --RTS --
     exe:graphql-engine +RTS -N -T -s -RTS serve
     --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
     )
 
   echo_pretty 'About to do:'
-  echo_pretty '    $ cabal new-build --project-file=cabal/dev-sh.project exe:graphql-engine'
+  echo_pretty '    $ cabal new-build exe:graphql-engine'
   echo_pretty "    $ ${RUN_INVOCATION[*]}"
   echo_pretty ''
 
-  cabal new-build --project-file=cabal/dev-sh.project exe:graphql-engine
+  cabal new-build exe:graphql-engine
 
   # We assume a PG is *already running*, and therefore bypass the
   # cleanup mechanism previously set.
@@ -483,7 +483,6 @@ elif [ "$MODE" = "test" ]; then
     # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
     # `graphql-engine version` to trigger build
     cabal run \
-      --project-file=cabal/dev-sh.project \
       -- exe:graphql-engine \
         --metadata-database-url="$PG_DB_URL" \
         version
@@ -501,7 +500,6 @@ elif [ "$MODE" = "test" ]; then
     HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
       HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
       cabal run \
-        --project-file=cabal/dev-sh.project \
         test:graphql-engine-tests \
         -- "${UNIT_TEST_ARGS[@]}"
   fi
@@ -529,7 +527,6 @@ elif [ "$MODE" = "test" ]; then
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
     cabal new-run \
-      --project-file=cabal/dev-sh.project \
       -- exe:graphql-engine \
         --metadata-database-url="$PG_DB_URL" serve \
         --stringify-numeric-types \

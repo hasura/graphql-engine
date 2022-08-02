@@ -15,6 +15,8 @@ own machine and how to contribute.
 
 For building console and running test suite:
 
+- [Docker](https://www.docker.com/get-started/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 - [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
 - npm >= 5.7
 - python >= 3.5 with pip3 and virtualenv
@@ -190,7 +192,7 @@ HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>
 1. To run the Haskell integration test suite, you'll first need to bring up the database containers:
 
 ```sh
-docker-compose up
+docker compose up
 ```
 
 2. Once the containers are up, you can run the test suite via
