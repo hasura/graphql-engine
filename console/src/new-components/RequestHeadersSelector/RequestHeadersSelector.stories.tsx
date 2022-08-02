@@ -2,6 +2,7 @@ import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
 import { expect } from '@storybook/jest';
 import { userEvent, within, waitFor } from '@storybook/testing-library';
+import { action } from '@storybook/addon-actions';
 import { z } from 'zod';
 import {
   RequestHeadersSelector,
@@ -55,6 +56,7 @@ export const Primary: Story<Props> = args => {
 
 Primary.args = {
   name: 'headers',
+  onSubmit: jest.fn().mockImplementation(action('submit')),
 };
 
 Primary.play = async ({ args, canvasElement }) => {
@@ -122,8 +124,8 @@ Primary.play = async ({ args, canvasElement }) => {
   };
 
   await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
-  const firstOnSubmitCallParams = args.onSubmit.mock.calls[0];
-  expect(firstOnSubmitCallParams).toMatchObject(
+
+  expect(args.onSubmit).toBeCalledWith(
     expect.objectContaining([{ ...submittedHeaders }])
   );
 };

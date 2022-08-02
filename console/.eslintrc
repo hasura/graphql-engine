@@ -248,7 +248,11 @@
         "react/no-array-index-key": "off",
         "no-case-declarations": 0,
         "react/jsx-indent": "off",
-        "arrow-body-style": "off"
+        "arrow-body-style": "off",
+        "react/require-default-props": "warn",
+        "react/no-unused-prop-types": "warn",
+        "jsx-a11y/role-supports-aria-props": "warn"
+
       }
     },
     {
