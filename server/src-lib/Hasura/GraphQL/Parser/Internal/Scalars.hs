@@ -17,7 +17,6 @@ module Hasura.GraphQL.Parser.Internal.Scalars
     bigInt,
     scientific,
     -- internal
-    unsafeRawScalar,
     jsonScalar,
   )
 where
@@ -25,15 +24,14 @@ where
 import Control.Monad ((>=>))
 import Data.Aeson qualified as A
 import Data.Aeson.Internal qualified as A.Internal
-import Data.Aeson.Types qualified as A
 import Data.Int (Int32, Int64)
 import Data.Scientific (Scientific)
 import Data.Scientific qualified as S
+import Data.Scientific qualified as Scientific
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Read (decimal)
 import Data.UUID qualified as UUID
-import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser.Class.Parse
 import Hasura.GraphQL.Parser.ErrorCode
@@ -49,32 +47,34 @@ import Prelude
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onLeft" :: String) #-}
 
+{-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
+
 {-# ANN module ("HLint: ignore Use tshow" :: String) #-}
 
 --------------------------------------------------------------------------------
 -- Built-in scalars
 
 boolean :: MonadParse m => Parser origin 'Both m Bool
-boolean = mkScalar GName._Boolean Nothing \case
+boolean = mkScalar GName._Boolean \case
   GraphQLValue (VBoolean b) -> pure b
   JSONValue (A.Bool b) -> pure b
   v -> typeMismatch GName._Boolean "a boolean" v
 
 int :: MonadParse m => Parser origin 'Both m Int32
-int = mkScalar GName._Int Nothing \case
-  GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
-  JSONValue (A.Number n) -> convertWith scientificToInteger n
+int = mkScalar GName._Int \case
+  GraphQLValue (VInt i) -> scientificToInteger $ fromInteger i
+  JSONValue (A.Number n) -> scientificToInteger n
   v -> typeMismatch GName._Int "a 32-bit integer" v
 
 float :: MonadParse m => Parser origin 'Both m Double
-float = mkScalar GName._Float Nothing \case
-  GraphQLValue (VFloat f) -> convertWith scientificToFloat f
-  GraphQLValue (VInt i) -> convertWith scientificToFloat $ fromInteger i
-  JSONValue (A.Number n) -> convertWith scientificToFloat n
+float = mkScalar GName._Float \case
+  GraphQLValue (VFloat f) -> scientificToFloat f
+  GraphQLValue (VInt i) -> scientificToFloat $ fromInteger i
+  JSONValue (A.Number n) -> scientificToFloat n
   v -> typeMismatch GName._Float "a float" v
 
 string :: MonadParse m => Parser origin 'Both m Text
-string = mkScalar GName._String Nothing \case
+string = mkScalar GName._String \case
   GraphQLValue (VString s) -> pure s
   JSONValue (A.String s) -> pure s
   v -> typeMismatch GName._String "a string" v
@@ -82,22 +82,22 @@ string = mkScalar GName._String Nothing \case
 -- | As an input type, any string or integer input value should be coerced to ID as Text
 -- https://spec.graphql.org/June2018/#sec-ID
 identifier :: MonadParse m => Parser origin 'Both m Text
-identifier = mkScalar GName._ID Nothing \case
+identifier = mkScalar GName._ID \case
   GraphQLValue (VString s) -> pure s
   GraphQLValue (VInt i) -> pure . Text.pack $ show i
   JSONValue (A.String s) -> pure s
   JSONValue (A.Number n) -> parseScientific n
   v -> typeMismatch GName._ID "a String or a 32-bit integer" v
   where
-    parseScientific = convertWith $ fmap (Text.pack . show @Int) . scientificToInteger
+    parseScientific = fmap (Text.pack . show @Int) . scientificToInteger
 
 --------------------------------------------------------------------------------
 -- Custom scalars
 
 uuid :: MonadParse m => Parser origin 'Both m UUID.UUID
-uuid = mkScalar name Nothing \case
-  GraphQLValue (VString s) -> convertWith A.parseJSON $ A.String s
-  JSONValue v -> convertWith A.parseJSON v
+uuid = mkScalar name \case
+  GraphQLValue (VString s) -> parseJSON $ A.String s
+  JSONValue v -> parseJSON v
   v -> typeMismatch name "a UUID" v
   where
     name = $$(litName "uuid")
@@ -110,9 +110,9 @@ jsonb = jsonScalar $$(litName "jsonb") Nothing
 -- compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "NonNegativeInt".
 nonNegativeInt :: MonadParse m => Parser origin 'Both m Int32
-nonNegativeInt = mkScalar GName._Int Nothing \case
-  GraphQLValue (VInt i) | i >= 0 -> convertWith scientificToInteger $ fromInteger i
-  JSONValue (A.Number n) | n >= 0 -> convertWith scientificToInteger n
+nonNegativeInt = mkScalar GName._Int \case
+  GraphQLValue (VInt i) | i >= 0 -> scientificToInteger $ fromInteger i
+  JSONValue (A.Number n) | n >= 0 -> scientificToInteger n
   v -> typeMismatch GName._Int "a non-negative 32-bit integer" v
 
 -- | GraphQL ints are 32-bit integers; but in some places we want to accept bigger ints. To do so,
@@ -120,9 +120,9 @@ nonNegativeInt = mkScalar GName._Int Nothing \case
 -- string literals. We do keep the same type name in the schema for backwards compatibility.
 -- TODO: when we can do a breaking change, we can rename the type to "BigInt".
 bigInt :: MonadParse m => Parser origin 'Both m Int64
-bigInt = mkScalar GName._Int Nothing \case
-  GraphQLValue (VInt i) -> convertWith scientificToInteger $ fromInteger i
-  JSONValue (A.Number n) -> convertWith scientificToInteger n
+bigInt = mkScalar GName._Int \case
+  GraphQLValue (VInt i) -> scientificToInteger $ fromInteger i
+  JSONValue (A.Number n) -> scientificToInteger n
   GraphQLValue (VString s)
     | Right (i, "") <- decimal s ->
       pure i
@@ -134,7 +134,7 @@ bigInt = mkScalar GName._Int Nothing \case
 -- | Parser for 'Scientific'. Certain backends like BigQuery support
 -- Decimal/BigDecimal and need an arbitrary precision number.
 scientific :: MonadParse m => Parser origin 'Both m Scientific
-scientific = mkScalar name Nothing \case
+scientific = mkScalar name \case
   GraphQLValue (VFloat f) -> pure f
   GraphQLValue (VInt i) -> pure $ S.scientific i 0
   JSONValue (A.Number n) -> pure n
@@ -145,27 +145,6 @@ scientific = mkScalar name Nothing \case
 --------------------------------------------------------------------------------
 -- Internal tools
 
--- | Explicitly define any desired scalar type.
---
--- This was considered unsafe because, unlike all other scalar definitions, it
--- doesn't enforce that we properly peel variables, and let the caller decide
--- how they want to deal with potential variables. This allows the caller to
--- bypass type-checking and (deprecated) non-reusability semantics (see comment
--- about re-usability in TypeChecking).
---
--- In practice, this function isn't very dangerous, and preferable to an
--- explicit use of the Parser constructor.
-unsafeRawScalar ::
-  MonadParse n =>
-  Name ->
-  Maybe Description ->
-  Parser origin 'Both n (InputValue Variable)
-unsafeRawScalar name description =
-  Parser
-    { pType = TNamed NonNullable $ Definition name description Nothing [] TIScalar,
-      pParser = pure
-    }
-
 -- | Creates a parser that transforms its input into a JSON value. 'valueToJSON'
 -- does properly unpack variables.
 jsonScalar :: MonadParse m => Name -> Maybe Description -> Parser origin 'Both m A.Value
@@ -175,7 +154,7 @@ jsonScalar name description =
       pParser = valueToJSON $ toGraphQLType schemaType
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description Nothing [] TIScalar
+    schemaType = typeNamed name description
 
 --------------------------------------------------------------------------------
 -- Local helpers
@@ -183,18 +162,33 @@ jsonScalar name description =
 mkScalar ::
   MonadParse m =>
   Name ->
-  Maybe Description ->
   (InputValue Variable -> m a) ->
   Parser origin 'Both m a
-mkScalar name description parser =
+mkScalar name parser =
   Parser
     { pType = schemaType,
       pParser = peelVariable (toGraphQLType schemaType) >=> parser
     }
   where
-    schemaType = TNamed NonNullable $ Definition name description Nothing [] TIScalar
+    schemaType = typeNamed name Nothing
 
-convertWith :: MonadParse m => (a -> A.Parser b) -> a -> m b
-convertWith f x = case A.Internal.iparse f x of
-  A.Internal.IError path message -> withPath path $ parseErrorWith ParseFailed (toErrorMessage (Text.pack message))
-  A.Internal.ISuccess result -> pure result
+typeNamed :: Name -> Maybe Description -> Type origin 'Both
+typeNamed name description = TNamed NonNullable $ Definition name description Nothing [] TIScalar
+
+scientificToInteger :: (MonadParse m, Integral i, Bounded i) => Scientific -> m i
+scientificToInteger num =
+  maybe (parseErrorWith ParseFailed failure) pure $ Scientific.toBoundedInteger num
+  where
+    failure = "The value " <> toErrorMessage (Text.pack (show num)) <> " lies outside the bounds or is not an integer. Maybe it is a float, or is there integer overflow?"
+
+scientificToFloat :: (MonadParse m, RealFloat f) => Scientific -> m f
+scientificToFloat num =
+  either (const (parseErrorWith ParseFailed failure)) pure $ Scientific.toBoundedRealFloat num
+  where
+    failure = "The value " <> toErrorMessage (Text.pack (show num)) <> " lies outside the bounds. Is it overflowing the float bounds?"
+
+parseJSON :: (MonadParse m, A.FromJSON b) => A.Value -> m b
+parseJSON x =
+  case A.Internal.iparse A.parseJSON x of
+    A.Internal.IError path message -> withPath path $ parseErrorWith ParseFailed (toErrorMessage (Text.pack message))
+    A.Internal.ISuccess result -> pure result

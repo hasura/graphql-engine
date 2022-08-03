@@ -163,7 +163,7 @@ scientificToInteger num =
   toBoundedInteger num
     `onNothing` fail
       ( "The value " ++ show num ++ " lies outside the "
-          ++ "bounds or is not an integer.  Maybe it is a "
+          ++ "bounds or is not an integer. Maybe it is a "
           ++ "float, or is there integer overflow?"
       )
 
@@ -173,7 +173,7 @@ scientificToFloat num =
     `onLeft` \_ ->
       fail
         ( "The value " ++ show num ++ " lies outside the "
-            ++ "bounds.  Is it overflowing the float bounds?"
+            ++ "bounds. Is it overflowing the float bounds?"
         )
 
 parsePGValue :: PGScalarType -> Value -> AT.Parser PGScalarValue
