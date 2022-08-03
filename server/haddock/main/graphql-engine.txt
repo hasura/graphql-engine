@@ -30435,6 +30435,8 @@ mainCmdFooter :: Doc
 module Hasura.Server.Init
 
 -- | Query the Metadata DB for the catalog version.
+--   
+--   NOTE: Is this the appropriate module for this?
 getDbId :: TxE QErr MetadataDbId
 getPgVersion :: TxE QErr PGVersion
 generateInstanceId :: IO InstanceId
@@ -30464,8 +30466,8 @@ rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -> WithEnv (Maybe UrlConf)
 --   corresponding values from the <a>WithEnv</a> context.
 mkServeOptions :: EnabledLogTypes impl => ServeOptionsRaw impl -> WithEnv (ServeOptions impl)
 defaultEnabledAPIs :: [API]
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.StartupTimeInfo
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.Server.Init.StartupTimeInfo
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Init.StartupTimeInfo
 
 
 -- | Migrations for the Hasura catalog.
