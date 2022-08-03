@@ -1,45 +1,22 @@
 import { getPathRoot } from '../urlUtils';
 
 describe('getPathRoot', () => {
-  describe('returns empty string with falsy paths', () => {
-    it.each([
-      {
-        path: undefined,
-        expected: '',
-      },
-      {
-        path: null,
-        expected: '',
-      },
-      {
-        path: '',
-        expected: '',
-      },
-    ])('for %o', ({ path, expected }) => {
-      expect(getPathRoot(path)).toBe(expected);
-    });
+  it.each`
+    path
+    ${undefined}
+    ${null}
+    ${''}
+  `('Given a falsy value ($path), then returns a empty string', ({ path }) => {
+    expect(getPathRoot(path)).toBe('');
   });
 
-  describe('returns the first part of the path', () => {
-    it.each([
-      {
-        path: '/foo/bar/doe',
-        expected: 'foo',
-      },
-      {
-        path: '/foo/bar',
-        expected: 'foo',
-      },
-      {
-        path: '/foo',
-        expected: 'foo',
-      },
-      {
-        path: '/',
-        expected: '',
-      },
-    ])('for %o', ({ path, expected }) => {
-      expect(getPathRoot(path)).toBe(expected);
-    });
+  it.each`
+    path              | expected
+    ${'/foo/bar/doe'} | ${'foo'}
+    ${'/foo/bar'}     | ${'foo'}
+    ${'/foo'}         | ${'foo'}
+    ${'/'}            | ${''}
+  `('Given a $path path, then returns $expected', ({ path, expected }) => {
+    expect(getPathRoot(path)).toBe(expected);
   });
 });

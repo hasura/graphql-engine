@@ -9,5 +9,6 @@ The Hasura console is an admin dashboard to manage the connected database and to
 - [Generic info](./docs/console-generic-info.md)
 - [Development Tooling](https://main--614d7904644d03004addd43b.chromatic.com/?path=/story/dev-tooling--page)
 - [Design System's Storybook](https://main--614d7904644d03004addd43b.chromatic.com)
+  - [How to create/document new Components](./src/docs/dev/ComponentDoc.stories.mdx)
 - [Cypress Dashboard](https://dashboard.cypress.io/projects/5yiuic)
 - [Cypress README](./cypress/README.md)

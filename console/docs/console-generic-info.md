@@ -177,19 +177,6 @@ It should automatically connect to the Redux store when started in development m
 By default [redux-logger](https://www.npmjs.com/package/redux-logger) is enabled to assist in development.
 You can disable it if you wish by commenting out the `createLogger` line in `src/client.js`
 
-### E2E and Unit Tests
-
-* E2E Tests are written using [Cypress](https://www.cypress.io/) .
-   - Run tests: `npm run cy:open`
-   - Write your tests in the `cypress/integration` directory.
-
-* Unit tests are written using [Jest Framework](https://jestjs.io/)
-    - Tests are written inside `__test__` folder of respective services.
-    - Unit testing is mostly applied on the utility functions.
-    - If you want to run tests, execute `npm run jest` or `npm run jest-watch` (for watch mode)
-    - [Snapshot testing](https://jestjs.io/docs/en/snapshot-testing) is also used with unit tests.
-    - when you want to update the snapshot, you can run `npm run jest -- -u` or press `u` if you are in jest-watch mode.
-
 ### Linter and formatter
 
 Pre-commit git-hook that runs linter and formatter is by default disabled. You can enable it by adding `HUSKY_PRE_COMMIT=true` to your `.env` file.

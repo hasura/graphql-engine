@@ -1,6 +1,6 @@
 import { getPathRoot } from '../Common/utils/urlUtils';
 
-type IsBlockActiveArgs = {
+export type IsBlockActiveArgs = {
   blockPath: string;
   pathname: string;
   isDefaultBlock: boolean;
@@ -11,11 +11,13 @@ export const isBlockActive = ({
   isDefaultBlock,
   pathname,
 }: IsBlockActiveArgs) => {
-  const block = getPathRoot(blockPath);
   const currentActiveBlock = getPathRoot(pathname);
 
-  return (
-    currentActiveBlock === block ||
-    (isDefaultBlock && currentActiveBlock === '')
-  );
+  if (isDefaultBlock) {
+    return currentActiveBlock === '';
+  }
+
+  const block = getPathRoot(blockPath);
+
+  return currentActiveBlock === block;
 };
