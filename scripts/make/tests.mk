@@ -17,6 +17,12 @@ test-mysql: spawn-postgres spawn-mysql wait-for-postgres wait-for-mysql remove-t
 	$(call stop_after, \
 		cabal run tests-hspec -- -m 'MySQL')
 
+.PHONY: test-citus
+## test-citus: run tests for Citus backend
+test-citus: spawn-postgres spawn-citus wait-for-postgres wait-for-citus remove-tix-file
+	$(call stop_after, \
+		cabal run tests-hspec -- -m 'Citus')
+
 .PHONY: test-backends
 ## test-backends: run tests for all backends
 # BigQuery tests will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/tests-hspec#required-setup-for-bigquery-tests
