@@ -7,7 +7,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture
 import Harness.Test.Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Prelude
 import Test.Hspec
 
@@ -18,7 +18,7 @@ spec :: SpecWith TestEnvironment
 spec =
   run
     [postgresFixture, citusFixture]
-    (\_ -> it "Tracks tables without failing" $ \_ -> return @IO ())
+    (\_ -> it "Tracks tables without failing" \_ -> return @IO ())
 
 postgresFixture :: Fixture ()
 postgresFixture =

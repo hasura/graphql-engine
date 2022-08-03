@@ -8,10 +8,9 @@
 --     making joins against them.
 module Test.RemoteRelationship.FromRemoteSchemaSpec (spec) where
 
-import Data.Functor ((<&>))
+import Data.List.NonEmpty qualified as NE
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
-import Data.Text (Text)
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -22,14 +21,14 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Context.runWithLocalTestEnvironment [context] tests
+spec = Context.runWithLocalTestEnvironment (NE.fromList [context]) tests
   where
     context =
       Context

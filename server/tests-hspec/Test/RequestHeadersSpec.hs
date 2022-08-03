@@ -3,6 +3,7 @@
 -- | Tests related to request headers
 module Test.RequestHeadersSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
@@ -16,8 +17,8 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 
@@ -26,14 +27,16 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = sqlserverSetup,
-          teardown = sqlserverTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.SQLServer,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = sqlserverSetup,
+              teardown = sqlserverTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

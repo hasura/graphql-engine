@@ -3,6 +3,7 @@
 -- | Test insert with default values
 module Test.InsertDefaultsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -13,8 +14,8 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
-import Prelude
 
 --------------------------------------------------------------------------------
 
@@ -22,15 +23,9 @@ import Prelude
 
 spec :: SpecWith TestEnvironment
 spec = do
-  Context.run
-    [ postgresContext,
-      citusContext,
-      mssqlContext
-    ]
-    commonTests
-
-  Context.run [postgresContext, citusContext] postgresTests
-  Context.run [mssqlContext] mssqlTests
+  Context.run (NE.fromList [postgresContext, citusContext, mssqlContext]) commonTests
+  Context.run (NE.fromList [postgresContext, citusContext]) postgresTests
+  Context.run (NE.fromList [mssqlContext]) mssqlTests
   where
     postgresContext =
       Context.Context

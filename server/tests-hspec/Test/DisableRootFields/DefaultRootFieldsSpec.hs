@@ -3,6 +3,7 @@
 -- | Test if all root fields (list, pk and aggregate) are enabled by default
 module Test.DisableRootFields.DefaultRootFieldsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -21,21 +22,23 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = postgresSetup,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        },
-      Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = sqlServerSetup,
-          teardown = SQLServer.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = postgresSetup,
+              teardown = Postgres.teardown schema,
+              customOptions = Nothing
+            },
+          Context.Context
+            { name = Context.Backend Context.SQLServer,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = sqlServerSetup,
+              teardown = SQLServer.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

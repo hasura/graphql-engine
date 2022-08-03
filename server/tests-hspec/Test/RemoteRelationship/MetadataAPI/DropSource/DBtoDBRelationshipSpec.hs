@@ -31,14 +31,15 @@ module Test.RemoteRelationship.MetadataAPI.DropSource.DBtoDBRelationshipSpec (sp
 
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson.Lens (key, values, _String)
+import Data.List.NonEmpty qualified as NE
 import Data.Maybe qualified as Unsafe (fromJust)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (shouldBeYaml, shouldReturnYaml, yaml)
 import Harness.Test.Context qualified as Context
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..), dbTodbRemoteRelationshipContext)
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -46,7 +47,7 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec = Context.runWithLocalTestEnvironment contexts tests
   where
-    contexts = [dbTodbRemoteRelationshipContext]
+    contexts = NE.fromList [dbTodbRemoteRelationshipContext]
 
 --------------------------------------------------------------------------------
 -- Tests

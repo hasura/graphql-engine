@@ -3,6 +3,7 @@
 -- | Test if all root fields are disabled
 module Test.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (shouldReturnYaml, yaml)
@@ -20,14 +21,16 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = postgresSetup,
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = postgresSetup,
+              teardown = Postgres.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

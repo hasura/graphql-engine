@@ -10,19 +10,18 @@ where
 
 import Control.Exception.Safe (impureThrow)
 import Data.Aeson qualified as Aeson
-import Data.Bifunctor
+import Data.Bifunctor qualified as Bifunctor
 import Data.String
 import Data.Text qualified as T
 import Data.Text.Encoding (encodeUtf8)
 import Data.Yaml qualified
+import Hasura.Prelude
 import Instances.TH.Lift ()
 import Language.Haskell.Meta (parseExp)
 import Language.Haskell.TH
 import Language.Haskell.TH.Quote (QuasiQuoter (..))
-import Text.Parsec ((<|>))
 import Text.Parsec qualified as P
 import Text.Parsec.String (Parser)
-import Prelude
 
 -- | a class for values that can be interpolated in Yaml strings
 class ToYamlString a where
@@ -73,7 +72,7 @@ evalInterpolation txt =
       interpret result
 
 parseInterpolated :: String -> Either String [InterpolatePart]
-parseInterpolated = first show . P.parse parseParts "yamlQQ"
+parseInterpolated = Bifunctor.first show . P.parse parseParts "yamlQQ"
   where
     -- This can probably be made more succinct. We start by trying to parse
     -- an interpolated expression, then we try to parse a comment. The reasoning

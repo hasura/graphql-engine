@@ -10,7 +10,7 @@ where
 
 import Data.Aeson.Key (Key)
 import Harness.Constants qualified as Constants (bigqueryDataset, citusDb, dataConnectorDb, mysqlDb, postgresDb, sqlserverDb)
-import Prelude
+import Hasura.Prelude
 
 -- | A supported backend type.
 data BackendType

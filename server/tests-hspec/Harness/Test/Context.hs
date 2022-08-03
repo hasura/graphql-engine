@@ -48,7 +48,7 @@ import Test.Hspec.Core.Spec (mapSpecItem)
 --
 -- For a more general version that can run tests for any 'Context'@ a@, see
 -- 'runWithLocalTestEnvironment'.
-run :: [Context ()] -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
+run :: NonEmpty (Context ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
 run contexts tests = do
   let mappedTests opts =
         mapSpecItem
@@ -82,7 +82,7 @@ actionWithTestEnvironmentMapping actionWith (testEnvironment, _) = actionWith te
 -- See 'Context' for details.
 runWithLocalTestEnvironment ::
   forall a.
-  [Context a] ->
+  NonEmpty (Context a) ->
   (Options -> SpecWith (TestEnvironment, a)) ->
   SpecWith TestEnvironment
 runWithLocalTestEnvironment contexts tests =

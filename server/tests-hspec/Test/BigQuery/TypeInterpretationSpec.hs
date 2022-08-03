@@ -6,7 +6,7 @@
 module Test.BigQuery.TypeInterpretationSpec (spec) where
 
 import Data.Aeson (Value)
-import Data.Text (Text)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
@@ -15,20 +15,22 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.BigQuery,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = BigQuery.setup schema,
-          teardown = BigQuery.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.BigQuery,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = BigQuery.setup schema,
+              teardown = BigQuery.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

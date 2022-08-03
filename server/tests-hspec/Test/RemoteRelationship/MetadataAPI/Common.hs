@@ -36,16 +36,11 @@ where
 -- Debugging
 
 import Data.Char (isUpper, toLower)
-import Data.Foldable (traverse_)
-import Data.Function ((&))
-import Data.List (intercalate, sortBy)
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
-import Data.Text (Text)
 import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
@@ -55,7 +50,7 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
-import Prelude
+import Hasura.Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -507,7 +502,7 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
           orderByFunction = case ta_order_by of
             Nothing -> \_ _ -> EQ
             Just orderByArg -> orderTrack orderByArg
-          limitFunction = maybe Prelude.id take ta_limit
+          limitFunction = maybe Hasura.Prelude.id take ta_limit
       pure $
         tracks
           & filter filterFunction

@@ -8,7 +8,7 @@
 module Test.Schema.DefaultValuesSpec (spec) where
 
 import Data.Aeson (Value)
-import Data.Text (Text)
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql, postGraphqlWithHeaders, postMetadata_)
@@ -19,27 +19,29 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.Postgres,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Postgres.setup schema <> setupMetadata "postgres",
-          teardown = Postgres.teardown schema,
-          customOptions = Nothing
-        },
-      Context.Context
-        { name = Context.Backend Context.SQLServer,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = Sqlserver.setup schema <> setupMetadata "mssql",
-          teardown = Sqlserver.teardown schema,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.Postgres,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Postgres.setup schema <> setupMetadata "postgres",
+              teardown = Postgres.teardown schema,
+              customOptions = Nothing
+            },
+          Context.Context
+            { name = Context.Backend Context.SQLServer,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = Sqlserver.setup schema <> setupMetadata "mssql",
+              teardown = Sqlserver.teardown schema,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

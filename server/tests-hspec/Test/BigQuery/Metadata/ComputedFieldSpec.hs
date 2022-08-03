@@ -3,6 +3,7 @@
 -- | All tests related to metadata API for computed fields in a BigQuery source
 module Test.BigQuery.Metadata.ComputedFieldSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Constants qualified as Constants
@@ -12,22 +13,24 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, it)
-import Prelude
 
 -- ** Preamble
 
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.BigQuery,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = bigquerySetup,
-          teardown = bigqueryTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.BigQuery,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = bigquerySetup,
+              teardown = bigqueryTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 -- ** Setup and teardown

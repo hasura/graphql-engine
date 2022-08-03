@@ -11,7 +11,6 @@ where
 
 import Control.Concurrent (forkIO)
 import Control.Exception.Safe (bracket)
-import Control.Monad.IO.Class (liftIO)
 import Data.Aeson qualified as Aeson
 import Data.ByteString.Lazy qualified as Lazy (ByteString)
 import Data.Morpheus qualified as Morpheus (interpreter)
@@ -26,11 +25,11 @@ import Data.Morpheus.Types
   )
 import Harness.Http qualified as Http
 import Harness.TestEnvironment (Server (..), serverUrl)
+import Hasura.Prelude
 import Network.Socket qualified as Socket
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Web.Spock.Core qualified as Spock
-import Prelude
 
 -------------------------------------------------------------------------------
 

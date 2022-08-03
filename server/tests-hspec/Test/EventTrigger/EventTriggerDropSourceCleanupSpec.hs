@@ -7,6 +7,7 @@
 module Test.EventTrigger.EventTriggerDropSourceCleanupSpec (spec) where
 
 import Control.Concurrent.Chan qualified as Chan
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
@@ -26,16 +27,18 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Context.runWithLocalTestEnvironment
-    [ Context.Context
-        { name = Context.Backend Context.SQLServer,
-          -- setup the webhook server as the local test environment,
-          -- so that the server can be referenced while testing
-          mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-          setup = mssqlSetupWithEventTriggers,
-          teardown = mssqlTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.SQLServer,
+              -- setup the webhook server as the local test environment,
+              -- so that the server can be referenced while testing
+              mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
+              setup = mssqlSetupWithEventTriggers,
+              teardown = mssqlTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------

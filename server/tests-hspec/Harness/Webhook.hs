@@ -8,20 +8,18 @@ where
 import Control.Concurrent (forkIO)
 import Control.Concurrent.Chan qualified as Chan
 import Control.Exception.Safe (bracket)
-import Control.Monad.IO.Class (liftIO)
 import Data.Aeson qualified as Aeson
 import Data.Parser.JSONPath (parseJSONPath)
 import Data.Text qualified as T
 import Harness.Http qualified as Http
 import Harness.TestEnvironment (Server (..), serverUrl)
 import Hasura.Base.Error (iResultToMaybe)
-import Hasura.Prelude (fromMaybe)
+import Hasura.Prelude
 import Hasura.Server.Utils (executeJSONPath)
 import Network.Socket qualified as Socket
 import Network.Wai.Extended qualified as Wai
 import Network.Wai.Handler.Warp qualified as Warp
 import Web.Spock.Core qualified as Spock
-import Prelude
 
 newtype EventsQueue = EventsQueue (Chan.Chan Aeson.Value)
 

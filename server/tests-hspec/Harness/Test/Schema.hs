@@ -40,8 +40,7 @@ import Data.Aeson
     (.=),
   )
 import Data.Aeson.Key qualified as K
-import Data.Foldable (for_)
-import Data.Text (Text, pack)
+import Data.Text qualified as T
 import Data.Time (UTCTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
 import Harness.Exceptions
@@ -49,7 +48,7 @@ import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Context (BackendType, defaultBackendTypeString, defaultSchema, defaultSource, schemaKeyword)
 import Harness.TestEnvironment (TestEnvironment)
-import Prelude
+import Hasura.Prelude
 
 -- | Generic type to use to specify schema tables for all backends.
 -- Usually a list of these make up a "schema" to pass to the respective
@@ -302,7 +301,7 @@ trackObjectRelationships backend Table {tableName, tableReferences, tableManualR
       schema = defaultSchema backend
       tableObj =
         object
-          [ schemaKeyword backend .= String (pack schema),
+          [ schemaKeyword backend .= String (T.pack schema),
             "name" .= String tableName
           ]
       requestType = source <> "_create_object_relationship"
@@ -323,7 +322,7 @@ args:
     let relationshipName = mkObjectRelationshipName ref
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (T.pack schema),
               "name" .= String referenceTargetTable
             ]
         manualConfiguration :: Value
@@ -358,7 +357,7 @@ trackArrayRelationships backend Table {tableName, tableReferences, tableManualRe
       schema = defaultSchema backend
       tableObj =
         object
-          [ schemaKeyword backend .= String (pack schema),
+          [ schemaKeyword backend .= String (T.pack schema),
             "name" .= String tableName
           ]
       requestType = source <> "_create_array_relationship"
@@ -366,7 +365,7 @@ trackArrayRelationships backend Table {tableName, tableReferences, tableManualRe
     let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (T.pack schema),
               "name" .= String referenceTargetTable
             ]
     GraphqlEngine.postMetadata_
@@ -386,7 +385,7 @@ args:
     let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (T.pack schema),
               "name" .= String referenceTargetTable
             ]
         manualConfiguration :: Value
@@ -417,7 +416,7 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
       schema = defaultSchema backend
       tableObj =
         object
-          [ schemaKeyword backend .= String (pack schema),
+          [ schemaKeyword backend .= String (T.pack schema),
             "name" .= String tableName
           ]
       requestType = source <> "_drop_relationship"
@@ -426,7 +425,7 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
         objectRelationshipName = mkObjectRelationshipName ref
         targetTableObj =
           object
-            [ schemaKeyword backend .= String (pack schema),
+            [ schemaKeyword backend .= String (T.pack schema),
               "name" .= String referenceTargetTable
             ]
     finally

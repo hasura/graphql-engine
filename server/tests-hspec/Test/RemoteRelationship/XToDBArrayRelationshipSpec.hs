@@ -17,17 +17,13 @@ import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value)
 import Data.Aeson.Lens (key, values, _String)
 import Data.Char (isUpper, toLower)
-import Data.Foldable (traverse_)
-import Data.Function ((&))
-import Data.List (intercalate, sortBy)
+import Data.List.NonEmpty qualified as NE
 import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Maybe qualified as Unsafe (fromJust)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types
 import Data.Morpheus.Types qualified as Morpheus
-import Data.Text (Text)
 import Data.Typeable (Typeable)
-import GHC.Generics (Generic)
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -39,10 +35,10 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (Server, TestEnvironment, stopServer)
+import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
-import Prelude
 
---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- Preamble
 
 spec :: SpecWith TestEnvironment
@@ -50,7 +46,7 @@ spec = Context.runWithLocalTestEnvironment contexts tests
   where
     lhsContexts = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
     rhsContexts = [rhsPostgres, rhsSQLServer]
-    contexts = combine <$> lhsContexts <*> rhsContexts
+    contexts = NE.fromList $ combine <$> lhsContexts <*> rhsContexts
 
 -- | Combines a lhs and a rhs.
 --

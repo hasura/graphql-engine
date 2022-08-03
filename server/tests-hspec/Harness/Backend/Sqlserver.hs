@@ -24,11 +24,8 @@ where
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
-import Data.Bool (bool)
-import Data.Foldable (for_)
-import Data.String
-import Data.Text (Text, pack, replace)
-import Data.Text qualified as T (pack, unpack, unwords)
+import Data.String (fromString)
+import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.ODBC.SQLServer qualified as Sqlserver
@@ -42,9 +39,8 @@ import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
-import Hasura.Prelude (tshow)
+import Hasura.Prelude
 import System.Process.Typed
-import Prelude
 
 -- | Check that the SQLServer service is live and ready to accept connections.
 livenessCheck :: HasCallStack => IO ()
@@ -202,8 +198,8 @@ wrapIdentifier identifier = "[" <> identifier <> "]"
 serialize :: ScalarValue -> Text
 serialize = \case
   VInt i -> tshow i
-  VStr s -> "'" <> replace "'" "\'" s <> "'"
-  VUTCTime t -> pack $ formatTime defaultTimeLocale "'%F %T'" t
+  VStr s -> "'" <> T.replace "'" "\'" s <> "'"
+  VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> tshow @Int $ if b then 1 else 0
   VNull -> "NULL"
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvMssql

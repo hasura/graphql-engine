@@ -9,8 +9,8 @@ import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http qualified as Http
 import Harness.TestEnvironment (TestEnvironment (TestEnvironment, server))
+import Hasura.Prelude
 import Test.Hspec
-import Prelude
 
 spec :: SpecWith TestEnvironment
 spec = do

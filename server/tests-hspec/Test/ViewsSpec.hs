@@ -3,6 +3,7 @@
 -- | Test views.
 module Test.ViewsSpec (spec) where
 
+import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Mysql as Mysql
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql
@@ -12,8 +13,8 @@ import Harness.Test.Context qualified as Context
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
+import Hasura.Prelude
 import Test.Hspec
-import Prelude
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -21,14 +22,16 @@ import Prelude
 spec :: SpecWith TestEnvironment
 spec =
   Context.run
-    [ Context.Context
-        { name = Context.Backend Context.MySQL,
-          mkLocalTestEnvironment = Context.noLocalTestEnvironment,
-          setup = mysqlSetup,
-          teardown = mysqlTeardown,
-          customOptions = Nothing
-        }
-    ]
+    ( NE.fromList
+        [ Context.Context
+            { name = Context.Backend Context.MySQL,
+              mkLocalTestEnvironment = Context.noLocalTestEnvironment,
+              setup = mysqlSetup,
+              teardown = mysqlTeardown,
+              customOptions = Nothing
+            }
+        ]
+    )
     tests
 
 --------------------------------------------------------------------------------
