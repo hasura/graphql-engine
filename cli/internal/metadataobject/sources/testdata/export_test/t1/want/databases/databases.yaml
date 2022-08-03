@@ -19,6 +19,12 @@
       suffix: null
       prefix: null
       namespace: mynamespace
+  health_check:
+    interval: 10
+    retries: 3
+    test:
+      sql: SELECT 1
+    timeout: 5
   tables: "!include default/tables/tables.yaml"
   functions: "!include default/functions/functions.yaml"
 - name: bg

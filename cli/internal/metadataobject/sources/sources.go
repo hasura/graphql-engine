@@ -28,6 +28,7 @@ type SourceWithNormalFields struct {
 	Configuration yaml.Node `yaml:"configuration"`
 	QueryTags     yaml.Node `yaml:"query_tags,omitempty"`
 	Customization yaml.Node `yaml:"customization,omitempty"`
+	HealthCheck	  yaml.Node `yaml:"health_check,omitempty"`
 }
 type Source struct {
 	SourceWithNormalFields `yaml:",inline"`
