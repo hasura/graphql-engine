@@ -106,6 +106,7 @@ buildTableQueryAndSubscriptionFields ::
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b
   ) =>
+  MkRootFieldName ->
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
@@ -116,15 +117,15 @@ buildTableQueryAndSubscriptionFields ::
       [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
       Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
     )
-buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx gqlName = do
+buildTableQueryAndSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo streamSubCtx gqlName = do
   tCase <- asks getter
   roleName <- retrieve scRole
-  -- select table
-  selectName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelect mkSelectField gqlName
-  -- select table by pk
-  selectPKName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectByPk mkSelectByPkField gqlName
-  -- select table aggregate
-  selectAggName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectAggregate mkSelectAggregateField gqlName
+  let -- select table
+      selectName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelect mkSelectField gqlName
+      -- select table by pk
+      selectPKName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectByPk mkSelectByPkField gqlName
+      -- select table aggregate
+      selectAggName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfSelectAggregate mkSelectAggregateField gqlName
 
   selectTableParser <- optionalFieldParser QDBMultipleRows $ selectTable sourceInfo tableInfo selectName selectDesc
   selectTableByPkParser <- optionalFieldParser QDBSingleRow $ selectTableByPk sourceInfo tableInfo selectPKName selectPKDesc
@@ -138,7 +139,7 @@ buildTableQueryAndSubscriptionFields sourceInfo tableName tableInfo streamSubCtx
     Just SelPermInfo {..} -> do
       selectStreamParser <-
         if (isRootFieldAllowed SRFTSelectStream spiAllowedSubscriptionRootFields && streamSubCtx == StreamingSubscriptionsEnabled)
-          then buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo gqlName
+          then buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo gqlName
           else pure mempty
 
       let (querySelectTableParser, subscriptionSelectTableParser) =
@@ -201,17 +202,19 @@ buildTableStreamingSubscriptionFields ::
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b
   ) =>
+  MkRootFieldName ->
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
   m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo tableIdentifier = do
+buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo tableIdentifier = do
   tCase <- asks getter
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
       selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner : " <>> tableName
-  selectStreamName <-
-    mkRootFieldName $ setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
+      selectStreamName =
+        runMkRootFieldName mkRootFieldName $
+          setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
   catMaybes
     <$> sequenceA
       [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceInfo tableInfo selectStreamName selectDesc
@@ -219,21 +222,24 @@ buildTableStreamingSubscriptionFields sourceInfo tableName tableInfo tableIdenti
 
 buildTableInsertMutationFields ::
   forall b r m n.
-  MonadBuildSchema b r m n =>
-  BackendTableSelectSchema b =>
+  ( MonadBuildSchema b r m n,
+    BackendTableSelectSchema b
+  ) =>
   (SourceInfo b -> TableInfo b -> m (InputFieldsParser n (BackendInsert b (UnpreparedValue b)))) ->
+  MkRootFieldName ->
   Scenario ->
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
   m [FieldParser n (AnnotatedInsert b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableInsertMutationFields backendInsertAction scenario sourceInfo tableName tableInfo gqlName = do
+buildTableInsertMutationFields backendInsertAction mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
-  -- insert in table
-  insertName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfInsert mkInsertField gqlName
-  -- insert one in table
-  insertOneName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfInsertOne mkInsertOneField gqlName
+  let -- insert in table
+      insertName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfInsert mkInsertField gqlName
+      -- insert one in table
+      insertOneName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfInsertOne mkInsertOneField gqlName
+
   insert <- insertIntoTable backendInsertAction scenario sourceInfo tableInfo insertName insertDesc
   -- Select permissions are required for insertOne: the selection set is the
   -- same as a select on that table, and it therefore can't be populated if the
@@ -278,6 +284,7 @@ buildTableUpdateMutationFields ::
     m
       (InputFieldsParser n (BackendUpdate b (UnpreparedValue b)))
   ) ->
+  MkRootFieldName ->
   Scenario ->
   -- | The source that the table lives in
   SourceInfo b ->
@@ -288,13 +295,14 @@ buildTableUpdateMutationFields ::
   -- | field display name
   C.GQLNameIdentifier ->
   m [FieldParser n (AnnotatedUpdateG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableUpdateMutationFields mkBackendUpdate scenario sourceInfo tableName tableInfo gqlName = do
+buildTableUpdateMutationFields mkBackendUpdate mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
   backendUpdate <- mkBackendUpdate tableInfo
-  -- update table
-  updateName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdate mkUpdateField gqlName
-  -- update table by pk
-  updatePKName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdateByPk mkUpdateByPkField gqlName
+  let -- update table
+      updateName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdate mkUpdateField gqlName
+      -- update table by pk
+      updatePKName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfUpdateByPk mkUpdateByPkField gqlName
+
   update <- updateTable backendUpdate scenario sourceInfo tableInfo updateName updateDesc
   -- Primary keys can only be tested in the `where` clause if a primary key
   -- exists on the table and if the user has select permissions on all columns
@@ -313,18 +321,20 @@ buildTableDeleteMutationFields ::
   ( MonadBuildSchema b r m n,
     BackendTableSelectSchema b
   ) =>
+  MkRootFieldName ->
   Scenario ->
   SourceInfo b ->
   TableName b ->
   TableInfo b ->
   C.GQLNameIdentifier ->
   m [FieldParser n (AnnDelG b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
-buildTableDeleteMutationFields scenario sourceInfo tableName tableInfo gqlName = do
+buildTableDeleteMutationFields mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
   tCase <- asks getter
-  -- delete from table
-  deleteName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDelete mkDeleteField gqlName
-  -- delete from table by pk
-  deletePKName <- mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDeleteByPk mkDeleteByPkField gqlName
+  let -- delete from table
+      deleteName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDelete mkDeleteField gqlName
+      -- delete from table by pk
+      deletePKName = runMkRootFieldName mkRootFieldName $ setFieldNameCase tCase tableInfo _tcrfDeleteByPk mkDeleteByPkField gqlName
+
   delete <- deleteFromTable scenario sourceInfo tableInfo deleteName deleteDesc
   -- Primary keys can only be tested in the `where` clause if the user has
   -- select permissions for them, which at the very least requires select

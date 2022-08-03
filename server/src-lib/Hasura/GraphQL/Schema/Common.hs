@@ -106,7 +106,6 @@ type MonadBuildSchemaBase r m n =
     Has SchemaContext r,
     -- TODO: make all `Has x r` explicit fields of 'SchemaContext'
     Has MkTypename r,
-    Has MkRootFieldName r,
     Has CustomizeRemoteFieldName r,
     Has NamingCase r
   )

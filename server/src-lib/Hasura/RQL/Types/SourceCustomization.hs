@@ -8,10 +8,10 @@ module Hasura.RQL.Types.SourceCustomization
     emptySourceCustomization,
     getSourceTypeCustomization,
     getRootFieldsCustomization,
-    mkRootFieldName,
+    getRootFieldsCustomizer,
     SourceCustomization (..),
     withSourceCustomization,
-    MkRootFieldName,
+    MkRootFieldName (..),
     CustomizeRemoteFieldName (..),
     withRemoteFieldNameCustomization,
 
@@ -208,28 +208,41 @@ getNamingConvention sc defaultNC = defaultNC `seq` fromMaybe HasuraCase $ _scNam
 newtype MkRootFieldName = MkRootFieldName {runMkRootFieldName :: G.Name -> G.Name}
   deriving (Semigroup, Monoid) via (Endo G.Name)
 
--- | Inject a new root field name customization function into the environment.
--- This can be used by schema-building code (with @MonadBuildSchema@ constraint) to ensure
--- the correct root field name customizations are applied.
-withRootFieldNameCustomization :: forall m r a. (MonadReader r m, Has MkRootFieldName r) => MkRootFieldName -> m a -> m a
-withRootFieldNameCustomization = local . set hasLens
-
--- | Apply the root field name customization function from the current environment.
-mkRootFieldName :: (MonadReader r m, Has MkRootFieldName r) => G.Name -> m G.Name
-mkRootFieldName name =
-  ($ name) . runMkRootFieldName <$> asks getter
+getRootFieldsCustomizer ::
+  forall m.
+  (MonadError QErr m) =>
+  SourceCustomization ->
+  SupportedNamingCase ->
+  Maybe NamingCase ->
+  m MkRootFieldName
+getRootFieldsCustomizer sc@SourceCustomization {..} namingConventionSupport defaultNC = do
+  tCase <- getNamingCase sc namingConventionSupport defaultNC
+  pure $ mkCustomizedFieldName _scRootFields tCase
 
 -- | Inject NamingCase, typename and root field name customizations from @SourceCustomization@ into
 -- the environment.
 withSourceCustomization ::
   forall m r a.
-  (MonadReader r m, Has MkTypename r, Has MkRootFieldName r, Has NamingCase r, MonadError QErr m) =>
+  (MonadReader r m, Has MkTypename r, Has NamingCase r, MonadError QErr m) =>
   SourceCustomization ->
   SupportedNamingCase ->
   Maybe NamingCase ->
   m a ->
   m a
 withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defaultNC m = do
+  tCase <- getNamingCase sc namingConventionSupport defaultNC
+  withTypenameCustomization (mkCustomizedTypename _scTypeNames tCase)
+    . withNamingCaseCustomization tCase
+    $ m
+
+getNamingCase ::
+  forall m.
+  (MonadError QErr m) =>
+  SourceCustomization ->
+  SupportedNamingCase ->
+  Maybe NamingCase ->
+  m NamingCase
+getNamingCase sc namingConventionSupport defaultNC = do
   let namingConv = getNamingConvention sc defaultNC
   -- The console currently constructs a graphql query based on table name and
   -- schema name to fetch the data from the database (other than postgres).
@@ -237,17 +250,11 @@ withSourceCustomization sc@SourceCustomization {..} namingConventionSupport defa
   -- custom query constructed by console won't work (because the field names
   -- has changed) and thus the data explorer tab won't work properly. So, we
   -- have restricted this feature to postgres for now.
-  tCase <-
-    case namingConventionSupport of
-      AllConventions -> pure namingConv
-      OnlyHasuraCase -> case namingConv of
-        GraphqlCase -> throw400 NotSupported $ "sources other than postgres do not support graphql-default as naming convention yet"
-        HasuraCase -> pure HasuraCase
-
-  withTypenameCustomization (mkCustomizedTypename _scTypeNames tCase)
-    . withRootFieldNameCustomization (mkCustomizedFieldName _scRootFields tCase)
-    . withNamingCaseCustomization tCase
-    $ m
+  case namingConventionSupport of
+    AllConventions -> pure namingConv
+    OnlyHasuraCase -> case namingConv of
+      GraphqlCase -> throw400 NotSupported $ "sources other than postgres do not support graphql-default as naming convention yet"
+      HasuraCase -> pure HasuraCase
 
 withNamingCaseCustomization :: forall m r a. (MonadReader r m, Has NamingCase r) => NamingCase -> m a -> m a
 withNamingCaseCustomization = local . set hasLens

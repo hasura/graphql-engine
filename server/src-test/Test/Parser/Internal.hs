@@ -91,6 +91,7 @@ mkColumnInfo ColumnInfoBuilder {..} =
 mkParser :: QualifiedTable -> [ColumnInfoBuilder] -> SchemaTestT [Parser]
 mkParser table cib =
   buildTableUpdateMutationFields
+    mempty
     Frontend
     sourceInfo
     table
