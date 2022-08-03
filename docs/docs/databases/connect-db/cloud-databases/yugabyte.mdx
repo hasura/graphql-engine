@@ -29,11 +29,7 @@ and sign up or log in.
 
 On the Hasura Cloud dashboard, create a new project:
 
-<Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/create-hasura-cloud-project.png'
-  alt='Create Hasura Cloud project'
-  width='1000px'
-/>
+<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' width='1000px' />
 
 You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
 
@@ -41,7 +37,7 @@ After the project is initialized successfully, click on `Launch console` to open
 
 On the Hasura console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
 
-<Thumbnail src='/img/graphql/cloud/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
 ## Step 2: Create a Postgres DB on Yugabyte (skip if you have an existing DB) {#create-pg-db-yugabyte}
 
@@ -49,23 +45,15 @@ Log into the [Yugabyte Cloud dashboard](https://cloud.yugabyte.com/login).
 
 On the Yugabyte Cloud dashboard, click on `Create a free cluster`:
 
-<Thumbnail src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-2.png' alt='Create cluster on Yugabyte' width='1000px' />
+<Thumbnail src='/img/cloud-dbs/yugabyte/yb-step-2.png' alt='Create cluster on Yugabyte' width='1000px' />
 
 Select the `Managed Free` option and then click `Next`.
 
-<Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3a.png'
-  alt='Managed Free cluster on Yugabyte'
-  width='1000px'
-/>
+<Thumbnail src='/img/cloud-dbs/yugabyte/yb-step-3a.png' alt='Managed Free cluster on Yugabyte' width='1000px' />
 
 Select a `Cloud Provider` and `Region` and then click `Next`.
 
-<Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3b.png'
-  alt='Cloud Provider and Region on Yugabyte'
-  width='1000px'
-/>
+<Thumbnail src='/img/cloud-dbs/yugabyte/yb-step-3b.png' alt='Cloud Provider and Region on Yugabyte' width='1000px' />
 
 :::info Note
 
@@ -77,7 +65,7 @@ If you're using a database user other than the default one, make sure to give it
 Download your credentials and then click `Create Cluster`.
 
 <Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3c.png'
+  src='/img/cloud-dbs/yugabyte/yb-step-3c.png'
   alt='Create cluster on Yugabyte after downloading credentials'
   width='1000px'
 />
@@ -86,28 +74,24 @@ Download your credentials and then click `Create Cluster`.
 
 From the cluster's dashboard, click `Add IP Allow List`:
 
-<Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3d.png'
-  alt='Add IP Allow List on Yugabyte'
-  width='1000px'
-/>
+<Thumbnail src='/img/cloud-dbs/yugabyte/yb-step-3d.png' alt='Add IP Allow List on Yugabyte' width='1000px' />
 
 Within the modal, click `Create New List and Add to Cluster`:
 
 <Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3e.png'
+  src='/img/cloud-dbs/yugabyte/yb-step-3e.png'
   alt='Create New List and Add to Cluster on Yugabyte'
   width='1000px'
 />
 
 Copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's details view on Hasura Cloud.
 
-<Thumbnail src='/img/graphql/cloud/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' />
+<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' />
 
 Enter the Hasura IP address that you copied:
 
 <Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3f.png'
+  src='/img/cloud-dbs/yugabyte/yb-step-3f.png'
   alt='Add Hasura IP to database in Allow List on Yugabyte'
   width='700px'
 />
@@ -125,7 +109,7 @@ postgresql://<user-name>:<password>@<public-ip>:<postgres-port>/<db>?ssl=true&ss
 To get it, from the cluster's dashboard, click `Run your own application`:
 
 <Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3g.png'
+  src='/img/cloud-dbs/yugabyte/yb-step-3g.png'
   alt='Run your own application on clutser dashboard'
   width='700px'
 />
@@ -133,7 +117,7 @@ To get it, from the cluster's dashboard, click `Run your own application`:
 Click the `Optimize for Hasura Cloud` checkbox and then copy your connection string:
 
 <Thumbnail
-  src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3h.png'
+  src='/img/cloud-dbs/yugabyte/yb-step-3h.png'
   alt='Copy connection string on cluster dashboard'
   width='1000px'
 />
@@ -143,7 +127,7 @@ Click the `Optimize for Hasura Cloud` checkbox and then copy your connection str
 Back on the Hasura Console, enter the database URL that we just copied and replace the `<DB USER>` and `<DB PASSWORD>`
 with the information from your credentials downloaded in [step 2](#create-pg-db-yugabyte):
 
-<Thumbnail src='/img/graphql/cloud/cloud-dbs/yugabyte/yb-step-3i.png' alt='Database setup' width='600px' />
+<Thumbnail src='/img/cloud-dbs/yugabyte/yb-step-3i.png' alt='Database setup' width='600px' />
 
 Then click `Connect Database`.
 
@@ -156,7 +140,7 @@ vars to connect to the databases in place of the raw database URLs.
 
 Voilà. You are ready to start developing.
 
-<Thumbnail src='/img/graphql/cloud/cloud-dbs/hasura-console.png' alt='Hasura console' width='1100px' />
+<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura console' width='1100px' />
 
 ## Next steps
 
@@ -167,4 +151,4 @@ You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
 [collaborators](/projects/collaborators.mdx), [env vars](/projects/env-vars.mdx) or
 [custom domains](/projects/domains.mdx)).
 
-<Thumbnail src='/img/graphql/cloud/getting-started/project-manage.png' alt='Project actions' width='860px' />
+<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />

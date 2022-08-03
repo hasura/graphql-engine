@@ -23,51 +23,39 @@ Enum type fields are restricted to a fixed set of allowed values.
 
 ## Enums in a database
 
-In a relational database such as Postgres, an enum type field in a table
-can be defined in two ways:
+In a relational database such as Postgres, an enum type field in a table can be defined in two ways:
 
 ### Using [native Postgres enum types](https://www.postgresql.org/docs/current/datatype-enum.html) {#pg-native-enum}
 
-While the most obvious solution, native enum types have significant
-drawbacks: they are not easily mutable. New values cannot be added to an
-enum inside a transaction (that is, `ALTER TYPE ... ADD VALUE` is not
-supported by transactional DDL), and values cannot be removed from an
-enum at all without completely dropping and recreating it (which cannot
-be done if the enum is in use by *any* tables, views, or functions).
-Therefore, native enum types should only be used for enums that are
-guaranteed to *never* change, such as days of the week.
+While the most obvious solution, native enum types have significant drawbacks: they are not easily mutable. New values
+cannot be added to an enum inside a transaction (that is, `ALTER TYPE ... ADD VALUE` is not supported by transactional
+DDL), and values cannot be removed from an enum at all without completely dropping and recreating it (which cannot be
+done if the enum is in use by _any_ tables, views, or functions). Therefore, native enum types should only be used for
+enums that are guaranteed to _never_ change, such as days of the week.
 
 ### Using [foreign-key references](https://www.postgresql.org/docs/current/tutorial-fk.html) to a single-column table {#pg-reference-table-enum}
 
-This approach represents an enum using ordinary relational database
-concepts. The enum type is represented by a table, and the values of the
-enum are rows in the table. Columns in other tables that use the enum
-are ordinary foreign-key references to the enum table.
+This approach represents an enum using ordinary relational database concepts. The enum type is represented by a table,
+and the values of the enum are rows in the table. Columns in other tables that use the enum are ordinary foreign-key
+references to the enum table.
 
-For enums with values that are dynamic and may require updates, such as
-a list of tags or user roles, this approach is strongly recommended.
-Modifying an enum defined this way is easy: simply insert, update, or
-delete rows in the enum table (and updates or deletes can even be
-cascaded to references, and they may be done within a transaction).
+For enums with values that are dynamic and may require updates, such as a list of tags or user roles, this approach is
+strongly recommended. Modifying an enum defined this way is easy: simply insert, update, or delete rows in the enum
+table (and updates or deletes can even be cascaded to references, and they may be done within a transaction).
 
 ## Enums in the Hasura GraphQL engine
 
-Given the limitations of native Postgres enum types (as described
-[above](#pg-native-enum)), Hasura currently only generates GraphQL enum
-types for enums defined using the [referenced tables](#pg-reference-table-enum) approach.
+Given the limitations of native Postgres enum types (as described [above](#pg-native-enum)), Hasura currently only
+generates GraphQL enum types for enums defined using the [referenced tables](#pg-reference-table-enum) approach.
 
-You may use native Postgres enum types in your database schema, but they
-will essentially be treated like text fields in the generated GraphQL
-schema. Therefore, this guide focuses primarily on modeling an enum
-using a reference table, but you may still use native Postgres enum
-types to help maintain data consistency in your database. You can always
-choose to create a table with the values of a Postgres enum as shown in
-the [section below](#pg-create-enum-table-from-pg-enum).
+You may use native Postgres enum types in your database schema, but they will essentially be treated like text fields in
+the generated GraphQL schema. Therefore, this guide focuses primarily on modeling an enum using a reference table, but
+you may still use native Postgres enum types to help maintain data consistency in your database. You can always choose
+to create a table with the values of a Postgres enum as shown in the
+[section below](#pg-create-enum-table-from-pg-enum).
 
-**Example:** Let’s say we have a database that tracks user information,
-and users may only have one of three specific roles: user, moderator, or
-administrator. To represent that, we might have a `users` table with the
-following schema:
+**Example:** Let’s say we have a database that tracks user information, and users may only have one of three specific
+roles: user, moderator, or administrator. To represent that, we might have a `users` table with the following schema:
 
 ```sql
 CREATE TABLE users (
@@ -86,32 +74,29 @@ INSERT INTO users (name, role) VALUES
   ('Gerald', 'user');
 ```
 
-This works alright, but it doesn’t prevent us from inserting nonsensical
-values for `role`, such as
+This works alright, but it doesn’t prevent us from inserting nonsensical values for `role`, such as
 
 ```sql
 INSERT INTO users (name, role) VALUES
   ('Hal', 'spaghetti');
 ```
 
-which we certainly don’t want. Hence we should create an enum to
-restrict the allowed values.
+which we certainly don’t want. Hence we should create an enum to restrict the allowed values.
 
 ### Creating an enum compatible table {#pg-create-enum-table}
 
-To represent an enum, we’re going to create an \_<em>enum table</em>, which for Hasura’s purposes is any table that meets the following restrictions:
+To represent an enum, we’re going to create an \_<em>enum table</em>, which for Hasura’s purposes is any table that
+meets the following restrictions:
 
-1.  The table must have a single-column primary key of type `text`. The
-    values of this column are the legal values of the enum, and they
-    must all be [valid GraphQL enum value names](https://graphql.github.io/graphql-spec/June2018/#EnumValue).
-2.  Optionally, the table may have a second column, also of type `text`,
-    which will be used as a description of each value in the generated
-    GraphQL schema.
+1.  The table must have a single-column primary key of type `text`. The values of this column are the legal values of
+    the enum, and they must all be
+    [valid GraphQL enum value names](https://graphql.github.io/graphql-spec/June2018/#EnumValue).
+2.  Optionally, the table may have a second column, also of type `text`, which will be used as a description of each
+    value in the generated GraphQL schema.
 3.  The table must not contain any other columns.
 4.  The table must contain at least 1 row.
 
-**For example**, to create an enum that represents our user roles, we
-would create the following table:
+**For example**, to create an enum that represents our user roles, we would create the following table:
 
 ```sql
 CREATE TABLE user_role (
@@ -125,12 +110,11 @@ INSERT INTO user_role (value, comment) VALUES
   ('administrator', 'Users with the privilege to set users’ roles');
 ```
 
-<div id="pg-create-enum-table-from-pg-enum"/>
+<div id='pg-create-enum-table-from-pg-enum' />
 
 :::info Creating an enum table from a native PG enum
 
-You can create a table containing the values of a PG enum by executing
-the following SQL:
+You can create a table containing the values of a PG enum by executing the following SQL:
 
 ```sql
 CREATE TABLE "<my_enum_table>" (value TEXT PRIMARY KEY);
@@ -143,20 +127,16 @@ Next, we need to tell Hasura that this table represents an enum.
 
 ### Setting a table as an enum table
 
-Once we have a table which satisfies the conditions for an enum table as
-described [above](#pg-create-enum-table), we need to tell Hasura that
-this table represents an enum.
+Once we have a table which satisfies the conditions for an enum table as described [above](#pg-create-enum-table), we
+need to tell Hasura that this table represents an enum.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Head to the `Data -> [table-name] -> Modify` tab in the console and
-toggle the switch in the `Set table as enum` section:
+Head to the `Data -> [table-name] -> Modify` tab in the console and toggle the switch in the `Set table as enum`
+section:
 
-<Thumbnail
-  src="/img/graphql/core/schema/enum-set.png"
-  alt="Set table as enum"
-/>
+<Thumbnail src='/img/schema/enum-set.png' alt='Set table as enum' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -181,7 +161,8 @@ hasura metadata apply
 A table can be set as an enum via the following 2 methods:
 
 1.  Passing `true` for the `is_enum` option of the
-    [pg_track_table](/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) metadata API while tracking a table:
+    [pg_track_table](/api-reference/metadata-api/table-view.mdx#metadata-pg-track-table) metadata API while tracking a
+    table:
 
     ```http {11}
     POST /v1/metadata HTTP/1.1
@@ -199,8 +180,8 @@ A table can be set as an enum via the following 2 methods:
     }
     ```
 
-2.  Using the [pg_set_table_is_enum](/api-reference/metadata-api/table-view.mdx#metadata-pg-set-table-is-enum) metadata API to change
-    whether or not an already-tracked table should be used as an enum:
+2.  Using the [pg_set_table_is_enum](/api-reference/metadata-api/table-view.mdx#metadata-pg-set-table-is-enum) metadata
+    API to change whether or not an already-tracked table should be used as an enum:
 
     ```http
     POST /v1/metadata HTTP/1.1
@@ -225,11 +206,10 @@ A table can be set as an enum via the following 2 methods:
 
 ### Using an enum table
 
-To set a field of a table as an enum in the GraphQL schema, we need to
-set a reference from it to the enum table via a foreign key.
+To set a field of a table as an enum in the GraphQL schema, we need to set a reference from it to the enum table via a
+foreign key.
 
-**For example**, to update our `users` table to reference the
-`user_role` enum table:
+**For example**, to update our `users` table to reference the `user_role` enum table:
 
 ```sql
 ALTER TABLE users ADD CONSTRAINT
@@ -238,13 +218,10 @@ ALTER TABLE users ADD CONSTRAINT
 
 ### Making queries using enum values
 
-Once a table has been tracked as an enum, the GraphQL schema will be
-updated to expose the values of the table as GraphQL enum values i.e.
-only the exposed values will be permitted for all fields referencing to
-it.
+Once a table has been tracked as an enum, the GraphQL schema will be updated to expose the values of the table as
+GraphQL enum values i.e. only the exposed values will be permitted for all fields referencing to it.
 
-**For example**, the `role` column of the `users` table only permits the
-values in the `user_role` table:
+**For example**, the `role` column of the `users` table only permits the values in the `user_role` table:
 
 ```graphql
 type users {
@@ -265,8 +242,8 @@ enum user_role_enum {
 }
 ```
 
-When making queries that filter on the `role` column, use the name of
-the enum value directly rather than providing a string:
+When making queries that filter on the `role` column, use the name of the enum value directly rather than providing a
+string:
 
 <GraphiQLIDE
   query={`{
@@ -279,7 +256,7 @@ the enum value directly rather than providing a string:
     name
   }
 }`}
-response={`{
+  response={`{
   "data": {
     "users": [
       {
@@ -293,29 +270,25 @@ response={`{
 
 ### Enums and migrations
 
-As enum tables have a requirement to contain at least 1 row, it is
-necessary to have a migration which inserts values into an enum table.
-Otherwise while applying migrations an error would be thrown while
-trying to set the table as an enum.
+As enum tables have a requirement to contain at least 1 row, it is necessary to have a migration which inserts values
+into an enum table. Otherwise while applying migrations an error would be thrown while trying to set the table as an
+enum.
 
-The migration which inserts values into an enum table needs to be
-between the migration creating the table and the migration setting it as
-an enum.
+The migration which inserts values into an enum table needs to be between the migration creating the table and the
+migration setting it as an enum.
 
-This can be achieved via the console by performing the following steps
-while setting up an enum table:
+This can be achieved via the console by performing the following steps while setting up an enum table:
 
 1.  Create the enum table
-2.  Use the `RawSQL` tab of the console to insert the enum values into
-    the table and mark the insert as a migration
+2.  Use the `RawSQL` tab of the console to insert the enum values into the table and mark the insert as a migration
 3.  Set the table as an enum
 
-You can also [manually create migration files](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) to
-achieve this.
+You can also
+[manually create migration files](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) to achieve
+this.
 
 ### Current limitations
 
-Currently, Hasura does not automatically detect changes to the contents
-of enum tables, so the GraphQL schema will only be updated after
-[manually reloading metadata](/migrations-metadata-seeds/manage-metadata.mdx#reload-metadata-manual) after inserting,
-updating, or deleting rows from an enum table.
+Currently, Hasura does not automatically detect changes to the contents of enum tables, so the GraphQL schema will only
+be updated after [manually reloading metadata](/migrations-metadata-seeds/manage-metadata.mdx#reload-metadata-manual)
+after inserting, updating, or deleting rows from an enum table.

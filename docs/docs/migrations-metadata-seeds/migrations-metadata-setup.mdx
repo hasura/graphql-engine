@@ -9,21 +9,20 @@ keywords:
   - existing Hasura
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Migrations & Metadata Setup
 
 ## Introduction
 
-[Migrations and Metadata](/migrations-metadata-seeds/index.mdx) allow you to keep track of, update, roll-back or move your database
-and Hasura Server configurations using the [Hasura CLI](/hasura-cli/index.mdx).
-
+[Migrations and Metadata](/migrations-metadata-seeds/index.mdx) allow you to keep track of, update, roll-back or move
+your database and Hasura Server configurations using the [Hasura CLI](/hasura-cli/index.mdx).
 
 ## Getting started
 
-It is a typical requirement to export an existing Hasura "setup" so that you can apply it to another Hasura instance
-to reproduce the same setup. For example, to achieve a **dev**️ -> **staging**️ -> **production** environment
-promotion scenario.
+It is a typical requirement to export an existing Hasura "setup" so that you can apply it to another Hasura instance to
+reproduce the same setup. For example, to achieve a **dev**️ -> **staging**️ -> **production** environment promotion
+scenario.
 
 :::info Note
 
@@ -32,14 +31,13 @@ migrations, etc.
 
 :::
 
-Any change made in the Console served by Hasura CLI which modifies your underlying database schema can be kept
-track of in Migrations.
+Any change made in the Console served by Hasura CLI which modifies your underlying database schema can be kept track of
+in Migrations.
 
-Let's set up Migrations starting with the following two tables in our schema. For this guide we're assuming you have
-a Hasura Server up and running, either on [Hasura Cloud](/getting-started/index.mdx) or as a
-[standalone installation in Docker](/getting-started/index.mdx) and have connected a database with a table that has
-some columns configured.
-
+Let's set up Migrations starting with the following two tables in our schema. For this guide we're assuming you have a
+Hasura Server up and running, either on [Hasura Cloud](/getting-started/index.mdx) or as a
+[standalone installation in Docker](/getting-started/index.mdx) and have connected a database with a table that has some
+columns configured.
 
 ```sql
 author (id uuid, name text, rating integer)
@@ -48,13 +46,13 @@ article (id uuid, title text, content text, author_id uuid)
 
 ## Step 0: Disable the Console served by the server {#migrations-project-init}
 
-The Hasura Console can be served directly by the Hasura Server and also by the Hasura CLI. To use Migrations,
-the console served by the server (which is served at `/console`) should be disabled and all changes must
-go through the Console served by the CLI. Otherwise, changes could be made through the Server Console which _**will
-not**_ be tracked by Migrations.
+The Hasura Console can be served directly by the Hasura Server and also by the Hasura CLI. To use Migrations, the
+console served by the server (which is served at `/console`) should be disabled and all changes must go through the
+Console served by the CLI. Otherwise, changes could be made through the Server Console which _**will not**_ be tracked
+by Migrations.
 
-In order to disable the Server Console either remove the `--enable-console` flag from the command that starts the
-server or set the following environment variable to `false`:
+In order to disable the Server Console either remove the `--enable-console` flag from the command that starts the server
+or set the following environment variable to `false`:
 
 ```bash
 HASURA_GRAPHQL_ENABLE_CONSOLE=false
@@ -79,11 +77,13 @@ hasura init demo-project --endpoint https://docs-demo.hasura.app --admin-secret 
 ```
 
 Input `Y` or `Yes` at the prompt:
+
 ```text
 ? Initialize project with metadata & migrations from https://docs-demo.hasura.app ? Yes
 ```
 
 We'll see an output like this:
+
 ```text
 INFO Metadata exported
 INFO Creating migrations for source: default
@@ -102,37 +102,40 @@ we also specified. It will create a `config.yaml` file and a `migrations`, `meta
 directory structure is mandatory and should not be changed in order to use Hasura migrations properly.
 
 ### Endpoint
-We use the `--endpoint` flag to give the `init` command the URI location of our endpoint. Change this to your own
-Hasura location. In this example we're using a Hasura Cloud instance but if you've deployed Hasura using Docker, the
-URL might be `http://xx.xx.xx.xx:8080` without the `https` and with a port number. In either case, the endpoint should
-_**not**_ contain the `/v1/graphql` API path. It should just be the hostname, and any sub-path if it is configured that
-way.
+
+We use the `--endpoint` flag to give the `init` command the URI location of our endpoint. Change this to your own Hasura
+location. In this example we're using a Hasura Cloud instance but if you've deployed Hasura using Docker, the URL might
+be `http://xx.xx.xx.xx:8080` without the `https` and with a port number. In either case, the endpoint should _**not**_
+contain the `/v1/graphql` API path. It should just be the hostname, and any sub-path if it is configured that way.
 
 ### Admin Secret
+
 If you have an admin secret set on your Server, you can set it safely as an environment variable
-`HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret>` on your local machine and the CLI will use it for running commands.
-In our example though we added an `--admin-secret` flag and your admin secret value to the `init` command This will be
-saved along with the specified endpoint in the `config.yaml` file. With this, we will also not have to add them as
-flags for every subsequent Hasura CLI command.
+`HASURA_GRAPHQL_ADMIN_SECRET=<your-admin-secret>` on your local machine and the CLI will use it for running commands. In
+our example though we added an `--admin-secret` flag and your admin secret value to the `init` command This will be
+saved along with the specified endpoint in the `config.yaml` file. With this, we will also not have to add them as flags
+for every subsequent Hasura CLI command.
 
 :::warning Caution
 
 Be mindful of adding `config.yaml` with an admin secret or other sensitive data to version control in case you
-accidentally leak secrets of a public Hasura instance. To avoid this you can add sensitive values to an
-environment variable file such as `production.env` with env vars in accordance with the
-[Hasura CLI supported vars](/hasura-cli/config-reference.mdx) and then deleting the sensitive key-value line
-from your `config.yaml` file. You can then specify using this file in the Hasura CLI with the `--envfile` flag.
-Eg: `hasura console --envfile production.env`
+accidentally leak secrets of a public Hasura instance. To avoid this you can add sensitive values to an environment
+variable file such as `production.env` with env vars in accordance with the
+[Hasura CLI supported vars](/hasura-cli/config-reference.mdx) and then deleting the sensitive key-value line from your
+`config.yaml` file. You can then specify using this file in the Hasura CLI with the `--envfile` flag. Eg:
+`hasura console --envfile production.env`
 
 :::
 
 ### Initialization
+
 By inputting `Yes` at the prompt to initialize metadata & migrations we have told the CLI to create an initial
-Migrations directory called, for example, `1654696186008_init`. This naming structure consists of a Unix timestamp
-in nanoseconds of when it was created (the "version") and an auto generated name. Since this is the initialization
-of Migrations the CLI automatically names it `init`.
+Migrations directory called, for example, `1654696186008_init`. This naming structure consists of a Unix timestamp in
+nanoseconds of when it was created (the "version") and an auto generated name. Since this is the initialization of
+Migrations the CLI automatically names it `init`.
 
 Our directory structure should now look something like this:
+
 ```text
 📂 demo-project
 ├─ 📂 metadata
@@ -163,13 +166,13 @@ Our directory structure should now look something like this:
 └─ 📄 config.yaml
 ```
 
-If we had entered `No` at the prompt, the Hasura Migrations and Metadata would not have been initialised, and you
-would be able to do it manually [using the CLI later](/hasura-cli/commands/hasura_init.mdx).
+If we had entered `No` at the prompt, the Hasura Migrations and Metadata would not have been initialised, and you would
+be able to do it manually [using the CLI later](/hasura-cli/commands/hasura_init.mdx).
 
-As you can see from the structure, the `metadata` folder contains files used to describe the configuration of the
-Hasura server and the `migrations` folder contains a folder for each of our databases. Ours only has one, `default`,
-and within it we have our migration folder consisting of the up.sql file with the SQL commands needed to create our
-database schema.
+As you can see from the structure, the `metadata` folder contains files used to describe the configuration of the Hasura
+server and the `migrations` folder contains a folder for each of our databases. Ours only has one, `default`, and within
+it we have our migration folder consisting of the up.sql file with the SQL commands needed to create our database
+schema.
 
 ## Step 3: Add Migrations and Metadata to version control
 
@@ -200,12 +203,12 @@ hasura console
 ## Step 5: Add a new table and see how Migrations and Metadata are updated
 
 As you use the Hasura Console UI served by the CLI to make changes to your schema, database migration files are
-automatically generated in the `migrations/` directory and the metadata is exported in the `metadata/` directory of
-your project.
+automatically generated in the `migrations/` directory and the metadata is exported in the `metadata/` directory of your
+project.
 
-Let's use the Console to create the following table `address (id uuid, street text, zip text, city text,
-country text, author_id uuid)` and once that's done create a foreign-key to the `author` table via the `author_id ->
-id` columns.
+Let's use the Console to create the following table
+`address (id uuid, street text, zip text, city text, country text, author_id uuid)` and once that's done create a
+foreign-key to the `author` table via the `author_id -> id` columns.
 
 Now if we check the `migrations/<database-name>` directory, we can find new directories called
 `<version-timestamp-number>_create_table_public_address` and
@@ -217,8 +220,8 @@ change.
 
 :::warning Warning
 
-The accuracy of `up.sql` files is guaranteed but you should manually check `down.sql` files in order to make sure
-they accurately describe the opposite of the `up.sql` Migration.
+The accuracy of `up.sql` files is guaranteed but you should manually check `down.sql` files in order to make sure they
+accurately describe the opposite of the `up.sql` Migration.
 
 :::
 
@@ -233,16 +236,16 @@ Migrations are only created when using the console through the CLI.
 
 ## Step 6: Squash Migrations and add checkpoints to version control
 
-Squashing Migrations is the process of merging multiple `sql` files into one. As you keep using the console via the
-CLI to make changes to the schema, new migration files will keep getting generated and the metadata files will keep
-getting updated automatically.
+Squashing Migrations is the process of merging multiple `sql` files into one. As you keep using the console via the CLI
+to make changes to the schema, new migration files will keep getting generated and the metadata files will keep getting
+updated automatically.
 
-Typically, while adding a feature, a lot of incremental migration files get created for each of the small tasks that
-you did to achieve the feature.
+Typically, while adding a feature, a lot of incremental migration files get created for each of the small tasks that you
+did to achieve the feature.
 
-To improve maintainability of the migration files and to ensure you can go back to a particular version of the
-metadata, it is recommended that you periodically squash your migration files and commit the project status to
-version control whenever you reach a logical checkpoint in your feature development.
+To improve maintainability of the migration files and to ensure you can go back to a particular version of the metadata,
+it is recommended that you periodically squash your migration files and commit the project status to version control
+whenever you reach a logical checkpoint in your feature development.
 
 The following command will squash all migration files from the given migration to the latest migration into a single
 migration file.
@@ -254,10 +257,9 @@ hasura migrate squash --name "<my-feature-name>" --from <start-migration-version
 # note down the version timestamp number
 ```
 
-Because all the Migrations included in the squash have already happened on the Server, we need to tell the Server
-that this new squashed version has already been applied. When we do this using the `hasura migrate apply` command
-but also tell the Server not to execute the statements in the squash to avoid errors and conflicts. We do that as
-follows:
+Because all the Migrations included in the squash have already happened on the Server, we need to tell the Server that
+this new squashed version has already been applied. When we do this using the `hasura migrate apply` command but also
+tell the Server not to execute the statements in the squash to avoid errors and conflicts. We do that as follows:
 
 ```bash
 # mark the squashed migration as applied on this server
@@ -284,26 +286,21 @@ We can use the Hasura CLI command `deploy` to do this.
 hasura deploy --endpoint http://another-server-instance.hasura.app
 ```
 
-This command will apply Migrations and Metadata on the new Hasura instance and make sure that the Metadata is
-consistent with the underlying database schema.
+This command will apply Migrations and Metadata on the new Hasura instance and make sure that the Metadata is consistent
+with the underlying database schema.
 
-:::info Note
-If you need an automated way of applying Migrations and Metadata, take a look at the
-[cli-migrations](/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can
-automatically apply Migrations and Metadata and then start the Hasura Server.
-:::
+:::info Note If you need an automated way of applying Migrations and Metadata, take a look at the
+[cli-migrations](/migrations-metadata-seeds/auto-apply-migrations.mdx) Docker image, which can automatically apply
+Migrations and Metadata and then start the Hasura Server. :::
 
 If you open the Console of the new instance, you can see that our three tables have been created and tracked:
 
-<Thumbnail
-  src="/img/graphql/core/migrations/tracked-tables.png"
-  alt="Tracked tables from Hasura migrations"
-  width="30%"
-/>
+<Thumbnail src='/img/migrations-metadata-seeds/tracked-tables.png' alt='Tracked tables from Hasura migrations' width='30%' />
 
 ## Step 8: Check the status of Migrations
 
 Let's check the status of our Migrations using the CLI.
+
 ```bash
 # in project dir
 hasura migrate status
@@ -329,11 +326,10 @@ We can see the version timestamp number of the migration, it's name, and whether
 filesystem) and also present on the database via the Hasura Server. Hasura keeps track of which migrations have been
 applied to the databases in order to not duplicate applying them and creating errors.
 
-If `SOURCE STATUS` indicates `Not Present`, it means that the migration version is present on the server, but not on
-the current user's local directory. This typically happens if multiple people are collaborating on a project and one
-of the collaborators forgot to pull the latest changes which included the latest migration files, or another
-collaborator forgot to push the latest migration files that were applied on the database. Syncing of the files would
-fix the issue.
+If `SOURCE STATUS` indicates `Not Present`, it means that the migration version is present on the server, but not on the
+current user's local directory. This typically happens if multiple people are collaborating on a project and one of the
+collaborators forgot to pull the latest changes which included the latest migration files, or another collaborator
+forgot to push the latest migration files that were applied on the database. Syncing of the files would fix the issue.
 
 If `DATABASE STATUS` indicates `Not Present`, it means that there are new migration versions in the local directory
 which are not applied on the database yet. To apply them executing `hasura migrate apply` will resolve this.

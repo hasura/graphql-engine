@@ -40,7 +40,7 @@ Azure monitor Integration is only available for Hasura Cloud projects on the `St
   this context)
 
   <Thumbnail
-    src='/img/graphql/cloud/metrics/service-principal-properties.png'
+    src='/img/observability/service-principal-properties.png'
     alt='Service Principal Properties'
     width='1146px'
   />
@@ -49,11 +49,7 @@ Azure monitor Integration is only available for Hasura Cloud projects on the `St
   `New client secret`. Add a suitable description and expiry period for the secret and click `Add`. Copy the value of
   the created secret (Referred to as `Active Directory Client Secret` in this context)
 
-  <Thumbnail
-    src='/img/graphql/cloud/metrics/service-principal-secret.png'
-    alt='Service Principal Secret'
-    width='1146px'
-  />
+  <Thumbnail src='/img/observability/service-principal-secret.png' alt='Service Principal Secret' width='1146px' />
 
 - Create a [Log Analytics Workspace](https://docs.microsoft.com/en-us/azure/azure-monitor/logs/quick-create-workspace)
   in Azure.
@@ -62,7 +58,7 @@ Azure monitor Integration is only available for Hasura Cloud projects on the `St
   (Referred as `Shared Key` in this context).
 
   <Thumbnail
-    src='/img/graphql/cloud/metrics/log-analytics-workspace-config.png'
+    src='/img/observability/log-analytics-workspace-config.png'
     alt='Log Analytics workspace config parameters'
     width='1146px'
   />
@@ -70,18 +66,14 @@ Azure monitor Integration is only available for Hasura Cloud projects on the `St
 - From the `Properties` tab of the created log analytics workspace, retrieve `Resource ID` and `Location` (Referred to
   as `Region` in this context)
 
-  <Thumbnail
-    src='/img/graphql/cloud/metrics/log-analytics-properties.png'
-    alt='Log Analytics Properties'
-    width='1146px'
-  />
+  <Thumbnail src='/img/observability/log-analytics-properties.png' alt='Log Analytics Properties' width='1146px' />
 
 - Assign the Role `Monitoring Metrics Publisher` to the Service principal against the Log analytics workspace. From the
   `Access control (IAM)` tab of the created log analytics workspace, Click on `Add` and select `Add role assignment`. In
   the Add role assignment panel, Select the Role as `Monitoring Metrics Publisher` and select the created service
   principal for role assignment and click `Save`.
 
-  <Thumbnail src='/img/graphql/cloud/metrics/service-principal-role.png' alt='Service Principal Role' width='1146px' />
+  <Thumbnail src='/img/observability/service-principal-role.png' alt='Service Principal Role' width='1146px' />
 
 - Create an
   [Application Insights resource](https://docs.microsoft.com/en-us/azure/azure-monitor/app/create-new-resource>) in
@@ -89,14 +81,14 @@ Azure monitor Integration is only available for Hasura Cloud projects on the `St
 
 - From the `Overview` tab of the created Application Insights resource, retrieve `Instrumentation Key`
 
-  <Thumbnail src='/img/graphql/cloud/metrics/azure-instrumentation-key.png' alt='Instrumentation Key' width='1146px' />
+  <Thumbnail src='/img/observability/azure-instrumentation-key.png' alt='Instrumentation Key' width='1146px' />
 
 ## Configure Azure Monitor integration
 
 On the Project settings page, navigate to **Integrations > Azure Monitor**.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/integrate-azure-monitor.png'
+  src='/img/observability/integrate-azure-monitor.png'
   alt='Configure Azure Monitor Integration'
   width='1146px'
 />
@@ -119,7 +111,7 @@ signifies successful exporting of the telemetry to Azure monitor. `Last Exported
 the timestamp of the last telemetry (log, metric, trace) successfully exported to your Azure monitor dashboard.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/configure-azure-monitor-done.png'
+  src='/img/observability/configure-azure-monitor-done.png'
   alt='Azure monitor Integration successfully configured'
   width='1146px'
 />
@@ -128,7 +120,7 @@ In case of error while exporting any of telemetries(logs, metrics, traces) to Az
 error messages/instructions are displayed. Click `Update Settings` button to update the config parameters.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/configure-azure-monitor-fail.png'
+  src='/img/observability/configure-azure-monitor-fail.png'
   alt='Azure monitor Integration unable to push logs'
   width='1146px'
 />
@@ -152,7 +144,7 @@ To navigate to
 ,click `View Metrics`.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/azure-monitor-view-metrics.png'
+  src='/img/observability/azure-monitor-view-metrics.png'
   alt='Azure monitor Integration successfully configured'
   width='1146px'
 />
@@ -161,7 +153,7 @@ From the `Select a scope` panel, expand the resource group which contains the `L
 and click `Apply`. In the filter menu, select the correct namespace and `Add filter` to view the individual metric.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/azure-monitor-metrics.png'
+  src='/img/observability/azure-monitor-metrics.png'
   alt='Metrics successfully exported to Azure monitor'
   width='1146px'
 />
@@ -173,7 +165,7 @@ To navigate to
 click `View Logs`.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/azure-monitor-view-logs.png'
+  src='/img/observability/azure-monitor-view-logs.png'
   alt='Azure monitor Integration successfully configured'
   width='1146px'
 />
@@ -183,7 +175,7 @@ and click `Apply`. The logs can be filtered using `Log type`. Use `{YOUR_LOG_TYP
 logs. Custom log types are displayed in the left of the Query panel.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/azure-monitor-logs.png'
+  src='/img/observability/azure-monitor-logs.png'
   alt='Logs successfully exported to Azure monitor'
   width='1146px'
 />
@@ -195,7 +187,7 @@ To navigate to
 click `View traces`.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/azure-monitor-view-traces.png'
+  src='/img/observability/azure-monitor-view-traces.png'
   alt='Application Insights Instrumentation Key'
   width='1146px'
 />
@@ -205,7 +197,7 @@ and `Dependency` Event types. Clicking any of the `Dependency` result shows the 
 corresponding trace.
 
 <Thumbnail
-  src='/img/graphql/cloud/metrics/azure-monitor-trace-flame-graph.png'
+  src='/img/observability/azure-monitor-trace-flame-graph.png'
   alt='Traces successfully exported to Azure monitor'
   width='1146px'
 />

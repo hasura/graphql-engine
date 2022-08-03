@@ -9,7 +9,7 @@ keywords:
 sidebar_position: 1
 ---
 
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -17,7 +17,9 @@ import TabItem from '@theme/TabItem';
 
 ## Introduction
 
-Cron triggers are used to reliably trigger HTTP endpoints to run custom business logic periodically based on a [cron schedule](https://en.wikipedia.org/wiki/Cron). For example, you can create a cron trigger to generate an end-of-day sales report every weekday at 10pm.
+Cron triggers are used to reliably trigger HTTP endpoints to run custom business logic periodically based on a
+[cron schedule](https://en.wikipedia.org/wiki/Cron). For example, you can create a cron trigger to generate an
+end-of-day sales report every weekday at 10pm.
 
 To add a cron trigger, follow these steps:
 
@@ -27,33 +29,27 @@ The following fields are required to define a cron trigger:
 
 - **Name**: A name for the cron trigger.
 - **Webhook**: The HTTP endpoint that should be triggered.
-- **Cron schedule**: A cron expression defining the schedule for the cron. Cron events are created based on the UTC timezone. You can use tools like [crontab guru](https://crontab.guru/#*_*_*_*_*)
-  to help build a cron expression.
+- **Cron schedule**: A cron expression defining the schedule for the cron. Cron events are created based on the UTC
+  timezone. You can use tools like [crontab guru](https://crontab.guru/#*_*_*_*_*) to help build a cron expression.
 - **Payload**: The JSON payload which will be sent to the webhook.
 
-For example, we can create a cron trigger called `eod_reports`, to trigger the webhook `https://mywebhook.com/eod` with the cron schedule `0 22 * * 1-5`, which
-means "At 22:00 on every day-of-week from Monday through Friday" (you can check this [here](https://crontab.guru/#0_22_*_*_1-5)).
+For example, we can create a cron trigger called `eod_reports`, to trigger the webhook `https://mywebhook.com/eod` with
+the cron schedule `0 22 * * 1-5`, which means "At 22:00 on every day-of-week from Monday through Friday" (you can check
+this [here](https://crontab.guru/#0_22_*_*_1-5)).
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 Navigate to `Events > Cron Triggers > Create` in your Hasura console.
 
-<Thumbnail
-  src="/img/graphql/core/event-triggers/create-cron.png"
-  alt="Adding a cron trigger"
-  width="1000px"
-/>
+<Thumbnail src='/img/event-triggers/create-cron.png' alt='Adding a cron trigger' width='1000px' />
 
 In the form opened, fill out the fields defined above:
 
-You can use the link next to the `Cron Schedule` field to help build a cron expression using [crontab guru](https://crontab.guru/#*_*_*_*_*), or use the `Frequently used crons` dropdown as a shortcut.
+You can use the link next to the `Cron Schedule` field to help build a cron expression using
+[crontab guru](https://crontab.guru/#*_*_*_*_*), or use the `Frequently used crons` dropdown as a shortcut.
 
-<Thumbnail
-  src="/img/graphql/core/event-triggers/define-cron-trigger.png"
-  alt="Defining a cron trigger"
-  width="500px"
-/>
+<Thumbnail src='/img/event-triggers/define-cron-trigger.png' alt='Defining a cron trigger' width='500px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -77,7 +73,8 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can define a cron trigger via the [create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) metadata API:
+You can define a cron trigger via the
+[create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -105,7 +102,8 @@ If you like, you can also define the following values:
 
 - **Headers**: List of headers to be sent to the webhook.
 - **Retry configuration**: In case the call to the webhook fails.
-- **Include in metadata**: When set to true, the cron trigger will be included in the metadata and can be exported along with it.
+- **Include in metadata**: When set to true, the cron trigger will be included in the metadata and can be exported along
+  with it.
 - **Comment**: Custom description of the cron trigger.
 
 <Tabs className="api-tabs">
@@ -114,15 +112,16 @@ If you like, you can also define the following values:
 Expand the `Advanced` section.
 
 <Thumbnail
-  src="/img/graphql/core/event-triggers/advanced-cron.png"
-  alt="Defining advanced options for a cron trigger"
-  width="700px"
+  src='/img/event-triggers/advanced-cron.png'
+  alt='Defining advanced options for a cron trigger'
+  width='700px'
 />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can define advanced options for a crone trigger when adding it to the `cron_triggers.yaml` file inside the `metadata` directory:
+You can define advanced options for a crone trigger when adding it to the `cron_triggers.yaml` file inside the
+`metadata` directory:
 
 ```yaml
 - name: eod_reports
@@ -147,7 +146,8 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can define advanced options for a cron trigger when defining it via the [create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) metadata API:
+You can define advanced options for a cron trigger when defining it via the
+[create_cron_trigger](/api-reference/metadata-api/scheduled-triggers.mdx#metadata-create-cron-trigger) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -178,10 +178,7 @@ X-Hasura-Role: admin
 
 ## Schedule & logs
 
-Once you've created your cron trigger, you can see `Pending events`, `Processed events`, and `Invocation logs` in their respective tabs.
+Once you've created your cron trigger, you can see `Pending events`, `Processed events`, and `Invocation logs` in their
+respective tabs.
 
-<Thumbnail
-  src="/img/graphql/core/event-triggers/pending-cron.png"
-  alt="Schedule and logs for cron triggers"
-  width="1200px"
-/>
+<Thumbnail src='/img/event-triggers/pending-cron.png' alt='Schedule and logs for cron triggers' width='1200px' />

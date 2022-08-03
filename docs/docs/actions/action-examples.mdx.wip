@@ -34,14 +34,14 @@ This page provides reference examples of typical action use cases.
 
   Now we have an action ``updateAddress`` that looks as follows:
 
-  .. thumbnail:: /img/graphql/core/actions/update-address-action-definition.png
+  .. thumbnail:: /img/actions/update-address-action-definition.png
          :alt: Update address action
          :width: 65%
 
   We can now add an object relationship from the ``updateAddress`` action to the ``authors`` table in our schema.
   We call it ``updatedAddressAuthor``.
 
-  .. thumbnail:: /img/graphql/core/actions/action-object-relationship.png
+  .. thumbnail:: /img/actions/action-object-relationship.png
          :alt: Object relationship from action
          :width: 65%
 
@@ -90,14 +90,14 @@ This page provides reference examples of typical action use cases.
 
   Now we have an action ``updateAuthor`` that looks as follows:
 
-  .. thumbnail:: /img/graphql/core/actions/update-author-action-definition.png
+  .. thumbnail:: /img/actions/update-author-action-definition.png
          :alt: Update author action
          :width: 65%
 
   We can now add an array relationship from the ``updateAuthor`` action to the ``articles`` table in our schema.
   We call it ``updatedAuthorArticles``.
 
-  .. thumbnail:: /img/graphql/core/actions/action-array-relationship.png
+  .. thumbnail:: /img/actions/action-array-relationship.png
          :alt: Array relationship from action
          :width: 65%
 

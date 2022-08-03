@@ -10,22 +10,20 @@ keywords:
   - tables
 ---
 
-import Tabs from "@theme/Tabs";
-import TabItem from "@theme/TabItem";
-import Thumbnail from "@site/src/components/Thumbnail";
-import GraphiQLIDE from "@site/src/components/GraphiQLIDE";
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Thumbnail from '@site/src/components/Thumbnail';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 # MS SQL Server: Tables basics
 
 ## Introduction
 
-Adding tables allows you to define the GraphQL types of your schema
-including their corresponding fields.
+Adding tables allows you to define the GraphQL types of your schema including their corresponding fields.
 
 ## Creating tables {#ms-sql-server-create-tables}
 
-Let's say we want to create two simple tables for `articles` and
-`authors` schema:
+Let's say we want to create two simple tables for `articles` and `authors` schema:
 
 ```sql
 authors (
@@ -45,17 +43,12 @@ articles (
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Open the Hasura console and head to the `Data` tab and click on the
-button on the left side bar to open up an interface to create tables.
+Open the Hasura console and head to the `Data` tab and click on the button on the left side bar to open up an interface
+to create tables.
 
-For example, here is the schema for the `articles` table in this
-interface:
+For example, here is the schema for the `articles` table in this interface:
 
-<Thumbnail
-  src="/img/graphql/core/schema/create-table-graphql-mssql.png"
-  alt="Schema for an article table"
-  width="1100px"
-/>
+<Thumbnail src='/img/schema/create-table-graphql-mssql.png' alt='Schema for an article table' width='1100px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -67,8 +60,8 @@ interface:
     CREATE TABLE articles(id int NOT NULL, title text NOT NULL, content text NOT NULL, rating int NOT NULL, author_id int NOT NULL, PRIMARY KEY (id));
     ```
 
-2.  Add the following statement to the `down.sql` file in case you need
-    to [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations) the above statement:
+2.  Add the following statement to the `down.sql` file in case you need to
+    [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations) the above statement:
 
     ```sql
     DROP TABLE articles;
@@ -105,30 +98,23 @@ X-Hasura-Role: admin
 
 ## Tracking tables
 
-Tables can be present in the underlying MS SQL Server database without
-being exposed over the GraphQL API. In order to expose a table over the
-GraphQL API, it needs to be **tracked**.
+Tables can be present in the underlying MS SQL Server database without being exposed over the GraphQL API. In order to
+expose a table over the GraphQL API, it needs to be **tracked**.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-When a table is created via the Hasura console, it gets tracked by
-default.
+When a table is created via the Hasura console, it gets tracked by default.
 
-You can track any existing tables in your database from the
-`Data -> Schema` page:
+You can track any existing tables in your database from the `Data -> Schema` page:
 
-<Thumbnail
-  src="/img/graphql/core/schema/schema-track-tables-mssql.png"
-  alt="Track table"
-  width="700px"
-/>
+<Thumbnail src='/img/schema/schema-track-tables-mssql.png' alt='Track table' width='700px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-1.  To track the table and expose it over the GraphQL API, edit the
-    `tables.yaml` file in the `metadata` directory as follows:
+1.  To track the table and expose it over the GraphQL API, edit the `tables.yaml` file in the `metadata` directory as
+    follows:
 
     ```yaml {4-6}
     - table:
@@ -148,8 +134,7 @@ You can track any existing tables in your database from the
 </TabItem>
 <TabItem value="api" label="API">
 
-To track the table and expose it over the GraphQL API, make the
-following API call to the
+To track the table and expose it over the GraphQL API, make the following API call to the
 [mssql_track_table metadata API](/api-reference/metadata-api/table-view.mdx#mssql-track-table):
 
 ```http
@@ -171,11 +156,10 @@ X-Hasura-Role: admin
 
 ## Generated GraphQL schema types
 
-As soon as a table is created and tracked, the corresponding GraphQL
-schema types and query fields will be automatically generated.
+As soon as a table is created and tracked, the corresponding GraphQL schema types and query fields will be automatically
+generated.
 
-The following object type is generated for the `articles` table we just
-created and tracked:
+The following object type is generated for the `articles` table we just created and tracked:
 
 ```graphql
 # Object type
@@ -191,12 +175,10 @@ type Articles {
 Let's analyze the above type:
 
 - `Articles` is the name of the type
-- `id`, `title`, `content`, `rating` and `author_id` are fields of the
-  `Articles` type
+- `id`, `title`, `content`, `rating` and `author_id` are fields of the `Articles` type
 - `Int` and `String` are types that fields can have
 
-The following query fields are generated for the `articles` table we
-just created and tracked:
+The following query fields are generated for the `articles` table we just created and tracked:
 
 ```graphql
 # Query field
@@ -234,9 +216,8 @@ See the [query](/api-reference/graphql-api/query.mdx) API reference for the full
 
 ## Try out basic GraphQL requests
 
-At this point, you should be able to try out basic GraphQL queries on
-the newly created tables from the `API` tab in the console. _(You may
-want to add some sample data into the tables first)_
+At this point, you should be able to try out basic GraphQL queries on the newly created tables from the `API` tab in the
+console. _(You may want to add some sample data into the tables first)_
 
 - Query all rows in the `articles` table:
 

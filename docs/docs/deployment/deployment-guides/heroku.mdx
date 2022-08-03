@@ -36,7 +36,7 @@ up you'll be redirected to your Heroku app creation page automatically.
 
 :::
 
-<Thumbnail src='/img/graphql/core/deployment/heroku-app.png' alt='Deploy to Heroku' />
+<Thumbnail src='/img/deployment/heroku-app.png' alt='Deploy to Heroku' />
 
 Heroku's free Postgres add-on is automatically provisioned.
 
@@ -109,7 +109,7 @@ console where you can [connect a database](#heroku-connect-db).
 Head to the `Data` tab on the console to connect your database. You can connect to the Heroku Postgres database that was
 set up with your deployment using the `DATABASE_URL` env var.
 
-<Thumbnail src='/img/graphql/core/deployment/heroku_connect_db.png' alt='Connect db on Heroku' width='1200px' />
+<Thumbnail src='/img/deployment/heroku_connect_db.png' alt='Connect db on Heroku' width='1200px' />
 
 ### Option 2: Existing database
 
@@ -121,7 +121,7 @@ like to add GraphQL to it.
 Add an env var, say `PG_DATABASE_URL` with your existing Heroku Postgres database URL and a
 `HASURA_GRAPHQL_ADMIN_SECRET` if you want to [secure your endpoint](#heroku-secure).
 
-<Thumbnail src='/img/graphql/core/deployment/heroku_database_env.png' alt='Configure environment variables' />
+<Thumbnail src='/img/deployment/heroku_database_env.png' alt='Configure environment variables' />
 
 :::info Note
 
@@ -135,7 +135,7 @@ The Hasura GraphQL engine needs access permissions to your Postgres database as 
 Wait for the GraphQL engine to restart then head to the `Data` tab on the console and connect your database using the
 env var added above.
 
-<Thumbnail src='/img/graphql/core/deployment/heroku_connect_db.png' alt='Connect db on Heroku' width='1200px' />
+<Thumbnail src='/img/deployment/heroku_connect_db.png' alt='Connect db on Heroku' width='1200px' />
 
 #### Step 3: Track tables and relationships
 
@@ -151,12 +151,12 @@ admin secret key.
 
 Head to the config-vars URL on your Heroku dashboard and set the `HASURA_GRAPHQL_ADMIN_SECRET` environment variable.
 
-<Thumbnail src='/img/graphql/core/deployment/secure-heroku.png' alt='Add an admin secret' />
+<Thumbnail src='/img/deployment/secure-heroku.png' alt='Add an admin secret' />
 
 Setting this environment variable will automatically restart the dyno. Now when you access your console, you'll be
 prompted for the admin secret key.
 
-<Thumbnail src='/img/graphql/core/deployment/access-key-console.png' alt='Prompt for the admin secret' />
+<Thumbnail src='/img/deployment/access-key-console.png' alt='Prompt for the admin secret' />
 
 :::info Note
 

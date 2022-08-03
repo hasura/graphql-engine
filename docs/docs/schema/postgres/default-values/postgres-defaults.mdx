@@ -44,13 +44,13 @@ Open the console and head to `Data -> [article] -> Modify`.
 
 Click the `Edit` button next to the `created_at` field and add `now()` as a default value.
 
-<Thumbnail src='/img/graphql/core/schema/add-default-value.png' alt='Modify the table in the console' width='1000px' />
+<Thumbnail src='/img/schema/add-default-value.png' alt='Modify the table in the console' width='1000px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the following SQL
-statement to the `up.sql` file:
+[Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add the
+following SQL statement to the `up.sql` file:
 
 ```sql
 ALTER TABLE ONLY "public"."article" ALTER COLUMN "created_at" SET DEFAULT now();

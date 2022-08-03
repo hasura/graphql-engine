@@ -13,7 +13,7 @@ keywords:
 ---
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # GraphQL API with Python & Flask: JWT authentication
 
@@ -31,13 +31,13 @@ We create two [actions](/actions/create.mdx), each with its own set of [custom t
 
 ```graphql
 type Mutation {
-  Signup (email: String! password: String!): CreateUserOutput
+  Signup(email: String!, password: String!): CreateUserOutput
 }
 
 type CreateUserOutput {
-  id : Int!
-  email : String!
-  password : String!
+  id: Int!
+  email: String!
+  password: String!
 }
 ```
 
@@ -45,41 +45,39 @@ type CreateUserOutput {
 
 ```graphql
 type Mutation {
-  Login (email: String! password: String!): JsonWebToken
+  Login(email: String!, password: String!): JsonWebToken
 }
 
 type JsonWebToken {
-  token : String!
+  token: String!
 }
 ```
 
 Example: creating the `Signup` action
 
 <Thumbnail
-  src="/img/graphql/core/actions/python-flask-signup-types.png"
-  alt="Python Flask signup types"
-  width="1000px"
-  className="no-shadow"
+  src='/img/actions/python-flask-signup-types.png'
+  alt='Python Flask signup types'
+  width='1000px'
+  className='no-shadow'
 />
 
 ## Step 2: Action handler implementation for signup
 
-In the `Codegen` tab, a scaffold gets generated from the GraphQL types you defined.
-Next, implement the business logic for `Signup`. Your action will do the following:
+In the `Codegen` tab, a scaffold gets generated from the GraphQL types you defined. Next, implement the business logic
+for `Signup`. Your action will do the following:
 
--   Receive the action arguments `email` and `password` on `request`,
-    and pass those values to `SignupArgs.from_request()`.
--   Convert the plaintext password input into a hashed secure password
-    with Argon2.
--   Send a mutation to Hasura to save the newly created user with the
-    hashed password.
--   Return the created user object to signal success or else error.
+- Receive the action arguments `email` and `password` on `request`, and pass those values to
+  `SignupArgs.from_request()`.
+- Convert the plaintext password input into a hashed secure password with Argon2.
+- Send a mutation to Hasura to save the newly created user with the hashed password.
+- Return the created user object to signal success or else error.
 
-To implement the Argon2 password hashing, you can use [argon2-cffi][].
-Next, use a [requests][] library for making requests to Hasura for mutations/queries.
+To implement the Argon2 password hashing, you can use [argon2-cffi][]. Next, use a [requests][] library for making
+requests to Hasura for mutations/queries.
 
-  [argon2-cffi]: https://github.com/hynek/argon2-cffi
-  [requests]: https://github.com/psf/requests
+[argon2-cffi]: https://github.com/hynek/argon2-cffi
+[requests]: https://github.com/psf/requests
 
 Here is how your `requirements.txt` file should look: ::
 
@@ -92,10 +90,9 @@ Next up is the implementation.
 
 ### Signup handler & password hashing
 
-For password hashing, the `argon2` API is minimal and straightforward:
-an instance of a password hasher is created with `PasswordHasher()`,
-which has methods `.hash(password)`, `.verify(hashed_password, password)`,
-and `.check_needs_rehash(hashed_password)`.
+For password hashing, the `argon2` API is minimal and straightforward: an instance of a password hasher is created with
+`PasswordHasher()`, which has methods `.hash(password)`, `.verify(hashed_password, password)`, and
+`.check_needs_rehash(hashed_password)`.
 
 In your signup handler, first convert the action input password to a secure hash:
 
@@ -111,8 +108,8 @@ def signup_handler():
 
 ### GraphQL request client
 
-Next, since you have the user's email and hashed password, you need to send a request to Hasura to save them in the database.
-For this, you need a request client implementation:
+Next, since you have the user's email and hashed password, you need to send a request to Hasura to save them in the
+database. For this, you need a request client implementation:
 
 ```python
 from requests import request
@@ -145,8 +142,9 @@ class Client:
     )
 ```
 
-Create a utility class for handling your Hasura operations. It takes an URL and headers object as initialization options and exposes a method `.run_query()` for performing GraphQL requests.
-Create the query function for saving your user in the `Signup` action as a class method as well.
+Create a utility class for handling your Hasura operations. It takes an URL and headers object as initialization options
+and exposes a method `.run_query()` for performing GraphQL requests. Create the query function for saving your user in
+the `Signup` action as a class method as well.
 
 You can instantiate the `Client` like this:
 
@@ -157,7 +155,8 @@ HASURA_HEADERS = {"X-Hasura-Admin-Secret": "your-secret"}
 client = Client(url=HASURA_URL, headers=HASURA_HEADERS)
 ```
 
-Now, in your `Signup` action handler, you need to call `client.create_user()` with the input email and the hashed password value to save them, then return the result:
+Now, in your `Signup` action handler, you need to call `client.create_user()` with the input email and the hashed
+password value to save them, then return the result:
 
 ```python
 @app.route("/signup", methods=["POST"])
@@ -172,8 +171,7 @@ def signup_handler():
         return CreateUserOutput(**user).to_json()
 ```
 
-To test this out, send an HTTP request to your Flask API at `/signup`
-with an email and password:
+To test this out, send an HTTP request to your Flask API at `/signup` with an email and password:
 
 ```http
 POST http://localhost:5000/signup HTTP/1.1
@@ -203,13 +201,13 @@ Date: Sun, 10 May 2020 19:58:23 GMT
 }
 ```
 
-Now your `Signup` action is functional!
-And finally, create the `Login` handler to perform a password comparison, and then return a signed JWT if successful.
+Now your `Signup` action is functional! And finally, create the `Login` handler to perform a password comparison, and
+then return a signed JWT if successful.
 
 ## Step 3: Action handler implementation for login
 
-The first thing you need is a new request method on your `Client` class to find a user by email so that you can look them up to compare the password.
-Under `create_user`, create the following new method:
+The first thing you need is a new request method on your `Client` class to find a user by email so that you can look
+them up to compare the password. Under `create_user`, create the following new method:
 
 ```python
 find_user_by_email = lambda self, email: self.run_query(
@@ -226,11 +224,12 @@ find_user_by_email = lambda self, email: self.run_query(
 )
 ```
 
-Then in your login handler, call `Password.verify()` to compare the input password against the hashed password saved in the database.
-If the password matches, you create a JWT from the user credentials and return it.
+Then in your login handler, call `Password.verify()` to compare the input password against the hashed password saved in
+the database. If the password matches, you create a JWT from the user credentials and return it.
 
-You should also determine whether the password needs to be updated and re-hashed by Argon2 if the hashing parameters have changed and are no longer valid.
-If so, you should re-hash and then save the updated password in the database through an update mutation to Hasura, `client.update_password()`.
+You should also determine whether the password needs to be updated and re-hashed by Argon2 if the hashing parameters
+have changed and are no longer valid. If so, you should re-hash and then save the updated password in the database
+through an update mutation to Hasura, `client.update_password()`.
 
 ```python
 @app.route("/login", methods=["POST"])
@@ -246,8 +245,7 @@ def login_handler():
         return { "message": "Invalid credentials" }, 401
 ```
 
-Here is what the implementation of `generate_token()` and
-`rehash_and_save_password_if_needed()` could look like:
+Here is what the implementation of `generate_token()` and `rehash_and_save_password_if_needed()` could look like:
 
 ```python
 import os
@@ -277,9 +275,9 @@ def generate_token(user) -> str:
 
 def rehash_and_save_password_if_needed(user, plaintext_password):
     """
-    Whenever your Argon2 parameters – or argon2-cffi’s defaults! – 
+    Whenever your Argon2 parameters – or argon2-cffi’s defaults! –
     change, you should rehash your passwords at the next opportunity.
-    The common approach is to do that whenever a user logs in, since 
+    The common approach is to do that whenever a user logs in, since
     that should be the only time when you have access to the cleartext password.
     Therefore it’s best practice to check – and if necessary rehash –
     passwords after each successful authentication.
@@ -611,6 +609,7 @@ if __name__ == "__main__":
 
 :::info Additional Resources
 
-Introduction to Hasura Actions - [View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
+Introduction to Hasura Actions -
+[View Recording](https://hasura.io/events/webinar/hasura-actions/?pg=docs&plcmt=body&cta=view-recording&tech=).
 
 :::

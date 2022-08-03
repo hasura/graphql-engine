@@ -40,7 +40,7 @@ From the [API Explorer landing page](https://cloud.hasura.io/public/graphiql), y
 of the page to try out some existing public GraphQL APIs including **SpaceX**, **GitHub**, or **GraphQL Jobs**.
 
 <Thumbnail
-  src='/img/graphql/cloud/api-explorer/connect-to-existing-api_graphql-api-explorer_v1.png'
+  src='/img/api-explorer/connect-to-existing-api_graphql-api-explorer_v1.png'
   alt='API Explorer Landing Page'
   width='1146px'
 />
@@ -59,7 +59,7 @@ You can use the Hasura GraphQL API explorer to connect to any publicly available
 to the endpoint field and click "Connect to Endpoint".
 
 <Thumbnail
-  src='/img/graphql/cloud/api-explorer/connect-to-api_graphql-api-explorer_v1.png'
+  src='/img/api-explorer/connect-to-api_graphql-api-explorer_v1.png'
   alt='API Explorer Share Link'
   width='1146px'
 />
@@ -68,7 +68,7 @@ Once connected you are able to add any headers you may need to provide authentic
 endpoint.
 
 <Thumbnail
-  src='/img/graphql/cloud/api-explorer/add-headers_graphql-api-explorer_v1.png'
+  src='/img/api-explorer/add-headers_graphql-api-explorer_v1.png'
   alt='API Explorer Share Link'
   width='1146px'
 />
@@ -78,31 +78,30 @@ endpoint.
 Using the GraphQL API Explorer to test a Hasura Cloud project with public access requires only two pieces of
 configuration for the project. Most importantly, you must set up unauthenticated access user roles. You can achieve this
 by creating an `anonymous` role with the respective permissions.
-[Read more here](/auth/authorization/common-roles-auth-examples.mdx#anonymous-users-example) for detailed
-steps.
+[Read more here](/auth/authorization/common-roles-auth-examples.mdx#anonymous-users-example) for detailed steps.
 
 The other piece of configuration is setting the `HASURA_GRAPHQL_UNAUTHORIZED_ROLE` environment variable to `anonymous`.
-[Read more](/auth/authentication/unauthenticated-access.mdx#configuring-unauthenticated--public-access) on
-how to set up unauthenticated/public access user roles.
+[Read more](/auth/authentication/unauthenticated-access.mdx#configuring-unauthenticated--public-access) on how to set up
+unauthenticated/public access user roles.
 
 The Hasura Cloud Project GraphQL API is publicly sharable, to allow users to access it without authentication. Navigate
 to the project settings to find the public, sharable URL.
 
 <Thumbnail
-  src='/img/graphql/cloud/api-explorer/share-link_graphql-api-explorer_v1.png'
+  src='/img/api-explorer/share-link_graphql-api-explorer_v1.png'
   alt='API Explorer Share Link'
   width='1146px'
 />
 
 :::info Note
 
-If an [admin secret](/deployment/securing-graphql-endpoint.mdx) is configured for your Hasura project,
-Hasura GraphQL Engine will automatically reject unauthenticated requests. In this case, for the project to be publicly
-accessible, the admin secret has to be passed as a header in the GraphiQL interface under the **Request Headers**
-section. Be careful not to leak a production admin secret publicly.
+If an [admin secret](/deployment/securing-graphql-endpoint.mdx) is configured for your Hasura project, Hasura GraphQL
+Engine will automatically reject unauthenticated requests. In this case, for the project to be publicly accessible, the
+admin secret has to be passed as a header in the GraphiQL interface under the **Request Headers** section. Be careful
+not to leak a production admin secret publicly.
 
 <Thumbnail
-  src='/img/graphql/cloud/api-explorer/admin-secret-header_graphql-api-explorer_v1.png'
+  src='/img/api-explorer/admin-secret-header_graphql-api-explorer_v1.png'
   alt='API Explorer Header Admin Secret'
   width='1146px'
 />

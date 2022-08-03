@@ -11,7 +11,7 @@ keywords:
 ---
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
-import Thumbnail from "@site/src/components/Thumbnail";
+import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -19,21 +19,20 @@ import TabItem from '@theme/TabItem';
 
 ## Introduction
 
-Many times, we need to perform validations of input data before
-selecting, inserting or updating objects.
+Many times, we need to perform validations of input data before selecting, inserting or updating objects.
 
 BigQuery does not natively support constraints, primary or foreign keys.
 
-However, if you would like the validation logic to be at the GraphQL API
-layer, Hasura permissions can be used to add your validation.
+However, if you would like the validation logic to be at the GraphQL API layer, Hasura permissions can be used to add
+your validation.
 
 These solutions are explained in some more detail below.
 
 ## Using Hasura permissions
-If the validation logic can be expressed **declaratively** using static
-values and data from the database, then you can use
-[row level permissions](/auth/authorization/permission-rules.mdx#row-level-permissions) to perform the
-validations. (Read more about [Authorization](/auth/authorization/index.mdx)).
+
+If the validation logic can be expressed **declaratively** using static values and data from the database, then you can
+use [row level permissions](/auth/authorization/permission-rules.mdx#row-level-permissions) to perform the validations.
+(Read more about [Authorization](/auth/authorization/index.mdx)).
 
 **Example 1:** Validate that the `editor` role can only select `article`s with empty titles.
 
@@ -49,15 +48,12 @@ Now, we can create a role `editor` and add a select validation rule as follows:
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail
-  src="/img/graphql/core/schema/bq-validation-not-empty.png"
-/>
+<Thumbnail src='/img/schema/bq-validation-not-empty.png' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can add roles and permissions in the `tables.yaml` file inside the
-`metadata` directory:
+You can add roles and permissions in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {4-10}
 table:
@@ -112,7 +108,8 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-If we set the `X-Hasura-Role` to `editor` and try to select all articles, only those with empty string titles will be returned:
+If we set the `X-Hasura-Role` to `editor` and try to select all articles, only those with empty string titles will be
+returned:
 
 <GraphiQLIDE
   query={`query {
@@ -123,7 +120,7 @@ If we set the `X-Hasura-Role` to `editor` and try to select all articles, only t
   }
 }
 `}
-response={`{
+  response={`{
   "data": {
     "bigquery_articles": [
       {
@@ -156,9 +153,7 @@ Now, we can create a role `author` and add an select validation rule as follows:
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-<Thumbnail
-  src="/img/graphql/core/schema/bq-author-own-articles.png"
-/>
+<Thumbnail src='/img/schema/bq-author-own-articles.png' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
@@ -187,7 +182,8 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a select permission rule by using the [bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) metadata API:
+You can add a select permission rule by using the
+[bigquery_create_select_permission](/api-reference/metadata-api/permission.mdx) metadata API:
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -217,8 +213,8 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-
-If we set the `X-Hasura-Role` and `X-Hasura-User-Id` headers, then try to select all articles, only those where the `author_id` matches the current `X-Hasura-User-Id` will be returned:
+If we set the `X-Hasura-Role` and `X-Hasura-User-Id` headers, then try to select all articles, only those where the
+`author_id` matches the current `X-Hasura-User-Id` will be returned:
 
 <GraphiQLIDE
   query={`query {
@@ -228,7 +224,7 @@ If we set the `X-Hasura-Role` and `X-Hasura-User-Id` headers, then try to select
       author_id
     }
   }`}
-response={`{
+  response={`{
   "data": {
     "bigquery_articles": [
       {
@@ -248,8 +244,7 @@ response={`{
 
 :::info Note
 
-Permissions are scoped to a user's role. So, if a validation check needs
-to be global then you will have to define it for all roles which have
-insert/update permissions.
+Permissions are scoped to a user's role. So, if a validation check needs to be global then you will have to define it
+for all roles which have insert/update permissions.
 
 :::

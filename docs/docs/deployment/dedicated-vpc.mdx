@@ -35,7 +35,7 @@ Once the feature is enabled for your account, you'll see a new tab on the dashbo
 can be found here. You can also initiate a request to create a new VPC. To request a new VPC, click on the **Create New
 VPC** button on top. It'll open up a form with the following fields:
 
-<Thumbnail src='/img/graphql/cloud/dedicated-vpc/view-vpc-list.png' alt='VPC list' width='1146px' />
+<Thumbnail src='/img/deployment/dedicated-vpc/view-vpc-list.png' alt='VPC list' width='1146px' />
 
 Enter the following details:
 
@@ -56,11 +56,11 @@ If the provisioning failed, you'll see the VPC in a **Failed** state. Reach out 
 Once the VPC is provisioned, create a project by clicking on the **New Project** button in VPC details screen or get in
 touch with us to migrate your existing hasura project to the VPC.
 
-<Thumbnail src='/img/graphql/cloud/dedicated-vpc/create-vpc-projects.png' alt='Create VPC Project' width='600px' />
+<Thumbnail src='/img/deployment/dedicated-vpc/create-vpc-projects.png' alt='Create VPC Project' width='600px' />
 
 All projects within a VPC is listed under **Projects**.
 
-<Thumbnail src='/img/graphql/cloud/dedicated-vpc/vpc-projects-list.png' alt='VPC Projects List' width='900px' />
+<Thumbnail src='/img/deployment/dedicated-vpc/vpc-projects-list.png' alt='VPC Projects List' width='900px' />
 
 ## VPC Peering
 
@@ -72,11 +72,7 @@ You can view all the request and active peerings in the **Peerings** tab.
 
 To create a new peering request, click on the **Initiate Peering Request** button.
 
-<Thumbnail
-  src='/img/graphql/cloud/dedicated-vpc/create-peering-request.png'
-  alt='Create Peering Request'
-  width='900px'
-/>
+<Thumbnail src='/img/deployment/dedicated-vpc/create-peering-request.png' alt='Create Peering Request' width='900px' />
 
 There are two types of peering requests:
 
@@ -87,11 +83,7 @@ There are two types of peering requests:
 
 This is typically used if you want to connect to RDS or Action/Event Trigger webhooks within an AWS VPC that you own.
 
-<Thumbnail
-  src='/img/graphql/cloud/dedicated-vpc/hasura-to-customer-peering.png'
-  alt='Hasura to Customer'
-  width='600px'
-/>
+<Thumbnail src='/img/deployment/dedicated-vpc/hasura-to-customer-peering.png' alt='Hasura to Customer' width='600px' />
 
 Fill in the form with the following details:
 
@@ -128,11 +120,7 @@ If the provisioning failed, you'll see the status as **Failed**. Reach out to su
 This mode can be used if you're using a managed 3rd party service like Aiven or Timescale Cloud and want to initiate a
 peering request towards Hasura Cloud.
 
-<Thumbnail
-  src='/img/graphql/cloud/dedicated-vpc/customer-to-hasura-peering.png'
-  alt='Customer to Hasura'
-  width='600px'
-/>
+<Thumbnail src='/img/deployment/dedicated-vpc/customer-to-hasura-peering.png' alt='Customer to Hasura' width='600px' />
 
 This popup shows all the required info to create a peering request from the 3rd party service:
 

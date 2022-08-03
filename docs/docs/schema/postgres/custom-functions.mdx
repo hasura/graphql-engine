@@ -57,10 +57,10 @@ SQL functions can be created using SQL statements which can be executed as follo
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-1.  [Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add your
-    [create function SQL statement](https://www.postgresql.org/docs/current/sql-createfunction.html) to the `up.sql`
-    file. Also, add an SQL statement that reverts the previous statement to the `down.sql` file in case you need to
-    [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations) the migrations.
+1.  [Create a migration manually](/migrations-metadata-seeds/manage-migrations.mdx#create-manual-migrations) and add
+    your [create function SQL statement](https://www.postgresql.org/docs/current/sql-createfunction.html) to the
+    `up.sql` file. Also, add an SQL statement that reverts the previous statement to the `down.sql` file in case you
+    need to [roll back](/migrations-metadata-seeds/manage-migrations.mdx#roll-back-migrations) the migrations.
 
 2.  Apply the migration by running:
 
@@ -104,7 +104,7 @@ over the GraphQL API right after creation if it is supported.
 
 You can track any existing supported functions in your database from the `Data -> Schema` page:
 
-<Thumbnail src='/img/graphql/core/schema/schema-track-functions.png' alt='Track functions' />
+<Thumbnail src='/img/schema/schema-track-functions.png' alt='Track functions' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
