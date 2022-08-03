@@ -34,6 +34,7 @@ import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Column qualified as RQL
 import Hasura.RQL.Types.Source qualified as RQL
+import Hasura.RQL.Types.SourceCustomization qualified as RQL
 import Hasura.RQL.Types.Table qualified as RQL
 import Hasura.SQL.Backend (BackendType (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
@@ -46,13 +47,13 @@ instance BackendSchema 'DataConnector where
 
   buildTableRelayQueryFields = experimentalBuildTableRelayQueryFields
 
-  buildFunctionQueryFields _ _ _ _ = pure []
-  buildFunctionRelayQueryFields _ _ _ _ _ = pure []
-  buildFunctionMutationFields _ _ _ _ = pure []
-  buildTableInsertMutationFields _ _ _ _ _ = pure []
-  buildTableUpdateMutationFields _ _ _ _ _ = pure []
-  buildTableDeleteMutationFields _ _ _ _ _ = pure []
-  buildTableStreamingSubscriptionFields _ _ _ _ = pure []
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
+  buildTableInsertMutationFields _ _ _ _ _ _ = pure []
+  buildTableUpdateMutationFields _ _ _ _ _ _ = pure []
+  buildTableDeleteMutationFields _ _ _ _ _ _ = pure []
+  buildTableStreamingSubscriptionFields _ _ _ _ _ = pure []
 
   -- backend extensions
   relayExtension = Nothing
@@ -80,13 +81,14 @@ instance BackendTableSelectSchema 'DataConnector where
 
 experimentalBuildTableRelayQueryFields ::
   MonadBuildSchema 'DataConnector r m n =>
+  RQL.MkRootFieldName ->
   RQL.SourceInfo 'DataConnector ->
   RQL.TableName 'DataConnector ->
   RQL.TableInfo 'DataConnector ->
   GQLNameIdentifier ->
   NESeq (RQL.ColumnInfo 'DataConnector) ->
   m [a]
-experimentalBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
+experimentalBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 columnParser' ::

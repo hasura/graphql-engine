@@ -44,6 +44,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Source (SourceInfo)
+import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -88,77 +89,84 @@ instance BackendTableSelectSchema 'BigQuery where
 
 bqBuildTableRelayQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  MkRootFieldName ->
   SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
   NESeq (ColumnInfo 'BigQuery) ->
   m [a]
-bqBuildTableRelayQueryFields _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
+bqBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _tableInfo _gqlName _pkeyColumns =
   pure []
 
 bqBuildTableInsertMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  MkRootFieldName ->
   Scenario ->
   SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
   m [a]
-bqBuildTableInsertMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
+bqBuildTableInsertMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildTableUpdateMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  MkRootFieldName ->
   Scenario ->
   SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
   m [a]
-bqBuildTableUpdateMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
+bqBuildTableUpdateMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildTableDeleteMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  MkRootFieldName ->
   Scenario ->
   SourceInfo 'BigQuery ->
   TableName 'BigQuery ->
   TableInfo 'BigQuery ->
   C.GQLNameIdentifier ->
   m [a]
-bqBuildTableDeleteMutationFields _scenario _sourceName _tableName _tableInfo _gqlName =
+bqBuildTableDeleteMutationFields _mkRootFieldName _scenario _sourceName _tableName _tableInfo _gqlName =
   pure []
 
 bqBuildFunctionQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  MkRootFieldName ->
   SourceInfo 'BigQuery ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   m [a]
-bqBuildFunctionQueryFields _ _ _ _ =
+bqBuildFunctionQueryFields _ _ _ _ _ =
   pure []
 
 bqBuildFunctionRelayQueryFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  MkRootFieldName ->
   SourceInfo 'BigQuery ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   NESeq (ColumnInfo 'BigQuery) ->
   m [a]
-bqBuildFunctionRelayQueryFields _sourceName _functionName _functionInfo _tableName _pkeyColumns =
+bqBuildFunctionRelayQueryFields _mkRootFieldName _sourceName _functionName _functionInfo _tableName _pkeyColumns =
   pure []
 
 bqBuildFunctionMutationFields ::
   MonadBuildSchema 'BigQuery r m n =>
+  MkRootFieldName ->
   SourceInfo 'BigQuery ->
   FunctionName 'BigQuery ->
   FunctionInfo 'BigQuery ->
   TableName 'BigQuery ->
   m [a]
-bqBuildFunctionMutationFields _ _ _ _ =
+bqBuildFunctionMutationFields _ _ _ _ _ =
   pure []
 
 ----------------------------------------------------------------

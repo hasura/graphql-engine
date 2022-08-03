@@ -55,6 +55,7 @@ import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization (MkRootFieldName)
 import Hasura.SQL.Backend
 import Hasura.Server.Types (StreamingSubscriptionsCtx)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -98,6 +99,7 @@ class
   -- top level parsers
   buildTableQueryAndSubscriptionFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     SourceInfo b ->
     TableName b ->
     TableInfo b ->
@@ -110,6 +112,7 @@ class
       )
   buildTableStreamingSubscriptionFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     SourceInfo b ->
     TableName b ->
     TableInfo b ->
@@ -117,6 +120,7 @@ class
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableRelayQueryFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     SourceInfo b ->
     TableName b ->
     TableInfo b ->
@@ -125,6 +129,7 @@ class
     m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
   buildTableInsertMutationFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     Scenario ->
     SourceInfo b ->
     TableName b ->
@@ -140,6 +145,7 @@ class
   -- its namesake @GSB.@'Hasura.GraphQL.Schema.Build.buildTableUpdateMutationFields'.
   buildTableUpdateMutationFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     Scenario ->
     -- | The source that the table lives in
     SourceInfo b ->
@@ -153,6 +159,7 @@ class
 
   buildTableDeleteMutationFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     Scenario ->
     SourceInfo b ->
     TableName b ->
@@ -162,6 +169,7 @@ class
 
   buildFunctionQueryFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
@@ -170,6 +178,7 @@ class
 
   buildFunctionRelayQueryFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
@@ -179,6 +188,7 @@ class
 
   buildFunctionMutationFields ::
     MonadBuildSchema b r m n =>
+    MkRootFieldName ->
     SourceInfo b ->
     FunctionName b ->
     FunctionInfo b ->
