@@ -1,6 +1,6 @@
 import { Driver } from '@/dataSources';
 
-type TrackingTableFormPlaceholders = {
+export type TrackingTableFormPlaceholders = {
   custom_name: string;
   select: string;
   select_by_pk: string;
@@ -40,7 +40,7 @@ export const getTrackTableType = (driver: Driver) => {
   return `${prefix}_track_table`;
 };
 
-export type GetTablePayloadArgs = {
+type GetTablePayloadArgs = {
   driver: Driver;
   schema: string;
   tableName: string;

@@ -80,24 +80,9 @@ Pre-commit git-hook that runs linter and formatter is by default disabled. You c
   npm run format
   ```
 
-### E2E and Unit Tests
+### Testing
 
-- E2E Tests are written using [Cypress](https://www.cypress.io/) .
-
-  - Run tests: `npm run cy:open`
-  - Write your tests in the `cypress/integration` directory.
-
-- Unit tests are written using [Jest Framework](https://jestjs.io/)
-  - Tests are written inside `__test__` folder of respective services.
-  - Unit testing is mostly applied on the utility functions.
-  - If you want to run tests, execute `npm run jest` or `npm run jest-watch` (for watch mode)
-  - [Snapshot testing](https://jestjs.io/docs/en/snapshot-testing) is also used with unit tests.
-  - when you want to update the snapshot, you can run `npm run jest -- -u` or press `u` if you are in jest-watch mode.
-
-### Chromatic
-
-[Chromatic](https://www.chromatic.com/) is used for visual testing the stories.
-If you have a story you do not wish to snapshot in Chromatic, you can disable snapshotting with the [disableSnapshot](https://www.chromatic.com/docs/ignoring-elements#ignore-stories) story parameter.
+Refer to the [Test Tooling doc](./testing/2-test-tooling.mdx).
 
 ### Webpack
 
