@@ -227,7 +227,7 @@ args:
       - name: name
         type: String!
       output_type: UserId
-      handler: http://127.0.0.1:5593/create-user
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - type: create_action
   args:
@@ -238,7 +238,7 @@ args:
       - name: users
         type: '[UserInput!]!'
       output_type: '[UserId]'
-      handler: http://127.0.0.1:5593/create-users
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-users"
 
 - type: create_action
   args:
@@ -249,7 +249,7 @@ args:
       - name: arg
         type: InObject!
       output_type: OutObject
-      handler: http://127.0.0.1:5593/mirror-action
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
 
 - type: create_action
   args:
@@ -260,7 +260,7 @@ args:
       - name: arg
         type: InObject!
       output_type: OutObject
-      handler: http://127.0.0.1:5593/mirror-action
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
 
 - type: update_action
   args:
@@ -271,7 +271,7 @@ args:
       - name: arg
         type: InObject!
       output_type: OutObject
-      handler: http://127.0.0.1:5593/mirror-action
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
       request_transform:
         version: 2
         template_engine: Kriti
@@ -296,7 +296,7 @@ args:
       - name: arg
         type: InObject!
       output_type: OutObjectTransformed
-      handler: http://127.0.0.1:5593/mirror-action
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
 
 - type: update_action
   args:
@@ -307,7 +307,7 @@ args:
       - name: arg
         type: InObject!
       output_type: OutObjectTransformed
-      handler: http://127.0.0.1:5593/mirror-action
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
       response_transform:
         version: 2
         template_engine: Kriti
@@ -325,7 +325,7 @@ args:
     definition:
       type: query
       output_type: OutHeaders
-      handler: http://127.0.0.1:5593/mirror-headers
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-headers"
 
 - type: create_action
   args:
@@ -336,7 +336,7 @@ args:
       - name: email
         type: String!
       output_type: UserId!
-      handler: http://127.0.0.1:5593/get-user-by-email
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email"
 
 - type: create_action
   args:
@@ -347,7 +347,7 @@ args:
       - name: email
         type: String!
       output_type: NestedOutObject!
-      handler: http://127.0.0.1:5593/get-user-by-email-nested
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email-nested"
 
 - type: create_action
   args:
@@ -358,7 +358,7 @@ args:
       - name: email
         type: String!
       output_type: NestedOutObjectTransformed!
-      handler: http://127.0.0.1:5593/get-user-by-email-nested
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email-nested"
       response_transform:
         version: 2
         template_engine: Kriti
@@ -391,7 +391,7 @@ args:
       - name: email
         type: String!
       output_type: NestedJoinObject!
-      handler: http://127.0.0.1:5593/get-user-by-email-nested
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email-nested"
 
 - type: create_action
   args:
@@ -402,7 +402,7 @@ args:
       - name: email
         type: String!
       output_type: '[UserId]!'
-      handler: http://127.0.0.1:5593/get-users-by-email
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-users-by-email"
 
 - type: create_action
   args:
@@ -413,7 +413,7 @@ args:
       - name: email
         type: String!
       output_type: '[NestedOutObject]!'
-      handler: http://127.0.0.1:5593/get-users-by-email-nested
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-users-by-email-nested"
 
 - type: create_action
   args:
@@ -425,7 +425,7 @@ args:
         type: IntentionalErrorInput!
       # this can be anything, since this action never succeeds
       output_type: '[UserId]!'
-      handler: http://127.0.0.1:5593/intentional-error
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/intentional-error"
 
 - type: create_action
   args:
@@ -434,7 +434,7 @@ args:
       kind: synchronous
       arguments:
       output_type: NullableResp
-      handler: http://127.0.0.1:5593/null-response
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/null-response"
 
 - type: create_action
   args:
@@ -443,7 +443,7 @@ args:
       kind: synchronous
       arguments:
       output_type: String!
-      handler: http://127.0.0.1:5593/scalar-response
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-response"
 
 - type: create_action
   args:
@@ -452,7 +452,7 @@ args:
       kind: synchronous
       arguments:
       output_type: json!
-      handler: http://127.0.0.1:5593/json-response
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/json-response"
 
 - type: create_action
   args:
@@ -461,7 +461,7 @@ args:
       kind: synchronous
       arguments:
       output_type: myCustomScalar!
-      handler: http://127.0.0.1:5593/json-response
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/json-response"
 
 - type: create_action
   args:
@@ -470,7 +470,7 @@ args:
       kind: synchronous
       arguments:
       output_type: '[String]!'
-      handler: http://127.0.0.1:5593/scalar-array-response
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-array-response"
 
 - type: create_action
   args:
@@ -479,7 +479,7 @@ args:
       kind: synchronous
       arguments:
       output_type: '[myCustomScalar!]!'
-      handler: http://127.0.0.1:5593/custom-scalar-array-response
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/custom-scalar-array-response"
 
 - type: create_action
   args:
@@ -488,7 +488,7 @@ args:
       kind: synchronous
       arguments:
       output_type: '[[myCustomScalar!]]!'
-      handler: http://127.0.0.1:5593/custom-scalar-array-response
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/custom-scalar-array-response"
 
 - type: create_select_permission
   args:
@@ -513,7 +513,7 @@ args:
     definition:
       type: query
       output_type: Recursive
-      handler: http://127.0.0.1:5593/recursive-output
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/recursive-output"
 
 - type: create_action
   args:
@@ -521,7 +521,7 @@ args:
     definition:
       type: query
       output_type: 'ResultIdList'
-      handler: http://127.0.0.1:5593/get-results
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-results"
 
 - type: create_action
   args:
@@ -529,7 +529,7 @@ args:
     definition:
       type: query
       output_type: '[Result]'
-      handler: http://127.0.0.1:5593/get-results
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-results"
       response_transform:
         version: 2
         template_engine: Kriti
@@ -548,7 +548,7 @@ args:
     definition:
       type: query
       output_type: TypedNestedNull!
-      handler: http://127.0.0.1:5593/typed-nested-null
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/typed-nested-null"
 
 - type: create_action
   args:
@@ -556,4 +556,4 @@ args:
     definition:
       type: query
       output_type: TypedNestedNull!
-      handler: http://127.0.0.1:5593/typed-nested-null-wrong-field
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/typed-nested-null-wrong-field"

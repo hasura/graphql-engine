@@ -13,7 +13,7 @@
         - name: users
           type: '[UserInput!]!'
         output_type: UserId
-        handler: http://127.0.0.1:5593/create-users
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-users"
 
 - description: Run create_users sync action
   url: /v1/graphql
@@ -62,7 +62,7 @@
                 , name: \"Blake\"}, {email: \"elsa@hasura.io\", name: \"Elsa\"}]){\n\
                 \    id\n    user {\n      name\n      email\n      is_admin\n    }\n\
                 \  }\n}\n"
-            url: http://127.0.0.1:5593/create-users
+            url: "{{ACTION_WEBHOOK_HANDLER}}/create-users"
             headers: []
             transformed_request:
         path: $
@@ -85,4 +85,4 @@
         - name: name
           type: String!
         output_type: UserId
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"

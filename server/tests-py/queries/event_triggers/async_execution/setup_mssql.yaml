@@ -21,4 +21,4 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/sleep_2s
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}/sleep_2s"

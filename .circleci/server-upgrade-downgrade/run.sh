@@ -57,7 +57,7 @@ wait_for_port() {
 		PIDMSG=", PID ($PID)"
 	fi
 	echo "waiting for ${PORT}${PIDMSG}"
-	for i in $(seq 1 60); do
+	for _i in $(seq 1 60); do
 		nc -z localhost $PORT && echo "port $PORT is ready" && return
 		echo -n .
 		sleep 1
@@ -73,7 +73,7 @@ wait_for_port() {
 }
 
 wait_for_postgres() {
-        for i in $(seq 1 60); do
+        for _i in $(seq 1 60); do
                 psql "$1" -c '' >/dev/null 2>&1 && \
                         echo "postgres is ready at $1" && \
                         return
@@ -98,13 +98,12 @@ log() { echo $'\e[1;33m'"--> $*"$'\e[0m'; }
 LATEST_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-latest-release-server.log
 CURRENT_SERVER_LOG=$SERVER_TEST_OUTPUT_DIR/upgrade-test-current-server.log
 
-HGE_ENDPOINT=http://localhost:$HASURA_GRAPHQL_SERVER_PORT
 # export them so that GraphQL Engine can use it
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES="$HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES"
 # Required for testing caching
 export GHCRTS='-N1'
 # Required for event trigger tests
-export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+export EVENT_WEBHOOK_HANDLER="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
 

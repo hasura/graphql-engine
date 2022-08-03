@@ -105,7 +105,7 @@ some of the tests are executed.
 
    ```
    env EVENT_WEBHOOK_HEADER=MyEnvValue \
-       WEBHOOK_FROM_ENV=http://localhost:5592 \
+       EVENT_WEBHOOK_HANDLER=http://localhost:5592 \
        SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN=http://127.0.0.1:5594 \
      cabal new-run -- exe:graphql-engine \
        --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \

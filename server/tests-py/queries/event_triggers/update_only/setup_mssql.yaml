@@ -17,4 +17,4 @@ args:
       name: test_t1
     update:
       columns: "*"
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"

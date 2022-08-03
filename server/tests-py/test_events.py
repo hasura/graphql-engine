@@ -568,7 +568,7 @@ class TestUpdateEventQuery(object):
         #   update:
         #     columns: ["c1", "c3"]
         resp = hge_ctx.v1q_f(self.dir() + '/update-setup.yaml')
-        assert resp[1]["sources"][0]["tables"][0]["event_triggers"][0]["webhook"] == 'http://127.0.0.1:5592/new'
+        assert resp[1]["sources"][0]["tables"][0]["event_triggers"][0]["webhook"] == '{{EVENT_WEBHOOK_HANDLER}}/new'
         yield
         resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
 
@@ -645,7 +645,7 @@ class TestUpdateEventQueryMSSQL(object):
         sources = resp[1]["sources"]
         for source in sources:
             if source["name"] == "mssql":
-                assert source["tables"][0]["event_triggers"][0]["webhook"] == 'http://127.0.0.1:5592/new'
+                assert source["tables"][0]["event_triggers"][0]["webhook"] == '{{EVENT_WEBHOOK_HANDLER}}/new'
 
         yield
         print("--- TEARDOWN STARTED -----")

@@ -21,7 +21,7 @@ args:
       columns: [c2]
     delete:
       columns: "*"
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"
     retry_conf:
       num_retries: 10
       interval_sec: 100

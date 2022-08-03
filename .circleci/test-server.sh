@@ -184,7 +184,7 @@ export HGE_URL_2=""
 if [ -n "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ]; then
 	HGE_URL_2="http://localhost:8081"
 fi
-export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+export EVENT_WEBHOOK_HANDLER="http://127.0.0.1:5592"
 export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
 export HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES=true
 export DEFAULT_HASURA_EXPERIMENTAL_FEATURES=streaming_subscriptions

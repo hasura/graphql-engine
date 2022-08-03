@@ -470,7 +470,7 @@ elif [ "$MODE" = "test" ]; then
 
   # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
-  export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
+  export EVENT_WEBHOOK_HANDLER="http://127.0.0.1:5592"
   export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
   export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
   export ACTION_WEBHOOK_HANDLER="http://127.0.0.1:5593"
