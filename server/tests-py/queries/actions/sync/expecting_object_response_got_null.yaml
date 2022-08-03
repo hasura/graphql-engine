@@ -11,7 +11,7 @@
         kind: synchronous
         arguments:
         output_type: UserId!
-        handler: http://127.0.0.1:5593/null-response
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/null-response"
 
 - description: Run create_user sync action (with null_response handler)
   url: /v1/graphql
@@ -45,7 +45,7 @@
               action:
                 name: create_user
               request_query: "mutation {\n  create_user {\n    id\n  }\n}\n"
-            url: http://127.0.0.1:5593/null-response
+            url: "{{ACTION_WEBHOOK_HANDLER}}/null-response"
             headers: []
             transformed_request:
         path: $
@@ -68,4 +68,4 @@
         - name: name
           type: String!
         output_type: UserId
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"

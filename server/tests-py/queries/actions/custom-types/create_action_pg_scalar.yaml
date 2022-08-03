@@ -15,7 +15,7 @@
         - name: location
           type: geography!
         output_type: User!
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - description: Remove action
   url: /v1/query

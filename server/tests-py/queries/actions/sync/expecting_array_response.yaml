@@ -15,7 +15,7 @@
         - name: name
           type: String!
         output_type: '[UserId]'
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - description: Run create_users action
   url: /v1/graphql
@@ -59,7 +59,7 @@
               request_query: "mutation {\n  create_users(email: \"clarke@gmail.com\", name:\
                 \ \"Clarke\"){\n    id\n    user {\n      name\n      email\n      is_admin\n\
                 \    }\n  }\n}\n"
-            url: http://127.0.0.1:5593/create-user
+            url: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
             headers: []
             transformed_request:
         path: $
@@ -80,4 +80,4 @@
         - name: users
           type: '[UserInput!]!'
         output_type: '[UserId]'
-        handler: http://127.0.0.1:5593/create-users
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-users"

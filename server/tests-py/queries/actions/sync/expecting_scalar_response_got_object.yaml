@@ -16,7 +16,7 @@
         - name: name
           type: String!
         output_type: String!
-        handler: http://127.0.0.1:5593/create-user
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - description: Run scalar-response sync action
   url: /v1/graphql
@@ -52,7 +52,7 @@
                 name: scalar_response
               request_query: "mutation {\n  scalar_response(email: \"clarke@gmail.com\", name: \"\
                 Clarke\")\n}\n"
-            url: http://127.0.0.1:5593/create-user
+            url: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
             headers: []
             transformed_request:
         path: $
@@ -71,4 +71,4 @@
         kind: synchronous
         arguments:
         output_type: String!
-        handler: http://127.0.0.1:5593/scalar-response
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-response"

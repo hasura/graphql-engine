@@ -38,7 +38,7 @@ args:
       - name: name
         type: String!
       output_type: UserId
-      handler: http://127.0.0.1:5593/create-user
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - type: create_action_permission
   args:

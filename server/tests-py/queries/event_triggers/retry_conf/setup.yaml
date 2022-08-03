@@ -41,7 +41,7 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/fail
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}/fail"
     retry_conf:
       num_retries: 4
       interval_sec: 1
@@ -57,7 +57,7 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/sleep_2s
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}/sleep_2s"
     retry_conf:
       num_retries: 2
       interval_sec: 1
@@ -74,7 +74,7 @@ args:
       columns: '*'
     delete:
       columns: '*'
-    webhook: http://127.0.0.1:5592/sleep_2s
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}/sleep_2s"
     retry_conf:
       num_retries: 0
       interval_sec: 2

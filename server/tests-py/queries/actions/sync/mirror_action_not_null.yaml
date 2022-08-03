@@ -28,7 +28,7 @@ response:
               name: mirror
             request_query: "mutation ($id: ID, $name: String) {\n  mirror(arg: {id: $id, name:\
               \ $name}){\n    id\n    name\n  }\n}\n"
-          url: http://127.0.0.1:5593/mirror-action
+          url: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
           headers: []
           transformed_request:
       path: $
