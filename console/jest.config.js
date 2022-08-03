@@ -4,7 +4,7 @@ module.exports = {
     '^.+\\.(ts|tsx|js|jsx)?$': 'ts-jest',
     '^.+\\.svg$': 'jest-svg-transformer',
   },
-  testRegex: '(/__tests__/.*)\\.(test|spec).[jt]sx?$',
+  testRegex: '^.+\\.(test|spec).[jt]sx?$',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   moduleDirectories: ['node_modules', 'src'],
