@@ -29,9 +29,9 @@ const Relationships = ({
 
   return (
     <div>
-      <Helmet
-        title={`Relationships - ${currentAction.name} - Actions | Hasura`}
-      />
+      <Helmet>
+        <title data-heap-redact-text="true">{`Relationships - ${currentAction.name} - Actions | Hasura`}</title>
+      </Helmet>
       {existingRelationships}
       {objectType.kind === 'scalar' ? (
         <div className="mb-sm text-gray-600 test-sm">

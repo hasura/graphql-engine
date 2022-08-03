@@ -212,9 +212,9 @@ class ModifyCustomFunction extends React.Component {
 
     return (
       <div>
-        <Helmet
-          title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
-        />
+        <Helmet>
+          <title data-heap-redact-text="true">{`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}</title>
+        </Helmet>
         <CommonTabLayout
           appPrefix={this.urlWithSource}
           currentTab="modify"

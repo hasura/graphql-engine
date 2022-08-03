@@ -173,7 +173,9 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
 
   return (
     <div className="w-[600px]">
-      <Helmet title={`Codegen - ${currentAction.name} - Actions | Hasura`} />
+      <Helmet>
+        <title data-heap-redact-text="true">{`Codegen - ${currentAction.name} - Actions | Hasura`}</title>
+      </Helmet>
       {getFrameworkActions()}
       <div className="mb-5">
         <CodeTabs

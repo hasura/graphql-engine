@@ -50,12 +50,14 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
 
   return (
     <div>
-      <Helmet
-        title={getReactHelmetTitle(
-          `${activeTab} - ${triggerName}`,
-          EVENTS_SERVICE_HEADING
-        )}
-      />
+      <Helmet>
+        <title data-heap-redact-text="true">
+          {getReactHelmetTitle(
+            `${activeTab} - ${triggerName}`,
+            EVENTS_SERVICE_HEADING
+          )}
+        </title>
+      </Helmet>
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <h2 className={styles.heading_text}>{triggerName}</h2>

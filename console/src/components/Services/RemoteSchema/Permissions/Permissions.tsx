@@ -119,9 +119,9 @@ const Permissions: React.FC<PermissionsProps> = props => {
 
   return (
     <div>
-      <Helmet
-        title={`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}
-      />
+      <Helmet>
+        <title data-heap-redact-text="true">{`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}</title>
+      </Helmet>
       <PermissionsTable
         allRoles={allRoles}
         currentRemoteSchema={currentRemoteSchema}
