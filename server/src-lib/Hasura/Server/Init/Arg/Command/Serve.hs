@@ -810,8 +810,7 @@ experimentalFeaturesEnv =
       <> "inherited_roles: ignored; inherited roles cannot be switched off"
       <> "naming_convention: apply naming convention (graphql-default/hasura-default) based on source customization"
       <> "apollo_federation: use hasura as a subgraph in an Apollo gateway"
-      -- TODO(SOLOMON): Write a description of this experimental feature:
-      -- <> "streaming_subscriptions: ..."
+      <> "streaming_subscriptions: A streaming subscription streams the response according to the cursor provided by the user"
   )
 
 parseEventsFetchBatchSize :: Opt.Parser (Maybe Common.NonNegativeInt)
