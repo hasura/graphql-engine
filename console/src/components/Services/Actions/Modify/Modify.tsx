@@ -371,7 +371,9 @@ const ModifyAction: React.FC<ModifyProps> = ({
 
   return (
     <>
-      <Helmet title={`Modify Action - ${actionName} - Actions | Hasura`} />
+      <Helmet>
+        <title data-heap-redact-text="true">{`Modify Action - ${actionName} - Actions | Hasura`}</title>
+      </Helmet>
 
       <div className="w-full overflow-y-auto bg-gray-50">
         <div className="max-w-6xl">

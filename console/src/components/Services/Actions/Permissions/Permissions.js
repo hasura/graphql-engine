@@ -165,9 +165,9 @@ const Permissions = ({
 
   return (
     <div>
-      <Helmet
-        title={`Permissions - ${currentAction.name} - Actions | Hasura`}
-      />
+      <Helmet>
+        <title data-heap-redact-text="true">{`Permissions - ${currentAction.name} - Actions | Hasura`}</title>
+      </Helmet>
       {getPermissionsTable()}
       <div className={`${styles.add_mar_bottom}`}>
         {!readOnlyMode && (

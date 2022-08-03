@@ -200,9 +200,11 @@ class Edit extends React.Component {
 
     return (
       <div>
-        <Helmet
-          title={`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
-        />
+        <Helmet>
+          <title data-heap-redact-text="true">
+            {`Edit ${pageTitle} - ${remoteSchemaName} - ${pageTitle}s | Hasura`}
+          </title>
+        </Helmet>
         <Tabs
           appPrefix={appPrefix}
           currentTab="modify"
