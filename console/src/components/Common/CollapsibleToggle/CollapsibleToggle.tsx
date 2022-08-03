@@ -75,14 +75,10 @@ class CollapsibleToggle extends React.Component<
         }}
         open={isOpen}
       >
-        <summary
-          className="cursor-pointer inline-block items-center"
-          data-test={testId}
-        >
-          <span className="inline-block text-xs mr-sm">
+        <summary className="cursor-pointer flex items-start" data-test={testId}>
+          <span className="inline-block text-xs mr-sm mt-0.5">
             <FaChevronRight className={`${isOpen && 'rotate-90'}`} />
           </span>
-
           <span className="inline-block">{getTitle()}</span>
         </summary>
         <div className="mt-sm">{children}</div>

@@ -1,7 +1,6 @@
 import React from 'react';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { Tooltip } from '@/new-components/Tooltip';
 import {
   FaCloud,
   FaCog,
@@ -111,8 +110,8 @@ const getSidebarItem = (
   const className = isCurrentBlockActive ? styles.navSideBarActive : '';
 
   return (
-    <OverlayTrigger placement="right" overlay={itemTooltip}>
-      <li>
+    <li>
+      <Tooltip side="right" tooltipContentChildren={itemTooltip}>
         <Link
           className={className}
           to={appPrefix + path}
@@ -123,10 +122,10 @@ const getSidebarItem = (
               'aria-hidden': true,
             })}
           </div>
-          <p>{title}</p>
+          <p className="uppercase">{title}</p>
         </Link>
-      </li>
-    </OverlayTrigger>
+      </Tooltip>
+    </li>
   );
 };
 

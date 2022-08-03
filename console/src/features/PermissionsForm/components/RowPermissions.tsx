@@ -8,7 +8,7 @@ import { NormalizedTable, Table } from '@/dataSources/types';
 import { PGFunction } from '@/dataSources/services/postgresql/types';
 import { generateTableDef } from '@/dataSources';
 import { InputField } from '@/new-components/Form';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { Collapse } from '@/new-components/Collapse';
 import { getIngForm } from '../../../components/Services/Data/utils';
 
@@ -32,7 +32,7 @@ const NoChecksLabel = () => (
 const CustomLabel = () => (
   <span data-test="custom-check" className="flex items-center">
     With custom check:
-    <ToolTip message="Create custom check using permissions builder" />
+    <IconTooltip message="Create custom check using permissions builder" />
   </span>
 );
 

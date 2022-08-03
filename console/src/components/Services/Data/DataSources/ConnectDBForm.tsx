@@ -1,6 +1,6 @@
 import React, { ChangeEvent, Dispatch } from 'react';
 import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
@@ -186,7 +186,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           className={`${styles.remove_pad_bottom} mb-md flex items-center gap-1 ${styles.connect_db_header}`}
         >
           {title ?? defaultTitle}
-          <ToolTip message="Environment variable recommended" />
+          <IconTooltip message="Environment variable recommended" />
           <a
             href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database"
             target="_blank"
@@ -308,7 +308,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
                   className={`${styles.add_mar_bottom_mid} flex items-center gap-1`}
                 >
                   <b>Service Account Key:</b>
-                  <ToolTip message="Service account key for BigQuery data source" />
+                  <IconTooltip message="Service account key for BigQuery data source" />
                 </div>
                 <JSONEditor
                   minLines={5}
@@ -442,7 +442,7 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
           connectionDBState={connectionDBState}
           connectionDBStateDispatch={connectionDBStateDispatch}
         />
-        {/* 
+        {/*
           TODO: remove the edit state condition when the BE issue is solved
           https://github.com/hasura/graphql-engine-mono/issues/4700
         */}

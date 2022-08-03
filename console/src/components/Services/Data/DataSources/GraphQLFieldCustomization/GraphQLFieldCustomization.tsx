@@ -1,5 +1,5 @@
 import { Collapse } from '@/new-components/Collapse';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import React from 'react';
 import { FormRow } from './FormRow';
 import { NamingConvention } from './NamingConvention';
@@ -32,7 +32,7 @@ export const GraphQLFieldCustomization = ({
                 <div>
                   <div className="flex items-center p-sm text-gray-600 font-semibold">
                     Root Fields
-                    <ToolTip message="Set a namespace or add a prefix / suffix to the root fields for the database's objects in the GraphQL API" />
+                    <IconTooltip message="Set a namespace or add a prefix / suffix to the root fields for the database's objects in the GraphQL API" />
                   </div>
                 </div>
                 <form
@@ -56,7 +56,7 @@ export const GraphQLFieldCustomization = ({
                 <div>
                   <div className="flex items-center p-sm text-gray-600 font-semibold">
                     Type Names
-                    <ToolTip message="Add a prefix / suffix to the types for the database's objects in the GraphQL API" />
+                    <IconTooltip message="Add a prefix / suffix to the types for the database's objects in the GraphQL API" />
                   </div>
                 </div>
                 <form

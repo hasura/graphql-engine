@@ -131,25 +131,6 @@ export const Template = args => {
   );
 };
 
-export const TemplateStories = stories => {
-  return (
-    <div>
-      {Object.entries(stories).map(([storyName, story]) => (
-        <div key={storyName}>
-          <div
-            className={
-              'text-black dark:text-white bg-gray-100 dark:bg-gray-700 underline p-2'
-            }
-          >
-            {storyName}
-          </div>
-          <div>{Template(story)}</div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 export const stories = {
   'States - With default value': {
     name: 'codeEditorFieldName',

@@ -1,7 +1,6 @@
 import React from 'react';
 import { GraphQLError } from 'graphql';
-import { Tooltip, OverlayTrigger } from 'react-bootstrap';
-import { FaQuestionCircle } from 'react-icons/fa';
+import { IconTooltip } from '@/new-components/Tooltip';
 import HandlerEditor from './HandlerEditor';
 import ExecutionEditor from './ExecutionEditor';
 import HeaderConfEditor from './HeaderConfEditor';
@@ -189,16 +188,7 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
       <div className="mb-lg w-8/12">
         <h2 className="text-lg font-semibold mb-xs flex items-center">
           Action custom timeout
-          <OverlayTrigger
-            placement="right"
-            overlay={
-              <Tooltip id="tooltip-cascade">
-                Configure timeout for Action. Defaults to 30 seconds.
-              </Tooltip>
-            }
-          >
-            <FaQuestionCircle className="ml-xs" aria-hidden="true" />
-          </OverlayTrigger>
+          <IconTooltip message="Configure timeout for Action. Defaults to 30 seconds." />
         </h2>
         <div className="mb-lg w-4/12">
           <input

@@ -53,25 +53,6 @@ import { Component } from '@/new-components/Component';
 
 export const Template = args => <Component {...args} />;
 
-export const TemplateStories = stories => {
-  return (
-    <div>
-      {Object.entries(stories).map(([storyName, story]) => (
-        <div key={storyName}>
-          <div
-            className={
-              'text-black dark:text-white bg-gray-100 dark:bg-gray-700 underline p-2'
-            }
-          >
-            {storyName}
-          </div>
-          <div className={'py-4'}>{Template(story)}</div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 export const stories = {
   'States - Disabled': {
     prop1: 'text-gray-400',

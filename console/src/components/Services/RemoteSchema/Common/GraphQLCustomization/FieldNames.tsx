@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { OverlayTrigger } from 'react-bootstrap';
-import { FaQuestionCircle } from 'react-icons/fa';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { Button } from '../../../../Common';
 import TypeMapping from './TypeMapping';
 import { inputStyles } from '../../constants';
@@ -25,9 +23,10 @@ type Props = {
 };
 
 const tooltip = (
-  <Tooltip id="tooltip-cascade">
-    Field remapping takes precedence to prefixes and suffixes.
-  </Tooltip>
+  <IconTooltip
+    message="Field remapping takes precedence to prefixes and suffixes."
+    side="right"
+  />
 );
 
 const SelectOne = ({
@@ -138,10 +137,7 @@ const FieldNames = ({
       </div>
 
       <div className="text-lg font-bold mt-md">
-        Remap Field Names{' '}
-        <OverlayTrigger placement="right" overlay={tooltip}>
-          <FaQuestionCircle aria-hidden="true" />
-        </OverlayTrigger>
+        Remap Field Names {tooltip}
         <TypeMapping
           types={
             types.find(x => x.typeName === fieldNameInput?.parentType)

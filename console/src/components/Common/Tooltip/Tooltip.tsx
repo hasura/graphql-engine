@@ -1,12 +1,8 @@
 import React from 'react';
 import { FaInfoCircle } from 'react-icons/fa';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { Tooltip } from '@/new-components/Tooltip';
 import styles from './Tooltip.scss';
 
-const tooltipGen = (message: string) => {
-  return <Tooltip id={message}>{message}</Tooltip>;
-};
 export interface TooltipProps extends React.ComponentProps<'i'> {
   message: string;
   placement?: 'right' | 'left' | 'top' | 'bottom';
@@ -20,14 +16,14 @@ const ToolTip: React.FC<TooltipProps> = ({
   tooltipStyle = '',
   children,
 }) => (
-  <OverlayTrigger placement={placement} overlay={tooltipGen(message)}>
+  <Tooltip side={placement} tooltipContentChildren={message}>
     {children || (
       <FaInfoCircle
         className={`cursor-pointer ${styles.tooltipIcon} ${tooltipStyle} text-sm`}
         aria-hidden="true"
       />
     )}
-  </OverlayTrigger>
+  </Tooltip>
 );
 
 export default ToolTip;

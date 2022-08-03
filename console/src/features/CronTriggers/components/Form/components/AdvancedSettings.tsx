@@ -1,5 +1,5 @@
 import React from 'react';
-import { ToolTip } from '@/new-components/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 import { InputField, Radio } from '@/new-components/Form';
 import { Collapse } from '@/new-components/Collapse';
 import { RequestHeadersSelector } from '@/new-components/RequestHeadersSelector';
@@ -21,7 +21,7 @@ export const AdvancedSettings = () => {
             <div className="mb-md">
               <label className="block flex items-center text-gray-600 font-semibold mb-xs">
                 Headers
-                <ToolTip message="Configure headers for the request to the webhook" />
+                <IconTooltip message="Configure headers for the request to the webhook" />
               </label>
               <RequestHeadersSelector
                 name="headers"
@@ -31,7 +31,7 @@ export const AdvancedSettings = () => {
             <div className="mb-md">
               <label className="block flex items-center text-gray-600 font-semibold">
                 Method
-                <ToolTip message="Configure method to transform your request to (optional). GET requests will be sent without a payload or content-type header" />
+                <IconTooltip message="Configure method to transform your request to (optional). GET requests will be sent without a payload or content-type header" />
               </label>
               <Radio
                 orientation="horizontal"
@@ -50,7 +50,7 @@ export const AdvancedSettings = () => {
             <div className="mb-md">
               <label className="block flex items-center text-gray-600 font-semibold mb-xs">
                 Query Params
-                <ToolTip message="Configure headers for the request to the webhook" />
+                <IconTooltip message="Configure headers for the request to the webhook" />
               </label>
               <RequestHeadersSelector
                 name="query_params"

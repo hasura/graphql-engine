@@ -1,8 +1,6 @@
 import React from 'react';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { Tooltip } from '@/new-components/Tooltip';
 import { FaExclamationTriangle } from 'react-icons/fa';
-
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import styles from './WarningSymbol.scss';
 
@@ -17,15 +15,13 @@ const WarningSymbol: React.FC<WarningSymbolProps> = ({
   tooltipPlacement = 'right',
   customStyle = '',
 }) => {
-  const tooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
-
   return (
     <div className={styles.display_inline}>
-      <OverlayTrigger placement={tooltipPlacement} overlay={tooltip}>
+      <Tooltip tooltipContentChildren={tooltipText} side={tooltipPlacement}>
         <span>
           <WarningIcon customStyle={customStyle} />
         </span>
-      </OverlayTrigger>
+      </Tooltip>
     </div>
   );
 };
