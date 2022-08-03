@@ -34,6 +34,15 @@ This doc covers how you can install the Hasura EE Control Plane. The Hasura EE C
 - [Helm CLI](https://helm.sh/docs/intro/install/#from-the-binary-releases) to generate the right kubernetes manifests
   locally from the templates
 
+- Persistent volumes provisioned with the following minimum storage:
+
+  | Persistent Volume | Storage |
+  | ----------------- | ------- |
+  | Auth-Redis        | 2GB     |
+  | Data-Redis        | 20GB    |
+  | Timescaledb       | 200GB   |
+  | Postgres          | 100GB   |
+
 ## Installation instructions
 
 ### Step 1: Download the Lux Helm Charts tarball
