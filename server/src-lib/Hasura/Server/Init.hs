@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -O0 #-}
 
 -- | Arg and Env Parsing for initialisation of the engine along with
@@ -19,7 +18,8 @@ where
 
 --------------------------------------------------------------------------------
 
-import Data.Aeson.TH qualified as J
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson qualified as Aeson
 import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Database.PG.Query qualified as Q
@@ -66,9 +66,9 @@ Following is the precise behaviour -
 
 --------------------------------------------------------------------------------
 
--- NOTE(SOLOMON): Does this belong here?
-
 -- | Query the Metadata DB for the catalog version.
+--
+-- NOTE: Is this the appropriate module for this?
 getDbId :: Q.TxE Error.QErr Types.MetadataDbId
 getDbId =
   Types.MetadataDbId . runIdentity . Q.getRow
@@ -91,8 +91,15 @@ data StartupTimeInfo = StartupTimeInfo
     _stiTimeTaken :: !Double
   }
 
--- TODO(SOLOMON): Remove this template splice
-$(J.deriveJSON hasuraJSON ''StartupTimeInfo)
+instance FromJSON StartupTimeInfo where
+  parseJSON = Aeson.withObject "StartupTimeInfo" \obj -> do
+    _stiMessage <- obj Aeson..: "message"
+    _stiTimeTaken <- obj Aeson..: "time_taken"
+    pure StartupTimeInfo {..}
+
+instance ToJSON StartupTimeInfo where
+  toJSON StartupTimeInfo {..} =
+    Aeson.object ["message" Aeson..= _stiMessage, "time_taken" Aeson..= _stiTimeTaken]
 
 --------------------------------------------------------------------------------
 
